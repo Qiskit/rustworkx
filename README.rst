@@ -4,7 +4,9 @@ retworkx
 retworkx is a rust graph library interface to python3. For right now it's scope
 is as an experiment in being a potential replacement for qiskit-terra's
 networkx usage (hence the name). The scope might grow or change over time, but
-to start it's just about building a DAG and operating on it with performance and safety that Rust provides. It is also a personal exercise in learning how to interface rust with python.
+to start it's just about building a DAG and operating on it with the performance
+and safety that Rust provides. It is also a personal exercise in learning how
+to interface rust with python.
 
 Installing retworkx
 -------------------
