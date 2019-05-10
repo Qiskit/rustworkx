@@ -116,7 +116,6 @@ where
     Box::new(left.zip(right))
 }
 
-// Not finished yet, always returns 0 now
 #[pyfunction]
 fn dag_longest_path_length(graph: &PyDAG) -> usize {
     let dag = &graph.graph;
