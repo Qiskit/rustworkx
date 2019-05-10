@@ -15,6 +15,9 @@ extern crate pyo3;
 extern crate daggy;
 extern crate petgraph;
 
+use std::collections::HashMap;
+use std::iter;
+
 use pyo3::create_exception;
 use pyo3::exceptions::Exception;
 use pyo3::prelude::*;
@@ -104,22 +107,58 @@ impl PyDAG {
     //   }
 }
 
+fn pairwise<'a, I>(xs: I) -> Box<Iterator<Item = (Option<I::Item>, I::Item)> + 'a>
+where
+    I: 'a + IntoIterator + Clone,
+{
+    let left = iter::once(None).chain(xs.clone().into_iter().map(Some));
+    let right = xs.into_iter();
+    Box::new(left.zip(right))
+}
+
 // Not finished yet, always returns 0 now
 #[pyfunction]
-fn dag_longest_path_length(graph: &PyDAG) -> u64 {
+fn dag_longest_path_length(graph: &PyDAG) -> usize {
     let dag = &graph.graph;
     let nodes = match algo::toposort(dag.graph(), None) {
         Ok(nodes) => nodes,
         Err(_err) => panic!("DAG has a cycle, something is really wrong"),
     };
+    let mut dist: HashMap<usize, (usize, usize)> = HashMap::new();
     for node in nodes {
+        // Iterator that yields (EdgeIndex, NodeIndex)
         let parents = dag.parents(node).iter(&dag);
-        let mut length: usize;
-        for p_node in parents {
-            println!("{}", p_node.1.index())
+        let mut us: Vec<(usize, usize)> = Vec::new();
+        for (_, p_node) in parents {
+            let p_index = p_node.index();
+            let length = dist[&p_index].0 + 1;
+            let u = p_index;
+            us.push((length, u));
         }
+        let maxu: (usize, usize);
+        if us.len() > 0 {
+            maxu = *us.iter().max_by_key(|x| x.0).unwrap();
+        } else {
+            maxu = (0, node.index());
+        };
+        dist.insert(node.index(), maxu);
     }
-    0
+    let mut u: Option<usize> = None;
+    let first = dist.iter().max_by_key(|(_, v)| v.0).unwrap();
+    let first_v = *first.1;
+    let mut v = first_v.0;
+    let mut path: Vec<usize> = Vec::new();
+    while !u.is_some() || u.unwrap() != v {
+        path.push(v);
+        u = Some(v);
+        v = dist[&v].1;
+    }
+    path.reverse();
+    let mut path_length: usize = 0;
+    for (_, _) in pairwise(path) {
+        path_length += 1
+    }
+    path_length
 }
 //
 //#[pyfunction]
