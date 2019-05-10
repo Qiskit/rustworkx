@@ -1,6 +1,6 @@
 [package]
 name = "retworkx"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 license = "Apache-2.0"
 
