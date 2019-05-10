@@ -12,15 +12,14 @@
 
 extern crate pyo3;
 
-extern crate petgraph;
 extern crate daggy;
+extern crate petgraph;
 
-
-use pyo3::prelude::*;
-use pyo3::Python;
-use pyo3::wrap_pyfunction;
 use pyo3::create_exception;
 use pyo3::exceptions::Exception;
+use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
+use pyo3::Python;
 
 use daggy::Dag;
 use daggy::NodeIndex;
@@ -32,75 +31,77 @@ struct EdgeWeight;
 
 #[pyclass]
 pub struct PyDAG {
-    graph: Dag::<PyObject, EdgeWeight>,
+    graph: Dag<PyObject, EdgeWeight>,
 }
 
 #[pymethods]
 impl PyDAG {
-   #[new]
-   fn new(obj: &PyRawObject) {
-       obj.init(PyDAG{ graph: Dag::<PyObject, EdgeWeight>::new() });
-   }
-//   pub fn edges(&self) -> PyResult<()> {
-//
-//   }
-//   pub fn nodes(&self) -> PyResult<()> {
-//
-//   }
-//   pub fn successors(&self, node: usize) -> Iter<PyObject> {
-//       let index = NodeIndex::new(node);
-//       let c_walker = self.graph.children(index);
-//       c_walker.iter(&self.graph) as Iter<PyObject>
-//   }
-//   pub fn predecessors(&self, node: usize) -> Iter<PyObject> {
-//       let index = NodeIndex::new(node);
-//       let p_walker = self.graph.parents(index);
-//       p_walker.iter(&self.graph) as Iter<PyObject>
-//
-//   }
-//   pub fn get_edge_data(&self) -> PyResult<()> {
-//
-//   }
-   pub fn remove_node(&mut self, node: usize) -> PyResult<()>{
-       let index = NodeIndex::new(node);
-       self.graph.remove_node(index);
+    #[new]
+    fn new(obj: &PyRawObject) {
+        obj.init(PyDAG {
+            graph: Dag::<PyObject, EdgeWeight>::new(),
+        });
+    }
+    //   pub fn edges(&self) -> PyResult<()> {
+    //
+    //   }
+    //   pub fn nodes(&self) -> PyResult<()> {
+    //
+    //   }
+    //   pub fn successors(&self, node: usize) -> Iter<PyObject> {
+    //       let index = NodeIndex::new(node);
+    //       let c_walker = self.graph.children(index);
+    //       c_walker.iter(&self.graph) as Iter<PyObject>
+    //   }
+    //   pub fn predecessors(&self, node: usize) -> Iter<PyObject> {
+    //       let index = NodeIndex::new(node);
+    //       let p_walker = self.graph.parents(index);
+    //       p_walker.iter(&self.graph) as Iter<PyObject>
+    //
+    //   }
+    //   pub fn get_edge_data(&self) -> PyResult<()> {
+    //
+    //   }
+    pub fn remove_node(&mut self, node: usize) -> PyResult<()> {
+        let index = NodeIndex::new(node);
+        self.graph.remove_node(index);
 
-       Ok(())
-   }
-   pub fn add_edge(&mut self, parent: usize, child: usize) -> PyResult<()>{
-       let p_index = NodeIndex::new(parent);
-       let c_index = NodeIndex::new(child);
-       match self.graph.update_edge(p_index, c_index, EdgeWeight) {
-          Err(_err) => Err(DAGWouldCycle::py_err("Adding an edge would cycle")),
-          Ok(_result) => Ok(())
-       }
-   }
-   pub fn add_node(&mut self, obj: PyObject) -> usize{
-      let index = self.graph.add_node(obj);
-      index.index()
-   }
-   pub fn add_child(&mut self, parent: usize, obj: PyObject) -> usize{
-       let index = NodeIndex::new(parent);
-       let (_, index) = self.graph.add_child(index, EdgeWeight, obj);
-       index.index()
-   }
-   pub fn add_parent(&mut self, child: usize, obj: PyObject) -> usize{
-       let index = NodeIndex::new(child);
-       let (_, index) = self.graph.add_parent(index, EdgeWeight, obj);
-       index.index()
-   }
-//   pub fn add_nodes_from(&self) -> PyResult<()> {
-//
-//   }
-//   pub fn add_edges_from(&self) -> PyResult<()> {
-//
-//   }
-//   pub fn number_of_edges(&self) -> PyResult<()> {
-//
-//   }
-//   pub fn in_degree(&self) -> PyResult<()> {
-//
-//   }
+        Ok(())
+    }
+    pub fn add_edge(&mut self, parent: usize, child: usize) -> PyResult<()> {
+        let p_index = NodeIndex::new(parent);
+        let c_index = NodeIndex::new(child);
+        match self.graph.update_edge(p_index, c_index, EdgeWeight) {
+            Err(_err) => Err(DAGWouldCycle::py_err("Adding an edge would cycle")),
+            Ok(_result) => Ok(()),
+        }
+    }
+    pub fn add_node(&mut self, obj: PyObject) -> usize {
+        let index = self.graph.add_node(obj);
+        index.index()
+    }
+    pub fn add_child(&mut self, parent: usize, obj: PyObject) -> usize {
+        let index = NodeIndex::new(parent);
+        let (_, index) = self.graph.add_child(index, EdgeWeight, obj);
+        index.index()
+    }
+    pub fn add_parent(&mut self, child: usize, obj: PyObject) -> usize {
+        let index = NodeIndex::new(child);
+        let (_, index) = self.graph.add_parent(index, EdgeWeight, obj);
+        index.index()
+    }
+    //   pub fn add_nodes_from(&self) -> PyResult<()> {
+    //
+    //   }
+    //   pub fn add_edges_from(&self) -> PyResult<()> {
+    //
+    //   }
+    //   pub fn number_of_edges(&self) -> PyResult<()> {
+    //
+    //   }
+    //   pub fn in_degree(&self) -> PyResult<()> {
+    //
+    //   }
 }
 
 // Not finished yet, always returns 0 now
@@ -115,7 +116,6 @@ fn dag_longest_path_length(graph: &PyDAG) -> u64 {
         let parents = dag.parents(node).iter(&dag);
         let mut length: usize;
         for p_node in parents {
-
             println!("{}", p_node.1.index())
         }
     }
@@ -142,9 +142,9 @@ fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
-//   m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
+    //   m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
-//    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
+    //    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_class::<PyDAG>()?;
     Ok(())
 }
