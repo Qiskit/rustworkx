@@ -1,0 +1,24 @@
+notifications:
+    email: false
+
+cache: pip
+
+before_install:
+    - source tools/install_rust.sh
+    - pip install -U pip virtualenv
+install:
+    - virtualenv test-venv
+    - test-venv/bin/pip install -U .
+script:
+    - cd tests && ../test-venv/bin/python -m unittest discover .
+
+jobs:
+  include:
+    - name: Python 3.5 Tests Linux
+      python: 3.5
+    - name: Python 3.6 Tests Linux
+      python: 3.6
+    - name: Python 3.7 Tests Linux
+      dist: xenial
+      python: 3.7
+      sudo: true
