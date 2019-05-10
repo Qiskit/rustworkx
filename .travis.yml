@@ -25,3 +25,4 @@ jobs:
       dist: xenial
       python: 3.7
       sudo: true
+language: python
