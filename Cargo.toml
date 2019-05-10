@@ -1,0 +1,17 @@
+[package]
+name = "retworkx"
+version = "0.1.0"
+authors = ["Matthew Treinish <mtreinish@kortar.org>"]
+license = "Apache-2.0"
+
+[lib]
+name = "retworkx"
+crate-type = ["cdylib"]
+
+[dependencies]
+petgraph = "0.4"
+daggy = "*"
+
+[dependencies.pyo3]
+version = "0.7.0-alpha.1"
+features = ["extension-module"]
