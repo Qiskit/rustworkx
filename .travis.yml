@@ -4,7 +4,8 @@ notifications:
 cache: pip
 
 before_install:
-    - source tools/install_rust.sh
+    - sh tools/install_rust.sh
+    - export PATH=~/.cargo/bin:$PATH
     - pip install -U pip virtualenv
 install:
     - virtualenv test-venv
