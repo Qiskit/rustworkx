@@ -191,7 +191,7 @@ fn dag_longest_path_length(graph: &PyDAG) -> usize {
             us.push((length, u));
         }
         let maxu: (usize, usize);
-        if us.len() > 0 {
+        if !us.is_empty() {
             maxu = *us.iter().max_by_key(|x| x.0).unwrap();
         } else {
             maxu = (0, node.index());
@@ -203,7 +203,7 @@ fn dag_longest_path_length(graph: &PyDAG) -> usize {
     let first_v = *first.1;
     let mut v = first_v.0;
     let mut path: Vec<usize> = Vec::new();
-    while !u.is_some() || u.unwrap() != v {
+    while u.is_none() || u.unwrap() != v {
         path.push(v);
         u = Some(v);
         v = dist[&v].1;
