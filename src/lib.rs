@@ -185,9 +185,12 @@ impl PyDAG {
     //   pub fn number_of_edges(&self) -> PyResult<()> {
     //
     //   }
-    //   pub fn in_degree(&self) -> PyResult<()> {
-    //
-    //   }
+    pub fn in_degree(&self, node: usize) -> usize {
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Incoming;
+        let neighbors = self.graph.neighbors_directed(index, dir);
+        neighbors.count()
+    }
 }
 
 fn pairwise<'a, I>(

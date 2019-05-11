@@ -33,3 +33,17 @@ class TestAdj(unittest.TestCase):
         self.assertEqual({node_b: {'a': 1}, node_c: {'a': 2}}, res)
         res = dag.adj_direction(node_a, True)
         self.assertEqual({}, res)
+
+    def test_in_direction(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        for i in range(5):
+            dag.add_parent(node_a, i, None)
+        self.assertEqual(5, dag.in_degree(node_a))
+
+    def test_in_direction_none(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        for i in range(5):
+            dag.add_child(node_a, i, None)
+        self.assertEqual(0, dag.in_degree(node_a))
