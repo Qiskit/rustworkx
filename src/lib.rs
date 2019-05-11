@@ -71,15 +71,34 @@ impl PyDAG {
         }
         Ok(PyList::new(py, predec).into())
     }
-    //   pub fn get_edge_data(&self) -> PyResult<()> {
-    //
-    //   }
+
+    pub fn get_edge_data(
+        &self,
+        node_a: usize,
+        node_b: usize,
+    ) -> PyResult<(&PyObject)> {
+        let index_a = NodeIndex::new(node_a);
+        let index_b = NodeIndex::new(node_b);
+        let edge_index = match self.graph.find_edge(index_a, index_b) {
+            Some(edge_index) => edge_index,
+            None => {
+                return Err(NoEdgeBetweenNodes::py_err(
+                    "No edge found between nodes",
+                ))
+            }
+        };
+
+        let data = self.graph.edge_weight(edge_index).unwrap();
+        Ok(data)
+    }
+
     pub fn remove_node(&mut self, node: usize) -> PyResult<()> {
         let index = NodeIndex::new(node);
         self.graph.remove_node(index);
 
         Ok(())
     }
+
     pub fn add_edge(
         &mut self,
         parent: usize,
@@ -109,6 +128,7 @@ impl PyDAG {
         let (_, index) = self.graph.add_child(index, edge, obj);
         index.index()
     }
+
     pub fn add_parent(
         &mut self,
         child: usize,
@@ -119,6 +139,7 @@ impl PyDAG {
         let (_, index) = self.graph.add_parent(index, edge, obj);
         index.index()
     }
+
     pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.neighbors(index);
@@ -253,7 +274,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 }
 
 create_exception!(retworkx, DAGWouldCycle, Exception);
-create_exception!(retworkx, DAGIsCycle, Exception);
+create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
 
 #[cfg(test)]
 mod tests {
