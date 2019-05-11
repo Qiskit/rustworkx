@@ -1,8 +1,15 @@
 [package]
 name = "retworkx"
+description = "A python graph library implemented in Rust"
 version = "0.0.1"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 license = "Apache-2.0"
+readme = "README.rst"
+repository = "https://github.com/mtreinish/retworkx"
+keywords = ["python", "graph"]
+
+[badges]
+travis-ci = {repository = "mtreinish/retworkx"}
 
 [lib]
 name = "retworkx"
