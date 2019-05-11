@@ -17,7 +17,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 petgraph = "0.4"
-daggy = "*"
+daggy = "0.6"
 
 [dependencies.pyo3]
 version = "0.7.0-alpha.1"
