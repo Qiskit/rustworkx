@@ -23,18 +23,19 @@ use pyo3::exceptions::Exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
+use pyo3::types::PyDict;
 
 use daggy::Dag;
 use daggy::NodeIndex;
 use daggy::Walker;
 use petgraph::algo;
+use petgraph::visit::IntoNeighbors;
+use petgraph::visit::IntoNeighborsDirected;
 //use petgraph::visit::WalkerIter;
-
-struct EdgeWeight;
 
 #[pyclass]
 pub struct PyDAG {
-    graph: Dag<PyObject, EdgeWeight>,
+    graph: Dag<PyObject, PyObject>,
 }
 
 #[pymethods]
@@ -42,7 +43,7 @@ impl PyDAG {
     #[new]
     fn new(obj: &PyRawObject) {
         obj.init(PyDAG {
-            graph: Dag::<PyObject, EdgeWeight>::new(),
+            graph: Dag::<PyObject, PyObject>::new(),
         });
     }
     //   pub fn edges(&self) -> PyResult<()> {
@@ -71,10 +72,11 @@ impl PyDAG {
 
         Ok(())
     }
-    pub fn add_edge(&mut self, parent: usize, child: usize) -> PyResult<()> {
+    pub fn add_edge(&mut self, parent: usize, child: usize,
+                    edge: PyObject) -> PyResult<()> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
-        match self.graph.update_edge(p_index, c_index, EdgeWeight) {
+        match self.graph.update_edge(p_index, c_index, edge) {
             Err(_err) => Err(DAGWouldCycle::py_err("Adding an edge would cycle")),
             Ok(_result) => Ok(()),
         }
@@ -83,15 +85,49 @@ impl PyDAG {
         let index = self.graph.add_node(obj);
         index.index()
     }
-    pub fn add_child(&mut self, parent: usize, obj: PyObject) -> usize {
+    pub fn add_child(&mut self, parent: usize, obj: PyObject,
+                     edge: PyObject) -> usize {
         let index = NodeIndex::new(parent);
-        let (_, index) = self.graph.add_child(index, EdgeWeight, obj);
+        let (_, index) = self.graph.add_child(index, edge, obj);
         index.index()
     }
-    pub fn add_parent(&mut self, child: usize, obj: PyObject) -> usize {
+    pub fn add_parent(&mut self, child: usize, obj: PyObject,
+                      edge: PyObject) -> usize {
         let index = NodeIndex::new(child);
-        let (_, index) = self.graph.add_parent(index, EdgeWeight, obj);
+        let (_, index) = self.graph.add_parent(index, edge, obj);
         index.index()
+    }
+    pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
+        let index = NodeIndex::new(node);
+        let neighbors = self.graph.neighbors(index);
+        let out_dict = PyDict::new(py);
+        let graph = self.graph.graph();
+        for neighbor in neighbors {
+            let edge = graph.find_edge(index, neighbor);
+            let edge_w = graph.edge_weight(edge.unwrap());
+            out_dict.set_item(neighbor.index(), edge_w)?;
+        }
+        Ok(out_dict.into())
+    }
+
+    pub fn adj_direction(&mut self, py: Python, node: usize,
+                         direction: bool) -> PyResult<PyObject> {
+        let index = NodeIndex::new(node);
+        let dir;
+        if direction {
+            dir = petgraph::Direction::Incoming;
+        } else {
+            dir = petgraph::Direction::Outgoing;
+        }
+        let graph = self.graph.graph();
+        let neighbors = self.graph.neighbors_directed(index, dir);
+        let out_dict = PyDict::new(py);
+        for neighbor in neighbors {
+            let edge = graph.find_edge(index, neighbor);
+            let edge_w = graph.edge_weight(edge.unwrap());
+            out_dict.set_item(neighbor.index(), edge_w)?;
+        }
+        Ok(out_dict.into())
     }
     //   pub fn add_nodes_from(&self) -> PyResult<()> {
     //
