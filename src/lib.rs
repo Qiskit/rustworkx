@@ -21,7 +21,7 @@ use std::iter;
 use pyo3::create_exception;
 use pyo3::exceptions::Exception;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
@@ -52,17 +52,25 @@ impl PyDAG {
     //   pub fn nodes(&self) -> PyResult<()> {
     //
     //   }
-    //   pub fn successors(&self, node: usize) -> Iter<PyObject> {
-    //       let index = NodeIndex::new(node);
-    //       let c_walker = self.graph.children(index);
-    //       c_walker.iter(&self.graph) as Iter<PyObject>
-    //   }
-    //   pub fn predecessors(&self, node: usize) -> Iter<PyObject> {
-    //       let index = NodeIndex::new(node);
-    //       let p_walker = self.graph.parents(index);
-    //       p_walker.iter(&self.graph) as Iter<PyObject>
-    //
-    //   }
+    pub fn successors(&self, py: Python, node: usize) -> PyResult<PyObject> {
+        let index = NodeIndex::new(node);
+        let c_walker = self.graph.children(index);
+        let mut succesors: Vec<&PyObject> = Vec::new();
+        for succ in c_walker.iter(&self.graph) {
+            succesors.push(self.graph.node_weight(succ.1).unwrap());
+        }
+        Ok(PyList::new(py, succesors).into())
+    }
+
+    pub fn predecessors(&self, py: Python, node: usize) -> PyResult<PyObject> {
+        let index = NodeIndex::new(node);
+        let p_walker = self.graph.parents(index);
+        let mut predec: Vec<&PyObject> = Vec::new();
+        for pred in p_walker.iter(&self.graph) {
+            predec.push(self.graph.node_weight(pred.1).unwrap());
+        }
+        Ok(PyList::new(py, predec).into())
+    }
     //   pub fn get_edge_data(&self) -> PyResult<()> {
     //
     //   }
