@@ -215,11 +215,12 @@ fn dag_longest_path_length(graph: &PyDAG) -> usize {
     }
     path_length
 }
-//
-//#[pyfunction]
-//fn number_weakly_connected_components(graph: PyDAG) -> u64 {
-//
-//}
+
+#[pyfunction]
+fn number_weakly_connected_components(graph: &PyDAG) -> usize {
+    let dag = graph.graph.graph();
+    algo::connected_components(dag)
+}
 
 #[pyfunction]
 fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
@@ -236,7 +237,7 @@ fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
-    //   m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
     //    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_class::<PyDAG>()?;
