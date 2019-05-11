@@ -4,7 +4,9 @@ from setuptools_rust import Binding, RustExtension
 setup(
     name="retworkx",
     version="0.0.1",
-    description="A python graph library implemented in Rust"
+    description="A python graph library implemented in Rust",
+    author = "Matthew Treinish",
+    author_email = "mtreinish@kortar.org",
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha",
@@ -17,13 +19,14 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
     ],
-    url=https://github.com/mtreinish/retworkx,
+    url="https://github.com/mtreinish/retworkx",
     project_urls={
         "Bug Tracker": "https://github.com/mtreinish/retworkx/issues",
         "Source Code": "https://github.com/mtreinish/retworkx",
     },
     rust_extensions=[RustExtension("retworkx.retworkx", "Cargo.toml",
                                    binding=Binding.PyO3)],
+    include_package_data=True,
     packages=["retworkx"],
     zip_safe=False,
     python_requires=">=3.5",

@@ -3,3 +3,5 @@
 Cargo.lock
 __pycache__
 *.pyc
+dist/
+*egg*
