@@ -17,28 +17,13 @@ import retworkx
 
 class TestEdges(unittest.TestCase):
 
-    def test_get_edge_data(self):
+    def test_nodes(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
         node_b = dag.add_child(node_a, 'b', "Edgy")
-        res = dag.get_edge_data(node_a, node_b)
-        self.assertEqual("Edgy", res)
+        res = dag.nodes()
+        self.assertEqual(['a', 'b'], res)
 
-    def test_no_edge(self):
+    def test_no_nodes(self):
         dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
-        node_b = dag.add_node('b')
-        self.assertRaises(Exception, dag.get_edge_data,
-                          node_a, node_b)
-
-    def test_edges(self):
-        dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', "Edgy")
-        dag.add_child(node_b, 'c', "Super edgy")
-        self.assertEqual(["Edgy", "Super edgy"], dag.edges())
-
-    def test_edges_empty(self):
-        dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
-        self.assertEqual([], dag.edges())
+        self.assertEqual([], dag.nodes())

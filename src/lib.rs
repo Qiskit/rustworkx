@@ -46,12 +46,25 @@ impl PyDAG {
             graph: Dag::<PyObject, PyObject>::new(),
         });
     }
-    //   pub fn edges(&self) -> PyResult<()> {
-    //
-    //   }
-    //   pub fn nodes(&self) -> PyResult<()> {
-    //
-    //   }
+
+    pub fn edges(&self, py: Python) -> PyObject {
+        let raw_edges = self.graph.raw_edges();
+        let mut out: Vec<&PyObject> = Vec::new();
+        for edge in raw_edges {
+            out.push(&edge.weight);
+        }
+        PyList::new(py, out).into()
+    }
+
+    pub fn nodes(&self, py: Python) -> PyObject {
+        let raw_nodes = self.graph.raw_nodes();
+        let mut out: Vec<&PyObject> = Vec::new();
+        for node in raw_nodes {
+            out.push(&node.weight);
+        }
+        PyList::new(py, out).into()
+    }
+
     pub fn successors(&self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let c_walker = self.graph.children(index);
