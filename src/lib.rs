@@ -21,9 +21,9 @@ use std::iter;
 use pyo3::create_exception;
 use pyo3::exceptions::Exception;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
-use pyo3::types::PyDict;
 
 use daggy::Dag;
 use daggy::NodeIndex;
@@ -72,12 +72,18 @@ impl PyDAG {
 
         Ok(())
     }
-    pub fn add_edge(&mut self, parent: usize, child: usize,
-                    edge: PyObject) -> PyResult<()> {
+    pub fn add_edge(
+        &mut self,
+        parent: usize,
+        child: usize,
+        edge: PyObject,
+    ) -> PyResult<()> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
         match self.graph.update_edge(p_index, c_index, edge) {
-            Err(_err) => Err(DAGWouldCycle::py_err("Adding an edge would cycle")),
+            Err(_err) => {
+                Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
+            }
             Ok(_result) => Ok(()),
         }
     }
@@ -85,14 +91,22 @@ impl PyDAG {
         let index = self.graph.add_node(obj);
         index.index()
     }
-    pub fn add_child(&mut self, parent: usize, obj: PyObject,
-                     edge: PyObject) -> usize {
+    pub fn add_child(
+        &mut self,
+        parent: usize,
+        obj: PyObject,
+        edge: PyObject,
+    ) -> usize {
         let index = NodeIndex::new(parent);
         let (_, index) = self.graph.add_child(index, edge, obj);
         index.index()
     }
-    pub fn add_parent(&mut self, child: usize, obj: PyObject,
-                      edge: PyObject) -> usize {
+    pub fn add_parent(
+        &mut self,
+        child: usize,
+        obj: PyObject,
+        edge: PyObject,
+    ) -> usize {
         let index = NodeIndex::new(child);
         let (_, index) = self.graph.add_parent(index, edge, obj);
         index.index()
@@ -110,8 +124,12 @@ impl PyDAG {
         Ok(out_dict.into())
     }
 
-    pub fn adj_direction(&mut self, py: Python, node: usize,
-                         direction: bool) -> PyResult<PyObject> {
+    pub fn adj_direction(
+        &mut self,
+        py: Python,
+        node: usize,
+        direction: bool,
+    ) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let dir;
         if direction {
@@ -143,7 +161,9 @@ impl PyDAG {
     //   }
 }
 
-fn pairwise<'a, I>(xs: I) -> Box<Iterator<Item = (Option<I::Item>, I::Item)> + 'a>
+fn pairwise<'a, I>(
+    xs: I,
+) -> Box<Iterator<Item = (Option<I::Item>, I::Item)> + 'a>
 where
     I: 'a + IntoIterator + Clone,
 {
