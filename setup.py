@@ -3,7 +3,7 @@ from setuptools_rust import Binding, RustExtension
 
 setup(
     name="retworkx",
-    version="0.0.1",
+    version="0.0.2",
     description="A python graph library implemented in Rust",
     author = "Matthew Treinish",
     author_email = "mtreinish@kortar.org",
