@@ -40,7 +40,7 @@ jobs:
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
 #      if: tag IS present
       script:
-        - sudo pip install cibuildwheel==0.10.2
+        - sudo pip install cibuildwheel==0.10.2 twine
         - cibuildwheel --output-dir wheelhouse
 #        - twine upload wheelhouse/*
     - os: osx
@@ -57,7 +57,7 @@ jobs:
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       script:
-        - sudo pip2 install cibuildwheel==0.10.2
+        - sudo pip2 install cibuildwheel==0.10.2 twine
         - cibuildwheel --output-dir wheelhouse
 #        - twine upload wheelhouse/*
 
