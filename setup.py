@@ -1,10 +1,16 @@
 from setuptools import setup
 from setuptools_rust import Binding, RustExtension
 
+
+def readme():
+    with open('README.rst') as f:
+        return f.read()
+
 setup(
     name="retworkx",
-    version="0.0.2",
+    version="0.0.3",
     description="A python graph library implemented in Rust",
+    long_description=readme(),
     author = "Matthew Treinish",
     author_email = "mtreinish@kortar.org",
     classifiers=[
@@ -23,6 +29,7 @@ setup(
     project_urls={
         "Bug Tracker": "https://github.com/mtreinish/retworkx/issues",
         "Source Code": "https://github.com/mtreinish/retworkx",
+        "Documentation": "https://retworkx.readthedocs.io",
     },
     rust_extensions=[RustExtension("retworkx.retworkx", "Cargo.toml",
                                    binding=Binding.PyO3)],
