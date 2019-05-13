@@ -38,14 +38,14 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-#      if: tag IS present
+      if: tag IS present
       script:
         - sudo pip install cibuildwheel==0.10.2 twine
         - cibuildwheel --output-dir wheelhouse
-#        - twine upload wheelhouse/*
+        - twine upload wheelhouse/*
     - os: osx
       language: generic
-#      if: tag IS present
+      if: tag IS present
       before_install:
           - echo ""
       install:
@@ -59,6 +59,6 @@ jobs:
       script:
         - sudo pip2 install cibuildwheel==0.10.2 twine
         - cibuildwheel --output-dir wheelhouse
-#        - twine upload wheelhouse/*
+        - twine upload wheelhouse/*
 
 language: python
