@@ -1,6 +1,9 @@
 retworkx
 ========
 
+* You can see the full rendered docs at: https://retworkx.readthedocs.io/en/latest/index.html
+
+
 retworkx is a rust graph library interface to python3. For right now it's scope
 is as an experiment in being a potential replacement for `qiskit-terra`_'s
 networkx usage (hence the name). The scope might grow or change over time, but
