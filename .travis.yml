@@ -35,7 +35,7 @@ jobs:
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-*"
-        - CIBW_ENVIRONMENT="PATH=$PATH:$HOME/.cargo/bin"
+        - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
 #      if: tag IS present
@@ -53,7 +53,7 @@ jobs:
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-*"
-        - CIBW_ENVIRONMENT="PATH=$PATH:$HOME/.cargo/bin"
+        - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest {project}/tests"
       script:
