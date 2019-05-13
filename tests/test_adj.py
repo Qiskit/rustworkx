@@ -34,6 +34,11 @@ class TestAdj(unittest.TestCase):
         res = dag.adj_direction(node_a, True)
         self.assertEqual({}, res)
 
+    def test_no_neighbor(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        self.assertEqual({}, dag.adj(node_a))
+
     def test_in_direction(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
