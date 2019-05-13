@@ -55,7 +55,7 @@ jobs:
         - CIBW_SKIP="cp27-* cp34-*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
-        - CIBW_TEST_COMMAND="python -m unittest {project}/tests"
+        - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       script:
         - sudo pip2 install cibuildwheel==0.10.2
         - cibuildwheel --output-dir wheelhouse
