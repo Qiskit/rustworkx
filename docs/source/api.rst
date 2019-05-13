@@ -184,3 +184,11 @@ retworkx API
     :returns is_isomorphic: True if the 2 PyDAGs are structurally isomorphic
         False if they are not.
     :rtype: bool
+
+.. py:function:: topological_sort(graph):
+    Return the topological sort of node indexes from the provided graph
+
+    :param PyDAG first: The DAG to get the topological sort on
+
+    :returns nodes: A list of node indexes topologically sorted.
+    :rtype: list

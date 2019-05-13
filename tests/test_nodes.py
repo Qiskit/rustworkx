@@ -27,3 +27,16 @@ class TestEdges(unittest.TestCase):
     def test_no_nodes(self):
         dag = retworkx.PyDAG()
         self.assertEqual([], dag.nodes())
+
+    def test_topo_sort_empty(self):
+        dag = retworkx.PyDAG()
+        self.assertEqual([], retworkx.topological_sort(dag))
+
+    def test_topo_sort(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        for i in range(5):
+            dag.add_child(node_a, i, None)
+        dag.add_parent(3, 'A parent', None)
+        res = retworkx.topological_sort(dag)
+        self.assertEqual([6, 0, 5, 4, 3, 2, 1], res)

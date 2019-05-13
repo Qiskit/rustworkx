@@ -272,6 +272,19 @@ fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
     algo::is_isomorphic(first.graph.graph(), second.graph.graph())
 }
 
+#[pyfunction]
+fn topological_sort(py: Python, graph: &PyDAG) -> PyObject {
+    let nodes = match algo::toposort(graph.graph.graph(), None) {
+        Ok(nodes) => nodes,
+        Err(_err) => panic!("DAG has a cycle, something is really wrong"),
+    };
+    let mut out: Vec<usize> = Vec::new();
+    for node in nodes {
+        out.push(node.index());
+    }
+    PyList::new(py, out).into()
+}
+
 //#[pyfunction]
 //fn lexicographical_topological_sort(graph: PyDAG,
 //                                    key: &PyObject) {
@@ -284,6 +297,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     //    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_class::<PyDAG>()?;
     Ok(())
