@@ -25,4 +25,40 @@ jobs:
       dist: xenial
       python: 3.7
       sudo: true
+    - sudo: required
+      services:
+        - docker
+      before_install:
+          - echo ""
+      install:
+          - echo ""
+      env:
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
+        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
+        - TWINE_USERNAME=retworkx-ci
+        - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
+      if: tag IS present
+      script:
+        - sudo pip install cibuildwheel==0.10.2 twine
+        - cibuildwheel --output-dir wheelhouse
+        - twine upload wheelhouse/*
+    - os: osx
+      language: generic
+      if: tag IS present
+      before_install:
+          - echo ""
+      install:
+          - echo ""
+      env:
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
+        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
+        - TWINE_USERNAME=retworkx-ci
+        - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
+      script:
+        - sudo pip2 install cibuildwheel==0.10.2 twine
+        - cibuildwheel --output-dir wheelhouse
+        - twine upload wheelhouse/*
+
 language: python
