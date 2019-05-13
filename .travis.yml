@@ -28,6 +28,10 @@ jobs:
     - sudo: required
       services:
         - docker
+      before_install:
+          - echo ""
+      install:
+          - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-*"
@@ -41,6 +45,10 @@ jobs:
     - os: osx
       language: generic
 #      if: tag IS present
+      before_install:
+          - echo ""
+      install:
+          - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-*"
