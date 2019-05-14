@@ -2,17 +2,14 @@ environment:
     matrix:
         - PYTHON: C:\Python35
           TAG_SCENARIO: false
-          PATH: "%PATH%:%USERPROFILE%\.cargo\bin"
         - PYTHON: C:\Python36
           TAG_SCENARIO: false
-          PATH: "%PATH%:%USERPROFILE%\.cargo\bin"
         - PYTHON: C:\Python37
           TAG_SCENARIO: false
-          PATH: "%PATH%:%USERPROFILE%\.cargo\bin"
         - WHEEL: 1
           PYTHON: C:\Python35
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust && tools/install_rust.sh
-          CIBW_ENVIRONMENT: PATH="%PATH%:%USERPROFILE%\.cargo\bin"
+          CIBW_ENVIRONMENT: PATH=%PATH%;%USERPROFILE%\.cargo\bin
           CIBW_SKIP: cp27-* cp34-*
           TWINE_USERNAME: retworkx-ci
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -61,5 +58,7 @@ install:
     - venv\Scripts\activate.bat
     - pip.exe install -U setuptools-rust
     - sh tools/install_rust.sh
+    - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+
 test_script:
     - cd tests && ../test-venv/bin/python -m unittest discover .
