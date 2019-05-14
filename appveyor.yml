@@ -1,4 +1,3 @@
-image: Visual Studio 2017
 environment:
     global:
         RUST_BACKTRACE: 1
@@ -13,7 +12,7 @@ environment:
         - WHEEL: 1
           PYTHON: C:\Python35-x64
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust && tools/install_rust.sh
-          CIBW_ENVIRONMENT: PATH=$PATH:$USERPROFILE\.cargo\bin
+#          CIBW_ENVIRONMENT: PATH=$PATH:$USERPROFILE\.cargo\bin
           CIBW_SKIP: cp27-* cp34-*
           TWINE_USERNAME: retworkx-ci
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -58,13 +57,16 @@ install:
         https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
         Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
           throw "There are newer queued builds for this pull request, failing early." }
+    - python -V
     - ps: .\tools\setup.ps1
     - call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" amd64
-    - "%PYTHON%\\python.exe -m venv venv"
-    - venv\Scripts\activate.bat
+    - rustc -V
+    - cargo -V
+#    - "%PYTHON%\\python.exe -m venv venv"
+#    - venv\Scripts\activate.bat
     - pip.exe install -U setuptools-rust
 #    - sh tools/install_rust.sh
-    - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+#    - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
 test_script:
     - pip.exe install .
     - cd tests && python -m unittest discover .
