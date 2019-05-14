@@ -153,6 +153,23 @@ retworkx API
         :returns degree: The inbound degree for the specified node
         :rtype: int
 
+    .. py:method:: remove_edge(self, parent, child):
+        Remove an edge between 2 nodes.
+
+        Note if there are multiple edges between the specified nodes only one
+        will be removed.
+
+        :param int parent: The index for the parent node.
+        :param int child: The index of the child node.
+
+        :raises NoEdgeBetweenNodes: If there are no edges between the nodes
+            specified
+
+    .. py:method:: remove_edge_from_index(self, edge):
+        Remove an edge identified by the provided index
+
+        :param int edge: The index of the edge to remove
+
 .. _daggy: https://github.com/mitchmindtree/daggy
 .. _petgraph: https://github.com/bluss/petgraph
 

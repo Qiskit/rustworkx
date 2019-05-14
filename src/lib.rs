@@ -26,6 +26,7 @@ use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
 use daggy::Dag;
+use daggy::EdgeIndex;
 use daggy::NodeIndex;
 use daggy::Walker;
 use petgraph::algo;
@@ -127,6 +128,28 @@ impl PyDAG {
             Ok(_result) => Ok(()),
         }
     }
+
+    pub fn remove_edge(&mut self, parent: usize, child: usize) -> PyResult<()> {
+        let p_index = NodeIndex::new(parent);
+        let c_index = NodeIndex::new(child);
+        let edge_index = match self.graph.find_edge(p_index, c_index) {
+            Some(edge_index) => edge_index,
+            None => {
+                return Err(NoEdgeBetweenNodes::py_err(
+                    "No edge found between nodes",
+                ))
+            }
+        };
+        self.graph.remove_edge(edge_index);
+        Ok(())
+    }
+
+    pub fn remove_edge_from_index(&mut self, edge: usize) -> PyResult<()> {
+        let edge_index = EdgeIndex::new(edge);
+        self.graph.remove_edge(edge_index);
+        Ok(())
+    }
+
     pub fn add_node(&mut self, obj: PyObject) -> usize {
         let index = self.graph.add_node(obj);
         index.index()

@@ -49,3 +49,38 @@ class TestEdges(unittest.TestCase):
         node_b = dag.add_child(node_a, 'a', 'a')
         dag.add_edge(node_a, node_b, 'b')
         self.assertEqual(['a', 'b'], dag.edges())
+
+    def test_remove_no_edge(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_node('b')
+        self.assertRaises(Exception, dag.remove_edge,
+                          node_a, node_b)
+
+    def test_remove_edge_single(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', 'edgy')
+        dag.remove_edge(node_a, node_b)
+        self.assertEqual([], dag.edges())
+
+    def test_remove_multiple(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', 'edgy')
+        dag.add_edge(node_a, node_b, 'super_edgy')
+        dag.remove_edge_from_index(0)
+        self.assertEqual(['super_edgy'], dag.edges())
+
+    def test_remove_edge_from_index(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', 'edgy')
+        dag.remove_edge_from_index(0)
+        self.assertEqual([], dag.edges())
+
+    def test_remove_edge_no_edge(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        dag.remove_edge_from_index(0)
+        self.assertEqual([], dag.edges())
