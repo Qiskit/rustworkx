@@ -42,3 +42,10 @@ class TestEdges(unittest.TestCase):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
         self.assertEqual([], dag.edges())
+
+    def test_add_duplicates(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'a', 'a')
+        dag.add_edge(node_a, node_b, 'b')
+        self.assertEqual(['a', 'b'], dag.edges())

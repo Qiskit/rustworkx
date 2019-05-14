@@ -71,7 +71,8 @@ retworkx API
         Add an edge between 2 nodes.
 
         Use add_child() or add_parent() to create a node with an edge at the
-        same time as an edge for better performance.
+        same time as an edge for better performance. Using this method will
+        enable adding duplicate edges between nodes.
 
         :param int parent: Index of the parent node
         :param int child: Index of the child node

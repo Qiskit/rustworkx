@@ -120,7 +120,7 @@ impl PyDAG {
     ) -> PyResult<()> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
-        match self.graph.update_edge(p_index, c_index, edge) {
+        match self.graph.add_edge(p_index, c_index, edge) {
             Err(_err) => {
                 Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
             }
