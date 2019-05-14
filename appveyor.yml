@@ -61,4 +61,4 @@ install:
     - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
 
 test_script:
-    - cd tests && ../test-venv/bin/python -m unittest discover .
+    - cd tests && python -m unittest discover .
