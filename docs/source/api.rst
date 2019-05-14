@@ -118,30 +118,31 @@ retworkx API
     .. py:method:: adj(self, node):
         Get the index and data for the neighbors of a node.
 
-        This will return a dictionary of node indexes that contains the data
-        objects for the nodes which have an edge (inbound or outbound) with
-        the specified node.
+        This will return a dictionary where the keys are the node indexes of
+        the adjacent nodes (inbound or outbound) and the value is the edge data
+        objects between that adjacent node and the provided node.
 
         :param int node: The index of the node to get the neighbors
 
         :returns neighbors: A dictionary where the keys are node indexes and
-            the value is the node data object for all nodes that share an
+            the value is the edge data object for all nodes that share an
             edge with the specified node.
         :rtype: dict
 
     .. py:method:: adj_direction(self, node, direction):
         Get the index and data for either the parent or children of a node.
 
-        This will return a dictionary of node indexes that contains the data
-        objects for the nodes which have an edge (inbound or outbound as
-        specified) with the specified node.
+        This will return a dictionary where the keys are the node indexes of
+        the adjacent nodes (inbound or outbound as specified) and the value
+        is the edge data objects for the edges between that adjacent node
+        and the provided node.
 
         :param int node: The index of the node to get the neighbors
         :param bool direction: The direction to use for finding nodes,
             True means inbound edges and False means outbound edges.
 
         :returns neighbors: A dictionary where the keys are node indexes and
-            the value is the node data object for all nodes that share an
+            the value is the edge data object for all nodes that share an
             edge with the specified node.
         :rtype: dict
 
