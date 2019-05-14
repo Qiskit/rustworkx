@@ -59,6 +59,6 @@ install:
     - pip.exe install -U setuptools-rust
     - sh tools/install_rust.sh
     - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-
+    - pip.exe install .
 test_script:
     - cd tests && python -m unittest discover .
