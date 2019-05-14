@@ -1,5 +1,3 @@
-version: 1.0.{build}
-
 environment:
     matrix:
         - PYTHON: C:\Python35
