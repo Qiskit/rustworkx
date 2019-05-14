@@ -2,6 +2,7 @@ image: Visual Studio 2017
 environment:
     global:
         RUST_BACKTRACE: 1
+        TARGET: x86_64-pc-windows-msvc
     matrix:
         - PYTHON: C:\Python35-x64
           TAG_SCENARIO: false
