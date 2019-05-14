@@ -2,17 +2,21 @@ environment:
     matrix:
         - PYTHON: C:\Python35
           TAG_SCENARIO: false
+          PATH: %PATH%:%USERPROFILE%\.cargo\bin
         - PYTHON: C:\Python36
           TAG_SCENARIO: false
+          PATH: %PATH%:%USERPROFILE%\.cargo\bin
         - PYTHON: C:\Python37
           TAG_SCENARIO: false
+          PATH: %PATH%:%USERPROFILE%\.cargo\bin
         - WHEEL: 1
           PYTHON: C:\Python35
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust && tools/install_rust.sh
+          CIBW_ENVIRONMENT: PATH="%PATH%:%USERPROFILE%\.cargo\bin"
           CIBW_SKIP: cp27-* cp34-*
           TWINE_USERNAME: retworkx-ci
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
-          TAG_SCENARIO: true
+          TAG_SCENARIO: false
 for:
 -
   # non-tagged scenario
@@ -39,7 +43,7 @@ build_script:
   - if defined WHEEL (pip install cibuildwheel==0.10.1)
   - if defined WHEEL (pip install -U twine)
   - if defined WHEEL (cibuildwheel --output-dir wheelhouse)
-  - if defined WHEEL (twine upload wheelhouse\*)  
+#  - if defined WHEEL (twine upload wheelhouse\*)
 artifacts:
   - path: "wheelhouse\\*.whl"
     name: Wheels
@@ -57,6 +61,5 @@ install:
     - venv\Scripts\activate.bat
     - pip.exe install -U setuptools-rust
     - sh tools/install_rust.sh
-    - export PATH=~/.cargo/bin:$PATH
 test_script:
     - cd tests && ../test-venv/bin/python -m unittest discover .
