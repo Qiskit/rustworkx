@@ -9,7 +9,7 @@ environment:
         - WHEEL: 1
           PYTHON: C:\Python35
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust && tools/install_rust.sh
-          CIBW_ENVIRONMENT: PATH=%PATH%;%USERPROFILE%\.cargo\bin
+          CIBW_ENVIRONMENT: PATH=$PATH:$USERPROFILE\.cargo\bin
           CIBW_SKIP: cp27-* cp34-*
           TWINE_USERNAME: retworkx-ci
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
