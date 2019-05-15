@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name="retworkx",
-    version="0.0.5",
+    version="0.0.6",
     description="A python graph library implemented in Rust",
     long_description=readme(),
     author = "Matthew Treinish",
