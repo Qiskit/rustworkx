@@ -1,0 +1,72 @@
+environment:
+    global:
+        RUST_BACKTRACE: 1
+        TARGET: x86_64-pc-windows-msvc
+    matrix:
+        - PYTHON: C:\Python35-x64
+          TAG_SCENARIO: false
+        - PYTHON: C:\Python36-x64
+          TAG_SCENARIO: false
+        - PYTHON: C:\Python37-x64
+          TAG_SCENARIO: false
+#        - WHEEL: 1
+#          PYTHON: C:\Python35-x64
+#          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
+#          CIBW_ENVIRONMENT: PATH=$PATH:$USERPROFILE\.cargo\bin
+#          CIBW_SKIP: cp27-* cp34-*
+#          TWINE_USERNAME: retworkx-ci
+#          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
+#          TAG_SCENARIO: true
+for:
+-
+  # non-tagged scenario
+  matrix:
+    only:
+      - TAG_SCENARIO: false
+
+  skip_tags: true
+
+-
+  # tagged scenario
+  matrix:
+    only:
+      - TAG_SCENARIO: true
+
+  skip_non_tags: true
+
+build: false
+deploy: false
+
+skip_branch_with_pr: true
+
+build_script:
+#  - if defined WHEEL (pip install cibuildwheel==0.10.1)
+#  - if defined WHEEL (pip install -U twine)
+#  - if defined WHEEL (cibuildwheel --output-dir wheelhouse)
+#  - if defined WHEEL (twine upload wheelhouse\*)
+artifacts:
+  - path: "wheelhouse\\*.whl"
+    name: Wheels
+install:
+    # If there is a newer build queued for the same PR, cancel this one.
+    # The AppVeyor 'rollout builds' option is supposed to serve the same
+    # purpose but it is problematic because it tends to cancel builds pushed
+    # directly to master instead of just PR builds (or the converse).
+    # credits: JuliaLang developers.
+    - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+          throw "There are newer queued builds for this pull request, failing early." }
+    - python -V
+    - ps: .\tools\setup.ps1
+    - call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" amd64
+    - rustc -V
+    - cargo -V
+#    - "%PYTHON%\\python.exe -m venv venv"
+#    - venv\Scripts\activate.bat
+    - pip.exe install -U setuptools-rust
+#    - sh tools/install_rust.sh
+#    - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+test_script:
+    - pip.exe install .
+    - cd tests && python -m unittest discover .
