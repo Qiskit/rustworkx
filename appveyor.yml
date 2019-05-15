@@ -4,17 +4,17 @@ environment:
         TARGET: x86_64-pc-windows-msvc
     matrix:
         - PYTHON: C:\Python35-x64
-          TAG_SCENARIO: true
+          TAG_SCENARIO: false
         - PYTHON: C:\Python36-x64
-          TAG_SCENARIO: true
+          TAG_SCENARIO: false
         - PYTHON: C:\Python37-x64
-          TAG_SCENARIO: true
+          TAG_SCENARIO: false
         - WHEEL: 1
           CIBW_BEFORE_BUILD: ps .\tools\setup.ps1
           CIBW_SKIP: cp27-* cp34-* *-win32
           TWINE_USERNAME: retworkx-ci
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
-          TAG_SCENARIO: false
+          TAG_SCENARIO: true
 for:
 -
   # non-tagged scenario
@@ -41,7 +41,7 @@ build_script:
   - if defined WHEEL (pip install cibuildwheel==0.10.1)
   - if defined WHEEL (pip install -U twine)
   - if defined WHEEL (cibuildwheel --output-dir wheelhouse)
-#  - if defined WHEEL (twine upload wheelhouse\*)
+  - if defined WHEEL (twine upload wheelhouse\*)
 artifacts:
   - path: "wheelhouse\\*.whl"
     name: Wheels
