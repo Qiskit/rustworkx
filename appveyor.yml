@@ -4,14 +4,14 @@ environment:
         TARGET: x86_64-pc-windows-msvc
     matrix:
         - PYTHON: C:\Python35-x64
-          TAG_SCENARIO: false
+          TAG_SCENARIO: true
         - PYTHON: C:\Python36-x64
-          TAG_SCENARIO: false
+          TAG_SCENARIO: true
         - PYTHON: C:\Python37-x64
-          TAG_SCENARIO: false
+          TAG_SCENARIO: true
         - WHEEL: 1
 #          PYTHON: C:\Python35-x64
-          CIBW_BEFORE_BUILD: ps: .\tools\setup.ps1
+          CIBW_BEFORE_BUILD: "ps: .\tools\setup.ps1"
 #          CIBW_ENVIRONMENT: PATH=$PATH:$USERPROFILE\.cargo\bin
           CIBW_SKIP: cp27-* cp34-* *-win32
           TWINE_USERNAME: retworkx-c
