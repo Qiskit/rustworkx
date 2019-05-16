@@ -50,10 +50,12 @@ The first step for building retworkx from source is to clone it locally with::
 
   git clone https://github.com/mtreinish/retworkx.git
 
-retworkx uses PyO3 and setuptools-rust to build the python interface.
+retworkx uses `PyO3`_ and `setuptools-rust`_ to build the python interface.
 Unfortunately, this means you need to use nightly rust because PyO3 only works
 with nightly at this point. You can use `rustup`_ to install rust nightly.
 
+.. _PyO3: https://github.com/pyo3/pyo3
+.. _setuptools-rust: https://github.com/PyO3/setuptools-rust
 .. _rustup: https://rustup.rs/
 
 Once you have nightly rust and cargo installed you can easily install retworkx
