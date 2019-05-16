@@ -16,13 +16,15 @@ to interface rust with python.
 Installing retworkx
 -------------------
 
-retworkx is published on pypi so on x86_64 and i686 linux systems or Mac OSX
-systems installing is as simple as running::
+retworkx is published on pypi so on x86_64 and i686 Linux systems or x86_64 on
+Mac OSX and Windows installing is as simple as running::
 
   pip install retworkx
 
 This will install a precompiled version of retworkx into your python
-environment. However if there are no precompiled binaries published for your
+environment.
+
+However, if there are no precompiled binaries published for your
 system you'll have to compile the code. The source package is also published on
 pypi so you can also run the above command to install it. However, there are 2
 preconditions for this to work, first you need to have cargo/rustc **nightly**
