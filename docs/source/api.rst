@@ -204,6 +204,30 @@ retworkx API
         False if they are not.
     :rtype: bool
 
+.. py:function:: is_isomorphic_node_match(first, second, matcher):
+    Determine if 2 DAGS are structurally isomorphic.
+
+    This checks igf 2 graphs are isomorphic both structurally and also comparing
+    the node data using the provided matcher function. The matcher function
+    takes in 2 node data objects and will compare them. A simple example that
+    checks if they're just equal would be::
+
+        graph_a = retworkx.PyDAG()
+        graph_b = retworkx.PyDAG()
+        retworkx.is_isomorphic_node_match(graph_a, graph_b,
+                                          lambda x, y: x == y)
+
+    :param PyDAG first: The first DAG to compare
+    :param PyDAG second: The second DAG to compare
+    :param function matcher: A python callable object that takes 2 positional
+        arguments one for each node data object. If the return of this
+        function evaluates to True then the nodes passed to it are vieded as
+        matching.
+
+    :returns is_isomorphic: True if the 2 PyDAGs are isomorphic
+        False if they are not.
+    :rtype: bool
+
 .. py:function:: topological_sort(graph):
     Return the topological sort of node indexes from the provided graph
 

@@ -296,6 +296,29 @@ fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
 }
 
 #[pyfunction]
+fn is_isomorphic_node_match(
+    py: Python,
+    first: &PyDAG,
+    second: &PyDAG,
+    matcher: PyObject,
+) -> bool {
+    let compare_nodes = |a: &PyObject, b: &PyObject| -> bool {
+        let res = matcher.call1(py, (a, b)).unwrap();
+        res.is_true(py).unwrap()
+    };
+
+    fn compare_edges(_a: &PyObject, _b: &PyObject) -> bool {
+        true
+    }
+    algo::is_isomorphic_matching(
+        first.graph.graph(),
+        second.graph.graph(),
+        compare_nodes,
+        compare_edges,
+    )
+}
+
+#[pyfunction]
 fn topological_sort(py: Python, graph: &PyDAG) -> PyObject {
     let nodes = match algo::toposort(graph.graph.graph(), None) {
         Ok(nodes) => nodes,
@@ -320,6 +343,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     //    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_class::<PyDAG>()?;
