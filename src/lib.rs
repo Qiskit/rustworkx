@@ -182,7 +182,11 @@ impl PyDAG {
         let out_dict = PyDict::new(py);
         let graph = self.graph.graph();
         for neighbor in neighbors {
-            let edge = graph.find_edge(index, neighbor);
+            let mut edge = graph.find_edge(index, neighbor);
+            // If there is no edge then it must be a parent neighbor
+            if edge.is_none() {
+                edge = graph.find_edge(neighbor, index);
+            }
             let edge_w = graph.edge_weight(edge.unwrap());
             out_dict.set_item(neighbor.index(), edge_w)?;
         }
@@ -206,8 +210,27 @@ impl PyDAG {
         let neighbors = self.graph.neighbors_directed(index, dir);
         let out_dict = PyDict::new(py);
         for neighbor in neighbors {
-            let edge = graph.find_edge(index, neighbor);
-            let edge_w = graph.edge_weight(edge.unwrap());
+            let edge;
+            if direction {
+                edge = match graph.find_edge(neighbor, index) {
+                    Some(edge) => edge,
+                    None => {
+                        return Err(NoEdgeBetweenNodes::py_err(
+                            "No edge found between nodes",
+                        ))
+                    }
+                };
+            } else {
+                edge = match graph.find_edge(index, neighbor) {
+                    Some(edge) => edge,
+                    None => {
+                        return Err(NoEdgeBetweenNodes::py_err(
+                            "No edge found between nodes",
+                        ))
+                    }
+                };
+            }
+            let edge_w = graph.edge_weight(edge);
             out_dict.set_item(neighbor.index(), edge_w)?;
         }
         Ok(out_dict.into())
@@ -241,12 +264,17 @@ where
 }
 
 #[pyfunction]
-fn dag_longest_path_length(graph: &PyDAG) -> usize {
+fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
     let dag = &graph.graph;
     let nodes = match algo::toposort(dag.graph(), None) {
         Ok(nodes) => nodes,
-        Err(_err) => panic!("DAG has a cycle, something is really wrong"),
+        Err(_err) => {
+            return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
+        }
     };
+    if nodes.len() == 0 {
+        return Ok(0);
+    }
     let mut dist: HashMap<usize, (usize, usize)> = HashMap::new();
     for node in nodes {
         // Iterator that yields (EdgeIndex, NodeIndex)
@@ -267,11 +295,19 @@ fn dag_longest_path_length(graph: &PyDAG) -> usize {
         dist.insert(node.index(), maxu);
     }
     let mut u: Option<usize> = None;
-    let first = dist.iter().max_by_key(|(_, v)| v.0).unwrap();
+    let first = match dist.iter().max_by_key(|(_, v)| v.0) {
+        Some(first) => first,
+        None => {
+            return Err(Exception::py_err("Encountered something unexpected"))
+        }
+    };
     let first_v = *first.1;
     let mut v = first_v.0;
     let mut path: Vec<usize> = Vec::new();
-    while u.is_none() || u.unwrap() != v {
+    while match u {
+        Some(u) => u != v,
+        None => true,
+    } {
         path.push(v);
         u = Some(v);
         v = dist[&v].1;
@@ -281,7 +317,7 @@ fn dag_longest_path_length(graph: &PyDAG) -> usize {
     for (_, _) in pairwise(path) {
         path_length += 1
     }
-    path_length
+    Ok(path_length)
 }
 
 #[pyfunction]
@@ -319,16 +355,18 @@ fn is_isomorphic_node_match(
 }
 
 #[pyfunction]
-fn topological_sort(py: Python, graph: &PyDAG) -> PyObject {
+fn topological_sort(py: Python, graph: &PyDAG) -> PyResult<PyObject> {
     let nodes = match algo::toposort(graph.graph.graph(), None) {
         Ok(nodes) => nodes,
-        Err(_err) => panic!("DAG has a cycle, something is really wrong"),
+        Err(_err) => {
+            return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
+        }
     };
     let mut out: Vec<usize> = Vec::new();
     for node in nodes {
         out.push(node.index());
     }
-    PyList::new(py, out).into()
+    Ok(PyList::new(py, out).into())
 }
 
 //#[pyfunction]
@@ -352,6 +390,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
 create_exception!(retworkx, DAGWouldCycle, Exception);
 create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
+create_exception!(retworkx, DAGHasCycle, Exception);
 
 #[cfg(test)]
 mod tests {
