@@ -145,6 +145,8 @@ retworkx API
             the value is the edge data object for all nodes that share an
             edge with the specified node.
         :rtype: dict
+        :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
+            found to a neighbor node
 
     .. py:method:: in_degree(self, node):
         Get the degree of a node for inbound edges.
@@ -181,6 +183,8 @@ retworkx API
 
     :returns length: The longest path length on the graph
     :rtype: int
+
+    :raises Exception: If an unexpected error occurs and a path can't be found
 
 .. py:function:: number_weakly_connected_components(graph):
     Find the number of weakly connected components in a DAG.
@@ -235,3 +239,5 @@ retworkx API
 
     :returns nodes: A list of node indexes topologically sorted.
     :rtype: list
+
+    :raises DAGHasCycle: if a cycle is encountered while sorting the graph

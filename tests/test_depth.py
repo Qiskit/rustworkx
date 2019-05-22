@@ -55,3 +55,7 @@ class TestLongestPath(unittest.TestCase):
         dag = retworkx.PyDAG()
         dag.add_node(0)
         self.assertEqual(1, retworkx.dag_longest_path_length(dag))
+
+    def test_empty_graph(self):
+        dag = retworkx.PyDAG()
+        self.assertEqual(0, retworkx.dag_longest_path_length(dag))
