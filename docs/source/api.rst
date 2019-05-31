@@ -58,6 +58,16 @@ retworkx API
         :returns: The data object set for the edge
         :raises: When there is no edge between nodes
 
+    .. py:method:: get_all_edge_data(self, node_a, node_b):
+        Return the edge data for all the edges between 2 nodes.
+
+        :param int node_a: The index for the first node
+        :param int node_b: The index for the second node
+
+        :returns: A list with all the data objects for the edges between nodes
+        :rtype: list
+        :raises: When there is no edge between nodes
+
     .. py:method:: remove_node(self, node):
         Remove a node from the DAG.
 

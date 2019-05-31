@@ -30,9 +30,9 @@ use daggy::EdgeIndex;
 use daggy::NodeIndex;
 use daggy::Walker;
 use petgraph::algo;
+use petgraph::visit::EdgeRef;
 use petgraph::visit::IntoNeighbors;
 use petgraph::visit::IntoNeighborsDirected;
-//use petgraph::visit::WalkerIter;
 
 #[pyclass]
 pub struct PyDAG {
@@ -104,6 +104,31 @@ impl PyDAG {
 
         let data = self.graph.edge_weight(edge_index).unwrap();
         Ok(data)
+    }
+
+    pub fn get_all_edge_data(
+        &self,
+        py: Python,
+        node_a: usize,
+        node_b: usize,
+    ) -> PyResult<(PyObject)> {
+        let index_a = NodeIndex::new(node_a);
+        let index_b = NodeIndex::new(node_b);
+        let raw_edges = self
+            .graph
+            .graph()
+            .edges_directed(index_a, petgraph::Direction::Outgoing);
+        let mut out: Vec<&PyObject> = Vec::new();
+        for edge in raw_edges {
+            if edge.target() == index_b {
+                out.push(edge.weight());
+            }
+        }
+        if out.len() == 0 {
+            Err(NoEdgeBetweenNodes::py_err("No edge found between nodes"))
+        } else {
+            Ok(PyList::new(py, out).into())
+        }
     }
 
     pub fn remove_node(&mut self, node: usize) -> PyResult<()> {

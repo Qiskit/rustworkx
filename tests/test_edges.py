@@ -24,6 +24,15 @@ class TestEdges(unittest.TestCase):
         res = dag.get_edge_data(node_a, node_b)
         self.assertEqual("Edgy", res)
 
+    def test_get_all_edge_data(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_edge(node_a, node_b, 'b')
+        res = dag.get_all_edge_data(node_a, node_b)
+        self.assertIn('b', res)
+        self.assertIn('Edgy', res)
+
     def test_no_edge(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
