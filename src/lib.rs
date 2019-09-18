@@ -279,7 +279,7 @@ impl PyDAG {
 
 fn pairwise<'a, I>(
     xs: I,
-) -> Box<Iterator<Item = (Option<I::Item>, I::Item)> + 'a>
+) -> Box<dyn Iterator<Item = (Option<I::Item>, I::Item)> + 'a>
 where
     I: 'a + IntoIterator + Clone,
 {
