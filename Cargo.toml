@@ -20,5 +20,5 @@ petgraph = "0.4"
 daggy = "0.6"
 
 [dependencies.pyo3]
-version = "0.8.0"
+version = "0.8.3"
 features = ["extension-module"]

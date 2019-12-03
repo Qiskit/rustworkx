@@ -90,7 +90,7 @@ impl PyDAG {
         &self,
         node_a: usize,
         node_b: usize,
-    ) -> PyResult<(&PyObject)> {
+    ) -> PyResult<&PyObject> {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
         let edge_index = match self.graph.find_edge(index_a, index_b) {
@@ -111,7 +111,7 @@ impl PyDAG {
         py: Python,
         node_a: usize,
         node_b: usize,
-    ) -> PyResult<(PyObject)> {
+    ) -> PyResult<PyObject> {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
         let raw_edges = self
