@@ -14,19 +14,21 @@ install:
     - test-venv/bin/pip install -U .
 script:
     - cd tests && ../test-venv/bin/python -m unittest discover .
-
 jobs:
   include:
     - name: Python 3.5 Tests Linux
       python: 3.5
+      dist: bionic
     - name: Python 3.6 Tests Linux
       python: 3.6
+      dist: bionic
     - name: Python 3.7 Tests Linux
-      dist: xenial
+      dist: bionic
       python: 3.7
-      sudo: true
-    - sudo: required
-      services:
+    - name: Python 3.8 Tests Linux
+      python: 3.8
+      dist: bionic
+    - services:
         - docker
       before_install:
           - echo ""
@@ -40,7 +42,7 @@ jobs:
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - sudo pip install -U cibuildwheel==0.10.2 twine
+        - sudo pip install -U cibuildwheel==1.0.0 twine
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - os: osx
@@ -57,7 +59,7 @@ jobs:
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       script:
-        - sudo pip2 install -U cibuildwheel==0.10.2 twine
+        - sudo pip2 install -U cibuildwheel==1.0.0 twine
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
 

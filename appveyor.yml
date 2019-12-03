@@ -9,6 +9,8 @@ environment:
           TAG_SCENARIO: false
         - PYTHON: C:\Python37-x64
           TAG_SCENARIO: false
+        - PYTHON: C:\Python38-x64
+          TAG_SCENARIO: false
         - WHEEL: 1
           CIBW_BEFORE_BUILD: ps .\tools\setup.ps1
           CIBW_SKIP: cp27-* cp34-* *-win32
@@ -38,7 +40,7 @@ deploy: false
 skip_branch_with_pr: true
 
 build_script:
-  - if defined WHEEL (pip install cibuildwheel==0.10.1)
+  - if defined WHEEL (pip install cibuildwheel==1.0.0)
   - if defined WHEEL (pip install -U twine)
   - if defined WHEEL (cibuildwheel --output-dir wheelhouse)
   - if defined WHEEL (twine upload wheelhouse\*)
