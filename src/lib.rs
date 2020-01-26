@@ -551,6 +551,12 @@ fn number_weakly_connected_components(graph: &PyDAG) -> usize {
     algo::connected_components(graph)
 }
 
+#[pyfunction]
+fn is_directed_acyclic_graph(graph: &PyDAG) -> bool {
+    let cycle_detected = algo::is_cyclic_directed(graph);
+    !cycle_detected
+}
+
 //#[pyfunction]
 //fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
 //    is_isomorphic(&first.graph, &second.graph)
@@ -605,6 +611,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     //    m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
     //    m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
