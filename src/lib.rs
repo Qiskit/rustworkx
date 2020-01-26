@@ -10,8 +10,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+extern crate fixedbitset;
 extern crate petgraph;
 extern crate pyo3;
+
+mod dag_isomorphism;
 
 use std::collections::HashMap;
 use std::iter;
@@ -557,33 +560,33 @@ fn is_directed_acyclic_graph(graph: &PyDAG) -> bool {
     !cycle_detected
 }
 
-//#[pyfunction]
-//fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
-//    is_isomorphic(&first.graph, &second.graph)
-//}
+#[pyfunction]
+fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
+    dag_isomorphism::is_isomorphic(first, second)
+}
 
-//#[pyfunction]
-//fn is_isomorphic_node_match(
-//    py: Python,
-//    first: &PyDAG,
-//    second: &PyDAG,
-//    matcher: PyObject,
-//) -> bool {
-//    let compare_nodes = |a: &PyObject, b: &PyObject| -> bool {
-//        let res = matcher.call1(py, (a, b)).unwrap();
-//        res.is_true(py).unwrap()
-//    };
-//
-//    fn compare_edges(_a: &PyObject, _b: &PyObject) -> bool {
-//        true
-//    }
-//    algo::is_isomorphic_matching(
-//        &first.graph,
-//        &second.graph,
-//        compare_nodes,
-//        compare_edges,
-//    )
-//}
+#[pyfunction]
+fn is_isomorphic_node_match(
+    py: Python,
+    first: &PyDAG,
+    second: &PyDAG,
+    matcher: PyObject,
+) -> bool {
+    let compare_nodes = |a: &PyObject, b: &PyObject| -> bool {
+        let res = matcher.call1(py, (a, b)).unwrap();
+        res.is_true(py).unwrap()
+    };
+
+    fn compare_edges(_a: &PyObject, _b: &PyObject) -> bool {
+        true
+    }
+    dag_isomorphism::is_isomorphic_matching(
+        first,
+        second,
+        compare_nodes,
+        compare_edges,
+    )
+}
 
 #[pyfunction]
 fn topological_sort(py: Python, graph: &PyDAG) -> PyResult<PyObject> {
@@ -612,8 +615,8 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
-    //    m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
-    //    m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
+    m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     //    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_class::<PyDAG>()?;
