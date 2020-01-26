@@ -38,6 +38,10 @@ use petgraph::visit::{
 #[pyclass]
 pub struct PyDAG {
     graph: StableDiGraph<PyObject, PyObject>,
+    cycle_state: algo::DfsSpace<
+        NodeIndex,
+        <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
+    >,
 }
 
 pub type Edges<'a, E> =
@@ -221,6 +225,7 @@ impl PyDAG {
     fn new(obj: &PyRawObject) {
         obj.init(PyDAG {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
+            cycle_state: algo::DfsSpace::default(),
         });
     }
 
@@ -322,17 +327,19 @@ impl PyDAG {
         parent: usize,
         child: usize,
         edge: PyObject,
-    ) -> PyResult<()> {
+    ) -> PyResult<usize> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
-        let edge = self.graph.add_edge(p_index, c_index, edge);
-        // NOTE(mtreinish): This becomes a scaling limit as the dag grows:
-        let cycle = algo::is_cyclic_directed(&self.graph);
-        if cycle {
-            self.graph.remove_edge(edge);
+        let should_check_for_cycle =
+            must_check_for_cycle(self, p_index, c_index);
+        let state = Some(&mut self.cycle_state);
+        if should_check_for_cycle
+            && algo::has_path_connecting(&self.graph, c_index, p_index, state)
+        {
             Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
         } else {
-            Ok(())
+            let edge = self.graph.add_edge(p_index, c_index, edge);
+            Ok(edge.index())
         }
     }
 
@@ -359,14 +366,7 @@ impl PyDAG {
 
     pub fn add_node(&mut self, obj: PyObject) -> PyResult<usize> {
         let index = self.graph.add_node(obj);
-        // NOTE(mtreinish): This becomes a scaling limit as the dag grows:
-        let cycle = algo::is_cyclic_directed(&self.graph);
-        if cycle {
-            self.graph.remove_node(index);
-            Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
-        } else {
-            Ok(index.index())
-        }
+        Ok(index.index())
     }
 
     pub fn add_child(
@@ -377,15 +377,8 @@ impl PyDAG {
     ) -> PyResult<usize> {
         let index = NodeIndex::new(parent);
         let child_node = self.graph.add_node(obj);
-        let _child_edge = self.graph.add_edge(index, child_node, edge);
-        // NOTE(mtreinish): This becomes a scaling limit as the dag grows:
-        let cycle = algo::is_cyclic_directed(&self.graph);
-        if cycle {
-            self.graph.remove_node(index);
-            Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
-        } else {
-            Ok(child_node.index())
-        }
+        self.graph.add_edge(index, child_node, edge);
+        Ok(child_node.index())
     }
 
     pub fn add_parent(
@@ -396,15 +389,8 @@ impl PyDAG {
     ) -> PyResult<usize> {
         let index = NodeIndex::new(child);
         let parent_node = self.graph.add_node(obj);
-        let _parent_edge = self.graph.add_edge(parent_node, index, edge);
-        // NOTE(mtreinish): This becomes a scaling limit as the dag grows:
-        let cycle = algo::is_cyclic_directed(&self.graph);
-        if cycle {
-            self.graph.remove_node(index);
-            Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
-        } else {
-            Ok(parent_node.index())
-        }
+        self.graph.add_edge(parent_node, index, edge);
+        Ok(parent_node.index())
     }
 
     pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
@@ -477,6 +463,18 @@ impl PyDAG {
         let neighbors = self.graph.neighbors_directed(index, dir);
         neighbors.count()
     }
+}
+
+fn must_check_for_cycle(dag: &PyDAG, a: NodeIndex, b: NodeIndex) -> bool {
+    let mut parents_a = dag
+        .graph
+        .neighbors_directed(a, petgraph::Direction::Incoming);
+    let mut children_b = dag
+        .graph
+        .neighbors_directed(b, petgraph::Direction::Outgoing);
+    parents_a.next().is_some()
+        && children_b.next().is_some()
+        && dag.graph.find_edge(a, b).is_none()
 }
 
 fn pairwise<'a, I>(
