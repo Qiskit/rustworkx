@@ -10,13 +10,15 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+extern crate fixedbitset;
+extern crate petgraph;
 extern crate pyo3;
 
-extern crate daggy;
-extern crate petgraph;
+mod dag_isomorphism;
 
 use std::collections::HashMap;
 use std::iter;
+use std::ops::{Index, IndexMut};
 
 use pyo3::create_exception;
 use pyo3::exceptions::Exception;
@@ -25,18 +27,199 @@ use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
-use daggy::Dag;
-use daggy::EdgeIndex;
-use daggy::NodeIndex;
-use daggy::Walker;
 use petgraph::algo;
-use petgraph::visit::EdgeRef;
-use petgraph::visit::IntoNeighbors;
-use petgraph::visit::IntoNeighborsDirected;
+use petgraph::graph::{EdgeIndex, NodeIndex};
+use petgraph::prelude::*;
+use petgraph::stable_graph::StableDiGraph;
+use petgraph::visit::{
+    GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
+    IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
+    IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
+    NodeIndexable, Visitable,
+};
 
 #[pyclass]
 pub struct PyDAG {
-    graph: Dag<PyObject, PyObject>,
+    graph: StableDiGraph<PyObject, PyObject>,
+    cycle_state: algo::DfsSpace<
+        NodeIndex,
+        <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
+    >,
+}
+
+pub type Edges<'a, E> =
+    petgraph::stable_graph::Edges<'a, E, petgraph::Directed>;
+
+impl GraphBase for PyDAG {
+    type NodeId = NodeIndex;
+    type EdgeId = EdgeIndex;
+}
+
+impl NodeCount for PyDAG {
+    fn node_count(&self) -> usize {
+        self.graph.node_count()
+    }
+}
+
+impl GraphProp for PyDAG {
+    type EdgeType = petgraph::Directed;
+    fn is_directed(&self) -> bool {
+        true
+    }
+}
+
+impl petgraph::visit::Visitable for PyDAG {
+    type Map = <StableDiGraph<PyObject, PyObject> as Visitable>::Map;
+    fn visit_map(&self) -> Self::Map {
+        self.graph.visit_map()
+    }
+    fn reset_map(&self, map: &mut Self::Map) {
+        self.graph.reset_map(map)
+    }
+}
+
+impl petgraph::visit::Data for PyDAG {
+    type NodeWeight = PyObject;
+    type EdgeWeight = PyObject;
+}
+
+impl petgraph::data::DataMap for PyDAG {
+    fn node_weight(&self, id: Self::NodeId) -> Option<&Self::NodeWeight> {
+        self.graph.node_weight(id)
+    }
+    fn edge_weight(&self, id: Self::EdgeId) -> Option<&Self::EdgeWeight> {
+        self.graph.edge_weight(id)
+    }
+}
+
+impl petgraph::data::DataMapMut for PyDAG {
+    fn node_weight_mut(
+        &mut self,
+        id: Self::NodeId,
+    ) -> Option<&mut Self::NodeWeight> {
+        self.graph.node_weight_mut(id)
+    }
+    fn edge_weight_mut(
+        &mut self,
+        id: Self::EdgeId,
+    ) -> Option<&mut Self::EdgeWeight> {
+        self.graph.edge_weight_mut(id)
+    }
+}
+
+impl<'a> IntoNeighbors for &'a PyDAG {
+    type Neighbors = petgraph::stable_graph::Neighbors<'a, PyObject>;
+    fn neighbors(self, n: NodeIndex) -> Self::Neighbors {
+        self.graph.neighbors(n)
+    }
+}
+
+impl<'a> IntoNeighborsDirected for &'a PyDAG {
+    type NeighborsDirected = petgraph::stable_graph::Neighbors<'a, PyObject>;
+    fn neighbors_directed(
+        self,
+        n: NodeIndex,
+        d: petgraph::Direction,
+    ) -> Self::Neighbors {
+        self.graph.neighbors_directed(n, d)
+    }
+}
+
+impl<'a> IntoEdgeReferences for &'a PyDAG {
+    type EdgeRef = petgraph::stable_graph::EdgeReference<'a, PyObject>;
+    type EdgeReferences = petgraph::stable_graph::EdgeReferences<'a, PyObject>;
+    fn edge_references(self) -> Self::EdgeReferences {
+        self.graph.edge_references()
+    }
+}
+
+impl<'a> IntoEdges for &'a PyDAG {
+    type Edges = Edges<'a, PyObject>;
+    fn edges(self, a: Self::NodeId) -> Self::Edges {
+        self.graph.edges(a)
+    }
+}
+
+impl<'a> IntoEdgesDirected for &'a PyDAG {
+    type EdgesDirected = Edges<'a, PyObject>;
+    fn edges_directed(
+        self,
+        a: Self::NodeId,
+        dir: petgraph::Direction,
+    ) -> Self::EdgesDirected {
+        self.graph.edges_directed(a, dir)
+    }
+}
+
+impl<'a> IntoNodeIdentifiers for &'a PyDAG {
+    type NodeIdentifiers = petgraph::stable_graph::NodeIndices<'a, PyObject>;
+    fn node_identifiers(self) -> Self::NodeIdentifiers {
+        self.graph.node_identifiers()
+    }
+}
+
+impl<'a> IntoNodeReferences for &'a PyDAG {
+    type NodeRef = (NodeIndex, &'a PyObject);
+    type NodeReferences = petgraph::stable_graph::NodeReferences<'a, PyObject>;
+    fn node_references(self) -> Self::NodeReferences {
+        self.graph.node_references()
+    }
+}
+
+impl NodeIndexable for PyDAG {
+    fn node_bound(&self) -> usize {
+        self.graph.node_bound()
+    }
+    fn to_index(&self, ix: NodeIndex) -> usize {
+        self.graph.to_index(ix)
+    }
+    fn from_index(&self, ix: usize) -> Self::NodeId {
+        self.graph.from_index(ix)
+    }
+}
+
+impl NodeCompactIndexable for PyDAG {}
+
+impl Index<NodeIndex> for PyDAG {
+    type Output = PyObject;
+    fn index(&self, index: NodeIndex) -> &PyObject {
+        &self.graph[index]
+    }
+}
+
+impl IndexMut<NodeIndex> for PyDAG {
+    fn index_mut(&mut self, index: NodeIndex) -> &mut PyObject {
+        &mut self.graph[index]
+    }
+}
+
+impl Index<EdgeIndex> for PyDAG {
+    type Output = PyObject;
+    fn index(&self, index: EdgeIndex) -> &PyObject {
+        &self.graph[index]
+    }
+}
+
+impl IndexMut<EdgeIndex> for PyDAG {
+    fn index_mut(&mut self, index: EdgeIndex) -> &mut PyObject {
+        &mut self.graph[index]
+    }
+}
+
+impl GetAdjacencyMatrix for PyDAG {
+    type AdjMatrix =
+        <StableDiGraph<PyObject, PyObject> as GetAdjacencyMatrix>::AdjMatrix;
+    fn adjacency_matrix(&self) -> Self::AdjMatrix {
+        self.graph.adjacency_matrix()
+    }
+    fn is_adjacent(
+        &self,
+        matrix: &Self::AdjMatrix,
+        a: NodeIndex,
+        b: NodeIndex,
+    ) -> bool {
+        self.graph.is_adjacent(matrix, a, b)
+    }
 }
 
 #[pymethods]
@@ -44,44 +227,49 @@ impl PyDAG {
     #[new]
     fn new(obj: &PyRawObject) {
         obj.init(PyDAG {
-            graph: Dag::<PyObject, PyObject>::new(),
+            graph: StableDiGraph::<PyObject, PyObject>::new(),
+            cycle_state: algo::DfsSpace::default(),
         });
     }
 
     pub fn edges(&self, py: Python) -> PyObject {
-        let raw_edges = self.graph.raw_edges();
+        let raw_edges = self.graph.edge_indices();
         let mut out: Vec<&PyObject> = Vec::new();
         for edge in raw_edges {
-            out.push(&edge.weight);
+            out.push(self.graph.edge_weight(edge).unwrap());
         }
         PyList::new(py, out).into()
     }
 
     pub fn nodes(&self, py: Python) -> PyObject {
-        let raw_nodes = self.graph.raw_nodes();
+        let raw_nodes = self.graph.node_indices();
         let mut out: Vec<&PyObject> = Vec::new();
         for node in raw_nodes {
-            out.push(&node.weight);
+            out.push(self.graph.node_weight(node).unwrap());
         }
         PyList::new(py, out).into()
     }
 
     pub fn successors(&self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
-        let c_walker = self.graph.children(index);
+        let children = self
+            .graph
+            .neighbors_directed(index, petgraph::Direction::Outgoing);
         let mut succesors: Vec<&PyObject> = Vec::new();
-        for succ in c_walker.iter(&self.graph) {
-            succesors.push(self.graph.node_weight(succ.1).unwrap());
+        for succ in children {
+            succesors.push(self.graph.node_weight(succ).unwrap());
         }
         Ok(PyList::new(py, succesors).into())
     }
 
     pub fn predecessors(&self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
-        let p_walker = self.graph.parents(index);
+        let parents = self
+            .graph
+            .neighbors_directed(index, petgraph::Direction::Incoming);
         let mut predec: Vec<&PyObject> = Vec::new();
-        for pred in p_walker.iter(&self.graph) {
-            predec.push(self.graph.node_weight(pred.1).unwrap());
+        for pred in parents {
+            predec.push(self.graph.node_weight(pred).unwrap());
         }
         Ok(PyList::new(py, predec).into())
     }
@@ -116,7 +304,6 @@ impl PyDAG {
         let index_b = NodeIndex::new(node_b);
         let raw_edges = self
             .graph
-            .graph()
             .edges_directed(index_a, petgraph::Direction::Outgoing);
         let mut out: Vec<&PyObject> = Vec::new();
         for edge in raw_edges {
@@ -124,7 +311,7 @@ impl PyDAG {
                 out.push(edge.weight());
             }
         }
-        if out.len() == 0 {
+        if out.is_empty() {
             Err(NoEdgeBetweenNodes::py_err("No edge found between nodes"))
         } else {
             Ok(PyList::new(py, out).into())
@@ -143,14 +330,19 @@ impl PyDAG {
         parent: usize,
         child: usize,
         edge: PyObject,
-    ) -> PyResult<()> {
+    ) -> PyResult<usize> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
-        match self.graph.add_edge(p_index, c_index, edge) {
-            Err(_err) => {
-                Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
-            }
-            Ok(_result) => Ok(()),
+        let should_check_for_cycle =
+            must_check_for_cycle(self, p_index, c_index);
+        let state = Some(&mut self.cycle_state);
+        if should_check_for_cycle
+            && algo::has_path_connecting(&self.graph, c_index, p_index, state)
+        {
+            Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
+        } else {
+            let edge = self.graph.add_edge(p_index, c_index, edge);
+            Ok(edge.index())
         }
     }
 
@@ -175,19 +367,21 @@ impl PyDAG {
         Ok(())
     }
 
-    pub fn add_node(&mut self, obj: PyObject) -> usize {
+    pub fn add_node(&mut self, obj: PyObject) -> PyResult<usize> {
         let index = self.graph.add_node(obj);
-        index.index()
+        Ok(index.index())
     }
+
     pub fn add_child(
         &mut self,
         parent: usize,
         obj: PyObject,
         edge: PyObject,
-    ) -> usize {
+    ) -> PyResult<usize> {
         let index = NodeIndex::new(parent);
-        let (_, index) = self.graph.add_child(index, edge, obj);
-        index.index()
+        let child_node = self.graph.add_node(obj);
+        self.graph.add_edge(index, child_node, edge);
+        Ok(child_node.index())
     }
 
     pub fn add_parent(
@@ -195,24 +389,24 @@ impl PyDAG {
         child: usize,
         obj: PyObject,
         edge: PyObject,
-    ) -> usize {
+    ) -> PyResult<usize> {
         let index = NodeIndex::new(child);
-        let (_, index) = self.graph.add_parent(index, edge, obj);
-        index.index()
+        let parent_node = self.graph.add_node(obj);
+        self.graph.add_edge(parent_node, index, edge);
+        Ok(parent_node.index())
     }
 
     pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.neighbors(index);
         let out_dict = PyDict::new(py);
-        let graph = self.graph.graph();
         for neighbor in neighbors {
-            let mut edge = graph.find_edge(index, neighbor);
+            let mut edge = self.graph.find_edge(index, neighbor);
             // If there is no edge then it must be a parent neighbor
             if edge.is_none() {
-                edge = graph.find_edge(neighbor, index);
+                edge = self.graph.find_edge(neighbor, index);
             }
-            let edge_w = graph.edge_weight(edge.unwrap());
+            let edge_w = self.graph.edge_weight(edge.unwrap());
             out_dict.set_item(neighbor.index(), edge_w)?;
         }
         Ok(out_dict.into())
@@ -225,37 +419,34 @@ impl PyDAG {
         direction: bool,
     ) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
-        let dir;
-        if direction {
-            dir = petgraph::Direction::Incoming;
+        let dir = if direction {
+            petgraph::Direction::Incoming
         } else {
-            dir = petgraph::Direction::Outgoing;
-        }
-        let graph = self.graph.graph();
+            petgraph::Direction::Outgoing
+        };
         let neighbors = self.graph.neighbors_directed(index, dir);
         let out_dict = PyDict::new(py);
         for neighbor in neighbors {
-            let edge;
-            if direction {
-                edge = match graph.find_edge(neighbor, index) {
+            let edge = if direction {
+                match self.graph.find_edge(neighbor, index) {
                     Some(edge) => edge,
                     None => {
                         return Err(NoEdgeBetweenNodes::py_err(
                             "No edge found between nodes",
                         ))
                     }
-                };
+                }
             } else {
-                edge = match graph.find_edge(index, neighbor) {
+                match self.graph.find_edge(index, neighbor) {
                     Some(edge) => edge,
                     None => {
                         return Err(NoEdgeBetweenNodes::py_err(
                             "No edge found between nodes",
                         ))
                     }
-                };
-            }
-            let edge_w = graph.edge_weight(edge);
+                }
+            };
+            let edge_w = self.graph.edge_weight(edge);
             out_dict.set_item(neighbor.index(), edge_w)?;
         }
         Ok(out_dict.into())
@@ -277,6 +468,18 @@ impl PyDAG {
     }
 }
 
+fn must_check_for_cycle(dag: &PyDAG, a: NodeIndex, b: NodeIndex) -> bool {
+    let mut parents_a = dag
+        .graph
+        .neighbors_directed(a, petgraph::Direction::Incoming);
+    let mut children_b = dag
+        .graph
+        .neighbors_directed(b, petgraph::Direction::Outgoing);
+    parents_a.next().is_some()
+        && children_b.next().is_some()
+        && dag.graph.find_edge(a, b).is_none()
+}
+
 fn pairwise<'a, I>(
     xs: I,
 ) -> Box<dyn Iterator<Item = (Option<I::Item>, I::Item)> + 'a>
@@ -291,21 +494,22 @@ where
 #[pyfunction]
 fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
     let dag = &graph.graph;
-    let nodes = match algo::toposort(dag.graph(), None) {
+    let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
         }
     };
-    if nodes.len() == 0 {
+    if nodes.is_empty() {
         return Ok(0);
     }
     let mut dist: HashMap<usize, (usize, usize)> = HashMap::new();
     for node in nodes {
         // Iterator that yields (EdgeIndex, NodeIndex)
-        let parents = dag.parents(node).iter(&dag);
+        let parents =
+            dag.neighbors_directed(node, petgraph::Direction::Incoming);
         let mut us: Vec<(usize, usize)> = Vec::new();
-        for (_, p_node) in parents {
+        for p_node in parents {
             let p_index = p_node.index();
             let length = dist[&p_index].0 + 1;
             let u = p_index;
@@ -347,13 +551,18 @@ fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
 
 #[pyfunction]
 fn number_weakly_connected_components(graph: &PyDAG) -> usize {
-    let dag = graph.graph.graph();
-    algo::connected_components(dag)
+    algo::connected_components(graph)
+}
+
+#[pyfunction]
+fn is_directed_acyclic_graph(graph: &PyDAG) -> bool {
+    let cycle_detected = algo::is_cyclic_directed(graph);
+    !cycle_detected
 }
 
 #[pyfunction]
 fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
-    algo::is_isomorphic(first.graph.graph(), second.graph.graph())
+    dag_isomorphism::is_isomorphic(first, second)
 }
 
 #[pyfunction]
@@ -371,9 +580,9 @@ fn is_isomorphic_node_match(
     fn compare_edges(_a: &PyObject, _b: &PyObject) -> bool {
         true
     }
-    algo::is_isomorphic_matching(
-        first.graph.graph(),
-        second.graph.graph(),
+    dag_isomorphism::is_isomorphic_matching(
+        first,
+        second,
         compare_nodes,
         compare_edges,
     )
@@ -381,7 +590,7 @@ fn is_isomorphic_node_match(
 
 #[pyfunction]
 fn topological_sort(py: Python, graph: &PyDAG) -> PyResult<PyObject> {
-    let nodes = match algo::toposort(graph.graph.graph(), None) {
+    let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
@@ -405,6 +614,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
