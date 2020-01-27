@@ -82,7 +82,7 @@ jobs:
       install:
           - echo ""
       env:
-        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
