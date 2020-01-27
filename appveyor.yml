@@ -4,19 +4,19 @@ environment:
         TARGET: x86_64-pc-windows-msvc
     matrix:
         - PYTHON: C:\Python35-x64
-          TAG_SCENARIO: true
+          TAG_SCENARIO: false
         - PYTHON: C:\Python36-x64
-          TAG_SCENARIO: true
+          TAG_SCENARIO: false
         - PYTHON: C:\Python37-x64
-          TAG_SCENARIO: true
+          TAG_SCENARIO: false
         - PYTHON: C:\Python38-x64
-          TAG_SCENARIO: true
+          TAG_SCENARIO: false
         - WHEEL: 1
           CIBW_BEFORE_BUILD: ps .\tools\setup.ps1 && pip install -U setuptools-rust
           CIBW_SKIP: cp27-* cp34-* *-win32
           TWINE_USERNAME: retworkx-ci
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
-          TAG_SCENARIO: false
+          TAG_SCENARIO: true
 for:
 -
   # non-tagged scenario
