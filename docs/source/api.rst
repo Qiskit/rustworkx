@@ -158,12 +158,48 @@ retworkx API
         :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
             found to a neighbor node
 
+    .. py:method:: in_edges(self, node):
+        Get the index and edge data for all parents of a node.
+
+        This will return a list of tuples with the parent index the node index
+        and the edge data. This can be used to recreate add_edge() calls.
+
+        :param int node: The index of the node to get the edges for
+
+        :returns in_edges: A list of tuples of the form:
+            (parent_index, node_index, edge_data)
+        :rtype: list
+        :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
+            found to a neighbor node
+
+    .. py:method:: out_edges(self, node):
+        Get the index and edge data for all children of a node.
+
+        This will return a list of tuples with the child index the node index
+        and the edge data. This can be used to recreate add_edge() calls.
+
+        :param int node: The index of the node to get the edges for
+
+        :returns out_edges: A list of tuples of the form:
+            (node_index, child_index, edge_data)
+        :rtype: list
+        :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
+            found to a neighbor node
+
     .. py:method:: in_degree(self, node):
         Get the degree of a node for inbound edges.
 
         :param int node: The index of the node to find the inbound degree of
 
         :returns degree: The inbound degree for the specified node
+        :rtype: int
+
+    .. py:method:: out_degree(self, node):
+        Get the degree of a node for outbound edges.
+
+        :param int node: The index of the node to find the outbound degree of
+
+        :returns degree: The outbound degree for the specified node
         :rtype: int
 
     .. py:method:: remove_edge(self, parent, child):

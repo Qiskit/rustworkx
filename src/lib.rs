@@ -451,6 +451,51 @@ impl PyDAG {
         }
         Ok(out_dict.into())
     }
+
+    pub fn in_edges(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Incoming;
+        let neighbors = self.graph.neighbors_directed(index, dir);
+        let mut out_list: Vec<PyObject> = Vec::new();
+        for neighbor in neighbors {
+            let edge = match self.graph.find_edge(neighbor, index) {
+                Some(edge) => edge,
+                None => {
+                    return Err(NoEdgeBetweenNodes::py_err(
+                        "No edge found between nodes",
+                    ))
+                }
+            };
+            let edge_w = self.graph.edge_weight(edge);
+            let triplet =
+                (neighbor.index(), node, edge_w.unwrap()).to_object(py);
+            out_list.push(triplet)
+        }
+        Ok(PyList::new(py, out_list).into())
+    }
+
+    pub fn out_edges(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Outgoing;
+        let neighbors = self.graph.neighbors_directed(index, dir);
+        let mut out_list: Vec<PyObject> = Vec::new();
+        for neighbor in neighbors {
+            let edge = match self.graph.find_edge(index, neighbor) {
+                Some(edge) => edge,
+                None => {
+                    return Err(NoEdgeBetweenNodes::py_err(
+                        "No edge found between nodes",
+                    ))
+                }
+            };
+            let edge_w = self.graph.edge_weight(edge);
+            let triplet =
+                (node, neighbor.index(), edge_w.unwrap()).to_object(py);
+            out_list.push(triplet)
+        }
+        Ok(PyList::new(py, out_list).into())
+    }
+
     //   pub fn add_nodes_from(&self) -> PyResult<()> {
     //
     //   }
@@ -463,6 +508,13 @@ impl PyDAG {
     pub fn in_degree(&self, node: usize) -> usize {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
+        let neighbors = self.graph.neighbors_directed(index, dir);
+        neighbors.count()
+    }
+
+    pub fn out_degree(&self, node: usize) -> usize {
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Outgoing;
         let neighbors = self.graph.neighbors_directed(index, dir);
         neighbors.count()
     }
