@@ -44,6 +44,25 @@ class TestAdj(unittest.TestCase):
         res = dag.adj_direction(node_b, True)
         self.assertEqual({node_a: {'a': 1}}, res)
 
+    def test_single_neighbor_dir_out_edges(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {'a': 1})
+        node_c = dag.add_child(node_a, 'c', {'a': 2})
+        res = dag.out_edges(node_a)
+        self.assertEqual([(node_a, node_c, {'a': 2}),
+                          (node_a, node_b, {'a': 1})], res)
+
+    def test_neighbor_dir_surrounded_in_out_edges(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {'a': 1})
+        node_c = dag.add_child(node_b, 'c', {'a': 2})
+        res = dag.out_edges(node_b)
+        self.assertEqual([(node_b, node_c, {'a': 2})], res)
+        res = dag.in_edges(node_b)
+        self.assertEqual([(node_a, node_b, {'a': 1})], res)
+
     def test_no_neighbor(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
@@ -62,3 +81,17 @@ class TestAdj(unittest.TestCase):
         for i in range(5):
             dag.add_child(node_a, i, None)
         self.assertEqual(0, dag.in_degree(node_a))
+
+    def test_out_direction(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        for i in range(5):
+            dag.add_parent(node_a, i, None)
+        self.assertEqual(0, dag.out_degree(node_a))
+
+    def test_out_direction_none(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        for i in range(5):
+            dag.add_child(node_a, i, None)
+        self.assertEqual(5, dag.out_degree(node_a))

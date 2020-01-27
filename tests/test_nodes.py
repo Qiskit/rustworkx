@@ -40,3 +40,25 @@ class TestEdges(unittest.TestCase):
         dag.add_parent(3, 'A parent', None)
         res = retworkx.topological_sort(dag)
         self.assertEqual([6, 0, 5, 4, 3, 2, 1], res)
+
+    def test_get_node_data(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        self.assertEqual('b', dag.get_node_data(node_b))
+
+    def test_get_node_data_bad_index(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        self.assertRaises(IndexError, dag.get_node_data, 42)
+
+    def test_pydag_length(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        self.assertEqual(2, len(dag))
+
+    def test_pydag_length_empty(self):
+        dag = retworkx.PyDAG()
+        self.assertEqual(0, len(dag))

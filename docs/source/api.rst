@@ -4,22 +4,17 @@ retworkx API
 .. py:class:: PyDAG
    A class for creating direct acyclic graphs.
 
-   The PyDAG class is constructed using the Rust library `daggy`_ which is
-   itself built on the Rust library `petgraph`_. The limitations and quirks
-   with both libraries dictate how this operates. The biggest thing to be
-   aware of when using the PyDAG class is that while node and edge indexes
-   are used for accessing elements on the DAG, node removal can change the
-   index of a node `petgraph`_. The limitations and quirks
-   with both libraries dictate how this operates. The biggest thing to be
-   aware of when using the PyDAG class is that while node and edge indexes
-   are used for accessing elements on the DAG, node removal can change the
-   indexes of nodes. Basically when a node in the middle of the dag is
-   removed the last index is moved to fill that spot. This means either
-   you have to track that event, or on node removal update the indexes for
-   the nodes you care about.
+   The PyDAG class is constructed using the Rust library `petgraph`_ around
+   the ``StableGraph`` type. The limitations and quirks with this library and
+   type dictate how this operates. The biggest thing to be aware of when using
+   the PyDAG class is that an integer node and edge index is used for accessing
+   elements on the DAG, not the data/weight of nodes and edges.
 
     .. py:method:: __init__(self):
         Initialize an empty DAG.
+
+    .. py:method:: __len__(self):
+        Return the number of nodes in the graph. Use via ``len()`` function
 
     .. py:method:: edges(self):
         Return a list of all edge data.
@@ -48,6 +43,14 @@ retworkx API
 
         :returns: A list of the node data for all the parent neighbor nodes
         :rtype: list
+
+    .. py:method:: get_node_data(self, node):
+        Return the node data for a given node index
+
+        :param int node: The index for the node
+
+        :returns: The data object set for that node
+        :raises IndexError: when an invalid node index is provided
 
     .. py:method:: get_edge_data(self, node_a, node_b):
         Return the edge data for the edge between 2 nodes.
@@ -158,12 +161,48 @@ retworkx API
         :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
             found to a neighbor node
 
+    .. py:method:: in_edges(self, node):
+        Get the index and edge data for all parents of a node.
+
+        This will return a list of tuples with the parent index the node index
+        and the edge data. This can be used to recreate add_edge() calls.
+
+        :param int node: The index of the node to get the edges for
+
+        :returns in_edges: A list of tuples of the form:
+            (parent_index, node_index, edge_data)
+        :rtype: list
+        :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
+            found to a neighbor node
+
+    .. py:method:: out_edges(self, node):
+        Get the index and edge data for all children of a node.
+
+        This will return a list of tuples with the child index the node index
+        and the edge data. This can be used to recreate add_edge() calls.
+
+        :param int node: The index of the node to get the edges for
+
+        :returns out_edges: A list of tuples of the form:
+            (node_index, child_index, edge_data)
+        :rtype: list
+        :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
+            found to a neighbor node
+
     .. py:method:: in_degree(self, node):
         Get the degree of a node for inbound edges.
 
         :param int node: The index of the node to find the inbound degree of
 
         :returns degree: The inbound degree for the specified node
+        :rtype: int
+
+    .. py:method:: out_degree(self, node):
+        Get the degree of a node for outbound edges.
+
+        :param int node: The index of the node to find the outbound degree of
+
+        :returns degree: The outbound degree for the specified node
         :rtype: int
 
     .. py:method:: remove_edge(self, parent, child):
@@ -183,7 +222,6 @@ retworkx API
 
         :param int edge: The index of the edge to remove
 
-.. _daggy: https://github.com/mitchmindtree/daggy
 .. _petgraph: https://github.com/bluss/petgraph
 
 .. py:function:: dag_longest_path_length(graph):
