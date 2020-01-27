@@ -87,7 +87,7 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-#      if: tag IS present
+      if: tag IS present
       script:
         - sudo pip install -U cibuildwheel==1.1.0 twine
         - cibuildwheel --output-dir wheelhouse
