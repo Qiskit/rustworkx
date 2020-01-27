@@ -49,6 +49,14 @@ retworkx API
         :returns: A list of the node data for all the parent neighbor nodes
         :rtype: list
 
+    .. py:method:: get_node_data(self, node):
+        Return the node data for a given node index
+
+        :param int node: The index for the node
+
+        :returns: The data object set for that node
+        :raises IndexError: when an invalid node index is provided
+
     .. py:method:: get_edge_data(self, node_a, node_b):
         Return the edge data for the edge between 2 nodes.
 
