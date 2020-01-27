@@ -205,6 +205,14 @@ retworkx API
     :returns number: The number of weakly connected components in the DAG
     :rtype: int
 
+.. py:function:: is_directed_acyclic_graph(graph):
+    Check that the DAG doesn't have a cycle (should always return True)
+
+    :param PyDAG graph: The graph to check for cycles
+
+    :returns is_dag: True if there are no cycles and False if a cycle is found
+    :rtype: bool
+
 .. py:function:: is_isomorphic(first, second):
     Determine if 2 DAGS are structurally isomorphic.
 
