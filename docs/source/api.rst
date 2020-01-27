@@ -4,22 +4,17 @@ retworkx API
 .. py:class:: PyDAG
    A class for creating direct acyclic graphs.
 
-   The PyDAG class is constructed using the Rust library `daggy`_ which is
-   itself built on the Rust library `petgraph`_. The limitations and quirks
-   with both libraries dictate how this operates. The biggest thing to be
-   aware of when using the PyDAG class is that while node and edge indexes
-   are used for accessing elements on the DAG, node removal can change the
-   index of a node `petgraph`_. The limitations and quirks
-   with both libraries dictate how this operates. The biggest thing to be
-   aware of when using the PyDAG class is that while node and edge indexes
-   are used for accessing elements on the DAG, node removal can change the
-   indexes of nodes. Basically when a node in the middle of the dag is
-   removed the last index is moved to fill that spot. This means either
-   you have to track that event, or on node removal update the indexes for
-   the nodes you care about.
+   The PyDAG class is constructed using the Rust library `petgraph`_ around
+   the ``StableGraph`` type. The limitations and quirks with this library and
+   type dictate how this operates. The biggest thing to be aware of when using
+   the PyDAG class is that an integer node and edge index is used for accessing
+   elements on the DAG, not the data/weight of nodes and edges.
 
     .. py:method:: __init__(self):
         Initialize an empty DAG.
+
+    .. py:method:: __len__(self):
+        Return the number of nodes in the graph. Use via ``len()`` function
 
     .. py:method:: edges(self):
         Return a list of all edge data.
@@ -227,7 +222,6 @@ retworkx API
 
         :param int edge: The index of the edge to remove
 
-.. _daggy: https://github.com/mitchmindtree/daggy
 .. _petgraph: https://github.com/bluss/petgraph
 
 .. py:function:: dag_longest_path_length(graph):
