@@ -672,6 +672,32 @@ fn topological_sort(py: Python, graph: &PyDAG) -> PyResult<PyObject> {
     Ok(PyList::new(py, out).into())
 }
 
+#[pyfunction]
+fn ancestors(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
+    let index = NodeIndex::new(node);
+    let mut out_list: Vec<usize> = Vec::new();
+    for n in graph.graph.node_indices() {
+        let n_int = n.index();
+        if n_int != node && algo::has_path_connecting(graph, n, index, None) {
+            out_list.push(n_int);
+        }
+    }
+    Ok(PyList::new(py, out_list).into())
+}
+
+#[pyfunction]
+fn descendants(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
+    let index = NodeIndex::new(node);
+    let mut out_list: Vec<usize> = Vec::new();
+    for n in graph.graph.node_indices() {
+        let n_int = n.index();
+        if n_int != node && algo::has_path_connecting(graph, index, n, None) {
+            out_list.push(n_int);
+        }
+    }
+    Ok(PyList::new(py, out_list).into())
+}
+
 //#[pyfunction]
 //fn lexicographical_topological_sort(graph: PyDAG,
 //                                    key: &PyObject) {
@@ -687,6 +713,8 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
+    m.add_wrapped(wrap_pyfunction!(descendants))?;
+    m.add_wrapped(wrap_pyfunction!(ancestors))?;
     //    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_class::<PyDAG>()?;
     Ok(())
