@@ -600,7 +600,7 @@ fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
         }
     };
     let first_v = *first.1;
-    let mut v = first_v.0;
+    let mut v = first_v.1;
     let mut path: Vec<usize> = Vec::new();
     while match u {
         Some(u) => u != v,
