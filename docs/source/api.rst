@@ -291,9 +291,37 @@ retworkx API
 .. py:function:: topological_sort(graph):
     Return the topological sort of node indexes from the provided graph
 
-    :param PyDAG first: The DAG to get the topological sort on
+    :param PyDAG graph: The DAG to get the topological sort on
 
     :returns nodes: A list of node indexes topologically sorted.
     :rtype: list
 
     :raises DAGHasCycle: if a cycle is encountered while sorting the graph
+
+.. py:function:: ancestors(graph, node):
+    Return the ancestors of a node in a graph.
+
+    This differs from :py:meth:`PyDAG.predecessors` method  in that
+    predecessors returns only nodes with a direct edge into the provided node.
+    While this function returns all nodes that have a path into the provided
+    node.
+
+    :param PyDAG graph: The DAG to get the descendants from
+    :param int node: The index of the dag to get the ancestors for
+
+    :returns nodes: A list of node indexes of ancestors of provided node.
+    :rtype: list
+
+.. py:function:: descendants(graph, node):
+    Return the descendants of a node in a graph.
+
+    This differs from :py:meth:`PyDAG.successors` method in that
+    predecessors returns only nodes with a direct edge out of the provided node.
+    While this function returns all nodes that have a path from the provided
+    node.
+
+    :param PyDAG graph: The DAG to get the descendants from
+    :param int node: The index of the dag to get the descendants for
+
+    :returns nodes: A list of node indexes of descendants of provided node.
+    :rtype: list

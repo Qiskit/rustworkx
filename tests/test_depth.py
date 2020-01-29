@@ -49,7 +49,7 @@ class TestLongestPath(unittest.TestCase):
         dag.add_edge(node_a, node_c, {})
         dag.add_edge(node_a, node_e, {})
         dag.add_edge(node_c, node_e, {})
-        self.assertEqual(5, retworkx.dag_longest_path_length(dag))
+        self.assertEqual(4, retworkx.dag_longest_path_length(dag))
 
     def test_degenerate_graph(self):
         dag = retworkx.PyDAG()
