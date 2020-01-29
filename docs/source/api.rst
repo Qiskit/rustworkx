@@ -298,6 +298,21 @@ retworkx API
 
     :raises DAGHasCycle: if a cycle is encountered while sorting the graph
 
+.. py:function:: lexicogrpahical_topological_sort(dag, key):
+    Get the lexicographical topological sorted nodes' data from the provided dag
+
+    This function returns a list of nodes in a graph lexicographically
+    topologically sorted using the provided key function.
+
+    :param PyDAG dag: The DAG to get the topological sorted nodes from
+    :param function key: Takes in a python function or other callable that
+        gets passed a single argument the node data from the graph and is
+        expected to return a string.
+
+    :returns nodes: A list of node's data lexicographically topologically
+        sorted.
+    :rtype: list
+
 .. py:function:: ancestors(graph, node):
     Return the ancestors of a node in a graph.
 

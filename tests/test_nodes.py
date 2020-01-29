@@ -15,7 +15,7 @@ import unittest
 import retworkx
 
 
-class TestEdges(unittest.TestCase):
+class TestNodes(unittest.TestCase):
 
     def test_nodes(self):
         dag = retworkx.PyDAG()
@@ -40,6 +40,17 @@ class TestEdges(unittest.TestCase):
         dag.add_parent(3, 'A parent', None)
         res = retworkx.topological_sort(dag)
         self.assertEqual([6, 0, 5, 4, 3, 2, 1], res)
+
+    def test_lexicographical_topo_sort(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        for i in range(5):
+            dag.add_child(node_a, i, None)
+        dag.add_parent(3, 'A parent', None)
+        res = retworkx.lexicographical_topological_sort(dag, lambda x: str(x))
+        # Node values for nodes [6, 0, 5, 4, 3, 2, 1]
+        expected = ['A parent', 'a', 4, 3, 2, 1, 0]
+        self.assertEqual(expected, res)
 
     def test_get_node_data(self):
         dag = retworkx.PyDAG()
