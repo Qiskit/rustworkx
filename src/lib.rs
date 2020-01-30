@@ -603,9 +603,9 @@ where
     Box::new(left.zip(right))
 }
 
-#[pyfunction]
-fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
+fn longest_path(graph: &PyDAG) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
+    let mut path: Vec<usize> = Vec::new();
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
@@ -613,7 +613,7 @@ fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
         }
     };
     if nodes.is_empty() {
-        return Ok(0);
+        return Ok(path);
     }
     let mut dist: HashMap<usize, (usize, usize)> = HashMap::new();
     for node in nodes {
@@ -644,7 +644,6 @@ fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
     };
     let first_v = *first.1;
     let mut v = first_v.1;
-    let mut path: Vec<usize> = Vec::new();
     while match u {
         Some(u) => u != v,
         None => true,
@@ -654,6 +653,21 @@ fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
         v = dist[&v].1;
     }
     path.reverse();
+    Ok(path)
+}
+
+#[pyfunction]
+fn dag_longest_path(py: Python, graph: &PyDAG) -> PyResult<PyObject> {
+    let path = longest_path(graph)?;
+    Ok(PyList::new(py, path).into())
+}
+
+#[pyfunction]
+fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
+    let path = longest_path(graph)?;
+    if path.is_empty() {
+        return Ok(0);
+    }
     let mut path_length: usize = 0;
     for (_, _) in pairwise(path) {
         path_length += 1
@@ -818,6 +832,7 @@ fn lexicographical_topological_sort(
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
