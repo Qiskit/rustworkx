@@ -16,7 +16,8 @@ extern crate pyo3;
 
 mod dag_isomorphism;
 
-use std::collections::HashMap;
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap};
 use std::iter;
 use std::ops::{Index, IndexMut};
 
@@ -698,11 +699,79 @@ fn descendants(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     Ok(PyList::new(py, out_list).into())
 }
 
-//#[pyfunction]
-//fn lexicographical_topological_sort(graph: PyDAG,
-//                                    key: &PyObject) {
-//
-//}
+#[pyfunction]
+fn lexicographical_topological_sort(
+    py: Python,
+    dag: &PyDAG,
+    key: PyObject,
+) -> PyResult<PyObject> {
+    let key_callable = |a: &PyObject| -> PyResult<PyObject> {
+        let res = key.call1(py, (a,))?;
+        Ok(res.to_object(py))
+    };
+    // HashMap of node_index indegree
+    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::new();
+    for node in dag.graph.node_indices() {
+        in_degree_map.insert(node, dag.in_degree(node.index()));
+    }
+
+    #[derive(Clone, Eq, PartialEq)]
+    struct State {
+        key: String,
+        node: NodeIndex,
+    }
+
+    impl Ord for State {
+        fn cmp(&self, other: &State) -> Ordering {
+            // Notice that the we flip the ordering on costs.
+            // In case of a tie we compare positions - this step is necessary
+            // to make implementations of `PartialEq` and `Ord` consistent.
+            other
+                .key
+                .cmp(&self.key)
+                .then_with(|| self.node.index().cmp(&other.node.index()))
+        }
+    }
+
+    // `PartialOrd` needs to be implemented as well.
+    impl PartialOrd for State {
+        fn partial_cmp(&self, other: &State) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    let mut zero_indegree = BinaryHeap::new();
+    for (node, degree) in in_degree_map.iter() {
+        if *degree == 0 {
+            let map_key_raw = key_callable(&dag.graph[*node])?;
+            let map_key: String = map_key_raw.extract(py)?;
+            zero_indegree.push(State {
+                key: map_key,
+                node: *node,
+            });
+        }
+    }
+    let mut out_list: Vec<&PyObject> = Vec::new();
+    let dir = petgraph::Direction::Outgoing;
+    while let Some(State { key: _, node }) = zero_indegree.pop() {
+        let neighbors = dag.graph.neighbors_directed(node, dir);
+        for child in neighbors {
+            let child_degree = in_degree_map.get_mut(&child).unwrap();
+            *child_degree -= 1;
+            if *child_degree == 0 {
+                let map_key_raw = key_callable(&dag.graph[node])?;
+                let map_key: String = map_key_raw.extract(py)?;
+                zero_indegree.push(State {
+                    key: map_key,
+                    node: child,
+                });
+                in_degree_map.remove(&child);
+            }
+        }
+        out_list.push(&dag.graph[node])
+    }
+    Ok(PyList::new(py, out_list).into())
+}
 
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -715,7 +784,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
-    //    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
+    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_class::<PyDAG>()?;
     Ok(())
 }
