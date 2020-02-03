@@ -10,6 +10,10 @@ retworkx API
    the PyDAG class is that an integer node and edge index is used for accessing
    elements on the DAG, not the data/weight of nodes and edges.
 
+     .. note::
+          When using ``copy.deepcopy()`` or pickling node indexes are not
+          guaranteed to be preserved.
+
     .. py:method:: __init__(self):
         Initialize an empty DAG.
 

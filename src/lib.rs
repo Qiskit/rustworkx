@@ -25,7 +25,7 @@ use pyo3::class::PyMappingProtocol;
 use pyo3::create_exception;
 use pyo3::exceptions::{Exception, IndexError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyDict, PyList, PyLong, PyTuple};
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
@@ -40,7 +40,7 @@ use petgraph::visit::{
     NodeIndexable, Visitable,
 };
 
-#[pyclass]
+#[pyclass(module = "retworkx")]
 pub struct PyDAG {
     graph: StableDiGraph<PyObject, PyObject>,
     cycle_state: algo::DfsSpace<
@@ -232,6 +232,66 @@ impl PyDAG {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
         });
+    }
+
+    fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
+        let out_dict = PyDict::new(py);
+        let node_dict = PyDict::new(py);
+        let mut out_list: Vec<PyObject> = Vec::new();
+        out_dict.set_item("nodes", node_dict)?;
+
+        let dir = petgraph::Direction::Incoming;
+        for node_index in self.graph.node_indices() {
+            let node_data = self.graph.node_weight(node_index).unwrap();
+            node_dict.set_item(node_index.index(), node_data)?;
+            for edge in self.graph.edges_directed(node_index, dir) {
+                let edge_w = edge.weight();
+                let triplet =
+                    (edge.source().index(), edge.target().index(), edge_w)
+                        .to_object(py);
+                out_list.push(triplet);
+            }
+        }
+        let py_out_list: PyObject = PyList::new(py, out_list).into();
+        out_dict.set_item("edges", py_out_list)?;
+        Ok(out_dict.into())
+    }
+
+    fn __setstate__(&mut self, state: PyObject) -> PyResult<()> {
+        let mut node_mapping: HashMap<usize, NodeIndex> = HashMap::new();
+        self.graph = StableDiGraph::<PyObject, PyObject>::new();
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        let dict_state = state.cast_as::<PyDict>(py)?;
+
+        let nodes_dict = dict_state
+            .get_item("nodes")
+            .unwrap()
+            .downcast_ref::<PyDict>()?;
+        let edges_list = dict_state
+            .get_item("edges")
+            .unwrap()
+            .downcast_ref::<PyList>()?;
+        for raw_index in nodes_dict.keys().iter() {
+            let tmp_index = raw_index.downcast_ref::<PyLong>()?;
+            let index: usize = tmp_index.extract()?;
+            let raw_data = nodes_dict.get_item(index).unwrap();
+            let node_index = self.graph.add_node(raw_data.into());
+            node_mapping.insert(index, node_index);
+        }
+        for raw_edge in edges_list.iter() {
+            let edge = raw_edge.downcast_ref::<PyTuple>()?;
+            let raw_p_index = edge.get_item(0).downcast_ref::<PyLong>()?;
+            let tmp_p_index: usize = raw_p_index.extract()?;
+            let raw_c_index = edge.get_item(1).downcast_ref::<PyLong>()?;
+            let tmp_c_index: usize = raw_c_index.extract()?;
+            let edge_data = edge.get_item(2);
+
+            let p_index = node_mapping.get(&tmp_p_index).unwrap();
+            let c_index = node_mapping.get(&tmp_c_index).unwrap();
+            self.graph.add_edge(*p_index, *c_index, edge_data.into());
+        }
+        Ok(())
     }
 
     pub fn edges(&self, py: Python) -> PyObject {
@@ -470,8 +530,7 @@ impl PyDAG {
         let raw_edges = self.graph.edges_directed(index, dir);
         for edge in raw_edges {
             let edge_w = edge.weight();
-            let triplet =
-                (edge.source().index(), node, edge_w).to_object(py);
+            let triplet = (edge.source().index(), node, edge_w).to_object(py);
             out_list.push(triplet)
         }
         Ok(PyList::new(py, out_list).into())
@@ -484,8 +543,7 @@ impl PyDAG {
         let raw_edges = self.graph.edges_directed(index, dir);
         for edge in raw_edges {
             let edge_w = edge.weight();
-            let triplet =
-                (node, edge.target().index(), edge_w).to_object(py);
+            let triplet = (node, edge.target().index(), edge_w).to_object(py);
             out_list.push(triplet)
         }
         Ok(PyList::new(py, out_list).into())
