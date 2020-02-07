@@ -45,6 +45,9 @@ install:
 script:
     - cd tests && ../test-venv/bin/python -m unittest discover .
 jobs:
+  fast_finish: true
+  allow_failures:
+    - name: Python 3.7 Tests s390x Linux
   include:
     - name: Python 3.5 Tests Linux
       python: 3.5
