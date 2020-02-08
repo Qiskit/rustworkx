@@ -1,6 +1,7 @@
 notifications:
     email: false
 
+os: linux
 cache: pip
 
 stage_osx: &stage_osx
@@ -44,6 +45,7 @@ install:
 script:
     - cd tests && ../test-venv/bin/python -m unittest discover .
 jobs:
+  fast_finish: true
   include:
     - name: Python 3.5 Tests Linux
       python: 3.5
@@ -57,7 +59,18 @@ jobs:
     - name: Python 3.8 Tests Linux
       python: 3.8
       dist: bionic
-
+    - name: Python 3.7 Tests ppc64le Linux
+      python: 3.7
+      arch: ppc64le
+      dist: bionic
+    - name: Python 3.7 Tests s390x Linux
+      python: 3.7
+      arch: s390x
+      dist: bionic
+    - name: Python 3.7 Tests arm64 Linux
+      python: 3.7
+      arch: arm64
+      dist: bionic
     - name: Python 3.5 Tests OSX
       <<: *stage_osx
       env:
