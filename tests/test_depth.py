@@ -24,9 +24,9 @@ class TestLongestPath(unittest.TestCase):
         b
         |\
         c d
-        |
-        e
         |\
+        e |
+        | |
         f g
         """
         dag = retworkx.PyDAG()
@@ -36,7 +36,7 @@ class TestLongestPath(unittest.TestCase):
         dag.add_child(node_b, 'd', {})
         node_e = dag.add_child(node_c, 'e', {})
         node_f = dag.add_child(node_e, 'f', {})
-        dag.add_child(node_e, 'g', {})
+        dag.add_child(node_c, 'g', {})
         self.assertEqual(4, retworkx.dag_longest_path_length(dag))
         self.assertEqual([node_a, node_b, node_c, node_e, node_f],
                          retworkx.dag_longest_path(dag))
