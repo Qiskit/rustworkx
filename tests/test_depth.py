@@ -58,7 +58,7 @@ class TestLongestPath(unittest.TestCase):
     def test_degenerate_graph(self):
         dag = retworkx.PyDAG()
         dag.add_node(0)
-        self.assertEqual(1, retworkx.dag_longest_path_length(dag))
+        self.assertEqual(0, retworkx.dag_longest_path_length(dag))
         self.assertEqual([0],
                          retworkx.dag_longest_path(dag))
 

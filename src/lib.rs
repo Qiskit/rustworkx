@@ -18,7 +18,6 @@ mod dag_isomorphism;
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
-use std::iter;
 use std::ops::{Index, IndexMut};
 
 use pyo3::class::PyMappingProtocol;
@@ -592,17 +591,6 @@ fn must_check_for_cycle(dag: &PyDAG, a: NodeIndex, b: NodeIndex) -> bool {
         && dag.graph.find_edge(a, b).is_none()
 }
 
-fn pairwise<'a, I>(
-    xs: I,
-) -> Box<dyn Iterator<Item = (Option<I::Item>, I::Item)> + 'a>
-where
-    I: 'a + IntoIterator + Clone,
-{
-    let left = iter::once(None).chain(xs.clone().into_iter().map(Some));
-    let right = xs.into_iter();
-    Box::new(left.zip(right))
-}
-
 fn longest_path(graph: &PyDAG) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
     let mut path: Vec<usize> = Vec::new();
@@ -615,40 +603,36 @@ fn longest_path(graph: &PyDAG) -> PyResult<Vec<usize>> {
     if nodes.is_empty() {
         return Ok(path);
     }
-    let mut dist: HashMap<usize, (usize, usize)> = HashMap::new();
+    let mut dist: HashMap<NodeIndex, (i64, NodeIndex)> = HashMap::new();
     for node in nodes {
-        // Iterator that yields (EdgeIndex, NodeIndex)
         let parents =
             dag.neighbors_directed(node, petgraph::Direction::Incoming);
-        let mut us: Vec<(usize, usize)> = Vec::new();
+        let mut us: Vec<(i64, NodeIndex)> = Vec::new();
         for p_node in parents {
-            let p_index = p_node.index();
-            let length = dist[&p_index].0 + 1;
-            let u = p_index;
-            us.push((length, u));
+            let length = dist[&p_node].0 + 1;
+            us.push((length, p_node));
         }
-        let maxu: (usize, usize);
+        let maxu: (i64, NodeIndex);
         if !us.is_empty() {
             maxu = *us.iter().max_by_key(|x| x.0).unwrap();
         } else {
-            maxu = (0, node.index());
+            maxu = (0, node);
         };
-        dist.insert(node.index(), maxu);
+        dist.insert(node, maxu);
     }
-    let mut u: Option<usize> = None;
-    let first = match dist.iter().max_by_key(|(_, v)| v.0) {
+    let first = match dist.keys().max_by_key(|index| dist[index]) {
         Some(first) => first,
         None => {
             return Err(Exception::py_err("Encountered something unexpected"))
         }
     };
-    let first_v = *first.1;
-    let mut v = first_v.1;
+    let mut v = *first;
+    let mut u: Option<NodeIndex> = None;
     while match u {
         Some(u) => u != v,
         None => true,
     } {
-        path.push(v);
+        path.push(v.index());
         u = Some(v);
         v = dist[&v].1;
     }
@@ -668,10 +652,7 @@ fn dag_longest_path_length(graph: &PyDAG) -> PyResult<usize> {
     if path.is_empty() {
         return Ok(0);
     }
-    let mut path_length: usize = 0;
-    for (_, _) in pairwise(path) {
-        path_length += 1
-    }
+    let path_length: usize = path.len() - 1;
     Ok(path_length)
 }
 
