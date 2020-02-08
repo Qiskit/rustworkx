@@ -67,6 +67,7 @@ jobs:
     - name: Python 3.7 Tests s390x Linux
       python: 3.7
       arch: s390x
+      dist: bionic
       env:
         - RUST_BACKTRACE=full
     - name: Python 3.7 Tests arm64 Linux
