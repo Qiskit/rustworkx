@@ -603,16 +603,16 @@ fn longest_path(graph: &PyDAG) -> PyResult<Vec<usize>> {
     if nodes.is_empty() {
         return Ok(path);
     }
-    let mut dist: HashMap<NodeIndex, (i64, NodeIndex)> = HashMap::new();
+    let mut dist: HashMap<NodeIndex, (usize, NodeIndex)> = HashMap::new();
     for node in nodes {
         let parents =
             dag.neighbors_directed(node, petgraph::Direction::Incoming);
-        let mut us: Vec<(i64, NodeIndex)> = Vec::new();
+        let mut us: Vec<(usize, NodeIndex)> = Vec::new();
         for p_node in parents {
             let length = dist[&p_node].0 + 1;
             us.push((length, p_node));
         }
-        let maxu: (i64, NodeIndex);
+        let maxu: (usize, NodeIndex);
         if !us.is_empty() {
             maxu = *us.iter().max_by_key(|x| x.0).unwrap();
         } else {
