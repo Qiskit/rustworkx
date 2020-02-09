@@ -33,8 +33,8 @@ use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableDiGraph;
 use petgraph::visit::{
-    GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
+    Bfs, GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences,
+    IntoEdges, IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
     IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
     NodeIndexable, Visitable,
 };
@@ -711,6 +711,30 @@ fn topological_sort(py: Python, graph: &PyDAG) -> PyResult<PyObject> {
 }
 
 #[pyfunction]
+fn bfs_successors(
+    py: Python,
+    graph: &PyDAG,
+    node: usize,
+) -> PyResult<PyObject> {
+    let index = NodeIndex::new(node);
+    let mut bfs = Bfs::new(graph, index);
+    let mut out_list: Vec<(&PyObject, Vec<&PyObject>)> = Vec::new();
+    while let Some(nx) = bfs.next(graph) {
+        let children = graph
+            .graph
+            .neighbors_directed(nx, petgraph::Direction::Outgoing);
+        let mut succesors: Vec<&PyObject> = Vec::new();
+        for succ in children {
+            succesors.push(graph.graph.node_weight(succ).unwrap());
+        }
+        if !succesors.is_empty() {
+            out_list.push((graph.graph.node_weight(nx).unwrap(), succesors));
+        }
+    }
+    Ok(PyList::new(py, out_list).into())
+}
+
+#[pyfunction]
 fn ancestors(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let index = NodeIndex::new(node);
     let mut out_list: Vec<usize> = Vec::new();
@@ -813,6 +837,7 @@ fn lexicographical_topological_sort(
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
