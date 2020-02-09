@@ -1,9 +1,4 @@
-notifications:
-    email: false
-
-os: linux
-cache: pip
-
+---
 stage_osx: &stage_osx
   os: osx
   language: generic
@@ -32,75 +27,103 @@ stage_osx: &stage_osx
     - pip install -U .
   script:
     - cd tests && python -m unittest discover .
-
+notifications:
+  email: false
+os: linux
+language: python
+cache: pip
+dist: bionic
 before_install:
-    - which python
-    - sh tools/install_rust.sh
-    - export PATH=~/.cargo/bin:$PATH
-    - which python
-    - pip install -U pip virtualenv
+  - which python
+  - sh tools/install_rust.sh
+  - export PATH=~/.cargo/bin:$PATH
+  - which python
+  - pip install -U pip virtualenv
 install:
-    - virtualenv test-venv
-    - test-venv/bin/pip install -U .
+  - virtualenv test-venv
+  - test-venv/bin/pip install -U .
 script:
-    - cd tests && ../test-venv/bin/python -m unittest discover .
+  - cd tests && ../test-venv/bin/python -m unittest discover .
+stages:
+  - name: Compile and rustfmt
+    if: tag IS blank
+  - name: Linux x86_64
+    if: tag IS blank
+  - name: Linux non-x86_64
+    if: tag IS blank
+  - name: macOS
+    if: tag IS blank
+  - name: deploy
+    if: tag IS present
+
 jobs:
   fast_finish: true
   include:
-    - language: rust
+    - name: Compile and rustfmt
+      language: rust
+      stage: Compile and rustfmt
+      before_install: echo ""
+      install: echo ""
       before_script:
-        - rustup override set nightly
+        - rustup update
+        - rustup component add rustfmt
+        - rustup override set nightly-2020-02-06
         - rustup component add rustfmt
       script:
         - cargo build
         - cargo fmt -- --check
     - name: Python 3.5 Tests Linux
+      stage: Linux x86_64
       python: 3.5
-      dist: bionic
     - name: Python 3.6 Tests Linux
+      stage: Linux x86_64
       python: 3.6
-      dist: bionic
     - name: Python 3.7 Tests Linux
-      dist: bionic
+      stage: Linux x86_64
       python: 3.7
     - name: Python 3.8 Tests Linux
+      stage: Linux x86_64
       python: 3.8
-      dist: bionic
     - name: Python 3.7 Tests ppc64le Linux
+      stage: Linux non-x86_64
       python: 3.7
       arch: ppc64le
-      dist: bionic
     - name: Python 3.7 Tests s390x Linux
+      stage: Linux non-x86_64
       python: 3.7
       arch: s390x
-      dist: bionic
     - name: Python 3.7 Tests arm64 Linux
+      stage: Linux non-x86_64
       python: 3.7
       arch: arm64
-      dist: bionic
     - name: Python 3.5 Tests OSX
+      stage: macOS
       <<: *stage_osx
       env:
         - PYTHON_VERSION=3.5.8
     - name: Python 3.6 Tests OSX
+      stage: macOS
       <<: *stage_osx
       env:
         - PYTHON_VERSION=3.6.9
     - name: Python 3.7 Tests OSX
+      stage: macOS
       <<: *stage_osx
       env:
         - PYTHON_VERSION=3.7.5
     - name: Python 3.8 Tests OSX
+      stage: macOS
       <<: *stage_osx
       env:
         - PYTHON_VERSION=3.8.0
 
-    - services:
+    - stage: deploy
+      services:
         - docker
       before_install:
-          - echo ""
+        - echo ""
       install:
-          - echo ""
+        - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-*"
@@ -112,13 +135,14 @@ jobs:
         - sudo pip install -U cibuildwheel==1.1.0 twine
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
-    - os: osx
+    - stage: deploy
+      os: osx
       language: generic
       if: tag IS present
       before_install:
-          - echo ""
+        - echo ""
       install:
-          - echo ""
+        - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-*"
@@ -129,5 +153,3 @@ jobs:
         - sudo pip2 install -U cibuildwheel==1.1.0 twine
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
-
-language: python
