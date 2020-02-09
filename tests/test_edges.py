@@ -40,6 +40,18 @@ class TestEdges(unittest.TestCase):
         self.assertRaises(Exception, dag.get_edge_data,
                           node_a, node_b)
 
+    def test_has_edge(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {})
+        self.assertTrue(dag.has_edge(node_a, node_b))
+
+    def test_has_edge_no_edge(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_node('b')
+        self.assertFalse(dag.has_edge(node_a, node_b))
+
     def test_edges(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')

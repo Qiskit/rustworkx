@@ -311,6 +311,15 @@ impl PyDAG {
         PyList::new(py, out).into()
     }
 
+    pub fn has_edge(&self, node_a: usize, node_b: usize) -> bool {
+        let index_a = NodeIndex::new(node_a);
+        let index_b = NodeIndex::new(node_b);
+        match self.graph.find_edge(index_a, index_b) {
+            Some(_) => true,
+            None => false,
+        }
+    }
+
     pub fn successors(&self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let children = self
