@@ -47,6 +47,13 @@ script:
 jobs:
   fast_finish: true
   include:
+    - language: rust
+      before_script:
+        - rustup override set nightly
+        - rustup component add rustfmt
+      script:
+        - cargo build
+        - cargo fmt -- --check
     - name: Python 3.5 Tests Linux
       python: 3.5
       dist: bionic
