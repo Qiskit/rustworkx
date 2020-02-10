@@ -24,6 +24,15 @@ class TestPredecessors(unittest.TestCase):
         res = dag.predecessors(node_c)
         self.assertEqual(['a'], res)
 
+    def test_single_predecessor_multiple_edges(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {'a': 1})
+        node_c = dag.add_child(node_a, 'c', {'a': 2})
+        dag.add_edge(node_a, node_c, {'a': 3})
+        res = dag.predecessors(node_c)
+        self.assertEqual(['a'], res)
+
     def test_many_parents(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
@@ -45,6 +54,16 @@ class TestSuccessors(unittest.TestCase):
         res = dag.successors(node_b)
         self.assertEqual(['c'], res)
 
+    def test_single_successor_multiple_edges(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {'a': 1})
+        node_c = dag.add_child(node_b, 'c', {'a': 2})
+        dag.add_child(node_c, 'd', {'a': 1})
+        dag.add_edge(node_b, node_c, {'a': 3})
+        res = dag.successors(node_b)
+        self.assertEqual(['c'], res)
+
     def test_many_children(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
@@ -56,7 +75,7 @@ class TestSuccessors(unittest.TestCase):
                           {'numeral': 3}, {'numeral': 2}, {'numeral': 1},
                           {'numeral': 0}], res)
 
-class TestSuccessors(unittest.TestCase):
+class TestBfsSuccessors(unittest.TestCase):
     def test_single_successor(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')

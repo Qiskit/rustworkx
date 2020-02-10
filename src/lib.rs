@@ -17,7 +17,7 @@ extern crate pyo3;
 mod dag_isomorphism;
 
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::ops::{Index, IndexMut};
 
 use pyo3::class::PyMappingProtocol;
@@ -314,10 +314,7 @@ impl PyDAG {
     pub fn has_edge(&self, node_a: usize, node_b: usize) -> bool {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
-        match self.graph.find_edge(index_a, index_b) {
-            Some(_) => true,
-            None => false,
-        }
+        self.graph.find_edge(index_a, index_b).is_some()
     }
 
     pub fn successors(&self, py: Python, node: usize) -> PyResult<PyObject> {
@@ -326,8 +323,12 @@ impl PyDAG {
             .graph
             .neighbors_directed(index, petgraph::Direction::Outgoing);
         let mut succesors: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
         for succ in children {
-            succesors.push(self.graph.node_weight(succ).unwrap());
+            if !used_indexes.contains(&succ) {
+                succesors.push(self.graph.node_weight(succ).unwrap());
+                used_indexes.insert(succ);
+            }
         }
         Ok(PyList::new(py, succesors).into())
     }
@@ -338,8 +339,12 @@ impl PyDAG {
             .graph
             .neighbors_directed(index, petgraph::Direction::Incoming);
         let mut predec: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
         for pred in parents {
-            predec.push(self.graph.node_weight(pred).unwrap());
+            if !used_indexes.contains(&pred) {
+                predec.push(self.graph.node_weight(pred).unwrap());
+                used_indexes.insert(pred);
+            }
         }
         Ok(PyList::new(py, predec).into())
     }
