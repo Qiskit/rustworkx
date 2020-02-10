@@ -59,12 +59,18 @@ with nightly at this point. You can use `rustup`_ to install rust nightly.
 .. _rustup: https://rustup.rs/
 
 Once you have nightly rust and cargo installed you can easily install retworkx
-into your python environment using pip. Once you have a local clone of the repo
-you can install retworkx into your python env with::
+into your python environment using pip. Once you have a local clone of the repo,
+change your current working directory to the root of the repo. To set the compiler
+for ``retworkx`` to nightly rust using ``rustup``, run the following from this
+directory::
+
+  rustup override set nightly
+
+then, you can install retworkx into your python env with::
 
   pip install .
 
-Assuming your current working directory is the root of the repo. Otherwise
+Assuming your current working directory is still the root of the repo. Otherwise
 you can run::
 
   pip install $PATH_TO_REPO_ROOT
