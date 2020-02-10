@@ -75,7 +75,7 @@ class TestSuccessors(unittest.TestCase):
                           {'numeral': 3}, {'numeral': 2}, {'numeral': 1},
                           {'numeral': 0}], res)
 
-class TestSuccessors(unittest.TestCase):
+class TestBfsSuccessors(unittest.TestCase):
     def test_single_successor(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
