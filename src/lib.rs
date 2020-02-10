@@ -814,7 +814,6 @@ fn lexicographical_topological_sort(
             Some(self.cmp(other))
         }
     }
-
     let mut zero_indegree = BinaryHeap::new();
     for (node, degree) in in_degree_map.iter() {
         if *degree == 0 {
@@ -834,7 +833,7 @@ fn lexicographical_topological_sort(
             let child_degree = in_degree_map.get_mut(&child).unwrap();
             *child_degree -= 1;
             if *child_degree == 0 {
-                let map_key_raw = key_callable(&dag.graph[node])?;
+                let map_key_raw = key_callable(&dag.graph[child])?;
                 let map_key: String = map_key_raw.extract(py)?;
                 zero_indegree.push(State {
                     key: map_key,
