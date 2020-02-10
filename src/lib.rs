@@ -804,7 +804,7 @@ fn lexicographical_topological_sort(
             other
                 .key
                 .cmp(&self.key)
-                .then_with(|| self.node.index().cmp(&other.node.index()))
+                .then_with(|| other.node.index().cmp(&self.node.index()))
         }
     }
 
