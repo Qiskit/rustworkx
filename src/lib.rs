@@ -17,7 +17,7 @@ extern crate pyo3;
 mod dag_isomorphism;
 
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::ops::{Index, IndexMut};
 
 use pyo3::class::PyMappingProtocol;
@@ -326,8 +326,12 @@ impl PyDAG {
             .graph
             .neighbors_directed(index, petgraph::Direction::Outgoing);
         let mut succesors: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
         for succ in children {
-            succesors.push(self.graph.node_weight(succ).unwrap());
+            if !used_indexes.contains(&succ) {
+                succesors.push(self.graph.node_weight(succ).unwrap());
+                used_indexes.insert(succ);
+            }
         }
         Ok(PyList::new(py, succesors).into())
     }
@@ -338,8 +342,12 @@ impl PyDAG {
             .graph
             .neighbors_directed(index, petgraph::Direction::Incoming);
         let mut predec: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
         for pred in parents {
-            predec.push(self.graph.node_weight(pred).unwrap());
+            if !used_indexes.contains(&pred) {
+                predec.push(self.graph.node_weight(pred).unwrap());
+                used_indexes.insert(pred);
+            }
         }
         Ok(PyList::new(py, predec).into())
     }
