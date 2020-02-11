@@ -17,6 +17,7 @@ extern crate pyo3;
 mod dag_isomorphism;
 
 use std::cmp::Ordering;
+use std::cmp::min;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::ops::{Index, IndexMut};
 
@@ -24,7 +25,7 @@ use pyo3::class::PyMappingProtocol;
 use pyo3::create_exception;
 use pyo3::exceptions::{Exception, IndexError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyLong, PyTuple};
+use pyo3::types::{PyDict, IntoPyDict, PyList, PyLong, PyTuple};
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
@@ -847,6 +848,50 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+// Find the shortest path lengths between all pairs of nodes using Floyd's
+// algorithm
+// Note: Edge weights are assumed to be 1
+#[pyfunction]
+fn floyd_warshall(
+    py: Python,
+    dag: &PyDAG,
+) -> PyResult<PyObject> {
+    let mut dist: HashMap<(usize, usize), usize> = HashMap::new();
+
+    for u in dag.graph.node_indices() {
+        for v in dag.graph.node_indices() {
+            dist.insert((u.index(), v.index()), std::usize::MAX);
+        }
+    }
+    for node in dag.graph.node_indices() {
+        dist.insert((node.index(), node.index()), 0);
+    }
+    
+    for edge in dag.graph.edge_indices() {
+        let source_target = dag.graph.edge_endpoints(edge).unwrap();
+        let u = source_target.0.index();
+        let v = source_target.1.index();
+        dist.insert((u, v), min(1, *dist.get(&(u, v)).unwrap()));
+    }
+
+    for w in dag.graph.node_indices() {
+        for u in dag.graph.node_indices() {
+            for v in dag.graph.node_indices() {
+                let &u_v_dist = dist.get(&(u.index(), v.index())).unwrap();
+                let &u_w_dist = dist.get(&(u.index(), w.index())).unwrap();
+                let &w_v_dist = dist.get(&(w.index(), v.index())).unwrap();
+                if u_w_dist == std::usize::MAX || w_v_dist == std::usize::MAX {
+                    continue;
+                }
+                if u_v_dist > u_w_dist + w_v_dist {
+                    dist.insert((u.index(), v.index()), u_w_dist + w_v_dist);
+                }
+            }
+        }
+    }
+    Ok(dist.into_py_dict(py).to_object(py))
+}
+
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -861,6 +906,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
+    m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_class::<PyDAG>()?;
     Ok(())
 }
