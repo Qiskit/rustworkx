@@ -26,6 +26,15 @@ retworkx API
         :returns: A list of all the edge data objects in the DAG
         :rtype: list
 
+    .. py:method:: has_edge(self, node_a, node_b):
+        Return True if there is an edge from node_a to node_b.
+
+        :param int node_a: The source node index to check for an edge
+        :param int node_b: The destination node index to check for an edge
+
+        :returns: True if there is an edge false if there is no edge
+        :rtype: bool
+
     .. py:method:: nodes(self):
         Return a list of all node data.
 
@@ -228,6 +237,16 @@ retworkx API
 
 .. _petgraph: https://github.com/bluss/petgraph
 
+.. py:function:: dag_longest_path(graph):
+    Find the the longest path in a graph.
+
+    :param PyDAG graph: The graph to find the longest path on
+
+    :returns path: The node indexes of the longest path on the graph
+    :rtype: list
+
+    :raises Exception: If an unexpected error occurs and a path can't be found
+
 .. py:function:: dag_longest_path_length(graph):
     Find the length of the longest path in a graph.
 
@@ -326,7 +345,7 @@ retworkx API
     node.
 
     :param PyDAG graph: The DAG to get the descendants from
-    :param int node: The index of the dag to get the ancestors for
+    :param int node: The index of the dag node to get the ancestors for
 
     :returns nodes: A list of node indexes of ancestors of provided node.
     :rtype: list
@@ -340,7 +359,19 @@ retworkx API
     node.
 
     :param PyDAG graph: The DAG to get the descendants from
-    :param int node: The index of the dag to get the descendants for
+    :param int node: The index of the dag node to get the descendants for
 
     :returns nodes: A list of node indexes of descendants of provided node.
+    :rtype: list
+
+.. py:function:: bfs_successors(graph, node):
+    Return successors in a breadth-first-search from a source node.
+
+    The return format is [(Parent Node, [Children Nodes])] in a bfs order from
+    the source node provided.
+
+    :param PyDAG graph: The DAG to get the bfs_successors from
+    :param int node: The index of the dag node to get the bfs successors for
+
+    :returns nodes: A list of nodes's data and their children in bfs order
     :rtype: list
