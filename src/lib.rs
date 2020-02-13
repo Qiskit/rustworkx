@@ -16,8 +16,8 @@ extern crate pyo3;
 
 mod dag_isomorphism;
 
-use std::cmp::Ordering;
 use std::cmp::min;
+use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::ops::{Index, IndexMut};
 
@@ -852,11 +852,7 @@ fn lexicographical_topological_sort(
 // algorithm
 // Note: Edge weights are assumed to be 1
 #[pyfunction]
-fn floyd_warshall(
-    py: Python,
-    dag: &PyDAG,
-) -> PyResult<PyObject> {
-
+fn floyd_warshall(py: Python, dag: &PyDAG) -> PyResult<PyObject> {
     let mut dist: HashMap<(usize, usize), usize> = HashMap::new();
     for node in dag.graph.node_indices() {
         // Distance from a node to itself is zero
@@ -879,15 +875,15 @@ fn floyd_warshall(
             for v in dag.graph.node_indices() {
                 let u_v_dist = match dist.get(&(u.index(), v.index())) {
                     Some(u_v_dist) => *u_v_dist,
-                    None => std::usize::MAX
+                    None => std::usize::MAX,
                 };
                 let u_w_dist = match dist.get(&(u.index(), w.index())) {
                     Some(u_w_dist) => *u_w_dist,
-                    None => std::usize::MAX
+                    None => std::usize::MAX,
                 };
                 let w_v_dist = match dist.get(&(w.index(), v.index())) {
                     Some(w_v_dist) => *w_v_dist,
-                    None => std::usize::MAX
+                    None => std::usize::MAX,
                 };
                 if u_w_dist == std::usize::MAX || w_v_dist == std::usize::MAX {
                     // Avoid overflow!
@@ -907,7 +903,8 @@ fn floyd_warshall(
         let v_index = nodes.1;
         if out_dict.contains(u_index)? {
             let u_dict = out_dict
-                .get_item(u_index).unwrap()
+                .get_item(u_index)
+                .unwrap()
                 .downcast_ref::<PyDict>()?;
             u_dict.set_item(v_index, distance);
             out_dict.set_item(u_index, u_dict)?;
