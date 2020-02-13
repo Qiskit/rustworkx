@@ -25,7 +25,7 @@ use pyo3::class::PyMappingProtocol;
 use pyo3::create_exception;
 use pyo3::exceptions::{Exception, IndexError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, IntoPyDict, PyList, PyLong, PyTuple};
+use pyo3::types::{PyDict, PyList, PyLong, PyTuple};
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
@@ -873,13 +873,12 @@ fn floyd_warshall(
         let v = source_target.1.index();
         dist.insert((u, v), min(1, *dist.get(&(u, v)).unwrap()));
     }
-
     for w in dag.graph.node_indices() {
         for u in dag.graph.node_indices() {
             for v in dag.graph.node_indices() {
-                let &u_v_dist = dist.get(&(u.index(), v.index())).unwrap();
-                let &u_w_dist = dist.get(&(u.index(), w.index())).unwrap();
-                let &w_v_dist = dist.get(&(w.index(), v.index())).unwrap();
+                let u_v_dist = *dist.get(&(u.index(), v.index())).unwrap();
+                let u_w_dist = *dist.get(&(u.index(), w.index())).unwrap();
+                let w_v_dist = *dist.get(&(w.index(), v.index())).unwrap();
                 if u_w_dist == std::usize::MAX || w_v_dist == std::usize::MAX {
                     continue;
                 }
@@ -889,7 +888,30 @@ fn floyd_warshall(
             }
         }
     }
-    Ok(dist.into_py_dict(py).to_object(py))
+
+    let out_dict = PyDict::new(py);
+    for u in dag.graph.node_indices() {
+        for v in dag.graph.node_indices() {
+            let &u_v_dist = dist.get(&(u.index(), v.index())).unwrap();
+            if u_v_dist != std::usize::MAX {
+                if out_dict.contains(u.index())? {
+                    let u_dict = out_dict.get_item(u.index())
+                                         .unwrap()
+                                         .downcast_ref::<PyDict>()?;
+                    u_dict.set_item(v.index(), u_v_dist);
+                    out_dict.set_item(u.index(),
+                                      u_dict)?;
+                } else {
+                    let mut u_dict = PyDict::new(py);
+                    u_dict.set_item(v.index(), u_v_dist);
+                    out_dict.set_item(u.index(),
+                                      u_dict)?;
+                }
+            }
+        }
+    }
+
+    Ok(out_dict.into())
 }
 
 #[pymodule]
