@@ -277,7 +277,7 @@ retworkx API
 .. py:function:: is_isomorphic(first, second):
     Determine if 2 DAGS are structurally isomorphic.
 
-    This checks igf 2 graphs are structurally isomorphic (it doesn't match
+    This checks if 2 graphs are structurally isomorphic (it doesn't match
     the contents of the nodes or edges on the dag).
 
     :param PyDAG first: The first DAG to compare
@@ -290,7 +290,7 @@ retworkx API
 .. py:function:: is_isomorphic_node_match(first, second, matcher):
     Determine if 2 DAGS are structurally isomorphic.
 
-    This checks igf 2 graphs are isomorphic both structurally and also comparing
+    This checks if 2 graphs are isomorphic both structurally and also comparing
     the node data using the provided matcher function. The matcher function
     takes in 2 node data objects and will compare them. A simple example that
     checks if they're just equal would be::
@@ -375,3 +375,33 @@ retworkx API
 
     :returns nodes: A list of nodes's data and their children in bfs order
     :rtype: list
+
+.. py:function:: floyd_warshall(graph):
+    Return the shortest path lengths between every pair of nodes that has a
+    path connecting them.
+
+    The runtime is :math:`O(|N|^3 + |E|)` where :math:`|N|` is the number
+    of nodes and :math:`|E|` is the number of edges.
+
+    This is done with the Floyd Warshall algorithm:
+    
+    1. Process all edges by setting the distance from the parent to
+       the child equal to the edge weight.
+    2. Iterate through every pair of nodes (source, target) and an additional
+       itermediary node (w). If the distance from source :math:`\rightarrow` w
+       :math:`\rightarrow` target is less than the distance from source
+       :math:`\rightarrow` target, update the source :math:`\rightarrow` target
+       distance (to pass through w).
+
+    The return format is ``{Source Node: {Target Node: Distance}}``.
+
+    .. note::
+
+        Paths that do not exist are simply not found in the return dictionary,
+        rather than setting the distance to infinity, or -1.
+
+    .. note::
+
+        Edge weights are restricted to 1 in the current implementation.
+
+    :param PyDAG graph: The DAG to get all shortest paths from
