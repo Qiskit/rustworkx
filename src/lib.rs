@@ -16,6 +16,7 @@ extern crate pyo3;
 
 mod dag_isomorphism;
 
+use std::cmp::min;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::ops::{Index, IndexMut};
@@ -847,6 +848,75 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+// Find the shortest path lengths between all pairs of nodes using Floyd's
+// algorithm
+// Note: Edge weights are assumed to be 1
+#[pyfunction]
+fn floyd_warshall(py: Python, dag: &PyDAG) -> PyResult<PyObject> {
+    let mut dist: HashMap<(usize, usize), usize> = HashMap::new();
+    for node in dag.graph.node_indices() {
+        // Distance from a node to itself is zero
+        dist.insert((node.index(), node.index()), 0);
+    }
+    for edge in dag.graph.edge_indices() {
+        // Distance between nodes that share an edge is 1
+        let source_target = dag.graph.edge_endpoints(edge).unwrap();
+        let u = source_target.0.index();
+        let v = source_target.1.index();
+        // Update dist only if the key hasn't been set to 0 already
+        // (i.e. in case edge is a self edge). Assumes edge weight = 1.
+        dist.entry((u, v)).or_insert(1);
+    }
+    // The shortest distance between any pair of nodes u, v is the min of the
+    // distance tracked so far from u->v and the distance from u to v thorough
+    // another node w, for any w.
+    for w in dag.graph.node_indices() {
+        for u in dag.graph.node_indices() {
+            for v in dag.graph.node_indices() {
+                let u_v_dist = match dist.get(&(u.index(), v.index())) {
+                    Some(u_v_dist) => *u_v_dist,
+                    None => std::usize::MAX,
+                };
+                let u_w_dist = match dist.get(&(u.index(), w.index())) {
+                    Some(u_w_dist) => *u_w_dist,
+                    None => std::usize::MAX,
+                };
+                let w_v_dist = match dist.get(&(w.index(), v.index())) {
+                    Some(w_v_dist) => *w_v_dist,
+                    None => std::usize::MAX,
+                };
+                if u_w_dist == std::usize::MAX || w_v_dist == std::usize::MAX {
+                    // Avoid overflow!
+                    continue;
+                }
+                if u_v_dist > u_w_dist + w_v_dist {
+                    dist.insert((u.index(), v.index()), u_w_dist + w_v_dist);
+                }
+            }
+        }
+    }
+
+    // Some re-formatting for Python: Dict[int, Dict[int, int]]
+    let out_dict = PyDict::new(py);
+    for (nodes, distance) in dist {
+        let u_index = nodes.0;
+        let v_index = nodes.1;
+        if out_dict.contains(u_index)? {
+            let u_dict = out_dict
+                .get_item(u_index)
+                .unwrap()
+                .downcast_ref::<PyDict>()?;
+            u_dict.set_item(v_index, distance);
+            out_dict.set_item(u_index, u_dict)?;
+        } else {
+            let mut u_dict = PyDict::new(py);
+            u_dict.set_item(v_index, distance);
+            out_dict.set_item(u_index, u_dict)?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -861,6 +931,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
+    m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_class::<PyDAG>()?;
     Ok(())
 }
