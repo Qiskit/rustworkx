@@ -303,6 +303,11 @@ impl PyDAG {
 
     #[setter]
     fn set_check_cycle(&mut self, value: bool) -> PyResult<()> {
+        if !self.check_cycle && value {
+            if !is_directed_acyclic_graph(self) {
+                return Err(DAGHasCycle::py_err("PyDAG object has a cycle"));
+            }
+        }
         self.check_cycle = value;
         Ok(())
     }
