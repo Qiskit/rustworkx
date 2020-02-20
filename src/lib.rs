@@ -944,6 +944,78 @@ fn floyd_warshall(py: Python, dag: &PyDAG) -> PyResult<PyObject> {
     Ok(out_dict.into())
 }
 
+#[pyfunction]
+fn layers(
+    py: Python,
+    dag: &PyDAG,
+    first_layer: Vec<usize>,
+) -> PyResult<PyObject> {
+    let mut output: Vec<Vec<&PyObject>> = Vec::new();
+    // Convert usize to NodeIndex
+    let mut first_layer_index: Vec<NodeIndex> = Vec::new();
+    for index in first_layer {
+        first_layer_index.push(NodeIndex::new(index));
+    }
+
+    let mut cur_layer = first_layer_index;
+    let mut next_layer: Vec<NodeIndex> = Vec::new();
+    let mut predecessor_count: HashMap<NodeIndex, usize> = HashMap::new();
+
+    let mut layer_node_data: Vec<&PyObject> = Vec::new();
+    for layer_node in &cur_layer {
+        layer_node_data.push(&dag[*layer_node]);
+    }
+    output.push(layer_node_data);
+
+    // Iterate until there are no more
+    while !cur_layer.is_empty() {
+        for node in &cur_layer {
+            let children = dag
+                .graph
+                .neighbors_directed(*node, petgraph::Direction::Outgoing);
+            let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+            for succ in children {
+                // Skip duplicate successors
+                if used_indexes.contains(&succ) {
+                    continue;
+                }
+                used_indexes.insert(succ);
+                let mut multiplicity: usize = 0;
+                let raw_edges = dag
+                    .graph
+                    .edges_directed(*node, petgraph::Direction::Outgoing);
+                for edge in raw_edges {
+                    if edge.target() == succ {
+                        multiplicity += 1;
+                    }
+                }
+                if predecessor_count.contains_key(&succ) {
+                    let count = predecessor_count.get_mut(&succ).unwrap();
+                    *count -= multiplicity;
+                } else {
+                    let count: usize =
+                        dag.in_degree(succ.index()) - multiplicity;
+                    predecessor_count.insert(succ, count);
+                }
+                if *predecessor_count.get(&succ).unwrap() == 0 {
+                    next_layer.push(succ);
+                    predecessor_count.remove(&succ);
+                }
+            }
+        }
+        let mut layer_node_data: Vec<&PyObject> = Vec::new();
+        for layer_node in &next_layer {
+            layer_node_data.push(&dag[*layer_node]);
+        }
+        if !layer_node_data.is_empty() {
+            output.push(layer_node_data);
+        }
+        cur_layer = next_layer;
+        next_layer = Vec::new();
+    }
+    Ok(PyList::new(py, output).into())
+}
+
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -959,6 +1031,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
+    m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_class::<PyDAG>()?;
     Ok(())
 }
