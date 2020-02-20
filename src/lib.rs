@@ -16,7 +16,6 @@ extern crate pyo3;
 
 mod dag_isomorphism;
 
-use std::cmp::min;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::ops::{Index, IndexMut};
@@ -906,11 +905,11 @@ fn floyd_warshall(py: Python, dag: &PyDAG) -> PyResult<PyObject> {
                 .get_item(u_index)
                 .unwrap()
                 .downcast_ref::<PyDict>()?;
-            u_dict.set_item(v_index, distance);
+            u_dict.set_item(v_index, distance)?;
             out_dict.set_item(u_index, u_dict)?;
         } else {
-            let mut u_dict = PyDict::new(py);
-            u_dict.set_item(v_index, distance);
+            let u_dict = PyDict::new(py);
+            u_dict.set_item(v_index, distance)?;
             out_dict.set_item(u_index, u_dict)?;
         }
     }
