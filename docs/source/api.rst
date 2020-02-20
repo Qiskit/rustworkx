@@ -405,3 +405,16 @@ retworkx API
         Edge weights are restricted to 1 in the current implementation.
 
     :param PyDAG graph: The DAG to get all shortest paths from
+
+.. py:function:: layers(graph, first_layer):
+    Return a list of layers
+
+    A layer is a subgraph whose nodes are disjoint, i.e.,
+    a layer has depth 1. The layers are constructed using a greedy algorithm.
+
+    :param PyDAG graph: The DAG to get the layers from
+    :param list first_layer: A list of node ids for the first layer. This
+        will be the first layer in the output
+
+    :returns layers: A list of layers, each layer is a list of node data
+    :rtype: list
