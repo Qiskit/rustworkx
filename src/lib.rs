@@ -46,6 +46,7 @@ pub struct PyDAG {
         NodeIndex,
         <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
     >,
+    check_cycle: bool,
 }
 
 pub type Edges<'a, E> =
@@ -230,6 +231,7 @@ impl PyDAG {
         obj.init(PyDAG {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
         });
     }
 
@@ -290,6 +292,22 @@ impl PyDAG {
             let c_index = node_mapping.get(&tmp_c_index).unwrap();
             self.graph.add_edge(*p_index, *c_index, edge_data.into());
         }
+        Ok(())
+    }
+
+    #[getter]
+    fn get_check_cycle(&self) -> PyResult<bool> {
+        Ok(self.check_cycle)
+    }
+
+    #[setter]
+    fn set_check_cycle(&mut self, value: bool) -> PyResult<()> {
+        if !self.check_cycle && value {
+            if !is_directed_acyclic_graph(self) {
+                return Err(DAGHasCycle::py_err("PyDAG object has a cycle"));
+            }
+        }
+        self.check_cycle = value;
         Ok(())
     }
 
@@ -417,13 +435,23 @@ impl PyDAG {
     ) -> PyResult<usize> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
-        let should_check_for_cycle =
-            must_check_for_cycle(self, p_index, c_index);
-        let state = Some(&mut self.cycle_state);
-        if should_check_for_cycle
-            && algo::has_path_connecting(&self.graph, c_index, p_index, state)
-        {
-            Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
+        if self.check_cycle {
+            let should_check_for_cycle =
+                must_check_for_cycle(self, p_index, c_index);
+            let state = Some(&mut self.cycle_state);
+            if should_check_for_cycle
+                && algo::has_path_connecting(
+                    &self.graph,
+                    c_index,
+                    p_index,
+                    state,
+                )
+            {
+                Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
+            } else {
+                let edge = self.graph.add_edge(p_index, c_index, edge);
+                Ok(edge.index())
+            }
         } else {
             let edge = self.graph.add_edge(p_index, c_index, edge);
             Ok(edge.index())

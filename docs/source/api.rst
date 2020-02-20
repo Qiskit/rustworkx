@@ -8,7 +8,18 @@ retworkx API
    the ``StableGraph`` type. The limitations and quirks with this library and
    type dictate how this operates. The biggest thing to be aware of when using
    the PyDAG class is that an integer node and edge index is used for accessing
-   elements on the DAG, not the data/weight of nodes and edges.
+   elements on the DAG, not the data/weight of nodes and edges. By default the
+   PyDAG realtime cycle checking is disabled for performance, however you can
+   opt-in to having the PyDAG class ensure that no cycles are added by setting
+   the ``check_cycle`` attribute to True. For example::
+
+       import retworkx
+       dag = retworkx.PyDAG()
+       dag.check_cycle = True
+
+   With check_cycle set to true any calls to :method:`PyDAG.add_edge` will
+   ensure that no cycles are added, ensuring that the PyDAG class truly
+   represents a directed acyclic graph.
 
      .. note::
           When using ``copy.deepcopy()`` or pickling node indexes are not
