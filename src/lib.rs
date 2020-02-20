@@ -302,10 +302,8 @@ impl PyDAG {
 
     #[setter]
     fn set_check_cycle(&mut self, value: bool) -> PyResult<()> {
-        if !self.check_cycle && value {
-            if !is_directed_acyclic_graph(self) {
-                return Err(DAGHasCycle::py_err("PyDAG object has a cycle"));
-            }
+        if !self.check_cycle && value && !is_directed_acyclic_graph(self) {
+            return Err(DAGHasCycle::py_err("PyDAG object has a cycle"));
         }
         self.check_cycle = value;
         Ok(())
@@ -855,7 +853,7 @@ fn lexicographical_topological_sort(
     }
     let mut out_list: Vec<&PyObject> = Vec::new();
     let dir = petgraph::Direction::Outgoing;
-    while let Some(State { key: _, node }) = zero_indegree.pop() {
+    while let Some(State { node, .. }) = zero_indegree.pop() {
         let neighbors = dag.graph.neighbors_directed(node, dir);
         for child in neighbors {
             let child_degree = in_degree_map.get_mut(&child).unwrap();
@@ -989,14 +987,10 @@ fn layers(
                         multiplicity += 1;
                     }
                 }
-                if predecessor_count.contains_key(&succ) {
-                    let count = predecessor_count.get_mut(&succ).unwrap();
-                    *count -= multiplicity;
-                } else {
-                    let count: usize =
-                        dag.in_degree(succ.index()) - multiplicity;
-                    predecessor_count.insert(succ, count);
-                }
+                predecessor_count
+                    .entry(succ)
+                    .and_modify(|e| *e -= multiplicity)
+                    .or_insert(dag.in_degree(succ.index()) - multiplicity);
                 if *predecessor_count.get(&succ).unwrap() == 0 {
                     next_layer.push(succ);
                     predecessor_count.remove(&succ);
