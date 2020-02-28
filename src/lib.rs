@@ -17,6 +17,7 @@ extern crate pyo3;
 mod dag_isomorphism;
 
 use std::cmp::Ordering;
+use std::cmp::{Eq, PartialEq};
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::ops::{Index, IndexMut};
 
@@ -881,6 +882,110 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+fn eq_callable(a: &PyObject, b: &PyObject) -> PyResult<bool> {
+    let gil = pyo3::Python::acquire_gil();
+    let py = gil.python();
+    let locals = PyDict::new(py);
+    locals.set_item("a", a);
+    locals.set_item("b", b);
+    let ret = py.eval("a == b", None, Some(locals)).unwrap();
+    Ok(ret.extract().unwrap())
+}
+
+fn compare_callable(a: &PyObject, b: &PyObject) -> PyResult<i8> {
+    let gil = pyo3::Python::acquire_gil();
+    let py = gil.python();
+    let locals = PyDict::new(py);
+    locals.set_item("a", a);
+    locals.set_item("b", b);
+    py.run("x = -1\nif a < b:\n    x = 1\nelif a == b:\n    x = 0\nelse:\n    x = 2",
+           None, Some(locals));
+    let ret = locals.get_item("x").unwrap();
+    Ok(ret.extract().unwrap())
+}
+
+#[pyfunction]
+fn lexicographical_topological_sort_py_cmp(
+    py: Python,
+    dag: &PyDAG,
+    key: PyObject,
+) -> PyResult<PyObject> {
+    // HashMap of node_index indegree
+    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::new();
+    for node in dag.graph.node_indices() {
+        in_degree_map.insert(node, dag.in_degree(node.index()));
+    }
+
+    struct State {
+        object: PyObject,
+        node: NodeIndex,
+    }
+    impl Eq for State {}
+
+    impl PartialEq for State {
+        fn eq(&self, other: &Self) -> bool {
+            match eq_callable(&self.object, &other.object) {
+                Result::Ok(ret) => ret,
+                Result::Err(err) => panic!("{:?}", err.ptype),
+            }
+        }
+    }
+
+    impl Ord for State {
+        fn cmp(&self, other: &State) -> Ordering {
+            let ret = match compare_callable(&self.object, &other.object) {
+                Result::Ok(ret) => ret,
+                Result::Err(err) => panic!("{:?}", err.ptype),
+            };
+            if ret <= 0 {
+                other.node.index().cmp(&self.node.index())
+            } else if ret == 1 {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }
+        }
+    }
+
+    // `PartialOrd` needs to be implemented as well.
+    impl PartialOrd for State {
+        fn partial_cmp(&self, other: &State) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+    let mut zero_indegree = BinaryHeap::new();
+    for (node, degree) in in_degree_map.iter() {
+        if *degree == 0 {
+            let res = key.call1(py, (&dag.graph[*node],))?;
+            let out = res.to_object(py);
+            zero_indegree.push(State {
+                object: out,
+                node: *node,
+            });
+        }
+    }
+    let mut out_list: Vec<&PyObject> = Vec::new();
+    let dir = petgraph::Direction::Outgoing;
+    while let Some(State { node, .. }) = zero_indegree.pop() {
+        let neighbors = dag.graph.neighbors_directed(node, dir);
+        for child in neighbors {
+            let child_degree = in_degree_map.get_mut(&child).unwrap();
+            *child_degree -= 1;
+            if *child_degree == 0 {
+                let res = key.call1(py, (&dag.graph[child],))?;
+                let out = res.to_object(py);
+                zero_indegree.push(State {
+                    object: out,
+                    node: child,
+                });
+                in_degree_map.remove(&child);
+            }
+        }
+        out_list.push(&dag.graph[node])
+    }
+    Ok(PyList::new(py, out_list).into())
+}
+
 // Find the shortest path lengths between all pairs of nodes using Floyd's
 // algorithm
 // Note: Edge weights are assumed to be 1
@@ -1032,6 +1137,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
+    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort_py_cmp))?;
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_class::<PyDAG>()?;
