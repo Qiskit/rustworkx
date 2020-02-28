@@ -327,6 +327,14 @@ impl PyDAG {
         PyList::new(py, out).into()
     }
 
+    pub fn node_indexes(&self, py: Python) -> PyObject {
+        let mut out_list: Vec<usize> = Vec::new();
+        for node_index in self.graph.node_indices() {
+            out_list.push(node_index.index());
+        }
+        PyList::new(py, out_list).into()
+    }
+
     pub fn has_edge(&self, node_a: usize, node_b: usize) -> bool {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);

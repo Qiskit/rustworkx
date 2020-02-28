@@ -52,6 +52,12 @@ retworkx API
         :returns: A list of all the node data objects in the DAG
         :rtype: list
 
+    .. py:method:: node_indexes(self):
+        Return a list of all node indexes.
+
+        :returns: A list of all the node indexes in the DAG
+        :rtype: list
+
     .. py:method:: successors(self, node):
         Return a list of all the node successor data.
 

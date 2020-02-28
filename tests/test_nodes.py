@@ -22,10 +22,12 @@ class TestNodes(unittest.TestCase):
         node_b = dag.add_child(node_a, 'b', "Edgy")
         res = dag.nodes()
         self.assertEqual(['a', 'b'], res)
+        self.assertEqual([0, 1], dag.node_indexes())
 
     def test_no_nodes(self):
         dag = retworkx.PyDAG()
         self.assertEqual([], dag.nodes())
+        self.assertEquals([], dag.node_indexes())
 
     def test_topo_sort_empty(self):
         dag = retworkx.PyDAG()
