@@ -51,6 +51,18 @@ class TestNodes(unittest.TestCase):
         expected = ['A parent', 'a', 0, 1, 2, 3, 4]
         self.assertEqual(expected, res)
 
+    def test_lexicographical_topo_sort_with_cache(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        for i in range(5):
+            dag.add_child(node_a, i, None)
+        dag.add_parent(3, 'A parent', None)
+        res = retworkx.lexicographical_topological_sort(dag, lambda x: str(x), use_cache=True)
+        # Node values for nodes [6, 0, 5, 4, 3, 2, 1]
+        expected = ['A parent', 'a', 0, 1, 2, 3, 4]
+        self.assertEqual(expected, res)
+
+
     def test_lexicographical_topo_sort_qiskit(self):
         dag = retworkx.PyDAG()
         # inputs
@@ -88,6 +100,47 @@ class TestNodes(unittest.TestCase):
         dag.add_edge(cr_1, cr_1_out, 'cr[1]')
 
         res = list(retworkx.lexicographical_topological_sort(dag, lambda x: str(x)))
+        expected = ['cr[0]', 'cr[0]_out', 'cr[1]', 'cr[1]_out', 'qr[0]', 'qr[1]', 'cx_1', 'h_1', 'qr[2]', 'cx_2',
+                    'cx_3', 'h_2', 'qr[0]_out', 'qr[1]_out', 'qr[2]_out']
+        self.assertEqual(expected, res)
+
+    def test_lexicographical_topo_sort_qiskit_with_cache(self):
+        dag = retworkx.PyDAG()
+        # inputs
+        qr_0 = dag.add_node('qr[0]')
+        qr_1 = dag.add_node('qr[1]')
+        qr_2 = dag.add_node('qr[2]')
+        cr_0 = dag.add_node('cr[0]')
+        cr_1 = dag.add_node('cr[1]')
+
+        # wires
+        cx_1 = dag.add_node('cx_1')
+        dag.add_edge(qr_0, cx_1, 'qr[0]')
+        dag.add_edge(qr_1, cx_1, 'qr[1]')
+        h_1 = dag.add_node('h_1')
+        dag.add_edge(cx_1, h_1, 'qr[0]')
+        cx_2 = dag.add_node('cx_2')
+        dag.add_edge(cx_1, cx_2, 'qr[1]')
+        dag.add_edge(qr_2, cx_2, 'qr[2]')
+        cx_3 = dag.add_node('cx_3')
+        dag.add_edge(h_1, cx_3, 'qr[0]')
+        dag.add_edge(cx_2, cx_3, 'qr[2]')
+        h_2 = dag.add_node('h_2')
+        dag.add_edge(cx_3, h_2, 'qr[2]')
+
+        # outputs
+        qr_0_out = dag.add_node('qr[0]_out')
+        dag.add_edge(cx_3, qr_0_out, 'qr[0]')
+        qr_1_out = dag.add_node('qr[1]_out')
+        dag.add_edge(cx_2, qr_1_out, 'qr[1]')
+        qr_2_out = dag.add_node('qr[2]_out')
+        dag.add_edge(h_2, qr_2_out, 'qr[2]')
+        cr_0_out = dag.add_node('cr[0]_out')
+        dag.add_edge(cr_0, cr_0_out, 'qr[2]')
+        cr_1_out = dag.add_node('cr[1]_out')
+        dag.add_edge(cr_1, cr_1_out, 'cr[1]')
+
+        res = list(retworkx.lexicographical_topological_sort(dag, lambda x: str(x), use_cache=True))
         expected = ['cr[0]', 'cr[0]_out', 'cr[1]', 'cr[1]_out', 'qr[0]', 'qr[1]', 'cx_1', 'h_1', 'qr[2]', 'cx_2',
                     'cx_3', 'h_2', 'qr[0]_out', 'qr[1]_out', 'qr[2]_out']
         self.assertEqual(expected, res)

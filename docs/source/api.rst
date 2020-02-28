@@ -342,6 +342,18 @@ retworkx API
     :param function key: Takes in a python function or other callable that
         gets passed a single argument the node data from the graph and is
         expected to return a string.
+    :param bool use_cache: When set to True this will cache the output of the
+        ``key`` function for each node. So that subsequent calls to this
+        function for a given PyDAG object will not have to call ``key`` again.
+
+        .. note::
+
+            If the output of ``key`` will change for a given node's data at
+            any point for an existing PyDAG object ``use_cache`` is not safe.
+            The order returned will be incorrect if an existing node changes
+            it's returned sort key since once it is initially cached that
+            cached value will be used for all subsequent calls while
+            ``use_cache`` is True.
 
     :returns nodes: A list of node's data lexicographically topologically
         sorted.

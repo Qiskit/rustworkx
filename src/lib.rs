@@ -47,6 +47,7 @@ pub struct PyDAG {
         <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
     >,
     check_cycle: bool,
+    sort_key_cache: HashMap<usize, String>,
 }
 
 pub type Edges<'a, E> =
@@ -232,6 +233,7 @@ impl PyDAG {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
+            sort_key_cache: HashMap::new(),
         });
     }
 
@@ -800,11 +802,12 @@ fn descendants(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     Ok(PyList::new(py, out_list).into())
 }
 
-#[pyfunction]
+#[pyfunction(use_cache = false)]
 fn lexicographical_topological_sort(
     py: Python,
-    dag: &PyDAG,
+    dag: &mut PyDAG,
     key: PyObject,
+    use_cache: bool,
 ) -> PyResult<PyObject> {
     let key_callable = |a: &PyObject| -> PyResult<PyObject> {
         let res = key.call1(py, (a,))?;
@@ -843,8 +846,23 @@ fn lexicographical_topological_sort(
     let mut zero_indegree = BinaryHeap::new();
     for (node, degree) in in_degree_map.iter() {
         if *degree == 0 {
-            let map_key_raw = key_callable(&dag.graph[*node])?;
-            let map_key: String = map_key_raw.extract(py)?;
+            let map_key: String;
+            let raw_node = dag.graph.node_weight(*node).unwrap();
+            let node_key_raw = raw_node as *const PyObject;
+            let node_key = node_key_raw as usize;
+            if use_cache {
+                if !dag.sort_key_cache.contains_key(&node_key) {
+                    let map_key_raw = key_callable(&raw_node)?;
+                    map_key = map_key_raw.extract(py)?;
+                    dag.sort_key_cache.insert(node_key, map_key.clone());
+                } else {
+                    map_key =
+                        dag.sort_key_cache.get(&node_key).unwrap().to_string();
+                }
+            } else {
+                let map_key_raw = key_callable(&raw_node)?;
+                map_key = map_key_raw.extract(py)?;
+            }
             zero_indegree.push(State {
                 key: map_key,
                 node: *node,
@@ -859,8 +877,26 @@ fn lexicographical_topological_sort(
             let child_degree = in_degree_map.get_mut(&child).unwrap();
             *child_degree -= 1;
             if *child_degree == 0 {
-                let map_key_raw = key_callable(&dag.graph[child])?;
-                let map_key: String = map_key_raw.extract(py)?;
+                let map_key: String;
+                let raw_node = dag.graph.node_weight(child).unwrap();
+                let node_key_raw = raw_node as *const PyObject;
+                let node_key = node_key_raw as usize;
+                if use_cache {
+                    if !dag.sort_key_cache.contains_key(&node_key) {
+                        let map_key_raw = key_callable(&raw_node)?;
+                        map_key = map_key_raw.extract(py)?;
+                        dag.sort_key_cache.insert(node_key, map_key.clone());
+                    } else {
+                        map_key = dag
+                            .sort_key_cache
+                            .get(&node_key)
+                            .unwrap()
+                            .to_string();
+                    }
+                } else {
+                    let map_key_raw = key_callable(&raw_node)?;
+                    map_key = map_key_raw.extract(py)?;
+                }
                 zero_indegree.push(State {
                     key: map_key,
                     node: child,
