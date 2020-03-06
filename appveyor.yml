@@ -1,19 +1,38 @@
+image:
+  - Visual Studio 2015
 environment:
     global:
         RUST_BACKTRACE: 1
-        TARGET: x86_64-pc-windows-msvc
     matrix:
         - PYTHON: C:\Python35-x64
           TAG_SCENARIO: false
+          TARGET: x86_64-pc-windows-msvc
+          PLATFORM: amd64
         - PYTHON: C:\Python36-x64
           TAG_SCENARIO: false
+          TARGET: x86_64-pc-windows-msvc
+          PLATFORM: amd64
         - PYTHON: C:\Python37-x64
+          PLATFORM: amd64
           TAG_SCENARIO: false
+          TARGET: x86_64-pc-windows-msvc
         - PYTHON: C:\Python38-x64
           TAG_SCENARIO: false
+          TARGET: x86_64-pc-windows-msvc
+          PLATFORM: amd64
         - WHEEL: 1
           CIBW_BEFORE_BUILD: ps .\tools\setup.ps1 && pip install -U setuptools-rust
           CIBW_SKIP: cp27-* cp34-* *-win32
+          TWINE_USERNAME: retworkx-ci
+          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
+          TAG_SCENARIO: true
+          TARGET: x86_64-pc-windows-msvc
+          PLATFORM: amd64
+        - WHEEL: 1
+          TARGET: i686-pc-windows-msvc
+          PLATFORM: x86
+          CIBW_BEFORE_BUILD: ps .\tools\setup.ps1 && pip install -U setuptools-rust
+          CIBW_SKIP: cp27-* cp34-* *amd64
           TWINE_USERNAME: retworkx-ci
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
           TAG_SCENARIO: true
@@ -58,7 +77,7 @@ install:
         Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
           throw "There are newer queued builds for this pull request, failing early." }
     - ps: .\tools\setup.ps1
-    - call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" amd64
+    - call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %PLATFORM%
     - rustc -V
     - cargo -V
     - pip.exe install -U setuptools-rust
