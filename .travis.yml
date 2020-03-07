@@ -136,6 +136,20 @@ jobs:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
+      python: 3.7
+      before_install:
+        - echo ""
+      install:
+        - echo ""
+      env:
+        - TWINE_USERNAME=retworkx-ci
+      before_script:
+        - pip install -U twine
+      if: tag IS present
+      script:
+        - python setup.py sdist
+        - twine upload dist/*
+    - stage: deploy
       arch: arm64
       services:
         - docker
