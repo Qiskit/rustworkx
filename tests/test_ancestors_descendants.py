@@ -22,7 +22,7 @@ class TestAncestors(unittest.TestCase):
         node_b = dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_b, 'c', {'a': 2})
         res = retworkx.ancestors(dag, node_c)
-        self.assertEqual([node_a, node_b], res)
+        self.assertEqual([node_a, node_b], sorted(res))
 
     def test_no_ancestors(self):
         dag = retworkx.PyDAG()
@@ -46,7 +46,7 @@ class TestDescendants(unittest.TestCase):
         node_b = dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_b, 'c', {'a': 2})
         res = retworkx.descendants(dag, node_a)
-        self.assertEqual([node_b, node_c], res)
+        self.assertEqual([node_b, node_c], sorted(res))
 
     def test_no_descendants(self):
         dag = retworkx.PyDAG()
