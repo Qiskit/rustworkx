@@ -785,30 +785,30 @@ fn bfs_successors(
 #[pyfunction]
 fn ancestors(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let index = NodeIndex::new(node);
-    let mut out_list: Vec<usize> = Vec::new();
+    let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(graph);
     let res = algo::dijkstra(reverse_graph, index, None, |_| 1);
     for n in res.keys() {
         let n_int = n.index();
         if n_int != node {
-            out_list.push(n_int);
+            out_set.insert(n_int);
         }
     }
-    Ok(PyList::new(py, out_list).into())
+    Ok(out_set.to_object(py))
 }
 
 #[pyfunction]
 fn descendants(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let index = NodeIndex::new(node);
-    let mut out_list: Vec<usize> = Vec::new();
+    let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(graph, index, None, |_| 1);
     for n in res.keys() {
         let n_int = n.index();
         if n_int != node {
-            out_list.push(n_int);
+            out_set.insert(n_int);
         }
     }
-    Ok(PyList::new(py, out_list).into())
+    Ok(out_set.to_object(py))
 }
 
 #[pyfunction]
