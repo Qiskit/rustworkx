@@ -790,10 +790,9 @@ fn ancestors(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let res = algo::dijkstra(reverse_graph, index, None, |_| 1);
     for n in res.keys() {
         let n_int = n.index();
-        if n_int != node {
-            out_set.insert(n_int);
-        }
+        out_set.insert(n_int);
     }
+    out_set.remove(&node);
     Ok(out_set.to_object(py))
 }
 
@@ -804,10 +803,9 @@ fn descendants(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let res = algo::dijkstra(graph, index, None, |_| 1);
     for n in res.keys() {
         let n_int = n.index();
-        if n_int != node {
-            out_set.insert(n_int);
-        }
+        out_set.insert(n_int);
     }
+    out_set.remove(&node);
     Ok(out_set.to_object(py))
 }
 
