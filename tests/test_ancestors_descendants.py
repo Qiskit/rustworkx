@@ -22,14 +22,14 @@ class TestAncestors(unittest.TestCase):
         node_b = dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_b, 'c', {'a': 2})
         res = retworkx.ancestors(dag, node_c)
-        self.assertEqual([node_a, node_b], res)
+        self.assertEqual({node_a, node_b}, res)
 
     def test_no_ancestors(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
         dag.add_child(node_a, 'b', {'a': 1})
         res = retworkx.ancestors(dag, node_a)
-        self.assertEqual([], res)
+        self.assertEqual(set(), res)
 
     def test_ancestors_no_descendants(self):
         dag = retworkx.PyDAG()
@@ -37,7 +37,7 @@ class TestAncestors(unittest.TestCase):
         node_b = dag.add_child(node_a, 'b', {'a': 1})
         dag.add_child(node_b, 'c', {'b': 1})
         res = retworkx.ancestors(dag, node_b)
-        self.assertEqual([node_a], res)
+        self.assertEqual({node_a}, res)
 
 class TestDescendants(unittest.TestCase):
     def test_descendants(self):
@@ -46,13 +46,13 @@ class TestDescendants(unittest.TestCase):
         node_b = dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_b, 'c', {'a': 2})
         res = retworkx.descendants(dag, node_a)
-        self.assertEqual([node_b, node_c], res)
+        self.assertEqual({node_b, node_c}, res)
 
     def test_no_descendants(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
         res = retworkx.descendants(dag, node_a)
-        self.assertEqual([], res)
+        self.assertEqual(set(), res)
 
     def test_descendants_no_ancestors(self):
         dag = retworkx.PyDAG()
@@ -60,4 +60,4 @@ class TestDescendants(unittest.TestCase):
         node_b = dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_b, 'c', {'b': 1})
         res = retworkx.descendants(dag, node_b)
-        self.assertEqual([node_c], res)
+        self.assertEqual({node_c}, res)
