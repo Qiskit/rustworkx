@@ -126,13 +126,13 @@ jobs:
         - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
-        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - sudo pip install -U cibuildwheel==1.1.0 twine
+        - sudo pip install -U cibuildwheel==1.2.0 twine
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -144,7 +144,7 @@ jobs:
       env:
         - TWINE_USERNAME=retworkx-ci
       before_script:
-        - pip install -U twine
+        - pip install -U twine setuptools-rust
       if: tag IS present
       script:
         - python setup.py sdist
@@ -159,15 +159,13 @@ jobs:
         - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
-        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - sudo pip install -U twine
-        - git clone https://github.com/joerick/cibuildwheel.git
-        - sudo pip install ./cibuildwheel
+        - sudo pip install -U twine cibuildwheel==1.2.0
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -180,15 +178,13 @@ jobs:
         - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
-        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - sudo pip install -U twine
-        - git clone https://github.com/joerick/cibuildwheel.git
-        - sudo pip install ./cibuildwheel
+        - sudo pip install -U twine cibuildwheel==1.2.0
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -201,11 +197,11 @@ jobs:
         - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
-        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       script:
-        - sudo pip2 install -U cibuildwheel==1.1.0 twine
+        - sudo pip2 install -U cibuildwheel==1.2.0 twine
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
