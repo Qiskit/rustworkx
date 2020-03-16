@@ -58,6 +58,27 @@ class TestIsomorphic(unittest.TestCase):
             retworkx.is_isomorphic_node_match(
                 dag_a, dag_b, lambda x, y: x == y))
 
+    def test_is_isomorphic_nodes_compare_raises(self):
+        dag_a = retworkx.PyDAG()
+        dag_b = retworkx.PyDAG()
+
+        node_a = dag_a.add_node('a_1')
+        dag_a.add_child(node_a, 'a_2', 'a_1')
+        dag_a.add_child(node_a, 'a_3', 'a_2')
+
+        node_b = dag_b.add_node('b_1')
+        dag_b.add_child(node_b, 'b_2', 'b_1')
+        dag_b.add_child(node_b, 'b_3', 'b_2')
+
+        def compare_nodes(a, b):
+            raise TypeError("Failure")
+
+        self.assertRaises(
+            TypeError,
+            retworkx.is_isomorphic_node_match,
+                (dag_a, dag_b, compare_nodes))
+
+
     def test_isomorphic_compare_nodes_identical(self):
         dag_a = retworkx.PyDAG()
         dag_b = retworkx.PyDAG()

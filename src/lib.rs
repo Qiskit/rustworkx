@@ -716,8 +716,9 @@ fn is_directed_acyclic_graph(graph: &PyDAG) -> bool {
 }
 
 #[pyfunction]
-fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
-    dag_isomorphism::is_isomorphic(first, second)
+fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> PyResult<bool> {
+    let res = dag_isomorphism::is_isomorphic(first, second)?;
+    Ok(res)
 }
 
 #[pyfunction]
@@ -726,21 +727,22 @@ fn is_isomorphic_node_match(
     first: &PyDAG,
     second: &PyDAG,
     matcher: PyObject,
-) -> bool {
-    let compare_nodes = |a: &PyObject, b: &PyObject| -> bool {
-        let res = matcher.call1(py, (a, b)).unwrap();
-        res.is_true(py).unwrap()
+) -> PyResult<bool> {
+    let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+        let res = matcher.call1(py, (a, b))?;
+        Ok(res.is_true(py).unwrap())
     };
 
-    fn compare_edges(_a: &PyObject, _b: &PyObject) -> bool {
-        true
+    fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
+        Ok(true)
     }
-    dag_isomorphism::is_isomorphic_matching(
+    let res = dag_isomorphism::is_isomorphic_matching(
         first,
         second,
         compare_nodes,
         compare_edges,
-    )
+    )?;
+    Ok(res)
 }
 
 #[pyfunction]
