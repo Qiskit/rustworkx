@@ -14,6 +14,7 @@ import unittest
 
 import retworkx
 
+
 class TestLayers(unittest.TestCase):
     def test_dagcircuit_basic(self):
         dag = retworkx.PyDAG()
@@ -35,7 +36,6 @@ class TestLayers(unittest.TestCase):
         x_gate = dag.add_child(measure_qr_1, "x", "qr[1]")
         dag.add_edge(measure_qr_1, x_gate, "cr[1]")
         dag.add_edge(cr_0_in, x_gate, "cr[0]")
-
 
         measure_qr_0 = dag.add_child(cx_gate, "measure", "qr[0]")
         dag.add_edge(measure_qr_0, qr_0_out, "qr[0]")

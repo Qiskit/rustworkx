@@ -1,10 +1,18 @@
 from setuptools import setup
-from setuptools_rust import Binding, RustExtension
+try:
+    from setuptools_rust import Binding, RustExtension
+except ImportError:
+    import sys
+    import subprocess
+    subprocess.call([sys.executable, '-m', 'pip', 'install',
+                     'setuptools-rust'])
+    from setuptools_rust import Binding, RustExtension
 
 
 def readme():
     with open('README.md') as f:
         return f.read()
+
 
 setup(
     name="retworkx",
@@ -12,8 +20,8 @@ setup(
     description="A python graph library implemented in Rust",
     long_description=readme(),
     long_description_content_type='text/markdown',
-    author = "Matthew Treinish",
-    author_email = "mtreinish@kortar.org",
+    author="Matthew Treinish",
+    author_email="mtreinish@kortar.org",
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha",

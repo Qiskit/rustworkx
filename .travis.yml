@@ -45,7 +45,7 @@ install:
 script:
   - cd tests && ../test-venv/bin/python -m unittest discover .
 stages:
-  - name: Compile and rustfmt
+  - name: Compile and lint
     if: tag IS blank
   - name: Linux x86_64
     if: tag IS blank
@@ -61,7 +61,7 @@ jobs:
   include:
     - name: Compile and rustfmt
       language: rust
-      stage: Compile and rustfmt
+      stage: Compile and lint
       before_install: echo ""
       install: echo ""
       before_script:
@@ -72,6 +72,12 @@ jobs:
       script:
         - cargo build
         - cargo fmt -- --check
+    - name: Python lint
+      language: python
+      stage: Compile and lint
+      before_install: pip install -U pip setuptools virtualenv
+      install: pip install -U flake8
+      script: flake8 setup.py tests
     - name: Python 3.5 Tests Linux
       stage: Linux x86_64
       python: 3.5

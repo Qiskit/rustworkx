@@ -17,17 +17,14 @@ does not break any existing tests and that any new tests that you've added
 also run successfully. Before you open a new pull request for your change,
 you'll want to run the test suite locally.
 
-Right now tests can only be run manually by invoking python's unittest (or
-a compatible runner) directly from a python environment with retworkx compiled
-and installed. To do this you run:
+The easiest way to run the test suite is to use
+[**tox**](https://tox.readthedocs.io/en/latest/#). You can install tox
+with pip: `pip install -U tox`. Tox provides several advantages, but the
+biggest one is that it builds an isolated virtualenv for running tests. This
+means it does not pollute your system python when running.
 
-```bash
-python -m unittest discover .
-```
-
-from `./tests` in the repo (adjust `.` accordingly if you are running it from
-another directoy). Note that you can **not** run the tests from the root of the
-repo, this is because retworkx packaging shim will conflict with imports from
-retworkx the installed version of retworkx (which contains the compiled
-extension).
+Note, if you run tests outside of tox that you can **not** run the tests from
+the root of the repo, this is because retworkx packaging shim will conflict
+with imports from retworkx the installed version of retworkx (which contains
+the compiled extension).
 
