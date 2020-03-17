@@ -27,10 +27,10 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
     ],
-    url="https://github.com/mtreinish/retworkx",
+    url="https://github.com/Qiskit/retworkx",
     project_urls={
-        "Bug Tracker": "https://github.com/mtreinish/retworkx/issues",
-        "Source Code": "https://github.com/mtreinish/retworkx",
+        "Bug Tracker": "https://github.com/Qiskit/retworkx/issues",
+        "Source Code": "https://github.com/Qiskit/retworkx",
         "Documentation": "https://retworkx.readthedocs.io",
     },
     rust_extensions=[RustExtension("retworkx.retworkx", "Cargo.toml",
