@@ -3,7 +3,7 @@ from setuptools_rust import Binding, RustExtension
 
 
 def readme():
-    with open('README.rst') as f:
+    with open('README.md') as f:
         return f.read()
 
 setup(
@@ -11,6 +11,7 @@ setup(
     version="0.3.2",
     description="A python graph library implemented in Rust",
     long_description=readme(),
+    long_description_content_type='text/markdown',
     author = "Matthew Treinish",
     author_email = "mtreinish@kortar.org",
     classifiers=[
