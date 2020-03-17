@@ -19,7 +19,7 @@ class TestPredecessors(unittest.TestCase):
     def test_single_predecessor(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', {'a': 1})
+        dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_a, 'c', {'a': 2})
         res = dag.predecessors(node_c)
         self.assertEqual(['a'], res)
@@ -27,7 +27,7 @@ class TestPredecessors(unittest.TestCase):
     def test_single_predecessor_multiple_edges(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', {'a': 1})
+        dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_a, 'c', {'a': 2})
         dag.add_edge(node_a, node_c, {'a': 3})
         res = dag.predecessors(node_c)
@@ -43,6 +43,7 @@ class TestPredecessors(unittest.TestCase):
                           {'numeral': 6}, {'numeral': 5}, {'numeral': 4},
                           {'numeral': 3}, {'numeral': 2}, {'numeral': 1},
                           {'numeral': 0}], res)
+
 
 class TestSuccessors(unittest.TestCase):
     def test_single_successor(self):
@@ -75,6 +76,7 @@ class TestSuccessors(unittest.TestCase):
                           {'numeral': 3}, {'numeral': 2}, {'numeral': 1},
                           {'numeral': 0}], res)
 
+
 class TestBfsSuccessors(unittest.TestCase):
     def test_single_successor(self):
         dag = retworkx.PyDAG()
@@ -91,10 +93,10 @@ class TestBfsSuccessors(unittest.TestCase):
         for i in range(10):
             dag.add_child(node_a, {'numeral': i}, {'edge': i})
         res = retworkx.bfs_successors(dag, node_a)
-        self.assertEqual([('a', [{'numeral': 9}, {'numeral': 8}, {'numeral': 7},
-                          {'numeral': 6}, {'numeral': 5}, {'numeral': 4},
-                          {'numeral': 3}, {'numeral': 2}, {'numeral': 1},
-                          {'numeral': 0}])], res)
+        self.assertEqual([('a', [{'numeral': 9}, {'numeral': 8},
+                          {'numeral': 7}, {'numeral': 6}, {'numeral': 5},
+                          {'numeral': 4}, {'numeral': 3}, {'numeral': 2},
+                          {'numeral': 1}, {'numeral': 0}])], res)
 
     def test_bfs_succesors(self):
         dag = retworkx.PyDAG()
