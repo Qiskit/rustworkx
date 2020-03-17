@@ -5,11 +5,11 @@ version = "0.3.2"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 license = "Apache-2.0"
 readme = "README.rst"
-repository = "https://github.com/mtreinish/retworkx"
+repository = "https://github.com/Qiskit/retworkx"
 keywords = ["python", "graph"]
 
 [badges]
-travis-ci = {repository = "mtreinish/retworkx"}
+travis-ci = {repository = "Qiskit/retworkx"}
 
 [lib]
 name = "retworkx"

@@ -5,28 +5,28 @@ retworkx
 
 
 retworkx is a rust graph library interface to python3. For right now it's scope
-is as an experiment in being a potential replacement for `qiskit-terra`_'s
-networkx usage (hence the name). The scope might grow or change over time, but
-to start it's just about building a DAG and operating on it with the performance
-and safety that Rust provides. It is also a personal exercise in learning how
-to interface rust with python.
+is as a replacement for `qiskit-terra`_'s previous (and current) networkx usage
+(hence the name). The scope might grow or change over time, but to start it's
+just about building a DAG and operating on it with the performance and safety
+that Rust provides.
 
 .. _qiskit-terra: https://github.com/Qiskit/qiskit-terra
 
 Installing retworkx
 -------------------
 
-retworkx is published on pypi so on x86_64 and i686 Linux systems or x86_64 on
-Mac OSX and Windows installing is as simple as running::
+retworkx is published on pypi so on x86_64, i686, ppc64le, and aarch64 Linux
+systems, x86_64 on Mac OSX, and 32 and 64 bit Windows installing is as simple
+as running::
 
   pip install retworkx
 
 This will install a precompiled version of retworkx into your python
 environment.
 
-However, if there are no precompiled binaries published for your
-system you'll have to compile the code. The source package is also published on
-pypi so you can also run the above command to install it. However, there are 2
+However, if there are no precompiled binaries published for your system you'll
+have to compile the code. The source package is also published on pypi so you
+can also run the above command to install it. However, there are 2
 preconditions for this to work, first you need to have cargo/rustc **nightly**
 in your PATH. You can use `rustup`_ to make this step simpler. Secondly, you
 need to have ``setuptools-rust`` installed in your python environment. This can
@@ -48,7 +48,7 @@ Building from source
 
 The first step for building retworkx from source is to clone it locally with::
 
-  git clone https://github.com/mtreinish/retworkx.git
+  git clone https://github.com/Qiskit/retworkx.git
 
 retworkx uses `PyO3`_ and `setuptools-rust`_ to build the python interface.
 Unfortunately, this means you need to use nightly rust because PyO3 only works
@@ -75,10 +75,10 @@ you can run::
 
   pip install $PATH_TO_REPO_ROOT
 
-which will install it the same way. Then retworkx in your local python
-environment. There are 2 things to note when doing this though, first if you
-try to run python from the repo root using this method it will not work as you
-expect. There is a name conflict in the repo root because of the local python
+which will install it the same way. Then retworkx is installed inyour local
+python environment. There are 2 things to note when doing this though, first if
+you try to run python from the repo root using this method it will not work as
+you expect. There is a name conflict in the repo root because of the local python
 package shim used in building the package. Simply run your python scripts or
 programs using retworkx outside of the repo root. The second issue is that any
 local changes you make to the rust code will not be reflected live in the
