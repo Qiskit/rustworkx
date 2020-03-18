@@ -39,6 +39,7 @@ class TestAncestors(unittest.TestCase):
         res = retworkx.ancestors(dag, node_b)
         self.assertEqual({node_a}, res)
 
+
 class TestDescendants(unittest.TestCase):
     def test_descendants(self):
         dag = retworkx.PyDAG()

@@ -61,7 +61,7 @@ class TestEdges(unittest.TestCase):
 
     def test_edges_empty(self):
         dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
+        dag.add_node('a')
         self.assertEqual([], dag.edges())
 
     def test_add_duplicates(self):
@@ -96,13 +96,13 @@ class TestEdges(unittest.TestCase):
     def test_remove_edge_from_index(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', 'edgy')
+        dag.add_child(node_a, 'b', 'edgy')
         dag.remove_edge_from_index(0)
         self.assertEqual([], dag.edges())
 
     def test_remove_edge_no_edge(self):
         dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
+        dag.add_node('a')
         dag.remove_edge_from_index(0)
         self.assertEqual([], dag.edges())
 
