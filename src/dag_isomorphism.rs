@@ -171,23 +171,23 @@ impl Vf2State {
 ///
 /// * Luigi P. Cordella, Pasquale Foggia, Carlo Sansone, Mario Vento;
 ///   *A (Sub)Graph Isomorphism Algorithm for Matching Large Graphs*
-pub fn is_isomorphic(dag0: &PyDAG, dag1: &PyDAG) -> bool {
+pub fn is_isomorphic(dag0: &PyDAG, dag1: &PyDAG) -> PyResult<bool> {
     let g0 = &dag0.graph;
     let g1 = &dag1.graph;
     if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
     {
-        return false;
+        return Ok(false);
     }
 
     let mut st = [Vf2State::new(dag0), Vf2State::new(dag1)];
-    try_match(
+    let res = try_match(
         &mut st,
         dag0,
         dag1,
         &mut NoSemanticMatch,
         &mut NoSemanticMatch,
-    )
-    .unwrap_or(false)
+    )?;
+    Ok(res.unwrap_or(false))
 }
 
 /// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
@@ -201,26 +201,26 @@ pub fn is_isomorphic_matching<F, G>(
     dag1: &PyDAG,
     mut node_match: F,
     mut edge_match: G,
-) -> bool
+) -> PyResult<bool>
 where
-    F: FnMut(&PyObject, &PyObject) -> bool,
-    G: FnMut(&PyObject, &PyObject) -> bool,
+    F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
+    G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
 {
     let g0 = &dag0.graph;
     let g1 = &dag1.graph;
     if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
     {
-        return false;
+        return Ok(false);
     }
 
     let mut st = [Vf2State::new(dag0), Vf2State::new(dag1)];
-    try_match(&mut st, dag0, dag1, &mut node_match, &mut edge_match)
-        .unwrap_or(false)
+    let res = try_match(&mut st, dag0, dag1, &mut node_match, &mut edge_match)?;
+    Ok(res.unwrap_or(false))
 }
 
 trait SemanticMatcher<T> {
     fn enabled() -> bool;
-    fn eq(&mut self, _: &T, _: &T) -> bool;
+    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
 }
 
 struct NoSemanticMatch;
@@ -231,22 +231,23 @@ impl<T> SemanticMatcher<T> for NoSemanticMatch {
         false
     }
     #[inline]
-    fn eq(&mut self, _: &T, _: &T) -> bool {
-        true
+    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool> {
+        Ok(true)
     }
 }
 
 impl<T, F> SemanticMatcher<T> for F
 where
-    F: FnMut(&T, &T) -> bool,
+    F: FnMut(&T, &T) -> PyResult<bool>,
 {
     #[inline]
     fn enabled() -> bool {
         true
     }
     #[inline]
-    fn eq(&mut self, a: &T, b: &T) -> bool {
-        self(a, b)
+    fn eq(&mut self, a: &T, b: &T) -> PyResult<bool> {
+        let res = self(a, b)?;
+        Ok(res)
     }
 }
 
@@ -257,7 +258,7 @@ fn try_match<F, G>(
     dag1: &PyDAG,
     node_match: &mut F,
     edge_match: &mut G,
-) -> Option<bool>
+) -> PyResult<Option<bool>>
 where
     F: SemanticMatcher<PyObject>,
     G: SemanticMatcher<PyObject>,
@@ -265,7 +266,7 @@ where
     let g0 = &dag0.graph;
     let g1 = &dag1.graph;
     if st[0].is_complete() {
-        return Some(true);
+        return Ok(Some(true));
     }
     let dag = [dag0, dag1];
     let g = [g0, g1];
@@ -365,7 +366,7 @@ where
     //fn is_feasible(nodes: [NodeIndex<Ix>; 2]) -> bool {
     let mut is_feasible = |st: &mut [Vf2State; 2],
                            nodes: [NodeIndex; 2]|
-     -> bool {
+     -> PyResult<bool> {
         // Check syntactic feasibility of mapping by ensuring adjacencies
         // of nx map to adjacencies of mx.
         //
@@ -402,12 +403,12 @@ where
                     m_neigh,
                 );
                 if !has_edge {
-                    return false;
+                    return Ok(false);
                 }
             }
         }
         if succ_count[0] != succ_count[1] {
-            return false;
+            return Ok(false);
         }
         // R_pred
         if g[0].is_directed() {
@@ -426,17 +427,18 @@ where
                         nodes[1 - j],
                     );
                     if !has_edge {
-                        return false;
+                        return Ok(false);
                     }
                 }
             }
             if pred_count[0] != pred_count[1] {
-                return false;
+                return Ok(false);
             }
         }
         // semantic feasibility: compare associated data for nodes
-        if F::enabled() && !node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]]) {
-            return false;
+        let match_result = node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?;
+        if F::enabled() && !match_result {
+            return Ok(false);
         }
         // semantic feasibility: compare associated data for edges
         if G::enabled() {
@@ -455,9 +457,10 @@ where
                     }
                     match g[1 - j].find_edge(nodes[1 - j], m_neigh) {
                         Some(m_edge) => {
-                            if !edge_match.eq(&g[j][n_edge], &g[1 - j][m_edge])
-                            {
-                                return false;
+                            let match_result = edge_match
+                                .eq(&g[j][n_edge], &g[1 - j][m_edge])?;
+                            if !match_result {
+                                return Ok(false);
                             }
                         }
                         None => unreachable!(), // covered by syntactic check
@@ -477,10 +480,10 @@ where
                         }
                         match g[1 - j].find_edge(m_neigh, nodes[1 - j]) {
                             Some(m_edge) => {
-                                if !edge_match
-                                    .eq(&g[j][n_edge], &g[1 - j][m_edge])
-                                {
-                                    return false;
+                                let match_result = edge_match
+                                    .eq(&g[j][n_edge], &g[1 - j][m_edge])?;
+                                if !match_result {
+                                    return Ok(false);
                                 }
                             }
                             None => unreachable!(), // covered by syntactic check
@@ -489,7 +492,7 @@ where
                 }
             }
         }
-        true
+        Ok(true)
     };
     let mut stack: Vec<Frame<NodeIndex>> = vec![Frame::Outer];
 
@@ -526,10 +529,11 @@ where
                 nodes,
                 open_list: ol,
             } => {
-                if is_feasible(&mut st, nodes) {
+                let feasible = is_feasible(&mut st, nodes)?;
+                if feasible {
                     push_state(&mut st, nodes);
                     if st[0].is_complete() {
-                        return Some(true);
+                        return Ok(Some(true));
                     }
                     // Check cardinalities of Tin, Tout sets
                     if st[0].out_size == st[1].out_size
@@ -558,5 +562,5 @@ where
             }
         }
     }
-    None
+    Ok(None)
 }
