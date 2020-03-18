@@ -16,7 +16,7 @@ def readme():
 
 setup(
     name="retworkx",
-    version="0.3.2",
+    version="0.3.3",
     description="A python graph library implemented in Rust",
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -24,8 +24,8 @@ setup(
     author_email="mtreinish@kortar.org",
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
-        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
         "Programming Language :: Rust",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.5",
@@ -36,6 +36,7 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
     ],
+    keywords="Networks network graph Graph Theory DAG",
     url="https://github.com/Qiskit/retworkx",
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/retworkx/issues",
