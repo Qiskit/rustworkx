@@ -1,32 +1,4 @@
 ---
-stage_osx: &stage_osx
-  os: osx
-  language: generic
-  cache:
-    pip: true
-    directories:
-      - ~/python-interpreters/
-  before_install:
-    # Travis does not provide support for Python 3 under osx - it needs to be
-    # installed manually.
-    - |
-      if [[ ! -d ~/python-interpreters/$PYTHON_VERSION ]]; then
-        git clone git://github.com/pyenv/pyenv.git
-        cd pyenv/plugins/python-build
-        ./install.sh
-        cd ../../..
-        python-build $PYTHON_VERSION ~/python-interpreters/$PYTHON_VERSION
-      fi
-      sudo pip2 install -U virtualenv pip setuptools
-      virtualenv --python ~/python-interpreters/$PYTHON_VERSION/bin/python venv
-      source venv/bin/activate
-    - which python
-    - sh tools/install_rust.sh
-    - export PATH=~/.cargo/bin:$PATH
-  install:
-    - pip install -U .
-  script:
-    - cd tests && python -m unittest discover .
 notifications:
   email: false
 os: linux
@@ -102,27 +74,6 @@ jobs:
       stage: Linux non-x86_64
       python: 3.7
       arch: arm64
-    - name: Python 3.5 Tests OSX
-      stage: macOS
-      <<: *stage_osx
-      env:
-        - PYTHON_VERSION=3.5.8
-    - name: Python 3.6 Tests OSX
-      stage: macOS
-      <<: *stage_osx
-      env:
-        - PYTHON_VERSION=3.6.9
-    - name: Python 3.7 Tests OSX
-      stage: macOS
-      <<: *stage_osx
-      env:
-        - PYTHON_VERSION=3.7.5
-    - name: Python 3.8 Tests OSX
-      stage: macOS
-      <<: *stage_osx
-      env:
-        - PYTHON_VERSION=3.8.0
-
     - stage: deploy
       services:
         - docker
@@ -191,23 +142,5 @@ jobs:
       if: tag IS present
       script:
         - sudo pip install -U twine cibuildwheel==1.2.0
-        - cibuildwheel --output-dir wheelhouse
-        - twine upload wheelhouse/*
-    - stage: deploy
-      os: osx
-      language: generic
-      if: tag IS present
-      before_install:
-        - echo ""
-      install:
-        - echo ""
-      env:
-        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && tools/install_rust.sh"
-        - CIBW_SKIP="cp27-* cp34-* pp*"
-        - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
-        - TWINE_USERNAME=retworkx-ci
-        - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      script:
-        - sudo pip2 install -U cibuildwheel==1.2.0 twine
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
