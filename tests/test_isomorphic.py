@@ -76,8 +76,7 @@ class TestIsomorphic(unittest.TestCase):
         self.assertRaises(
             TypeError,
             retworkx.is_isomorphic_node_match,
-                (dag_a, dag_b, compare_nodes))
-
+            (dag_a, dag_b, compare_nodes))
 
     def test_isomorphic_compare_nodes_identical(self):
         dag_a = retworkx.PyDAG()
