@@ -73,7 +73,10 @@ the repo. To set the compiler for `retworkx` to nightly rust using
 rustup override set nightly
 ```
 
-then, you can install retworkx into your python env with:
+(MacOS users shoud instead run `rustup default nightly` to enable
+nightly rust globally.)
+
+Then, you can install retworkx into your python env with:
 ```bash
 pip install .
 ```
