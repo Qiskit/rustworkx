@@ -18,15 +18,15 @@ script:
   - cd tests && ../test-venv/bin/python -m unittest discover .
 stages:
   - name: Compile and lint
-    if: tag IS blank
-  - name: Linux x86_64
-    if: tag IS blank
-  - name: Linux non-x86_64
-    if: tag IS blank
-  - name: macOS
-    if: tag IS blank
-  - name: deploy
     if: tag IS present
+  - name: Linux x86_64
+    if: tag IS present
+  - name: Linux non-x86_64
+    if: tag IS present
+  - name: macOS
+    if: tag IS present
+  - name: deploy
+    if: tag IS blank
 
 jobs:
   fast_finish: true
@@ -147,7 +147,7 @@ jobs:
     - stage: deploy
       os: osx
       language: generic
-      if: tag IS present
+      if: tag IS blank
       before_install:
         - echo ""
       install:
