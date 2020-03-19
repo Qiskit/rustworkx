@@ -14,30 +14,6 @@ stages:
   - stage: 'Wheel_Builds'
     condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
     jobs:
-    - job: 'macos'
-      condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
-      pool: {vmImage: 'macOS-10.15'}
-      variables:
-        python.version: '3.7'
-        CIBW_BEFORE_BUILD: pip install -U setuptools-rust && rustup default nightly
-        CIBW_SKIP: cp27-* cp34-* pp*
-        TWINE_USERNAME: retworkx-ci
-        CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
-      steps:
-      - task: UsePythonVersion@0
-      - bash: |
-          set -e
-          python -m pip install --upgrade pip
-          pip install cibuildwheel==1.2.0
-          pip install -U twine
-          cibuildwheel --output-dir wheelhouse .
-      - task: PublishBuildArtifacts@1
-        inputs: {pathtoPublish: 'wheelhouse'}
-        condition: succeededOrFailed()
-      - bash: |
-          twine upload wheelhouse/*
-        env:
-          TWINE_PASSWORD: $(TWINE_PASSWORD)
     - job: 'Windows_64'
       pool: {vmImage: 'vs2017-win2016'}
       condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
