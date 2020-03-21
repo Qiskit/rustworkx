@@ -121,3 +121,10 @@ class TestEdges(unittest.TestCase):
         dag.add_edge(node_b, node_a, {})
         with self.assertRaises(Exception):
             dag.check_cycle = True
+
+    def test_cycle_checking_at_init(self):
+        dag = retworkx.PyDAG(True)
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {})
+        with self.assertRaises(Exception):
+            dag.add_edge(node_b, node_a, {})
