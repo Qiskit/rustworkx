@@ -52,7 +52,7 @@ jobs:
       before_install: pip install -U pip setuptools virtualenv
       install: pip install -U flake8
       script: flake8 setup.py tests
-    - name: Coverage
+    - name: Python 3.7 Tests Linux and Coverage
       language: python
       python: 3.7
       stage: Compile and lint
@@ -76,9 +76,6 @@ jobs:
     - name: Python 3.6 Tests Linux
       stage: Linux x86_64
       python: 3.6
-    - name: Python 3.7 Tests Linux
-      stage: Linux x86_64
-      python: 3.7
     - name: Python 3.8 Tests Linux
       stage: Linux x86_64
       python: 3.8
