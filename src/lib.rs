@@ -235,7 +235,7 @@ impl PyDAG {
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             sort_key_cache: HashMap::new(),
-        });
+        }
     }
 
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
