@@ -68,7 +68,7 @@ jobs:
         - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
         - cd tests && python -m unittest discover . && cd ..
         - zip -0 ccov.zip `find . \( -name "retworkx*.gc*" \) -print`
-        - ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o coveralls.info
+        - ./grcov ccov.zip -s . -t lcov --ignore-not-existing --ignore "/*" -o coveralls.info
         - coveralls-lcov coveralls.info
     - name: Python 3.5 Tests Linux
       stage: Linux x86_64
