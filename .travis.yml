@@ -3,7 +3,9 @@ notifications:
   email: false
 os: linux
 language: python
-cache: pip
+cache:
+  pip: true
+  cargo: true
 dist: bionic
 before_install:
   - which python
@@ -50,15 +52,30 @@ jobs:
       before_install: pip install -U pip setuptools virtualenv
       install: pip install -U flake8
       script: flake8 setup.py tests
+    - name: Python 3.7 Tests Linux and Coverage
+      language: python
+      python: 3.7
+      stage: Compile and lint
+      install:
+        - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
+        - pip install -U setuptools-rust
+        - gem install coveralls-lcov
+        - export CARGO_INCREMENTAL=0
+        - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
+        - python setup.py develop
+      script:
+        - export CARGO_INCREMENTAL=0
+        - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
+        - cd tests && python -m unittest discover . && cd ..
+        - zip -0 ccov.zip `find . \( -name "retworkx*.gc*" \) -print`
+        - ./grcov ccov.zip -s . -t lcov --ignore-not-existing --ignore "/*" -o coveralls.info
+        - coveralls-lcov coveralls.info
     - name: Python 3.5 Tests Linux
       stage: Linux x86_64
       python: 3.5
     - name: Python 3.6 Tests Linux
       stage: Linux x86_64
       python: 3.6
-    - name: Python 3.7 Tests Linux
-      stage: Linux x86_64
-      python: 3.7
     - name: Python 3.8 Tests Linux
       stage: Linux x86_64
       python: 3.8
