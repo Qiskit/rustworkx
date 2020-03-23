@@ -30,6 +30,16 @@ class TestNodes(unittest.TestCase):
         self.assertEqual([], dag.nodes())
         self.assertEqual([], dag.node_indexes())
 
+    def test_remove_node(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_child(node_b, 'c', "Edgy_mk2")
+        dag.remove_node(node_b)
+        res = dag.nodes()
+        self.assertEqual(['a', 'c'], res)
+        self.assertEqual([0, 2], dag.node_indexes())
+
     def test_topo_sort_empty(self):
         dag = retworkx.PyDAG()
         self.assertEqual([], retworkx.topological_sort(dag))
@@ -42,6 +52,13 @@ class TestNodes(unittest.TestCase):
         dag.add_parent(3, 'A parent', None)
         res = retworkx.topological_sort(dag)
         self.assertEqual([6, 0, 5, 4, 3, 2, 1], res)
+
+    def test_topo_sort_with_cycle(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {})
+        dag.add_edge(node_b, node_a, {})
+        self.assertRaises(Exception, retworkx.topological_sort, dag)
 
     def test_lexicographical_topo_sort(self):
         dag = retworkx.PyDAG()
