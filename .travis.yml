@@ -58,7 +58,8 @@ jobs:
       stage: Compile and lint
       install:
         - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
-        - pip install -U setuptools-rust coveralls
+        - pip install -U setuptools-rust
+        - gem install coveralls-lcov
         - export CARGO_INCREMENTAL=0
         - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
         - python setup.py develop
@@ -67,8 +68,8 @@ jobs:
         - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
         - cd tests && python -m unittest discover . && cd ..
         - zip -0 ccov.zip `find . \( -name "retworkx*.gc*" \) -print`
-        - ./grcov ccov.zip -s . -t coveralls --llvm --branch --ignore-not-existing --ignore "/*" --token '' --commit-sha $TRAVIS_COMMIT > coveralls.json
-        - coveralls
+        - ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o coveralls.info
+        - coveralls-lcov coveralls.info
     - name: Python 3.5 Tests Linux
       stage: Linux x86_64
       python: 3.5
