@@ -17,7 +17,12 @@ retworkx API
        dag = retworkx.PyDAG()
        dag.check_cycle = True
 
-   With check_cycle set to true any calls to :method:`PyDAG.add_edge` will
+   or at object creation::
+
+       import retworkx
+       dag = retworkx.PyDAG(True)
+
+   With check_cycle set to true any calls to :meth:`PyDAG.add_edge` will
    ensure that no cycles are added, ensuring that the PyDAG class truly
    represents a directed acyclic graph.
 
@@ -25,8 +30,11 @@ retworkx API
           When using ``copy.deepcopy()`` or pickling node indexes are not
           guaranteed to be preserved.
 
-    .. py:method:: __init__(self):
+    .. py:method:: __init__(self, check_cycle=False):
         Initialize an empty DAG.
+
+        :param bool check_cycle: If set true enable cycle checking on add_edge()
+            calls
 
     .. py:method:: __len__(self):
         Return the number of nodes in the graph. Use via ``len()`` function
@@ -50,6 +58,12 @@ retworkx API
         Return a list of all node data.
 
         :returns: A list of all the node data objects in the DAG
+        :rtype: list
+
+    .. py:method:: node_indexes(self):
+        Return a list of all node indexes.
+
+        :returns: A list of all the node indexes in the DAG
         :rtype: list
 
     .. py:method:: successors(self, node):
@@ -182,6 +196,7 @@ retworkx API
             the value is the edge data object for all nodes that share an
             edge with the specified node.
         :rtype: dict
+
         :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
             found to a neighbor node
 
@@ -196,6 +211,7 @@ retworkx API
         :returns in_edges: A list of tuples of the form:
             (parent_index, node_index, edge_data)
         :rtype: list
+
         :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
             found to a neighbor node
 
@@ -210,6 +226,7 @@ retworkx API
         :returns out_edges: A list of tuples of the form:
             (node_index, child_index, edge_data)
         :rtype: list
+
         :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
             found to a neighbor node
 

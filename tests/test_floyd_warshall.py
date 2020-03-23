@@ -51,7 +51,7 @@ class TestFloydWarshall(unittest.TestCase):
         dag.add_edge(cr_0, cr_0_out, 'qr[2]')
         cr_1_out = dag.add_node('cr[1]_out')
         dag.add_edge(cr_1, cr_1_out, 'cr[1]')
-        
+
         result = retworkx.floyd_warshall(dag)
         expected = {
             0: {0: 0, 5: 1, 6: 2, 7: 2, 8: 3, 9: 4, 10: 4, 11: 3, 12: 5},

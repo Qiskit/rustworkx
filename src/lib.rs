@@ -36,7 +36,7 @@ use petgraph::visit::{
     Bfs, GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences,
     IntoEdges, IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
     IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
-    NodeIndexable, Visitable,
+    NodeIndexable, Reversed, Visitable,
 };
 
 #[pyclass(module = "retworkx")]
@@ -228,11 +228,12 @@ impl GetAdjacencyMatrix for PyDAG {
 #[pymethods]
 impl PyDAG {
     #[new]
-    fn new(obj: &PyRawObject) {
-        obj.init(PyDAG {
+    #[args(check_cycle = "false")]
+    fn new(check_cycle: bool) -> Self {
+        PyDAG {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
-            check_cycle: false,
+            check_cycle,
             sort_key_cache: HashMap::new(),
         });
     }
@@ -267,26 +268,22 @@ impl PyDAG {
         let py = gil.python();
         let dict_state = state.cast_as::<PyDict>(py)?;
 
-        let nodes_dict = dict_state
-            .get_item("nodes")
-            .unwrap()
-            .downcast_ref::<PyDict>()?;
-        let edges_list = dict_state
-            .get_item("edges")
-            .unwrap()
-            .downcast_ref::<PyList>()?;
+        let nodes_dict =
+            dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
+        let edges_list =
+            dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
         for raw_index in nodes_dict.keys().iter() {
-            let tmp_index = raw_index.downcast_ref::<PyLong>()?;
+            let tmp_index = raw_index.downcast::<PyLong>()?;
             let index: usize = tmp_index.extract()?;
             let raw_data = nodes_dict.get_item(index).unwrap();
             let node_index = self.graph.add_node(raw_data.into());
             node_mapping.insert(index, node_index);
         }
         for raw_edge in edges_list.iter() {
-            let edge = raw_edge.downcast_ref::<PyTuple>()?;
-            let raw_p_index = edge.get_item(0).downcast_ref::<PyLong>()?;
+            let edge = raw_edge.downcast::<PyTuple>()?;
+            let raw_p_index = edge.get_item(0).downcast::<PyLong>()?;
             let tmp_p_index: usize = raw_p_index.extract()?;
-            let raw_c_index = edge.get_item(1).downcast_ref::<PyLong>()?;
+            let raw_c_index = edge.get_item(1).downcast::<PyLong>()?;
             let tmp_c_index: usize = raw_c_index.extract()?;
             let edge_data = edge.get_item(2);
 
@@ -327,6 +324,14 @@ impl PyDAG {
             out.push(self.graph.node_weight(node).unwrap());
         }
         PyList::new(py, out).into()
+    }
+
+    pub fn node_indexes(&self, py: Python) -> PyObject {
+        let mut out_list: Vec<usize> = Vec::new();
+        for node_index in self.graph.node_indices() {
+            out_list.push(node_index.index());
+        }
+        PyList::new(py, out_list).into()
     }
 
     pub fn has_edge(&self, node_a: usize, node_b: usize) -> bool {
@@ -710,8 +715,9 @@ fn is_directed_acyclic_graph(graph: &PyDAG) -> bool {
 }
 
 #[pyfunction]
-fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
-    dag_isomorphism::is_isomorphic(first, second)
+fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> PyResult<bool> {
+    let res = dag_isomorphism::is_isomorphic(first, second)?;
+    Ok(res)
 }
 
 #[pyfunction]
@@ -720,21 +726,22 @@ fn is_isomorphic_node_match(
     first: &PyDAG,
     second: &PyDAG,
     matcher: PyObject,
-) -> bool {
-    let compare_nodes = |a: &PyObject, b: &PyObject| -> bool {
-        let res = matcher.call1(py, (a, b)).unwrap();
-        res.is_true(py).unwrap()
+) -> PyResult<bool> {
+    let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+        let res = matcher.call1(py, (a, b))?;
+        Ok(res.is_true(py).unwrap())
     };
 
-    fn compare_edges(_a: &PyObject, _b: &PyObject) -> bool {
-        true
+    fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
+        Ok(true)
     }
-    dag_isomorphism::is_isomorphic_matching(
+    let res = dag_isomorphism::is_isomorphic_matching(
         first,
         second,
         compare_nodes,
         compare_edges,
-    )
+    )?;
+    Ok(res)
 }
 
 #[pyfunction]
@@ -779,27 +786,28 @@ fn bfs_successors(
 #[pyfunction]
 fn ancestors(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let index = NodeIndex::new(node);
-    let mut out_list: Vec<usize> = Vec::new();
-    for n in graph.graph.node_indices() {
+    let mut out_set: HashSet<usize> = HashSet::new();
+    let reverse_graph = Reversed(graph);
+    let res = algo::dijkstra(reverse_graph, index, None, |_| 1);
+    for n in res.keys() {
         let n_int = n.index();
-        if n_int != node && algo::has_path_connecting(graph, n, index, None) {
-            out_list.push(n_int);
-        }
+        out_set.insert(n_int);
     }
-    Ok(PyList::new(py, out_list).into())
+    out_set.remove(&node);
+    Ok(out_set.to_object(py))
 }
 
 #[pyfunction]
 fn descendants(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let index = NodeIndex::new(node);
-    let mut out_list: Vec<usize> = Vec::new();
-    for n in graph.graph.node_indices() {
+    let mut out_set: HashSet<usize> = HashSet::new();
+    let res = algo::dijkstra(graph, index, None, |_| 1);
+    for n in res.keys() {
         let n_int = n.index();
-        if n_int != node && algo::has_path_connecting(graph, index, n, None) {
-            out_list.push(n_int);
-        }
+        out_set.insert(n_int);
     }
-    Ok(PyList::new(py, out_list).into())
+    out_set.remove(&node);
+    Ok(out_set.to_object(py))
 }
 
 #[pyfunction(use_cache = false)]
@@ -963,10 +971,8 @@ fn floyd_warshall(py: Python, dag: &PyDAG) -> PyResult<PyObject> {
         let u_index = nodes.0;
         let v_index = nodes.1;
         if out_dict.contains(u_index)? {
-            let u_dict = out_dict
-                .get_item(u_index)
-                .unwrap()
-                .downcast_ref::<PyDict>()?;
+            let u_dict =
+                out_dict.get_item(u_index).unwrap().downcast::<PyDict>()?;
             u_dict.set_item(v_index, distance)?;
             out_dict.set_item(u_index, u_dict)?;
         } else {

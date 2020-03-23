@@ -1,37 +1,11 @@
 ---
-stage_osx: &stage_osx
-  os: osx
-  language: generic
-  cache:
-    pip: true
-    directories:
-      - ~/python-interpreters/
-  before_install:
-    # Travis does not provide support for Python 3 under osx - it needs to be
-    # installed manually.
-    - |
-      if [[ ! -d ~/python-interpreters/$PYTHON_VERSION ]]; then
-        git clone git://github.com/pyenv/pyenv.git
-        cd pyenv/plugins/python-build
-        ./install.sh
-        cd ../../..
-        python-build $PYTHON_VERSION ~/python-interpreters/$PYTHON_VERSION
-      fi
-      sudo pip2 install -U virtualenv pip setuptools
-      virtualenv --python ~/python-interpreters/$PYTHON_VERSION/bin/python venv
-      source venv/bin/activate
-    - which python
-    - sh tools/install_rust.sh
-    - export PATH=~/.cargo/bin:$PATH
-  install:
-    - pip install -U .
-  script:
-    - cd tests && python -m unittest discover .
 notifications:
   email: false
 os: linux
 language: python
-cache: pip
+cache:
+  pip: true
+  cargo: true
 dist: bionic
 before_install:
   - which python
@@ -45,7 +19,7 @@ install:
 script:
   - cd tests && ../test-venv/bin/python -m unittest discover .
 stages:
-  - name: Compile and rustfmt
+  - name: Compile and lint
     if: tag IS blank
   - name: Linux x86_64
     if: tag IS blank
@@ -61,7 +35,7 @@ jobs:
   include:
     - name: Compile and rustfmt
       language: rust
-      stage: Compile and rustfmt
+      stage: Compile and lint
       before_install: echo ""
       install: echo ""
       before_script:
@@ -72,15 +46,36 @@ jobs:
       script:
         - cargo build
         - cargo fmt -- --check
+    - name: Python lint
+      language: python
+      stage: Compile and lint
+      before_install: pip install -U pip setuptools virtualenv
+      install: pip install -U flake8
+      script: flake8 setup.py tests
+    - name: Python 3.7 Tests Linux and Coverage
+      language: python
+      python: 3.7
+      stage: Compile and lint
+      install:
+        - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
+        - pip install -U setuptools-rust
+        - gem install coveralls-lcov
+        - export CARGO_INCREMENTAL=0
+        - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
+        - python setup.py develop
+      script:
+        - export CARGO_INCREMENTAL=0
+        - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
+        - cd tests && python -m unittest discover . && cd ..
+        - zip -0 ccov.zip `find . \( -name "retworkx*.gc*" \) -print`
+        - ./grcov ccov.zip -s . -t lcov --ignore-not-existing --ignore "/*" -o coveralls.info
+        - coveralls-lcov coveralls.info
     - name: Python 3.5 Tests Linux
       stage: Linux x86_64
       python: 3.5
     - name: Python 3.6 Tests Linux
       stage: Linux x86_64
       python: 3.6
-    - name: Python 3.7 Tests Linux
-      stage: Linux x86_64
-      python: 3.7
     - name: Python 3.8 Tests Linux
       stage: Linux x86_64
       python: 3.8
@@ -88,35 +83,14 @@ jobs:
       stage: Linux non-x86_64
       python: 3.7
       arch: ppc64le
-    - name: Python 3.7 Tests s390x Linux
-      stage: Linux non-x86_64
-      python: 3.7
-      arch: s390x
+#    - name: Python 3.7 Tests s390x Linux
+#      stage: Linux non-x86_64
+#      python: 3.7
+#      arch: s390x
     - name: Python 3.7 Tests arm64 Linux
       stage: Linux non-x86_64
       python: 3.7
       arch: arm64
-    - name: Python 3.5 Tests OSX
-      stage: macOS
-      <<: *stage_osx
-      env:
-        - PYTHON_VERSION=3.5.8
-    - name: Python 3.6 Tests OSX
-      stage: macOS
-      <<: *stage_osx
-      env:
-        - PYTHON_VERSION=3.6.9
-    - name: Python 3.7 Tests OSX
-      stage: macOS
-      <<: *stage_osx
-      env:
-        - PYTHON_VERSION=3.7.5
-    - name: Python 3.8 Tests OSX
-      stage: macOS
-      <<: *stage_osx
-      env:
-        - PYTHON_VERSION=3.8.0
-
     - stage: deploy
       services:
         - docker
@@ -126,13 +100,65 @@ jobs:
         - echo ""
       env:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
-        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - sudo pip install -U cibuildwheel==1.1.0 twine
+        - pip install -U cibuildwheel==1.2.0 twine
+        - cibuildwheel --output-dir wheelhouse
+        - twine upload wheelhouse/*
+    - stage: deploy
+      python: 3.7
+      before_install:
+        - echo ""
+      install:
+        - echo ""
+      env:
+        - TWINE_USERNAME=retworkx-ci
+      before_script:
+        - pip install -U twine setuptools-rust
+      if: tag IS present
+      script:
+        - python setup.py sdist
+        - twine upload dist/*
+    - stage: deploy
+      arch: arm64
+      services:
+        - docker
+      before_install:
+        - echo ""
+      install:
+        - echo ""
+      env:
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
+        - CIBW_SKIP="cp27-* cp34-* pp*"
+        - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
+        - TWINE_USERNAME=retworkx-ci
+        - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
+      if: tag IS present
+      script:
+        - pip install -U twine cibuildwheel==1.2.0
+        - cibuildwheel --output-dir wheelhouse
+        - twine upload wheelhouse/*
+    - stage: deploy
+      arch: ppc64le
+      services:
+        - docker
+      before_install:
+        - echo ""
+      install:
+        - echo ""
+      env:
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
+        - CIBW_SKIP="cp27-* cp34-* pp*"
+        - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
+        - TWINE_USERNAME=retworkx-ci
+        - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
+      if: tag IS present
+      script:
+        - pip install -U twine cibuildwheel==1.2.0
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy

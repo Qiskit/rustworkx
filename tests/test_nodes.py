@@ -14,18 +14,31 @@ import unittest
 
 import retworkx
 
+
 class TestNodes(unittest.TestCase):
 
     def test_nodes(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_child(node_a, 'b', "Edgy")
         res = dag.nodes()
         self.assertEqual(['a', 'b'], res)
+        self.assertEqual([0, 1], dag.node_indexes())
 
     def test_no_nodes(self):
         dag = retworkx.PyDAG()
         self.assertEqual([], dag.nodes())
+        self.assertEqual([], dag.node_indexes())
+
+    def test_remove_node(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_child(node_b, 'c', "Edgy_mk2")
+        dag.remove_node(node_b)
+        res = dag.nodes()
+        self.assertEqual(['a', 'c'], res)
+        self.assertEqual([0, 2], dag.node_indexes())
 
     def test_topo_sort_empty(self):
         dag = retworkx.PyDAG()
@@ -39,6 +52,13 @@ class TestNodes(unittest.TestCase):
         dag.add_parent(3, 'A parent', None)
         res = retworkx.topological_sort(dag)
         self.assertEqual([6, 0, 5, 4, 3, 2, 1], res)
+
+    def test_topo_sort_with_cycle(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {})
+        dag.add_edge(node_b, node_a, {})
+        self.assertRaises(Exception, retworkx.topological_sort, dag)
 
     def test_lexicographical_topo_sort(self):
         dag = retworkx.PyDAG()
@@ -99,9 +119,11 @@ class TestNodes(unittest.TestCase):
         cr_1_out = dag.add_node('cr[1]_out')
         dag.add_edge(cr_1, cr_1_out, 'cr[1]')
 
-        res = list(retworkx.lexicographical_topological_sort(dag, lambda x: str(x)))
-        expected = ['cr[0]', 'cr[0]_out', 'cr[1]', 'cr[1]_out', 'qr[0]', 'qr[1]', 'cx_1', 'h_1', 'qr[2]', 'cx_2',
-                    'cx_3', 'h_2', 'qr[0]_out', 'qr[1]_out', 'qr[2]_out']
+        res = list(retworkx.lexicographical_topological_sort(dag,
+                                                             lambda x: str(x)))
+        expected = ['cr[0]', 'cr[0]_out', 'cr[1]', 'cr[1]_out', 'qr[0]',
+                    'qr[1]', 'cx_1', 'h_1', 'qr[2]', 'cx_2', 'cx_3', 'h_2',
+                    'qr[0]_out', 'qr[1]_out', 'qr[2]_out']
         self.assertEqual(expected, res)
 
     def test_lexicographical_topo_sort_qiskit_with_cache(self):
@@ -154,16 +176,15 @@ class TestNodes(unittest.TestCase):
     def test_get_node_data_bad_index(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_child(node_a, 'b', "Edgy")
         self.assertRaises(IndexError, dag.get_node_data, 42)
 
     def test_pydag_length(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_child(node_a, 'b', "Edgy")
         self.assertEqual(2, len(dag))
 
     def test_pydag_length_empty(self):
         dag = retworkx.PyDAG()
         self.assertEqual(0, len(dag))
-
