@@ -704,6 +704,139 @@ impl PyGraph {
             ))
         }
     }
+
+    /// Add another PyGraph object into this PyGraph
+    ///
+    /// :param PyGraph other: The other PyGraph object to add onto this
+    ///     graph.
+    /// :param dict node_map: A dictionary mapping node indexes from this
+    ///     PyGraph object to node indexes in the other PyGraph object.
+    ///     The keys are a node index in this graph and the value is a tuple
+    ///     of the node index in the other graph to add an edge to and the
+    ///     weight of that edge. For example::
+    ///
+    ///         {
+    ///             1: (2, "weight"),
+    ///             2: (4, "weight2")
+    ///         }
+    ///
+    /// :returns: new_node_ids: A dictionary mapping node index from the other
+    ///     PyGraph to the equivalent node index in this PyDAG after they've been
+    ///     combined
+    /// :rtype: dict
+    ///
+    /// For example, start by building a graph:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   import os
+    ///   import tempfile
+    ///
+    ///   import pydot
+    ///   from PIL import Image
+    ///
+    ///   import retworkx
+    ///
+    ///   # Build first graph and visualize:
+    ///   graph = retworkx.PyGraph()
+    ///   node_a, node_b, node_c = graph.add_nodes_from(['A', 'B', 'C'])
+    ///   graph.add_edges_from_no_data([(node_a, node_b), (node_b, node_c)])
+    ///   dot_str = graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    /// Then build a second one:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   # Build second graph and visualize:
+    ///   other_graph = retworkx.PyGraph()
+    ///   node_d, node_e = other_graph.add_nodes_from(['D', 'E'])
+    ///   other_graph.add_edge(node_d, node_e, None)
+    ///   dot_str = other_graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'other_graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    /// Finally compose the ``other_graph`` onto ``graph``
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   node_map = {node_b: (node_d, 'B to D')}
+    ///   graph.compose(other_graph, node_map)
+    ///   dot_str = graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'combined_graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    #[text_signature = "(other, node_map, /)"]
+    pub fn compose(
+        &mut self,
+        py: Python,
+        other: &PyGraph,
+        node_map: PyObject,
+    ) -> PyResult<PyObject> {
+        let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let node_map_dict = node_map.cast_as::<PyDict>(py)?;
+        let mut node_map_hashmap: HashMap<usize, (usize, PyObject)> =
+            HashMap::default();
+        for (k, v) in node_map_dict.iter() {
+            node_map_hashmap.insert(k.extract()?, v.extract()?);
+        }
+        // TODO: Reimplement this without looping over the graphs
+        // Loop over other nodes add add to self graph
+        for node in other.graph.node_indices() {
+            let new_index =
+                self.graph.add_node(other.graph[node].clone_ref(py));
+            new_node_map.insert(node, new_index);
+        }
+        // loop over other edges and add to self graph
+        for edge in other.graph.edge_references() {
+            let new_p_index = new_node_map.get(&edge.source()).unwrap();
+            let new_c_index = new_node_map.get(&edge.target()).unwrap();
+            self.graph.add_edge(
+                *new_p_index,
+                *new_c_index,
+                edge.weight().clone_ref(py),
+            );
+        }
+        // Add edges from map
+        for (this_index, (index, weight)) in node_map_hashmap.iter() {
+            let new_index = new_node_map.get(&NodeIndex::new(*index)).unwrap();
+            self.graph.add_edge(
+                NodeIndex::new(*this_index),
+                *new_index,
+                weight.clone_ref(py),
+            );
+        }
+        let out_dict = PyDict::new(py);
+        for (orig_node, new_node) in new_node_map.iter() {
+            out_dict.set_item(orig_node.index(), new_node.index())?;
+        }
+        Ok(out_dict.into())
+    }
 }
 
 #[pyproto]
