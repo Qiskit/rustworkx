@@ -23,6 +23,7 @@ stages:
         CIBW_SKIP: cp27-* cp34-* pp*
         TWINE_USERNAME: retworkx-ci
         CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
+        CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=10.9
       steps:
       - task: UsePythonVersion@0
       - bash: |
@@ -92,6 +93,8 @@ stages:
         matrix:
           Python37:
             python.version: '3.7'
+      variables:
+        MACOSX_DEPLOYMENT_TARGET: 10.9
       steps:
         - task: UsePythonVersion@0
           inputs:
@@ -155,6 +158,8 @@ stages:
             python.version: '3.5'
           Python38:
             python.version: '3.8'
+      variables:
+        MACOSX_DEPLOYMENT_TARGET: 10.9
       steps:
         - task: UsePythonVersion@0
           inputs:
