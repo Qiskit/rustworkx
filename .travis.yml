@@ -40,12 +40,10 @@ jobs:
       install: echo ""
       before_script:
         - rustup update
-        - rustup component add rustfmt
-        - rustup override set nightly-2020-02-06
-        - rustup component add rustfmt
+        - rustup override set nightly
       script:
         - cargo build
-        - cargo fmt -- --check
+        - cargo +stable fmt -- --check
     - name: Python lint
       language: python
       stage: Compile and lint
