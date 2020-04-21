@@ -1,22 +1,31 @@
 from setuptools import setup
-from setuptools_rust import Binding, RustExtension
+try:
+    from setuptools_rust import Binding, RustExtension
+except ImportError:
+    import sys
+    import subprocess
+    subprocess.call([sys.executable, '-m', 'pip', 'install',
+                     'setuptools-rust'])
+    from setuptools_rust import Binding, RustExtension
 
 
 def readme():
-    with open('README.rst') as f:
+    with open('README.md') as f:
         return f.read()
+
 
 setup(
     name="retworkx",
-    version="0.2.0",
+    version="0.3.3",
     description="A python graph library implemented in Rust",
     long_description=readme(),
-    author = "Matthew Treinish",
-    author_email = "mtreinish@kortar.org",
+    long_description_content_type='text/markdown',
+    author="Matthew Treinish",
+    author_email="mtreinish@kortar.org",
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
-        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
         "Programming Language :: Rust",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.5",
@@ -27,10 +36,11 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
     ],
-    url="https://github.com/mtreinish/retworkx",
+    keywords="Networks network graph Graph Theory DAG",
+    url="https://github.com/Qiskit/retworkx",
     project_urls={
-        "Bug Tracker": "https://github.com/mtreinish/retworkx/issues",
-        "Source Code": "https://github.com/mtreinish/retworkx",
+        "Bug Tracker": "https://github.com/Qiskit/retworkx/issues",
+        "Source Code": "https://github.com/Qiskit/retworkx",
         "Documentation": "https://retworkx.readthedocs.io",
     },
     rust_extensions=[RustExtension("retworkx.retworkx", "Cargo.toml",

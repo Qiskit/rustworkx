@@ -8,14 +8,33 @@ retworkx API
    the ``StableGraph`` type. The limitations and quirks with this library and
    type dictate how this operates. The biggest thing to be aware of when using
    the PyDAG class is that an integer node and edge index is used for accessing
-   elements on the DAG, not the data/weight of nodes and edges.
+   elements on the DAG, not the data/weight of nodes and edges. By default the
+   PyDAG realtime cycle checking is disabled for performance, however you can
+   opt-in to having the PyDAG class ensure that no cycles are added by setting
+   the ``check_cycle`` attribute to True. For example::
+
+       import retworkx
+       dag = retworkx.PyDAG()
+       dag.check_cycle = True
+
+   or at object creation::
+
+       import retworkx
+       dag = retworkx.PyDAG(True)
+
+   With check_cycle set to true any calls to :meth:`PyDAG.add_edge` will
+   ensure that no cycles are added, ensuring that the PyDAG class truly
+   represents a directed acyclic graph.
 
      .. note::
           When using ``copy.deepcopy()`` or pickling node indexes are not
           guaranteed to be preserved.
 
-    .. py:method:: __init__(self):
+    .. py:method:: __init__(self, check_cycle=False):
         Initialize an empty DAG.
+
+        :param bool check_cycle: If set true enable cycle checking on add_edge()
+            calls
 
     .. py:method:: __len__(self):
         Return the number of nodes in the graph. Use via ``len()`` function
@@ -26,10 +45,25 @@ retworkx API
         :returns: A list of all the edge data objects in the DAG
         :rtype: list
 
+    .. py:method:: has_edge(self, node_a, node_b):
+        Return True if there is an edge from node_a to node_b.
+
+        :param int node_a: The source node index to check for an edge
+        :param int node_b: The destination node index to check for an edge
+
+        :returns: True if there is an edge false if there is no edge
+        :rtype: bool
+
     .. py:method:: nodes(self):
         Return a list of all node data.
 
         :returns: A list of all the node data objects in the DAG
+        :rtype: list
+
+    .. py:method:: node_indexes(self):
+        Return a list of all node indexes.
+
+        :returns: A list of all the node indexes in the DAG
         :rtype: list
 
     .. py:method:: successors(self, node):
@@ -162,6 +196,7 @@ retworkx API
             the value is the edge data object for all nodes that share an
             edge with the specified node.
         :rtype: dict
+
         :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
             found to a neighbor node
 
@@ -176,6 +211,7 @@ retworkx API
         :returns in_edges: A list of tuples of the form:
             (parent_index, node_index, edge_data)
         :rtype: list
+
         :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
             found to a neighbor node
 
@@ -190,6 +226,7 @@ retworkx API
         :returns out_edges: A list of tuples of the form:
             (node_index, child_index, edge_data)
         :rtype: list
+
         :raises NoEdgeBetweenNodes if the DAG is broken and an edge can't be
             found to a neighbor node
 
@@ -228,6 +265,16 @@ retworkx API
 
 .. _petgraph: https://github.com/bluss/petgraph
 
+.. py:function:: dag_longest_path(graph):
+    Find the the longest path in a graph.
+
+    :param PyDAG graph: The graph to find the longest path on
+
+    :returns path: The node indexes of the longest path on the graph
+    :rtype: list
+
+    :raises Exception: If an unexpected error occurs and a path can't be found
+
 .. py:function:: dag_longest_path_length(graph):
     Find the length of the longest path in a graph.
 
@@ -258,7 +305,7 @@ retworkx API
 .. py:function:: is_isomorphic(first, second):
     Determine if 2 DAGS are structurally isomorphic.
 
-    This checks igf 2 graphs are structurally isomorphic (it doesn't match
+    This checks if 2 graphs are structurally isomorphic (it doesn't match
     the contents of the nodes or edges on the dag).
 
     :param PyDAG first: The first DAG to compare
@@ -271,7 +318,7 @@ retworkx API
 .. py:function:: is_isomorphic_node_match(first, second, matcher):
     Determine if 2 DAGS are structurally isomorphic.
 
-    This checks igf 2 graphs are isomorphic both structurally and also comparing
+    This checks if 2 graphs are isomorphic both structurally and also comparing
     the node data using the provided matcher function. The matcher function
     takes in 2 node data objects and will compare them. A simple example that
     checks if they're just equal would be::
@@ -326,7 +373,7 @@ retworkx API
     node.
 
     :param PyDAG graph: The DAG to get the descendants from
-    :param int node: The index of the dag to get the ancestors for
+    :param int node: The index of the dag node to get the ancestors for
 
     :returns nodes: A list of node indexes of ancestors of provided node.
     :rtype: list
@@ -340,7 +387,62 @@ retworkx API
     node.
 
     :param PyDAG graph: The DAG to get the descendants from
-    :param int node: The index of the dag to get the descendants for
+    :param int node: The index of the dag node to get the descendants for
 
     :returns nodes: A list of node indexes of descendants of provided node.
+    :rtype: list
+
+.. py:function:: bfs_successors(graph, node):
+    Return successors in a breadth-first-search from a source node.
+
+    The return format is [(Parent Node, [Children Nodes])] in a bfs order from
+    the source node provided.
+
+    :param PyDAG graph: The DAG to get the bfs_successors from
+    :param int node: The index of the dag node to get the bfs successors for
+
+    :returns nodes: A list of nodes's data and their children in bfs order
+    :rtype: list
+
+.. py:function:: floyd_warshall(graph):
+    Return the shortest path lengths between every pair of nodes that has a
+    path connecting them.
+
+    The runtime is :math:`O(|N|^3 + |E|)` where :math:`|N|` is the number
+    of nodes and :math:`|E|` is the number of edges.
+
+    This is done with the Floyd Warshall algorithm:
+    
+    1. Process all edges by setting the distance from the parent to
+       the child equal to the edge weight.
+    2. Iterate through every pair of nodes (source, target) and an additional
+       itermediary node (w). If the distance from source :math:`\rightarrow` w
+       :math:`\rightarrow` target is less than the distance from source
+       :math:`\rightarrow` target, update the source :math:`\rightarrow` target
+       distance (to pass through w).
+
+    The return format is ``{Source Node: {Target Node: Distance}}``.
+
+    .. note::
+
+        Paths that do not exist are simply not found in the return dictionary,
+        rather than setting the distance to infinity, or -1.
+
+    .. note::
+
+        Edge weights are restricted to 1 in the current implementation.
+
+    :param PyDAG graph: The DAG to get all shortest paths from
+
+.. py:function:: layers(graph, first_layer):
+    Return a list of layers
+
+    A layer is a subgraph whose nodes are disjoint, i.e.,
+    a layer has depth 1. The layers are constructed using a greedy algorithm.
+
+    :param PyDAG graph: The DAG to get the layers from
+    :param list first_layer: A list of node ids for the first layer. This
+        will be the first layer in the output
+
+    :returns layers: A list of layers, each layer is a list of node data
     :rtype: list

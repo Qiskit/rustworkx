@@ -36,7 +36,7 @@ use petgraph::visit::{
     Bfs, GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences,
     IntoEdges, IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
     IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
-    NodeIndexable, Visitable,
+    NodeIndexable, Reversed, Visitable,
 };
 
 #[pyclass(module = "retworkx")]
@@ -46,6 +46,7 @@ pub struct PyDAG {
         NodeIndex,
         <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
     >,
+    check_cycle: bool,
 }
 
 pub type Edges<'a, E> =
@@ -226,11 +227,13 @@ impl GetAdjacencyMatrix for PyDAG {
 #[pymethods]
 impl PyDAG {
     #[new]
-    fn new(obj: &PyRawObject) {
-        obj.init(PyDAG {
+    #[args(check_cycle = "false")]
+    fn new(check_cycle: bool) -> Self {
+        PyDAG {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
-        });
+            check_cycle,
+        }
     }
 
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
@@ -263,26 +266,22 @@ impl PyDAG {
         let py = gil.python();
         let dict_state = state.cast_as::<PyDict>(py)?;
 
-        let nodes_dict = dict_state
-            .get_item("nodes")
-            .unwrap()
-            .downcast_ref::<PyDict>()?;
-        let edges_list = dict_state
-            .get_item("edges")
-            .unwrap()
-            .downcast_ref::<PyList>()?;
+        let nodes_dict =
+            dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
+        let edges_list =
+            dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
         for raw_index in nodes_dict.keys().iter() {
-            let tmp_index = raw_index.downcast_ref::<PyLong>()?;
+            let tmp_index = raw_index.downcast::<PyLong>()?;
             let index: usize = tmp_index.extract()?;
             let raw_data = nodes_dict.get_item(index).unwrap();
             let node_index = self.graph.add_node(raw_data.into());
             node_mapping.insert(index, node_index);
         }
         for raw_edge in edges_list.iter() {
-            let edge = raw_edge.downcast_ref::<PyTuple>()?;
-            let raw_p_index = edge.get_item(0).downcast_ref::<PyLong>()?;
+            let edge = raw_edge.downcast::<PyTuple>()?;
+            let raw_p_index = edge.get_item(0).downcast::<PyLong>()?;
             let tmp_p_index: usize = raw_p_index.extract()?;
-            let raw_c_index = edge.get_item(1).downcast_ref::<PyLong>()?;
+            let raw_c_index = edge.get_item(1).downcast::<PyLong>()?;
             let tmp_c_index: usize = raw_c_index.extract()?;
             let edge_data = edge.get_item(2);
 
@@ -290,6 +289,20 @@ impl PyDAG {
             let c_index = node_mapping.get(&tmp_c_index).unwrap();
             self.graph.add_edge(*p_index, *c_index, edge_data.into());
         }
+        Ok(())
+    }
+
+    #[getter]
+    fn get_check_cycle(&self) -> PyResult<bool> {
+        Ok(self.check_cycle)
+    }
+
+    #[setter]
+    fn set_check_cycle(&mut self, value: bool) -> PyResult<()> {
+        if !self.check_cycle && value && !is_directed_acyclic_graph(self) {
+            return Err(DAGHasCycle::py_err("PyDAG object has a cycle"));
+        }
+        self.check_cycle = value;
         Ok(())
     }
 
@@ -309,6 +322,14 @@ impl PyDAG {
             out.push(self.graph.node_weight(node).unwrap());
         }
         PyList::new(py, out).into()
+    }
+
+    pub fn node_indexes(&self, py: Python) -> PyObject {
+        let mut out_list: Vec<usize> = Vec::new();
+        for node_index in self.graph.node_indices() {
+            out_list.push(node_index.index());
+        }
+        PyList::new(py, out_list).into()
     }
 
     pub fn has_edge(&self, node_a: usize, node_b: usize) -> bool {
@@ -417,13 +438,23 @@ impl PyDAG {
     ) -> PyResult<usize> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
-        let should_check_for_cycle =
-            must_check_for_cycle(self, p_index, c_index);
-        let state = Some(&mut self.cycle_state);
-        if should_check_for_cycle
-            && algo::has_path_connecting(&self.graph, c_index, p_index, state)
-        {
-            Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
+        if self.check_cycle {
+            let should_check_for_cycle =
+                must_check_for_cycle(self, p_index, c_index);
+            let state = Some(&mut self.cycle_state);
+            if should_check_for_cycle
+                && algo::has_path_connecting(
+                    &self.graph,
+                    c_index,
+                    p_index,
+                    state,
+                )
+            {
+                Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
+            } else {
+                let edge = self.graph.add_edge(p_index, c_index, edge);
+                Ok(edge.index())
+            }
         } else {
             let edge = self.graph.add_edge(p_index, c_index, edge);
             Ok(edge.index())
@@ -704,8 +735,9 @@ fn is_directed_acyclic_graph(graph: &PyDAG) -> bool {
 }
 
 #[pyfunction]
-fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> bool {
-    dag_isomorphism::is_isomorphic(first, second)
+fn is_isomorphic(first: &PyDAG, second: &PyDAG) -> PyResult<bool> {
+    let res = dag_isomorphism::is_isomorphic(first, second)?;
+    Ok(res)
 }
 
 #[pyfunction]
@@ -714,21 +746,22 @@ fn is_isomorphic_node_match(
     first: &PyDAG,
     second: &PyDAG,
     matcher: PyObject,
-) -> bool {
-    let compare_nodes = |a: &PyObject, b: &PyObject| -> bool {
-        let res = matcher.call1(py, (a, b)).unwrap();
-        res.is_true(py).unwrap()
+) -> PyResult<bool> {
+    let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+        let res = matcher.call1(py, (a, b))?;
+        Ok(res.is_true(py).unwrap())
     };
 
-    fn compare_edges(_a: &PyObject, _b: &PyObject) -> bool {
-        true
+    fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
+        Ok(true)
     }
-    dag_isomorphism::is_isomorphic_matching(
+    let res = dag_isomorphism::is_isomorphic_matching(
         first,
         second,
         compare_nodes,
         compare_edges,
-    )
+    )?;
+    Ok(res)
 }
 
 #[pyfunction]
@@ -773,27 +806,28 @@ fn bfs_successors(
 #[pyfunction]
 fn ancestors(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let index = NodeIndex::new(node);
-    let mut out_list: Vec<usize> = Vec::new();
-    for n in graph.graph.node_indices() {
+    let mut out_set: HashSet<usize> = HashSet::new();
+    let reverse_graph = Reversed(graph);
+    let res = algo::dijkstra(reverse_graph, index, None, |_| 1);
+    for n in res.keys() {
         let n_int = n.index();
-        if n_int != node && algo::has_path_connecting(graph, n, index, None) {
-            out_list.push(n_int);
-        }
+        out_set.insert(n_int);
     }
-    Ok(PyList::new(py, out_list).into())
+    out_set.remove(&node);
+    Ok(out_set.to_object(py))
 }
 
 #[pyfunction]
 fn descendants(py: Python, graph: &PyDAG, node: usize) -> PyResult<PyObject> {
     let index = NodeIndex::new(node);
-    let mut out_list: Vec<usize> = Vec::new();
-    for n in graph.graph.node_indices() {
+    let mut out_set: HashSet<usize> = HashSet::new();
+    let res = algo::dijkstra(graph, index, None, |_| 1);
+    for n in res.keys() {
         let n_int = n.index();
-        if n_int != node && algo::has_path_connecting(graph, index, n, None) {
-            out_list.push(n_int);
-        }
+        out_set.insert(n_int);
     }
-    Ok(PyList::new(py, out_list).into())
+    out_set.remove(&node);
+    Ok(out_set.to_object(py))
 }
 
 #[pyfunction]
@@ -849,7 +883,7 @@ fn lexicographical_topological_sort(
     }
     let mut out_list: Vec<&PyObject> = Vec::new();
     let dir = petgraph::Direction::Outgoing;
-    while let Some(State { key: _, node }) = zero_indegree.pop() {
+    while let Some(State { node, .. }) = zero_indegree.pop() {
         let neighbors = dag.graph.neighbors_directed(node, dir);
         for child in neighbors {
             let child_degree = in_degree_map.get_mut(&child).unwrap();
@@ -869,6 +903,141 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+// Find the shortest path lengths between all pairs of nodes using Floyd's
+// algorithm
+// Note: Edge weights are assumed to be 1
+#[pyfunction]
+fn floyd_warshall(py: Python, dag: &PyDAG) -> PyResult<PyObject> {
+    let mut dist: HashMap<(usize, usize), usize> = HashMap::new();
+    for node in dag.graph.node_indices() {
+        // Distance from a node to itself is zero
+        dist.insert((node.index(), node.index()), 0);
+    }
+    for edge in dag.graph.edge_indices() {
+        // Distance between nodes that share an edge is 1
+        let source_target = dag.graph.edge_endpoints(edge).unwrap();
+        let u = source_target.0.index();
+        let v = source_target.1.index();
+        // Update dist only if the key hasn't been set to 0 already
+        // (i.e. in case edge is a self edge). Assumes edge weight = 1.
+        dist.entry((u, v)).or_insert(1);
+    }
+    // The shortest distance between any pair of nodes u, v is the min of the
+    // distance tracked so far from u->v and the distance from u to v thorough
+    // another node w, for any w.
+    for w in dag.graph.node_indices() {
+        for u in dag.graph.node_indices() {
+            for v in dag.graph.node_indices() {
+                let u_v_dist = match dist.get(&(u.index(), v.index())) {
+                    Some(u_v_dist) => *u_v_dist,
+                    None => std::usize::MAX,
+                };
+                let u_w_dist = match dist.get(&(u.index(), w.index())) {
+                    Some(u_w_dist) => *u_w_dist,
+                    None => std::usize::MAX,
+                };
+                let w_v_dist = match dist.get(&(w.index(), v.index())) {
+                    Some(w_v_dist) => *w_v_dist,
+                    None => std::usize::MAX,
+                };
+                if u_w_dist == std::usize::MAX || w_v_dist == std::usize::MAX {
+                    // Avoid overflow!
+                    continue;
+                }
+                if u_v_dist > u_w_dist + w_v_dist {
+                    dist.insert((u.index(), v.index()), u_w_dist + w_v_dist);
+                }
+            }
+        }
+    }
+
+    // Some re-formatting for Python: Dict[int, Dict[int, int]]
+    let out_dict = PyDict::new(py);
+    for (nodes, distance) in dist {
+        let u_index = nodes.0;
+        let v_index = nodes.1;
+        if out_dict.contains(u_index)? {
+            let u_dict =
+                out_dict.get_item(u_index).unwrap().downcast::<PyDict>()?;
+            u_dict.set_item(v_index, distance)?;
+            out_dict.set_item(u_index, u_dict)?;
+        } else {
+            let u_dict = PyDict::new(py);
+            u_dict.set_item(v_index, distance)?;
+            out_dict.set_item(u_index, u_dict)?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
+#[pyfunction]
+fn layers(
+    py: Python,
+    dag: &PyDAG,
+    first_layer: Vec<usize>,
+) -> PyResult<PyObject> {
+    let mut output: Vec<Vec<&PyObject>> = Vec::new();
+    // Convert usize to NodeIndex
+    let mut first_layer_index: Vec<NodeIndex> = Vec::new();
+    for index in first_layer {
+        first_layer_index.push(NodeIndex::new(index));
+    }
+
+    let mut cur_layer = first_layer_index;
+    let mut next_layer: Vec<NodeIndex> = Vec::new();
+    let mut predecessor_count: HashMap<NodeIndex, usize> = HashMap::new();
+
+    let mut layer_node_data: Vec<&PyObject> = Vec::new();
+    for layer_node in &cur_layer {
+        layer_node_data.push(&dag[*layer_node]);
+    }
+    output.push(layer_node_data);
+
+    // Iterate until there are no more
+    while !cur_layer.is_empty() {
+        for node in &cur_layer {
+            let children = dag
+                .graph
+                .neighbors_directed(*node, petgraph::Direction::Outgoing);
+            let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+            for succ in children {
+                // Skip duplicate successors
+                if used_indexes.contains(&succ) {
+                    continue;
+                }
+                used_indexes.insert(succ);
+                let mut multiplicity: usize = 0;
+                let raw_edges = dag
+                    .graph
+                    .edges_directed(*node, petgraph::Direction::Outgoing);
+                for edge in raw_edges {
+                    if edge.target() == succ {
+                        multiplicity += 1;
+                    }
+                }
+                predecessor_count
+                    .entry(succ)
+                    .and_modify(|e| *e -= multiplicity)
+                    .or_insert(dag.in_degree(succ.index()) - multiplicity);
+                if *predecessor_count.get(&succ).unwrap() == 0 {
+                    next_layer.push(succ);
+                    predecessor_count.remove(&succ);
+                }
+            }
+        }
+        let mut layer_node_data: Vec<&PyObject> = Vec::new();
+        for layer_node in &next_layer {
+            layer_node_data.push(&dag[*layer_node]);
+        }
+        if !layer_node_data.is_empty() {
+            output.push(layer_node_data);
+        }
+        cur_layer = next_layer;
+        next_layer = Vec::new();
+    }
+    Ok(PyList::new(py, output).into())
+}
+
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -883,6 +1052,8 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
+    m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
+    m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_class::<PyDAG>()?;
     Ok(())
 }
