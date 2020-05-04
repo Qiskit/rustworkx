@@ -41,13 +41,13 @@ class TestNodes(unittest.TestCase):
         self.assertEqual([0, 2], graph.node_indexes())
 
     def test_get_node_data(self):
-        graph = retworkx.PyDAG()
+        graph = retworkx.PyGraph()
         graph.add_node('a')
         node_b = graph.add_node('b')
         self.assertEqual('b', graph.get_node_data(node_b))
 
     def test_get_node_data_bad_index(self):
-        graph = retworkx.PyDAG()
+        graph = retworkx.PyGraph()
         graph.add_node('a')
         graph.add_node('b')
         self.assertRaises(IndexError, graph.get_node_data, 42)
@@ -60,5 +60,5 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(2, len(graph))
 
     def test_pygraph_length_empty(self):
-        graph = retworkx.PyDAG()
+        graph = retworkx.PyGraph()
         self.assertEqual(0, len(graph))

@@ -51,7 +51,7 @@ impl NodeCount for PyGraph {
 impl GraphProp for PyGraph {
     type EdgeType = petgraph::Undirected;
     fn is_directed(&self) -> bool {
-        true
+        false
     }
 }
 
@@ -334,10 +334,6 @@ impl PyGraph {
         let out_dict = PyDict::new(py);
         for neighbor in neighbors {
             let mut edge = self.graph.find_edge(index, neighbor);
-            // If there is no edge then it must be a parent neighbor
-            if edge.is_none() {
-                edge = self.graph.find_edge(neighbor, index);
-            }
             let edge_w = self.graph.edge_weight(edge.unwrap());
             out_dict.set_item(neighbor.index(), edge_w)?;
         }

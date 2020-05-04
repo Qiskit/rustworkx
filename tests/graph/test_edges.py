@@ -42,6 +42,13 @@ class TestEdges(unittest.TestCase):
         self.assertRaises(Exception, graph.get_edge_data,
                           node_a, node_b)
 
+    def test_no_edge_get_all_edge_data(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        self.assertRaises(Exception, graph.get_all_edge_data,
+                          node_a, node_b)
+
     def test_has_edge(self):
         graph = retworkx.PyGraph()
         node_a = graph.add_node('a')
@@ -115,3 +122,12 @@ class TestEdges(unittest.TestCase):
         graph.add_node('a')
         graph.remove_edge_from_index(0)
         self.assertEqual([], graph.edges())
+
+    def test_degree(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, "Edgy")
+        node_c = graph.add_node('c')
+        graph.add_edge(node_b, node_c, "Super edgy")
+        self.assertEqual(2, graph.degree(node_b))
