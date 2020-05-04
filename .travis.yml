@@ -59,7 +59,7 @@ jobs:
         - pip install -U setuptools-rust
         - gem install coveralls-lcov
         - export CARGO_INCREMENTAL=0
-        - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Zno-landing-pads"
+        - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off"
         - python setup.py develop
       script:
         - export CARGO_INCREMENTAL=0
