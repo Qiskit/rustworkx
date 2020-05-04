@@ -333,7 +333,7 @@ impl PyGraph {
         let neighbors = self.graph.neighbors(index);
         let out_dict = PyDict::new(py);
         for neighbor in neighbors {
-            let mut edge = self.graph.find_edge(index, neighbor);
+            let edge = self.graph.find_edge(index, neighbor);
             let edge_w = self.graph.edge_weight(edge.unwrap());
             out_dict.set_item(neighbor.index(), edge_w)?;
         }
