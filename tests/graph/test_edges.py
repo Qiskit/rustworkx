@@ -112,7 +112,7 @@ class TestEdges(unittest.TestCase):
     def test_remove_edge_from_index(self):
         graph = retworkx.PyGraph()
         node_a = graph.add_node('a')
-        node_b =graph.add_node('b')
+        node_b = graph.add_node('b')
         graph.add_edge(node_a, node_b, 'edgy')
         graph.remove_edge_from_index(0)
         self.assertEqual([], graph.edges())

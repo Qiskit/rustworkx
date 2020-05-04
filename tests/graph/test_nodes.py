@@ -19,7 +19,7 @@ class TestNodes(unittest.TestCase):
 
     def test_nodes(self):
         graph = retworkx.PyGraph()
-        node_a = graph.add_node('a')
+        graph.add_node('a')
         graph.add_node('b')
         res = graph.nodes()
         self.assertEqual(['a', 'b'], res)
@@ -32,7 +32,7 @@ class TestNodes(unittest.TestCase):
 
     def test_remove_node(self):
         graph = retworkx.PyGraph()
-        node_a = graph.add_node('a')
+        graph.add_node('a')
         node_b = graph.add_node('b')
         graph.add_node('c')
         graph.remove_node(node_b)
