@@ -112,10 +112,6 @@ retworkx API
     .. py:method:: remove_node(self, node):
         Remove a node from the DAG.
 
-        NOTE: Removal of a node may change the index for other nodes in the
-        DAG. The last node will shift to the index of the removed node to take
-        its place.
-
         :param int node: The index of the node to remove
 
     .. py:method:: add_edge(self, parent, child, edge):
@@ -455,7 +451,8 @@ retworkx API
    the ``StableGraph`` type. The limitations and quirks with this library and
    type dictate how this operates. The biggest thing to be aware of when using
    the PyGraph class is that an integer node and edge index is used for
-   accessing elements on the DAG, not the data/weight of nodes and edges.
+   accessing elements on the graph, it doesn't support associative access via
+   the data/weight of nodes and edges.
 
     .. py:method:: __init__(self):
         Initialize an empty graph.
@@ -466,7 +463,7 @@ retworkx API
     .. py:method:: edges(self):
         Return a list of all edge data.
 
-        :returns: A list of all the edge data objects in the DAG
+        :returns: A list of all the edge data objects in the graph
         :rtype: list
 
     .. py:method:: has_edge(self, node_a, node_b):
@@ -503,7 +500,7 @@ retworkx API
 
         Note if there are multiple edges between the nodes only one will be
         returned. To get all edge data objects use
-        :py:method:`retworkx.PyGraph.get_all_edge_data`
+        :py:meth:`retworkx.PyGraph.get_all_edge_data`
 
         :param int node_a: The index for the first node
         :param int node_b: The index for the second node
@@ -522,7 +519,7 @@ retworkx API
         :raises: When there is no edge between nodes
 
     .. py:method:: remove_node(self, node):
-        Remove a node from the DAG.
+        Remove a node from the graph.
 
         :param int node: The index of the node to remove
 
