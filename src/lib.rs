@@ -15,6 +15,7 @@ extern crate petgraph;
 extern crate pyo3;
 
 mod dag_isomorphism;
+mod graph;
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
@@ -1055,6 +1056,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_class::<PyDAG>()?;
+    m.add_class::<graph::PyGraph>()?;
     Ok(())
 }
 
