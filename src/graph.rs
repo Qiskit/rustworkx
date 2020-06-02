@@ -18,6 +18,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyLong, PyTuple};
 use pyo3::Python;
 
+use super::NoEdgeBetweenNodes;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableUnGraph;
@@ -26,7 +27,6 @@ use petgraph::visit::{
     IntoNeighbors, IntoNodeIdentifiers, IntoNodeReferences,
     NodeCompactIndexable, NodeCount, NodeIndexable, Visitable,
 };
-use super::NoEdgeBetweenNodes;
 
 #[pyclass(module = "retworkx")]
 pub struct PyGraph {
@@ -196,7 +196,7 @@ impl PyGraph {
     }
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
         let out_dict = PyDict::new(py);
-        let node_dict =  PyDict::new(py);
+        let node_dict = PyDict::new(py);
         let mut out_list: Vec<PyObject> = Vec::new();
         out_dict.set_item("nodes", node_dict)?;
         for node_index in self.graph.node_indices() {
@@ -207,7 +207,8 @@ impl PyGraph {
             let edge_w = self.graph.edge_weight(edge);
             let endpoints = self.graph.edge_endpoints(edge).unwrap();
 
-            let triplet = (endpoints.0.index(), endpoints.1.index(), edge_w).to_object(py);
+            let triplet = (endpoints.0.index(), endpoints.1.index(), edge_w)
+                .to_object(py);
             out_list.push(triplet);
         }
         let py_out_list: PyObject = PyList::new(py, out_list).into();
@@ -231,7 +232,6 @@ impl PyGraph {
                     let tmp_node = self.graph.add_node(py.None());
                     self.graph.remove_node(tmp_node);
                 }
-
             }
             let raw_data = nodes_dict.get_item(index).unwrap();
             self.graph.add_node(raw_data.into());
