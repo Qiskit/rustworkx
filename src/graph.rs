@@ -227,15 +227,20 @@ impl PyGraph {
         for raw_index in nodes_dict.keys().iter() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
             let index: usize = tmp_index.extract()?;
-            if index > index_count {
-                for _ in 0..index - index_count {
+            let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
+            if index > index_count + 1 {
+                let diff = index - (index_count + 1);
+                for _ in 0..diff {
                     let tmp_node = self.graph.add_node(py.None());
-                    self.graph.remove_node(tmp_node);
+                    tmp_nodes.push(tmp_node);
                 }
             }
             let raw_data = nodes_dict.get_item(index).unwrap();
-            self.graph.add_node(raw_data.into());
-            index_count = index;
+            let out_index = self.graph.add_node(raw_data.into());
+            for tmp_node in tmp_nodes {
+                self.graph.remove_node(tmp_node);
+            }
+            index_count = out_index.index();
         }
 
         for raw_edge in edges_list.iter() {

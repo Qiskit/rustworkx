@@ -27,3 +27,15 @@ class TestDeepcopy(unittest.TestCase):
         dag_a.add_edge(node_b, node_c, 'edge_2')
         dag_b = copy.deepcopy(dag_a)
         self.assertIsInstance(dag_b, retworkx.PyGraph)
+
+    def test_deepcopy_with_holes_returns_graph(self):
+        dag_a = retworkx.PyGraph()
+        node_a = dag_a.add_node('a_1')
+        node_b = dag_a.add_node('a_2')
+        dag_a.add_edge(node_a, node_b, 'edge_1')
+        node_c = dag_a.add_node('a_3')
+        dag_a.add_edge(node_b, node_c, 'edge_2')
+        dag_a.remove_node(node_b)
+        dag_b = copy.deepcopy(dag_a)
+        self.assertIsInstance(dag_b, retworkx.PyGraph)
+        self.assertEqual([node_a, node_c], dag_b.node_indexes())
