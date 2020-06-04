@@ -43,7 +43,7 @@ use petgraph::visit::{
 };
 
 use ndarray::prelude::*;
-use numpy::ToPyArray;
+use numpy::IntoPyArray;
 
 #[pyclass(module = "retworkx")]
 pub struct PyDAG {
@@ -1042,7 +1042,7 @@ fn dag_adjacency_matrix(
         let j = edge.target().index();
         matrix[[i, j]] += edge_weight;
     }
-    Ok(matrix.to_pyarray(py).into())
+    Ok(matrix.into_pyarray(py).into())
 }
 
 #[pyfunction]
@@ -1066,7 +1066,7 @@ fn graph_adjacency_matrix(
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
-    Ok(matrix.to_pyarray(py).into())
+    Ok(matrix.into_pyarray(py).into())
 }
 
 #[pymodule]
