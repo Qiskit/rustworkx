@@ -887,6 +887,44 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+#[pyfunction]
+fn graph_greedy_color(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<PyObject> {
+    let mut colors: HashMap<usize, usize> = HashMap::new();
+    let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    node_vec.sort_by_key(|k| graph.graph.edges(*k).count());
+    node_vec.reverse();
+
+    for u in node_vec.iter().map(|x| x.index()) {
+        let mut neighbor_colors: HashMap<usize, usize> = HashMap::new();
+        let u_index = NodeIndex::new(u);
+        for edge in graph.graph.edges(u_index) {
+            let target = edge.target().index();
+            let source = edge.source().index();
+            if colors.contains_key(&target) && target != u {
+                neighbor_colors.insert(target, *colors.get(&target).unwrap());
+            } else if colors.contains_key(&source) && source != u {
+                neighbor_colors.insert(source, *colors.get(&source).unwrap());
+            }
+        }
+        let mut count: usize = 0;
+        loop {
+            if !neighbor_colors.contains_key(&count) {
+                break;
+            }
+            count += 1;
+        }
+        colors.insert(u, count);
+    }
+    let out_dict = PyDict::new(py);
+    for (index, color) in colors {
+        out_dict.set_item(index, color)?;
+    }
+    Ok(out_dict.into())
+}
+
 // Find the shortest path lengths between all pairs of nodes using Floyd's
 // algorithm
 // Note: Edge weights are assumed to be 1
@@ -1087,6 +1125,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(dag_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_class::<PyDAG>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
