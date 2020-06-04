@@ -443,6 +443,51 @@ retworkx API
     :returns layers: A list of layers, each layer is a list of node data
     :rtype: list
 
+.. py:function:: dag_adjacency_matrix(dag, weight_fn):
+   Return the adjacency matrix for a PyDAG class
+
+   In the case where there are multiple edges between nodes the value in the
+   output matrix will be the sum of the edges' weights.
+
+   :param PyDAG dag: The DAG used to generate the adjacency matrix from
+   :param weight_fn callable: A callable object (function, lambda, etc) which
+       will be passed the edge object and expected to return a ``float``. This
+       tells retworkx/rust how to extract a numerical weight as a ``float``
+       for edge object. Some simple examples are::
+
+         dag_adjacency_matrix(dag, weight_fn: lambda x: 1)
+
+       to return a weight of 1 for all edges. Also::
+
+         dag_adjacency_matrix(dag, weight_fn: lambda x: float(x))
+
+       to cast the edge object as a float as the weight.
+
+   :return matrix: The adjacency matrix for the input dag as a numpy array
+   :rtype: numpy.ndarray
+
+.. py:function:: graph_adjacency_matrix(dag, weight_fn):
+   Return the adjacency matrix for a PyGraph class
+
+   In the case where there are multiple edges between nodes the value in the
+   output matrix will be the sum of the edges' weights.
+
+   :param PyGraph graph: The graph used to generate the adjacency matrix from
+   :param weight_fn callable: A callable object (function, lambda, etc) which
+       will be passed the edge object and expected to return a ``float``. This
+       tells retworkx/rust how to extract a numerical weight as a ``float``
+       for edge object. Some simple examples are::
+
+         graph_adjacency_matrix(graph, weight_fn: lambda x: 1)
+
+       to return a weight of 1 for all edges. Also::
+
+         graph_adjacency_matrix(graph, weight_fn: lambda x: float(x))
+
+       to cast the edge object as a float as the weight.
+
+   :return matrix: The adjacency matrix for the input dag as a numpy array
+   :rtype: numpy.ndarray
 
 .. py:class:: PyGraph
    A class for creating undirected graphs.
