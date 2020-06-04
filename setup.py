@@ -49,5 +49,5 @@ setup(
     packages=["retworkx"],
     zip_safe=False,
     python_requires=">=3.5",
-    install_requires=['numpy>=0.16.0'],
+    install_requires=['numpy>=1.16.0'],
 )
