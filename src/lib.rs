@@ -11,17 +11,17 @@
 // under the License.
 
 extern crate fixedbitset;
+extern crate hashbrown;
 extern crate ndarray;
 extern crate numpy;
 extern crate petgraph;
 extern crate pyo3;
-extern crate hashbrown;
 
 mod dag_isomorphism;
 mod graph;
 
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap,  HashSet};
+use std::collections::{BinaryHeap, HashSet};
 use std::ops::{Index, IndexMut};
 
 use hashbrown::HashMap;
