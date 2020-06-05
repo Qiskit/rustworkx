@@ -11,6 +11,7 @@
 // under the License.
 
 extern crate fixedbitset;
+extern crate hashbrown;
 extern crate ndarray;
 extern crate numpy;
 extern crate petgraph;
@@ -20,8 +21,10 @@ mod dag_isomorphism;
 mod graph;
 
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashSet};
 use std::ops::{Index, IndexMut};
+
+use hashbrown::HashMap;
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::create_exception;
