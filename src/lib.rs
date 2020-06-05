@@ -899,22 +899,20 @@ fn graph_greedy_color(
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     node_vec.sort_by_key(|k| graph.graph.edges(*k).count());
     node_vec.reverse();
-
-    for u in node_vec.iter().map(|x| x.index()) {
-        let mut neighbor_colors: HashMap<usize, usize> = HashMap::new();
-        let u_index = NodeIndex::new(u);
-        for edge in graph.graph.edges(u_index) {
+    for u_index in node_vec.iter() {
+        let mut neighbor_colors: HashSet<usize> = HashSet::new();
+        let u = u_index.index();
+        for edge in graph.graph.edges(*u_index) {
             let target = edge.target().index();
-            let source = edge.source().index();
-            if colors.contains_key(&target) && target != u {
-                neighbor_colors.insert(target, *colors.get(&target).unwrap());
-            } else if colors.contains_key(&source) && source != u {
-                neighbor_colors.insert(source, *colors.get(&source).unwrap());
-            }
+            let existing_color = match colors.get(&target) {
+                Some(node) => node,
+                None => continue,
+            };
+            neighbor_colors.insert(*existing_color);
         }
         let mut count: usize = 0;
         loop {
-            if !neighbor_colors.contains_key(&count) {
+            if !neighbor_colors.contains(&count) {
                 break;
             }
             count += 1;
