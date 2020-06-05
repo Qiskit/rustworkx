@@ -17,6 +17,7 @@ install:
   - virtualenv test-venv
   - test-venv/bin/pip install -U .
 script:
+  - rustc --print cfg
   - cd tests && ../test-venv/bin/python -m unittest discover .
 stages:
   - name: Compile and lint
@@ -44,6 +45,7 @@ jobs:
         - rustup update
         - rustup override set nightly
       script:
+        - rustc --print cfg
         - cargo build
         - cargo +stable fmt -- --check
     - name: Python lint
