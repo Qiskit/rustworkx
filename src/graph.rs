@@ -30,7 +30,7 @@ use petgraph::visit::{
 
 #[pyclass(module = "retworkx")]
 pub struct PyGraph {
-    graph: StableUnGraph<PyObject, PyObject>,
+    pub graph: StableUnGraph<PyObject, PyObject>,
 }
 
 pub type Edges<'a, E> =
