@@ -174,7 +174,6 @@ stages:
           displayName: 'Build retworkx'
         - bash: |
             set -e
-            rustc --print cfg
             export PYTHONHASHSEED=$(python -S -c "import random; print(random.randint(1, 4294967295))")
             echo "PYTHONHASHSEED=$PYTHONHASHSEED"
             cd tests
@@ -207,7 +206,6 @@ stages:
           displayName: 'Build retworkx'
         - bash: |
             set -e
-            rustc --print cfg
             export PYTHONHASHSEED=$(python -S -c "import random; print(random.randint(1, 4294967295))")
             echo "PYTHONHASHSEED=$PYTHONHASHSEED"
             cd tests
