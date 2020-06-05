@@ -31,6 +31,7 @@ use petgraph::visit::{
 #[pyclass(module = "retworkx")]
 pub struct PyGraph {
     pub graph: StableUnGraph<PyObject, PyObject>,
+    pub node_removed: bool,
 }
 
 pub type Edges<'a, E> =
@@ -192,6 +193,7 @@ impl PyGraph {
     fn new() -> Self {
         PyGraph {
             graph: StableUnGraph::<PyObject, PyObject>::default(),
+            node_removed: false,
         }
     }
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
@@ -344,7 +346,7 @@ impl PyGraph {
     pub fn remove_node(&mut self, node: usize) -> PyResult<()> {
         let index = NodeIndex::new(node);
         self.graph.remove_node(index);
-
+        self.node_removed = true;
         Ok(())
     }
 

@@ -447,13 +447,7 @@ retworkx API
    Return the adjacency matrix for a PyDAG class
 
    In the case where there are multiple edges between nodes the value in the
-   output matrix will be the sum of the edges' weights. One edge case to be
-   aware of with this function is with graphs that have removed nodes. If a
-   node is removed the node indexes may not be contiguous (ie if you add 3
-   nodes and then remove node 2). In these cases the dimensions of the adjacency
-   matrix returned will be larger than expected because node index 2 which is
-   no longer used. However in these cases, all entries will be ``0`` for that
-   node.
+   output matrix will be the sum of the edges' weights.
 
    :param PyDAG dag: The DAG used to generate the adjacency matrix from
    :param weight_fn callable: A callable object (function, lambda, etc) which
@@ -476,13 +470,7 @@ retworkx API
    Return the adjacency matrix for a PyGraph class
 
    In the case where there are multiple edges between nodes the value in the
-   output matrix will be the sum of the edges' weights. One edge case to be
-   aware of with this function is with graphs that have removed nodes. If a
-   node is removed the node indexes may not be contiguous (ie if you add 3
-   nodes and then remove node 2). In these cases the dimensions of the adjacency
-   matrix returned will be larger than expected because node index 2 which is
-   no longer used. However in these cases, all entries will be ``0`` for that
-   node.
+   output matrix will be the sum of the edges' weights.
 
    :param PyGraph graph: The graph used to generate the adjacency matrix from
    :param weight_fn callable: A callable object (function, lambda, etc) which
