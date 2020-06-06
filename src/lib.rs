@@ -617,7 +617,8 @@ impl PyDAG {
         neighbors.count()
     }
 
-    pub fn find_adjacent_node_by_edge(&self,
+    pub fn find_adjacent_node_by_edge(
+        &self,
         py: Python,
         node: usize,
         predicate: PyObject,
@@ -633,7 +634,7 @@ impl PyDAG {
             let edge_predicate_raw = predicate_callable(&edge.weight())?;
             let edge_predicate: bool = edge_predicate_raw.extract(py)?;
             if edge_predicate {
-                    return Ok(self.graph.node_weight(edge.target()).unwrap());
+                return Ok(self.graph.node_weight(edge.target()).unwrap());
             }
         }
         return Err(NoSuitableNeighbors::py_err("No suitable neighbor"));
