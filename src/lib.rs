@@ -624,6 +624,29 @@ impl PyDAG {
         let neighbors = self.graph.edges_directed(index, dir);
         neighbors.count()
     }
+
+    pub fn find_adjacent_node_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        predicate: PyObject,
+    ) -> PyResult<&PyObject> {
+        let predicate_callable = |a: &PyObject| -> PyResult<PyObject> {
+            let res = predicate.call1(py, (a,))?;
+            Ok(res.to_object(py))
+        };
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Outgoing;
+        let edges = self.graph.edges_directed(index, dir);
+        for edge in edges {
+            let edge_predicate_raw = predicate_callable(&edge.weight())?;
+            let edge_predicate: bool = edge_predicate_raw.extract(py)?;
+            if edge_predicate {
+                return Ok(self.graph.node_weight(edge.target()).unwrap());
+            }
+        }
+        return Err(NoSuitableNeighbors::py_err("No suitable neighbor"));
+    }
 }
 
 #[pyproto]
@@ -1135,6 +1158,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 create_exception!(retworkx, DAGWouldCycle, Exception);
 create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
 create_exception!(retworkx, DAGHasCycle, Exception);
+create_exception!(retworkx, NoSuitableNeighbors, Exception);
 
 #[cfg(test)]
 mod tests {

@@ -136,3 +136,27 @@ class TestEdges(unittest.TestCase):
         node_b = dag.add_child(node_a, 'b', {})
         with self.assertRaises(Exception):
             dag.add_edge(node_b, node_a, {})
+
+    def test_find_adjacent_node_by_edge(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        dag.add_child(node_a, 'b', {'weights': [1, 2]})
+        dag.add_child(node_a, 'c', {'weights': [3, 4]})
+
+        def compare_edges(edge):
+            return 4 in edge['weights']
+
+        res = dag.find_adjacent_node_by_edge(node_a, compare_edges)
+        self.assertEqual('c', res)
+
+    def test_find_adjacent_node_by_edge_no_match(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        dag.add_child(node_a, 'b', {'weights': [1, 2]})
+        dag.add_child(node_a, 'c', {'weights': [3, 4]})
+
+        def compare_edges(edge):
+            return 5 in edge['weights']
+
+        with self.assertRaises(Exception):
+            dag.find_adjacent_node_by_edge(node_a, compare_edges)
