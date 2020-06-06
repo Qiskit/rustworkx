@@ -259,6 +259,22 @@ retworkx API
 
         :param int edge: The index of the edge to remove
 
+    .. py:method:: find_adjacent_node_by_edge(self, edge, predicate):
+        Find a target node with a specific edge
+
+        This method is used to find a target node for
+
+        :param int node: The node to use as the source of the search
+        :param callable predicate: A python callable that will take a single
+            parameter, the edge object, and will return a boolean if the
+            edge matches or not
+
+        :returns: The node object that has an edge to it from the provided
+            node index which matches the provided condition
+
+        :raises Exception: If no neighbor is found that matches the predicate
+            callable
+
 .. _petgraph: https://github.com/bluss/petgraph
 
 .. py:function:: dag_longest_path(graph):
