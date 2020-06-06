@@ -15,9 +15,10 @@ use std::ops::{Index, IndexMut};
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::IndexError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyDict, PyList, PyLong, PyTuple};
 use pyo3::Python;
 
+use super::NoEdgeBetweenNodes;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableUnGraph;
@@ -27,11 +28,9 @@ use petgraph::visit::{
     NodeCompactIndexable, NodeCount, NodeIndexable, Visitable,
 };
 
-use super::NoEdgeBetweenNodes;
-
 #[pyclass(module = "retworkx")]
 pub struct PyGraph {
-    graph: StableUnGraph<PyObject, PyObject>,
+    pub graph: StableUnGraph<PyObject, PyObject>,
 }
 
 pub type Edges<'a, E> =
@@ -194,6 +193,69 @@ impl PyGraph {
         PyGraph {
             graph: StableUnGraph::<PyObject, PyObject>::default(),
         }
+    }
+    fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
+        let out_dict = PyDict::new(py);
+        let node_dict = PyDict::new(py);
+        let mut out_list: Vec<PyObject> = Vec::new();
+        out_dict.set_item("nodes", node_dict)?;
+        for node_index in self.graph.node_indices() {
+            let node_data = self.graph.node_weight(node_index).unwrap();
+            node_dict.set_item(node_index.index(), node_data)?;
+        }
+        for edge in self.graph.edge_indices() {
+            let edge_w = self.graph.edge_weight(edge);
+            let endpoints = self.graph.edge_endpoints(edge).unwrap();
+
+            let triplet = (endpoints.0.index(), endpoints.1.index(), edge_w)
+                .to_object(py);
+            out_list.push(triplet);
+        }
+        let py_out_list: PyObject = PyList::new(py, out_list).into();
+        out_dict.set_item("edges", py_out_list)?;
+        Ok(out_dict.into())
+    }
+
+    fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
+        self.graph = StableUnGraph::<PyObject, PyObject>::default();
+        let dict_state = state.cast_as::<PyDict>(py)?;
+        let nodes_dict =
+            dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
+        let edges_list =
+            dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
+        let mut index_count = 0;
+        for raw_index in nodes_dict.keys().iter() {
+            let tmp_index = raw_index.downcast::<PyLong>()?;
+            let index: usize = tmp_index.extract()?;
+            let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
+            if index > index_count + 1 {
+                let diff = index - (index_count + 1);
+                for _ in 0..diff {
+                    let tmp_node = self.graph.add_node(py.None());
+                    tmp_nodes.push(tmp_node);
+                }
+            }
+            let raw_data = nodes_dict.get_item(index).unwrap();
+            let out_index = self.graph.add_node(raw_data.into());
+            for tmp_node in tmp_nodes {
+                self.graph.remove_node(tmp_node);
+            }
+            index_count = out_index.index();
+        }
+
+        for raw_edge in edges_list.iter() {
+            let edge = raw_edge.downcast::<PyTuple>()?;
+            let raw_p_index = edge.get_item(0).downcast::<PyLong>()?;
+            let parent: usize = raw_p_index.extract()?;
+            let p_index = NodeIndex::new(parent);
+            let raw_c_index = edge.get_item(1).downcast::<PyLong>()?;
+            let child: usize = raw_c_index.extract()?;
+            let c_index = NodeIndex::new(child);
+            let edge_data = edge.get_item(2);
+
+            self.graph.add_edge(p_index, c_index, edge_data.into());
+        }
+        Ok(())
     }
 
     pub fn edges(&self, py: Python) -> PyObject {

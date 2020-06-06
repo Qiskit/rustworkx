@@ -16,7 +16,7 @@ def readme():
 
 setup(
     name="retworkx",
-    version="0.3.4",
+    version="0.4.0",
     description="A python graph library implemented in Rust",
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -49,4 +49,5 @@ setup(
     packages=["retworkx"],
     zip_safe=False,
     python_requires=">=3.5",
+    install_requires=['numpy>=1.16.0'],
 )

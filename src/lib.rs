@@ -11,6 +11,9 @@
 // under the License.
 
 extern crate fixedbitset;
+extern crate hashbrown;
+extern crate ndarray;
+extern crate numpy;
 extern crate petgraph;
 extern crate pyo3;
 
@@ -18,8 +21,10 @@ mod dag_isomorphism;
 mod graph;
 
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashSet};
 use std::ops::{Index, IndexMut};
+
+use hashbrown::HashMap;
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::create_exception;
@@ -40,14 +45,17 @@ use petgraph::visit::{
     NodeIndexable, Reversed, Visitable,
 };
 
+use ndarray::prelude::*;
+use numpy::IntoPyArray;
+
 #[pyclass(module = "retworkx")]
 pub struct PyDAG {
-    graph: StableDiGraph<PyObject, PyObject>,
+    pub graph: StableDiGraph<PyObject, PyObject>,
     cycle_state: algo::DfsSpace<
         NodeIndex,
         <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
     >,
-    check_cycle: bool,
+    pub check_cycle: bool,
 }
 
 pub type Edges<'a, E> =
@@ -1040,6 +1048,53 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
+#[pyfunction]
+fn dag_adjacency_matrix(
+    py: Python,
+    graph: &PyDAG,
+    weight_fn: PyObject,
+) -> PyResult<PyObject> {
+    let n = graph.graph.node_bound();
+    let mut matrix = Array::<f64, _>::zeros((n, n).f());
+
+    let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
+        let res = weight_fn.call1(py, (a,))?;
+        Ok(res.to_object(py))
+    };
+    for edge in graph.graph.edge_references() {
+        let edge_weight_raw = weight_callable(&edge.weight())?;
+        let edge_weight: f64 = edge_weight_raw.extract(py)?;
+        let i = edge.source().index();
+        let j = edge.target().index();
+        matrix[[i, j]] += edge_weight;
+    }
+    Ok(matrix.into_pyarray(py).into())
+}
+
+#[pyfunction]
+fn graph_adjacency_matrix(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: PyObject,
+) -> PyResult<PyObject> {
+    let n = graph.graph.node_bound();
+    let mut matrix = Array::<f64, _>::zeros((n, n).f());
+
+    let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
+        let res = weight_fn.call1(py, (a,))?;
+        Ok(res.to_object(py))
+    };
+    for edge in graph.graph.edge_references() {
+        let edge_weight_raw = weight_callable(&edge.weight())?;
+        let edge_weight: f64 = edge_weight_raw.extract(py)?;
+        let i = edge.source().index();
+        let j = edge.target().index();
+        matrix[[i, j]] += edge_weight;
+        matrix[[j, i]] += edge_weight;
+    }
+    Ok(matrix.into_pyarray(py).into())
+}
+
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -1056,6 +1111,8 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
+    m.add_wrapped(wrap_pyfunction!(dag_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_class::<PyDAG>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
