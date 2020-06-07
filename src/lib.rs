@@ -17,6 +17,7 @@ extern crate numpy;
 extern crate petgraph;
 extern crate pyo3;
 
+mod astar;
 mod dag_isomorphism;
 mod graph;
 
@@ -1149,6 +1150,58 @@ fn graph_adjacency_matrix(
     Ok(matrix.into_pyarray(py).into())
 }
 
+#[pyfunction]
+fn astar_shortest_path(
+    py: Python,
+    graph: &graph::PyGraph,
+    node: usize,
+    goal_fn: PyObject,
+    edge_cost_fn: PyObject,
+    estimate_cost_fn: PyObject,
+) -> PyResult<PyObject> {
+    let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
+        let res = goal_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: bool = raw.extract(py)?;
+        Ok(output)
+    };
+
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: f64 = raw.extract(py)?;
+        Ok(output)
+    };
+
+    let estimate_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = estimate_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: f64 = raw.extract(py)?;
+        Ok(output)
+    };
+    let start = NodeIndex::new(node);
+
+    let astar_res = astar::astar(
+        graph,
+        start,
+        |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
+        |e| edge_cost_callable(e.weight()),
+        |estimate| {
+            estimate_cost_callable(graph.graph.node_weight(estimate).unwrap())
+        },
+    )?;
+    let path = match astar_res {
+        Some(path) => path,
+        None => {
+            return Err(NoPathFound::py_err(
+                "No path found that satisfies goal_fn",
+            ))
+        }
+    };
+    let out_path: Vec<usize> = path.1.into_iter().map(|x| x.index()).collect();
+    Ok(out_path.to_object(py))
+}
+
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -1167,6 +1220,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(dag_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(astar_shortest_path))?;
     m.add_class::<PyDAG>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
@@ -1176,6 +1230,7 @@ create_exception!(retworkx, DAGWouldCycle, Exception);
 create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
 create_exception!(retworkx, DAGHasCycle, Exception);
 create_exception!(retworkx, NoSuitableNeighbors, Exception);
+create_exception!(retworkx, NoPathFound, Exception);
 
 #[cfg(test)]
 mod tests {
