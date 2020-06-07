@@ -647,7 +647,7 @@ impl PyDAG {
                 return Ok(self.graph.node_weight(edge.target()).unwrap());
             }
         }
-        return Err(NoSuitableNeighbors::py_err("No suitable neighbor"));
+        Err(NoSuitableNeighbors::py_err("No suitable neighbor"))
     }
 }
 
