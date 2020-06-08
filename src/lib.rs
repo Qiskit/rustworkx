@@ -920,8 +920,8 @@ fn graph_greedy_color(
 ) -> PyResult<PyObject> {
     let mut colors: HashMap<usize, usize> = HashMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    node_vec.sort_by_key(|k| graph.graph.edges(*k).count());
-    node_vec.reverse();
+    let node_count = graph.graph.node_count();
+    node_vec.sort_by_key(|k| node_count - graph.graph.edges(*k).count());
     for u_index in node_vec.iter() {
         let mut neighbor_colors: HashSet<usize> = HashSet::new();
         let u = u_index.index();
