@@ -136,6 +136,25 @@ retworkx API
         :returns index: The index of the newly created node
         :rtype: int
 
+    .. py:method:: add_nodes_from(self, obj_list):
+        Add new nodes to the dag.
+
+        :param list obj_list: A list of python object to attach to the graph.
+
+        :returns indexes: A list of int indexes of the newly created nodes
+        :rtype: list
+
+    .. py:method:: add_edges_from(self, obj_list):
+        Add new edges to the dag.
+
+        :param list obj_list: A list of tuples of the form
+            ``(parent, child, obj)`` to attach to the graph. ``parent`` and
+            ``child`` are integer indexes describing where an edge should be
+            added, and obj is the python object for the edge data.
+
+        :returns indexes: A list of int indexes of the newly created edges
+        :rtype: list
+
     .. py:method:: add_child(self, parent, obj, edge):
         Add a new child node to the dag.
 
@@ -611,12 +630,31 @@ retworkx API
         :raises: When the new edge will create a cycle
 
     .. py:method:: add_node(self, obj):
-        Add a new node to the dag.
+        Add a new node to the graph.
 
         :param obj: The python object to attach to the node
 
         :returns index: The index of the newly created node
         :rtype: int
+
+    .. py:method:: add_nodes_from(self, obj_list):
+        Add new nodes to the graph.
+
+        :param list obj_list: A list of python object to attach to the graph.
+
+        :returns indexes: A list of int indexes of the newly created nodes
+        :rtype: list
+
+    .. py:method:: add_edges_from(self, obj_list):
+        Add new edges to the graph.
+
+        :param list obj_list: A list of tuples of the form
+            ``(parent, child, obj)`` to attach to the graph. ``parent`` and
+            ``child`` are integer indexes describing where an edge should be
+            added, and obj is the python object for the edge data.
+
+        :returns indexes: A list of int indexes of the newly created edges
+        :rtype: list
 
     .. py:method:: adj(self, node):
         Get the index and data for the neighbors of a node.

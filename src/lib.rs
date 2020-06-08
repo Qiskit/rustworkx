@@ -233,6 +233,38 @@ impl GetAdjacencyMatrix for PyDAG {
     }
 }
 
+// Rust side only PyDAG methods
+impl PyDAG {
+    fn _add_edge(
+        &mut self,
+        p_index: NodeIndex,
+        c_index: NodeIndex,
+        edge: PyObject,
+    ) -> PyResult<usize> {
+        if self.check_cycle {
+            let should_check_for_cycle =
+                must_check_for_cycle(self, p_index, c_index);
+            let state = Some(&mut self.cycle_state);
+            if should_check_for_cycle
+                && algo::has_path_connecting(
+                    &self.graph,
+                    c_index,
+                    p_index,
+                    state,
+                )
+            {
+                Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
+            } else {
+                let edge = self.graph.add_edge(p_index, c_index, edge);
+                Ok(edge.index())
+            }
+        } else {
+            let edge = self.graph.add_edge(p_index, c_index, edge);
+            Ok(edge.index())
+        }
+    }
+}
+
 #[pymethods]
 impl PyDAG {
     #[new]
@@ -447,27 +479,22 @@ impl PyDAG {
     ) -> PyResult<usize> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
-        if self.check_cycle {
-            let should_check_for_cycle =
-                must_check_for_cycle(self, p_index, c_index);
-            let state = Some(&mut self.cycle_state);
-            if should_check_for_cycle
-                && algo::has_path_connecting(
-                    &self.graph,
-                    c_index,
-                    p_index,
-                    state,
-                )
-            {
-                Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
-            } else {
-                let edge = self.graph.add_edge(p_index, c_index, edge);
-                Ok(edge.index())
-            }
-        } else {
-            let edge = self.graph.add_edge(p_index, c_index, edge);
-            Ok(edge.index())
+        let out_index = self._add_edge(p_index, c_index, edge)?;
+        Ok(out_index)
+    }
+
+    pub fn add_edges_from(
+        &mut self,
+        obj_list: Vec<(usize, usize, PyObject)>,
+    ) -> PyResult<Vec<usize>> {
+        let mut out_list: Vec<usize> = Vec::new();
+        for obj in obj_list {
+            let p_index = NodeIndex::new(obj.0);
+            let c_index = NodeIndex::new(obj.1);
+            let edge = self._add_edge(p_index, c_index, obj.2)?;
+            out_list.push(edge);
         }
+        Ok(out_list)
     }
 
     pub fn remove_edge(&mut self, parent: usize, child: usize) -> PyResult<()> {
@@ -602,15 +629,18 @@ impl PyDAG {
         Ok(PyList::new(py, out_list).into())
     }
 
-    //   pub fn add_nodes_from(&self) -> PyResult<()> {
-    //
-    //   }
-    //   pub fn add_edges_from(&self) -> PyResult<()> {
-    //
-    //   }
-    //   pub fn number_of_edges(&self) -> PyResult<()> {
-    //
-    //   }
+    pub fn add_nodes_from(
+        &mut self,
+        obj_list: Vec<PyObject>,
+    ) -> PyResult<Vec<usize>> {
+        let mut out_list: Vec<usize> = Vec::new();
+        for obj in obj_list {
+            let node_index = self.graph.add_node(obj);
+            out_list.push(node_index.index());
+        }
+        Ok(out_list)
+    }
+
     pub fn in_degree(&self, node: usize) -> usize {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
