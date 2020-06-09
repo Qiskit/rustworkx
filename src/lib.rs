@@ -242,11 +242,14 @@ impl PyDAG {
         c_index: NodeIndex,
         edge: PyObject,
     ) -> PyResult<usize> {
+        // Only check for cycles if instance attribute is set to true
         if self.check_cycle {
-            let should_check_for_cycle =
-                must_check_for_cycle(self, p_index, c_index);
+            // Only check for a cycle (by running has_path_connecting) if
+            // the new edge could potentiall add a cycle
+            let cycle_check_required =
+                is_cycle_check_required(self, p_index, c_index);
             let state = Some(&mut self.cycle_state);
-            if should_check_for_cycle
+            if cycle_check_required
                 && algo::has_path_connecting(
                     &self.graph,
                     c_index,
@@ -254,15 +257,13 @@ impl PyDAG {
                     state,
                 )
             {
-                Err(DAGWouldCycle::py_err("Adding an edge would cycle"))
-            } else {
-                let edge = self.graph.add_edge(p_index, c_index, edge);
-                Ok(edge.index())
+                return Err(DAGWouldCycle::py_err(
+                    "Adding an edge would cycle",
+                ));
             }
-        } else {
-            let edge = self.graph.add_edge(p_index, c_index, edge);
-            Ok(edge.index())
         }
+        let edge = self.graph.add_edge(p_index, c_index, edge);
+        Ok(edge.index())
     }
 }
 
@@ -703,7 +704,7 @@ impl PyMappingProtocol for PyDAG {
     }
 }
 
-fn must_check_for_cycle(dag: &PyDAG, a: NodeIndex, b: NodeIndex) -> bool {
+fn is_cycle_check_required(dag: &PyDAG, a: NodeIndex, b: NodeIndex) -> bool {
     let mut parents_a = dag
         .graph
         .neighbors_directed(a, petgraph::Direction::Incoming);
