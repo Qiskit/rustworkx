@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import numpy as np
 import unittest
 
 import retworkx
@@ -71,3 +72,17 @@ class TestFloydWarshall(unittest.TestCase):
             14: {14: 0},
         }
         self.assertDictEqual(result, expected)
+
+    def test_floyd_warshall_numpy(self):
+        graph = retworkx.PyGraph()
+        for i in range(6):
+            graph.add_node(i)
+        weights = [2, 12, 1, 5, 1]
+        for i in range(5):
+            graph.add_edge(i, i+1, weights[i])
+        graph.add_edge(5, 0, 10)
+        adj = retworkx.graph_adjacency_matrix(graph, lambda x: x)
+        print(adj)
+        dist = retworkx.graph_floyd_warshall_numpy(graph, lambda x: x)
+        print(dist)
+        self.assertEqual(dist[0, 3], 15)

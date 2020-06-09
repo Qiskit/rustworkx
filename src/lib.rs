@@ -982,6 +982,79 @@ fn floyd_warshall(py: Python, dag: &PyDAG) -> PyResult<PyObject> {
     Ok(out_dict.into())
 }
 
+fn _graph_adjacency_matrix(py: Python, graph: &graph::PyGraph, weight_fn: PyObject) -> PyResult<Array2<f64>> {
+    let node_map: Option<HashMap<NodeIndex, usize>>;
+    let n: usize;
+    if graph.node_removed {
+        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut count = 0;
+        for node in graph.graph.node_indices() {
+            node_hash_map.insert(node, count);
+            count += 1;
+        }
+        n = count;
+        node_map = Some(node_hash_map);
+    } else {
+        n = graph.graph.node_bound();
+        node_map = None;
+    }
+    let mut matrix = Array2::<f64>::zeros((n, n).f());
+
+    let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
+        let res = weight_fn.call1(py, (a,))?;
+        Ok(res.to_object(py))
+    };
+    for edge in graph.graph.edge_references() {
+        let edge_weight_raw = weight_callable(&edge.weight())?;
+        let edge_weight: f64 = edge_weight_raw.extract(py)?;
+        let source = edge.source();
+        let target = edge.target();
+        let i: usize;
+        let j: usize;
+        match &node_map {
+            Some(map) => {
+                i = *map.get(&source).unwrap();
+                j = *map.get(&target).unwrap();
+            }
+            None => {
+                i = source.index();
+                j = target.index();
+            }
+        }
+        matrix[[i, j]] += edge_weight;
+        matrix[[j, i]] += edge_weight;
+    }
+    Ok(matrix)
+}
+
+#[pyfunction]
+fn graph_floyd_warshall_numpy(py: Python, graph: &graph::PyGraph, weight_fn: PyObject) -> PyResult<PyObject> {
+    let mut mat = _graph_adjacency_matrix(py, graph, weight_fn)?;
+    // 0 out the diagonal
+    for x in mat.diag_mut() {
+        *x = 0.0;
+    }
+    let shape = graph.node_count();
+    // Perform the Floyd-Warshall algorithm.
+    // In each loop, this finds the shortest path from point i
+    // to point j using intermediate nodes 0..k
+    for k in 0..shape {
+        for i in 0..shape {
+            if mat[[i, k]] == 0.0 {
+                continue
+            }
+            for j in 0..shape {
+                let d_ijk = mat[[i, k]] + mat[[k, j]];
+                if d_ijk < mat[[i, j]] {
+                    mat[[i, j]] = d_ijk;
+                }
+            }
+        }
+    }
+    Ok(mat.into_pyarray(py).into())
+}
+
+
 #[pyfunction]
 fn layers(
     py: Python,
@@ -1105,48 +1178,8 @@ fn graph_adjacency_matrix(
     graph: &graph::PyGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    let n: usize;
-    if graph.node_removed {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
-        let mut count = 0;
-        for node in graph.graph.node_indices() {
-            node_hash_map.insert(node, count);
-            count += 1;
-        }
-        n = count;
-        node_map = Some(node_hash_map);
-    } else {
-        n = graph.graph.node_bound();
-        node_map = None;
-    }
-    let mut matrix = Array::<f64, _>::zeros((n, n).f());
-
-    let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
-        let res = weight_fn.call1(py, (a,))?;
-        Ok(res.to_object(py))
-    };
-    for edge in graph.graph.edge_references() {
-        let edge_weight_raw = weight_callable(&edge.weight())?;
-        let edge_weight: f64 = edge_weight_raw.extract(py)?;
-        let source = edge.source();
-        let target = edge.target();
-        let i: usize;
-        let j: usize;
-        match &node_map {
-            Some(map) => {
-                i = *map.get(&source).unwrap();
-                j = *map.get(&target).unwrap();
-            }
-            None => {
-                i = source.index();
-                j = target.index();
-            }
-        }
-        matrix[[i, j]] += edge_weight;
-        matrix[[j, i]] += edge_weight;
-    }
-    Ok(matrix.into_pyarray(py).into())
+    let out_mat: Array2<f64> = _graph_adjacency_matrix(py, graph, weight_fn)?;
+    Ok(out_mat.into_pyarray(py).into())
 }
 
 #[pymodule]
@@ -1164,6 +1197,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
+    m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(dag_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
