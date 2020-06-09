@@ -923,11 +923,14 @@ fn graph_greedy_color(
     let mut colors: HashMap<usize, usize> = HashMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let node_count = graph.graph.node_count();
-    node_vec.sort_by_key(|k| node_count - graph.graph.edges(*k).count());
-    for u_index in node_vec.iter() {
+    let mut sort_map: HashMap<NodeIndex, usize> = HashMap::new();
+    for k in node_vec.iter() {
+        sort_map.insert(*k, node_count - graph.graph.edges(*k).count());
+    }
+    node_vec.sort_by_key(|k| sort_map.get(k));
+    for u_index in node_vec {
         let mut neighbor_colors: HashSet<usize> = HashSet::new();
-        let u = u_index.index();
-        for edge in graph.graph.edges(*u_index) {
+        for edge in graph.graph.edges(u_index) {
             let target = edge.target().index();
             let existing_color = match colors.get(&target) {
                 Some(node) => node,
@@ -942,7 +945,7 @@ fn graph_greedy_color(
             }
             count += 1;
         }
-        colors.insert(u, count);
+        colors.insert(u_index.index(), count);
     }
     let out_dict = PyDict::new(py);
     for (index, color) in colors {
