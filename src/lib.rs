@@ -499,6 +499,21 @@ impl PyDAG {
         Ok(out_list)
     }
 
+    pub fn add_edges_from_no_data(
+        &mut self,
+        py: Python,
+        obj_list: Vec<(usize, usize)>,
+    ) -> PyResult<Vec<usize>> {
+        let mut out_list: Vec<usize> = Vec::new();
+        for obj in obj_list {
+            let p_index = NodeIndex::new(obj.0);
+            let c_index = NodeIndex::new(obj.1);
+            let edge = self._add_edge(p_index, c_index, py.None())?;
+            out_list.push(edge);
+        }
+        Ok(out_list)
+    }
+
     pub fn remove_edge(&mut self, parent: usize, child: usize) -> PyResult<()> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);

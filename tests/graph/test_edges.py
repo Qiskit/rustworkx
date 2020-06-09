@@ -150,3 +150,22 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         res = graph.add_edges_from([])
         self.assertEqual([], res)
+
+    def test_add_edge_from_no_data(self):
+        graph = retworkx.PyGraph()
+        nodes = list(range(4))
+        graph.add_nodes_from(nodes)
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3),
+                     (0, 3)]
+        res = graph.add_edges_from_no_data(edge_list)
+        self.assertEqual(len(res), 5)
+        self.assertEqual([None, None, None, None, None], graph.edges())
+        self.assertEqual(3, graph.degree(0))
+        self.assertEqual(2, graph.degree(1))
+        self.assertEqual(3, graph.degree(2))
+        self.assertEqual(2, graph.degree(3))
+
+    def test_add_edge_from_empty_no_data(self):
+        graph = retworkx.PyGraph()
+        res = graph.add_edges_from_no_data([])
+        self.assertEqual([], res)

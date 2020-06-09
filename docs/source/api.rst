@@ -155,6 +155,18 @@ retworkx API
         :returns indexes: A list of int indexes of the newly created edges
         :rtype: list
 
+    .. py:method:: add_edges_from_no_data(self, obj_list):
+        Add new edges to the dag without data.
+
+        :param list obj_list: A list of tuples of the form
+            ``(parent, child)`` to attach to the graph. ``parent`` and
+            ``child`` are integer indexes describing where an edge should be
+            added. Unlike :meth:`add_edges_from` there is no data payload and
+            when the edge is created None will be used.
+
+        :returns indexes: A list of int indexes of the newly created edges
+        :rtype: list
+
     .. py:method:: add_child(self, parent, obj, edge):
         Add a new child node to the dag.
 
@@ -640,6 +652,18 @@ retworkx API
             ``(parent, child, obj)`` to attach to the graph. ``parent`` and
             ``child`` are integer indexes describing where an edge should be
             added, and obj is the python object for the edge data.
+
+        :returns indexes: A list of int indexes of the newly created edges
+        :rtype: list
+
+   .. py:method:: add_edges_from_no_data(self, obj_list):
+        Add new edges to the dag without data.
+
+        :param list obj_list: A list of tuples of the form
+            ``(parent, child)`` to attach to the graph. ``parent`` and
+            ``child`` are integer indexes describing where an edge should be
+            added. Unlike :meth:`add_edges_from` there is no data payload and
+            when the edge is created None will be used.
 
         :returns indexes: A list of int indexes of the newly created edges
         :rtype: list
