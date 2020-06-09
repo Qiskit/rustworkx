@@ -56,6 +56,7 @@ pub struct PyDAG {
         <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
     >,
     pub check_cycle: bool,
+    pub node_removed: bool,
 }
 
 pub type Edges<'a, E> =
@@ -242,6 +243,7 @@ impl PyDAG {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
+            node_removed: false,
         }
     }
 
@@ -435,7 +437,7 @@ impl PyDAG {
     pub fn remove_node(&mut self, node: usize) -> PyResult<()> {
         let index = NodeIndex::new(node);
         self.graph.remove_node(index);
-
+        self.node_removed = true;
         Ok(())
     }
 
@@ -1090,7 +1092,21 @@ fn dag_adjacency_matrix(
     graph: &PyDAG,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let n = graph.graph.node_bound();
+    let node_map: Option<HashMap<NodeIndex, usize>>;
+    let n: usize;
+    if graph.node_removed {
+        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut count = 0;
+        for node in graph.graph.node_indices() {
+            node_hash_map.insert(node, count);
+            count += 1;
+        }
+        n = count;
+        node_map = Some(node_hash_map);
+    } else {
+        n = graph.graph.node_bound();
+        node_map = None;
+    }
     let mut matrix = Array::<f64, _>::zeros((n, n).f());
 
     let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
@@ -1100,8 +1116,20 @@ fn dag_adjacency_matrix(
     for edge in graph.graph.edge_references() {
         let edge_weight_raw = weight_callable(&edge.weight())?;
         let edge_weight: f64 = edge_weight_raw.extract(py)?;
-        let i = edge.source().index();
-        let j = edge.target().index();
+        let source = edge.source();
+        let target = edge.target();
+        let i: usize;
+        let j: usize;
+        match &node_map {
+            Some(map) => {
+                i = *map.get(&source).unwrap();
+                j = *map.get(&target).unwrap();
+            }
+            None => {
+                i = source.index();
+                j = target.index();
+            }
+        }
         matrix[[i, j]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
@@ -1113,7 +1141,21 @@ fn graph_adjacency_matrix(
     graph: &graph::PyGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let n = graph.graph.node_bound();
+    let node_map: Option<HashMap<NodeIndex, usize>>;
+    let n: usize;
+    if graph.node_removed {
+        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut count = 0;
+        for node in graph.graph.node_indices() {
+            node_hash_map.insert(node, count);
+            count += 1;
+        }
+        n = count;
+        node_map = Some(node_hash_map);
+    } else {
+        n = graph.graph.node_bound();
+        node_map = None;
+    }
     let mut matrix = Array::<f64, _>::zeros((n, n).f());
 
     let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
@@ -1123,8 +1165,20 @@ fn graph_adjacency_matrix(
     for edge in graph.graph.edge_references() {
         let edge_weight_raw = weight_callable(&edge.weight())?;
         let edge_weight: f64 = edge_weight_raw.extract(py)?;
-        let i = edge.source().index();
-        let j = edge.target().index();
+        let source = edge.source();
+        let target = edge.target();
+        let i: usize;
+        let j: usize;
+        match &node_map {
+            Some(map) => {
+                i = *map.get(&source).unwrap();
+                j = *map.get(&target).unwrap();
+            }
+            None => {
+                i = source.index();
+                j = target.index();
+            }
+        }
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
