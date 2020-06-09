@@ -139,7 +139,7 @@ retworkx API
     .. py:method:: add_nodes_from(self, obj_list):
         Add new nodes to the dag.
 
-        :param list obj_list: A list of python object to attach to the graph.
+        :param list obj_list: A list of python objects to attach to the graph.
 
         :returns indexes: A list of int indexes of the newly created nodes
         :rtype: list
