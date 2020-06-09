@@ -69,7 +69,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         res = retworkx.dag_adjacency_matrix(dag, lambda x: 1)
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(
-            np.array([[0, 0, 1], [0, 0, 0], [0, 0, 0]]), res))
+            np.array([[0, 1], [0, 0]]), res))
 
 
 class TestGraphAdjacencyMatrix(unittest.TestCase):
@@ -131,4 +131,4 @@ class TestGraphAdjacencyMatrix(unittest.TestCase):
         res = retworkx.graph_adjacency_matrix(graph, lambda x: 1)
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(
-            np.array([[0, 0, 1], [0, 0, 0], [1, 0, 0]]), res))
+            np.array([[0, 1], [1, 0]]), res))
