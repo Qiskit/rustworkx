@@ -505,6 +505,36 @@ retworkx API
    :return matrix: The adjacency matrix for the input dag as a numpy array
    :rtype: numpy.ndarray
 
+.. py:function:: graph_all_simple_paths(graph, from, to, cutoff=-1)
+   Return all simple paths between 2 nodes in a PyGraph object
+
+   A simple path is a path with no repeated nodes.
+
+   :param PyGraph graph: The graph to find the path in
+   :param int from: The node index to find the paths from
+   :param int to: The node index to find the paths to
+   :param int cutoff: The maximum depth of path to include in the output list
+       of paths. Defaults to -1 which includes all paths regardless of length.
+       Also, any integer value < 1 will include all found paths.
+
+   :returns paths: A list of lists where each inner list is a path path
+   :rtype: list
+
+.. py:function:: dag_all_simple_paths(graph, from, to, cutoff=-1)
+   Return all simple paths between 2 nodes in a PyGraph object
+
+   A simple path is a path with no repeated nodes.
+
+   :param PyDAG graph: The graph to find the path in
+   :param int from: The node index to find the paths from
+   :param int to: The node index to find the paths to
+   :param int cutoff: The maximum depth of path to include in the output list
+       of paths. Defaults to -1 which includes all paths regardless of length.
+       Also, any integer value < 1 will include all found paths.
+
+   :returns paths: A list of lists where each inner list is a path path
+   :rtype: list
+
 .. py:class:: PyGraph
    A class for creating undirected graphs.
 

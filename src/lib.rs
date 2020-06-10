@@ -1149,6 +1149,49 @@ fn graph_adjacency_matrix(
     Ok(matrix.into_pyarray(py).into())
 }
 
+#[pyfunction(cutoff=-1)]
+fn graph_all_simple_paths(
+    graph: &graph::PyGraph,
+    from: usize,
+    to: usize,
+    cutoff: isize,
+) -> PyResult<Vec<Vec<usize>>> {
+    let from_index = NodeIndex::new(from);
+    let to_index = NodeIndex::new(to);
+    let cutoff_petgraph: Option<usize>;
+    if cutoff < 1 {
+        cutoff_petgraph = None;
+    } else {
+        cutoff_petgraph = Some(cutoff as usize - 2);
+    }
+    let result: Vec<Vec<usize>> =
+        algo::all_simple_paths(graph, from_index, to_index, 0, cutoff_petgraph)
+            .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+            .collect();
+    Ok(result)
+}
+
+#[pyfunction(cutoff=-1)]
+fn dag_all_simple_paths(
+    graph: &PyDAG,
+    from: usize,
+    to: usize,
+    cutoff: isize,
+) -> PyResult<Vec<Vec<usize>>> {
+    let from_index = NodeIndex::new(from);
+    let to_index = NodeIndex::new(to);
+    let cutoff_petgraph: Option<usize>;
+    if cutoff < 1 {
+        cutoff_petgraph = None;
+    } else {
+        cutoff_petgraph = Some(cutoff as usize - 2)
+    }
+    let result: Vec<Vec<usize>> =
+        algo::all_simple_paths(graph, from_index, to_index, 0, cutoff_petgraph)
+            .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+            .collect();
+    Ok(result)
+}
 #[pymodule]
 fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -1167,6 +1210,8 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(dag_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(dag_all_simple_paths))?;
     m.add_class::<PyDAG>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
