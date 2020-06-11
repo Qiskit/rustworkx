@@ -925,6 +925,8 @@ fn graph_greedy_color(
     let node_count = graph.graph.node_count();
     let mut sort_map: HashMap<NodeIndex, usize> = HashMap::new();
     for k in node_vec.iter() {
+        // The intent behind this sort key is to sort nodes in descending order
+        // of degree
         sort_map.insert(*k, node_count - graph.graph.edges(*k).count());
     }
     node_vec.sort_by_key(|k| sort_map.get(k));
