@@ -19,7 +19,7 @@ stages:
       pool: {vmImage: 'macOS-10.15'}
       variables:
         python.version: '3.7'
-        CIBW_BEFORE_BUILD: pip install -U setuptools-rust && rustup default nightly
+        CIBW_BEFORE_BUILD: pip install -U setuptools-rust && rustup default nightly-2020-06-10
         CIBW_SKIP: cp27-* cp34-* pp*
         TWINE_USERNAME: retworkx-ci
         CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -43,7 +43,7 @@ stages:
       pool: {vmImage: 'vs2017-win2016'}
       condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
       variables:
-        CIBW_BEFORE_BUILD: rustup default nightly && pip install -U setuptools-rust
+        CIBW_BEFORE_BUILD: rustup default nightly-2020-06-10 && pip install -U setuptools-rust
         CIBW_SKIP: cp27-* cp34-* pp* *win32
         TWINE_USERNAME: retworkx-ci
         CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -65,7 +65,7 @@ stages:
       pool: {vmImage: 'vs2017-win2016'}
       condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
       variables:
-        CIBW_BEFORE_BUILD: rustup default nightly-i686-pc-windows-msvc && pip install -U setuptools-rust
+        CIBW_BEFORE_BUILD: rustup default nightly-i686-pc-windows-msvc-2020-06-10 && pip install -U setuptools-rust
         CIBW_SKIP: cp27-* cp34-* pp* *amd64
         TWINE_USERNAME: retworkx-ci
         CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -100,7 +100,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default nightly
+        - bash: rustup default nightly-2020-06-10
           displayName: 'Install Rust'
         - bash: python -m pip install --upgrade pip setuptools virtualenv setuptools-rust
           displayName: 'Install dependencies'
@@ -126,7 +126,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default nightly
+        - bash: rustup default nightly-2020-06-10
           displayName: 'Install Rust'
         - bash: |
             set -e
@@ -165,7 +165,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default nightly
+        - bash: rustup default nightly-2020-06-10
           displayName: 'Install Rust'
         - bash: python -m pip install --upgrade pip setuptools virtualenv setuptools-rust
           displayName: 'Install dependencies'
@@ -195,7 +195,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default nightly
+        - bash: rustup default nightly-2020-06-10
           displayName: 'Install Rust'
         - bash: |
             set -e
