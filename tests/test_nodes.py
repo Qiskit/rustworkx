@@ -135,3 +135,15 @@ class TestNodes(unittest.TestCase):
     def test_pydag_length_empty(self):
         dag = retworkx.PyDAG()
         self.assertEqual(0, len(dag))
+
+    def test_add_nodes_from(self):
+        dag = retworkx.PyDAG()
+        nodes = list(range(100))
+        res = dag.add_nodes_from(nodes)
+        self.assertEqual(len(res), 100)
+        self.assertEqual(res, nodes)
+
+    def test_add_node_from_empty(self):
+        dag = retworkx.PyDAG()
+        res = dag.add_nodes_from([])
+        self.assertEqual(len(res), 0)
