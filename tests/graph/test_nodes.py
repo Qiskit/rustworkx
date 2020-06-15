@@ -62,3 +62,15 @@ class TestNodes(unittest.TestCase):
     def test_pygraph_length_empty(self):
         graph = retworkx.PyGraph()
         self.assertEqual(0, len(graph))
+
+    def test_add_nodes_from(self):
+        graph = retworkx.PyGraph()
+        nodes = list(range(100))
+        res = graph.add_nodes_from(nodes)
+        self.assertEqual(len(res), 100)
+        self.assertEqual(res, nodes)
+
+    def test_add_node_from_empty(self):
+        graph = retworkx.PyGraph()
+        res = graph.add_nodes_from([])
+        self.assertEqual(len(res), 0)

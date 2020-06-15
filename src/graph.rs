@@ -362,6 +362,35 @@ impl PyGraph {
         Ok(edge.index())
     }
 
+    pub fn add_edges_from(
+        &mut self,
+        obj_list: Vec<(usize, usize, PyObject)>,
+    ) -> PyResult<Vec<usize>> {
+        let mut out_list: Vec<usize> = Vec::new();
+        for obj in obj_list {
+            let p_index = NodeIndex::new(obj.0);
+            let c_index = NodeIndex::new(obj.1);
+            let edge = self.graph.add_edge(p_index, c_index, obj.2);
+            out_list.push(edge.index());
+        }
+        Ok(out_list)
+    }
+
+    pub fn add_edges_from_no_data(
+        &mut self,
+        py: Python,
+        obj_list: Vec<(usize, usize)>,
+    ) -> PyResult<Vec<usize>> {
+        let mut out_list: Vec<usize> = Vec::new();
+        for obj in obj_list {
+            let p_index = NodeIndex::new(obj.0);
+            let c_index = NodeIndex::new(obj.1);
+            let edge = self.graph.add_edge(p_index, c_index, py.None());
+            out_list.push(edge.index());
+        }
+        Ok(out_list)
+    }
+
     pub fn remove_edge(
         &mut self,
         node_a: usize,
@@ -390,6 +419,18 @@ impl PyGraph {
     pub fn add_node(&mut self, obj: PyObject) -> PyResult<usize> {
         let index = self.graph.add_node(obj);
         Ok(index.index())
+    }
+
+    pub fn add_nodes_from(
+        &mut self,
+        obj_list: Vec<PyObject>,
+    ) -> PyResult<Vec<usize>> {
+        let mut out_list: Vec<usize> = Vec::new();
+        for obj in obj_list {
+            let node_index = self.graph.add_node(obj);
+            out_list.push(node_index.index());
+        }
+        Ok(out_list)
     }
 
     pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {

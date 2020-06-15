@@ -160,3 +160,59 @@ class TestEdges(unittest.TestCase):
 
         with self.assertRaises(Exception):
             dag.find_adjacent_node_by_edge(node_a, compare_edges)
+
+    def test_add_edge_from(self):
+        dag = retworkx.PyDAG()
+        nodes = list(range(4))
+        dag.add_nodes_from(nodes)
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        res = dag.add_edges_from(edge_list)
+        self.assertEqual(len(res), 5)
+        self.assertEqual(['a', 'b', 'c', 'd', 'e'], dag.edges())
+        self.assertEqual(3, dag.out_degree(0))
+        self.assertEqual(0, dag.in_degree(0))
+        self.assertEqual(1, dag.out_degree(1))
+        self.assertEqual(1, dag.out_degree(2))
+        self.assertEqual(2, dag.in_degree(3))
+
+    def test_add_edge_from_empty(self):
+        dag = retworkx.PyDAG()
+        res = dag.add_edges_from([])
+        self.assertEqual([], res)
+
+    def test_cycle_checking_at_init_nodes_from(self):
+        dag = retworkx.PyDAG(True)
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {})
+        node_c = dag.add_child(node_b, 'c', {})
+        with self.assertRaises(Exception):
+            dag.add_edges_from([(node_a, node_c, {}), (node_c, node_b, {})])
+
+    def test_add_edge_from_no_data(self):
+        dag = retworkx.PyDAG()
+        nodes = list(range(4))
+        dag.add_nodes_from(nodes)
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3),
+                     (0, 3)]
+        res = dag.add_edges_from_no_data(edge_list)
+        self.assertEqual(len(res), 5)
+        self.assertEqual([None, None, None, None, None], dag.edges())
+        self.assertEqual(3, dag.out_degree(0))
+        self.assertEqual(0, dag.in_degree(0))
+        self.assertEqual(1, dag.out_degree(1))
+        self.assertEqual(1, dag.out_degree(2))
+        self.assertEqual(2, dag.in_degree(3))
+
+    def test_add_edge_from_empty_no_data(self):
+        dag = retworkx.PyDAG()
+        res = dag.add_edges_from_no_data([])
+        self.assertEqual([], res)
+
+    def test_cycle_checking_at_init_nodes_from_no_data(self):
+        dag = retworkx.PyDAG(True)
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {})
+        node_c = dag.add_child(node_b, 'c', {})
+        with self.assertRaises(Exception):
+            dag.add_edges_from_no_data([(node_a, node_c), (node_c, node_b)])
