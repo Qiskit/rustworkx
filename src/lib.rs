@@ -245,7 +245,7 @@ impl PyDAG {
         // Only check for cycles if instance attribute is set to true
         if self.check_cycle {
             // Only check for a cycle (by running has_path_connecting) if
-            // the new edge could potentiall add a cycle
+            // the new edge could potentially add a cycle
             let cycle_check_required =
                 is_cycle_check_required(self, p_index, c_index);
             let state = Some(&mut self.cycle_state);
