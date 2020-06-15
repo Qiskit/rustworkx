@@ -16,7 +16,7 @@
 // https://github.com/petgraph/petgraph/blob/0.5.1/src/scored.rs
 // this was necessary to modify the error handling to allow python callables
 // to be use for the input functions for is_goal, edge_cost, estimate_cost
-// and return any exceptions raised in Python instaed of panickng
+// and return any exceptions raised in Python instead of panicking
 
 use std::cmp::Ordering;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
