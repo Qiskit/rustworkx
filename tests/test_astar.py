@@ -18,7 +18,7 @@ import retworkx
 class TestAstarDAG(unittest.TestCase):
 
     def test_astar_null_heuristic(self):
-        g = retworkx.PyDAG();
+        g = retworkx.PyDAG()
         a = g.add_node("A")
         b = g.add_node("B")
         c = g.add_node("C")
@@ -95,7 +95,7 @@ class TestAstarDAG(unittest.TestCase):
 class TestAstarGraph(unittest.TestCase):
 
     def test_astar_null_heuristic(self):
-        g = retworkx.PyGraph();
+        g = retworkx.PyGraph()
         a = g.add_node("A")
         b = g.add_node("B")
         c = g.add_node("C")
