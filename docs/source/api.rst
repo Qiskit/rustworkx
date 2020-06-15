@@ -546,16 +546,16 @@ retworkx API
    :param int to: The node index to find the paths to
    :param int min_depth: The minimum depth of the path to include in the output
        list of paths. By default all paths are included regardless of depth,
-       sett to 0 will behave like the default.
+       setting to 0 will behave like the default.
    :param int cutoff: The maximum depth of path to include in the output list
        of paths. By default includes all paths regardless of depth, setting to
        0 will behave like default.
 
-   :returns paths: A list of lists where each inner list is a path path
+   :returns paths: A list of lists where each inner list is a path
    :rtype: list
 
 .. py:function:: dag_all_simple_paths(graph, from, to, min_depth=None, cutoff=None)
-   Return all simple paths between 2 nodes in a PyGraph object
+   Return all simple paths between 2 nodes in a PyDAG object
 
    A simple path is a path with no repeated nodes.
 
@@ -569,7 +569,7 @@ retworkx API
        of paths. By default includes all paths regardless of depth, setting to
        0 will behave like default.
 
-   :returns paths: A list of lists where each inner list is a path path
+   :returns paths: A list of lists where each inner list is a path
    :rtype: list
 
 .. py:class:: PyGraph
