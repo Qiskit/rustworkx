@@ -30,6 +30,9 @@ retworkx API
           When using ``copy.deepcopy()`` or pickling node indexes are not
           guaranteed to be preserved.
 
+    PyDAG, is a subclass of the PyDiGraph class and behaves identically to
+    the PyDiGraph class.
+
     .. py:method:: __init__(self, check_cycle=False):
         Initialize an empty DAG.
 
@@ -698,5 +701,312 @@ retworkx API
         Remove an edge identified by the provided index
 
         :param int edge: The index of the edge to remove
+
+.. _petgraph: https://github.com/bluss/petgraph
+
+.. py:class:: PyDiGraph
+   A class for creating directed graph
+
+   The PyDiGraph class is constructed using the Rust library `petgraph`_ around
+   the ``StableGraph`` type. The limitations and quirks with this library and
+   type dictate how this operates. The biggest thing to be aware of when using
+   the PyDiGraph class is that an integer node and edge index is used for accessing
+   elements on the graph, not the data/weight of nodes and edges.
+
+   If you would like to use a PyDiGraph object as a directed acyclic graph you
+   can do this by enabling realtime cycle checking. For example::
+
+       import retworkx
+       dag = retworkx.PyDiGraph()
+       dag.check_cycle = True
+
+   or at object creation::
+
+       import retworkx
+       dag = retworkx.PyDiGraph(True)
+
+   With check_cycle set to true any calls to :meth:`PyDiGraph.add_edge` will
+   ensure that no cycles are added, ensuring that the PyDiGraph class truly
+   represents a directed acyclic graph.
+
+     .. note::
+          When using ``copy.deepcopy()`` or pickling node indexes are not
+          guaranteed to be preserved.
+
+    .. py:method:: __init__(self, check_cycle=False):
+        Initialize an empty directed graph.
+
+        :param bool check_cycle: If set true enable cycle checking on add_edge()
+            calls
+
+    .. py:method:: __len__(self):
+        Return the number of nodes in the graph. Use via ``len()`` function
+
+    .. py:method:: edges(self):
+        Return a list of all edge data.
+
+        :returns: A list of all the edge data objects in the graph
+        :rtype: list
+
+    .. py:method:: has_edge(self, node_a, node_b):
+        Return True if there is an edge from node_a to node_b.
+
+        :param int node_a: The source node index to check for an edge
+        :param int node_b: The destination node index to check for an edge
+
+        :returns: True if there is an edge false if there is no edge
+        :rtype: bool
+
+    .. py:method:: nodes(self):
+        Return a list of all node data.
+
+        :returns: A list of all the node data objects in the graph
+        :rtype: list
+
+    .. py:method:: node_indexes(self):
+        Return a list of all node indexes.
+
+        :returns: A list of all the node indexes in the graph
+        :rtype: list
+
+    .. py:method:: successors(self, node):
+        Return a list of all the node successor data.
+
+        :param int node: The index for the node to get the successors for
+
+        :returns: A list of the node data for all the child neighbor nodes
+        :rtype: list
+
+    .. py:method:: predecessors(self, node):
+        Return a list of all the node predecessor data.
+
+        :param int node: The index for the node to get the predecessors for
+
+        :returns: A list of the node data for all the parent neighbor nodes
+        :rtype: list
+
+    .. py:method:: get_node_data(self, node):
+        Return the node data for a given node index
+
+        :param int node: The index for the node
+
+        :returns: The data object set for that node
+        :raises IndexError: when an invalid node index is provided
+
+    .. py:method:: get_edge_data(self, node_a, node_b):
+        Return the edge data for the edge between 2 nodes.
+
+        :param int node_a: The index for the first node
+        :param int node_b: The index for the second node
+
+        :returns: The data object set for the edge
+        :raises: When there is no edge between nodes
+
+    .. py:method:: get_all_edge_data(self, node_a, node_b):
+        Return the edge data for all the edges between 2 nodes.
+
+        :param int node_a: The index for the first node
+        :param int node_b: The index for the second node
+
+        :returns: A list with all the data objects for the edges between nodes
+        :rtype: list
+        :raises: When there is no edge between nodes
+
+    .. py:method:: remove_node(self, node):
+        Remove a node from the graph.
+
+        :param int node: The index of the node to remove
+
+    .. py:method:: add_edge(self, parent, child, edge):
+        Add an edge between 2 nodes.
+
+        Use add_child() or add_parent() to create a node with an edge at the
+        same time as an edge for better performance. Using this method will
+        enable adding duplicate edges between nodes.
+
+        :param int parent: Index of the parent node
+        :param int child: Index of the child node
+        :param edge: The object to set as the data for the edge. It can be any
+            python object.
+
+        :raises: When the new edge will create a cycle
+
+    .. py:method:: add_node(self, obj):
+        Add a new node to the dag.
+
+        :param obj: The python object to attach to the node
+
+        :returns index: The index of the newly created node
+        :rtype: int
+
+    .. py:method:: add_nodes_from(self, obj_list):
+        Add new nodes to the dag.
+
+        :param list obj_list: A list of python objects to attach to the graph.
+
+        :returns indices: A list of int indices of the newly created nodes
+        :rtype: list
+
+    .. py:method:: add_edges_from(self, obj_list):
+        Add new edges to the dag.
+
+        :param list obj_list: A list of tuples of the form
+            ``(parent, child, obj)`` to attach to the graph. ``parent`` and
+            ``child`` are integer indexes describing where an edge should be
+            added, and obj is the python object for the edge data.
+
+        :returns indices: A list of int indices of the newly created edges
+        :rtype: list
+
+    .. py:method:: add_edges_from_no_data(self, obj_list):
+        Add new edges to the dag without python data.
+
+        :param list obj_list: A list of tuples of the form
+            ``(parent, child)`` to attach to the graph. ``parent`` and
+            ``child`` are integer indexes describing where an edge should be
+            added. Unlike :meth:`add_edges_from` there is no data payload and
+            when the edge is created None will be used.
+
+        :returns indices: A list of int indices of the newly created edges
+        :rtype: list
+
+    .. py:method:: add_child(self, parent, obj, edge):
+        Add a new child node to the dag.
+
+        This will create a new node on the dag and add an edge from the parent
+        to that new node.
+
+        :param int parent: The index for the parent node
+        :param obj: The python object to attach to the node
+        :param edge: The python object to attach to the edge
+
+        :returns index: The index of the newly created child node
+        :rtype: int
+
+    .. py:method:: add_parent(self, child, obj, edge):
+        Add a new parent node to the dag.
+
+        This create a new node on the dag and add an edge to the child from
+        that new node
+
+        :param int child: The index of the child node
+        :param obj: The python object to attach to the node
+        :param edge: The python object to attach to the edge
+
+        :returns index: The index of the newly created parent node
+        :rtype: int
+
+    .. py:method:: adj(self, node):
+        Get the index and data for the neighbors of a node.
+
+        This will return a dictionary where the keys are the node indexes of
+        the adjacent nodes (inbound or outbound) and the value is the edge data
+        objects between that adjacent node and the provided node.
+
+        :param int node: The index of the node to get the neighbors
+
+        :returns neighbors: A dictionary where the keys are node indexes and
+            the value is the edge data object for all nodes that share an
+            edge with the specified node.
+        :rtype: dict
+
+    .. py:method:: adj_direction(self, node, direction):
+        Get the index and data for either the parent or children of a node.
+
+        This will return a dictionary where the keys are the node indexes of
+        the adjacent nodes (inbound or outbound as specified) and the value
+        is the edge data objects for the edges between that adjacent node
+        and the provided node.
+
+        :param int node: The index of the node to get the neighbors
+        :param bool direction: The direction to use for finding nodes,
+            True means inbound edges and False means outbound edges.
+
+        :returns neighbors: A dictionary where the keys are node indexes and
+            the value is the edge data object for all nodes that share an
+            edge with the specified node.
+        :rtype: dict
+
+        :raises NoEdgeBetweenNodes if the graph is broken and an edge can't be
+            found to a neighbor node
+
+    .. py:method:: in_edges(self, node):
+        Get the index and edge data for all parents of a node.
+
+        This will return a list of tuples with the parent index the node index
+        and the edge data. This can be used to recreate add_edge() calls.
+
+        :param int node: The index of the node to get the edges for
+
+        :returns in_edges: A list of tuples of the form:
+            (parent_index, node_index, edge_data)
+        :rtype: list
+
+        :raises NoEdgeBetweenNodes if the graph is broken and an edge can't be
+            found to a neighbor node
+
+    .. py:method:: out_edges(self, node):
+        Get the index and edge data for all children of a node.
+
+        This will return a list of tuples with the child index the node index
+        and the edge data. This can be used to recreate add_edge() calls.
+
+        :param int node: The index of the node to get the edges for
+
+        :returns out_edges: A list of tuples of the form:
+            (node_index, child_index, edge_data)
+        :rtype: list
+
+        :raises NoEdgeBetweenNodes if the graph is broken and an edge can't be
+            found to a neighbor node
+
+    .. py:method:: in_degree(self, node):
+        Get the degree of a node for inbound edges.
+
+        :param int node: The index of the node to find the inbound degree of
+
+        :returns degree: The inbound degree for the specified node
+        :rtype: int
+
+    .. py:method:: out_degree(self, node):
+        Get the degree of a node for outbound edges.
+
+        :param int node: The index of the node to find the outbound degree of
+
+        :returns degree: The outbound degree for the specified node
+        :rtype: int
+
+    .. py:method:: remove_edge(self, parent, child):
+        Remove an edge between 2 nodes.
+
+        Note if there are multiple edges between the specified nodes only one
+        will be removed.
+
+        :param int parent: The index for the parent node.
+        :param int child: The index of the child node.
+
+        :raises NoEdgeBetweenNodes: If there are no edges between the nodes
+            specified
+
+    .. py:method:: remove_edge_from_index(self, edge):
+        Remove an edge identified by the provided index
+
+        :param int edge: The index of the edge to remove
+
+    .. py:method:: find_adjacent_node_by_edge(self, edge, predicate):
+        Find a target node with a specific edge
+
+        This method is used to find a target node for
+
+        :param int node: The node to use as the source of the search
+        :param callable predicate: A python callable that will take a single
+            parameter, the edge object, and will return a boolean if the
+            edge matches or not
+
+        :returns: The node object that has an edge to it from the provided
+            node index which matches the provided condition
+
+        :raises Exception: If no neighbor is found that matches the predicate
+            callable
 
 .. _petgraph: https://github.com/bluss/petgraph
