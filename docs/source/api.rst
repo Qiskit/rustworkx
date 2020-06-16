@@ -493,7 +493,7 @@ retworkx API
     :returns layers: A list of layers, each layer is a list of node data
     :rtype: list
 
-.. py:function:: dag_adjacency_matrix(dag, weight_fn):
+.. py:function:: digraph_adjacency_matrix(dag, weight_fn):
    Return the adjacency matrix for a PyDAG class
 
    In the case where there are multiple edges between nodes the value in the

@@ -439,7 +439,7 @@ fn layers(
 }
 
 #[pyfunction]
-fn dag_adjacency_matrix(
+fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: PyObject,
@@ -553,7 +553,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
-    m.add_wrapped(wrap_pyfunction!(dag_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
