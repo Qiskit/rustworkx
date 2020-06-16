@@ -563,13 +563,13 @@ retworkx API
 
   :param PyDAG graph: The input graph to use
   :param int node: The node index to compute the path from
-  :param goal_fn: A python callable that will take in 1 parameter a node's data
+  :param goal_fn: A python callable that will take in 1 parameter, a node's data
       object and will return a boolean which will be True if it is the finish
       node.
-  :param edge_cost_fn: A python callable that will take in 1 parameter, a edge's
+  :param edge_cost_fn: A python callable that will take in 1 parameter, an edge's
       data object and will return a float that represents the cost of that
       edge. It must be non-negative.
-  :param estimate_cost: A python callable that will take in 1 parameter, a
+  :param estimate_cost_fn: A python callable that will take in 1 parameter, a
       node's data object and will return a float which represents the estimated
       cost for the next node. The return must be non-negative. For the
       algorithm to find the actual shortest path, it should be admissible,
