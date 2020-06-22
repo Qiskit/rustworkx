@@ -30,3 +30,17 @@ class TestGraphColoring(unittest.TestCase):
         graph.add_edge(node_a, node_c, 1)
         res = retworkx.graph_greedy_color(graph)
         self.assertEqual({0: 0, 1: 1, 2: 1}, res)
+
+    def test_simple_graph_large_degree(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node(1)
+        node_b = graph.add_node(2)
+        graph.add_edge(node_a, node_b, 1)
+        node_c = graph.add_node(3)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        res = retworkx.graph_greedy_color(graph)
+        self.assertEqual({0: 0, 1: 1, 2: 1}, res)

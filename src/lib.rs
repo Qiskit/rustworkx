@@ -20,7 +20,7 @@ extern crate pyo3;
 mod dag_isomorphism;
 mod graph;
 
-use std::cmp::Ordering;
+use std::cmp::{Ordering, Reverse};
 use std::collections::{BinaryHeap, HashSet};
 use std::ops::{Index, IndexMut};
 
@@ -968,14 +968,13 @@ fn graph_greedy_color(
 ) -> PyResult<PyObject> {
     let mut colors: HashMap<usize, usize> = HashMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let node_count = graph.graph.node_count();
     let mut sort_map: HashMap<NodeIndex, usize> = HashMap::new();
     for k in node_vec.iter() {
         // The intent behind this sort key is to sort nodes in descending order
         // of degree
-        sort_map.insert(*k, node_count - graph.graph.edges(*k).count());
+        sort_map.insert(*k, graph.graph.edges(*k).count());
     }
-    node_vec.sort_by_key(|k| sort_map.get(k));
+    node_vec.sort_by_key(|k| Reverse(sort_map.get(k)));
     for u_index in node_vec {
         let mut neighbor_colors: HashSet<usize> = HashSet::new();
         for edge in graph.graph.edges(u_index) {
