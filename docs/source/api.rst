@@ -20,7 +20,7 @@ retworkx API
    or at object creation::
 
        import retworkx
-       dag = retworkx.PyDAG(True)
+       dag = retworkx.PyDAG(check_cycle=True)
 
    With check_cycle set to true any calls to :meth:`PyDAG.add_edge` will
    ensure that no cycles are added, ensuring that the PyDAG class truly
@@ -723,7 +723,7 @@ retworkx API
    or at object creation::
 
        import retworkx
-       dag = retworkx.PyDiGraph(True)
+       dag = retworkx.PyDiGraph(check_cycle=True)
 
    With check_cycle set to true any calls to :meth:`PyDiGraph.add_edge` will
    ensure that no cycles are added, ensuring that the PyDiGraph class truly
