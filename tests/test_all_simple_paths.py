@@ -103,7 +103,8 @@ class TestDAGAllSimplePaths(unittest.TestCase):
         dag = retworkx.PyDAG()
         dag.add_node(0)
         dag.add_node(1)
-        self.assertRaises(Exception, retworkx.dag_all_simple_paths, (dag, 0, 5))
+        self.assertRaises(Exception, retworkx.dag_all_simple_paths,
+                          (dag, 0, 5))
 
     def test_graph_dag_all_simple_paths(self):
         dag = retworkx.PyGraph()
@@ -263,7 +264,8 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         dag = retworkx.PyGraph()
         dag.add_node(0)
         dag.add_node(1)
-        self.assertRaises(Exception, retworkx.graph_all_simple_paths, (dag, 0, 5))
+        self.assertRaises(Exception, retworkx.graph_all_simple_paths,
+                          (dag, 0, 5))
 
     def test_dag_graph_all_simple_paths(self):
         dag = retworkx.PyDAG()
