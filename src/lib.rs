@@ -1204,7 +1204,17 @@ fn graph_all_simple_paths(
     cutoff: Option<usize>,
 ) -> PyResult<Vec<Vec<usize>>> {
     let from_index = NodeIndex::new(from);
+    if !graph.graph.contains_node(from_index) {
+        return Err(InvalidNode::py_err(
+            "The input index for 'from' is not a valid node index",
+        ));
+    }
     let to_index = NodeIndex::new(to);
+    if !graph.graph.contains_node(to_index) {
+        return Err(InvalidNode::py_err(
+            "The input index for 'to' is not a valid node index",
+        ));
+    }
     let min_intermediate_nodes: usize = match min_depth {
         Some(depth) => depth - 2,
         None => 0,
@@ -1234,7 +1244,17 @@ fn dag_all_simple_paths(
     cutoff: Option<usize>,
 ) -> PyResult<Vec<Vec<usize>>> {
     let from_index = NodeIndex::new(from);
+    if !graph.graph.contains_node(from_index) {
+        return Err(InvalidNode::py_err(
+            "The input index for 'from' is not a valid node index",
+        ));
+    }
     let to_index = NodeIndex::new(to);
+    if !graph.graph.contains_node(to_index) {
+        return Err(InvalidNode::py_err(
+            "The input index for 'to' is not a valid node index",
+        ));
+    }
     let min_intermediate_nodes: usize = match min_depth {
         Some(depth) => depth - 2,
         None => 0,
@@ -1280,6 +1300,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
+create_exception!(retworkx, InvalidNode, Exception);
 create_exception!(retworkx, DAGWouldCycle, Exception);
 create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
 create_exception!(retworkx, DAGHasCycle, Exception);

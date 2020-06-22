@@ -16,11 +16,9 @@ import retworkx
 
 
 class TestDAGAllSimplePaths(unittest.TestCase):
-    def test_all_simple_paths(self):
-        dag = retworkx.PyDAG()
-        for i in range(6):
-            dag.add_node(i)
-        edges = [
+    def setUp(self):
+        super().setUp()
+        self.edges = [
             (0, 1),
             (0, 2),
             (0, 3),
@@ -34,8 +32,12 @@ class TestDAGAllSimplePaths(unittest.TestCase):
             (4, 5),
             (5, 2),
             (5, 3)]
-        for edge in edges:
-            dag.add_edge(edge[0], edge[1], None)
+
+    def test_all_simple_paths(self):
+        dag = retworkx.PyDAG()
+        for i in range(6):
+            dag.add_node(i)
+        dag.add_edges_from_no_data(self.edges)
         paths = retworkx.dag_all_simple_paths(dag, 0, 5)
         expected = [
             [0, 1, 2, 3, 4, 5],
@@ -53,22 +55,7 @@ class TestDAGAllSimplePaths(unittest.TestCase):
         dag = retworkx.PyDAG()
         for i in range(6):
             dag.add_node(i)
-        edges = [
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (1, 2),
-            (1, 3),
-            (2, 3),
-            (2, 4),
-            (3, 2),
-            (3, 4),
-            (4, 2),
-            (4, 5),
-            (5, 2),
-            (5, 3)]
-        for edge in edges:
-            dag.add_edge(edge[0], edge[1], None)
+        dag.add_edges_from_no_data(self.edges)
         paths = retworkx.dag_all_simple_paths(dag, 0, 5, min_depth=6)
         expected = [
             [0, 1, 2, 3, 4, 5],
@@ -81,22 +68,7 @@ class TestDAGAllSimplePaths(unittest.TestCase):
         dag = retworkx.PyDAG()
         for i in range(6):
             dag.add_node(i)
-        edges = [
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (1, 2),
-            (1, 3),
-            (2, 3),
-            (2, 4),
-            (3, 2),
-            (3, 4),
-            (4, 2),
-            (4, 5),
-            (5, 2),
-            (5, 3)]
-        for edge in edges:
-            dag.add_edge(edge[0], edge[1], None)
+        dag.add_edges_from_no_data(self.edges)
         paths = retworkx.dag_all_simple_paths(dag, 0, 5, cutoff=4)
         expected = [
             [0, 2, 4, 5],
@@ -109,22 +81,7 @@ class TestDAGAllSimplePaths(unittest.TestCase):
         dag = retworkx.PyDAG()
         for i in range(6):
             dag.add_node(i)
-        edges = [
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (1, 2),
-            (1, 3),
-            (2, 3),
-            (2, 4),
-            (3, 2),
-            (3, 4),
-            (4, 2),
-            (4, 5),
-            (5, 2),
-            (5, 3)]
-        for edge in edges:
-            dag.add_edge(edge[0], edge[1], None)
+        dag.add_edges_from_no_data(self.edges)
         paths = retworkx.dag_all_simple_paths(dag, 0, 5, min_depth=5, cutoff=5)
         expected = [
             [0, 3, 2, 4, 5],
@@ -140,7 +97,13 @@ class TestDAGAllSimplePaths(unittest.TestCase):
         dag = retworkx.PyDAG()
         dag.add_node(0)
         dag.add_node(1)
-        self.assertEqual([], retworkx.dag_all_simple_paths(dag, 0, 5))
+        self.assertEqual([], retworkx.dag_all_simple_paths(dag, 0, 1))
+
+    def test_all_simple_path_invalid_node_index(self):
+        dag = retworkx.PyDAG()
+        dag.add_node(0)
+        dag.add_node(1)
+        self.assertRaises(Exception, retworkx.dag_all_simple_paths, (dag, 0, 5))
 
     def test_graph_dag_all_simple_paths(self):
         dag = retworkx.PyGraph()
@@ -151,11 +114,9 @@ class TestDAGAllSimplePaths(unittest.TestCase):
 
 
 class TestGraphAllSimplePaths(unittest.TestCase):
-    def test_all_simple_paths(self):
-        graph = retworkx.PyGraph()
-        for i in range(6):
-            graph.add_node(i)
-        edges = [
+    def setUp(self):
+        super().setUp()
+        self.edges = [
             (0, 1),
             (0, 2),
             (0, 3),
@@ -169,8 +130,12 @@ class TestGraphAllSimplePaths(unittest.TestCase):
             (4, 5),
             (5, 2),
             (5, 3)]
-        for edge in edges:
-            graph.add_edge(edge[0], edge[1], None)
+
+    def test_all_simple_paths(self):
+        graph = retworkx.PyGraph()
+        for i in range(6):
+            graph.add_node(i)
+        graph.add_edges_from_no_data(self.edges)
         paths = retworkx.graph_all_simple_paths(graph, 0, 5)
         expected = [
             [0, 3, 4, 5],
@@ -224,22 +189,7 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         graph = retworkx.PyGraph()
         for i in range(6):
             graph.add_node(i)
-        edges = [
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (1, 2),
-            (1, 3),
-            (2, 3),
-            (2, 4),
-            (3, 2),
-            (3, 4),
-            (4, 2),
-            (4, 5),
-            (5, 2),
-            (5, 3)]
-        for edge in edges:
-            graph.add_edge(edge[0], edge[1], None)
+        graph.add_edges_from_no_data(self.edges)
         paths = retworkx.graph_all_simple_paths(graph, 0, 5, min_depth=6)
         expected = [
             [0, 3, 1, 2, 4, 5],
@@ -264,22 +214,7 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         graph = retworkx.PyGraph()
         for i in range(6):
             graph.add_node(i)
-        edges = [
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (1, 2),
-            (1, 3),
-            (2, 3),
-            (2, 4),
-            (3, 2),
-            (3, 4),
-            (4, 2),
-            (4, 5),
-            (5, 2),
-            (5, 3)]
-        for edge in edges:
-            graph.add_edge(edge[0], edge[1], None)
+        graph.add_edges_from_no_data(self.edges)
         paths = retworkx.graph_all_simple_paths(graph, 0, 5, cutoff=4)
         expected = [
             [0, 3, 4, 5],
@@ -301,22 +236,7 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         graph = retworkx.PyGraph()
         for i in range(6):
             graph.add_node(i)
-        edges = [
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (1, 2),
-            (1, 3),
-            (2, 3),
-            (2, 4),
-            (3, 2),
-            (3, 4),
-            (4, 2),
-            (4, 5),
-            (5, 2),
-            (5, 3)]
-        for edge in edges:
-            graph.add_edge(edge[0], edge[1], None)
+        graph.add_edges_from_no_data(self.edges)
         paths = retworkx.graph_all_simple_paths(graph, 0, 5, min_depth=4,
                                                 cutoff=4)
         expected = [
@@ -334,10 +254,16 @@ class TestGraphAllSimplePaths(unittest.TestCase):
             self.assertIn(i, paths)
 
     def test_all_simple_path_no_path(self):
-        dag = retworkx.PyDAG()
+        dag = retworkx.PyGraph()
         dag.add_node(0)
         dag.add_node(1)
-        self.assertEqual([], retworkx.dag_all_simple_paths(dag, 0, 5))
+        self.assertEqual([], retworkx.graph_all_simple_paths(dag, 0, 1))
+
+    def test_all_simple_path_invalid_node_index(self):
+        dag = retworkx.PyGraph()
+        dag.add_node(0)
+        dag.add_node(1)
+        self.assertRaises(Exception, retworkx.graph_all_simple_paths, (dag, 0, 5))
 
     def test_dag_graph_all_simple_paths(self):
         dag = retworkx.PyDAG()
