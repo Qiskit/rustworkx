@@ -536,6 +536,14 @@ retworkx API
    :return matrix: The adjacency matrix for the input dag as a numpy array
    :rtype: numpy.ndarray
 
+.. py:function:: graph_greedy_color
+   Color a PyGraph object using a largest_first strategy greedy graph coloring.
+
+   :param PyGraph: The input PyGraph to color
+
+   :returns: A dictionary where keys are node indices and the value is the color
+   :rtype: dictionary
+
 .. py:class:: PyGraph
    A class for creating undirected graphs.
 
