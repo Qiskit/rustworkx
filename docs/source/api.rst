@@ -30,7 +30,7 @@ retworkx API
           When using ``copy.deepcopy()`` or pickling node indexes are not
           guaranteed to be preserved.
 
-    PyDAG, is a subclass of the PyDiGraph class and behaves identically to
+    PyDAG is a subclass of the PyDiGraph class and behaves identically to
     the PyDiGraph class.
 
     .. py:method:: __init__(self, check_cycle=False):
