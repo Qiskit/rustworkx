@@ -21,7 +21,7 @@ mod astar;
 mod dag_isomorphism;
 mod graph;
 
-use std::cmp::Ordering;
+use std::cmp::{Ordering, Reverse};
 use std::collections::{BinaryHeap, HashSet};
 use std::ops::{Index, IndexMut};
 
@@ -962,6 +962,44 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+#[pyfunction]
+fn graph_greedy_color(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<PyObject> {
+    let mut colors: HashMap<usize, usize> = HashMap::new();
+    let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let mut sort_map: HashMap<NodeIndex, usize> = HashMap::new();
+    for k in node_vec.iter() {
+        sort_map.insert(*k, graph.graph.edges(*k).count());
+    }
+    node_vec.sort_by_key(|k| Reverse(sort_map.get(k)));
+    for u_index in node_vec {
+        let mut neighbor_colors: HashSet<usize> = HashSet::new();
+        for edge in graph.graph.edges(u_index) {
+            let target = edge.target().index();
+            let existing_color = match colors.get(&target) {
+                Some(node) => node,
+                None => continue,
+            };
+            neighbor_colors.insert(*existing_color);
+        }
+        let mut count: usize = 0;
+        loop {
+            if !neighbor_colors.contains(&count) {
+                break;
+            }
+            count += 1;
+        }
+        colors.insert(u_index.index(), count);
+    }
+    let out_dict = PyDict::new(py);
+    for (index, color) in colors {
+        out_dict.set_item(index, color)?;
+    }
+    Ok(out_dict.into())
+}
+
 // Find the shortest path lengths between all pairs of nodes using Floyd's
 // algorithm
 // Note: Edge weights are assumed to be 1
@@ -1320,6 +1358,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_astar_shortest_path))?;
+    m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_class::<PyDAG>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
