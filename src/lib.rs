@@ -1235,6 +1235,86 @@ fn graph_adjacency_matrix(
 }
 
 #[pyfunction]
+fn graph_all_simple_paths(
+    graph: &graph::PyGraph,
+    from: usize,
+    to: usize,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<Vec<Vec<usize>>> {
+    let from_index = NodeIndex::new(from);
+    if !graph.graph.contains_node(from_index) {
+        return Err(InvalidNode::py_err(
+            "The input index for 'from' is not a valid node index",
+        ));
+    }
+    let to_index = NodeIndex::new(to);
+    if !graph.graph.contains_node(to_index) {
+        return Err(InvalidNode::py_err(
+            "The input index for 'to' is not a valid node index",
+        ));
+    }
+    let min_intermediate_nodes: usize = match min_depth {
+        Some(depth) => depth - 2,
+        None => 0,
+    };
+    let cutoff_petgraph: Option<usize> = match cutoff {
+        Some(depth) => Some(depth - 2),
+        None => None,
+    };
+    let result: Vec<Vec<usize>> = algo::all_simple_paths(
+        graph,
+        from_index,
+        to_index,
+        min_intermediate_nodes,
+        cutoff_petgraph,
+    )
+    .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+    .collect();
+    Ok(result)
+}
+
+#[pyfunction]
+fn dag_all_simple_paths(
+    graph: &PyDAG,
+    from: usize,
+    to: usize,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<Vec<Vec<usize>>> {
+    let from_index = NodeIndex::new(from);
+    if !graph.graph.contains_node(from_index) {
+        return Err(InvalidNode::py_err(
+            "The input index for 'from' is not a valid node index",
+        ));
+    }
+    let to_index = NodeIndex::new(to);
+    if !graph.graph.contains_node(to_index) {
+        return Err(InvalidNode::py_err(
+            "The input index for 'to' is not a valid node index",
+        ));
+    }
+    let min_intermediate_nodes: usize = match min_depth {
+        Some(depth) => depth - 2,
+        None => 0,
+    };
+    let cutoff_petgraph: Option<usize> = match cutoff {
+        Some(depth) => Some(depth - 2),
+        None => None,
+    };
+    let result: Vec<Vec<usize>> = algo::all_simple_paths(
+        graph,
+        from_index,
+        to_index,
+        min_intermediate_nodes,
+        cutoff_petgraph,
+    )
+    .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+    .collect();
+    Ok(result)
+}
+
+#[pyfunction]
 fn graph_astar_shortest_path(
     py: Python,
     graph: &graph::PyGraph,
@@ -1356,6 +1436,8 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(dag_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(dag_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
@@ -1364,6 +1446,7 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
+create_exception!(retworkx, InvalidNode, Exception);
 create_exception!(retworkx, DAGWouldCycle, Exception);
 create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
 create_exception!(retworkx, DAGHasCycle, Exception);

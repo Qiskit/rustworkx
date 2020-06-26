@@ -536,6 +536,42 @@ retworkx API
    :return matrix: The adjacency matrix for the input dag as a numpy array
    :rtype: numpy.ndarray
 
+.. py:function:: graph_all_simple_paths(graph, from, to, min_depth=None, cutoff=None)
+   Return all simple paths between 2 nodes in a PyGraph object
+
+   A simple path is a path with no repeated nodes.
+
+   :param PyGraph graph: The graph to find the path in
+   :param int from: The node index to find the paths from
+   :param int to: The node index to find the paths to
+   :param int min_depth: The minimum depth of the path to include in the output
+       list of paths. By default all paths are included regardless of depth,
+       setting to 0 will behave like the default.
+   :param int cutoff: The maximum depth of path to include in the output list
+       of paths. By default includes all paths regardless of depth, setting to
+       0 will behave like default.
+
+   :returns paths: A list of lists where each inner list is a path
+   :rtype: list
+
+.. py:function:: dag_all_simple_paths(graph, from, to, min_depth=None, cutoff=None)
+   Return all simple paths between 2 nodes in a PyDAG object
+
+   A simple path is a path with no repeated nodes.
+
+   :param PyDAG graph: The graph to find the path in
+   :param int from: The node index to find the paths from
+   :param int to: The node index to find the paths to
+   :param int min_depth: The minimum depth of the path to include in the output
+       list of paths. By default all paths are included regardless of depth,
+       sett to 0 will behave like the default.
+   :param int cutoff: The maximum depth of path to include in the output list
+       of paths. By default includes all paths regardless of depth, setting to
+       0 will behave like default.
+
+   :returns paths: A list of lists where each inner list is a path
+   :rtype: list
+
 .. py:function:: graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
    Compute the A* shortest path for a PyGraph
 
