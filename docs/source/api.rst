@@ -539,6 +539,94 @@ retworkx API
    :return matrix: The adjacency matrix for the input dag as a numpy array
    :rtype: numpy.ndarray
 
+.. py:function:: graph_all_simple_paths(graph, from, to, min_depth=None, cutoff=None)
+   Return all simple paths between 2 nodes in a PyGraph object
+
+   A simple path is a path with no repeated nodes.
+
+   :param PyGraph graph: The graph to find the path in
+   :param int from: The node index to find the paths from
+   :param int to: The node index to find the paths to
+   :param int min_depth: The minimum depth of the path to include in the output
+       list of paths. By default all paths are included regardless of depth,
+       setting to 0 will behave like the default.
+   :param int cutoff: The maximum depth of path to include in the output list
+       of paths. By default includes all paths regardless of depth, setting to
+       0 will behave like default.
+
+   :returns paths: A list of lists where each inner list is a path
+   :rtype: list
+
+.. py:function:: dag_all_simple_paths(graph, from, to, min_depth=None, cutoff=None)
+   Return all simple paths between 2 nodes in a PyDAG object
+
+   A simple path is a path with no repeated nodes.
+
+   :param PyDAG graph: The graph to find the path in
+   :param int from: The node index to find the paths from
+   :param int to: The node index to find the paths to
+   :param int min_depth: The minimum depth of the path to include in the output
+       list of paths. By default all paths are included regardless of depth,
+       sett to 0 will behave like the default.
+   :param int cutoff: The maximum depth of path to include in the output list
+       of paths. By default includes all paths regardless of depth, setting to
+       0 will behave like default.
+
+   :returns paths: A list of lists where each inner list is a path
+   :rtype: list
+
+.. py:function:: graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+   Compute the A* shortest path for a PyGraph
+
+  :param PyGraph graph: The input graph to use
+  :param int node: The node index to compute the path from
+  :param goal_fn: A python callable that will take in 1 parameter, a node's data
+      object and will return a boolean which will be True if it is the finish
+      node.
+  :param edge_cost_fn: A python callable that will take in 1 parameter, an edge's
+      data object and will return a float that represents the cost of that
+      edge. It must be non-negative.
+  :param estimate_cost_fn: A python callable that will take in 1 parameter, a
+      node's data object and will return a float which represents the estimated
+      cost for the next node. The return must be non-negative. For the
+      algorithm to find the actual shortest path, it should be admissible,
+      meaning that it should never overestimate the actual cost to get to the
+      nearest goal node.
+
+  :return path: The computed shortest path between node and finish as a list
+      of node indices.
+  :rtype: list
+
+.. py:function:: dag_astar_shortest_path(dag, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+   Compute the A* shortest path for a PyDAG
+
+  :param PyDAG graph: The input graph to use
+  :param int node: The node index to compute the path from
+  :param goal_fn: A python callable that will take in 1 parameter, a node's data
+      object and will return a boolean which will be True if it is the finish
+      node.
+  :param edge_cost_fn: A python callable that will take in 1 parameter, an edge's
+      data object and will return a float that represents the cost of that
+      edge. It must be non-negative.
+  :param estimate_cost_fn: A python callable that will take in 1 parameter, a
+      node's data object and will return a float which represents the estimated
+      cost for the next node. The return must be non-negative. For the
+      algorithm to find the actual shortest path, it should be admissible,
+      meaning that it should never overestimate the actual cost to get to the
+      nearest goal node.
+
+  :return path: The computed shortest path between node and finish as a list
+      of node indices.
+  :rtype: list
+
+.. py:function:: graph_greedy_color
+   Color a PyGraph object using a largest_first strategy greedy graph coloring.
+
+   :param PyGraph: The input PyGraph to color
+
+   :returns: A dictionary where keys are node indices and the value is the color
+   :rtype: dictionary
+
 .. py:class:: PyGraph
    A class for creating undirected graphs.
 

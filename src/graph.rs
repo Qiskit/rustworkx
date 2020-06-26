@@ -24,8 +24,9 @@ use petgraph::prelude::*;
 use petgraph::stable_graph::StableUnGraph;
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoNeighbors, IntoNodeIdentifiers, IntoNodeReferences,
-    NodeCompactIndexable, NodeCount, NodeIndexable, Visitable,
+    IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers,
+    IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeIndexable,
+    Visitable,
 };
 
 #[pyclass(module = "retworkx")]
@@ -98,6 +99,17 @@ impl<'a> IntoNeighbors for &'a PyGraph {
     type Neighbors = petgraph::stable_graph::Neighbors<'a, PyObject>;
     fn neighbors(self, n: NodeIndex) -> Self::Neighbors {
         self.graph.neighbors(n)
+    }
+}
+
+impl<'a> IntoNeighborsDirected for &'a PyGraph {
+    type NeighborsDirected = petgraph::stable_graph::Neighbors<'a, PyObject>;
+    fn neighbors_directed(
+        self,
+        n: NodeIndex,
+        d: petgraph::Direction,
+    ) -> Self::Neighbors {
+        self.graph.neighbors_directed(n, d)
     }
 }
 
