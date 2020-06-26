@@ -17,10 +17,11 @@ extern crate numpy;
 extern crate petgraph;
 extern crate pyo3;
 
+mod astar;
 mod dag_isomorphism;
 mod graph;
 
-use std::cmp::Ordering;
+use std::cmp::{Ordering, Reverse};
 use std::collections::{BinaryHeap, HashSet};
 use std::ops::{Index, IndexMut};
 
@@ -961,6 +962,44 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+#[pyfunction]
+fn graph_greedy_color(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<PyObject> {
+    let mut colors: HashMap<usize, usize> = HashMap::new();
+    let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let mut sort_map: HashMap<NodeIndex, usize> = HashMap::new();
+    for k in node_vec.iter() {
+        sort_map.insert(*k, graph.graph.edges(*k).count());
+    }
+    node_vec.sort_by_key(|k| Reverse(sort_map.get(k)));
+    for u_index in node_vec {
+        let mut neighbor_colors: HashSet<usize> = HashSet::new();
+        for edge in graph.graph.edges(u_index) {
+            let target = edge.target().index();
+            let existing_color = match colors.get(&target) {
+                Some(node) => node,
+                None => continue,
+            };
+            neighbor_colors.insert(*existing_color);
+        }
+        let mut count: usize = 0;
+        loop {
+            if !neighbor_colors.contains(&count) {
+                break;
+            }
+            count += 1;
+        }
+        colors.insert(u_index.index(), count);
+    }
+    let out_dict = PyDict::new(py);
+    for (index, color) in colors {
+        out_dict.set_item(index, color)?;
+    }
+    Ok(out_dict.into())
+}
+
 // Find the shortest path lengths between all pairs of nodes using Floyd's
 // algorithm
 // Note: Edge weights are assumed to be 1
@@ -1273,6 +1312,109 @@ fn dag_all_simple_paths(
     .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
     .collect();
     Ok(result)
+
+#[pyfunction]
+fn graph_astar_shortest_path(
+    py: Python,
+    graph: &graph::PyGraph,
+    node: usize,
+    goal_fn: PyObject,
+    edge_cost_fn: PyObject,
+    estimate_cost_fn: PyObject,
+) -> PyResult<PyObject> {
+    let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
+        let res = goal_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: bool = raw.extract(py)?;
+        Ok(output)
+    };
+
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: f64 = raw.extract(py)?;
+        Ok(output)
+    };
+
+    let estimate_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = estimate_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: f64 = raw.extract(py)?;
+        Ok(output)
+    };
+    let start = NodeIndex::new(node);
+
+    let astar_res = astar::astar(
+        graph,
+        start,
+        |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
+        |e| edge_cost_callable(e.weight()),
+        |estimate| {
+            estimate_cost_callable(graph.graph.node_weight(estimate).unwrap())
+        },
+    )?;
+    let path = match astar_res {
+        Some(path) => path,
+        None => {
+            return Err(NoPathFound::py_err(
+                "No path found that satisfies goal_fn",
+            ))
+        }
+    };
+    let out_path: Vec<usize> = path.1.into_iter().map(|x| x.index()).collect();
+    Ok(out_path.to_object(py))
+}
+
+#[pyfunction]
+fn dag_astar_shortest_path(
+    py: Python,
+    graph: &PyDAG,
+    node: usize,
+    goal_fn: PyObject,
+    edge_cost_fn: PyObject,
+    estimate_cost_fn: PyObject,
+) -> PyResult<PyObject> {
+    let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
+        let res = goal_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: bool = raw.extract(py)?;
+        Ok(output)
+    };
+
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: f64 = raw.extract(py)?;
+        Ok(output)
+    };
+
+    let estimate_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = estimate_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: f64 = raw.extract(py)?;
+        Ok(output)
+    };
+    let start = NodeIndex::new(node);
+
+    let astar_res = astar::astar(
+        graph,
+        start,
+        |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
+        |e| edge_cost_callable(e.weight()),
+        |estimate| {
+            estimate_cost_callable(graph.graph.node_weight(estimate).unwrap())
+        },
+    )?;
+    let path = match astar_res {
+        Some(path) => path,
+        None => {
+            return Err(NoPathFound::py_err(
+                "No path found that satisfies goal_fn",
+            ))
+        }
+    };
+    let out_path: Vec<usize> = path.1.into_iter().map(|x| x.index()).collect();
+    Ok(out_path.to_object(py))
 }
 
 #[pymodule]
@@ -1295,6 +1437,9 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(dag_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
+    m.add_wrapped(wrap_pyfunction!(dag_astar_shortest_path))?;
+    m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_class::<PyDAG>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
@@ -1305,6 +1450,7 @@ create_exception!(retworkx, DAGWouldCycle, Exception);
 create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
 create_exception!(retworkx, DAGHasCycle, Exception);
 create_exception!(retworkx, NoSuitableNeighbors, Exception);
+create_exception!(retworkx, NoPathFound, Exception);
 
 #[cfg(test)]
 mod tests {
