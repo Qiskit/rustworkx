@@ -557,12 +557,12 @@ retworkx API
    :returns paths: A list of lists where each inner list is a path
    :rtype: list
 
-.. py:function:: dag_all_simple_paths(graph, from, to, min_depth=None, cutoff=None)
-   Return all simple paths between 2 nodes in a PyDAG object
+.. py:function:: digraph_all_simple_paths(graph, from, to, min_depth=None, cutoff=None)
+   Return all simple paths between 2 nodes in a PyDiGraph object
 
    A simple path is a path with no repeated nodes.
 
-   :param PyDAG graph: The graph to find the path in
+   :param PyDiGraph graph: The graph to find the path in
    :param int from: The node index to find the paths from
    :param int to: The node index to find the paths to
    :param int min_depth: The minimum depth of the path to include in the output
@@ -597,10 +597,10 @@ retworkx API
       of node indices.
   :rtype: list
 
-.. py:function:: dag_astar_shortest_path(dag, node, goal_fn, edge_cost_fn, estimate_cost_fn):
-   Compute the A* shortest path for a PyDAG
+.. py:function:: digraph_astar_shortest_path(dag, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+   Compute the A* shortest path for a PyDiGraph
 
-  :param PyDAG graph: The input graph to use
+  :param PyDigraph graph: The input graph to use
   :param int node: The node index to compute the path from
   :param goal_fn: A python callable that will take in 1 parameter, a node's data
       object and will return a boolean which will be True if it is the finish
