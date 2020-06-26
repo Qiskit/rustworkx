@@ -11,12 +11,12 @@
 // under the License.
 
 // This module is a forked version of petgraph's isomorphism module @ 0.5.0.
-// It has then been modified to function with PyDAG inputs instead of Graph.
+// It has then been modified to function with PyDiGraph inputs instead of Graph.
 
 use fixedbitset::FixedBitSet;
 use std::marker;
 
-use super::PyDAG;
+use super::digraph::PyDiGraph;
 
 use pyo3::prelude::*;
 
@@ -46,7 +46,7 @@ struct Vf2State {
 }
 
 impl Vf2State {
-    pub fn new(dag: &PyDAG) -> Self {
+    pub fn new(dag: &PyDiGraph) -> Self {
         let g = &dag.graph;
         let c0 = g.node_count();
         let mut state = Vf2State {
@@ -77,7 +77,7 @@ impl Vf2State {
         &mut self,
         from: NodeIndex,
         to: NodeIndex,
-        dag: &PyDAG,
+        dag: &PyDiGraph,
     ) {
         let g = &dag.graph;
         self.generation += 1;
@@ -103,7 +103,7 @@ impl Vf2State {
     }
 
     /// Restore the state to before the last added mapping
-    pub fn pop_mapping(&mut self, from: NodeIndex, dag: &PyDAG) {
+    pub fn pop_mapping(&mut self, from: NodeIndex, dag: &PyDiGraph) {
         let g = &dag.graph;
         let s = self.generation;
         self.generation -= 1;
@@ -171,7 +171,7 @@ impl Vf2State {
 ///
 /// * Luigi P. Cordella, Pasquale Foggia, Carlo Sansone, Mario Vento;
 ///   *A (Sub)Graph Isomorphism Algorithm for Matching Large Graphs*
-pub fn is_isomorphic(dag0: &PyDAG, dag1: &PyDAG) -> PyResult<bool> {
+pub fn is_isomorphic(dag0: &PyDiGraph, dag1: &PyDiGraph) -> PyResult<bool> {
     let g0 = &dag0.graph;
     let g1 = &dag1.graph;
     if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
@@ -197,8 +197,8 @@ pub fn is_isomorphic(dag0: &PyDAG, dag1: &PyDAG) -> PyResult<bool> {
 ///
 /// The graphs should not be multigraphs.
 pub fn is_isomorphic_matching<F, G>(
-    dag0: &PyDAG,
-    dag1: &PyDAG,
+    dag0: &PyDiGraph,
+    dag1: &PyDiGraph,
     mut node_match: F,
     mut edge_match: G,
 ) -> PyResult<bool>
@@ -254,8 +254,8 @@ where
 /// Return Some(bool) if isomorphism is decided, else None.
 fn try_match<F, G>(
     mut st: &mut [Vf2State; 2],
-    dag0: &PyDAG,
-    dag1: &PyDAG,
+    dag0: &PyDiGraph,
+    dag1: &PyDiGraph,
     node_match: &mut F,
     edge_match: &mut G,
 ) -> PyResult<Option<bool>>

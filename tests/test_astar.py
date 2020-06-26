@@ -15,7 +15,7 @@ import unittest
 import retworkx
 
 
-class TestAstarDAG(unittest.TestCase):
+class TestAstarDigraph(unittest.TestCase):
 
     def test_astar_null_heuristic(self):
         g = retworkx.PyDAG()
@@ -34,10 +34,10 @@ class TestAstarDAG(unittest.TestCase):
         g.add_edge(b, f, 15)
         g.add_edge(c, f, 11)
         g.add_edge(e, f, 6)
-        path = retworkx.dag_astar_shortest_path(g, a,
-                                                lambda goal: goal == "E",
-                                                lambda x: float(x),
-                                                lambda y: 0)
+        path = retworkx.digraph_astar_shortest_path(g, a,
+                                                    lambda goal: goal == "E",
+                                                    lambda x: float(x),
+                                                    lambda y: 0)
         expected = [a, d, e]
         self.assertEqual(expected, path)
 
@@ -75,21 +75,21 @@ class TestAstarDAG(unittest.TestCase):
         ]
 
         for index, end in enumerate([a, b, c, d, e, f]):
-            path = retworkx.dag_astar_shortest_path(
+            path = retworkx.digraph_astar_shortest_path(
                 g, a, lambda finish: finish_func(end, finish),
                 lambda x: float(x), heuristic_func)
             self.assertEqual(expected[index], path)
 
-        self.assertRaises(Exception, retworkx.dag_astar_shortest_path,
+        self.assertRaises(Exception, retworkx.digraph_astar_shortest_path,
                           (g, a, lambda finish: finish_func(no_path, finish),
                            lambda x: float(x), heuristic_func))
 
-    def test_astar_dag_with_graph_input(self):
+    def test_astar_digraph_with_graph_input(self):
         g = retworkx.PyGraph()
         g.add_node(0)
         with self.assertRaises(TypeError):
-            retworkx.dag_astar_shortest_path(g, 0, lambda x: x,
-                                             lambda y: 1, lambda z: 0)
+            retworkx.digraph_astar_shortest_path(g, 0, lambda x: x,
+                                                 lambda y: 1, lambda z: 0)
 
 
 class TestAstarGraph(unittest.TestCase):
@@ -161,7 +161,7 @@ class TestAstarGraph(unittest.TestCase):
                           (g, a, lambda finish: finish_func(no_path, finish),
                            lambda x: float(x), heuristic_func))
 
-    def test_astar_graph_with_dag_input(self):
+    def test_astar_graph_with_digraph_input(self):
         g = retworkx.PyDAG()
         g.add_node(0)
         with self.assertRaises(TypeError):
