@@ -7,6 +7,7 @@ dist/
 build/
 *egg*
 docs/build/
+docs/build/stubs
 .tox/
 retworkx/*.so
 retworkx/*pyd
