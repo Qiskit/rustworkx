@@ -1312,6 +1312,7 @@ fn dag_all_simple_paths(
     .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
     .collect();
     Ok(result)
+}
 
 #[pyfunction]
 fn graph_astar_shortest_path(
