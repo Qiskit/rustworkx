@@ -990,7 +990,7 @@ fn graph_astar_shortest_path(
 
 /// Compute the A* shortest path for a PyDiGraph
 ///
-/// :param PyDigraph graph: The input graph to use
+/// :param PyDiGraph graph: The input graph to use
 /// :param int node: The node index to compute the path from
 /// :param goal_fn: A python callable that will take in 1 parameter, a node's
 ///     data object and will return a boolean which will be True if it is the

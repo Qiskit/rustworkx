@@ -7,18 +7,19 @@ Retworkx API Reference
 Graph Classes
 -------------
 
-.. toctree::
-    :maxdepth: 2
 
-    pygraph
-    pydigraph
-    pydag
+.. autosummary::
+   :toctree: stubs
+
+    retworkx.PyGraph
+    retworkx.PyDiGraph
+    retworkx.PyDAG
 
 Algorithm Functions
 -------------------
 
 .. autosummary::
-   :toctree: ../stubs/
+   :toctree: stubs
 
    retworkx.bfs_successors
    retworkx.dag_longest_path
