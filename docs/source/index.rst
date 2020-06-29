@@ -1,5 +1,6 @@
-retworkx
-========
+######################
+retworkx Documentation
+######################
 
 Contents:
 
@@ -7,4 +8,9 @@ Contents:
    :maxdepth: 2
 
    README
-   api
+   Retworkx API <api>
+
+.. Hiding - Indices and tables
+   :ref:`genindex`
+   :ref:`modindex`
+   :ref:`search`

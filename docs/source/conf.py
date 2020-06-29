@@ -25,16 +25,40 @@ import sys, os
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.extlinks',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
               'm2r',
              ]
+html_static_path = ['_static']
+templates_path = ['_templates']
+html_css_files = ['style.css', 'custom.css']
+
+autosummary_generate = True
+autodoc_default_options = {
+    'inherited-members': None,
+}
+autoclass_content = 'both'
+
+# The name of the Pygments (syntax highlighting) style to use.
+pygments_style = 'colorful'
+
+# A boolean that decides whether module names are prepended to all object names
+# (for object types where a “module” of some kind is defined), e.g. for
+# py:function directives.
+add_module_names = False
+
+# A list of prefixes that are ignored for sorting the Python module index
+# (e.g., if this is set to ['foo.'], then foo.bar is shown under B, not F).
+# This can be handy if you document a project that consists of a single
+# package. Works only for the HTML builder currently.
+modindex_common_prefix = ['retworkx.']
+
 
 # Enable todos in the output
 todo_include_todos = True
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = ['.rst', '.md']
@@ -97,7 +121,15 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'sphinx_rtd_theme'
+
+html_theme_options = {
+    'logo_only': False,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': True,
+    'style_nav_header_background': '#212121',
+}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
