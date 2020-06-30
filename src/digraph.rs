@@ -44,7 +44,37 @@ use super::{
     NoSuitableNeighbors,
 };
 
+/// A class for creating directed graphs
+///
+/// The PyDigraph class is constructed using the Rust library
+/// `petgraph <https://github.com/petgraph/petgraph>`__ around the
+/// ``StableGraph`` type. The limitations and quirks with this library and
+/// type dictate how this operates. The biggest thing to be aware of when using
+/// the PyDiGraph class is that an integer node and edge index is used for
+/// accessing elements on the graph, not the data/weight of nodes and edges. By
+/// default the PyDiGraph realtime cycle checking is disabled for performance,
+/// however you can opt-in to having the PyDiGraph class ensure that no cycles
+/// are added by setting the ``check_cycle`` attribute to True. For example::
+///
+///     import retworkx
+///     dag = retworkx.PyDiGraph()
+///     dag.check_cycle = True
+///
+/// or at object creation::
+///
+///     import retworkx
+///     dag = retworkx.PyDiGraph(check_cycle=True)
+///
+/// With check_cycle set to true any calls to :meth:`PyDiGraph.add_edge` will
+/// ensure that no cycles are added, ensuring that the PyDiGraph class truly
+/// represents a directed acyclic graph.
+///
+///  .. note::
+///        When using ``copy.deepcopy()`` or pickling node indexes are not
+///        guaranteed to be preserved.
+///
 #[pyclass(module = "retworkx", subclass)]
+#[text_signature = "(/, check_cycle=False)"]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
     cycle_state: algo::DfsSpace<
@@ -346,6 +376,10 @@ impl PyDiGraph {
         Ok(())
     }
 
+    /// Return a list of all edge data.
+    ///
+    /// :returns: A list of all the edge data objects in the graph
+    /// :rtype: list
     pub fn edges(&self, py: Python) -> PyObject {
         let raw_edges = self.graph.edge_indices();
         let mut out: Vec<&PyObject> = Vec::new();
@@ -355,6 +389,10 @@ impl PyDiGraph {
         PyList::new(py, out).into()
     }
 
+    /// Return a list of all node data.
+    ///
+    /// :returns: A list of all the node data objects in the graph
+    /// :rtype: list
     pub fn nodes(&self, py: Python) -> PyObject {
         let raw_nodes = self.graph.node_indices();
         let mut out: Vec<&PyObject> = Vec::new();
@@ -364,6 +402,10 @@ impl PyDiGraph {
         PyList::new(py, out).into()
     }
 
+    /// Return a list of all node indexes.
+    ///
+    /// :returns: A list of all the node indexes in the graph
+    /// :rtype: list
     pub fn node_indexes(&self, py: Python) -> PyObject {
         let mut out_list: Vec<usize> = Vec::new();
         for node_index in self.graph.node_indices() {
@@ -372,12 +414,27 @@ impl PyDiGraph {
         PyList::new(py, out_list).into()
     }
 
+    /// Return True if there is an edge from node_a to node_b.
+    ///
+    /// :param int node_a: The source node index to check for an edge
+    /// :param int node_b: The destination node index to check for an edge
+    ///
+    /// :returns: True if there is an edge false if there is no edge
+    /// :rtype: bool
+    #[text_signature = "(node_a, node_b, /)"]
     pub fn has_edge(&self, node_a: usize, node_b: usize) -> bool {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
         self.graph.find_edge(index_a, index_b).is_some()
     }
 
+    /// Return a list of all the node successor data.
+    ///
+    /// :param int node: The index for the node to get the successors for
+    ///
+    /// :returns: A list of the node data for all the child neighbor nodes
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
     pub fn successors(&self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let children = self
@@ -394,6 +451,13 @@ impl PyDiGraph {
         Ok(PyList::new(py, succesors).into())
     }
 
+    /// Return a list of all the node predecessor data.
+    ///
+    /// :param int node: The index for the node to get the predecessors for
+    ///
+    /// :returns: A list of the node data for all the parent neighbor nodes
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
     pub fn predecessors(&self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let parents = self
@@ -410,6 +474,14 @@ impl PyDiGraph {
         Ok(PyList::new(py, predec).into())
     }
 
+    /// Return the edge data for an edge between 2 nodes.
+    ///
+    /// :param int node_a: The index for the first node
+    /// :param int node_b: The index for the second node
+    ///
+    /// :returns: The data object set for the edge
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[text_signature = "(node_a, node_b)"]
     pub fn get_edge_data(
         &self,
         node_a: usize,
@@ -430,6 +502,13 @@ impl PyDiGraph {
         Ok(data)
     }
 
+    /// Return the node data for a given node index
+    ///
+    /// :param int node: The index for the node
+    ///
+    /// :returns: The data object set for that node
+    /// :raises IndexError: when an invalid node index is provided
+    #[text_signature = "(node)"]
     pub fn get_node_data(&self, node: usize) -> PyResult<&PyObject> {
         let index = NodeIndex::new(node);
         let node = match self.graph.node_weight(index) {
@@ -439,6 +518,15 @@ impl PyDiGraph {
         Ok(node)
     }
 
+    /// Return the edge data for all the edges between 2 nodes.
+    ///
+    /// :param int node_a: The index for the first node
+    /// :param int node_b: The index for the second node
+
+    /// :returns: A list with all the data objects for the edges between nodes
+    /// :rtype: list
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[text_signature = "(node_a, node_b, /)"]
     pub fn get_all_edge_data(
         &self,
         py: Python,
@@ -463,6 +551,10 @@ impl PyDiGraph {
         }
     }
 
+    /// Remove a node from the graph.
+    ///
+    /// :param int node: The index of the node to remove
+    #[text_signature = "(node, /)"]
     pub fn remove_node(&mut self, node: usize) -> PyResult<()> {
         let index = NodeIndex::new(node);
         self.graph.remove_node(index);
@@ -470,6 +562,23 @@ impl PyDiGraph {
         Ok(())
     }
 
+    /// Add an edge between 2 nodes.
+    ///
+    /// Use add_child() or add_parent() to create a node with an edge at the
+    /// same time as an edge for better performance. Using this method will
+    /// enable adding duplicate edges between nodes if the ``check_cycle``
+    /// attribute is set to ``True``.
+    ///
+    /// :param int parent: Index of the parent node
+    /// :param int child: Index of the child node
+    /// :param edge: The object to set as the data for the edge. It can be any
+    ///     python object.
+    ///
+    /// :returns: The edge index of the created edge
+    /// :rtype: int
+    ///
+    /// :raises: When the new edge will create a cycle
+    #[text_signature = "(parent, child, edge, /)"]
     pub fn add_edge(
         &mut self,
         parent: usize,
@@ -482,6 +591,16 @@ impl PyDiGraph {
         Ok(out_index)
     }
 
+    /// Add new edges to the dag.
+    ///
+    /// :param list obj_list: A list of tuples of the form
+    ///     ``(parent, child, obj)`` to attach to the graph. ``parent`` and
+    ///     ``child`` are integer indexes describing where an edge should be
+    ///     added, and obj is the python object for the edge data.
+    ///
+    /// :returns: A list of int indices of the newly created edges
+    /// :rtype: list
+    #[text_signature = "(obj_list, /)"]
     pub fn add_edges_from(
         &mut self,
         obj_list: Vec<(usize, usize, PyObject)>,
@@ -496,6 +615,17 @@ impl PyDiGraph {
         Ok(out_list)
     }
 
+    /// Add new edges to the dag without python data.
+    ///
+    /// :param list obj_list: A list of tuples of the form
+    ///     ``(parent, child)`` to attach to the graph. ``parent`` and
+    ///     ``child`` are integer indexes describing where an edge should be
+    ///     added. Unlike :meth:`add_edges_from` there is no data payload and
+    ///     when the edge is created None will be used.
+    ///
+    /// :returns: A list of int indices of the newly created edges
+    /// :rtype: list
+    #[text_signature = "(obj_list, /)"]
     pub fn add_edges_from_no_data(
         &mut self,
         py: Python,
@@ -511,6 +641,17 @@ impl PyDiGraph {
         Ok(out_list)
     }
 
+    /// Remove an edge between 2 nodes.
+    ///
+    /// Note if there are multiple edges between the specified nodes only one
+    /// will be removed.
+    ///
+    /// :param int parent: The index for the parent node.
+    /// :param int child: The index of the child node.
+    ///
+    /// :raises NoEdgeBetweenNodes: If there are no edges between the nodes
+    ///     specified
+    #[text_signature = "(parent, child, /)"]
     pub fn remove_edge(&mut self, parent: usize, child: usize) -> PyResult<()> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
@@ -526,17 +667,40 @@ impl PyDiGraph {
         Ok(())
     }
 
+    /// Remove an edge identified by the provided index
+    ///
+    /// :param int edge: The index of the edge to remove
+    #[text_signature = "(edge, /)"]
     pub fn remove_edge_from_index(&mut self, edge: usize) -> PyResult<()> {
         let edge_index = EdgeIndex::new(edge);
         self.graph.remove_edge(edge_index);
         Ok(())
     }
 
+    /// Add a new node to the graph.
+    ///
+    /// :param obj: The python object to attach to the node
+    ///
+    /// :returns: The index of the newly created node
+    /// :rtype: int
+    #[text_signature = "(obj, /)"]
     pub fn add_node(&mut self, obj: PyObject) -> PyResult<usize> {
         let index = self.graph.add_node(obj);
         Ok(index.index())
     }
 
+    /// Add a new child node to the graph.
+    ///
+    /// This will create a new node on the graph and add an edge from the parent
+    /// to that new node.
+    ///
+    /// :param int parent: The index for the parent node
+    /// :param obj: The python object to attach to the node
+    /// :param edge: The python object to attach to the edge
+    ///
+    /// :returns: The index of the newly created child node
+    /// :rtype: int
+    #[text_signature = "(parent, obj, edge, /)"]
     pub fn add_child(
         &mut self,
         parent: usize,
@@ -549,6 +713,18 @@ impl PyDiGraph {
         Ok(child_node.index())
     }
 
+    /// Add a new parent node to the dag.
+    ///
+    /// This create a new node on the dag and add an edge to the child from
+    /// that new node
+    ///
+    /// :param int child: The index of the child node
+    /// :param obj: The python object to attach to the node
+    /// :param edge: The python object to attach to the edge
+    ///
+    /// :returns index: The index of the newly created parent node
+    /// :rtype: int
+    #[text_signature = "(child, obj, edge, /)"]
     pub fn add_parent(
         &mut self,
         child: usize,
@@ -561,6 +737,21 @@ impl PyDiGraph {
         Ok(parent_node.index())
     }
 
+    /// Get the index and data for the neighbors of a node.
+    ///
+    /// This will return a dictionary where the keys are the node indexes of
+    /// the adjacent nodes (inbound or outbound) and the value is the edge dat
+    /// objects between that adjacent node and the provided node. Note in
+    /// the case of a multigraph only one edge will be used, not all of the
+    /// edges between two node.
+    ///
+    /// :param int node: The index of the node to get the neighbors
+    ///
+    /// :returns: A dictionary where the keys are node indexes and the value
+    ///     is the edge data object for all nodes that share an edge with the
+    ///     specified node.
+    /// :rtype: dict
+    #[text_signature = "(node, /)"]
     pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.neighbors(index);
@@ -577,6 +768,23 @@ impl PyDiGraph {
         Ok(out_dict.into())
     }
 
+    /// Get the index and data for either the parent or children of a node.
+    ///
+    /// This will return a dictionary where the keys are the node indexes of
+    /// the adjacent nodes (inbound or outbound as specified) and the value
+    /// is the edge data objects for the edges between that adjacent node
+    /// and the provided node. Note in the case of a multigraph only one edge
+    /// one edge will be used, not all of the edges between two node.
+    ///
+    /// :param int node: The index of the node to get the neighbors
+    /// :param bool direction: The direction to use for finding nodes,
+    ///     True means inbound edges and False means outbound edges.
+    ///
+    /// :returns: A dictionary where the keys are node indexes and
+    ///     the value is the edge data object for all nodes that share an
+    ///     edge with the specified node.
+    /// :rtype: dict
+    #[text_signature = "(node, direction, /)"]
     pub fn adj_direction(
         &mut self,
         py: Python,
@@ -617,6 +825,18 @@ impl PyDiGraph {
         Ok(out_dict.into())
     }
 
+    /// Get the index and edge data for all parents of a node.
+    ///
+    /// This will return a list of tuples with the parent index the node index
+    /// and the edge data. This can be used to recreate add_edge() calls.
+    /// :param int node: The index of the node to get the edges for
+    ///
+    /// :param int node: The index of the node to get the edges for
+    ///
+    /// :returns: A list of tuples of the form:
+    ///     ``(parent_index, node_index, edge_data)```
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
     pub fn in_edges(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
@@ -630,6 +850,17 @@ impl PyDiGraph {
         Ok(PyList::new(py, out_list).into())
     }
 
+    /// Get the index and edge data for all children of a node.
+    ///
+    /// This will return a list of tuples with the child index the node index
+    /// and the edge data. This can be used to recreate add_edge() calls.
+    ///
+    /// :param int node: The index of the node to get the edges for
+    ///
+    /// :returns out_edges: A list of tuples of the form:
+    ///     ```(node_index, child_index, edge_data)```
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
     pub fn out_edges(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Outgoing;
@@ -643,6 +874,14 @@ impl PyDiGraph {
         Ok(PyList::new(py, out_list).into())
     }
 
+    /// Add new nodes to the graph.
+    ///
+    /// :param list obj_list: A list of python objects to attach to the graph
+    ///     as new nodes
+    ///
+    /// :returns: A list of int indices of the newly created nodes
+    /// :rtype: list
+    #[text_signature = "(obj_list, /)"]
     pub fn add_nodes_from(
         &mut self,
         obj_list: Vec<PyObject>,
@@ -655,6 +894,13 @@ impl PyDiGraph {
         Ok(out_list)
     }
 
+    /// Get the degree of a node for inbound edges.
+    ///
+    /// :param int node: The index of the node to find the inbound degree of
+    ///
+    /// :returns: The inbound degree for the specified node
+    /// :rtype: int
+    #[text_signature = "(node, /)"]
     pub fn in_degree(&self, node: usize) -> usize {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
@@ -662,6 +908,11 @@ impl PyDiGraph {
         neighbors.count()
     }
 
+    /// Get the degree of a node for outbound edges.
+    ///
+    /// :param int node: The index of the node to find the outbound degree of
+    /// :returns: The outbound degree for the specified node
+    /// :rtype: int
     pub fn out_degree(&self, node: usize) -> usize {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Outgoing;
@@ -669,6 +920,18 @@ impl PyDiGraph {
         neighbors.count()
     }
 
+    /// Find a target node with a specific edge
+    ///
+    /// This method is used to find a target node that is a adjacent to a given
+    /// node given an edge condition.
+    ///
+    /// :param int node: The node to use as the source of the search
+    /// :param callable predicate: A python callable that will take a single
+    ///     parameter, the edge object, and will return a boolean if the
+    ///     edge matches or not
+    ///
+    /// :returns: The node object that has an edge to it from the provided
+    ///     node index which matches the provided condition
     pub fn find_adjacent_node_by_edge(
         &self,
         py: Python,

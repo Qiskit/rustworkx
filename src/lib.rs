@@ -91,7 +91,18 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     Ok(path)
 }
 
+/// Find the longest path in a DAG
+///
+/// :param PyDiGraph graph: The graph to find the longest path on. The input
+///     object must be a DAG without a cycle.
+///
+/// :returns: The node indices of the longest path on the DAG
+/// :rtype: list
+///
+/// :raises Exception: If an unexpected error occurs or a path can't be found
+/// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
+#[text_signature = "(graph, /)"]
 fn dag_longest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -100,7 +111,18 @@ fn dag_longest_path(
     Ok(PyList::new(py, path).into())
 }
 
+/// Find the length of the longest path in a DAG
+///
+/// :param PyDiGraph graph: The graph to find the longest path on. The input
+///     object must be a DAG without a cycle.
+///
+/// :returns: The longest path length on the DAG
+/// :rtype: int
+///
+/// :raises Exception: If an unexpected error occurs or a path can't be found
+/// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
+#[text_signature = "(graph, /)"]
 fn dag_longest_path_length(graph: &digraph::PyDiGraph) -> PyResult<usize> {
     let path = longest_path(graph)?;
     if path.is_empty() {
@@ -110,18 +132,46 @@ fn dag_longest_path_length(graph: &digraph::PyDiGraph) -> PyResult<usize> {
     Ok(path_length)
 }
 
+/// Find the number of weakly connected components in a DAG.
+///
+/// :param PyDiGraph graph: The graph to find the number of weakly connected
+///     components on
+///
+/// :returns: The number of weakly connected components in the DAG
+/// :rtype: int
 #[pyfunction]
+#[text_signature = "(graph, /)"]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     algo::connected_components(graph)
 }
 
+/// Check that the PyDiGraph or PyDAG doesn't have a cycle
+///
+/// :param PyDiGraph graph: The graph to check for cycles
+///
+/// :returns: ``True`` if there are no cycles in the input graph, ``False``
+///     if there are cycles
+/// :rtype: bool
 #[pyfunction]
+#[text_signature = "(graph, /)"]
 fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
     let cycle_detected = algo::is_cyclic_directed(graph);
     !cycle_detected
 }
 
+/// Determine if 2 graphs are structurally isomorphic
+///
+/// This checks if 2 graphs are structurally isomorphic (it doesn't match
+/// the contents of the nodes or edges on the graphs).
+///
+/// :param PyDiGraph first: The first graph to compare
+/// :param PyDiGraph second: The second graph to compare
+///
+/// :returns: ``True`` if the 2 graphs are structurally isomorphic, ``False``
+///     if they are not
+/// :rtype: bool
 #[pyfunction]
+#[text_signature = "(first, second, /)"]
 fn is_isomorphic(
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
@@ -130,7 +180,30 @@ fn is_isomorphic(
     Ok(res)
 }
 
+/// Determine if 2 DAGs are isomorphic
+///
+/// This checks if 2 graphs are isomorphic both structurally and also
+/// comparing the node data using the provided matcher function. The matcher
+/// function takes in 2 node data objects and will compare them. A simple
+/// example that checks if they're just equal would be::
+///
+///     graph_a = retworkx.PyDAG()
+///     graph_b = retworkx.PyDAG()
+///     retworkx.is_isomorphic_node_match(graph_a, graph_b,
+///                                       lambda x, y: x == y)
+///
+/// :param PyDiGraph first: The first graph to compare
+/// :param PyDiGraph second: The second graph to compare
+/// :param callable matcher: A python callable object that takes 2 positional
+///     one for each node data object. If the return of this
+///     function evaluates to True then the nodes passed to it are vieded as
+///     matching.
+///
+/// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
+///     not.
+/// :rtype: bool
 #[pyfunction]
+#[text_signature = "(first, second, matcher, /)"]
 fn is_isomorphic_node_match(
     py: Python,
     first: &digraph::PyDiGraph,
@@ -154,7 +227,16 @@ fn is_isomorphic_node_match(
     Ok(res)
 }
 
+/// Return the topological sort of node indexes from the provided graph
+///
+/// :param PyDiGraph graph: The DAG to get the topological sort on
+///
+/// :returns: A list of node indices topologically sorted.
+/// :rtype: list
+///
+/// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
 #[pyfunction]
+#[text_signature = "(graph, /)"]
 fn topological_sort(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -172,7 +254,18 @@ fn topological_sort(
     Ok(PyList::new(py, out).into())
 }
 
+/// Return successors in a breadth-first-search from a source node.
+///
+/// The return format is ``[(Parent Node, [Children Nodes])]`` in a bfs order
+/// from the source node provided.
+///
+/// :param PyDiGraph graph: The DAG to get the bfs_successors from
+/// :param int node: The index of the dag node to get the bfs successors for
+///
+/// :returns: A list of nodes's data and their children in bfs order
+/// :rtype: list
 #[pyfunction]
+#[text_signature = "(graph, node, /)"]
 fn bfs_successors(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -196,7 +289,20 @@ fn bfs_successors(
     Ok(PyList::new(py, out_list).into())
 }
 
+/// Return the ancestors of a node in a graph.
+///
+/// This differs from :meth:`PyDiGraph.predecessors` method  in that
+/// ``predecessors`` returns only nodes with a direct edge into the provided
+/// node. While this function returns all nodes that have a path into the
+/// provided node.
+///
+/// :param PyDiGraph graph: The graph to get the descendants from
+/// :param int node: The index of the graph node to get the ancestors for
+///
+/// :returns: A list of node indexes of ancestors of provided node.
+/// :rtype: list
 #[pyfunction]
+#[text_signature = "(graph, node, /)"]
 fn ancestors(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -214,6 +320,18 @@ fn ancestors(
     Ok(out_set.to_object(py))
 }
 
+/// Return the descendants of a node in a graph.
+///
+/// This differs from :meth:`PyDiGraph.successors` method in that
+/// ``successors``` returns only nodes with a direct edge out of the provided
+/// node. While this function returns all nodes that have a path from the
+/// provided node.
+///
+/// :param PyDiGraph graph: The graph to get the descendants from
+/// :param int node: The index of the graph node to get the descendants for
+///
+/// :returns: A list of node indexes of descendants of provided node.
+/// :rtype: list
 #[pyfunction]
 fn descendants(
     py: Python,
@@ -231,7 +349,20 @@ fn descendants(
     Ok(out_set.to_object(py))
 }
 
+/// Get the lexicographical topological sorted nodes from the provided DAG
+///  
+/// This function returns a list of nodes data in a graph lexicographically
+/// topologically sorted using the provided key function.
+///
+/// :param PyDiGraph dag: The DAG to get the topological sorted nodes from
+/// :param callable key: key is a python function or other callable that
+///     gets passed a single argument the node data from the graph and is
+///     expected to return a string which will be used for sorting.
+///
+/// :returns: A list of node's data lexicographically topologically sorted.
+/// :rtype: list
 #[pyfunction]
+#[text_signature = "(dag, key, /)"]
 fn lexicographical_topological_sort(
     py: Python,
     dag: &digraph::PyDiGraph,
@@ -304,7 +435,15 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+/// Color a PyGraph using a largest_first strategy greedy graph coloring.
+///
+/// :param PyGraph: The input PyGraph object to color
+///
+/// :returns: A dictionary where keys are node indices and the value is
+///     the color
+/// :rtype: dict
 #[pyfunction]
+#[text_signature = "(graph, /)"]
 fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
@@ -342,10 +481,39 @@ fn graph_greedy_color(
     Ok(out_dict.into())
 }
 
-// Find the shortest path lengths between all pairs of nodes using Floyd's
-// algorithm
-// Note: Edge weights are assumed to be 1
+/// Return the shortest path lengths between ever pair of nodes that has a
+/// path connecting them
+///
+/// The runtime is :math:`O(|N|^3 + |E|)` where :math:`|N|` is the number
+/// of nodes and :math:`|E|` is the number of edges.
+///
+/// This is done with the Floyd Warshall algorithm:
+///      
+/// 1. Process all edges by setting the distance from the parent to
+///    the child equal to the edge weight.
+/// 2. Iterate through every pair of nodes (source, target) and an additional
+///    itermediary node (w). If the distance from source :math:`\rightarrow` w
+///    :math:`\rightarrow` target is less than the distance from source
+///    :math:`\rightarrow` target, update the source :math:`\rightarrow` target
+///    distance (to pass through w).
+///
+/// The return format is ``{Source Node: {Target Node: Distance}}``.
+///
+/// .. note::
+///
+///     Paths that do not exist are simply not found in the return dictionary,
+///     rather than setting the distance to infinity, or -1.
+///
+/// .. note::
+///
+///     Edge weights are restricted to 1 in the current implementation.
+///
+/// :param PyDigraph graph: The DiGraph to get all shortest paths from
+///
+/// :returns: A dictionary of shortest paths
+/// :rtype: dict
 #[pyfunction]
+#[text_signature = "(dag, /)"]
 fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
     let mut dist: HashMap<(usize, usize), usize> = HashMap::new();
     for node in dag.graph.node_indices() {
@@ -409,7 +577,19 @@ fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
     Ok(out_dict.into())
 }
 
+/// Return a list of layers
+///  
+/// A layer is a subgraph whose nodes are disjoint, i.e.,
+/// a layer has depth 1. The layers are constructed using a greedy algorithm.
+///
+/// :param PyDiGraph graph: The DAG to get the layers from
+/// :param list first_layer: A list of node ids for the first layer. This
+///     will be the first layer in the output
+///
+/// :returns: A list of layers, each layer is a list of node data
+/// :rtype: list
 #[pyfunction]
+#[text_signature = "(dag, first_layer, /)"]
 fn layers(
     py: Python,
     dag: &digraph::PyDiGraph,
@@ -477,7 +657,30 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
+/// Return the adjacency matrix for a PyDiGraph object
+///
+/// In the case where there are multiple edges between nodes the value in the
+/// output matrix will be the sum of the edges' weights.
+///
+/// :param PyDiGraph graph: The DiGraph used to generate the adjacency matrix
+///     from
+/// :param weight_fn callable: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         dag_adjacency_matrix(dag, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         dag_adjacency_matrix(dag, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+///
+///  :return: The adjacency matrix for the input dag as a numpy array
+///  :rtype: numpy.ndarray
 #[pyfunction]
+#[text_signature = "(graph, weight_fn, /)"]
 fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -526,7 +729,29 @@ fn digraph_adjacency_matrix(
     Ok(matrix.into_pyarray(py).into())
 }
 
+/// Return the adjacency matrix for a PyGraph class
+///
+/// In the case where there are multiple edges between nodes the value in the
+/// output matrix will be the sum of the edges' weights.
+///
+/// :param PyGraph graph: The graph used to generate the adjacency matrix from
+/// :param weight_fn callable: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_adjacency_matrix(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_adjacency_matrix(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+///
+/// :return: The adjacency matrix for the input dag as a numpy array
+/// :rtype: numpy.ndarray
 #[pyfunction]
+#[text_signature = "(graph, weight_fn, /)"]
 fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
@@ -576,7 +801,24 @@ fn graph_adjacency_matrix(
     Ok(matrix.into_pyarray(py).into())
 }
 
+/// Return all simple paths between 2 nodes in a PyGraph object
+///
+/// A simple path is a path with no repeated nodes.
+///
+/// :param PyGraph graph: The graph to find the path in
+/// :param int from: The node index to find the paths from
+/// :param int to: The node index to find the paths to
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A list of lists where each inner list is a path of node indices
+/// :rtype: list
 #[pyfunction]
+#[text_signature = "(graph, from, to, /, min=None, cutoff=None)"]
 fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     from: usize,
@@ -616,7 +858,24 @@ fn graph_all_simple_paths(
     Ok(result)
 }
 
+/// Return all simple paths between 2 nodes in a PyDiGraph object
+///
+/// A simple path is a path with no repeated nodes.
+///
+/// :param PyDiGraph graph: The graph to find the path in
+/// :param int from: The node index to find the paths from
+/// :param int to: The node index to find the paths to
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     sett to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A list of lists where each inner list is a path
+/// :rtype: list
 #[pyfunction]
+#[text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)"]
 fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
     from: usize,
@@ -656,7 +915,28 @@ fn digraph_all_simple_paths(
     Ok(result)
 }
 
+/// Compute the A* shortest path for a PyGraph
+///
+/// :param PyGraph graph: The input graph to use
+/// :param int node: The node index to compute the path from
+/// :param goal_fn: A python callable that will take in 1 parameter, a node's data
+///     object and will return a boolean which will be True if it is the finish
+///     node.
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an edge's
+///     data object and will return a float that represents the cost of that
+///     edge. It must be non-negative.
+/// :param estimate_cost_fn: A python callable that will take in 1 parameter, a
+///     node's data object and will return a float which represents the estimated
+///     cost for the next node. The return must be non-negative. For the
+///     algorithm to find the actual shortest path, it should be admissible,
+///     meaning that it should never overestimate the actual cost to get to the
+///     nearest goal node.
+///
+/// :returns: The computed shortest path between node and finish as a list
+///     of node indices.
+/// :rtype: list
 #[pyfunction]
+#[text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)"]
 fn graph_astar_shortest_path(
     py: Python,
     graph: &graph::PyGraph,
@@ -708,7 +988,28 @@ fn graph_astar_shortest_path(
     Ok(out_path.to_object(py))
 }
 
+/// Compute the A* shortest path for a PyDiGraph
+///
+/// :param PyDiGraph graph: The input graph to use
+/// :param int node: The node index to compute the path from
+/// :param goal_fn: A python callable that will take in 1 parameter, a node's
+///     data object and will return a boolean which will be True if it is the
+///     finish node.
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an
+///     edge's data object and will return a float that represents the cost of
+///     that edge. It must be non-negative.
+/// :param estimate_cost_fn: A python callable that will take in 1 parameter, a
+///     node's data object and will return a float which represents the
+///     estimated cost for the next node. The return must be non-negative. For
+///     the algorithm to find the actual shortest path, it should be
+///     admissible, meaning that it should never overestimate the actual cost
+///     to get to the nearest goal node.
+///
+/// :return: The computed shortest path between node and finish as a list
+///     of node indices.
+/// :rtype: list
 #[pyfunction]
+#[text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)"]
 fn digraph_astar_shortest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
