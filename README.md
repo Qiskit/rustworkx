@@ -16,7 +16,7 @@ replacement for [qiskit](https://qiskit.org/)'s previous (and current)
 networkx usage (hence the name) but is designed to provide a high
 performance general purpose graph library to any python application. The
 project started as just building a faster general purpose graph to use as the
-underlying implementation for the DAGC at the center of
+underlying implementation for the DAG at the center of
 [qiskit-terra](https://github.com/Qiskit/qiskit-terra/)'s transpiler, but it
 has since grown to cover all the graph usage in Qiskit and other applications.
 
@@ -36,23 +36,10 @@ environment.
 However, if there are no precompiled binaries published for your system
 you'll have to compile the code. The source package is also published on
 pypi so you can also run the above command to install it. However, there
-are 2 preconditions for this to work, first you need to have cargo/rustc
-in your PATH. You can use [rustup](https://rustup.rs/) to make this step
-simpler. Secondly, you need to have `setuptools-rust` installed in your
-python environment. This can can be done by simply running:
-
-```bash
-pip install setuptools-rust
-```
-
-prior to running:
-
-```bash
-pip install retworkx
-```
-
-If you have rust properly installed pip will compile retworkx for your local
-system and it should run just as the prebuilt binaries would.
+to be able able to build the package from sdist you need to have cargo/rustc in
+your PATH. You can use [rustup](https://rustup.rs/) to make this step
+simpler. If you have rust properly installed pip will compile retworkx for your
+local system and it should run just as the prebuilt binaries would.
 
 ## Building from source
 
