@@ -41,3 +41,16 @@ Algorithm Functions
    retworkx.graph_astar_shortest_path
    retworkx.digraph_astar_shortest_path
    retworkx.graph_greedy_color
+
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.InvalidNode
+   retworkx.DAGWouldCycle
+   retworkx.NoEdgeBetweenNodes
+   retworkx.DAGHasCycle
+   retworkx.NoSuitableNeighbors
+   retworkx.NoPathFound

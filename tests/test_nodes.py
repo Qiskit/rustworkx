@@ -58,7 +58,7 @@ class TestNodes(unittest.TestCase):
         node_a = dag.add_node('a')
         node_b = dag.add_child(node_a, 'b', {})
         dag.add_edge(node_b, node_a, {})
-        self.assertRaises(Exception, retworkx.topological_sort, dag)
+        self.assertRaises(retworkx.DAGHasCycle, retworkx.topological_sort, dag)
 
     def test_lexicographical_topo_sort(self):
         dag = retworkx.PyDAG()
