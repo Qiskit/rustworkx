@@ -39,14 +39,14 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         node_a = graph.add_node('a')
         node_b = graph.add_node('b')
-        self.assertRaises(Exception, graph.get_edge_data,
+        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.get_edge_data,
                           node_a, node_b)
 
     def test_no_edge_get_all_edge_data(self):
         graph = retworkx.PyGraph()
         node_a = graph.add_node('a')
         node_b = graph.add_node('b')
-        self.assertRaises(Exception, graph.get_all_edge_data,
+        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.get_all_edge_data,
                           node_a, node_b)
 
     def test_has_edge(self):
@@ -89,7 +89,7 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         node_a = graph.add_node('a')
         node_b = graph.add_node('b')
-        self.assertRaises(Exception, graph.remove_edge,
+        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.remove_edge,
                           node_a, node_b)
 
     def test_remove_edge_single(self):
