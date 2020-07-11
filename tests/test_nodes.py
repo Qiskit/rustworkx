@@ -41,7 +41,7 @@ class TestNodes(unittest.TestCase):
         self.assertEqual([0, 2], dag.node_indexes())
 
     def test_remove_node_invalid_index(self):
-        graph = retworkx.PyGraph()
+        graph = retworkx.PyDAG()
         graph.add_node('a')
         graph.add_node('b')
         graph.add_node('c')
