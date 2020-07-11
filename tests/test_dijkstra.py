@@ -39,6 +39,48 @@ class TestDijkstraDiGraph(unittest.TestCase):
         expected = {4: 23.0}
         self.assertEqual(expected, path)
 
+    def test_dijkstra_with_no_goal_set(self):
+        g = retworkx.PyDAG()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        g.add_edge(a, b, 7)
+        g.add_edge(c, a, 9)
+        g.add_edge(a, d, 14)
+        g.add_edge(b, c, 10)
+        g.add_edge(d, c, 2)
+        g.add_edge(d, e, 9)
+        g.add_edge(b, f, 15)
+        g.add_edge(c, f, 11)
+        g.add_edge(e, f, 6)
+        path = retworkx.digraph_dijkstra_shortest_path_lengths(
+            g, a, lambda x: 1)
+        expected = {1: 1.0, 2: 2.0, 3: 1.0, 4: 2.0, 5: 2.0}
+        self.assertEqual(expected, path)
+
+    def test_dijkstra_with_no_path(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node('A')
+        g.add_node('B')
+        path = retworkx.digraph_dijkstra_shortest_path_lengths(
+            g, a, lambda x: float(x))
+        expected = {}
+        self.assertEqual(expected, path)
+
+    def test_dijkstra_with_disconnected_nodes(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node('A')
+        b = g.add_child(a, 'B', 1.2)
+        g.add_node('C')
+        g.add_parent(b, 'D', 2.4)
+        path = retworkx.digraph_dijkstra_shortest_path_lengths(
+            g, a, lambda x: x)
+        expected = {1: 1.2}
+        self.assertEqual(expected, path)
+
     def test_dijkstra_with_graph_input(self):
         g = retworkx.PyGraph()
         g.add_node(0)
@@ -70,7 +112,52 @@ class TestDijkstraGraph(unittest.TestCase):
         expected = {4: 20.0}
         self.assertEqual(expected, path)
 
-    def test_astar_graph_with_digraph_input(self):
+    def test_dijkstra_with_no_goal_set(self):
+        g = retworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        g.add_edge(a, b, 7)
+        g.add_edge(c, a, 9)
+        g.add_edge(a, d, 14)
+        g.add_edge(b, c, 10)
+        g.add_edge(d, c, 2)
+        g.add_edge(d, e, 9)
+        g.add_edge(b, f, 15)
+        g.add_edge(c, f, 11)
+        g.add_edge(e, f, 6)
+        path = retworkx.graph_dijkstra_shortest_path_lengths(
+            g, a, lambda x: 1)
+        expected = {1: 1.0, 2: 1.0, 3: 1.0, 4: 2.0, 5: 2.0}
+        self.assertEqual(expected, path)
+
+    def test_dijkstra_with_no_path(self):
+        g = retworkx.PyGraph()
+        a = g.add_node('A')
+        g.add_node('B')
+        path = retworkx.graph_dijkstra_shortest_path_lengths(
+            g, a, lambda x: float(x))
+        expected = {}
+        self.assertEqual(expected, path)
+
+    def test_dijkstra_with_disconnected_nodes(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node('A')
+        b = g.add_node('B')
+        g.add_edge(a, b, 1.2)
+        g.add_node('C')
+        d = g.add_node('D')
+        g.add_edge(b, d, 2.4)
+        path = retworkx.digraph_dijkstra_shortest_path_lengths(
+            g, a, lambda x: round(x, 1))
+        # Computers never work:
+        expected = {1: 1.2, 3: 3.5999999999999996}
+        self.assertEqual(expected, path)
+
+    def test_dijkstra_graph_with_digraph_input(self):
         g = retworkx.PyDAG()
         g.add_node(0)
         with self.assertRaises(TypeError):
