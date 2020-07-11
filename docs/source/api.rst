@@ -40,6 +40,8 @@ Algorithm Functions
    retworkx.digraph_all_simple_paths
    retworkx.graph_astar_shortest_path
    retworkx.digraph_astar_shortest_path
+   retworkx.graph_dijkstra_shortest_path_lengths
+   retworkx.digraph_dijkstra_shortest_path_lengths
    retworkx.graph_greedy_color
 
 Exceptions

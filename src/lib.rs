@@ -20,6 +20,7 @@ extern crate pyo3;
 mod astar;
 mod dag_isomorphism;
 mod digraph;
+mod dijkstra;
 mod graph;
 
 use std::cmp::{Ordering, Reverse};
@@ -915,6 +916,110 @@ fn digraph_all_simple_paths(
     Ok(result)
 }
 
+/// Compute the lengths of the shortest paths for a PyGraph object using
+/// Dijkstra's algorithm
+///
+/// :param PyGraph graph: The input graph to use
+/// :param int node: The node index to use as the source for finding the
+///     shortest paths from
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an
+///     edge's data object and will return a float that represents the
+///     cost/weight of that edge. It must be non-negative
+/// :param int goal: An optional node index to use as the end of the path.
+///     When specified the traversal will stop when the goal is reached and
+///     the output dictionary will only have a single entry with the length
+///     of the shortest path to the goal node.
+///
+/// :returns: A dictionary of the shortest paths from the provided node where
+///     the key is the node index of the end of the path and the value is the
+///     cost/sum of the weights of path
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, node, edge_cost_fn, /, goal=None)"]
+fn graph_dijkstra_shortest_path_lengths(
+    py: Python,
+    graph: &graph::PyGraph,
+    node: usize,
+    edge_cost_fn: PyObject,
+    goal: Option<usize>,
+) -> PyResult<PyObject> {
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        Ok(raw.extract(py)?)
+    };
+
+    let start = NodeIndex::new(node);
+    let goal_index: Option<NodeIndex> = match goal {
+        Some(node) => Some(NodeIndex::new(node)),
+        None => None,
+    };
+
+    let res = dijkstra::dijkstra(graph, start, goal_index, |e| {
+        edge_cost_callable(e.weight())
+    })?;
+    let out_dict = PyDict::new(py);
+    for (index, value) in res {
+        let int_index = index.index();
+        if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
+            out_dict.set_item(int_index, value)?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
+/// Compute the lengths of the shortest paths for a PyDiGraph object using
+/// Dijkstra's algorithm
+///
+/// :param PyDiGraph graph: The input graph to use
+/// :param int node: The node index to use as the source for finding the
+///     shortest paths from
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an
+///     edge's data object and will return a float that represents the
+///     cost/weight of that edge. It must be non-negative
+/// :param int goal: An optional node index to use as the end of the path.
+///     When specified the traversal will stop when the goal is reached and
+///     the output dictionary will only have a single entry with the length
+///     of the shortest path to the goal node.
+///
+/// :returns: A dictionary of the shortest paths from the provided node where
+///     the key is the node index of the end of the path and the value is the
+///     cost/sum of the weights of path
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, node, edge_cost_fn, /, goal=None)"]
+fn digraph_dijkstra_shortest_path_lengths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+    edge_cost_fn: PyObject,
+    goal: Option<usize>,
+) -> PyResult<PyObject> {
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        Ok(raw.extract(py)?)
+    };
+
+    let start = NodeIndex::new(node);
+    let goal_index: Option<NodeIndex> = match goal {
+        Some(node) => Some(NodeIndex::new(node)),
+        None => None,
+    };
+
+    let res = dijkstra::dijkstra(graph, start, goal_index, |e| {
+        edge_cost_callable(e.weight())
+    })?;
+    let out_dict = PyDict::new(py);
+    for (index, value) in res {
+        let int_index = index.index();
+        if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
+            out_dict.set_item(int_index, value)?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
 /// Compute the A* shortest path for a PyGraph
 ///
 /// :param PyGraph graph: The input graph to use
@@ -1100,6 +1205,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
