@@ -161,3 +161,23 @@ jobs:
         - pip install -U twine cibuildwheel==1.2.0
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
+    - stage: deploy
+      arch: s390x
+      services:
+        - docker
+      before_install:
+        - echo ""
+      install:
+        - echo ""
+      env:
+        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust_no_rustup.sh"
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
+        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
+        - TWINE_USERNAME=retworkx-ci
+        - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
+      if: tag IS present
+      script:
+        - sudo pip install -U twine cibuildwheel==1.5.2
+        - cibuildwheel --output-dir wheelhouse
+        - twine upload wheelhouse/*
