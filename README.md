@@ -11,12 +11,12 @@
     <https://retworkx.readthedocs.io/en/latest/index.html>
 
 retworkx is a general purpose graph library for python3 written in Rust to
-provide the performance and safety that Rust provides. It was built as a
-replacement for [qiskit](https://qiskit.org/)'s previous (and current)
+take advantage of the performance and safety that Rust provides. It was built
+as a replacement for [qiskit](https://qiskit.org/)'s previous (and current)
 networkx usage (hence the name) but is designed to provide a high
-performance general purpose graph library to any python application. The
-project started as just building a faster general purpose graph to use as the
-underlying implementation for the DAG at the center of
+performance general purpose graph library for any python application. The
+project was originally started to build a faster directed graph to use as the
+underlying data structure for the DAG at the center of
 [qiskit-terra](https://github.com/Qiskit/qiskit-terra/)'s transpiler, but it
 has since grown to cover all the graph usage in Qiskit and other applications.
 
@@ -33,13 +33,26 @@ pip install retworkx
 This will install a precompiled version of retworkx into your python
 environment.
 
-However, if there are no precompiled binaries published for your system
-you'll have to compile the code. The source package is also published on
-pypi so you can also run the above command to install it. However, there
-to be able able to build the package from sdist you need to have cargo/rustc in
-your PATH. You can use [rustup](https://rustup.rs/) to make this step
-simpler. If you have rust properly installed pip will compile retworkx for your
-local system and it should run just as the prebuilt binaries would.
+### Installing on a platform without precompiled binaries
+
+If there are no precompiled binaries published for your system you'll have to
+build the package from source for your system. A source package is also
+published on pypi, so you still can also run the above `pip` command to install
+it. However, to be able able to build the package from the published source
+package you need to have rust >=1.39 installed (and also
+[cargo](https://doc.rust-lang.org/cargo/) which is normally included with rust)
+You can use [rustup](https://rustup.rs/) (a cross platform installer for rust)
+to make this simpler, or rely on
+[other installation methods](https://forge.rust-lang.org/infra/other-installation-methods.html).
+Once you have rust properly installed, running:
+
+```bash
+pip install retworkx
+
+```
+
+will build retworkx for your local system from the source package and install
+it just as it would if there was a prebuilt binary available.
 
 ## Building from source
 
@@ -52,19 +65,19 @@ git clone https://github.com/Qiskit/retworkx.git
 
 retworkx uses [PyO3](https://github.com/pyo3/pyo3) and
 [setuptools-rust](https://github.com/PyO3/setuptools-rust) to build the
-python interface.
+python interface. Which enables using standard python tooling to work. So,
+assuming you have rust installed then you can easily install retworkx into your
+python environment using `pip`. Once you have a local clone of the repo, change
+your current working directory to the root of the repo. Then, you can install
+retworkx into your python env with:
 
-Once you have rust installed you can easily install retworkx into your python
-environment using `pip`. Once you have a local clone of the repo, change your
-current working directory to the root of the repo.
-
-Then, you can install retworkx into your python env with:
 ```bash
 pip install .
 ```
 
 Assuming your current working directory is still the root of the repo.
 Otherwise you can run:
+
 ```bash
 pip install $PATH_TO_REPO_ROOT
 ```
@@ -76,8 +89,8 @@ method it will not work as you expect. There is a name conflict in the
 repo root because of the local python package shim used in building the
 package. Simply run your python scripts or programs using retworkx
 outside of the repo root. The second issue is that any local changes you
-make to the rust code will not be reflected live in the python you'll
-need to recompile the source by rerunning pip install to have any
+make to the rust code will not be reflected live in your python environment,
+you'll need to recompile retworkx by rerunning `pip install` to have any
 changes reflected in your python environment.
 
 ## Using retworkx
@@ -87,7 +100,7 @@ All the functions and graph classes are off the root of the package.
 For example, building a DAG and adding 2 nodes with an edge between them
 would be:
 
-```python
+```python3
 import retworkx
 
 my_dag = retworkx.PyDAG(cycle_check=True)
