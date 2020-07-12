@@ -1,5 +1,5 @@
 #!/bin/bash
-wget https://static.rust-lang.org/dist/rust-nightly-s390x-unknown-linux-gnu.tar.gz
+wget https://static.rust-lang.org/dist/rust-1.44.1-s390x-unknown-linux-gnu.tar.gz
 yum clean packages
 yum clean headers
 yum clean metadata
