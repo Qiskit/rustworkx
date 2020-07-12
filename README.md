@@ -22,9 +22,9 @@ has since grown to cover all the graph usage in Qiskit and other applications.
 
 ## Installing retworkx
 
-retworkx is published on pypi so on x86\_64, i686, ppc64le, and aarch64
-Linux systems, x86\_64 on Mac OSX, and 32 and 64 bit Windows installing
-is as simple as running:
+retworkx is published on pypi so on x86\_64, i686, ppc64le, s390x, and
+aarch64 Linux systems, x86\_64 on Mac OSX, and 32 and 64 bit Windows
+installing is as simple as running:
 
 ```bash
 pip install retworkx
