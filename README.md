@@ -36,15 +36,14 @@ environment.
 ### Installing on a platform without precompiled binaries
 
 If there are no precompiled binaries published for your system you'll have to
-build the package from source for your system. A source package is also
-published on pypi, so you still can also run the above `pip` command to install
-it. However, to be able able to build the package from the published source
-package you need to have rust >=1.39 installed (and also
-[cargo](https://doc.rust-lang.org/cargo/) which is normally included with rust)
-You can use [rustup](https://rustup.rs/) (a cross platform installer for rust)
-to make this simpler, or rely on
+build the package from source. However, to be able able to build the package
+from the published source package you need to have rust >=1.39 installed (and
+also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
+rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
+rust) to make this simpler, or rely on
 [other installation methods](https://forge.rust-lang.org/infra/other-installation-methods.html).
-Once you have rust properly installed, running:
+A source package is also published on pypi, so you still can also run the above
+`pip` command to install it. Once you have rust properly installed, running:
 
 ```bash
 pip install retworkx
@@ -64,8 +63,8 @@ git clone https://github.com/Qiskit/retworkx.git
 
 retworkx uses [PyO3](https://github.com/pyo3/pyo3) and
 [setuptools-rust](https://github.com/PyO3/setuptools-rust) to build the
-python interface. Which enables using standard python tooling to work. So,
-assuming you have rust installed then you can easily install retworkx into your
+python interface, which enables using standard python tooling to work. So,
+assuming you have rust installed, you can easily install retworkx into your
 python environment using `pip`. Once you have a local clone of the repo, change
 your current working directory to the root of the repo. Then, you can install
 retworkx into your python env with:
