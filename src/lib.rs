@@ -1061,9 +1061,28 @@ fn digraph_astar_shortest_path(
     Ok(out_path.to_object(py))
 }
 
+/// The provided node is invalid.
+create_exception!(retworkx, InvalidNode, Exception);
+/// Performing this operation would result in trying to add a cycle to a DAG.
+create_exception!(retworkx, DAGWouldCycle, Exception);
+/// There is no edge present between the provided nodes.
+create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
+/// The specified Directed Graph has a cycle and can't be treated as a DAG.
+create_exception!(retworkx, DAGHasCycle, Exception);
+/// No neighbors found matching the provided predicate.
+create_exception!(retworkx, NoSuitableNeighbors, Exception);
+/// No path was found between the specified nodes.
+create_exception!(retworkx, NoPathFound, Exception);
+
 #[pymodule]
-fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    m.add("InvalidNode", py.get_type::<InvalidNode>())?;
+    m.add("DAGWouldCycle", py.get_type::<DAGWouldCycle>())?;
+    m.add("NoEdgeBetweenNodes", py.get_type::<NoEdgeBetweenNodes>())?;
+    m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
+    m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
+    m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
@@ -1088,13 +1107,6 @@ fn retworkx(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<graph::PyGraph>()?;
     Ok(())
 }
-
-create_exception!(retworkx, InvalidNode, Exception);
-create_exception!(retworkx, DAGWouldCycle, Exception);
-create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
-create_exception!(retworkx, DAGHasCycle, Exception);
-create_exception!(retworkx, NoSuitableNeighbors, Exception);
-create_exception!(retworkx, NoPathFound, Exception);
 
 #[cfg(test)]
 mod tests {
