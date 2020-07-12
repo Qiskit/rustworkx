@@ -20,15 +20,15 @@ script:
   - cd tests && ../test-venv/bin/python -m unittest discover .
 stages:
   - name: Compile and lint
-    if: tag IS present
-  - name: Linux x86_64
-    if: tag IS present
-  - name: Linux non-x86_64
-    if: tag IS present
-  - name: macOS
-    if: tag IS present
-  - name: deploy
     if: tag IS blank
+  - name: Linux x86_64
+    if: tag IS blank
+  - name: Linux non-x86_64
+    if: tag IS blank
+  - name: macOS
+    if: tag IS blank
+  - name: deploy
+    if: tag IS present
 
 jobs:
   fast_finish: true
@@ -176,8 +176,8 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      if: tag IS blank
+      if: tag IS present
       script:
         - sudo pip install -U twine cibuildwheel==1.5.2
         - cibuildwheel --output-dir wheelhouse
-#        - twine upload wheelhouse/*
+        - twine upload wheelhouse/*
