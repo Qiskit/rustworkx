@@ -48,7 +48,6 @@ Once you have rust properly installed, running:
 
 ```bash
 pip install retworkx
-
 ```
 
 will build retworkx for your local system from the source package and install
