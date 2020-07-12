@@ -40,6 +40,40 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(['a', 'c'], res)
         self.assertEqual([0, 2], graph.node_indexes())
 
+    def test_remove_node_invalid_index(self):
+        graph = retworkx.PyGraph()
+        graph.add_node('a')
+        graph.add_node('b')
+        graph.add_node('c')
+        graph.remove_node(76)
+        res = graph.nodes()
+        self.assertEqual(['a', 'b', 'c'], res)
+        self.assertEqual([0, 1, 2], graph.node_indexes())
+
+    def test_remove_nodes_from(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, "Edgy")
+        node_c = graph.add_node('c')
+        graph.add_edge(node_b, node_c, "Edgy_mk2")
+        graph.remove_nodes_from([node_b, node_c])
+        res = graph.nodes()
+        self.assertEqual(['a'], res)
+        self.assertEqual([0], graph.node_indexes())
+
+    def test_remove_nodes_from_with_invalid_index(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, "Edgy")
+        node_c = graph.add_node('c')
+        graph.add_edge(node_b, node_c, "Edgy_mk2")
+        graph.remove_nodes_from([node_b, node_c, 76])
+        res = graph.nodes()
+        self.assertEqual(['a'], res)
+        self.assertEqual([0], graph.node_indexes())
+
     def test_get_node_data(self):
         graph = retworkx.PyGraph()
         graph.add_node('a')
