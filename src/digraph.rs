@@ -839,17 +839,17 @@ impl PyDiGraph {
     ///     ``(parent_index, node_index, edge_data)```
     /// :rtype: list
     #[text_signature = "(node, /)"]
-    pub fn in_edges(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
+    pub fn in_edges(
+        &self,
+        node: usize,
+    ) -> PyResult<Vec<(usize, usize, &PyObject)>> {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
-        let mut out_list: Vec<PyObject> = Vec::new();
         let raw_edges = self.graph.edges_directed(index, dir);
-        for edge in raw_edges {
-            let edge_w = edge.weight();
-            let triplet = (edge.source().index(), node, edge_w).to_object(py);
-            out_list.push(triplet)
-        }
-        Ok(PyList::new(py, out_list).into())
+        let out_list: Vec<(usize, usize, &PyObject)> = raw_edges
+            .map(|x| (x.source().index(), node, x.weight()))
+            .collect();
+        Ok(out_list)
     }
 
     /// Get the index and edge data for all children of a node.
@@ -863,17 +863,17 @@ impl PyDiGraph {
     ///     ```(node_index, child_index, edge_data)```
     /// :rtype: list
     #[text_signature = "(node, /)"]
-    pub fn out_edges(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
+    pub fn out_edges(
+        &self,
+        node: usize,
+    ) -> PyResult<Vec<(usize, usize, &PyObject)>> {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Outgoing;
-        let mut out_list: Vec<PyObject> = Vec::new();
         let raw_edges = self.graph.edges_directed(index, dir);
-        for edge in raw_edges {
-            let edge_w = edge.weight();
-            let triplet = (node, edge.target().index(), edge_w).to_object(py);
-            out_list.push(triplet)
-        }
-        Ok(PyList::new(py, out_list).into())
+        let out_list: Vec<(usize, usize, &PyObject)> = raw_edges
+            .map(|x| (node, x.target().index(), x.weight()))
+            .collect();
+        Ok(out_list)
     }
 
     /// Add new nodes to the graph.
