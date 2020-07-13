@@ -427,7 +427,7 @@ impl PyDiGraph {
     /// :returns: A list of the node data for all the child neighbor nodes
     /// :rtype: list
     #[text_signature = "(node, /)"]
-    pub fn successors(&self, node: usize) -> PyResult<Vec<&PyObject>> {
+    pub fn successors(&self, node: usize) -> Vec<&PyObject> {
         let index = NodeIndex::new(node);
         let children = self
             .graph
@@ -440,7 +440,7 @@ impl PyDiGraph {
                 used_indexes.insert(succ);
             }
         }
-        Ok(succesors)
+        succesors
     }
 
     /// Return a list of all the node predecessor data.
@@ -450,7 +450,7 @@ impl PyDiGraph {
     /// :returns: A list of the node data for all the parent neighbor nodes
     /// :rtype: list
     #[text_signature = "(node, /)"]
-    pub fn predecessors(&self, node: usize) -> PyResult<Vec<&PyObject>> {
+    pub fn predecessors(&self, node: usize) -> Vec<&PyObject> {
         let index = NodeIndex::new(node);
         let parents = self
             .graph
@@ -463,7 +463,7 @@ impl PyDiGraph {
                 used_indexes.insert(pred);
             }
         }
-        Ok(predec)
+        predec
     }
 
     /// Return the edge data for an edge between 2 nodes.
@@ -839,14 +839,14 @@ impl PyDiGraph {
     pub fn in_edges(
         &self,
         node: usize,
-    ) -> PyResult<Vec<(usize, usize, &PyObject)>> {
+    ) -> Vec<(usize, usize, &PyObject)> {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
         let raw_edges = self.graph.edges_directed(index, dir);
         let out_list: Vec<(usize, usize, &PyObject)> = raw_edges
             .map(|x| (x.source().index(), node, x.weight()))
             .collect();
-        Ok(out_list)
+        out_list
     }
 
     /// Get the index and edge data for all children of a node.
@@ -863,14 +863,14 @@ impl PyDiGraph {
     pub fn out_edges(
         &self,
         node: usize,
-    ) -> PyResult<Vec<(usize, usize, &PyObject)>> {
+    ) -> Vec<(usize, usize, &PyObject)> {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Outgoing;
         let raw_edges = self.graph.edges_directed(index, dir);
         let out_list: Vec<(usize, usize, &PyObject)> = raw_edges
             .map(|x| (node, x.target().index(), x.weight()))
             .collect();
-        Ok(out_list)
+        out_list
     }
 
     /// Add new nodes to the graph.
