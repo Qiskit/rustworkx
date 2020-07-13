@@ -836,10 +836,7 @@ impl PyDiGraph {
     ///     ``(parent_index, node_index, edge_data)```
     /// :rtype: list
     #[text_signature = "(node, /)"]
-    pub fn in_edges(
-        &self,
-        node: usize,
-    ) -> Vec<(usize, usize, &PyObject)> {
+    pub fn in_edges(&self, node: usize) -> Vec<(usize, usize, &PyObject)> {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
         let raw_edges = self.graph.edges_directed(index, dir);
@@ -860,10 +857,7 @@ impl PyDiGraph {
     ///     ```(node_index, child_index, edge_data)```
     /// :rtype: list
     #[text_signature = "(node, /)"]
-    pub fn out_edges(
-        &self,
-        node: usize,
-    ) -> Vec<(usize, usize, &PyObject)> {
+    pub fn out_edges(&self, node: usize) -> Vec<(usize, usize, &PyObject)> {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Outgoing;
         let raw_edges = self.graph.edges_directed(index, dir);
