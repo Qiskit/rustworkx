@@ -1113,13 +1113,11 @@ pub fn directed_gnp_random_graph(
     }
     let mut v: isize = 0;
     let mut w: isize = -1;
-    let mut lp: f64 = 1.0 - probability;
-    lp = lp.ln();
+    let lp: f64 = (1.0 - probability).ln();
 
     while v < num_nodes {
         let random: f64 = rng.gen_range(0.0, 1.0);
-        let mut lr = 1.0 - random;
-        lr = lr.ln();
+        let lr: f64 = (1.0 - random).ln();
         let ratio: isize = (lr / lp) as isize;
         w = w + 1 + ratio;
         // avoid self loops
@@ -1199,13 +1197,11 @@ pub fn undirected_gnp_random_graph(
     }
     let mut v: isize = 1;
     let mut w: isize = -1;
-    let mut lp: f64 = 1.0 - probability;
-    lp = lp.ln();
+    let lp: f64 = (1.0 - probability).ln();
 
     while v < num_nodes {
         let random: f64 = rng.gen_range(0.0, 1.0);
-        let mut lr = 1.0 - random;
-        lr = lr.ln();
+        let lr = (1.0 - random).ln();
         let ratio: isize = (lr / lp) as isize;
         w = w + 1 + ratio;
         while w >= v && v < num_nodes {
