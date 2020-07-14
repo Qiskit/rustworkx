@@ -7,13 +7,21 @@ Retworkx API Reference
 Graph Classes
 -------------
 
-
 .. autosummary::
    :toctree: stubs
 
     retworkx.PyGraph
     retworkx.PyDiGraph
     retworkx.PyDAG
+
+Random Circuit Functions
+------------------------
+
+.. autosummary::
+   :toctree: stubs
+
+    retworkx.directed_gnp_random_graph
+    retworkx.undirected_gnp_random_graph
 
 Algorithm Functions
 -------------------
