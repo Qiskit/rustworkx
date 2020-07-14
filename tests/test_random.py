@@ -18,7 +18,7 @@ import retworkx
 class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_directed(self):
-        graph = retworkx.directed_gnp_random_graph(20, .5, 10)
+        graph = retworkx.directed_gnp_random_graph(20, .5, seed=10)
         self.assertEqual(len(graph), 20)
         self.assertEqual(len(graph.edges()), 104)
 
@@ -31,7 +31,7 @@ class TestGNPRandomGraph(unittest.TestCase):
             retworkx.directed_gnp_random_graph(23, 123.5)
 
     def test_random_gnp_undirected(self):
-        graph = retworkx.undirected_gnp_random_graph(20, .5, 10)
+        graph = retworkx.undirected_gnp_random_graph(20, .5, seed=10)
         self.assertEqual(len(graph), 20)
         self.assertEqual(len(graph.edges()), 105)
 
