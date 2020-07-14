@@ -30,7 +30,7 @@ use std::collections::{BinaryHeap, HashSet};
 use hashbrown::HashMap;
 
 use pyo3::create_exception;
-use pyo3::exceptions::{Exception, IndexError};
+use pyo3::exceptions::{Exception, ValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
@@ -1096,7 +1096,7 @@ pub fn directed_gnp_random_graph(
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
     if num_nodes <= 0 {
-        return Err(IndexError::py_err("num_nodes must be > 0"));
+        return Err(ValueError::py_err("num_nodes must be > 0"));
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
@@ -1107,7 +1107,7 @@ pub fn directed_gnp_random_graph(
         inner_graph.add_node(x.to_object(py));
     }
     if probability <= 0.0 || probability >= 1.0 {
-        return Err(IndexError::py_err(
+        return Err(ValueError::py_err(
             "Probability out of range, must be 0 < p < 1",
         ));
     }
@@ -1182,7 +1182,7 @@ pub fn undirected_gnp_random_graph(
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
     if num_nodes <= 0 {
-        return Err(IndexError::py_err("num_nodes must be > 0"));
+        return Err(ValueError::py_err("num_nodes must be > 0"));
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
@@ -1193,7 +1193,7 @@ pub fn undirected_gnp_random_graph(
         inner_graph.add_node(x.to_object(py));
     }
     if probability <= 0.0 || probability >= 1.0 {
-        return Err(IndexError::py_err(
+        return Err(ValueError::py_err(
             "Probability out of range, must be 0 < p < 1",
         ));
     }
