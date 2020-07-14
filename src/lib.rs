@@ -1077,7 +1077,7 @@ fn digraph_astar_shortest_path(
 /// ``fast_gnp_random_graph`` [2]_
 ///
 /// :param int num_nodes: The number of nodes to create in the graph
-/// :param float probability: The probability of an edge
+/// :param float probability: The probability of creating an edge between two nodes
 /// :param int seed: An optional seed to use for the random number generator
 ///
 /// :return: A PyDiGraph object
@@ -1153,7 +1153,7 @@ pub fn directed_gnp_random_graph(
 /// Erdős-Rényi graph or a binomial graph.
 ///
 /// The :math:`G_{n,p}` graph algorithm chooses each of the
-/// :math:`[n (n - 1)]/2` possible edges with probability :math:`p`.
+/// :math:`n (n - 1)/2` possible edges with probability :math:`p`.
 /// This algorithm [1]_ runs in :math:`O(n + m)` time, where :math:`m` is the
 /// expected number of edges, which equals :math:`p n (n - 1)/2`.
 ///
@@ -1161,7 +1161,7 @@ pub fn directed_gnp_random_graph(
 /// ``fast_gnp_random_graph`` [2]_
 ///
 /// :param int num_nodes: The number of nodes to create in the graph
-/// :param float probability: The probability of an edge
+/// :param float probability: The probability of creating an edge between two nodes
 /// :param int seed: An optional seed to use for the random number generator
 ///
 /// :return: A PyGraph object
