@@ -16,6 +16,8 @@ extern crate ndarray;
 extern crate numpy;
 extern crate petgraph;
 extern crate pyo3;
+extern crate rand;
+extern crate rand_pcg;
 
 mod astar;
 mod dag_isomorphism;
@@ -28,7 +30,7 @@ use std::collections::{BinaryHeap, HashSet};
 use hashbrown::HashMap;
 
 use pyo3::create_exception;
-use pyo3::exceptions::Exception;
+use pyo3::exceptions::{Exception, ValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
@@ -41,6 +43,8 @@ use petgraph::visit::{Bfs, IntoEdgeReferences, NodeIndexable, Reversed};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
+use rand::prelude::*;
+use rand_pcg::Pcg64;
 
 fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
@@ -1061,17 +1065,173 @@ fn digraph_astar_shortest_path(
     Ok(out_path.to_object(py))
 }
 
-/// The provided node is invalid.
+/// Return a :math:`G_{np}` directed random graph, also known as an
+/// Erdős-Rényi graph or a binomial graph.
+///
+/// The :math:`G_{n,p}` graph algorithm chooses each of the
+/// :math:`n (n - 1)` possible edges with probability :math:`p`.
+/// This algorithm [1]_ runs in :math:`O(n + m)` time, where :math:`m` is the
+/// expected number of edges, which equals :math:`p n (n - 1)/2`.
+///
+/// Based on the implementation of the networkx function
+/// ``fast_gnp_random_graph`` [2]_
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param float probability: The probability of creating an edge between two nodes
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+///
+/// .. [1] Vladimir Batagelj and Ulrik Brandes,
+///    "Efficient generation of large random networks",
+///    Phys. Rev. E, 71, 036113, 2005.
+/// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
+#[pyfunction]
+#[text_signature = "(num_nodes, probability, seed=None, /)"]
+pub fn directed_gnp_random_graph(
+    py: Python,
+    num_nodes: isize,
+    probability: f64,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    if num_nodes <= 0 {
+        return Err(ValueError::py_err("num_nodes must be > 0"));
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut inner_graph = StableDiGraph::<PyObject, PyObject>::new();
+    for x in 0..num_nodes {
+        inner_graph.add_node(x.to_object(py));
+    }
+    if probability <= 0.0 || probability >= 1.0 {
+        return Err(ValueError::py_err(
+            "Probability out of range, must be 0 < p < 1",
+        ));
+    }
+    let mut v: isize = 0;
+    let mut w: isize = -1;
+    let lp: f64 = (1.0 - probability).ln();
+
+    while v < num_nodes {
+        let random: f64 = rng.gen_range(0.0, 1.0);
+        let lr: f64 = (1.0 - random).ln();
+        let ratio: isize = (lr / lp) as isize;
+        w = w + 1 + ratio;
+        // avoid self loops
+        if v == w {
+            w += 1;
+        }
+        while v < num_nodes && num_nodes <= w {
+            w -= v;
+            v += 1;
+            // avoid self loops
+            if v == w {
+                w -= v;
+                v += 1;
+            }
+        }
+        if v < num_nodes {
+            let v_index = NodeIndex::new(v as usize);
+            let w_index = NodeIndex::new(w as usize);
+            inner_graph.add_edge(v_index, w_index, py.None());
+        }
+    }
+
+    let graph = digraph::PyDiGraph {
+        graph: inner_graph,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+    };
+    Ok(graph)
+}
+
+/// Return a :math:`G_{np}` random undirected graph, also known as an
+/// Erdős-Rényi graph or a binomial graph.
+///
+/// The :math:`G_{n,p}` graph algorithm chooses each of the
+/// :math:`n (n - 1)/2` possible edges with probability :math:`p`.
+/// This algorithm [1]_ runs in :math:`O(n + m)` time, where :math:`m` is the
+/// expected number of edges, which equals :math:`p n (n - 1)/2`.
+///
+/// Based on the implementation of the networkx function
+/// ``fast_gnp_random_graph`` [2]_
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param float probability: The probability of creating an edge between two nodes
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+///
+/// .. [1] Vladimir Batagelj and Ulrik Brandes,
+///    "Efficient generation of large random networks",
+///    Phys. Rev. E, 71, 036113, 2005.
+/// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
+#[pyfunction]
+#[text_signature = "(num_nodes, probability, seed=None, /)"]
+pub fn undirected_gnp_random_graph(
+    py: Python,
+    num_nodes: isize,
+    probability: f64,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    if num_nodes <= 0 {
+        return Err(ValueError::py_err("num_nodes must be > 0"));
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
+    for x in 0..num_nodes {
+        inner_graph.add_node(x.to_object(py));
+    }
+    if probability <= 0.0 || probability >= 1.0 {
+        return Err(ValueError::py_err(
+            "Probability out of range, must be 0 < p < 1",
+        ));
+    }
+    let mut v: isize = 1;
+    let mut w: isize = -1;
+    let lp: f64 = (1.0 - probability).ln();
+
+    while v < num_nodes {
+        let random: f64 = rng.gen_range(0.0, 1.0);
+        let lr = (1.0 - random).ln();
+        let ratio: isize = (lr / lp) as isize;
+        w = w + 1 + ratio;
+        while w >= v && v < num_nodes {
+            w -= v;
+            v += 1;
+        }
+        if v < num_nodes {
+            let v_index = NodeIndex::new(v as usize);
+            let w_index = NodeIndex::new(w as usize);
+            inner_graph.add_edge(v_index, w_index, py.None());
+        }
+    }
+
+    let graph = graph::PyGraph {
+        graph: inner_graph,
+        node_removed: false,
+    };
+    Ok(graph)
+}
+// The provided node is invalid.
 create_exception!(retworkx, InvalidNode, Exception);
-/// Performing this operation would result in trying to add a cycle to a DAG.
+// Performing this operation would result in trying to add a cycle to a DAG.
 create_exception!(retworkx, DAGWouldCycle, Exception);
-/// There is no edge present between the provided nodes.
+// There is no edge present between the provided nodes.
 create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
-/// The specified Directed Graph has a cycle and can't be treated as a DAG.
+// The specified Directed Graph has a cycle and can't be treated as a DAG.
 create_exception!(retworkx, DAGHasCycle, Exception);
-/// No neighbors found matching the provided predicate.
+// No neighbors found matching the provided predicate.
 create_exception!(retworkx, NoSuitableNeighbors, Exception);
-/// No path was found between the specified nodes.
+// No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, Exception);
 
 #[pymodule]
@@ -1103,6 +1263,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
+    m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())

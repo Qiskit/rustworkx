@@ -77,7 +77,7 @@ use super::{
 #[text_signature = "(/, check_cycle=False)"]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
-    cycle_state: algo::DfsSpace<
+    pub cycle_state: algo::DfsSpace<
         NodeIndex,
         <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
     >,
