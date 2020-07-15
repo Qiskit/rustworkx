@@ -964,10 +964,10 @@ fn graph_dijkstra_shortest_path_lengths(
     })?;
     let out_dict = PyDict::new(py);
     for (index, value) in res {
-        if value == 0.0 {
+        let int_index = index.index();
+        if int_index == node {
             continue;
         }
-        let int_index = index.index();
         if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
             out_dict.set_item(int_index, value)?;
         }
@@ -1019,10 +1019,10 @@ fn digraph_dijkstra_shortest_path_lengths(
     })?;
     let out_dict = PyDict::new(py);
     for (index, value) in res {
-        if value == 0.0 {
+        let int_index = index.index();
+        if int_index == node {
             continue;
         }
-        let int_index = index.index();
         if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
             out_dict.set_item(int_index, value)?;
         }
