@@ -12,6 +12,8 @@
 
 use std::ops::{Index, IndexMut};
 
+use hashbrown::HashMap;
+
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::IndexError;
 use pyo3::prelude::*;
@@ -288,13 +290,11 @@ impl PyGraph {
     /// :returns: A list of all the edge data objects in the graph
     /// :rtype: list
     #[text_signature = "()"]
-    pub fn edges(&self, py: Python) -> PyObject {
-        let raw_edges = self.graph.edge_indices();
-        let mut out: Vec<&PyObject> = Vec::new();
-        for edge in raw_edges {
-            out.push(self.graph.edge_weight(edge).unwrap());
-        }
-        PyList::new(py, out).into()
+    pub fn edges(&self) -> Vec<&PyObject> {
+        self.graph
+            .edge_indices()
+            .map(|edge| self.graph.edge_weight(edge).unwrap())
+            .collect()
     }
 
     /// Return a list of all node data.
@@ -302,13 +302,11 @@ impl PyGraph {
     /// :returns: A list of all the node data objects in the graph
     /// :rtype: list
     #[text_signature = "()"]
-    pub fn nodes(&self, py: Python) -> PyObject {
-        let raw_nodes = self.graph.node_indices();
-        let mut out: Vec<&PyObject> = Vec::new();
-        for node in raw_nodes {
-            out.push(self.graph.node_weight(node).unwrap());
-        }
-        PyList::new(py, out).into()
+    pub fn nodes(&self) -> Vec<&PyObject> {
+        self.graph
+            .node_indices()
+            .map(|node| self.graph.node_weight(node).unwrap())
+            .collect()
     }
 
     /// Return a list of all node indexes.
@@ -316,12 +314,8 @@ impl PyGraph {
     /// :returns: A list of all the node indexes in the graph
     /// :rtype: list
     #[text_signature = "()"]
-    pub fn node_indexes(&self, py: Python) -> PyObject {
-        let mut out_list: Vec<usize> = Vec::new();
-        for node_index in self.graph.node_indices() {
-            out_list.push(node_index.index());
-        }
-        PyList::new(py, out_list).into()
+    pub fn node_indexes(&self) -> Vec<usize> {
+        self.graph.node_indices().map(|node| node.index()).collect()
     }
 
     /// Return True if there is an edge between node_a to node_b.
@@ -398,23 +392,21 @@ impl PyGraph {
     #[text_signature = "(node_a, node_b, /)"]
     pub fn get_all_edge_data(
         &self,
-        py: Python,
         node_a: usize,
         node_b: usize,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Vec<&PyObject>> {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
-        let raw_edges = self.graph.edges(index_a);
-        let mut out: Vec<&PyObject> = Vec::new();
-        for edge in raw_edges {
-            if edge.target() == index_b {
-                out.push(edge.weight());
-            }
-        }
+        let out: Vec<&PyObject> = self
+            .graph
+            .edges(index_a)
+            .filter(|edge| edge.target() == index_b)
+            .map(|edge| edge.weight())
+            .collect();
         if out.is_empty() {
             Err(NoEdgeBetweenNodes::py_err("No edge found between nodes"))
         } else {
-            Ok(PyList::new(py, out).into())
+            Ok(out)
         }
     }
 
@@ -563,16 +555,13 @@ impl PyGraph {
     /// :returns indices: A list of int indices of the newly created nodes
     /// :rtype: list
     #[text_signature = "(obj_list, /)"]
-    pub fn add_nodes_from(
-        &mut self,
-        obj_list: Vec<PyObject>,
-    ) -> PyResult<Vec<usize>> {
+    pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> Vec<usize> {
         let mut out_list: Vec<usize> = Vec::new();
         for obj in obj_list {
             let node_index = self.graph.add_node(obj);
             out_list.push(node_index.index());
         }
-        Ok(out_list)
+        out_list
     }
 
     /// Remove nodes from the graph.
@@ -611,11 +600,16 @@ impl PyGraph {
     pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.neighbors(index);
-        let out_dict = PyDict::new(py);
+        let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
+
         for neighbor in neighbors {
             let edge = self.graph.find_edge(index, neighbor);
             let edge_w = self.graph.edge_weight(edge.unwrap());
-            out_dict.set_item(neighbor.index(), edge_w)?;
+            out_map.insert(neighbor.index(), edge_w.unwrap());
+        }
+        let out_dict = PyDict::new(py);
+        for (index, value) in out_map {
+            out_dict.set_item(index, value)?;
         }
         Ok(out_dict.into())
     }

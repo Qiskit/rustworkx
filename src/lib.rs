@@ -107,12 +107,8 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
 #[text_signature = "(graph, /)"]
-fn dag_longest_path(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-) -> PyResult<PyObject> {
-    let path = longest_path(graph)?;
-    Ok(PyList::new(py, path).into())
+fn dag_longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
+    longest_path(graph)
 }
 
 /// Find the length of the longest path in a DAG
@@ -241,21 +237,14 @@ fn is_isomorphic_node_match(
 /// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
 #[pyfunction]
 #[text_signature = "(graph, /)"]
-fn topological_sort(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-) -> PyResult<PyObject> {
+fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
         }
     };
-    let mut out: Vec<usize> = Vec::new();
-    for node in nodes {
-        out.push(node.index());
-    }
-    Ok(PyList::new(py, out).into())
+    Ok(nodes.iter().map(|node| node.index()).collect())
 }
 
 /// Return successors in a breadth-first-search from a source node.
@@ -307,11 +296,7 @@ fn bfs_successors(
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn ancestors(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-    node: usize,
-) -> PyResult<PyObject> {
+fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(graph);
@@ -321,7 +306,7 @@ fn ancestors(
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    Ok(out_set.to_object(py))
+    out_set
 }
 
 /// Return the descendants of a node in a graph.
@@ -337,11 +322,7 @@ fn ancestors(
 /// :returns: A list of node indexes of descendants of provided node.
 /// :rtype: list
 #[pyfunction]
-fn descendants(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-    node: usize,
-) -> PyResult<PyObject> {
+fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(graph, index, None, |_| 1);
@@ -350,7 +331,7 @@ fn descendants(
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    Ok(out_set.to_object(py))
+    out_set
 }
 
 /// Get the lexicographical topological sorted nodes from the provided DAG
@@ -948,7 +929,7 @@ fn graph_astar_shortest_path(
     goal_fn: PyObject,
     edge_cost_fn: PyObject,
     estimate_cost_fn: PyObject,
-) -> PyResult<PyObject> {
+) -> PyResult<Vec<usize>> {
     let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -988,8 +969,7 @@ fn graph_astar_shortest_path(
             ))
         }
     };
-    let out_path: Vec<usize> = path.1.into_iter().map(|x| x.index()).collect();
-    Ok(out_path.to_object(py))
+    Ok(path.1.into_iter().map(|x| x.index()).collect())
 }
 
 /// Compute the A* shortest path for a PyDiGraph
@@ -1021,7 +1001,7 @@ fn digraph_astar_shortest_path(
     goal_fn: PyObject,
     edge_cost_fn: PyObject,
     estimate_cost_fn: PyObject,
-) -> PyResult<PyObject> {
+) -> PyResult<Vec<usize>> {
     let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1061,8 +1041,7 @@ fn digraph_astar_shortest_path(
             ))
         }
     };
-    let out_path: Vec<usize> = path.1.into_iter().map(|x| x.index()).collect();
-    Ok(out_path.to_object(py))
+    Ok(path.1.into_iter().map(|x| x.index()).collect())
 }
 
 /// Return a :math:`G_{np}` directed random graph, also known as an
