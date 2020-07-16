@@ -1,0 +1,9 @@
+name: retworkx
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - rust=1.40.0=1
+  - pip
+  - pip:
+    - m2r2
