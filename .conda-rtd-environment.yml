@@ -5,3 +5,4 @@ channels:
 dependencies:
   - rust=1.40.0=1
   - m2r=0.2.1=py_0
+  - sphinx=3.0.4=py_0
