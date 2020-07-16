@@ -30,7 +30,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.extlinks',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
-              'm2r',
+              'm2r2',
              ]
 html_static_path = ['_static']
 templates_path = ['_templates']
