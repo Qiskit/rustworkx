@@ -108,7 +108,7 @@ jobs:
       install:
         - echo ""
       env:
-        - CIBW_BEFORE_ALL="yum install -y wget && tools/install_rust.sh"
+        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
@@ -142,7 +142,7 @@ jobs:
       install:
         - echo ""
       env:
-        - CIBW_BEFORE_ALL="yum install -y wget && tools/install_rust.sh"
+        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
@@ -162,7 +162,7 @@ jobs:
       install:
         - echo ""
       env:
-        - CIBW_BEFORE_ALL="yum install -y wget && tools/install_rust.sh"
+        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'

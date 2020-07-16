@@ -67,7 +67,7 @@ stages:
       pool: {vmImage: 'vs2017-win2016'}
 #      condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
       variables:
-        CIBW_BEFORE_ALL: rustup update && rustup default stable-i686-pc-windows-msvc
+        CIBW_BEFORE_ALL: rustup default stable-i686-pc-windows-msvc
         CIBW_BEFORE_BUILD: pip install -U setuptools-rust
         CIBW_SKIP: cp27-* cp34-* pp* *amd64
         TWINE_USERNAME: retworkx-ci
