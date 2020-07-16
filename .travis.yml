@@ -41,6 +41,7 @@ jobs:
       before_install: echo ""
       install: echo ""
       before_script:
+        - rustup default stable
         - rustup update
       script:
         - cargo build
