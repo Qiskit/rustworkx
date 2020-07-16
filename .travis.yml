@@ -41,10 +41,14 @@ jobs:
       stage: Compile and lint
       before_install: echo ""
       install: echo ""
-      before_script: echo ""
+      before_script:
+        - rustup default stable
+        - rustup override set stable
+        - rustup update
+        - rustup component add rustfmt
       script:
-        - cargo build
-        - cargo fmt -- --check
+        - cargo +stable build
+        - cargo +stable fmt -- --check
     - name: Python lint
       language: python
       stage: Compile and lint
