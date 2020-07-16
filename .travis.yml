@@ -37,14 +37,17 @@ jobs:
   include:
     - name: Compile and rustfmt
       language: rust
+      rust: stable
       stage: Compile and lint
       before_install: echo ""
       install: echo ""
       before_script:
+        - rustup default stable
+        - rustup override set stable
         - rustup update
-        - rustup override set nightly
+        - rustup component add rustfmt
       script:
-        - cargo build
+        - cargo +stable build
         - cargo +stable fmt -- --check
     - name: Python lint
       language: python
@@ -57,6 +60,7 @@ jobs:
       python: 3.7
       stage: Compile and lint
       install:
+        - rustup default nightly
         - curl -L https://github.com/mozilla/grcov/releases/download/v0.5.9/grcov-linux-x86_64.tar.bz2 | tar jxf -
         - pip install -U setuptools-rust
         - gem install coveralls-lcov
@@ -78,6 +82,9 @@ jobs:
     - name: Python 3.6 Tests Linux
       stage: Linux x86_64
       python: 3.6
+    - name: Python 3.7 Tests Linux
+      stage: Linux x86_64
+      python: 3.7
     - name: Python 3.8 Tests Linux
       stage: Linux x86_64
       python: 3.8
@@ -101,14 +108,15 @@ jobs:
       install:
         - echo ""
       env:
-        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
+        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U cibuildwheel==1.2.0 twine
+        - pip install -U cibuildwheel==1.5.2 twine
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -134,14 +142,15 @@ jobs:
       install:
         - echo ""
       env:
-        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
+        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U twine cibuildwheel==1.2.0
+        - pip install -U twine cibuildwheel==1.5.2
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -153,14 +162,15 @@ jobs:
       install:
         - echo ""
       env:
-        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust && yum install -y wget && tools/install_rust.sh"
+        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
+        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U twine cibuildwheel==1.2.0
+        - pip install -U twine cibuildwheel==1.5.2
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
