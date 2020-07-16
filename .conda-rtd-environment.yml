@@ -4,5 +4,6 @@ channels:
   - conda-forge
 dependencies:
   - rust=1.40.0=1
-  - m2r=0.2.1=py_0
-  - sphinx=2.4.4=py_0
+  - pip
+  - pip:
+    - m2r2
