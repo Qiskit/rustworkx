@@ -80,9 +80,10 @@ class TestAstarDigraph(unittest.TestCase):
                 lambda x: float(x), heuristic_func)
             self.assertEqual(expected[index], path)
 
-        self.assertRaises(Exception, retworkx.digraph_astar_shortest_path,
-                          (g, a, lambda finish: finish_func(no_path, finish),
-                           lambda x: float(x), heuristic_func))
+        with self.assertRaises(retworkx.NoPathFound):
+            retworkx.digraph_astar_shortest_path(
+                g, a, lambda finish: finish_func(no_path, finish),
+                lambda x: float(x), heuristic_func)
 
     def test_astar_digraph_with_graph_input(self):
         g = retworkx.PyGraph()
@@ -157,9 +158,10 @@ class TestAstarGraph(unittest.TestCase):
                 lambda x: float(x), heuristic_func)
             self.assertEqual(expected[index], path)
 
-        self.assertRaises(Exception, retworkx.graph_astar_shortest_path,
-                          (g, a, lambda finish: finish_func(no_path, finish),
-                           lambda x: float(x), heuristic_func))
+        with self.assertRaises(retworkx.NoPathFound):
+            retworkx.graph_astar_shortest_path(
+                g, a, lambda finish: finish_func(no_path, finish),
+                lambda x: float(x), heuristic_func)
 
     def test_astar_graph_with_digraph_input(self):
         g = retworkx.PyDAG()

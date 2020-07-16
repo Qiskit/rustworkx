@@ -7,13 +7,21 @@ Retworkx API Reference
 Graph Classes
 -------------
 
-
 .. autosummary::
    :toctree: stubs
 
     retworkx.PyGraph
     retworkx.PyDiGraph
     retworkx.PyDAG
+
+Random Circuit Functions
+------------------------
+
+.. autosummary::
+   :toctree: stubs
+
+    retworkx.directed_gnp_random_graph
+    retworkx.undirected_gnp_random_graph
 
 Algorithm Functions
 -------------------
@@ -41,3 +49,16 @@ Algorithm Functions
    retworkx.graph_astar_shortest_path
    retworkx.digraph_astar_shortest_path
    retworkx.graph_greedy_color
+
+Exceptions
+----------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.InvalidNode
+   retworkx.DAGWouldCycle
+   retworkx.NoEdgeBetweenNodes
+   retworkx.DAGHasCycle
+   retworkx.NoSuitableNeighbors
+   retworkx.NoPathFound

@@ -77,7 +77,7 @@ use super::{
 #[text_signature = "(/, check_cycle=False)"]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
-    cycle_state: algo::DfsSpace<
+    pub cycle_state: algo::DfsSpace<
         NodeIndex,
         <StableDiGraph<PyObject, PyObject> as Visitable>::Map,
     >,
@@ -553,7 +553,9 @@ impl PyDiGraph {
 
     /// Remove a node from the graph.
     ///
-    /// :param int node: The index of the node to remove
+    /// :param int node: The index of the node to remove. If the index is not
+    ///     present in the graph it will be ignored and this function will have
+    ///     no effect.
     #[text_signature = "(node, /)"]
     pub fn remove_node(&mut self, node: usize) -> PyResult<()> {
         let index = NodeIndex::new(node);
@@ -892,6 +894,24 @@ impl PyDiGraph {
             out_list.push(node_index.index());
         }
         Ok(out_list)
+    }
+
+    /// Remove nodes from the graph.
+    ///
+    /// If a node index in the list is not present in the graph it will be
+    /// ignored.
+    ///
+    /// :param list index_list: A list of node indicies to remove from the
+    ///     the graph.
+    #[text_signature = "(index_list, /)"]
+    pub fn remove_nodes_from(
+        &mut self,
+        index_list: Vec<usize>,
+    ) -> PyResult<()> {
+        for node in index_list.iter().map(|x| NodeIndex::new(*x)) {
+            self.graph.remove_node(node);
+        }
+        Ok(())
     }
 
     /// Get the degree of a node for inbound edges.
