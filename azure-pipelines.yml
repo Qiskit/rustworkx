@@ -198,7 +198,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default update
+        - bash: rustup update
           displayName: 'Install Rust'
         - bash: |
             set -e
