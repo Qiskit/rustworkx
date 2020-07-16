@@ -37,12 +37,11 @@ jobs:
   include:
     - name: Compile and rustfmt
       language: rust
+      rust: stable
       stage: Compile and lint
       before_install: echo ""
       install: echo ""
-      before_script:
-        - rustup default stable
-        - rustup update
+      before_script: echo ""
       script:
         - cargo build
         - cargo fmt -- --check
