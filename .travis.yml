@@ -20,15 +20,15 @@ script:
   - cd tests && ../test-venv/bin/python -m unittest discover .
 stages:
   - name: Compile and lint
-    if: tag IS present
-  - name: Linux x86_64
-    if: tag IS present
-  - name: Linux non-x86_64
-    if: tag IS present
-  - name: macOS
-    if: tag IS present
-  - name: deploy
     if: tag IS blank
+  - name: Linux x86_64
+    if: tag IS blank
+  - name: Linux non-x86_64
+    if: tag IS blank
+  - name: macOS
+    if: tag IS blank
+  - name: deploy
+    if: tag IS present
 
 jobs:
   fast_finish: true
@@ -114,11 +114,11 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      if: tag IS blank
+      if: tag IS present
       script:
         - pip install -U cibuildwheel==1.5.2 twine
         - cibuildwheel --output-dir wheelhouse
-#        - twine upload wheelhouse/*
+        - twine upload wheelhouse/*
     - stage: deploy
       python: 3.7
       before_install:
@@ -129,10 +129,10 @@ jobs:
         - TWINE_USERNAME=retworkx-ci
       before_script:
         - pip install -U twine setuptools-rust
-      if: tag IS blank
+      if: tag IS present
       script:
         - python setup.py sdist
-#        - twine upload dist/*
+        - twine upload dist/*
     - stage: deploy
       arch: arm64
       services:
@@ -148,11 +148,11 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      if: tag IS blank
+      if: tag IS present
       script:
         - pip install -U twine cibuildwheel==1.5.2
         - cibuildwheel --output-dir wheelhouse
-#        - twine upload wheelhouse/*
+        - twine upload wheelhouse/*
     - stage: deploy
       arch: ppc64le
       services:
@@ -168,11 +168,11 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      if: tag IS blank
+      if: tag IS present
       script:
         - pip install -U twine cibuildwheel==1.5.2
         - cibuildwheel --output-dir wheelhouse
-#        - twine upload wheelhouse/*
+        - twine upload wheelhouse/*
     - stage: deploy
       arch: s390x
       services:
@@ -188,8 +188,8 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      if: tag IS blank
+      if: tag IS present
       script:
         - sudo pip install -U twine cibuildwheel==1.5.2
         - cibuildwheel --output-dir wheelhouse
-#        - twine upload wheelhouse/*
+        - twine upload wheelhouse/*
