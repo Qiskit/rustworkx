@@ -78,7 +78,7 @@ jobs:
     - name: Python 3.6 Tests Linux
       stage: Linux x86_64
       python: 3.6
-    - name: Python 3.8 Tests Linux
+    - name: Python 3.7 Tests Linux
       stage: Linux x86_64
       python: 3.7
     - name: Python 3.8 Tests Linux
