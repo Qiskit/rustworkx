@@ -362,6 +362,10 @@ impl PyDiGraph {
         Ok(())
     }
 
+    /// Whether cycle checking is enabled for the DiGraph/DAG.
+    ///
+    /// If set to ``True`` adding new edges that would introduce a cycle
+    /// will raise a :class:`DAGWouldCycle` exception.
     #[getter]
     fn get_check_cycle(&self) -> PyResult<bool> {
         Ok(self.check_cycle)
@@ -380,6 +384,7 @@ impl PyDiGraph {
     ///
     /// :returns: A list of all the edge data objects in the graph
     /// :rtype: list
+    #[text_signature = "()"]
     pub fn edges(&self) -> Vec<&PyObject> {
         self.graph
             .edge_indices()
@@ -391,6 +396,7 @@ impl PyDiGraph {
     ///
     /// :returns: A list of all the node data objects in the graph
     /// :rtype: list
+    #[text_signature = "()"]
     pub fn nodes(&self) -> Vec<&PyObject> {
         self.graph
             .node_indices()
@@ -402,6 +408,7 @@ impl PyDiGraph {
     ///
     /// :returns: A list of all the node indexes in the graph
     /// :rtype: list
+    #[text_signature = "()"]
     pub fn node_indexes(&self) -> Vec<usize> {
         self.graph.node_indices().map(|node| node.index()).collect()
     }
@@ -473,7 +480,7 @@ impl PyDiGraph {
     ///
     /// :returns: The data object set for the edge
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[text_signature = "(node_a, node_b)"]
+    #[text_signature = "(node_a, node_b, /)"]
     pub fn get_edge_data(
         &self,
         node_a: usize,
@@ -500,7 +507,7 @@ impl PyDiGraph {
     ///
     /// :returns: The data object set for that node
     /// :raises IndexError: when an invalid node index is provided
-    #[text_signature = "(node)"]
+    #[text_signature = "(node, /)"]
     pub fn get_node_data(&self, node: usize) -> PyResult<&PyObject> {
         let index = NodeIndex::new(node);
         let node = match self.graph.node_weight(index) {
@@ -921,6 +928,7 @@ impl PyDiGraph {
     /// :param int node: The index of the node to find the outbound degree of
     /// :returns: The outbound degree for the specified node
     /// :rtype: int
+    #[text_signature = "(node, /)"]
     pub fn out_degree(&self, node: usize) -> usize {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Outgoing;
@@ -940,6 +948,7 @@ impl PyDiGraph {
     ///
     /// :returns: The node object that has an edge to it from the provided
     ///     node index which matches the provided condition
+    #[text_signature = "(node, predicate, /)"]
     pub fn find_adjacent_node_by_edge(
         &self,
         py: Python,
@@ -966,6 +975,7 @@ impl PyDiGraph {
 
 #[pyproto]
 impl PyMappingProtocol for PyDiGraph {
+    /// Return the number of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
     }
