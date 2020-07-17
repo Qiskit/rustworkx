@@ -630,6 +630,7 @@ impl PyGraph {
 
 #[pyproto]
 impl PyMappingProtocol for PyGraph {
+    /// Return the nmber of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
     }

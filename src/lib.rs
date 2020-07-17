@@ -322,6 +322,7 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :returns: A list of node indexes of descendants of provided node.
 /// :rtype: list
 #[pyfunction]
+#[text_signature = "(graph, node, /)"]
 fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
