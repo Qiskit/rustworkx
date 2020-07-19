@@ -43,7 +43,7 @@ where
     writeln!(file, "{} {{", TYPE[graph.is_directed() as usize])?;
     if let Some(graph_attr_map) = graph_attrs {
         for (key, value) in graph_attr_map.iter() {
-            writeln!(file, "{}={}", key, value)?;
+            writeln!(file, "{}={} ;", key, value)?;
         }
     }
 

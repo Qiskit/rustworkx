@@ -10,12 +10,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
+import tempfile
 import unittest
 
 import retworkx
 
 
 class TestDot(unittest.TestCase):
+    def setUp(self):
+        _, self.path = tempfile.mkstemp()
+        os.remove(self.path)
+
     def test_graph_to_dot(self):
         graph = retworkx.PyGraph()
         graph.add_node({'color': 'black', 'fillcolor': 'green',
@@ -27,8 +33,8 @@ class TestDot(unittest.TestCase):
             "graph {\n0 [color=black, fillcolor=green, label=a, style=filled"
             "];\n1 [color=black, fillcolor=red, label=a, style=filled];"
             "\n0 -- 1 [label=1, name=1];\n}\n")
-        res = graph.to_dot(lambda node: node, lambda edge: edge)
-        self.assertEqual(expected, res.decode('utf8'))
+        res = graph.to_dot(lambda node: node, lambda edge: edge).decode('utf8')
+        self.assertEqual(expected, res)
 
     def test_digraph_to_dot(self):
         graph = retworkx.PyDiGraph()
@@ -43,3 +49,65 @@ class TestDot(unittest.TestCase):
             "\n0 -> 1 [label=1, name=1];\n}\n")
         res = graph.to_dot(lambda node: node, lambda edge: edge)
         self.assertEqual(expected, res.decode('utf8'))
+
+    def test_graph_to_dot_to_file(self):
+        graph = retworkx.PyGraph()
+        graph.add_node({'color': 'black', 'fillcolor': 'green',
+                        'label': "a", 'style': 'filled'})
+        graph.add_node({'color': 'black', 'fillcolor': 'red',
+                        'label': "a", 'style': 'filled'})
+        graph.add_edge(0, 1, dict(label='1', name='1'))
+        expected = (
+            "graph {\n0 [color=black, fillcolor=green, label=a, style=filled"
+            "];\n1 [color=black, fillcolor=red, label=a, style=filled];"
+            "\n0 -- 1 [label=1, name=1];\n}\n")
+        res = graph.to_dot(lambda node: node, lambda edge: edge,
+                           filename=self.path)
+        self.addCleanup(os.remove, self.path)
+        self.assertIsNone(res)
+        with open(self.path, 'r') as fd:
+            res = fd.read()
+        self.assertEqual(expected, res)
+
+    def test_digraph_to_dot_to_file(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_node({'color': 'black', 'fillcolor': 'green',
+                        'label': "a", 'style': 'filled'})
+        graph.add_node({'color': 'black', 'fillcolor': 'red',
+                        'label': "a", 'style': 'filled'})
+        graph.add_edge(0, 1, dict(label='1', name='1'))
+        expected = (
+            "digraph {\n0 [color=black, fillcolor=green, label=a, style=filled"
+            "];\n1 [color=black, fillcolor=red, label=a, style=filled];"
+            "\n0 -> 1 [label=1, name=1];\n}\n")
+        res = graph.to_dot(lambda node: node, lambda edge: edge,
+                           filename=self.path)
+        self.addCleanup(os.remove, self.path)
+        self.assertIsNone(res)
+        with open(self.path, 'r') as fd:
+            res = fd.read()
+        self.assertEqual(expected, res)
+
+    def test_digraph_empty_dicts(self):
+        graph = retworkx.directed_gnp_random_graph(3, .9, seed=42)
+        dot_str = graph.to_dot(lambda _: {}, lambda _: {})
+        self.assertEqual("digraph {\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n0 -> 2 ;\n}\n",
+                         dot_str.decode('utf8'))
+
+    def test_graph_empty_dicts(self):
+        graph = retworkx.undirected_gnp_random_graph(3, .9, seed=42)
+        dot_str = graph.to_dot(lambda _: {}, lambda _: {})
+        self.assertEqual("graph {\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n2 -- 0 ;\n"
+                         "2 -- 1 ;\n}\n", dot_str.decode('utf8'))
+
+    def test_digraph_graph_attrs(self):
+        graph = retworkx.directed_gnp_random_graph(3, .9, seed=42)
+        dot_str = graph.to_dot(lambda _: {}, lambda _: {}, {'bgcolor': 'red'})
+        self.assertEqual("digraph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n"
+                         "0 -> 2 ;\n}\n", dot_str.decode('utf8'))
+
+    def test_graph_graph_attrs(self):
+        graph = retworkx.undirected_gnp_random_graph(3, .9, seed=42)
+        dot_str = graph.to_dot(lambda _: {}, lambda _: {}, {'bgcolor': 'red'})
+        self.assertEqual("graph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n"
+                         "2 -- 0 ;\n2 -- 1 ;\n}\n", dot_str.decode('utf8'))
