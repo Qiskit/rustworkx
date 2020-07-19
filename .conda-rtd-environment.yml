@@ -8,3 +8,6 @@ dependencies:
   - pip
   - pip:
     - m2r2
+    - jupyter-sphinx
+    - pydot
+    - pillow
