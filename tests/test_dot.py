@@ -19,7 +19,8 @@ import retworkx
 
 class TestDot(unittest.TestCase):
     def setUp(self):
-        _, self.path = tempfile.mkstemp()
+        fd, self.path = tempfile.mkstemp()
+        os.close(fd)
         os.remove(self.path)
 
     def test_graph_to_dot(self):
