@@ -17,7 +17,8 @@ extern crate numpy;
 extern crate petgraph;
 extern crate pyo3;
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
+use std::fs::File;
 use std::ops::{Index, IndexMut};
 
 use hashbrown::HashMap;
@@ -25,7 +26,7 @@ use hashbrown::HashMap;
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::IndexError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyLong, PyTuple};
+use pyo3::types::{PyBytes, PyDict, PyList, PyLong, PyTuple};
 use pyo3::Python;
 
 use petgraph::algo;
@@ -39,6 +40,7 @@ use petgraph::visit::{
     NodeIndexable, Visitable,
 };
 
+use super::dot_utils::build_dot;
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
     NoSuitableNeighbors,
@@ -970,6 +972,103 @@ impl PyDiGraph {
             }
         }
         Err(NoSuitableNeighbors::py_err("No suitable neighbor"))
+    }
+
+    /// Generate a dot file from the graph
+    ///
+    /// :param node_attr: A callable that will take in a node data object
+    ///     and return a dictionary of attributes to be associated with the
+    ///     node in the dot file. The key and value of this dictionary **must**
+    ///     be a string. If they're not strings retworkx will raise TypeError
+    ///     (unfortunately without an error message because of current
+    ///     limitations in the PyO3 type checking)
+    /// :param edge_attr: A callable that will take in an edge data object
+    ///     and return a dictionary of attributes to be associated with the
+    ///     node in the dot file. The key and value of this dictionary **must**
+    ///     be a string. If they're not strings retworkx will raise TypeError
+    ///     (unfortunately without an error message because of current
+    ///     limitations in the PyO3 type checking)
+    /// :param dict graph_attr: An optional dictionary that specifies any graph
+    ///     attributes for the output dot file. The key and value of this
+    ///     dictionary **must** be a string. If they're not strings retworkx
+    ///     will raise TypeError (unfortunately without an error message
+    ///     because of current limitations in the PyO3 type checking)
+    /// :param str filename: An optional path to write the dot file to
+    ///     if specified there is no return from the function
+    ///
+    /// :returns: A string with the dot file contents if filename is not
+    ///     specified.
+    /// :rtype: str
+    ///
+    /// Using this method enables you to leverage graphviz to visualize a
+    /// :class:`retworkx.PyDiGraph` object. For example:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   import os
+    ///   import tempfile
+    ///
+    ///   import pydot
+    ///   from PIL import Image
+    ///
+    ///   import retworkx
+    ///
+    ///   graph = retworkx.directed_gnp_random_graph(15, .25)
+    ///   dot_str = graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'),
+    ///       lambda edge: {})
+    ///   dot = pydot.graph_from_dot_data(dot_str.decode('utf8'))[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    #[text_signature = "(node_attr, edge_attr, /, graph_attr=None, filename=None)"]
+    pub fn to_dot(
+        &self,
+        py: Python,
+        node_attr: PyObject,
+        edge_attr: PyObject,
+        graph_attr: Option<BTreeMap<String, String>>,
+        filename: Option<String>,
+    ) -> PyResult<Option<PyObject>> {
+        let node_attr_callable =
+            |node: &PyObject| -> PyResult<BTreeMap<String, String>> {
+                let res = node_attr.call1(py, (node,))?;
+                Ok(res.extract(py)?)
+            };
+
+        let edge_attr_callable =
+            |edge: &PyObject| -> PyResult<BTreeMap<String, String>> {
+                let res = edge_attr.call1(py, (edge,))?;
+                Ok(res.extract(py)?)
+            };
+
+        if filename.is_some() {
+            let mut file = File::create(filename.unwrap())?;
+            build_dot(
+                self,
+                &mut file,
+                graph_attr,
+                node_attr_callable,
+                edge_attr_callable,
+            )?;
+            Ok(None)
+        } else {
+            let mut file = Vec::<u8>::new();
+            build_dot(
+                self,
+                &mut file,
+                graph_attr,
+                node_attr_callable,
+                edge_attr_callable,
+            )?;
+            Ok(Some(PyBytes::new(py, &file).to_object(py)))
+        }
     }
 }
 

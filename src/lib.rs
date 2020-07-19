@@ -23,6 +23,7 @@ mod astar;
 mod dag_isomorphism;
 mod digraph;
 mod dijkstra;
+mod dot_utils;
 mod graph;
 
 use std::cmp::{Ordering, Reverse};

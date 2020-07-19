@@ -4,6 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - rust=1.40.0=1
+  - graphviz
   - pip
   - pip:
     - m2r2
