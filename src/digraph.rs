@@ -979,7 +979,7 @@ impl PyDiGraph {
     /// :param node_attr: A callable that will take in a node data object
     ///     and return a dictionary of attributes to be associated with the
     ///     node in the dot file. The key and value of this dictionary **must**
-    ///     be a string. If they're not strings retworkx will raise TypeError
+    ///     be strings. If they're not strings retworkx will raise TypeError
     ///     (unfortunately without an error message because of current
     ///     limitations in the PyO3 type checking)
     /// :param edge_attr: A callable that will take in an edge data object
