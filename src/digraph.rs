@@ -1016,8 +1016,7 @@ impl PyDiGraph {
     ///   graph = retworkx.directed_gnp_random_graph(15, .25)
     ///   dot_str = graph.to_dot(
     ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'),
-    ///       lambda edge: {})
+    ///           color='black', fillcolor='lightblue', style='filled'))
     ///   dot = pydot.graph_from_dot_data(dot_str.decode('utf8'))[0]
     ///
     ///   with tempfile.TemporaryDirectory() as tmpdirname:
@@ -1027,46 +1026,22 @@ impl PyDiGraph {
     ///       os.remove(tmp_path)
     ///   image
     ///
-    #[text_signature = "(node_attr, edge_attr, /, graph_attr=None, filename=None)"]
+    #[text_signature = "(/, node_attr=None, edge_attr=None, graph_attr=None, filename=None)"]
     pub fn to_dot(
         &self,
         py: Python,
-        node_attr: PyObject,
-        edge_attr: PyObject,
+        node_attr: Option<PyObject>,
+        edge_attr: Option<PyObject>,
         graph_attr: Option<BTreeMap<String, String>>,
         filename: Option<String>,
     ) -> PyResult<Option<PyObject>> {
-        let node_attr_callable =
-            |node: &PyObject| -> PyResult<BTreeMap<String, String>> {
-                let res = node_attr.call1(py, (node,))?;
-                Ok(res.extract(py)?)
-            };
-
-        let edge_attr_callable =
-            |edge: &PyObject| -> PyResult<BTreeMap<String, String>> {
-                let res = edge_attr.call1(py, (edge,))?;
-                Ok(res.extract(py)?)
-            };
-
         if filename.is_some() {
             let mut file = File::create(filename.unwrap())?;
-            build_dot(
-                self,
-                &mut file,
-                graph_attr,
-                node_attr_callable,
-                edge_attr_callable,
-            )?;
+            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
             Ok(None)
         } else {
             let mut file = Vec::<u8>::new();
-            build_dot(
-                self,
-                &mut file,
-                graph_attr,
-                node_attr_callable,
-                edge_attr_callable,
-            )?;
+            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
             Ok(Some(PyBytes::new(py, &file).to_object(py)))
         }
     }

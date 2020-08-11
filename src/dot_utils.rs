@@ -22,12 +22,13 @@ use pyo3::prelude::*;
 static TYPE: [&str; 2] = ["graph", "digraph"];
 static EDGE: [&str; 2] = ["--", "->"];
 
-pub fn build_dot<G, N, E, T>(
+pub fn build_dot<G, T>(
+    py: Python,
     graph: G,
     file: &mut T,
     graph_attrs: Option<BTreeMap<String, String>>,
-    mut node_attrs: N,
-    mut edge_attrs: E,
+    node_attrs: Option<PyObject>,
+    edge_attrs: Option<PyObject>,
 ) -> PyResult<()>
 where
     T: Write,
@@ -37,8 +38,6 @@ where
         + NodeIndexable
         + GraphProp,
     G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
-    N: FnMut(&PyObject) -> PyResult<BTreeMap<String, String>>,
-    E: FnMut(&PyObject) -> PyResult<BTreeMap<String, String>>,
 {
     writeln!(file, "{} {{", TYPE[graph.is_directed() as usize])?;
     if let Some(graph_attr_map) = graph_attrs {
@@ -48,23 +47,21 @@ where
     }
 
     for node in graph.node_references() {
-        let node_attr_map = node_attrs(&node.weight())?;
         writeln!(
             file,
             "{} {};",
             graph.to_index(node.id()),
-            attr_map_to_string(node_attr_map)
+            attr_map_to_string(py, node_attrs.as_ref(), &node.weight())?
         )?;
     }
     for edge in graph.edge_references() {
-        let edge_attr_map = edge_attrs(&edge.weight())?;
         writeln!(
             file,
             "{} {} {} {};",
             graph.to_index(edge.source()),
             EDGE[graph.is_directed() as usize],
             graph.to_index(edge.target()),
-            attr_map_to_string(edge_attr_map)
+            attr_map_to_string(py, edge_attrs.as_ref(), &edge.weight())?
         )?;
     }
     writeln!(file, "}}")?;
@@ -72,14 +69,29 @@ where
 }
 
 /// Convert an attr map to an output string
-fn attr_map_to_string(attrs: BTreeMap<String, String>) -> String {
-    if attrs.is_empty() {
-        return "".to_string();
+fn attr_map_to_string<'a>(
+    py: Python,
+    attrs: Option<&'a PyObject>,
+    weight: &'a PyObject,
+) -> PyResult<String> {
+    if attrs.is_none() {
+        return Ok("".to_string());
     }
+    let attr_callable =
+        |node: &'a PyObject| -> PyResult<BTreeMap<String, String>> {
+            let res = attrs.unwrap().call1(py, (node,))?;
+            Ok(res.extract(py)?)
+        };
+
+    let attrs = attr_callable(weight)?;
+    if attrs.is_empty() {
+        return Ok("".to_string());
+    }
+
     let attr_string = attrs
         .iter()
         .map(|(key, value)| format!("{}={}", key, value))
         .collect::<Vec<String>>()
         .join(", ");
-    format!("[{}]", attr_string)
+    Ok(format!("[{}]", attr_string))
 }

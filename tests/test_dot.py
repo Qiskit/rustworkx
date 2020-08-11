@@ -112,3 +112,15 @@ class TestDot(unittest.TestCase):
         dot_str = graph.to_dot(lambda _: {}, lambda _: {}, {'bgcolor': 'red'})
         self.assertEqual("graph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n"
                          "2 -- 0 ;\n2 -- 1 ;\n}\n", dot_str.decode('utf8'))
+
+    def test_graph_no_args(self):
+        graph = retworkx.undirected_gnp_random_graph(3, .95, seed=24)
+        dot_str = graph.to_dot()
+        self.assertEqual("graph {\n0 ;\n1 ;\n2 ;\n2 -- 0 ;\n2 -- 1 ;\n}\n",
+                         dot_str.decode('utf8'))
+
+    def test_digraph_no_args(self):
+        graph = retworkx.directed_gnp_random_graph(3, .95, seed=24)
+        dot_str = graph.to_dot()
+        self.assertEqual("digraph {\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n0 -> 2 ;\n}\n",
+                         dot_str.decode('utf8'))
