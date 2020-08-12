@@ -8,6 +8,6 @@ dependencies:
   - pip
   - pip:
     - m2r2
-    - jupyter-sphinx
+    - jupyter-sphinx==0.2.3
     - pydot
     - pillow
