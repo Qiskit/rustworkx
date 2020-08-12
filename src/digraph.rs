@@ -10,23 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-extern crate fixedbitset;
-extern crate hashbrown;
-extern crate ndarray;
-extern crate numpy;
-extern crate petgraph;
-extern crate pyo3;
-
 use std::collections::{BTreeMap, HashSet};
 use std::fs::File;
 use std::ops::{Index, IndexMut};
+use std::str;
 
 use hashbrown::HashMap;
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::IndexError;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyDict, PyList, PyLong, PyTuple};
+use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
 use petgraph::algo;
@@ -1017,7 +1011,7 @@ impl PyDiGraph {
     ///   dot_str = graph.to_dot(
     ///       lambda node: dict(
     ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str.decode('utf8'))[0]
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
     ///
     ///   with tempfile.TemporaryDirectory() as tmpdirname:
     ///       tmp_path = os.path.join(tmpdirname, 'dag.png')
@@ -1042,7 +1036,9 @@ impl PyDiGraph {
         } else {
             let mut file = Vec::<u8>::new();
             build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(Some(PyBytes::new(py, &file).to_object(py)))
+            Ok(Some(
+                PyString::new(py, str::from_utf8(&file)?).to_object(py),
+            ))
         }
     }
 }
