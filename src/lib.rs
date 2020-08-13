@@ -1313,6 +1313,27 @@ pub fn undirected_gnp_random_graph(
     };
     Ok(graph)
 }
+
+/// Compute the strongly connected components for a directed graph
+///
+/// This function is implemented using Tarjan's algorithm
+///
+/// :param PyDiGraph graph: The input graph to find the strongly connected
+///     components for.
+///
+/// :return: A list of list of node ids for strongly connected components
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph,/)"]
+pub fn strongly_connected_components(
+    graph: &digraph::PyDiGraph,
+) -> Vec<Vec<usize>> {
+    algo::tarjan_scc(graph)
+        .iter()
+        .map(|x| x.iter().map(|id| id.index()).collect())
+        .collect()
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, Exception);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -1359,6 +1380,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
