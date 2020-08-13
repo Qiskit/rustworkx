@@ -1,6 +1,6 @@
 m2r2
 sphinx
 sphinx_rtd_theme
-jupyter-sphinx
+jupyter-sphinx==0.2.3
 pydot
 pillow>=4.2.1
