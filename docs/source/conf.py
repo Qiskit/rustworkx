@@ -31,7 +31,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
               'm2r2',
-              'jupyter_sphinx',
+              'jupyter_sphinx.execute',
              ]
 html_static_path = ['_static']
 templates_path = ['_templates']
