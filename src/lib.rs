@@ -1324,7 +1324,7 @@ pub fn undirected_gnp_random_graph(
 /// :return: A list of list of node ids for strongly connected components
 /// :rtype: list
 #[pyfunction]
-#[text_signature = "(graph,/)"]
+#[text_signature = "(graph, /)"]
 pub fn strongly_connected_components(
     graph: &digraph::PyDiGraph,
 ) -> Vec<Vec<usize>> {
