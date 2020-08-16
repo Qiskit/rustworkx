@@ -31,7 +31,7 @@ class TestStronglyConnected(unittest.TestCase):
         G.add_child(node_a, 2, {})
         G.add_node(3)
         self.assertEqual(retworkx.strongly_connected_components(G),
-                         [[1], [0], [2]])
+                         [[2], [1], [0]])
 
     def test_stongly_connected_no_linear(self):
         G = retworkx.PyDiGraph()
@@ -50,7 +50,7 @@ class TestStronglyConnected(unittest.TestCase):
             (7, 0),
             (7, 6),
         ])
-        expected = [[5], [2, 4, 3, 6], [7, 1, 0]]
+        expected = [[5], [2, 3, 4, 6], [0, 1, 7]]
         components = retworkx.strongly_connected_components(G)
         self.assertEqual(components, expected)
 

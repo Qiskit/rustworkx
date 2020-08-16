@@ -1316,7 +1316,7 @@ pub fn undirected_gnp_random_graph(
 
 /// Compute the strongly connected components for a directed graph
 ///
-/// This function is implemented using Tarjan's algorithm
+/// This function is implemented using Kosaraju's algorithm
 ///
 /// :param PyDiGraph graph: The input graph to find the strongly connected
 ///     components for.
@@ -1328,7 +1328,7 @@ pub fn undirected_gnp_random_graph(
 pub fn strongly_connected_components(
     graph: &digraph::PyDiGraph,
 ) -> Vec<Vec<usize>> {
-    algo::tarjan_scc(graph)
+    algo::kosaraju_scc(graph)
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
         .collect()
