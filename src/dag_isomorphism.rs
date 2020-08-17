@@ -16,12 +16,16 @@
 use fixedbitset::FixedBitSet;
 use std::marker;
 
+use hashbrown::HashMap;
+
 use super::digraph::PyDiGraph;
 
 use pyo3::prelude::*;
 
+use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
-use petgraph::visit::GetAdjacencyMatrix;
+use petgraph::stable_graph::StableDiGraph;
+use petgraph::visit::{EdgeRef, GetAdjacencyMatrix, IntoEdgeReferences};
 use petgraph::{Directed, Incoming};
 
 #[derive(Debug)]
@@ -190,6 +194,36 @@ pub fn is_isomorphic(dag0: &PyDiGraph, dag1: &PyDiGraph) -> PyResult<bool> {
     Ok(res.unwrap_or(false))
 }
 
+fn clone_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
+    // NOTE: this is a hacky workaround to handle non-contiguous node ids in
+    // VF2. The code which was forked from petgraph was written assuming the
+    // Graph type and not StableGraph so it makes an implicit assumption on
+    // node_bound() == node_count() which isn't true with removals on
+    // StableGraph. This compacts the node ids as a workaround until VF2State
+    // and try_match can be rewitten to handle this (and likely contributed
+    // upstream to petgraph too).
+    let mut new_graph = StableDiGraph::<PyObject, PyObject>::new();
+    let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+    for node_index in dag.graph.node_indices() {
+        let node_data = dag.graph.node_weight(node_index).unwrap();
+        let new_index = new_graph.add_node(node_data.clone_ref(py));
+        id_map.insert(node_index, new_index);
+    }
+    for edge in dag.graph.edge_references() {
+        let edge_w = edge.weight();
+        let p_index = id_map.get(&edge.source()).unwrap();
+        let c_index = id_map.get(&edge.target()).unwrap();
+        new_graph.add_edge(*p_index, *c_index, edge_w.clone_ref(py));
+    }
+
+    PyDiGraph {
+        graph: new_graph,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: dag.check_cycle,
+        node_removed: false,
+    }
+}
+
 /// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
 ///
 /// Using the VF2 algorithm, examining both syntactic and semantic
@@ -197,6 +231,7 @@ pub fn is_isomorphic(dag0: &PyDiGraph, dag1: &PyDiGraph) -> PyResult<bool> {
 ///
 /// The graphs should not be multigraphs.
 pub fn is_isomorphic_matching<F, G>(
+    py: Python,
     dag0: &PyDiGraph,
     dag1: &PyDiGraph,
     mut node_match: F,
@@ -206,15 +241,36 @@ where
     F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
     G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
 {
-    let g0 = &dag0.graph;
-    let g1 = &dag1.graph;
+    let inner_temp_dag0: PyDiGraph;
+    let inner_temp_dag1: PyDiGraph;
+    let dag0_out = if dag0.node_removed {
+        inner_temp_dag0 = clone_graph(py, dag0);
+        &inner_temp_dag0
+    } else {
+        dag0
+    };
+    let dag1_out = if dag1.node_removed {
+        inner_temp_dag1 = clone_graph(py, dag1);
+        &inner_temp_dag1
+    } else {
+        dag1
+    };
+    let g0 = &dag0_out.graph;
+    let g1 = &dag1_out.graph;
+
     if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
     {
         return Ok(false);
     }
 
-    let mut st = [Vf2State::new(dag0), Vf2State::new(dag1)];
-    let res = try_match(&mut st, dag0, dag1, &mut node_match, &mut edge_match)?;
+    let mut st = [Vf2State::new(&dag0_out), Vf2State::new(&dag1_out)];
+    let res = try_match(
+        &mut st,
+        &dag0_out,
+        &dag1_out,
+        &mut node_match,
+        &mut edge_match,
+    )?;
     Ok(res.unwrap_or(false))
 }
 
