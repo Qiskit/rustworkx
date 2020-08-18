@@ -35,10 +35,6 @@ class PyDAG(PyDiGraph):
     ensure that no cycles are added, ensuring that the PyDAG class truly
     represents a directed acyclic graph.
 
-    .. note::
-        When using ``copy.deepcopy()`` or pickling node indexes are not
-        guaranteed to be preserved.
-
     PyDAG is a subclass of the PyDiGraph class and behaves identically to
     the :class:`~retworkx.PyDiGraph` class.
     """
