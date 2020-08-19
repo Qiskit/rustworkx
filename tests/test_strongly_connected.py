@@ -21,17 +21,17 @@ class TestStronglyConnected(unittest.TestCase):
         G = retworkx.PyDiGraph()
         node_a = G.add_node(1)
         node_b = G.add_child(node_a, 2, {})
-        G.add_child(node_b, 3, {})
+        node_c = G.add_child(node_b, 3, {})
         self.assertEqual(retworkx.strongly_connected_components(G),
-                         [[2], [1], [0]])
+                         [[node_c], [node_b], [node_a]])
 
     def test_number_strongly_connected(self):
         G = retworkx.PyDiGraph()
         node_a = G.add_node(1)
-        G.add_child(node_a, 2, {})
-        G.add_node(3)
+        node_b = G.add_child(node_a, 2, {})
+        node_c = G.add_node(3)
         self.assertEqual(retworkx.strongly_connected_components(G),
-                         [[2], [1], [0]])
+                         [[node_c], [node_b], [node_a]])
 
     def test_stongly_connected_no_linear(self):
         G = retworkx.PyDiGraph()
