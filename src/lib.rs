@@ -1313,6 +1313,91 @@ pub fn undirected_gnp_random_graph(
     };
     Ok(graph)
 }
+
+/// Return a list of cycles which form a basis for cycles of a given PyGraph
+///
+/// A basis for cycles of a graph is a minimal collection of
+/// cycles such that any cycle in the graph can be written
+/// as a sum of cycles in the basis.  Here summation of cycles
+/// is defined as the exclusive or of the edges.
+///
+/// This is adapted from algorithm CACM 491 [1]_.
+///
+/// :param PyGraph graph: The graph to find the cycle basis in
+/// :param int root: Optional index for starting node for basis
+///
+/// :returns: A list of cycle lists. Each list is a list of node ids which
+///     forms a cycle (loop) in the input graph
+/// :rtype: list
+///
+/// .. [1] Paton, K. An algorithm for finding a fundamental set of
+///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
+#[pyfunction]
+#[text_signature = "(graph, /, root=None)"]
+pub fn cycle_basis(
+    graph: &graph::PyGraph,
+    root: Option<usize>,
+) -> Vec<Vec<usize>> {
+    let mut root_node = root;
+    let mut graph_nodes: HashSet<NodeIndex> =
+        graph.graph.node_indices().collect();
+    let mut cycles: Vec<Vec<usize>> = Vec::new();
+    while !graph_nodes.is_empty() {
+        let temp_value: NodeIndex;
+        let root_index = match root_node {
+            Some(root_value) => NodeIndex::new(root_value),
+            None => {
+                temp_value = *graph_nodes.iter().next().unwrap();
+                graph_nodes.remove(&temp_value);
+                temp_value
+            }
+        };
+        let mut stack: Vec<NodeIndex> = Vec::new();
+        stack.push(root_index);
+        let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        pred.insert(root_index, root_index);
+        let mut used: HashMap<NodeIndex, HashSet<NodeIndex>> = HashMap::new();
+        used.insert(root_index, HashSet::new());
+        while !stack.is_empty() {
+            let z = stack.pop().unwrap();
+            for neighbor in graph.graph.neighbors(z) {
+                if !used.contains_key(&neighbor) {
+                    pred.insert(neighbor, z);
+                    stack.push(neighbor);
+                    let mut temp_set: HashSet<NodeIndex> = HashSet::new();
+                    temp_set.insert(z);
+                    used.insert(neighbor, temp_set);
+                } else if z == neighbor {
+                    let mut cycle: Vec<usize> = Vec::new();
+                    cycle.push(z.index());
+                    cycles.push(cycle);
+                } else if !used.get(&z).unwrap().contains(&neighbor) {
+                    let pn = used.get(&neighbor).unwrap();
+                    let mut cycle: Vec<NodeIndex> = Vec::new();
+                    cycle.push(neighbor);
+                    cycle.push(z);
+                    let mut p = pred.get(&z).unwrap();
+                    while !pn.contains(p) {
+                        cycle.push(*p);
+                        p = pred.get(p).unwrap();
+                    }
+                    cycle.push(*p);
+                    cycles.push(cycle.iter().map(|x| x.index()).collect());
+                    let neighbor_set = used.get_mut(&neighbor).unwrap();
+                    neighbor_set.insert(z);
+                }
+            }
+        }
+        let mut temp_hashset: HashSet<NodeIndex> = HashSet::new();
+        for key in pred.keys() {
+            temp_hashset.insert(*key);
+        }
+        graph_nodes = graph_nodes.difference(&temp_hashset).copied().collect();
+        root_node = None;
+    }
+    cycles
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, Exception);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -1359,6 +1444,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
