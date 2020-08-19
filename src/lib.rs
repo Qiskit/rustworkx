@@ -565,7 +565,7 @@ fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
     Ok(out_dict.into())
 }
 
-fn _graph_adjacency_matrix(py: Python, graph: &graph::PyGraph, weight_fn: PyObject) -> PyResult<Array2<f64>> {
+fn _graph_adjacency_matrix(py: Python, graph: &graph::PyGraph, weight_fn: PyObject, min_multigraph: bool) -> PyResult<Array2<f64>> {
     let node_map: Option<HashMap<NodeIndex, usize>>;
     let n: usize;
     if graph.node_removed {
@@ -581,7 +581,11 @@ fn _graph_adjacency_matrix(py: Python, graph: &graph::PyGraph, weight_fn: PyObje
         n = graph.graph.node_bound();
         node_map = None;
     }
-    let mut matrix = Array2::<f64>::zeros((n, n).f());
+    let mut matrix = if min_multigraph {
+        Array2::<f64>::from_elem((n, n).f(), f64::INFINITY)
+    } else {
+        Array2::<f64>::zeros((n, n).f())
+    };
 
     let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
         let res = weight_fn.call1(py, (a,))?;
@@ -604,20 +608,25 @@ fn _graph_adjacency_matrix(py: Python, graph: &graph::PyGraph, weight_fn: PyObje
                 j = target.index();
             }
         }
-        matrix[[i, j]] += edge_weight;
-        matrix[[j, i]] += edge_weight;
+        if !min_multigraph {
+            matrix[[i, j]] += edge_weight;
+            matrix[[j, i]] += edge_weight;
+        } else {
+            matrix[[i, j]] = matrix[[i, j]].min(edge_weight);
+            matrix[[j, i]] = matrix[[i, j]].min(edge_weight);
+        }
     }
     Ok(matrix)
 }
 
 #[pyfunction]
 fn graph_floyd_warshall_numpy(py: Python, graph: &graph::PyGraph, weight_fn: PyObject) -> PyResult<PyObject> {
-    let mut mat = _graph_adjacency_matrix(py, graph, weight_fn)?;
+    let mut mat = _graph_adjacency_matrix(py, graph, weight_fn, true)?;
     // 0 out the diagonal
     for x in mat.diag_mut() {
         *x = 0.0;
     }
-    let shape = graph.node_count();
+    let shape = graph.graph.node_count();
     // Perform the Floyd-Warshall algorithm.
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
@@ -817,7 +826,7 @@ fn graph_adjacency_matrix(
     graph: &graph::PyGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let out_mat: Array2<f64> = _graph_adjacency_matrix(py, graph, weight_fn)?;
+    let out_mat: Array2<f64> = _graph_adjacency_matrix(py, graph, weight_fn, false)?;
     Ok(out_mat.into_pyarray(py).into())
 }
 
