@@ -177,3 +177,51 @@ class TestNodes(unittest.TestCase):
         dag = retworkx.PyDAG()
         res = dag.add_nodes_from([])
         self.assertEqual(len(res), 0)
+
+    def test_get_node_data_getitem(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        self.assertEqual('b', dag[node_b])
+
+    def test_get_node_data_getitem_bad_index(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        dag.add_child(node_a, 'b', "Edgy")
+        with self.assertRaises(IndexError):
+            dag[42]
+
+    def test_set_node_data_setitem(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag[node_b] = 'Oh so cool'
+        self.assertEqual('Oh so cool', dag[node_b])
+
+    def test_set_node_data_setitem_bad_index(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        with self.assertRaises(IndexError):
+            dag[42] = 'Oh so cool'
+
+    def test_remove_node_delitem(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_child(node_b, 'c', "Edgy_mk2")
+        del dag[node_b]
+        res = dag.nodes()
+        self.assertEqual(['a', 'c'], res)
+        self.assertEqual([0, 2], dag.node_indexes())
+
+    def test_remove_node_delitem_invalid_index(self):
+        graph = retworkx.PyDAG()
+        graph.add_node('a')
+        graph.add_node('b')
+        graph.add_node('c')
+        with self.assertRaises(IndexError):
+            del graph[76]
+        res = graph.nodes()
+        self.assertEqual(['a', 'b', 'c'], res)
+        self.assertEqual([0, 1, 2], graph.node_indexes())
