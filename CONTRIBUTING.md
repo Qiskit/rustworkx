@@ -28,3 +28,13 @@ the root of the repo, this is because retworkx packaging shim will conflict
 with imports from retworkx the installed version of retworkx (which contains
 the compiled extension).
 
+### Building documentation
+
+Just like with tests building documentation is done via tox. This will handle
+compiling retworkx, installing the python dependencies, and then building the
+documentation in an isolated venv. You can run just the docs build with:
+```
+tox -edocs
+```
+which will output the html rendered documentation in `docs/build/html` which
+you can view locally in a web browser.

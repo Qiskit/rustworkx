@@ -19,7 +19,8 @@ stages:
       pool: {vmImage: 'macOS-10.15'}
       variables:
         python.version: '3.7'
-        CIBW_BEFORE_BUILD: pip install -U setuptools-rust && rustup default nightly
+        CIBW_BEFORE_ALL: rustup update
+        CIBW_BEFORE_BUILD: pip install -U setuptools-rust
         CIBW_SKIP: cp27-* cp34-* pp*
         TWINE_USERNAME: retworkx-ci
         CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -29,7 +30,7 @@ stages:
       - bash: |
           set -e
           python -m pip install --upgrade pip
-          pip install cibuildwheel==1.2.0
+          pip install cibuildwheel==1.5.2
           pip install -U twine
           cibuildwheel --output-dir wheelhouse .
       - task: PublishBuildArtifacts@1
@@ -43,7 +44,8 @@ stages:
       pool: {vmImage: 'vs2017-win2016'}
       condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
       variables:
-        CIBW_BEFORE_BUILD: rustup default nightly && pip install -U setuptools-rust
+        CIBW_BEFORE_ALL: rustup update
+        CIBW_BEFORE_BUILD: pip install -U setuptools-rust
         CIBW_SKIP: cp27-* cp34-* pp* *win32
         TWINE_USERNAME: retworkx-ci
         CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -51,7 +53,7 @@ stages:
         - bash: |
             set -e
             python -m pip install --upgrade pip
-            pip install cibuildwheel==1.2.0
+            pip install cibuildwheel==1.5.2
             pip install -U twine
             cibuildwheel --output-dir wheelhouse
         - task: PublishBuildArtifacts@1
@@ -65,7 +67,8 @@ stages:
       pool: {vmImage: 'vs2017-win2016'}
       condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
       variables:
-        CIBW_BEFORE_BUILD: rustup default nightly-i686-pc-windows-msvc && pip install -U setuptools-rust
+        CIBW_BEFORE_ALL: rustup default stable-i686-pc-windows-msvc
+        CIBW_BEFORE_BUILD: pip install -U setuptools-rust
         CIBW_SKIP: cp27-* cp34-* pp* *amd64
         TWINE_USERNAME: retworkx-ci
         CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -73,7 +76,7 @@ stages:
         - bash: |
             set -e
             python -m pip install --upgrade pip
-            pip install cibuildwheel==1.2.0
+            pip install cibuildwheel==1.5.2
             pip install -U twine
             cibuildwheel --output-dir wheelhouse
         - task: PublishBuildArtifacts@1
@@ -86,6 +89,33 @@ stages:
   - stage: "Python_37_Tests"
     condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags'))
     jobs:
+    - job: 'MSRV'
+      pool: {vmImage: 'ubuntu-latest'}
+      condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags'))
+      strategy:
+        matrix:
+          Python37:
+            python.version: '3.7'
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '$(python.version)'
+          displayName: 'Use Pyhon $(python.version)'
+        - bash: rustup default 1.39.0
+          displayName: 'Install Rust'
+        - bash: python -m pip install --upgrade pip setuptools virtualenv setuptools-rust
+          displayName: 'Install dependencies'
+        - bash: |
+            pip install .
+          displayName: 'Build retworkx'
+        - bash: |
+            set -e
+            export PYTHONHASHSEED=$(python -S -c "import random; print(random.randint(1, 4294967295))")
+            echo "PYTHONHASHSEED=$PYTHONHASHSEED"
+            cd tests
+            python -m unittest discover .
+          displayName: 'Run tests'
+
     - job: 'MacOS_Catalina_Tests'
       pool: {vmImage: 'macOS-10.15'}
       condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags'))
@@ -100,7 +130,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default nightly
+        - bash: rustup update
           displayName: 'Install Rust'
         - bash: python -m pip install --upgrade pip setuptools virtualenv setuptools-rust
           displayName: 'Install dependencies'
@@ -126,7 +156,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default nightly
+        - bash: rustup update
           displayName: 'Install Rust'
         - bash: |
             set -e
@@ -165,7 +195,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default nightly
+        - bash: rustup update
           displayName: 'Install Rust'
         - bash: python -m pip install --upgrade pip setuptools virtualenv setuptools-rust
           displayName: 'Install dependencies'
@@ -195,7 +225,7 @@ stages:
           inputs:
             versionSpec: '$(python.version)'
           displayName: 'Use Python $(python.version)'
-        - bash: rustup default nightly
+        - bash: rustup update
           displayName: 'Install Rust'
         - bash: |
             set -e

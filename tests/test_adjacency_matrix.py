@@ -22,7 +22,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         node_a = dag.add_node('a')
         dag.add_child(node_a, 'b', {'a': 1})
         dag.add_child(node_a, 'c', {'a': 2})
-        res = retworkx.dag_adjacency_matrix(dag, lambda x: 1)
+        res = retworkx.digraph_adjacency_matrix(dag, lambda x: 1)
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(
             np.array(
@@ -34,7 +34,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
         dag.add_child(node_a, 'b', 7.0)
-        res = retworkx.dag_adjacency_matrix(dag, lambda x: float(x))
+        res = retworkx.digraph_adjacency_matrix(dag, lambda x: float(x))
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(
             np.array([[0.0, 7.0], [0.0, 0.0]]), res))
@@ -44,29 +44,29 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         node_a = dag.add_node('a')
         node_b = dag.add_child(node_a, 'b', 7.0)
         dag.add_edge(node_a, node_b, 0.5)
-        res = retworkx.dag_adjacency_matrix(dag, lambda x: float(x))
+        res = retworkx.digraph_adjacency_matrix(dag, lambda x: float(x))
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(
             np.array([[0.0, 7.5], [0.0, 0.0]]), res))
 
-    def test_graph_to_dag_adjacency_matrix(self):
+    def test_graph_to_digraph_adjacency_matrix(self):
         graph = retworkx.PyGraph()
-        self.assertRaises(TypeError, retworkx.dag_adjacency_matrix, graph)
+        self.assertRaises(TypeError, retworkx.digraph_adjacency_matrix, graph)
 
-    def test_no_edge_dag_adjacency_matrix(self):
+    def test_no_edge_digraph_adjacency_matrix(self):
         dag = retworkx.PyDAG()
         for i in range(50):
             dag.add_node(i)
-        res = retworkx.dag_adjacency_matrix(dag, lambda x: 1)
+        res = retworkx.digraph_adjacency_matrix(dag, lambda x: 1)
         self.assertTrue(np.array_equal(np.zeros([50, 50]), res))
 
-    def test_dag_with_index_holes(self):
+    def test_digraph_with_index_holes(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
         node_b = dag.add_child(node_a, 'b', 1)
         dag.add_child(node_a, 'c', 1)
         dag.remove_node(node_b)
-        res = retworkx.dag_adjacency_matrix(dag, lambda x: 1)
+        res = retworkx.digraph_adjacency_matrix(dag, lambda x: 1)
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(
             np.array([[0, 1], [0, 0]]), res))
@@ -113,7 +113,7 @@ class TestGraphAdjacencyMatrix(unittest.TestCase):
         dag = retworkx.PyDAG()
         self.assertRaises(TypeError, retworkx.graph_adjacency_matrix, dag)
 
-    def test_no_edge_dag_adjacency_matrix(self):
+    def test_no_edge_graph_adjacency_matrix(self):
         graph = retworkx.PyGraph()
         for i in range(50):
             graph.add_node(i)

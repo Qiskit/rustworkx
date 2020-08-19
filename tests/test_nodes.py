@@ -40,6 +40,36 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(['a', 'c'], res)
         self.assertEqual([0, 2], dag.node_indexes())
 
+    def test_remove_node_invalid_index(self):
+        graph = retworkx.PyDAG()
+        graph.add_node('a')
+        graph.add_node('b')
+        graph.add_node('c')
+        graph.remove_node(76)
+        res = graph.nodes()
+        self.assertEqual(['a', 'b', 'c'], res)
+        self.assertEqual([0, 1, 2], graph.node_indexes())
+
+    def test_remove_nodes_from(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        node_c = dag.add_child(node_b, 'c', "Edgy_mk2")
+        dag.remove_nodes_from([node_b, node_c])
+        res = dag.nodes()
+        self.assertEqual(['a'], res)
+        self.assertEqual([0], dag.node_indexes())
+
+    def test_remove_nodes_from_with_invalid_index(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        node_c = dag.add_child(node_b, 'c', "Edgy_mk2")
+        dag.remove_nodes_from([node_b, node_c, 76])
+        res = dag.nodes()
+        self.assertEqual(['a'], res)
+        self.assertEqual([0], dag.node_indexes())
+
     def test_topo_sort_empty(self):
         dag = retworkx.PyDAG()
         self.assertEqual([], retworkx.topological_sort(dag))
@@ -58,7 +88,7 @@ class TestNodes(unittest.TestCase):
         node_a = dag.add_node('a')
         node_b = dag.add_child(node_a, 'b', {})
         dag.add_edge(node_b, node_a, {})
-        self.assertRaises(Exception, retworkx.topological_sort, dag)
+        self.assertRaises(retworkx.DAGHasCycle, retworkx.topological_sort, dag)
 
     def test_lexicographical_topo_sort(self):
         dag = retworkx.PyDAG()
@@ -135,3 +165,15 @@ class TestNodes(unittest.TestCase):
     def test_pydag_length_empty(self):
         dag = retworkx.PyDAG()
         self.assertEqual(0, len(dag))
+
+    def test_add_nodes_from(self):
+        dag = retworkx.PyDAG()
+        nodes = list(range(100))
+        res = dag.add_nodes_from(nodes)
+        self.assertEqual(len(res), 100)
+        self.assertEqual(res, nodes)
+
+    def test_add_node_from_empty(self):
+        dag = retworkx.PyDAG()
+        res = dag.add_nodes_from([])
+        self.assertEqual(len(res), 0)
