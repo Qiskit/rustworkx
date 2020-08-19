@@ -89,6 +89,33 @@ stages:
   - stage: "Python_37_Tests"
     condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags'))
     jobs:
+    - job: 'MSRV'
+      pool: {vmImage: 'ubuntu-latest'}
+      condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags'))
+      strategy:
+        matrix:
+          Python37:
+            python.version: '3.7'
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '$(python.version)'
+          displayName: 'Use Pyhon $(python.version)'
+        - bash: rustup default 1.39.0
+          displayName: 'Install Rust'
+        - bash: python -m pip install --upgrade pip setuptools virtualenv setuptools-rust
+          displayName: 'Install dependencies'
+        - bash: |
+            pip install .
+          displayName: 'Build retworkx'
+        - bash: |
+            set -e
+            export PYTHONHASHSEED=$(python -S -c "import random; print(random.randint(1, 4294967295))")
+            echo "PYTHONHASHSEED=$PYTHONHASHSEED"
+            cd tests
+            python -m unittest discover .
+          displayName: 'Run tests'
+
     - job: 'MacOS_Catalina_Tests'
       pool: {vmImage: 'macOS-10.15'}
       condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags'))
