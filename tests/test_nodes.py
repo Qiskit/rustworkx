@@ -201,7 +201,7 @@ class TestNodes(unittest.TestCase):
     def test_set_node_data_setitem_bad_index(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_child(node_a, 'b', "Edgy")
         with self.assertRaises(IndexError):
             dag[42] = 'Oh so cool'
 
