@@ -587,7 +587,7 @@ fn _graph_adjacency_matrix(
         node_map = None;
     }
     let mut matrix = if min_multigraph {
-        Array2::<f64>::from_elem((n, n).f(), f64::INFINITY)
+        Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY)
     } else {
         Array2::<f64>::zeros((n, n).f())
     };
