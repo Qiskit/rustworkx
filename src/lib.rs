@@ -565,7 +565,12 @@ fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
     Ok(out_dict.into())
 }
 
-fn _graph_adjacency_matrix(py: Python, graph: &graph::PyGraph, weight_fn: PyObject, min_multigraph: bool) -> PyResult<Array2<f64>> {
+fn _graph_adjacency_matrix(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: PyObject,
+    min_multigraph: bool,
+) -> PyResult<Array2<f64>> {
     let node_map: Option<HashMap<NodeIndex, usize>>;
     let n: usize;
     if graph.node_removed {
@@ -619,8 +624,36 @@ fn _graph_adjacency_matrix(py: Python, graph: &graph::PyGraph, weight_fn: PyObje
     Ok(matrix)
 }
 
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// :param PyGraph graph: The graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+///
+/// :returns: A matrix of shortest path distances between nodes. If there is no
+///     path between two nodes then the corresponding matrix entry will be
+///     ``np.inf``.
+/// :rtype: numpy.ndarray
 #[pyfunction]
-fn graph_floyd_warshall_numpy(py: Python, graph: &graph::PyGraph, weight_fn: PyObject) -> PyResult<PyObject> {
+#[text_signature = "(graph, weight_fn, /)"]
+fn graph_floyd_warshall_numpy(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: PyObject,
+) -> PyResult<PyObject> {
     let mut mat = _graph_adjacency_matrix(py, graph, weight_fn, true)?;
     // 0 out the diagonal
     for x in mat.diag_mut() {
@@ -633,7 +666,7 @@ fn graph_floyd_warshall_numpy(py: Python, graph: &graph::PyGraph, weight_fn: PyO
     for k in 0..shape {
         for i in 0..shape {
             if mat[[i, k]] == 0.0 {
-                continue
+                continue;
             }
             for j in 0..shape {
                 let d_ijk = mat[[i, k]] + mat[[k, j]];
@@ -804,7 +837,7 @@ fn digraph_adjacency_matrix(
 /// output matrix will be the sum of the edges' weights.
 ///
 /// :param PyGraph graph: The graph used to generate the adjacency matrix from
-/// :param weight_fn callable: A callable object (function, lambda, etc) which
+/// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
 ///     tells retworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
@@ -826,7 +859,8 @@ fn graph_adjacency_matrix(
     graph: &graph::PyGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let out_mat: Array2<f64> = _graph_adjacency_matrix(py, graph, weight_fn, false)?;
+    let out_mat: Array2<f64> =
+        _graph_adjacency_matrix(py, graph, weight_fn, false)?;
     Ok(out_mat.into_pyarray(py).into())
 }
 
