@@ -73,11 +73,17 @@ use petgraph::visit::{
 ///     print("Node Index: %s" % node_index)
 ///     print(graph[node_index])
 ///
+///
+/// :param bool multigraph: When this is set to ``False`` the created PyGraph
+///     object will not be a multigraph (which is the default behavior). When
+///     ``False`` if parallel edges are added they will be ignored.
+///
 #[pyclass(module = "retworkx")]
 #[text_signature = "()"]
 pub struct PyGraph {
     pub graph: StableUnGraph<PyObject, PyObject>,
     pub node_removed: bool,
+    pub multigraph: bool,
 }
 
 pub type Edges<'a, E> =
@@ -253,10 +259,12 @@ impl GetAdjacencyMatrix for PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    fn new() -> Self {
+    #[args(multigraph = "true")]
+    fn new(multigraph: bool) -> Self {
         PyGraph {
             graph: StableUnGraph::<PyObject, PyObject>::default(),
             node_removed: false,
+            multigraph,
         }
     }
 
@@ -530,11 +538,15 @@ impl PyGraph {
         node_a: usize,
         node_b: usize,
         edge: PyObject,
-    ) -> PyResult<usize> {
+    ) -> PyResult<Option<usize>> {
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
+        if !self.multigraph && self.graph.find_edge(p_index, c_index).is_some()
+        {
+            return Ok(None);
+        }
         let edge = self.graph.add_edge(p_index, c_index, edge);
-        Ok(edge.index())
+        Ok(Some(edge.index()))
     }
 
     /// Add new edges to the graph.
@@ -555,6 +567,11 @@ impl PyGraph {
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
+            if !self.multigraph
+                && self.graph.find_edge(p_index, c_index).is_some()
+            {
+                continue;
+            }
             let edge = self.graph.add_edge(p_index, c_index, obj.2);
             out_list.push(edge.index());
         }
@@ -581,6 +598,11 @@ impl PyGraph {
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
+            if !self.multigraph
+                && self.graph.find_edge(p_index, c_index).is_some()
+            {
+                continue;
+            }
             let edge = self.graph.add_edge(p_index, c_index, py.None());
             out_list.push(edge.index());
         }
@@ -996,6 +1018,7 @@ impl PyGraph {
         Ok(PyGraph {
             graph: out_graph,
             node_removed: false,
+            multigraph: true,
         })
     }
 
@@ -1179,6 +1202,7 @@ impl PyGraph {
         PyGraph {
             graph: out_graph,
             node_removed: false,
+            multigraph: self.multigraph,
         }
     }
 }

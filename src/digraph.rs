@@ -1955,6 +1955,7 @@ impl PyDiGraph {
         crate::graph::PyGraph {
             graph: new_graph,
             node_removed: false,
+            multigraph: true,
         }
     }
 }

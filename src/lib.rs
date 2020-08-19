@@ -2241,6 +2241,7 @@ pub fn undirected_gnp_random_graph(
     let graph = graph::PyGraph {
         graph: inner_graph,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2394,6 +2395,7 @@ pub fn undirected_gnm_random_graph(
     let graph = graph::PyGraph {
         graph: inner_graph,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
