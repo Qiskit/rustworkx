@@ -237,6 +237,6 @@ class TestEdges(unittest.TestCase):
         dag.add_edges_from(edge_list)
         self.assertEqual(edge_list, dag.weighted_edge_list())
 
-    def test_edge_list_empty(self):
+    def test_weighted_edge_list_empty(self):
         dag = retworkx.PyDiGraph()
         self.assertEqual([], dag.weighted_edge_list())
