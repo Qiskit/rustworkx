@@ -169,3 +169,27 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         res = graph.add_edges_from_no_data([])
         self.assertEqual([], res)
+
+    def test_edge_list(self):
+        dag = retworkx.PyDiGraph()
+        dag.add_nodes_from(list(range(4)))
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        dag.add_edges_from(edge_list)
+        self.assertEqual([(x[0], x[1]) for x in edge_list], dag.edge_list())
+
+    def test_edge_list_empty(self):
+        dag = retworkx.PyDiGraph()
+        self.assertEqual([], dag.edge_list())
+
+    def test_weighted_edge_list(self):
+        dag = retworkx.PyDiGraph()
+        dag.add_nodes_from(list(range(4)))
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        dag.add_edges_from(edge_list)
+        self.assertEqual(edge_list, dag.weighted_edge_list())
+
+    def test_edge_list_empty(self):
+        dag = retworkx.PyDiGraph()
+        self.assertEqual([], dag.weighted_edge_list())
