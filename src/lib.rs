@@ -18,6 +18,7 @@ extern crate petgraph;
 extern crate pyo3;
 extern crate rand;
 extern crate rand_pcg;
+extern crate rayon;
 
 mod astar;
 mod dag_isomorphism;
@@ -47,6 +48,7 @@ use ndarray::prelude::*;
 use numpy::IntoPyArray;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
+use rayon::prelude::*;
 
 fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
@@ -442,7 +444,7 @@ fn graph_greedy_color(
     for k in node_vec.iter() {
         sort_map.insert(*k, graph.graph.edges(*k).count());
     }
-    node_vec.sort_by_key(|k| Reverse(sort_map.get(k)));
+    node_vec.par_sort_by_key(|k| Reverse(sort_map.get(k)));
     for u_index in node_vec {
         let mut neighbor_colors: HashSet<usize> = HashSet::new();
         for edge in graph.graph.edges(u_index) {
