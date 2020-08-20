@@ -18,6 +18,7 @@ extern crate petgraph;
 extern crate pyo3;
 extern crate rand;
 extern crate rand_pcg;
+extern crate rayon;
 
 mod astar;
 mod dag_isomorphism;
@@ -47,6 +48,7 @@ use ndarray::prelude::*;
 use numpy::IntoPyArray;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
+use rayon::prelude::*;
 
 fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
@@ -442,7 +444,7 @@ fn graph_greedy_color(
     for k in node_vec.iter() {
         sort_map.insert(*k, graph.graph.edges(*k).count());
     }
-    node_vec.sort_by_key(|k| Reverse(sort_map.get(k)));
+    node_vec.par_sort_by_key(|k| Reverse(sort_map.get(k)));
     for u_index in node_vec {
         let mut neighbor_colors: HashSet<usize> = HashSet::new();
         for edge in graph.graph.edges(u_index) {
@@ -1385,6 +1387,27 @@ pub fn undirected_gnp_random_graph(
     };
     Ok(graph)
 }
+
+/// Compute the strongly connected components for a directed graph
+///
+/// This function is implemented using Kosaraju's algorithm
+///
+/// :param PyDiGraph graph: The input graph to find the strongly connected
+///     components for.
+///
+/// :return: A list of list of node ids for strongly connected components
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn strongly_connected_components(
+    graph: &digraph::PyDiGraph,
+) -> Vec<Vec<usize>> {
+    algo::kosaraju_scc(graph)
+        .iter()
+        .map(|x| x.iter().map(|id| id.index()).collect())
+        .collect()
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, Exception);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -1432,6 +1455,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
