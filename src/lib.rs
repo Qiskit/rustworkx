@@ -665,9 +665,6 @@ fn graph_floyd_warshall_numpy(
     // to point j using intermediate nodes 0..k
     for k in 0..shape {
         for i in 0..shape {
-            if mat[[i, k]] == 0.0 {
-                continue;
-            }
             for j in 0..shape {
                 let d_ijk = mat[[i, k]] + mat[[k, j]];
                 if d_ijk < mat[[i, j]] {
