@@ -25,6 +25,7 @@ mod dag_isomorphism;
 mod digraph;
 mod dijkstra;
 mod dot_utils;
+mod generators;
 mod graph;
 
 use std::cmp::{Ordering, Reverse};
@@ -37,6 +38,7 @@ use pyo3::exceptions::{Exception, ValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
+use pyo3::wrap_pymodule;
 use pyo3::Python;
 
 use petgraph::algo;
@@ -49,6 +51,8 @@ use numpy::IntoPyArray;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
+
+use generators::PyInit_generators;
 
 fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
@@ -1385,6 +1389,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
+    m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
 
