@@ -26,6 +26,7 @@ mod digraph;
 mod dijkstra;
 mod dot_utils;
 mod graph;
+mod k_shortest_path;
 
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BinaryHeap, HashSet};
@@ -471,6 +472,115 @@ fn graph_greedy_color(
     Ok(out_dict.into())
 }
 
+/// Compute the length of the kth shortest path
+///
+/// Computes the lengths of the kth shortest path from ``start`` to every
+/// reachable node.
+///
+/// Computes in :math:`O(k * (|E| + |V|*log(|V|)))` time (average).
+///
+/// :param PyGraph graph: The graph to find the shortest paths in
+/// :param int start: The node index to find the shortest paths from
+/// :param int k: The kth shortest path to find the lengths of
+/// :param edge_cost: A python callable that will receive an edge payload and
+///     return a float for the cost of that eedge
+/// :param int goal: An optional goal node index, if specified the output
+///     dictionary
+///
+/// :returns: A dict of lengths where the key is the destination node index and
+///     the value is the length of the path.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
+fn digraph_k_shortest_path_lengths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    start: usize,
+    k: usize,
+    edge_cost: PyObject,
+    goal: Option<usize>,
+) -> PyResult<PyObject> {
+    let out_goal = match goal {
+        Some(g) => Some(NodeIndex::new(g)),
+        None => None,
+    };
+    let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
+        let res = edge_cost.call1(py, (edge,))?;
+        Ok(res.extract(py)?)
+    };
+
+    let out_map = k_shortest_path::k_shortest_path(
+        graph,
+        NodeIndex::new(start),
+        out_goal,
+        k,
+        edge_cost_callable,
+    )?;
+    let out_dict = PyDict::new(py);
+    for (index, length) in out_map {
+        if (out_goal.is_some() && out_goal.unwrap() == index)
+            || out_goal.is_none()
+        {
+            out_dict.set_item(index.index(), length)?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
+/// Compute the length of the kth shortest path
+///
+/// Computes the lengths of the kth shortest path from ``start`` to every
+/// reachable node.
+///
+/// Computes in :math:`O(k * (|E| + |V|*log(|V|)))` time (average).
+///
+/// :param PyGraph graph: The graph to find the shortest paths in
+/// :param int start: The node index to find the shortest paths from
+/// :param int k: The kth shortest path to find the lengths of
+/// :param edge_cost: A python callable that will receive an edge payload and
+///     return a float for the cost of that eedge
+/// :param int goal: An optional goal node index, if specified the output
+///     dictionary
+///
+/// :returns: A dict of lengths where the key is the destination node index and
+///     the value is the length of the path.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
+fn graph_k_shortest_path_lengths(
+    py: Python,
+    graph: &graph::PyGraph,
+    start: usize,
+    k: usize,
+    edge_cost: PyObject,
+    goal: Option<usize>,
+) -> PyResult<PyObject> {
+    let out_goal = match goal {
+        Some(g) => Some(NodeIndex::new(g)),
+        None => None,
+    };
+    let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
+        let res = edge_cost.call1(py, (edge,))?;
+        Ok(res.extract(py)?)
+    };
+
+    let out_map = k_shortest_path::k_shortest_path(
+        graph,
+        NodeIndex::new(start),
+        out_goal,
+        k,
+        edge_cost_callable,
+    )?;
+    let out_dict = PyDict::new(py);
+    for (index, length) in out_map {
+        if (out_goal.is_some() && out_goal.unwrap() == index)
+            || out_goal.is_none()
+        {
+            out_dict.set_item(index.index(), length)?;
+        }
+    }
+    Ok(out_dict.into())
+}
 /// Return the shortest path lengths between ever pair of nodes that has a
 /// path connecting them
 ///
@@ -1383,6 +1493,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     Ok(())
