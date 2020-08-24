@@ -1045,7 +1045,7 @@ impl PyDiGraph {
 
 #[pyproto]
 impl PyMappingProtocol for PyDiGraph {
-    /// Return the nmber of nodes in the graph
+    /// Return the number of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
     }
