@@ -194,7 +194,7 @@ pub fn is_isomorphic(dag0: &PyDiGraph, dag1: &PyDiGraph) -> PyResult<bool> {
     Ok(res.unwrap_or(false))
 }
 
-fn clone_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
+fn reindex_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
     // NOTE: this is a hacky workaround to handle non-contiguous node ids in
     // VF2. The code which was forked from petgraph was written assuming the
     // Graph type and not StableGraph so it makes an implicit assumption on
@@ -244,13 +244,13 @@ where
     let inner_temp_dag0: PyDiGraph;
     let inner_temp_dag1: PyDiGraph;
     let dag0_out = if dag0.node_removed {
-        inner_temp_dag0 = clone_graph(py, dag0);
+        inner_temp_dag0 = reindex_graph(py, dag0);
         &inner_temp_dag0
     } else {
         dag0
     };
     let dag1_out = if dag1.node_removed {
-        inner_temp_dag1 = clone_graph(py, dag1);
+        inner_temp_dag1 = reindex_graph(py, dag1);
         &inner_temp_dag1
     } else {
         dag1
