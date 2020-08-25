@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import unittest
 
 import retworkx
@@ -92,3 +93,86 @@ class TestIsomorphic(unittest.TestCase):
         self.assertTrue(
             retworkx.is_isomorphic_node_match(
                 dag_a, dag_b, lambda x, y: x == y))
+
+    def test_isomorphic_compare_nodes_with_removals(self):
+        dag_a = retworkx.PyDAG()
+        dag_b = retworkx.PyDAG()
+
+        qr_0_in = dag_a.add_node('qr[0]')
+        qr_1_in = dag_a.add_node('qr[1]')
+        cr_0_in = dag_a.add_node('cr[0]')
+        qr_0_out = dag_a.add_node('qr[0]')
+        qr_1_out = dag_a.add_node('qr[1]')
+        cr_0_out = dag_a.add_node('qr[0]')
+        cu1 = dag_a.add_child(qr_0_in, 'cu1', 'qr[0]')
+        dag_a.add_edge(qr_1_in, cu1, 'qr[1]')
+        measure_0 = dag_a.add_child(cr_0_in, 'measure', 'cr[0]')
+        dag_a.add_edge(cu1, measure_0, 'qr[0]')
+        measure_1 = dag_a.add_child(cu1, 'measure', 'qr[1]')
+        dag_a.add_edge(measure_0, measure_1, 'cr[0]')
+        dag_a.add_edge(measure_1, qr_1_out, 'qr[1]')
+        dag_a.add_edge(measure_1, cr_0_out, 'cr[0]')
+        dag_a.add_edge(measure_0, qr_0_out, 'qr[0]')
+        dag_a.remove_node(cu1)
+        dag_a.add_edge(qr_0_in, measure_0, 'qr[0]')
+        dag_a.add_edge(qr_1_in, measure_1, 'qr[1]')
+
+        qr_0_in = dag_b.add_node('qr[0]')
+        qr_1_in = dag_b.add_node('qr[1]')
+        cr_0_in = dag_b.add_node('cr[0]')
+        qr_0_out = dag_b.add_node('qr[0]')
+        qr_1_out = dag_b.add_node('qr[1]')
+        cr_0_out = dag_b.add_node('qr[0]')
+        measure_0 = dag_b.add_child(cr_0_in, 'measure', 'cr[0]')
+        dag_b.add_edge(qr_0_in, measure_0, 'qr[0]')
+        measure_1 = dag_b.add_child(qr_1_in, 'measure', 'qr[1]')
+        dag_b.add_edge(measure_1, qr_1_out, 'qr[1]')
+        dag_b.add_edge(measure_1, cr_0_out, 'cr[0]')
+        dag_b.add_edge(measure_0, measure_1, 'cr[0]')
+        dag_b.add_edge(measure_0, qr_0_out, 'qr[0]')
+
+        self.assertTrue(
+            retworkx.is_isomorphic_node_match(
+                dag_a, dag_b, lambda x, y: x == y))
+
+    def test_isomorphic_compare_nodes_with_removals_deepcopy(self):
+        dag_a = retworkx.PyDAG()
+        dag_b = retworkx.PyDAG()
+
+        qr_0_in = dag_a.add_node('qr[0]')
+        qr_1_in = dag_a.add_node('qr[1]')
+        cr_0_in = dag_a.add_node('cr[0]')
+        qr_0_out = dag_a.add_node('qr[0]')
+        qr_1_out = dag_a.add_node('qr[1]')
+        cr_0_out = dag_a.add_node('qr[0]')
+        cu1 = dag_a.add_child(qr_0_in, 'cu1', 'qr[0]')
+        dag_a.add_edge(qr_1_in, cu1, 'qr[1]')
+        measure_0 = dag_a.add_child(cr_0_in, 'measure', 'cr[0]')
+        dag_a.add_edge(cu1, measure_0, 'qr[0]')
+        measure_1 = dag_a.add_child(cu1, 'measure', 'qr[1]')
+        dag_a.add_edge(measure_0, measure_1, 'cr[0]')
+        dag_a.add_edge(measure_1, qr_1_out, 'qr[1]')
+        dag_a.add_edge(measure_1, cr_0_out, 'cr[0]')
+        dag_a.add_edge(measure_0, qr_0_out, 'qr[0]')
+        dag_a.remove_node(cu1)
+        dag_a.add_edge(qr_0_in, measure_0, 'qr[0]')
+        dag_a.add_edge(qr_1_in, measure_1, 'qr[1]')
+
+        qr_0_in = dag_b.add_node('qr[0]')
+        qr_1_in = dag_b.add_node('qr[1]')
+        cr_0_in = dag_b.add_node('cr[0]')
+        qr_0_out = dag_b.add_node('qr[0]')
+        qr_1_out = dag_b.add_node('qr[1]')
+        cr_0_out = dag_b.add_node('qr[0]')
+        measure_0 = dag_b.add_child(cr_0_in, 'measure', 'cr[0]')
+        dag_b.add_edge(qr_0_in, measure_0, 'qr[0]')
+        measure_1 = dag_b.add_child(qr_1_in, 'measure', 'qr[1]')
+        dag_b.add_edge(measure_1, qr_1_out, 'qr[1]')
+        dag_b.add_edge(measure_1, cr_0_out, 'cr[0]')
+        dag_b.add_edge(measure_0, measure_1, 'cr[0]')
+        dag_b.add_edge(measure_0, qr_0_out, 'qr[0]')
+
+        self.assertTrue(
+            retworkx.is_isomorphic_node_match(
+                copy.deepcopy(dag_a), copy.deepcopy(dag_b),
+                lambda x, y: x == y))

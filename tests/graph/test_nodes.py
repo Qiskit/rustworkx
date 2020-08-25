@@ -108,3 +108,57 @@ class TestNodes(unittest.TestCase):
         graph = retworkx.PyGraph()
         res = graph.add_nodes_from([])
         self.assertEqual(len(res), 0)
+
+    def test_get_node_data_getitem(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, "Edgy")
+        self.assertEqual('b', graph[node_b])
+
+    def test_get_node_data_getitem_bad_index(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, "Edgy")
+        with self.assertRaises(IndexError):
+            graph[42]
+
+    def test_set_node_data_setitem(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, "Edgy")
+        graph[node_b] = 'Oh so cool'
+        self.assertEqual('Oh so cool', graph[node_b])
+
+    def test_set_node_data_setitem_bad_index(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, "Edgy")
+        with self.assertRaises(IndexError):
+            graph[42] = 'Oh so cool'
+
+    def test_remove_node_delitem(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, "Edgy")
+        node_c = graph.add_node('c')
+        graph.add_edge(node_b, node_c, "Edgy_mk2")
+        del graph[node_b]
+        res = graph.nodes()
+        self.assertEqual(['a', 'c'], res)
+        self.assertEqual([0, 2], graph.node_indexes())
+
+    def test_remove_node_delitem_invalid_index(self):
+        graph = retworkx.PyGraph()
+        graph.add_node('a')
+        graph.add_node('b')
+        graph.add_node('c')
+        with self.assertRaises(IndexError):
+            del graph[76]
+        res = graph.nodes()
+        self.assertEqual(['a', 'b', 'c'], res)
+        self.assertEqual([0, 1, 2], graph.node_indexes())
