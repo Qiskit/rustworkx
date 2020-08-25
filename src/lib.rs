@@ -223,6 +223,7 @@ fn is_isomorphic_node_match(
         Ok(true)
     }
     let res = dag_isomorphism::is_isomorphic_matching(
+        py,
         first,
         second,
         compare_nodes,
