@@ -417,7 +417,7 @@ impl PyGraph {
     /// Get edge list
     ///
     /// Returns a list of tuples of the form ``(source, target)`` where
-    /// ``source`` and ``target are the node indices.
+    /// ``source`` and ``target`` are the node indices.
     ///
     /// :returns: An edge list with weights
     /// :rtype: list
@@ -430,7 +430,7 @@ impl PyGraph {
     /// Get edge list with weights
     ///
     /// Returns a list of tuples of the form ``(source, target, weight)`` where
-    /// ``source`` and ``target are the node indices and ``weight`` is the
+    /// ``source`` and ``target`` are the node indices and ``weight`` is the
     /// payload of the edge.
     ///
     /// :returns: An edge list with weights
