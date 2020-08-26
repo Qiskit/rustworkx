@@ -49,7 +49,7 @@ class TestStarGraph(unittest.TestCase):
         expected_edges = [(i, 0, None) for i in range(1, 20)]
         self.assertEqual(sorted(graph.in_edges(0)), sorted(expected_edges))
 
-    def test_star_directed_both_weights_and_num(self):
+    def test_star_directed_no_weights_or_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.directed_star_graph()
 

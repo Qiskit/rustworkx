@@ -35,7 +35,7 @@ class TestPathGraph(unittest.TestCase):
             self.assertEqual(graph.out_edges(i), [(i, i + 1, None)])
         self.assertEqual(graph.out_edges(19), [])
 
-    def test_path_directed_both_weights_and_num(self):
+    def test_path_directed_no_weights_or_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.directed_path_graph()
 
