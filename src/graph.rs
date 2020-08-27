@@ -825,4 +825,29 @@ impl PyMappingProtocol for PyGraph {
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
     }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<&'p PyObject> {
+        match self.graph.node_weight(NodeIndex::new(idx as usize)) {
+            Some(data) => Ok(data),
+            None => Err(IndexError::py_err("No node found for index")),
+        }
+    }
+
+    fn __setitem__(&'p mut self, idx: usize, value: PyObject) -> PyResult<()> {
+        let data = match self
+            .graph
+            .node_weight_mut(NodeIndex::new(idx as usize))
+        {
+            Some(node_data) => node_data,
+            None => return Err(IndexError::py_err("No node found for index")),
+        };
+        *data = value;
+        Ok(())
+    }
+
+    fn __delitem__(&'p mut self, idx: usize) -> PyResult<()> {
+        match self.graph.remove_node(NodeIndex::new(idx as usize)) {
+            Some(_) => Ok(()),
+            None => Err(IndexError::py_err("No node found for index")),
+        }
+    }
 }
