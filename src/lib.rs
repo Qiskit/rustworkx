@@ -25,6 +25,7 @@ mod dag_isomorphism;
 mod digraph;
 mod dijkstra;
 mod dot_utils;
+mod generators;
 mod graph;
 mod k_shortest_path;
 
@@ -38,6 +39,7 @@ use pyo3::exceptions::{Exception, ValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
+use pyo3::wrap_pymodule;
 use pyo3::Python;
 
 use petgraph::algo;
@@ -50,6 +52,8 @@ use numpy::IntoPyArray;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
+
+use generators::PyInit_generators;
 
 fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
@@ -224,6 +228,7 @@ fn is_isomorphic_node_match(
         Ok(true)
     }
     let res = dag_isomorphism::is_isomorphic_matching(
+        py,
         first,
         second,
         compare_nodes,
@@ -1497,6 +1502,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
+    m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
 

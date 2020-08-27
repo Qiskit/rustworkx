@@ -14,6 +14,19 @@ Graph Classes
     retworkx.PyDiGraph
     retworkx.PyDAG
 
+Generators
+----------
+
+.. autosummary::
+   :toctree: stubs
+
+    retworkx.generators.cycle_graph
+    retworkx.generators.directed_cycle_graph
+    retworkx.generators.path_graph
+    retworkx.generators.directed_path_graph
+    retworkx.generators.star_graph
+    retworkx.generators.directed_star_graph
+
 Random Circuit Functions
 ------------------------
 
