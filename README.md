@@ -91,6 +91,20 @@ make to the rust code will not be reflected live in your python environment,
 you'll need to recompile retworkx by rerunning `pip install` to have any
 changes reflected in your python environment.
 
+### Develop Mode
+
+If you'd like to build retworkx in debug mode and use an interactive debugger
+while working on a change you can use `python setup.py develop` to build
+and install retworkx in develop mode. This will build retworkx without
+optimizations and include debuginfo which can be handy for debugging. Do note
+that installing retworkx this way will be significantly slower then using
+`pip install` and should only be used for debugging/development.
+
+It's worth noting that `pip install -e` does not work, as it will link the python
+packaging shim to your python environment but not build the retworkx binary. If
+you want to build retworkx in debug mode you have to use
+`python setup.py develop`.
+
 ## Using retworkx
 
 Once you have retworkx installed you can use it by importing retworkx.
