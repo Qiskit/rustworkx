@@ -22,6 +22,7 @@ setup(
     long_description_content_type='text/markdown',
     author="Matthew Treinish",
     author_email="mtreinish@kortar.org",
+    license="Apache 2.0",
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
         "Intended Audience :: Developers",
