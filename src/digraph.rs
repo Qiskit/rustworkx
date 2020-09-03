@@ -1044,10 +1044,10 @@ impl PyDiGraph {
         }
     }
 
-    /// Read an edgelist file and create a new PyDiGraph object from the
+    /// Read an edge list file and create a new PyDiGraph object from the
     /// contents
     ///
-    /// The expected format for the edgelist file is a line seperated list
+    /// The expected format for the edge list file is a line seperated list
     /// of deliminated node ids. If there are more than 3 elements on
     /// a line the 3rd on will be treated as a string weight for the edge
     ///
@@ -1078,7 +1078,7 @@ impl PyDiGraph {
     ///       fd.write('1 2\n')
     ///       fd.write('2 3\n')
     ///       fd.flush()
-    ///       graph = retworkx.PyDiGraph.read_edgelist(path)
+    ///       graph = retworkx.PyDiGraph.read_edge_list(path)
     ///
     ///   # Draw graph
     ///   dot = pydot.graph_from_dot_data(graph.to_dot())[0]
@@ -1092,7 +1092,7 @@ impl PyDiGraph {
     ///
     #[staticmethod]
     #[text_signature = "(path, /, comment=None, deliminator=None)"]
-    pub fn read_edgelist(
+    pub fn read_edge_list(
         py: Python,
         path: &str,
         comment: Option<String>,

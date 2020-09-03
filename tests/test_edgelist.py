@@ -19,32 +19,32 @@ import retworkx
 
 class TestEdgeList(unittest.TestCase):
 
-    def test_empty_edgelist_graph(self):
+    def test_empty_edge_list_graph(self):
         with tempfile.NamedTemporaryFile() as fd:
-            graph = retworkx.PyGraph.read_edgelist(fd.name)
+            graph = retworkx.PyGraph.read_edge_list(fd.name)
         self.assertEqual(graph.nodes(), [])
 
-    def test_empty_edgelist_digraph(self):
+    def test_empty_edge_list_digraph(self):
         with tempfile.NamedTemporaryFile() as fd:
-            graph = retworkx.PyDiGraph.read_edgelist(fd.name)
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name)
         self.assertEqual(graph.nodes(), [])
 
     def test_invalid_path_graph(self):
         path = os.path.join(tempfile.gettempdir(), 'fake_file_name.txt')
         with self.assertRaises(FileNotFoundError):
-            retworkx.PyGraph.read_edgelist(path)
+            retworkx.PyGraph.read_edge_list(path)
 
     def test_invalid_path_digraph(self):
         path = os.path.join(tempfile.gettempdir(), 'fake_file_name.txt')
         with self.assertRaises(FileNotFoundError):
-            retworkx.PyDiGraph.read_edgelist(path)
+            retworkx.PyDiGraph.read_edge_list(path)
 
     def test_simple_example_digraph(self):
         with tempfile.NamedTemporaryFile('wt') as fd:
             fd.write('0 1\n')
             fd.write('1 2\n')
             fd.flush()
-            graph = retworkx.PyDiGraph.read_edgelist(fd.name)
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name)
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -57,7 +57,7 @@ class TestEdgeList(unittest.TestCase):
             fd.write('0 1\n')
             fd.write('1 2\n')
             fd.flush()
-            graph = retworkx.PyGraph.read_edgelist(fd.name)
+            graph = retworkx.PyGraph.read_edge_list(fd.name)
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -71,7 +71,7 @@ class TestEdgeList(unittest.TestCase):
             fd.write('1 2\n')
             fd.write('//2 3\n')
             fd.flush()
-            graph = retworkx.PyDiGraph.read_edgelist(fd.name, comment='//')
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment='//')
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -85,7 +85,7 @@ class TestEdgeList(unittest.TestCase):
             fd.write('1 2 # test comments\n')
             fd.write('#2 3\n')
             fd.flush()
-            graph = retworkx.PyGraph.read_edgelist(fd.name, comment='#')
+            graph = retworkx.PyGraph.read_edge_list(fd.name, comment='#')
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -99,7 +99,7 @@ class TestEdgeList(unittest.TestCase):
             fd.write('1 2 1\n')
             fd.write('//2 3\n')
             fd.flush()
-            graph = retworkx.PyDiGraph.read_edgelist(fd.name, comment='//')
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment='//')
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -114,7 +114,7 @@ class TestEdgeList(unittest.TestCase):
             fd.write('1 2 1# test comments\n')
             fd.write('#2 3\n')
             fd.flush()
-            graph = retworkx.PyGraph.read_edgelist(fd.name, comment='#')
+            graph = retworkx.PyGraph.read_edge_list(fd.name, comment='#')
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -129,8 +129,8 @@ class TestEdgeList(unittest.TestCase):
             fd.write('1|2|1\n')
             fd.write('//2|3\n')
             fd.flush()
-            graph = retworkx.PyDiGraph.read_edgelist(fd.name, comment='//',
-                                                     deliminator='|')
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment='//',
+                                                      deliminator='|')
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -145,8 +145,8 @@ class TestEdgeList(unittest.TestCase):
             fd.write('1,2,1# test comments\n')
             fd.write('#2,3\n')
             fd.flush()
-            graph = retworkx.PyGraph.read_edgelist(fd.name, comment='#',
-                                                   deliminator=',')
+            graph = retworkx.PyGraph.read_edge_list(fd.name, comment='#',
+                                                    deliminator=',')
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
