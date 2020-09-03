@@ -1056,6 +1056,10 @@ impl PyDiGraph {
     ///             1: (2, "weight"),
     ///             2: (4, "weight2")
     ///         }
+    /// :param edge_map_func: An optional python callabble that will take in a
+    ///     single edge weight/data object and return a new edge weight/data
+    ///     object that will be used when adding an edge from other onto this
+    ///     graph.
     ///
     /// :returns: new_node_ids: A dictionary mapping node index from the other
     ///     PyDiGraph to the equivalent node index in this PyDAG after they've been
@@ -1129,12 +1133,13 @@ impl PyDiGraph {
     ///       os.remove(tmp_path)
     ///   image
     ///
-    #[text_signature = "(other, node_map, /)"]
+    #[text_signature = "(other, node_map, /, edge_map_func=None)"]
     pub fn compose(
         &mut self,
         py: Python,
         other: &PyDiGraph,
         node_map: PyObject,
+        edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
         let node_map_dict = node_map.cast_as::<PyDict>(py)?;
@@ -1150,15 +1155,28 @@ impl PyDiGraph {
                 self.graph.add_node(other.graph[node].clone_ref(py));
             new_node_map.insert(node, new_index);
         }
+
+        fn edge_weight_callable(
+            py: Python,
+            edge_map: &Option<PyObject>,
+            edge: &PyObject,
+        ) -> PyResult<PyObject> {
+            match edge_map {
+                Some(edge_map) => {
+                    let res = edge_map.call1(py, (edge,))?;
+                    Ok(res.to_object(py))
+                }
+                None => Ok(edge.clone_ref(py)),
+            }
+        }
+
         // loop over other edges and add to self graph
         for edge in other.graph.edge_references() {
             let new_p_index = new_node_map.get(&edge.source()).unwrap();
             let new_c_index = new_node_map.get(&edge.target()).unwrap();
-            self.graph.add_edge(
-                *new_p_index,
-                *new_c_index,
-                edge.weight().clone_ref(py),
-            );
+            let weight =
+                edge_weight_callable(py, &edge_map_func, edge.weight())?;
+            self.graph.add_edge(*new_p_index, *new_c_index, weight);
         }
         // Add edges from map
         for (this_index, (index, weight)) in node_map_hashmap.iter() {
