@@ -1351,7 +1351,7 @@ pub fn cycle_basis(
     let mut cycles: Vec<Vec<usize>> = Vec::new();
     while !graph_nodes.is_empty() {
         let temp_value: NodeIndex;
-        // If root_node is not set get an "any" node from the set of graph
+        // If root_node is not set get an arbitrary node from the set of graph
         // nodes we've not "examined"
         let root_index = match root_node {
             Some(root_value) => NodeIndex::new(root_value),
