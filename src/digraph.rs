@@ -557,7 +557,7 @@ impl PyDiGraph {
     }
 
     /// Remove a node from the graph and add edges from all predecessors to all
-    /// descendants
+    /// successors
     ///
     /// :param int node: The index of the node to remove. If the index is not
     ///     present in the graph it will be ingored and this function willl have
