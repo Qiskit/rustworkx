@@ -427,41 +427,6 @@ impl PyGraph {
         Ok(())
     }
 
-    /// Remove a node from the graph and add edges from all predecessors to all
-    /// descendants
-    ///
-    /// :param int node: The index of the node to remove. If the index is not
-    ///     present in the graph it will be ingored and this function willl have
-    ///     no effect.
-    #[text_signature = "(node, /)"]
-    pub fn remove_node_retain_edges(
-        &mut self,
-        py: Python,
-        node: usize,
-    ) -> PyResult<()> {
-        let index = NodeIndex::new(node);
-        let mut edge_list: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
-        for (source, weight) in self
-            .graph
-            .edges_directed(index, petgraph::Direction::Incoming)
-            .map(|x| (x.source(), x.weight()))
-        {
-            for target in self
-                .graph
-                .edges_directed(index, petgraph::Direction::Outgoing)
-                .map(|x| x.target())
-            {
-                edge_list.push((source, target, weight.clone_ref(py)));
-            }
-        }
-        for (source, target, weight) in edge_list {
-            self.graph.add_edge(source, target, weight);
-        }
-        self.graph.remove_node(index);
-        self.node_removed = true;
-        Ok(())
-    }
-
     /// Add an edge between 2 nodes.
     ///
     /// :param int parent: Index of the parent node
