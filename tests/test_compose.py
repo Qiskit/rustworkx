@@ -56,7 +56,7 @@ class TestCompoes(unittest.TestCase):
         with self.assertRaises(TypeError):
             graph.compose(digraph, {})
 
-    def test_edge_map_func_digraph_compose(self):
+    def test_edge_map_and_node_map_func_digraph_compose(self):
         digraph = retworkx.PyDiGraph()
         original_input_nodes = digraph.add_nodes_from(['qr[0]', 'qr[1]'])
         original_op_nodes = digraph.add_nodes_from(['h'])
@@ -87,18 +87,27 @@ class TestCompoes(unittest.TestCase):
         other_digraph.remove_nodes_from(input_nodes)
         node_map = {original_op_nodes[0]: (op_nodes[0], 'qr[0]'),
                     original_input_nodes[1]: (op_nodes[0], 'qr[1]')}
-        res = digraph.compose(other_digraph, node_map, edge_map_func=map_fn)
+        res = digraph.compose(other_digraph, node_map,
+                              node_map_func=map_fn,
+                              edge_map_func=map_fn)
         self.assertEqual({2: 4, 3: 3, 4: 5}, res)
+        self.assertEqual(digraph[res[other_output_nodes[0]]], 'qr[0]')
+        self.assertEqual(digraph[res[other_output_nodes[1]]], 'qr[1]')
         # qr[0] -> h
         self.assertTrue(digraph.has_edge(0, 2))
+        self.assertTrue(digraph.get_all_edge_data(0, 2), ['qr[0]'])
         # qr[1] -> cx
         self.assertTrue(digraph.has_edge(1, 4))
+        self.assertTrue(digraph.get_all_edge_data(1, 4), ['qr[1]'])
         # h -> cx
         self.assertTrue(digraph.has_edge(2, 4))
+        self.assertTrue(digraph.get_all_edge_data(0, 2), ['qr[0]'])
         # cx -> qr[2]
         self.assertTrue(digraph.has_edge(4, 3))
+        self.assertTrue(digraph.get_all_edge_data(0, 2), ['qr[0]'])
         # cx -> qr[3]
         self.assertTrue(digraph.has_edge(4, 5))
+        self.assertTrue(digraph.get_all_edge_data(0, 2), ['qr[1]'])
 
     def test_edge_map_func_graph_compose(self):
         graph = retworkx.PyGraph()
@@ -131,15 +140,23 @@ class TestCompoes(unittest.TestCase):
         other_graph.remove_nodes_from(input_nodes)
         node_map = {original_op_nodes[0]: (op_nodes[0], 'qr[0]'),
                     original_input_nodes[1]: (op_nodes[0], 'qr[1]')}
-        res = graph.compose(other_graph, node_map, edge_map_func=map_fn)
+        res = graph.compose(other_graph, node_map, node_map_func=map_fn,
+                            edge_map_func=map_fn)
         self.assertEqual({2: 4, 3: 3, 4: 5}, res)
+        self.assertEqual(graph[res[other_output_nodes[0]]], 'qr[0]')
+        self.assertEqual(graph[res[other_output_nodes[1]]], 'qr[1]')
         # qr[0] -> h
         self.assertTrue(graph.has_edge(0, 2))
+        self.assertTrue(graph.get_all_edge_data(0, 2), ['qr[0]'])
         # qr[1] -> cx
         self.assertTrue(graph.has_edge(1, 4))
+        self.assertTrue(graph.get_all_edge_data(0, 2), ['qr[1]'])
         # h -> cx
         self.assertTrue(graph.has_edge(2, 4))
-        # cx -> qr[2]
+        self.assertTrue(graph.get_all_edge_data(0, 2), ['qr[0]'])
+        # cx -> qr[0]
         self.assertTrue(graph.has_edge(4, 3))
-        # cx -> qr[3]
+        self.assertTrue(graph.get_all_edge_data(0, 2), ['qr[0]'])
+        # cx -> qr[1]
         self.assertTrue(graph.has_edge(4, 5))
+        self.assertTrue(graph.get_all_edge_data(0, 2), ['qr[1]'])

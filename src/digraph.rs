@@ -1056,6 +1056,11 @@ impl PyDiGraph {
     ///             1: (2, "weight"),
     ///             2: (4, "weight2")
     ///         }
+    ///
+    /// :param node_map_func: An optional python callable that will take in a
+    ///     single node weight/data object and return a new node weight/data
+    ///     object that will be used when adding an node from other onto this
+    ///     graph.
     /// :param edge_map_func: An optional python callable that will take in a
     ///     single edge weight/data object and return a new edge weight/data
     ///     object that will be used when adding an edge from other onto this
@@ -1133,12 +1138,13 @@ impl PyDiGraph {
     ///       os.remove(tmp_path)
     ///   image
     ///
-    #[text_signature = "(other, node_map, /, edge_map_func=None)"]
+    #[text_signature = "(other, node_map, /, node_map_func=None, edge_map_func=None)"]
     pub fn compose(
         &mut self,
         py: Python,
         other: &PyDiGraph,
         node_map: PyObject,
+        node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
@@ -1148,11 +1154,29 @@ impl PyDiGraph {
         for (k, v) in node_map_dict.iter() {
             node_map_hashmap.insert(k.extract()?, v.extract()?);
         }
+
+        fn node_weight_callable(
+            py: Python,
+            node_map: &Option<PyObject>,
+            node: &PyObject,
+        ) -> PyResult<PyObject> {
+            match node_map {
+                Some(node_map) => {
+                    let res = node_map.call1(py, (node,))?;
+                    Ok(res.to_object(py))
+                }
+                None => Ok(node.clone_ref(py)),
+            }
+        }
+
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph
         for node in other.graph.node_indices() {
-            let new_index =
-                self.graph.add_node(other.graph[node].clone_ref(py));
+            let new_index = self.graph.add_node(node_weight_callable(
+                py,
+                &node_map_func,
+                &other.graph[node],
+            )?);
             new_node_map.insert(node, new_index);
         }
 
