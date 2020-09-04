@@ -56,7 +56,7 @@ class TestCompoes(unittest.TestCase):
         with self.assertRaises(TypeError):
             graph.compose(digraph, {})
 
-    def test_edge_map_and_node_map_func_digraph_compose(self):
+    def test_edge_map_and_node_map_funcs_digraph_compose(self):
         digraph = retworkx.PyDiGraph()
         original_input_nodes = digraph.add_nodes_from(['qr[0]', 'qr[1]'])
         original_op_nodes = digraph.add_nodes_from(['h'])
@@ -109,7 +109,7 @@ class TestCompoes(unittest.TestCase):
         self.assertTrue(digraph.has_edge(4, 5))
         self.assertTrue(digraph.get_all_edge_data(0, 2), ['qr[1]'])
 
-    def test_edge_map_func_graph_compose(self):
+    def test_edge_map_and_node_map_funcs_graph_compose(self):
         graph = retworkx.PyGraph()
         original_input_nodes = graph.add_nodes_from(['qr[0]', 'qr[1]'])
         original_op_nodes = graph.add_nodes_from(['h'])

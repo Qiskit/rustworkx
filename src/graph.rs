@@ -800,7 +800,7 @@ impl PyGraph {
     ///       os.remove(tmp_path)
     ///   image
     ///
-    #[text_signature = "(other, node_map, /, edge_map_func=None)"]
+    #[text_signature = "(other, node_map, /, node_map_func=None, edge_map_func=None)"]
     pub fn compose(
         &mut self,
         py: Python,
