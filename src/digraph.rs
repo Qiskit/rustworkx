@@ -1056,13 +1056,13 @@ impl PyDiGraph {
     ///             1: (2, "weight"),
     ///             2: (4, "weight2")
     ///         }
-    /// :param edge_map_func: An optional python callabble that will take in a
+    /// :param edge_map_func: An optional python callable that will take in a
     ///     single edge weight/data object and return a new edge weight/data
     ///     object that will be used when adding an edge from other onto this
     ///     graph.
     ///
     /// :returns: new_node_ids: A dictionary mapping node index from the other
-    ///     PyDiGraph to the equivalent node index in this PyDAG after they've been
+    ///     PyDiGraph to the corresponding node index in this PyDAG after they've been
     ///     combined
     /// :rtype: dict
     ///
