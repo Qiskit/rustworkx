@@ -80,6 +80,19 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(['a', 'c'], res)
         self.assertEqual([0, 2], dag.node_indexes())
         self.assertTrue(dag.has_edge(node_a, node_c))
+        self.assertEqual(dag.get_all_edge_data(node_a, node_c), ['Edgy'])
+
+    def test_remove_nodes_retain_edges_single_edge_outgoing_weight(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        node_c = dag.add_child(node_b, 'c', "Edgy_mk2")
+        dag.remove_node_retain_edges(node_b, use_outgoing=True)
+        res = dag.nodes()
+        self.assertEqual(['a', 'c'], res)
+        self.assertEqual([0, 2], dag.node_indexes())
+        self.assertTrue(dag.has_edge(node_a, node_c))
+        self.assertEqual(dag.get_all_edge_data(node_a, node_c), ['Edgy_mk2'])
 
     def test_remove_nodes_retain_edges_multiple_in_edges(self):
         dag = retworkx.PyDAG()
@@ -124,6 +137,25 @@ class TestNodes(unittest.TestCase):
         self.assertEqual([0, 1, 2, 4], dag.node_indexes())
         self.assertTrue(dag.has_edge(node_a, node_c))
         self.assertTrue(dag.has_edge(node_a, node_d))
+        self.assertTrue(dag.has_edge(node_e, node_c))
+        self.assertTrue(dag.has_edge(node_e, node_d))
+
+    def test_remove_node_retain_edges_with_condition(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_d = dag.add_node('d')
+        node_e = dag.add_node('e')
+        node_b = dag.add_child(node_a, 'b', "Edgy")
+        dag.add_edge(node_b, node_d, "Multiple out edgy")
+        dag.add_edge(node_e, node_b, "multiple in edgy")
+        node_c = dag.add_child(node_b, 'c', "Edgy_mk2")
+        dag.remove_node_retain_edges(
+            node_b, condition=lambda a, b: a == 'multiple in edgy')
+        res = dag.nodes()
+        self.assertEqual(['a', 'd', 'e', 'c'], res)
+        self.assertEqual([0, 1, 2, 4], dag.node_indexes())
+        self.assertFalse(dag.has_edge(node_a, node_c))
+        self.assertFalse(dag.has_edge(node_a, node_d))
         self.assertTrue(dag.has_edge(node_e, node_c))
         self.assertTrue(dag.has_edge(node_e, node_d))
 

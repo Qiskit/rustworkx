@@ -559,28 +559,65 @@ impl PyDiGraph {
     /// Remove a node from the graph and add edges from all predecessors to all
     /// successors
     ///
+    /// By default the data/weight on edges into the removed node will be used
+    /// for the retained edges.
+    ///
     /// :param int node: The index of the node to remove. If the index is not
     ///     present in the graph it will be ingored and this function willl have
     ///     no effect.
-    #[text_signature = "(node, /)"]
+    /// :param bool use_outgoing: If set to true the weight/data from the
+    ///     edge outgoing from ``node`` will be used in the retained edge
+    ///     instead of the default weight/data from the incoming edge.
+    /// :param condition: A callable that will be passed 2 edge weight/data
+    ///     objects, one from the incoming edge to ``node`` the other for the
+    ///     outgoing edge, and will return a ``bool`` on whether an edge should
+    ///     be retained. For example setting this kwarg to::
+    ///
+    ///         lambda in_edge, out_edge: in_edge == out_edge
+    ///
+    ///     would only retain edges if the input edge to ``node`` had the same
+    ///     data payload as the outgoing edge.
+    #[text_signature = "(node, /, use_outgoing=None, condition=None)"]
+    #[args(use_outgoing = "false")]
     pub fn remove_node_retain_edges(
         &mut self,
         py: Python,
         node: usize,
+        use_outgoing: bool,
+        condition: Option<PyObject>,
     ) -> PyResult<()> {
         let index = NodeIndex::new(node);
         let mut edge_list: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
-        for (source, weight) in self
+
+        fn check_condition(
+            py: Python,
+            condition: &Option<PyObject>,
+            in_weight: &PyObject,
+            out_weight: &PyObject,
+        ) -> PyResult<bool> {
+            match condition {
+                Some(condition) => {
+                    let res = condition.call1(py, (in_weight, out_weight))?;
+                    Ok(res.extract(py)?)
+                }
+                None => Ok(true),
+            }
+        }
+
+        for (source, in_weight) in self
             .graph
             .edges_directed(index, petgraph::Direction::Incoming)
             .map(|x| (x.source(), x.weight()))
         {
-            for target in self
+            for (target, out_weight) in self
                 .graph
                 .edges_directed(index, petgraph::Direction::Outgoing)
-                .map(|x| x.target())
+                .map(|x| (x.target(), x.weight()))
             {
-                edge_list.push((source, target, weight.clone_ref(py)));
+                let weight = if use_outgoing { out_weight } else { in_weight };
+                if check_condition(py, &condition, in_weight, out_weight)? {
+                    edge_list.push((source, target, weight.clone_ref(py)));
+                }
             }
         }
         for (source, target, weight) in edge_list {
