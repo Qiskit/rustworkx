@@ -1351,6 +1351,8 @@ pub fn cycle_basis(
     let mut cycles: Vec<Vec<usize>> = Vec::new();
     while !graph_nodes.is_empty() {
         let temp_value: NodeIndex;
+        // If root_node is not set get an "any" node from the set of graph
+        // nodes we've not "examined"
         let root_index = match root_node {
             Some(root_value) => NodeIndex::new(root_value),
             None => {
@@ -1359,25 +1361,33 @@ pub fn cycle_basis(
                 temp_value
             }
         };
+        // Stack (ie "pushdown list") of verticecs already in the spanning tree
         let mut stack: Vec<NodeIndex> = Vec::new();
         stack.push(root_index);
+        // Map of node index to predecessor node index
         let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
         pred.insert(root_index, root_index);
+        // Set of examined nodes during this iteration
         let mut used: HashMap<NodeIndex, HashSet<NodeIndex>> = HashMap::new();
         used.insert(root_index, HashSet::new());
+        // Walk the spanning tree
         while !stack.is_empty() {
+            // Use the last element added so that cycles are easier to find
             let z = stack.pop().unwrap();
             for neighbor in graph.graph.neighbors(z) {
+                // A new node was encountered:
                 if !used.contains_key(&neighbor) {
                     pred.insert(neighbor, z);
                     stack.push(neighbor);
                     let mut temp_set: HashSet<NodeIndex> = HashSet::new();
                     temp_set.insert(z);
                     used.insert(neighbor, temp_set);
+                // A self loop:
                 } else if z == neighbor {
                     let mut cycle: Vec<usize> = Vec::new();
                     cycle.push(z.index());
                     cycles.push(cycle);
+                // A cycle was found:
                 } else if !used.get(&z).unwrap().contains(&neighbor) {
                     let pn = used.get(&neighbor).unwrap();
                     let mut cycle: Vec<NodeIndex> = Vec::new();
