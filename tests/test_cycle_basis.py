@@ -62,3 +62,9 @@ class TestCycleBasis(unittest.TestCase):
         digraph = retworkx.PyDiGraph()
         with self.assertRaises(TypeError):
             retworkx.cycle_basis(digraph)
+
+    def test_self_loop(self):
+        self.graph.add_edge(1, 1, None)
+        res = sorted(sorted(c) for c in retworkx.cycle_basis(self.graph, 0))
+        self.assertEqual([[0, 1, 2, 3], [0, 1, 6, 7, 8], [0, 3, 4, 5], [1]],
+                         res)
