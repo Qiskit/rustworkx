@@ -179,3 +179,19 @@ class TestFloydWarshall(unittest.TestCase):
              [-2, -1, -2, -3],
              [-3, -2, -3, -4]], dtype=numpy.float64)
         self.assertTrue(numpy.array_equal(dist, expected))
+
+    def test_numpy_directed_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: x)
+        expected = numpy.full((4, 4), numpy.inf)
+        numpy.fill_diagonal(expected, 0)
+        self.assertTrue(numpy.array_equal(dist, expected))
+
+    def test_numpy_no_edges(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(4)))
+        dist = retworkx.graph_floyd_warshall_numpy(graph, lambda x: x)
+        expected = numpy.full((4, 4), numpy.inf)
+        numpy.fill_diagonal(expected, 0)
+        self.assertTrue(numpy.array_equal(dist, expected))
