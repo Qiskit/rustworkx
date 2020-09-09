@@ -44,7 +44,10 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::{Bfs, IntoEdgeReferences, NodeIndexable, Reversed};
+use petgraph::visit::{
+    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
+    NodeCount, NodeIndexable, Reversed,
+};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -53,6 +56,10 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use generators::PyInit_generators;
+
+trait NodesRemoved {
+    fn nodes_removed(&self) -> bool;
+}
 
 fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
@@ -572,6 +579,51 @@ fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
     Ok(out_dict.into())
 }
 
+fn get_edge_iter_with_weights<G>(
+    graph: G,
+) -> impl Iterator<Item = (usize, usize, PyObject)>
+where
+    G: GraphBase
+        + IntoEdgeReferences
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + GraphProp
+        + NodesRemoved,
+    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
+{
+    let node_map: Option<HashMap<NodeIndex, usize>>;
+    if graph.nodes_removed() {
+        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
+        for (count, node) in graph.node_identifiers().enumerate() {
+            let index = NodeIndex::new(graph.to_index(node));
+            node_hash_map.insert(index, count);
+        }
+        node_map = Some(node_hash_map);
+    } else {
+        node_map = None;
+    }
+
+    graph.edge_references().map(move |edge| {
+        let i: usize;
+        let j: usize;
+        match &node_map {
+            Some(map) => {
+                let source_index =
+                    NodeIndex::new(graph.to_index(edge.source()));
+                let target_index =
+                    NodeIndex::new(graph.to_index(edge.target()));
+                i = *map.get(&source_index).unwrap();
+                j = *map.get(&target_index).unwrap();
+            }
+            None => {
+                i = graph.to_index(edge.source());
+                j = graph.to_index(edge.target());
+            }
+        }
+        (i, j, edge.weight().clone())
+    })
+}
+
 /// Find all-pairs shortest path lengths using Floyd's algorithm
 ///
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
@@ -602,23 +654,7 @@ fn graph_floyd_warshall_numpy(
     graph: &graph::PyGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    // Handle holes in node index list
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    let n: usize;
-    if graph.node_removed {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
-        let mut count = 0;
-        for node in graph.graph.node_indices() {
-            node_hash_map.insert(node, count);
-            count += 1;
-        }
-        n = count;
-        node_map = Some(node_hash_map);
-    } else {
-        n = graph.graph.node_bound();
-        node_map = None;
-    }
-
+    let n = graph.node_count();
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY);
 
@@ -628,24 +664,8 @@ fn graph_floyd_warshall_numpy(
     };
 
     // Build adjacency matrix
-    for (source, target, weight) in graph
-        .graph
-        .edge_references()
-        .map(|edge| (edge.source(), edge.target(), edge.weight()))
-    {
-        let i: usize;
-        let j: usize;
-        let edge_weight = weight_callable(weight)?;
-        match &node_map {
-            Some(map) => {
-                i = *map.get(&source).unwrap();
-                j = *map.get(&target).unwrap();
-            }
-            None => {
-                i = source.index();
-                j = target.index();
-            }
-        }
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight = weight_callable(&weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         mat[[j, i]] = mat[[j, i]].min(edge_weight);
     }
@@ -700,22 +720,7 @@ fn digraph_floyd_warshall_numpy(
     graph: &digraph::PyDiGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    // Handle holes in node index list
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    let n: usize;
-    if graph.node_removed {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
-        let mut count = 0;
-        for node in graph.graph.node_indices() {
-            node_hash_map.insert(node, count);
-            count += 1;
-        }
-        n = count;
-        node_map = Some(node_hash_map);
-    } else {
-        n = graph.graph.node_bound();
-        node_map = None;
-    }
+    let n = graph.node_count();
 
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY);
@@ -726,24 +731,8 @@ fn digraph_floyd_warshall_numpy(
     };
 
     // Build adjacency matrix
-    for (source, target, weight) in graph
-        .graph
-        .edge_references()
-        .map(|edge| (edge.source(), edge.target(), edge.weight()))
-    {
-        let i: usize;
-        let j: usize;
-        let edge_weight = weight_callable(weight)?;
-        match &node_map {
-            Some(map) => {
-                i = *map.get(&source).unwrap();
-                j = *map.get(&target).unwrap();
-            }
-            None => {
-                i = source.index();
-                j = target.index();
-            }
-        }
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight = weight_callable(&weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
     }
     // 0 out the diagonal
@@ -875,44 +864,15 @@ fn digraph_adjacency_matrix(
     graph: &digraph::PyDiGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    let n: usize;
-    if graph.node_removed {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
-        let mut count = 0;
-        for node in graph.graph.node_indices() {
-            node_hash_map.insert(node, count);
-            count += 1;
-        }
-        n = count;
-        node_map = Some(node_hash_map);
-    } else {
-        n = graph.graph.node_bound();
-        node_map = None;
-    }
+    let n = graph.node_count();
     let mut matrix = Array::<f64, _>::zeros((n, n).f());
 
-    let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
+    let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
-        Ok(res.to_object(py))
+        res.extract(py)
     };
-    for edge in graph.graph.edge_references() {
-        let edge_weight_raw = weight_callable(&edge.weight())?;
-        let edge_weight: f64 = edge_weight_raw.extract(py)?;
-        let source = edge.source();
-        let target = edge.target();
-        let i: usize;
-        let j: usize;
-        match &node_map {
-            Some(map) => {
-                i = *map.get(&source).unwrap();
-                j = *map.get(&target).unwrap();
-            }
-            None => {
-                i = source.index();
-                j = target.index();
-            }
-        }
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight = weight_callable(&weight)?;
         matrix[[i, j]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
@@ -946,44 +906,15 @@ fn graph_adjacency_matrix(
     graph: &graph::PyGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    let n: usize;
-    if graph.node_removed {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
-        let mut count = 0;
-        for node in graph.graph.node_indices() {
-            node_hash_map.insert(node, count);
-            count += 1;
-        }
-        n = count;
-        node_map = Some(node_hash_map);
-    } else {
-        n = graph.graph.node_bound();
-        node_map = None;
-    }
+    let n = graph.node_count();
     let mut matrix = Array::<f64, _>::zeros((n, n).f());
 
-    let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
+    let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
-        Ok(res.to_object(py))
+        res.extract(py)
     };
-    for edge in graph.graph.edge_references() {
-        let edge_weight_raw = weight_callable(&edge.weight())?;
-        let edge_weight: f64 = edge_weight_raw.extract(py)?;
-        let source = edge.source();
-        let target = edge.target();
-        let i: usize;
-        let j: usize;
-        match &node_map {
-            Some(map) => {
-                i = *map.get(&source).unwrap();
-                j = *map.get(&target).unwrap();
-            }
-            None => {
-                i = source.index();
-                j = target.index();
-            }
-        }
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight = weight_callable(&weight)?;
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
