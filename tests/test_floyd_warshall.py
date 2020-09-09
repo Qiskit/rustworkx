@@ -12,6 +12,8 @@
 
 import unittest
 
+import numpy
+
 import retworkx
 
 
@@ -99,6 +101,23 @@ class TestFloydWarshall(unittest.TestCase):
         self.assertEqual(dist[0, 2], 4)
         self.assertEqual(dist[2, 0], 4)
 
+    def test_weighted_numpy_negative_cycle(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from([
+            (0, 1, 1),
+            (1, 2, -1),
+            (2, 3, -1),
+            (3, 0, -1),
+        ])
+        dist = retworkx.graph_floyd_warshall_numpy(graph, lambda x: x)
+        expected = numpy.array(
+            [[-6, -7, -8, -13],
+             [-7, -8, -9, -14],
+             [-8, -9, -10, -15],
+             [-13, -14, -15, -20]], dtype=numpy.float64)
+        self.assertTrue(numpy.array_equal(dist, expected))
+
     def test_floyd_warshall_numpy_cycle(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(7)))
@@ -143,3 +162,20 @@ class TestFloydWarshall(unittest.TestCase):
         dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: 1)
         self.assertEqual(dist[0, 3], 3)
         self.assertEqual(dist[0, 4], 4)
+
+    def test_weighted_numpy_directed_negative_cycle(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from([
+            (0, 1, 1),
+            (1, 2, -1),
+            (2, 3, -1),
+            (3, 0, -1),
+        ])
+        dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: x)
+        expected = numpy.array(
+            [[-2, -1, -2, -3],
+             [-3, -2, -3, -4],
+             [-2, -1, -2, -3],
+             [-3, -2, -3, -4]], dtype=numpy.float64)
+        self.assertTrue(numpy.array_equal(dist, expected))

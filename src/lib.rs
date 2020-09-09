@@ -746,18 +746,16 @@ fn digraph_floyd_warshall_numpy(
         }
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
     }
-
     // 0 out the diagonal
     for x in mat.diag_mut() {
         *x = 0.0;
     }
-    let shape = graph.graph.node_count();
     // Perform the Floyd-Warshall algorithm.
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
-    for k in 0..shape {
-        for i in 0..shape {
-            for j in 0..shape {
+    for k in 0..n {
+        for i in 0..n {
+            for j in 0..n {
                 let d_ijk = mat[[i, k]] + mat[[k, j]];
                 if d_ijk < mat[[i, j]] {
                     mat[[i, j]] = d_ijk;
