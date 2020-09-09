@@ -562,6 +562,78 @@ impl PyDiGraph {
         Ok(())
     }
 
+    /// Remove a node from the graph and add edges from all predecessors to all
+    /// successors
+    ///
+    /// By default the data/weight on edges into the removed node will be used
+    /// for the retained edges.
+    ///
+    /// :param int node: The index of the node to remove. If the index is not
+    ///     present in the graph it will be ingored and this function willl have
+    ///     no effect.
+    /// :param bool use_outgoing: If set to true the weight/data from the
+    ///     edge outgoing from ``node`` will be used in the retained edge
+    ///     instead of the default weight/data from the incoming edge.
+    /// :param condition: A callable that will be passed 2 edge weight/data
+    ///     objects, one from the incoming edge to ``node`` the other for the
+    ///     outgoing edge, and will return a ``bool`` on whether an edge should
+    ///     be retained. For example setting this kwarg to::
+    ///
+    ///         lambda in_edge, out_edge: in_edge == out_edge
+    ///
+    ///     would only retain edges if the input edge to ``node`` had the same
+    ///     data payload as the outgoing edge.
+    #[text_signature = "(node, /, use_outgoing=None, condition=None)"]
+    #[args(use_outgoing = "false")]
+    pub fn remove_node_retain_edges(
+        &mut self,
+        py: Python,
+        node: usize,
+        use_outgoing: bool,
+        condition: Option<PyObject>,
+    ) -> PyResult<()> {
+        let index = NodeIndex::new(node);
+        let mut edge_list: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
+
+        fn check_condition(
+            py: Python,
+            condition: &Option<PyObject>,
+            in_weight: &PyObject,
+            out_weight: &PyObject,
+        ) -> PyResult<bool> {
+            match condition {
+                Some(condition) => {
+                    let res = condition.call1(py, (in_weight, out_weight))?;
+                    Ok(res.extract(py)?)
+                }
+                None => Ok(true),
+            }
+        }
+
+        for (source, in_weight) in self
+            .graph
+            .edges_directed(index, petgraph::Direction::Incoming)
+            .map(|x| (x.source(), x.weight()))
+        {
+            for (target, out_weight) in self
+                .graph
+                .edges_directed(index, petgraph::Direction::Outgoing)
+                .map(|x| (x.target(), x.weight()))
+            {
+                let weight = if use_outgoing { out_weight } else { in_weight };
+                if check_condition(py, &condition, in_weight, out_weight)? {
+                    edge_list.push((source, target, weight.clone_ref(py)));
+                }
+            }
+        }
+        for (source, target, weight) in edge_list {
+            self._add_edge(source, target, weight)?;
+        }
+        self.graph.remove_node(index);
+        self.node_removed = true;
+        Ok(())
+    }
+
     /// Add an edge between 2 nodes.
     ///
     /// Use add_child() or add_parent() to create a node with an edge at the
@@ -1046,6 +1118,182 @@ impl PyDiGraph {
                 PyString::new(py, str::from_utf8(&file)?).to_object(py),
             ))
         }
+    }
+
+    /// Add another PyDiGraph object into this PyDiGraph
+    ///
+    /// :param PyDiGraph other: The other PyDiGraph object to add onto this
+    ///     graph.
+    /// :param dict node_map: A dictionary mapping node indexes from this
+    ///     PyDiGraph object to node indexes in the other PyDiGraph object.
+    ///     The keys are a node index in this graph and the value is a tuple
+    ///     of the node index in the other graph to add an edge to and the
+    ///     weight of that edge. For example::
+    ///
+    ///         {
+    ///             1: (2, "weight"),
+    ///             2: (4, "weight2")
+    ///         }
+    ///
+    /// :param node_map_func: An optional python callable that will take in a
+    ///     single node weight/data object and return a new node weight/data
+    ///     object that will be used when adding an node from other onto this
+    ///     graph.
+    /// :param edge_map_func: An optional python callable that will take in a
+    ///     single edge weight/data object and return a new edge weight/data
+    ///     object that will be used when adding an edge from other onto this
+    ///     graph.
+    ///
+    /// :returns: new_node_ids: A dictionary mapping node index from the other
+    ///     PyDiGraph to the corresponding node index in this PyDAG after they've been
+    ///     combined
+    /// :rtype: dict
+    ///
+    /// For example, start by building a graph:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   import os
+    ///   import tempfile
+    ///
+    ///   import pydot
+    ///   from PIL import Image
+    ///
+    ///   import retworkx
+    ///
+    ///   # Build first graph and visualize:
+    ///   graph = retworkx.PyDiGraph()
+    ///   node_a = graph.add_node('A')
+    ///   node_b = graph.add_child(node_a, 'B', 'A to B')
+    ///   node_c = graph.add_child(node_b, 'C', 'B to C')
+    ///   dot_str = graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    /// Then build a second one:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   # Build second graph and visualize:
+    ///   other_graph = retworkx.PyDiGraph()
+    ///   node_d = other_graph.add_node('D')
+    ///   other_graph.add_child(node_d, 'E', 'D to E')
+    ///   dot_str = other_graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'other_graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    /// Finally compose the ``other_graph`` onto ``graph``
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   node_map = {node_b: (node_d, 'B to D')}
+    ///   graph.compose(other_graph, node_map)
+    ///   dot_str = graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'combined_graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    #[text_signature = "(other, node_map, /, node_map_func=None, edge_map_func=None)"]
+    pub fn compose(
+        &mut self,
+        py: Python,
+        other: &PyDiGraph,
+        node_map: PyObject,
+        node_map_func: Option<PyObject>,
+        edge_map_func: Option<PyObject>,
+    ) -> PyResult<PyObject> {
+        let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let node_map_dict = node_map.cast_as::<PyDict>(py)?;
+        let mut node_map_hashmap: HashMap<usize, (usize, PyObject)> =
+            HashMap::default();
+        for (k, v) in node_map_dict.iter() {
+            node_map_hashmap.insert(k.extract()?, v.extract()?);
+        }
+
+        fn node_weight_callable(
+            py: Python,
+            node_map: &Option<PyObject>,
+            node: &PyObject,
+        ) -> PyResult<PyObject> {
+            match node_map {
+                Some(node_map) => {
+                    let res = node_map.call1(py, (node,))?;
+                    Ok(res.to_object(py))
+                }
+                None => Ok(node.clone_ref(py)),
+            }
+        }
+
+        // TODO: Reimplement this without looping over the graphs
+        // Loop over other nodes add add to self graph
+        for node in other.graph.node_indices() {
+            let new_index = self.graph.add_node(node_weight_callable(
+                py,
+                &node_map_func,
+                &other.graph[node],
+            )?);
+            new_node_map.insert(node, new_index);
+        }
+
+        fn edge_weight_callable(
+            py: Python,
+            edge_map: &Option<PyObject>,
+            edge: &PyObject,
+        ) -> PyResult<PyObject> {
+            match edge_map {
+                Some(edge_map) => {
+                    let res = edge_map.call1(py, (edge,))?;
+                    Ok(res.to_object(py))
+                }
+                None => Ok(edge.clone_ref(py)),
+            }
+        }
+
+        // loop over other edges and add to self graph
+        for edge in other.graph.edge_references() {
+            let new_p_index = new_node_map.get(&edge.source()).unwrap();
+            let new_c_index = new_node_map.get(&edge.target()).unwrap();
+            let weight =
+                edge_weight_callable(py, &edge_map_func, edge.weight())?;
+            self.graph.add_edge(*new_p_index, *new_c_index, weight);
+        }
+        // Add edges from map
+        for (this_index, (index, weight)) in node_map_hashmap.iter() {
+            let new_index = new_node_map.get(&NodeIndex::new(*index)).unwrap();
+            self.graph.add_edge(
+                NodeIndex::new(*this_index),
+                *new_index,
+                weight.clone_ref(py),
+            );
+        }
+        let out_dict = PyDict::new(py);
+        for (orig_node, new_node) in new_node_map.iter() {
+            out_dict.set_item(orig_node.index(), new_node.index())?;
+        }
+        Ok(out_dict.into())
     }
 }
 
