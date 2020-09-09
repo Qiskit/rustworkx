@@ -195,3 +195,23 @@ class TestFloydWarshall(unittest.TestCase):
         expected = numpy.full((4, 4), numpy.inf)
         numpy.fill_diagonal(expected, 0)
         self.assertTrue(numpy.array_equal(dist, expected))
+
+    def test_floyd_warshall_numpy_digraph_cycle_with_removals(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(8)))
+        graph.remove_node(0)
+        graph.add_edges_from_no_data(
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+        dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: 1)
+        self.assertEqual(dist[0, 3], 3)
+        self.assertEqual(dist[0, 4], 4)
+
+    def test_floyd_warshall_numpy_graph_cycle_with_removals(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(8)))
+        graph.remove_node(0)
+        graph.add_edges_from_no_data(
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+        dist = retworkx.graph_floyd_warshall_numpy(graph, lambda x: 1)
+        self.assertEqual(dist[0, 3], 3)
+        self.assertEqual(dist[0, 4], 3)
