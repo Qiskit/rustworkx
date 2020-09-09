@@ -549,6 +549,42 @@ impl PyDiGraph {
         }
     }
 
+    /// Get edge list
+    ///
+    /// Returns a list of tuples of the form ``(source, target)`` where
+    /// ``source`` and ``target`` are the node indices.
+    ///
+    /// :returns: An edge list with weights
+    /// :rtype: list
+    pub fn edge_list(&self) -> Vec<(usize, usize)> {
+        self.edge_references()
+            .map(|edge| (edge.source().index(), edge.target().index()))
+            .collect()
+    }
+
+    /// Get edge list with weights
+    ///
+    /// Returns a list of tuples of the form ``(source, target, weight)`` where
+    /// ``source`` and ``target`` are the node indices and ``weight`` is the
+    /// payload of the edge.
+    ///
+    /// :returns: An edge list with weights
+    /// :rtype: list
+    pub fn weighted_edge_list(
+        &self,
+        py: Python,
+    ) -> Vec<(usize, usize, PyObject)> {
+        self.edge_references()
+            .map(|edge| {
+                (
+                    edge.source().index(),
+                    edge.target().index(),
+                    edge.weight().clone_ref(py),
+                )
+            })
+            .collect()
+    }
+
     /// Remove a node from the graph.
     ///
     /// :param int node: The index of the node to remove. If the index is not
