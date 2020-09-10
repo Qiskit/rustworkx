@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::cmp;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::ops::{Index, IndexMut};
@@ -534,6 +535,62 @@ impl PyGraph {
             out_list.push(edge.index());
         }
         Ok(out_list)
+    }
+
+    /// Extend graph from an edge list
+    ///
+    /// This method differs from :meth:`add_edges_from_no_data` in that it will
+    /// add nodes if a node index is not present in the edge list.
+    ///
+    /// :param list edge_list: A list of tuples of the form ``(source, target)``
+    ///     where source and target are integer node indices. If the node index
+    ///     is no present in the edge list nodes will be added (with a node
+    ///     weight of ``None``) to that index.
+    #[text_signature = "(edge_list, /)"]
+    pub fn extend_from_edge_list(
+        &mut self,
+        py: Python,
+        edge_list: Vec<(usize, usize)>,
+    ) {
+        for (source, target) in edge_list {
+            let max_index = cmp::max(source, target);
+            while max_index >= self.node_count() {
+                self.graph.add_node(py.None());
+            }
+            self.graph.add_edge(
+                NodeIndex::new(source),
+                NodeIndex::new(target),
+                py.None(),
+            );
+        }
+    }
+
+    /// Extend graph from a weighted edge list
+    ///
+    /// This method differs from :meth:`add_edges_from` in that it will
+    /// add nodes if a node index is not present in the edge list.
+    ///
+    /// :param list edge_list: A list of tuples of the form
+    ///     ``(source, target, weight)`` where source and target are integer
+    ///     node indices. If the node index is no present in the edge list
+    ///     nodes will be added (with a node weight of ``None``) to that index.
+    #[text_signature = "(edge_lsit, /)"]
+    pub fn extend_from_weighted_edge_list(
+        &mut self,
+        py: Python,
+        edge_list: Vec<(usize, usize, PyObject)>,
+    ) {
+        for (source, target, weight) in edge_list {
+            let max_index = cmp::max(source, target);
+            while max_index >= self.node_count() {
+                self.graph.add_node(py.None());
+            }
+            self.graph.add_edge(
+                NodeIndex::new(source),
+                NodeIndex::new(target),
+                weight,
+            );
+        }
     }
 
     /// Remove an edge between 2 nodes.
