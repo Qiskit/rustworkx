@@ -18,7 +18,6 @@ crate-type = ["cdylib"]
 [dependencies]
 petgraph = "0.5.1"
 fixedbitset = "0.2.0"
-hashbrown = "0.9"
 numpy = "0.11.0"
 ndarray = "0.13.0"
 rand = "0.7"
@@ -28,3 +27,7 @@ rayon = "1.4"
 [dependencies.pyo3]
 version = "0.11.1"
 features = ["extension-module"]
+
+[dependencies.hashbrown]
+version = "0.9"
+features = ["rayon"]

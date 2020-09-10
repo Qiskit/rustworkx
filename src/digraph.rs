@@ -10,14 +10,14 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::ops::{Index, IndexMut};
 use std::str;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::IndexError;
