@@ -1377,7 +1377,7 @@ pub fn cycle_basis(
                 temp_value
             }
         };
-        // Stack (ie "pushdown list") of verticecs already in the spanning tree
+        // Stack (ie "pushdown list") of vertices already in the spanning tree
         let mut stack: Vec<NodeIndex> = Vec::new();
         stack.push(root_index);
         // Map of node index to predecessor node index
