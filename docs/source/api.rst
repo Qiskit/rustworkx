@@ -66,6 +66,7 @@ Algorithm Functions
    retworkx.graph_dijkstra_shortest_path_lengths
    retworkx.digraph_dijkstra_shortest_path_lengths
    retworkx.graph_greedy_color
+   retworkx.cycle_basis
    retworkx.strongly_connected_components
 
 Exceptions
