@@ -29,14 +29,14 @@ mod generators;
 mod graph;
 
 use std::cmp::{Ordering, Reverse};
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::BinaryHeap;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::create_exception;
 use pyo3::exceptions::{Exception, ValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyDict, PyList, PySet};
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
 use pyo3::Python;
@@ -312,7 +312,7 @@ fn bfs_successors(
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(graph);
@@ -322,7 +322,13 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    out_set
+    let set = PySet::empty(py).expect("Failed to construct empty set");
+    {
+        for val in out_set {
+            set.add(val).expect("Failed to add to set");
+        }
+    }
+    set.into()
 }
 
 /// Return the descendants of a node in a graph.
@@ -339,7 +345,11 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+fn descendants(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> PyObject {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(graph, index, None, |_| 1);
@@ -348,7 +358,13 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    out_set
+    let set = PySet::empty(py).expect("Failed to construct empty set");
+    {
+        for val in out_set {
+            set.add(val).expect("Failed to add to set");
+        }
+    }
+    set.into()
 }
 
 /// Get the lexicographical topological sorted nodes from the provided DAG
