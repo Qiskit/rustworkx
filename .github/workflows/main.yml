@@ -67,6 +67,7 @@ jobs:
   coverage:
     needs: [tests]
     name: Coverage
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -103,7 +104,8 @@ jobs:
           path-to-lcov: ${{ steps.coverage.outputs.report }}
   docs:
     needs: [tests]
-    name: Coverage
+    name: Build Docs
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
