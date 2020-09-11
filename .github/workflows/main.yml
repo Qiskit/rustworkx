@@ -80,6 +80,8 @@ jobs:
           toolchain: nightly
           override: true
           profile: minimal
+      - name: Download grcov
+        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.5.9/grcov-linux-x86_64.tar.bz2 | tar jxf -
       - name: Install deps
         run: pip install -U setuptools-rust
       - name: Build retworkx
@@ -90,19 +92,16 @@ jobs:
           RUSTDOCFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests"
       - name: Run tests
         run: cd tests && python -m unittest discover . && cd ..
-      - uses: actions-rs/grcov@v0.1
-        id: coverage
-        with:
-          output-type: lcov
-          llvm: true
-          ignore-not-existing: true
-          branch: false
-          ignore: "/*"
+      - name: Run grcov
+        run: |
+          set -e
+          zip -0 ccov.zip `find . \( -name "retworkx*.gc*" \) -print`
+          ./grcov ccov.zip -s . -t lcov --llvm --ignore-not-existing --ignore "/*" -o coveralls.info
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ${{ steps.coverage.outputs.report }}
+          path-to-lcov: coveralls.info
   docs:
     needs: [tests]
     name: Build Docs
