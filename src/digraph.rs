@@ -1212,8 +1212,8 @@ impl PyDiGraph {
         for line_raw in buf_reader.lines() {
             let line = line_raw?;
             let skip = match &comment {
-                Some(comm) => line.starts_with(comm),
-                None => line.is_empty(),
+                Some(comm) => line.trim().starts_with(comm),
+                None => line.trim().is_empty(),
             };
             if skip {
                 continue;
