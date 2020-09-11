@@ -95,8 +95,7 @@ jobs:
           llvm: true
           ignore-not-existing: true
           branch: false
-          ignore:
-            - "/*"
+          ignore: "/*"
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
