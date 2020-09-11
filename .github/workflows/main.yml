@@ -1,0 +1,127 @@
+---
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build_and_lint:
+    name: Build, rustfmt, and python lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - run: pip install -U flake8
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt
+      - name: Test Build
+        run: cargo build
+      - name: Rust Format
+        run: cargo fmt -- --check
+      - name: Python Lint
+        run: flake8 setup.py tests
+  tests:
+    needs: [build_and_rustfmt]
+    name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      matrix:
+        rust: [stable]
+        python-version: [3.5, 3.6, 3.7, 3.8]
+        platform: [
+          { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
+          { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
+          { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
+          { os: "windows-latest", python-architecture: "x86", rust-target: "i686-pc-windows-msvc" },
+        ]
+    include:
+        # Test minimal supported Rust version
+        - rust: 1.39.0
+          python-version: 3.8
+          platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
+          msrv: "MSRV"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.platform.python-architecture }}
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.platform.rust-target }}
+          profile: minimal
+      - name: 'Install dependencies'
+        run: python -m pip install --upgrade tox
+      - name: 'Run tests'
+        run: tox -epy
+  coverage:
+    needs: [tests]
+    name: Coverage
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          profile: minimal
+      - name: Install deps
+        run: pip install -U setuptools-rust
+      - name: Build retworkx
+        run: python setup.py develop
+        env:
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+          RUSTDOCFLAGS: "-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests"
+      - uses: actions-rs/grcov@v0.1
+        id: coverage
+        with:
+          output-type: lcov
+          llvm: true
+          ignore-not-existing: true
+          branch: flase
+          ignore:
+            - "/*"
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ${{ steps.coverage.outputs.report }}
+  docs:
+    needs: [tests]
+    name: Coverage
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+      - name: Install deps
+        run: pip install -U tox
+      - name: Build Docs
+        run: tox -edocs
+      - uses: actions/upload-artifact@v2
+        with:
+          name: html_docs
+          path: docs/build/html
