@@ -94,7 +94,7 @@ jobs:
           output-type: lcov
           llvm: true
           ignore-not-existing: true
-          branch: flase
+          branch: false
           ignore:
             - "/*"
       - name: Coveralls
