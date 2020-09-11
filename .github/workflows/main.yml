@@ -40,12 +40,12 @@ jobs:
           { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
           { os: "windows-latest", python-architecture: "x86", rust-target: "i686-pc-windows-msvc" },
         ]
-      include:
-        # Test minimal supported Rust version
-        - rust: 1.39.0
-          python-version: 3.8
-          platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
-          msrv: "MSRV"
+        include:
+          # Test minimal supported Rust version
+          - rust: 1.39.0
+            python-version: 3.8
+            platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
+            msrv: "MSRV"
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
