@@ -30,14 +30,14 @@ mod graph;
 mod k_shortest_path;
 
 use std::cmp::{Ordering, Reverse};
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::BinaryHeap;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::create_exception;
 use pyo3::exceptions::{Exception, ValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyDict, PyList, PySet};
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
 use pyo3::Python;
@@ -306,7 +306,7 @@ fn bfs_successors(
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(graph);
@@ -316,7 +316,13 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    out_set
+    let set = PySet::empty(py).expect("Failed to construct empty set");
+    {
+        for val in out_set {
+            set.add(val).expect("Failed to add to set");
+        }
+    }
+    set.into()
 }
 
 /// Return the descendants of a node in a graph.
@@ -333,7 +339,11 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+fn descendants(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> PyObject {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(graph, index, None, |_| 1);
@@ -342,7 +352,13 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    out_set
+    let set = PySet::empty(py).expect("Failed to construct empty set");
+    {
+        for val in out_set {
+            set.add(val).expect("Failed to add to set");
+        }
+    }
+    set.into()
 }
 
 /// Get the lexicographical topological sorted nodes from the provided DAG
@@ -1431,6 +1447,100 @@ pub fn undirected_gnp_random_graph(
     Ok(graph)
 }
 
+/// Return a list of cycles which form a basis for cycles of a given PyGraph
+///
+/// A basis for cycles of a graph is a minimal collection of
+/// cycles such that any cycle in the graph can be written
+/// as a sum of cycles in the basis.  Here summation of cycles
+/// is defined as the exclusive or of the edges.
+///
+/// This is adapted from algorithm CACM 491 [1]_.
+///
+/// :param PyGraph graph: The graph to find the cycle basis in
+/// :param int root: Optional index for starting node for basis
+///
+/// :returns: A list of cycle lists. Each list is a list of node ids which
+///     forms a cycle (loop) in the input graph
+/// :rtype: list
+///
+/// .. [1] Paton, K. An algorithm for finding a fundamental set of
+///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
+#[pyfunction]
+#[text_signature = "(graph, /, root=None)"]
+pub fn cycle_basis(
+    graph: &graph::PyGraph,
+    root: Option<usize>,
+) -> Vec<Vec<usize>> {
+    let mut root_node = root;
+    let mut graph_nodes: HashSet<NodeIndex> =
+        graph.graph.node_indices().collect();
+    let mut cycles: Vec<Vec<usize>> = Vec::new();
+    while !graph_nodes.is_empty() {
+        let temp_value: NodeIndex;
+        // If root_node is not set get an arbitrary node from the set of graph
+        // nodes we've not "examined"
+        let root_index = match root_node {
+            Some(root_value) => NodeIndex::new(root_value),
+            None => {
+                temp_value = *graph_nodes.iter().next().unwrap();
+                graph_nodes.remove(&temp_value);
+                temp_value
+            }
+        };
+        // Stack (ie "pushdown list") of vertices already in the spanning tree
+        let mut stack: Vec<NodeIndex> = Vec::new();
+        stack.push(root_index);
+        // Map of node index to predecessor node index
+        let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        pred.insert(root_index, root_index);
+        // Set of examined nodes during this iteration
+        let mut used: HashMap<NodeIndex, HashSet<NodeIndex>> = HashMap::new();
+        used.insert(root_index, HashSet::new());
+        // Walk the spanning tree
+        while !stack.is_empty() {
+            // Use the last element added so that cycles are easier to find
+            let z = stack.pop().unwrap();
+            for neighbor in graph.graph.neighbors(z) {
+                // A new node was encountered:
+                if !used.contains_key(&neighbor) {
+                    pred.insert(neighbor, z);
+                    stack.push(neighbor);
+                    let mut temp_set: HashSet<NodeIndex> = HashSet::new();
+                    temp_set.insert(z);
+                    used.insert(neighbor, temp_set);
+                // A self loop:
+                } else if z == neighbor {
+                    let mut cycle: Vec<usize> = Vec::new();
+                    cycle.push(z.index());
+                    cycles.push(cycle);
+                // A cycle was found:
+                } else if !used.get(&z).unwrap().contains(&neighbor) {
+                    let pn = used.get(&neighbor).unwrap();
+                    let mut cycle: Vec<NodeIndex> = Vec::new();
+                    cycle.push(neighbor);
+                    cycle.push(z);
+                    let mut p = pred.get(&z).unwrap();
+                    while !pn.contains(p) {
+                        cycle.push(*p);
+                        p = pred.get(p).unwrap();
+                    }
+                    cycle.push(*p);
+                    cycles.push(cycle.iter().map(|x| x.index()).collect());
+                    let neighbor_set = used.get_mut(&neighbor).unwrap();
+                    neighbor_set.insert(z);
+                }
+            }
+        }
+        let mut temp_hashset: HashSet<NodeIndex> = HashSet::new();
+        for key in pred.keys() {
+            temp_hashset.insert(*key);
+        }
+        graph_nodes = graph_nodes.difference(&temp_hashset).copied().collect();
+        root_node = None;
+    }
+    cycles
+}
+
 /// Compute the strongly connected components for a directed graph
 ///
 /// This function is implemented using Kosaraju's algorithm
@@ -1497,6 +1607,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
