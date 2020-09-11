@@ -1161,7 +1161,7 @@ impl PyDiGraph {
     ///
     /// :param str path: The path of the file to open
     /// :param str comment: Optional character to use as a comment by default
-    ///     there are no comment character
+    ///     there are no comment characters
     /// :param str deliminator: Optional character to use as a deliminator by
     ///     default any whitespace will be used
     ///
