@@ -1213,7 +1213,7 @@ impl PyDiGraph {
             let line = line_raw?;
             let skip = match &comment {
                 Some(comm) => line.starts_with(comm),
-                None => false,
+                None => line.is_empty(),
             };
             if skip {
                 continue;

@@ -65,6 +65,34 @@ class TestEdgeList(unittest.TestCase):
         self.assertTrue(graph.has_edge(2, 1))
         self.assertFalse(graph.has_edge(0, 2))
 
+    def test_blank_line_digraph(self):
+        with tempfile.NamedTemporaryFile('wt') as fd:
+            fd.write('0 1\n')
+            fd.write('\n')
+            fd.write('1 2\n')
+            fd.flush()
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name)
+        self.assertEqual(graph.node_indexes(), [0, 1, 2])
+        self.assertTrue(graph.has_edge(0, 1))
+        self.assertTrue(graph.has_edge(1, 2))
+        self.assertFalse(graph.has_edge(1, 0))
+        self.assertFalse(graph.has_edge(2, 1))
+        self.assertFalse(graph.has_edge(0, 2))
+
+    def test_blank_line_graph(self):
+        with tempfile.NamedTemporaryFile('wt') as fd:
+            fd.write('0 1\n')
+            fd.write('\n')
+            fd.write('1 2\n')
+            fd.flush()
+            graph = retworkx.PyGraph.read_edge_list(fd.name)
+        self.assertEqual(graph.node_indexes(), [0, 1, 2])
+        self.assertTrue(graph.has_edge(0, 1))
+        self.assertTrue(graph.has_edge(1, 2))
+        self.assertTrue(graph.has_edge(1, 0))
+        self.assertTrue(graph.has_edge(2, 1))
+        self.assertFalse(graph.has_edge(0, 2))
+
     def test_comment_digraph(self):
         with tempfile.NamedTemporaryFile('wt') as fd:
             fd.write('0 1 // test a comment\n')
