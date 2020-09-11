@@ -119,6 +119,8 @@ jobs:
           toolchain: stable
           override: true
           profile: minimal
+      - name: Install binary deps
+        run: apt-get install -y graphviz
       - name: Install deps
         run: pip install -U tox
       - name: Build Docs
