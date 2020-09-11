@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ master ]
 jobs:
-  build_and_lint:
+  build_lint:
     name: Build, rustfmt, and python lint
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +27,7 @@ jobs:
       - name: Python Lint
         run: flake8 setup.py tests
   tests:
-    needs: [build_and_rustfmt]
+    needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
     runs-on: ${{ matrix.platform.os }}
     strategy:
