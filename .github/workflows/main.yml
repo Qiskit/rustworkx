@@ -61,6 +61,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.platform.rust-target }}
           profile: minimal
+          default: true
       - name: 'Install dependencies'
         run: python -m pip install --upgrade tox
       - name: 'Run tests'
