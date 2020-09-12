@@ -312,7 +312,7 @@ dependencies = [
  "ndarray",
  "num-complex",
  "num-traits",
- "pyo3",
+ "pyo3 0.11.1",
 ]
 
 [[package]]
@@ -403,7 +403,23 @@ dependencies = [
  "libc",
  "parking_lot",
  "paste",
- "pyo3cls",
+ "pyo3cls 0.11.1",
+ "unindent",
+]
+
+[[package]]
+name = "pyo3"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fe7ed6655de90fd3bf799f25ce8b695e89eeb098d03db802723617649fcaa74"
+dependencies = [
+ "ctor",
+ "indoc",
+ "inventory",
+ "libc",
+ "parking_lot",
+ "paste",
+ "pyo3cls 0.12.0",
  "unindent",
 ]
 
@@ -419,12 +435,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyo3-derive-backend"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d021655b5f22aeee2eaf3c3f88503250ad6cf90e37a875e1bb1854fceb86b3d0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "pyo3cls"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3fa17e1ea569d0bf3b7c00f2a9eea831ca05e55dd76f1794c541abba1c64baa"
 dependencies = [
- "pyo3-derive-backend",
+ "pyo3-derive-backend 0.11.1",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pyo3cls"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "228ee516c00ac54fb70032d8cd928f213e70c87c340cdf44e2eba028d1f613ea"
+dependencies = [
+ "pyo3-derive-backend 0.12.0",
  "quote",
  "syn",
 ]
@@ -534,7 +572,7 @@ dependencies = [
  "ndarray",
  "numpy",
  "petgraph",
- "pyo3",
+ "pyo3 0.12.0",
  "rand",
  "rand_pcg",
  "rayon",

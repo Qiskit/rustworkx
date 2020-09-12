@@ -25,7 +25,7 @@ rand_pcg = "0.2"
 rayon = "1.4"
 
 [dependencies.pyo3]
-version = "0.11.1"
+version = "0.12.0"
 features = ["extension-module"]
 
 [dependencies.hashbrown]
