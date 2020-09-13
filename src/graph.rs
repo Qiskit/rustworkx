@@ -18,7 +18,7 @@ use std::str;
 use hashbrown::HashMap;
 
 use pyo3::class::PyMappingProtocol;
-use pyo3::exceptions::IndexError;
+use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
@@ -359,7 +359,7 @@ impl PyGraph {
         let edge_index = match self.graph.find_edge(index_a, index_b) {
             Some(edge_index) => edge_index,
             None => {
-                return Err(NoEdgeBetweenNodes::py_err(
+                return Err(NoEdgeBetweenNodes::new_err(
                     "No edge found between nodes",
                 ))
             }
@@ -380,7 +380,9 @@ impl PyGraph {
         let index = NodeIndex::new(node);
         let node = match self.graph.node_weight(index) {
             Some(node) => node,
-            None => return Err(IndexError::py_err("No node found for index")),
+            None => {
+                return Err(PyIndexError::new_err("No node found for index"))
+            }
         };
         Ok(node)
     }
@@ -408,7 +410,7 @@ impl PyGraph {
             .map(|edge| edge.weight())
             .collect();
         if out.is_empty() {
-            Err(NoEdgeBetweenNodes::py_err("No edge found between nodes"))
+            Err(NoEdgeBetweenNodes::new_err("No edge found between nodes"))
         } else {
             Ok(out)
         }
@@ -557,7 +559,7 @@ impl PyGraph {
         let edge_index = match self.graph.find_edge(p_index, c_index) {
             Some(edge_index) => edge_index,
             None => {
-                return Err(NoEdgeBetweenNodes::py_err(
+                return Err(NoEdgeBetweenNodes::new_err(
                     "No edge found between nodes",
                 ))
             }
@@ -926,7 +928,7 @@ impl PyMappingProtocol for PyGraph {
     fn __getitem__(&'p self, idx: usize) -> PyResult<&'p PyObject> {
         match self.graph.node_weight(NodeIndex::new(idx as usize)) {
             Some(data) => Ok(data),
-            None => Err(IndexError::py_err("No node found for index")),
+            None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 
@@ -936,7 +938,9 @@ impl PyMappingProtocol for PyGraph {
             .node_weight_mut(NodeIndex::new(idx as usize))
         {
             Some(node_data) => node_data,
-            None => return Err(IndexError::py_err("No node found for index")),
+            None => {
+                return Err(PyIndexError::new_err("No node found for index"))
+            }
         };
         *data = value;
         Ok(())
@@ -945,7 +949,7 @@ impl PyMappingProtocol for PyGraph {
     fn __delitem__(&'p mut self, idx: usize) -> PyResult<()> {
         match self.graph.remove_node(NodeIndex::new(idx as usize)) {
             Some(_) => Ok(()),
-            None => Err(IndexError::py_err("No node found for index")),
+            None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 }

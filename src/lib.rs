@@ -34,7 +34,7 @@ use std::collections::BinaryHeap;
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::create_exception;
-use pyo3::exceptions::{Exception, ValueError};
+use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PySet};
 use pyo3::wrap_pyfunction;
@@ -60,7 +60,7 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
-            return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
+            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
         }
     };
     if nodes.is_empty() {
@@ -86,7 +86,9 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let first = match dist.keys().max_by_key(|index| dist[index]) {
         Some(first) => first,
         None => {
-            return Err(Exception::py_err("Encountered something unexpected"))
+            return Err(PyException::new_err(
+                "Encountered something unexpected",
+            ))
         }
     };
     let mut v = *first;
@@ -250,7 +252,7 @@ fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
-            return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
+            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
         }
     };
     Ok(nodes.iter().map(|node| node.index()).collect())
@@ -839,13 +841,13 @@ fn graph_all_simple_paths(
 ) -> PyResult<Vec<Vec<usize>>> {
     let from_index = NodeIndex::new(from);
     if !graph.graph.contains_node(from_index) {
-        return Err(InvalidNode::py_err(
+        return Err(InvalidNode::new_err(
             "The input index for 'from' is not a valid node index",
         ));
     }
     let to_index = NodeIndex::new(to);
     if !graph.graph.contains_node(to_index) {
-        return Err(InvalidNode::py_err(
+        return Err(InvalidNode::new_err(
             "The input index for 'to' is not a valid node index",
         ));
     }
@@ -896,13 +898,13 @@ fn digraph_all_simple_paths(
 ) -> PyResult<Vec<Vec<usize>>> {
     let from_index = NodeIndex::new(from);
     if !graph.graph.contains_node(from_index) {
-        return Err(InvalidNode::py_err(
+        return Err(InvalidNode::new_err(
             "The input index for 'from' is not a valid node index",
         ));
     }
     let to_index = NodeIndex::new(to);
     if !graph.graph.contains_node(to_index) {
-        return Err(InvalidNode::py_err(
+        return Err(InvalidNode::new_err(
             "The input index for 'to' is not a valid node index",
         ));
     }
@@ -1100,7 +1102,7 @@ fn graph_astar_shortest_path(
     let path = match astar_res {
         Some(path) => path,
         None => {
-            return Err(NoPathFound::py_err(
+            return Err(NoPathFound::new_err(
                 "No path found that satisfies goal_fn",
             ))
         }
@@ -1172,7 +1174,7 @@ fn digraph_astar_shortest_path(
     let path = match astar_res {
         Some(path) => path,
         None => {
-            return Err(NoPathFound::py_err(
+            return Err(NoPathFound::new_err(
                 "No path found that satisfies goal_fn",
             ))
         }
@@ -1211,7 +1213,7 @@ pub fn directed_gnp_random_graph(
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
     if num_nodes <= 0 {
-        return Err(ValueError::py_err("num_nodes must be > 0"));
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
@@ -1222,7 +1224,7 @@ pub fn directed_gnp_random_graph(
         inner_graph.add_node(x.to_object(py));
     }
     if probability <= 0.0 || probability >= 1.0 {
-        return Err(ValueError::py_err(
+        return Err(PyValueError::new_err(
             "Probability out of range, must be 0 < p < 1",
         ));
     }
@@ -1295,7 +1297,7 @@ pub fn undirected_gnp_random_graph(
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
     if num_nodes <= 0 {
-        return Err(ValueError::py_err("num_nodes must be > 0"));
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
@@ -1306,7 +1308,7 @@ pub fn undirected_gnp_random_graph(
         inner_graph.add_node(x.to_object(py));
     }
     if probability <= 0.0 || probability >= 1.0 {
-        return Err(ValueError::py_err(
+        return Err(PyValueError::new_err(
             "Probability out of range, must be 0 < p < 1",
         ));
     }
@@ -1452,17 +1454,17 @@ pub fn strongly_connected_components(
 }
 
 // The provided node is invalid.
-create_exception!(retworkx, InvalidNode, Exception);
+create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
-create_exception!(retworkx, DAGWouldCycle, Exception);
+create_exception!(retworkx, DAGWouldCycle, PyException);
 // There is no edge present between the provided nodes.
-create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
+create_exception!(retworkx, NoEdgeBetweenNodes, PyException);
 // The specified Directed Graph has a cycle and can't be treated as a DAG.
-create_exception!(retworkx, DAGHasCycle, Exception);
+create_exception!(retworkx, DAGHasCycle, PyException);
 // No neighbors found matching the provided predicate.
-create_exception!(retworkx, NoSuitableNeighbors, Exception);
+create_exception!(retworkx, NoSuitableNeighbors, PyException);
 // No path was found between the specified nodes.
-create_exception!(retworkx, NoPathFound, Exception);
+create_exception!(retworkx, NoPathFound, PyException);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
