@@ -57,3 +57,8 @@ class TestLayers(unittest.TestCase):
             ['measure', 'measure'],
             ['cr[1]', 'qr[1]', 'cr[0]', 'qr[0]']]
         self.assertEqual(expected, res)
+
+    def test_first_layer_invalid_node(self):
+        dag = retworkx.PyDAG()
+        with self.assertRaises(retworkx.InvalidNode):
+            retworkx.layers(dag, [42])
