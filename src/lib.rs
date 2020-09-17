@@ -12,6 +12,7 @@
 
 mod astar;
 mod dag_isomorphism;
+mod dag_union;
 mod digraph;
 mod dijkstra;
 mod dot_utils;
@@ -185,6 +186,19 @@ fn is_isomorphic(
     second: &digraph::PyDiGraph,
 ) -> PyResult<bool> {
     let res = dag_isomorphism::is_isomorphic(first, second)?;
+    Ok(res)
+}
+
+#[pyfunction]
+#[text_signature = "(first, second, /)"]
+fn union(
+    py: Python,
+    first: &digraph::PyDiGraph,
+    second: &digraph::PyDiGraph,
+    merge_nodes: bool,
+    merge_edges: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let res = dag_union::union(py, first, second, merge_nodes, merge_edges)?;
     Ok(res)
 }
 
@@ -1749,6 +1763,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(union))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
