@@ -599,6 +599,8 @@ fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
 ///
 /// :returns: A list of layers, each layer is a list of node data
 /// :rtype: list
+///
+/// :raises InvalidNode: If a node index in ``first_layer`` is not in the graph
 #[pyfunction]
 #[text_signature = "(dag, first_layer, /)"]
 fn layers(
@@ -619,7 +621,16 @@ fn layers(
 
     let mut layer_node_data: Vec<&PyObject> = Vec::new();
     for layer_node in &cur_layer {
-        layer_node_data.push(&dag[*layer_node]);
+        let node_data = match dag.graph.node_weight(*layer_node) {
+            Some(data) => data,
+            None => {
+                return Err(InvalidNode::py_err(format!(
+                    "An index input in 'first_layer' {} is not a valid node index in the graph",
+                    layer_node.index()),
+                ))
+            }
+        };
+        layer_node_data.push(node_data);
     }
     output.push(layer_node_data);
 
