@@ -552,7 +552,7 @@ impl PyGraph {
     ///
     /// :param list edge_list: A list of tuples of the form ``(source, target)``
     ///     where source and target are integer node indices. If the node index
-    ///     is no present in the edge list nodes will be added (with a node
+    ///     is not present in the graph, nodes will be added (with a node
     ///     weight of ``None``) to that index.
     #[text_signature = "(edge_list, /)"]
     pub fn extend_from_edge_list(
@@ -580,7 +580,7 @@ impl PyGraph {
     ///
     /// :param list edge_list: A list of tuples of the form
     ///     ``(source, target, weight)`` where source and target are integer
-    ///     node indices. If the node index is no present in the edge list
+    ///     node indices. If the node index is not present in the graph,
     ///     nodes will be added (with a node weight of ``None``) to that index.
     #[text_signature = "(edge_lsit, /)"]
     pub fn extend_from_weighted_edge_list(
