@@ -39,7 +39,7 @@ use petgraph::visit::{
 use super::dot_utils::build_dot;
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
-    NoSuitableNeighbors,
+    NoSuitableNeighbors, NodesRemoved,
 };
 
 /// A class for creating directed graphs
@@ -89,6 +89,12 @@ pub type Edges<'a, E> =
 impl GraphBase for PyDiGraph {
     type NodeId = NodeIndex;
     type EdgeId = EdgeIndex;
+}
+
+impl<'a> NodesRemoved for &'a PyDiGraph {
+    fn nodes_removed(&self) -> bool {
+        self.node_removed
+    }
 }
 
 impl NodeCount for PyDiGraph {
