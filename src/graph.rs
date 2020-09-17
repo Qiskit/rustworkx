@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::cmp;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
@@ -830,16 +831,12 @@ impl PyGraph {
             };
             let src = pieces[0].parse::<usize>()?;
             let target = pieces[1].parse::<usize>()?;
-            if !out_graph.contains_node(NodeIndex::new(src)) {
-                for _index in 0..((src + 1) - out_graph.node_count()) {
-                    out_graph.add_node(py.None());
-                }
+            let max_index = cmp::max(src, target);
+            // Add nodes to graph
+            while max_index >= out_graph.node_count() {
+                out_graph.add_node(py.None());
             }
-            if !out_graph.contains_node(NodeIndex::new(target)) {
-                for _index in 0..((target + 1) - out_graph.node_count()) {
-                    out_graph.add_node(py.None());
-                }
-            }
+            // Add edges tp graph
             let weight = if pieces.len() > 2 {
                 let weight_str = match &deliminator {
                     Some(del) => pieces[2..].join(del),
