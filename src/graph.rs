@@ -13,6 +13,8 @@
 use std::cmp;
 use std::collections::BTreeMap;
 use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -25,7 +27,7 @@ use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
 use super::dot_utils::build_dot;
-use super::NoEdgeBetweenNodes;
+use super::{NoEdgeBetweenNodes, NodesRemoved};
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableUnGraph;
@@ -58,6 +60,12 @@ pub type Edges<'a, E> =
 impl GraphBase for PyGraph {
     type NodeId = NodeIndex;
     type EdgeId = EdgeIndex;
+}
+
+impl<'a> NodesRemoved for &'a PyGraph {
+    fn nodes_removed(&self) -> bool {
+        self.node_removed
+    }
 }
 
 impl NodeCount for PyGraph {
@@ -796,6 +804,114 @@ impl PyGraph {
                 PyString::new(py, str::from_utf8(&file)?).to_object(py),
             ))
         }
+    }
+
+    /// Read an edge list file and create a new PyGraph object from the
+    /// contents
+    ///
+    /// The expected format for the edge list file is a line seperated list
+    /// of deliminated node ids. If there are more than 3 elements on
+    /// a line the 3rd on will be treated as a string weight for the edge
+    ///
+    /// :param str path: The path of the file to open
+    /// :param str comment: Optional character to use as a comment by default
+    ///     there are no comment characters
+    /// :param str deliminator: Optional character to use as a deliminator by
+    ///     default any whitespace will be used
+    ///
+    /// For example:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   import os
+    ///   import tempfile
+    ///
+    ///   from PIL import Image
+    ///   import pydot
+    ///
+    ///   import retworkx
+    ///
+    ///
+    ///   with tempfile.NamedTemporaryFile('wt') as fd:
+    ///       path = fd.name
+    ///       fd.write('0 1\n')
+    ///       fd.write('0 2\n')
+    ///       fd.write('0 3\n')
+    ///       fd.write('1 2\n')
+    ///       fd.write('2 3\n')
+    ///       fd.flush()
+    ///       graph = retworkx.PyGraph.read_edge_list(path)
+    ///
+    ///   # Draw graph
+    ///   dot = pydot.graph_from_dot_data(graph.to_dot())[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    #[staticmethod]
+    #[text_signature = "(path, /, comment=None, deliminator=None)"]
+    pub fn read_edge_list(
+        py: Python,
+        path: &str,
+        comment: Option<String>,
+        deliminator: Option<String>,
+    ) -> PyResult<PyGraph> {
+        let file = File::open(path)?;
+        let buf_reader = BufReader::new(file);
+        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        for line_raw in buf_reader.lines() {
+            let line = line_raw?;
+            let skip = match &comment {
+                Some(comm) => line.trim().starts_with(comm),
+                None => line.trim().is_empty(),
+            };
+            if skip {
+                continue;
+            }
+            let line_no_comments = match &comment {
+                Some(comm) => line
+                    .find(comm)
+                    .map(|idx| &line[..idx])
+                    .unwrap_or(&line)
+                    .trim()
+                    .to_string(),
+                None => line,
+            };
+            let pieces: Vec<&str> = match &deliminator {
+                Some(del) => line_no_comments.split(del).collect(),
+                None => line_no_comments.split_whitespace().collect(),
+            };
+            let src = pieces[0].parse::<usize>()?;
+            let target = pieces[1].parse::<usize>()?;
+            let max_index = cmp::max(src, target);
+            // Add nodes to graph
+            while max_index >= out_graph.node_count() {
+                out_graph.add_node(py.None());
+            }
+            // Add edges tp graph
+            let weight = if pieces.len() > 2 {
+                let weight_str = match &deliminator {
+                    Some(del) => pieces[2..].join(del),
+                    None => pieces[2..].join(&' '.to_string()),
+                };
+                PyString::new(py, &weight_str).into()
+            } else {
+                py.None()
+            };
+            out_graph.add_edge(
+                NodeIndex::new(src),
+                NodeIndex::new(target),
+                weight,
+            );
+        }
+        Ok(PyGraph {
+            graph: out_graph,
+            node_removed: false,
+        })
     }
 
     /// Add another PyGraph object into this PyGraph
