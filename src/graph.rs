@@ -24,7 +24,7 @@ use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
 use super::dot_utils::build_dot;
-use super::NoEdgeBetweenNodes;
+use super::{NoEdgeBetweenNodes, NodesRemoved};
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableUnGraph;
@@ -57,6 +57,12 @@ pub type Edges<'a, E> =
 impl GraphBase for PyGraph {
     type NodeId = NodeIndex;
     type EdgeId = EdgeIndex;
+}
+
+impl<'a> NodesRemoved for &'a PyGraph {
+    fn nodes_removed(&self) -> bool {
+        self.node_removed
+    }
 }
 
 impl NodeCount for PyGraph {

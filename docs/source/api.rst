@@ -54,6 +54,8 @@ Algorithm Functions
    retworkx.ancestors
    retworkx.lexicographical_topological_sort
    retworkx.floyd_warshall
+   retworkx.graph_floyd_warshall_numpy
+   retworkx.digraph_floyd_warshall_numpy
    retworkx.layers
    retworkx.digraph_adjacency_matrix
    retworkx.graph_adjacency_matrix
