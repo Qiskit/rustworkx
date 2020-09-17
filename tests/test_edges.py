@@ -240,3 +240,84 @@ class TestEdges(unittest.TestCase):
     def test_weighted_edge_list_empty(self):
         dag = retworkx.PyDiGraph()
         self.assertEqual([], dag.weighted_edge_list())
+
+    def test_extend_from_edge_list(self):
+        dag = retworkx.PyDAG()
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3),
+                     (0, 3)]
+        dag.extend_from_edge_list(edge_list)
+        self.assertEqual(len(dag), 4)
+        self.assertEqual([None] * 5, dag.edges())
+        self.assertEqual(3, dag.out_degree(0))
+        self.assertEqual(0, dag.in_degree(0))
+        self.assertEqual(1, dag.out_degree(1))
+        self.assertEqual(1, dag.out_degree(2))
+        self.assertEqual(2, dag.in_degree(3))
+
+    def test_extend_from_edge_list_empty(self):
+        dag = retworkx.PyDAG()
+        dag.extend_from_edge_list([])
+        self.assertEqual(0, len(dag))
+
+    def test_cycle_checking_at_init_extend_from_weighted_edge_list(self):
+        dag = retworkx.PyDAG(True)
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {})
+        node_c = dag.add_child(node_b, 'c', {})
+        with self.assertRaises(retworkx.DAGWouldCycle):
+            dag.extend_from_weighted_edge_list([(node_a, node_c, {}),
+                                               (node_c, node_b, {})])
+
+    def test_extend_from_edge_list_nodes_exist(self):
+        dag = retworkx.PyDiGraph()
+        dag.add_nodes_from(list(range(4)))
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3),
+                     (0, 3)]
+        dag.extend_from_edge_list(edge_list)
+        self.assertEqual(len(dag), 4)
+        self.assertEqual([None] * 5, dag.edges())
+        self.assertEqual(3, dag.out_degree(0))
+        self.assertEqual(0, dag.in_degree(0))
+        self.assertEqual(1, dag.out_degree(1))
+        self.assertEqual(1, dag.out_degree(2))
+        self.assertEqual(2, dag.in_degree(3))
+
+    def test_extend_from_weighted_edge_list(self):
+        dag = retworkx.PyDAG()
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        dag.extend_from_weighted_edge_list(edge_list)
+        self.assertEqual(len(dag), 4)
+        self.assertEqual(['a', 'b', 'c', 'd', 'e'], dag.edges())
+        self.assertEqual(3, dag.out_degree(0))
+        self.assertEqual(0, dag.in_degree(0))
+        self.assertEqual(1, dag.out_degree(1))
+        self.assertEqual(1, dag.out_degree(2))
+        self.assertEqual(2, dag.in_degree(3))
+
+    def test_extend_from_weighted_edge_list_empty(self):
+        dag = retworkx.PyDAG()
+        dag.extend_from_weighted_edge_list([])
+        self.assertEqual(0, len(dag))
+
+    def test_cycle_checking_at_init_nodes_extend_from_edge_list(self):
+        dag = retworkx.PyDAG(True)
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', {})
+        node_c = dag.add_child(node_b, 'c', {})
+        with self.assertRaises(retworkx.DAGWouldCycle):
+            dag.extend_from_edge_list([(node_a, node_c), (node_c, node_b)])
+
+    def test_extend_from_weighted_edge_list_nodes_exist(self):
+        dag = retworkx.PyDiGraph()
+        dag.add_nodes_from(list(range(4)))
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        dag.extend_from_weighted_edge_list(edge_list)
+        self.assertEqual(len(dag), 4)
+        self.assertEqual(['a', 'b', 'c', 'd', 'e'], dag.edges())
+        self.assertEqual(3, dag.out_degree(0))
+        self.assertEqual(0, dag.in_degree(0))
+        self.assertEqual(1, dag.out_degree(1))
+        self.assertEqual(1, dag.out_degree(2))
+        self.assertEqual(2, dag.in_degree(3))
