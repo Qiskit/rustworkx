@@ -169,3 +169,87 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         res = graph.add_edges_from_no_data([])
         self.assertEqual([], res)
+
+    def test_edge_list(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(4)))
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        graph.add_edges_from(edge_list)
+        self.assertEqual([(x[0], x[1]) for x in edge_list], graph.edge_list())
+
+    def test_edge_list_empty(self):
+        graph = retworkx.PyGraph()
+        self.assertEqual([], graph.edge_list())
+
+    def test_weighted_edge_list(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(4)))
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        graph.add_edges_from(edge_list)
+        self.assertEqual(edge_list, graph.weighted_edge_list())
+
+    def test_weighted_edge_list_empty(self):
+        graph = retworkx.PyGraph()
+        self.assertEqual([], graph.weighted_edge_list())
+
+    def test_extend_from_edge_list(self):
+        graph = retworkx.PyGraph()
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3),
+                     (0, 3)]
+        graph.extend_from_edge_list(edge_list)
+        self.assertEqual(len(graph), 4)
+        self.assertEqual([None] * 5, graph.edges())
+        self.assertEqual(3, graph.degree(0))
+        self.assertEqual(2, graph.degree(1))
+        self.assertEqual(3, graph.degree(2))
+        self.assertEqual(2, graph.degree(3))
+
+    def test_extend_from_edge_list_empty(self):
+        graph = retworkx.PyGraph()
+        graph.extend_from_edge_list([])
+        self.assertEqual(0, len(graph))
+
+    def test_extend_from_edge_list_nodes_exist(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(4)))
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3),
+                     (0, 3)]
+        graph.extend_from_edge_list(edge_list)
+        self.assertEqual(len(graph), 4)
+        self.assertEqual([None] * 5, graph.edges())
+        self.assertEqual(3, graph.degree(0))
+        self.assertEqual(2, graph.degree(1))
+        self.assertEqual(3, graph.degree(2))
+        self.assertEqual(2, graph.degree(3))
+
+    def test_extend_from_weighted_edge_list(self):
+        graph = retworkx.PyGraph()
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        graph.extend_from_weighted_edge_list(edge_list)
+        self.assertEqual(len(graph), 4)
+        self.assertEqual(['a', 'b', 'c', 'd', 'e'], graph.edges())
+        self.assertEqual(3, graph.degree(0))
+        self.assertEqual(2, graph.degree(1))
+        self.assertEqual(3, graph.degree(2))
+        self.assertEqual(2, graph.degree(3))
+
+    def test_extend_from_weighted_edge_list_empty(self):
+        graph = retworkx.PyGraph()
+        graph.extend_from_weighted_edge_list([])
+        self.assertEqual(0, len(graph))
+
+    def test_extend_from_weighted_edge_list_nodes_exist(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(4)))
+        edge_list = [(0, 1, 'a'), (1, 2, 'b'), (0, 2, 'c'), (2, 3, 'd'),
+                     (0, 3, 'e')]
+        graph.extend_from_weighted_edge_list(edge_list)
+        self.assertEqual(len(graph), 4)
+        self.assertEqual(['a', 'b', 'c', 'd', 'e'], graph.edges())
+        self.assertEqual(3, graph.degree(0))
+        self.assertEqual(2, graph.degree(1))
+        self.assertEqual(3, graph.degree(2))
+        self.assertEqual(2, graph.degree(3))

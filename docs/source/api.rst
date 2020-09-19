@@ -14,6 +14,19 @@ Graph Classes
     retworkx.PyDiGraph
     retworkx.PyDAG
 
+Generators
+----------
+
+.. autosummary::
+   :toctree: stubs
+
+    retworkx.generators.cycle_graph
+    retworkx.generators.directed_cycle_graph
+    retworkx.generators.path_graph
+    retworkx.generators.directed_path_graph
+    retworkx.generators.star_graph
+    retworkx.generators.directed_star_graph
+
 Random Circuit Functions
 ------------------------
 
@@ -41,6 +54,8 @@ Algorithm Functions
    retworkx.ancestors
    retworkx.lexicographical_topological_sort
    retworkx.floyd_warshall
+   retworkx.graph_floyd_warshall_numpy
+   retworkx.digraph_floyd_warshall_numpy
    retworkx.layers
    retworkx.digraph_adjacency_matrix
    retworkx.graph_adjacency_matrix
@@ -51,6 +66,7 @@ Algorithm Functions
    retworkx.graph_dijkstra_shortest_path_lengths
    retworkx.digraph_dijkstra_shortest_path_lengths
    retworkx.graph_greedy_color
+   retworkx.cycle_basis
    retworkx.strongly_connected_components
 
 Exceptions

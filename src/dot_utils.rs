@@ -90,7 +90,13 @@ fn attr_map_to_string<'a>(
 
     let attr_string = attrs
         .iter()
-        .map(|(key, value)| format!("{}={}", key, value))
+        .map(|(key, value)| {
+            if key == "label" {
+                format!("{}=\"{}\"", key, value)
+            } else {
+                format!("{}={}", key, value)
+            }
+        })
         .collect::<Vec<String>>()
         .join(", ");
     Ok(format!("[{}]", attr_string))

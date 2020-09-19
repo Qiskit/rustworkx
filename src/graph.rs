@@ -10,8 +10,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::cmp;
 use std::collections::BTreeMap;
 use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -24,7 +27,7 @@ use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
 use super::dot_utils::build_dot;
-use super::NoEdgeBetweenNodes;
+use super::{NoEdgeBetweenNodes, NodesRemoved};
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableUnGraph;
@@ -57,6 +60,12 @@ pub type Edges<'a, E> =
 impl GraphBase for PyGraph {
     type NodeId = NodeIndex;
     type EdgeId = EdgeIndex;
+}
+
+impl<'a> NodesRemoved for &'a PyGraph {
+    fn nodes_removed(&self) -> bool {
+        self.node_removed
+    }
 }
 
 impl NodeCount for PyGraph {
@@ -414,6 +423,42 @@ impl PyGraph {
         }
     }
 
+    /// Get edge list
+    ///
+    /// Returns a list of tuples of the form ``(source, target)`` where
+    /// ``source`` and ``target`` are the node indices.
+    ///
+    /// :returns: An edge list with weights
+    /// :rtype: list
+    pub fn edge_list(&self) -> Vec<(usize, usize)> {
+        self.edge_references()
+            .map(|edge| (edge.source().index(), edge.target().index()))
+            .collect()
+    }
+
+    /// Get edge list with weights
+    ///
+    /// Returns a list of tuples of the form ``(source, target, weight)`` where
+    /// ``source`` and ``target`` are the node indices and ``weight`` is the
+    /// payload of the edge.
+    ///
+    /// :returns: An edge list with weights
+    /// :rtype: list
+    pub fn weighted_edge_list(
+        &self,
+        py: Python,
+    ) -> Vec<(usize, usize, PyObject)> {
+        self.edge_references()
+            .map(|edge| {
+                (
+                    edge.source().index(),
+                    edge.target().index(),
+                    edge.weight().clone_ref(py),
+                )
+            })
+            .collect()
+    }
+
     /// Remove a node from the graph.
     ///
     /// :param int node: The index of the node to remove. If the index is not
@@ -498,6 +543,62 @@ impl PyGraph {
             out_list.push(edge.index());
         }
         Ok(out_list)
+    }
+
+    /// Extend graph from an edge list
+    ///
+    /// This method differs from :meth:`add_edges_from_no_data` in that it will
+    /// add nodes if a node index is not present in the edge list.
+    ///
+    /// :param list edge_list: A list of tuples of the form ``(source, target)``
+    ///     where source and target are integer node indices. If the node index
+    ///     is not present in the graph, nodes will be added (with a node
+    ///     weight of ``None``) to that index.
+    #[text_signature = "(edge_list, /)"]
+    pub fn extend_from_edge_list(
+        &mut self,
+        py: Python,
+        edge_list: Vec<(usize, usize)>,
+    ) {
+        for (source, target) in edge_list {
+            let max_index = cmp::max(source, target);
+            while max_index >= self.node_count() {
+                self.graph.add_node(py.None());
+            }
+            self.graph.add_edge(
+                NodeIndex::new(source),
+                NodeIndex::new(target),
+                py.None(),
+            );
+        }
+    }
+
+    /// Extend graph from a weighted edge list
+    ///
+    /// This method differs from :meth:`add_edges_from` in that it will
+    /// add nodes if a node index is not present in the edge list.
+    ///
+    /// :param list edge_list: A list of tuples of the form
+    ///     ``(source, target, weight)`` where source and target are integer
+    ///     node indices. If the node index is not present in the graph,
+    ///     nodes will be added (with a node weight of ``None``) to that index.
+    #[text_signature = "(edge_lsit, /)"]
+    pub fn extend_from_weighted_edge_list(
+        &mut self,
+        py: Python,
+        edge_list: Vec<(usize, usize, PyObject)>,
+    ) {
+        for (source, target, weight) in edge_list {
+            let max_index = cmp::max(source, target);
+            while max_index >= self.node_count() {
+                self.graph.add_node(py.None());
+            }
+            self.graph.add_edge(
+                NodeIndex::new(source),
+                NodeIndex::new(target),
+                weight,
+            );
+        }
     }
 
     /// Remove an edge between 2 nodes.
@@ -703,6 +804,289 @@ impl PyGraph {
                 PyString::new(py, str::from_utf8(&file)?).to_object(py),
             ))
         }
+    }
+
+    /// Read an edge list file and create a new PyGraph object from the
+    /// contents
+    ///
+    /// The expected format for the edge list file is a line seperated list
+    /// of deliminated node ids. If there are more than 3 elements on
+    /// a line the 3rd on will be treated as a string weight for the edge
+    ///
+    /// :param str path: The path of the file to open
+    /// :param str comment: Optional character to use as a comment by default
+    ///     there are no comment characters
+    /// :param str deliminator: Optional character to use as a deliminator by
+    ///     default any whitespace will be used
+    ///
+    /// For example:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   import os
+    ///   import tempfile
+    ///
+    ///   from PIL import Image
+    ///   import pydot
+    ///
+    ///   import retworkx
+    ///
+    ///
+    ///   with tempfile.NamedTemporaryFile('wt') as fd:
+    ///       path = fd.name
+    ///       fd.write('0 1\n')
+    ///       fd.write('0 2\n')
+    ///       fd.write('0 3\n')
+    ///       fd.write('1 2\n')
+    ///       fd.write('2 3\n')
+    ///       fd.flush()
+    ///       graph = retworkx.PyGraph.read_edge_list(path)
+    ///
+    ///   # Draw graph
+    ///   dot = pydot.graph_from_dot_data(graph.to_dot())[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    #[staticmethod]
+    #[text_signature = "(path, /, comment=None, deliminator=None)"]
+    pub fn read_edge_list(
+        py: Python,
+        path: &str,
+        comment: Option<String>,
+        deliminator: Option<String>,
+    ) -> PyResult<PyGraph> {
+        let file = File::open(path)?;
+        let buf_reader = BufReader::new(file);
+        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        for line_raw in buf_reader.lines() {
+            let line = line_raw?;
+            let skip = match &comment {
+                Some(comm) => line.trim().starts_with(comm),
+                None => line.trim().is_empty(),
+            };
+            if skip {
+                continue;
+            }
+            let line_no_comments = match &comment {
+                Some(comm) => line
+                    .find(comm)
+                    .map(|idx| &line[..idx])
+                    .unwrap_or(&line)
+                    .trim()
+                    .to_string(),
+                None => line,
+            };
+            let pieces: Vec<&str> = match &deliminator {
+                Some(del) => line_no_comments.split(del).collect(),
+                None => line_no_comments.split_whitespace().collect(),
+            };
+            let src = pieces[0].parse::<usize>()?;
+            let target = pieces[1].parse::<usize>()?;
+            let max_index = cmp::max(src, target);
+            // Add nodes to graph
+            while max_index >= out_graph.node_count() {
+                out_graph.add_node(py.None());
+            }
+            // Add edges tp graph
+            let weight = if pieces.len() > 2 {
+                let weight_str = match &deliminator {
+                    Some(del) => pieces[2..].join(del),
+                    None => pieces[2..].join(&' '.to_string()),
+                };
+                PyString::new(py, &weight_str).into()
+            } else {
+                py.None()
+            };
+            out_graph.add_edge(
+                NodeIndex::new(src),
+                NodeIndex::new(target),
+                weight,
+            );
+        }
+        Ok(PyGraph {
+            graph: out_graph,
+            node_removed: false,
+        })
+    }
+
+    /// Add another PyGraph object into this PyGraph
+    ///
+    /// :param PyGraph other: The other PyGraph object to add onto this
+    ///     graph.
+    /// :param dict node_map: A dictionary mapping node indexes from this
+    ///     PyGraph object to node indexes in the other PyGraph object.
+    ///     The keys are a node index in this graph and the value is a tuple
+    ///     of the node index in the other graph to add an edge to and the
+    ///     weight of that edge. For example::
+    ///
+    ///         {
+    ///             1: (2, "weight"),
+    ///             2: (4, "weight2")
+    ///         }
+    ///
+    /// :param node_map_func: An optional python callable that will take in a
+    ///     single node weight/data object and return a new node weight/data
+    ///     object that will be used when adding an node from other onto this
+    ///     graph.
+    /// :param edge_map_func: An optional python callabble that will take in a
+    ///     single edge weight/data object and return a new edge weight/data
+    ///     object that will be used when adding an edge from other onto this
+    ///     graph.
+    ///
+    /// :returns: new_node_ids: A dictionary mapping node index from the other
+    ///     PyGraph to the equivalent node index in this PyDAG after they've
+    ///     been combined
+    /// :rtype: dict
+    ///
+    /// For example, start by building a graph:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   import os
+    ///   import tempfile
+    ///
+    ///   import pydot
+    ///   from PIL import Image
+    ///
+    ///   import retworkx
+    ///
+    ///   # Build first graph and visualize:
+    ///   graph = retworkx.PyGraph()
+    ///   node_a, node_b, node_c = graph.add_nodes_from(['A', 'B', 'C'])
+    ///   graph.add_edges_from_no_data([(node_a, node_b), (node_b, node_c)])
+    ///   dot_str = graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    /// Then build a second one:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   # Build second graph and visualize:
+    ///   other_graph = retworkx.PyGraph()
+    ///   node_d, node_e = other_graph.add_nodes_from(['D', 'E'])
+    ///   other_graph.add_edge(node_d, node_e, None)
+    ///   dot_str = other_graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'other_graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    /// Finally compose the ``other_graph`` onto ``graph``
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///   node_map = {node_b: (node_d, 'B to D')}
+    ///   graph.compose(other_graph, node_map)
+    ///   dot_str = graph.to_dot(
+    ///       lambda node: dict(
+    ///           color='black', fillcolor='lightblue', style='filled'))
+    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
+    ///
+    ///   with tempfile.TemporaryDirectory() as tmpdirname:
+    ///       tmp_path = os.path.join(tmpdirname, 'combined_graph.png')
+    ///       dot.write_png(tmp_path)
+    ///       image = Image.open(tmp_path)
+    ///       os.remove(tmp_path)
+    ///   image
+    ///
+    #[text_signature = "(other, node_map, /, node_map_func=None, edge_map_func=None)"]
+    pub fn compose(
+        &mut self,
+        py: Python,
+        other: &PyGraph,
+        node_map: PyObject,
+        node_map_func: Option<PyObject>,
+        edge_map_func: Option<PyObject>,
+    ) -> PyResult<PyObject> {
+        let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let node_map_dict = node_map.cast_as::<PyDict>(py)?;
+        let mut node_map_hashmap: HashMap<usize, (usize, PyObject)> =
+            HashMap::default();
+        for (k, v) in node_map_dict.iter() {
+            node_map_hashmap.insert(k.extract()?, v.extract()?);
+        }
+
+        fn node_weight_callable(
+            py: Python,
+            node_map: &Option<PyObject>,
+            node: &PyObject,
+        ) -> PyResult<PyObject> {
+            match node_map {
+                Some(node_map) => {
+                    let res = node_map.call1(py, (node,))?;
+                    Ok(res.to_object(py))
+                }
+                None => Ok(node.clone_ref(py)),
+            }
+        }
+
+        // TODO: Reimplement this without looping over the graphs
+        // Loop over other nodes add add to self graph
+        for node in other.graph.node_indices() {
+            let new_index = self.graph.add_node(node_weight_callable(
+                py,
+                &node_map_func,
+                &other.graph[node],
+            )?);
+            new_node_map.insert(node, new_index);
+        }
+
+        fn edge_weight_callable(
+            py: Python,
+            edge_map: &Option<PyObject>,
+            edge: &PyObject,
+        ) -> PyResult<PyObject> {
+            match edge_map {
+                Some(edge_map) => {
+                    let res = edge_map.call1(py, (edge,))?;
+                    Ok(res.to_object(py))
+                }
+                None => Ok(edge.clone_ref(py)),
+            }
+        }
+
+        // loop over other edges and add to self graph
+        for edge in other.graph.edge_references() {
+            let new_p_index = new_node_map.get(&edge.source()).unwrap();
+            let new_c_index = new_node_map.get(&edge.target()).unwrap();
+            let weight =
+                edge_weight_callable(py, &edge_map_func, edge.weight())?;
+            self.graph.add_edge(*new_p_index, *new_c_index, weight);
+        }
+        // Add edges from map
+        for (this_index, (index, weight)) in node_map_hashmap.iter() {
+            let new_index = new_node_map.get(&NodeIndex::new(*index)).unwrap();
+            self.graph.add_edge(
+                NodeIndex::new(*this_index),
+                *new_index,
+                weight.clone_ref(py),
+            );
+        }
+        let out_dict = PyDict::new(py);
+        for (orig_node, new_node) in new_node_map.iter() {
+            out_dict.set_item(orig_node.index(), new_node.index())?;
+        }
+        Ok(out_dict.into())
     }
 }
 

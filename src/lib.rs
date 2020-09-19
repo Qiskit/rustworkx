@@ -25,30 +25,41 @@ mod dag_isomorphism;
 mod digraph;
 mod dijkstra;
 mod dot_utils;
+mod generators;
 mod graph;
 
 use std::cmp::{Ordering, Reverse};
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::BinaryHeap;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::create_exception;
 use pyo3::exceptions::{Exception, ValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyDict, PyList, PySet};
 use pyo3::wrap_pyfunction;
+use pyo3::wrap_pymodule;
 use pyo3::Python;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::{Bfs, IntoEdgeReferences, NodeIndexable, Reversed};
+use petgraph::visit::{
+    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
+    NodeCount, NodeIndexable, Reversed,
+};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
+
+use generators::PyInit_generators;
+
+trait NodesRemoved {
+    fn nodes_removed(&self) -> bool;
+}
 
 fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let dag = &graph.graph;
@@ -301,7 +312,7 @@ fn bfs_successors(
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(graph);
@@ -311,7 +322,13 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    out_set
+    let set = PySet::empty(py).expect("Failed to construct empty set");
+    {
+        for val in out_set {
+            set.add(val).expect("Failed to add to set");
+        }
+    }
+    set.into()
 }
 
 /// Return the descendants of a node in a graph.
@@ -328,7 +345,11 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+fn descendants(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> PyObject {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(graph, index, None, |_| 1);
@@ -337,7 +358,13 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    out_set
+    let set = PySet::empty(py).expect("Failed to construct empty set");
+    {
+        for val in out_set {
+            set.add(val).expect("Failed to add to set");
+        }
+    }
+    set.into()
 }
 
 /// Get the lexicographical topological sorted nodes from the provided DAG
@@ -568,6 +595,182 @@ fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
     Ok(out_dict.into())
 }
 
+fn get_edge_iter_with_weights<G>(
+    graph: G,
+) -> impl Iterator<Item = (usize, usize, PyObject)>
+where
+    G: GraphBase
+        + IntoEdgeReferences
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + GraphProp
+        + NodesRemoved,
+    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
+{
+    let node_map: Option<HashMap<NodeIndex, usize>>;
+    if graph.nodes_removed() {
+        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
+        for (count, node) in graph.node_identifiers().enumerate() {
+            let index = NodeIndex::new(graph.to_index(node));
+            node_hash_map.insert(index, count);
+        }
+        node_map = Some(node_hash_map);
+    } else {
+        node_map = None;
+    }
+
+    graph.edge_references().map(move |edge| {
+        let i: usize;
+        let j: usize;
+        match &node_map {
+            Some(map) => {
+                let source_index =
+                    NodeIndex::new(graph.to_index(edge.source()));
+                let target_index =
+                    NodeIndex::new(graph.to_index(edge.target()));
+                i = *map.get(&source_index).unwrap();
+                j = *map.get(&target_index).unwrap();
+            }
+            None => {
+                i = graph.to_index(edge.source());
+                j = graph.to_index(edge.target());
+            }
+        }
+        (i, j, edge.weight().clone())
+    })
+}
+
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// :param PyGraph graph: The graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+///
+/// :returns: A matrix of shortest path distances between nodes. If there is no
+///     path between two nodes then the corresponding matrix entry will be
+///     ``np.inf``.
+/// :rtype: numpy.ndarray
+#[pyfunction]
+#[text_signature = "(graph, weight_fn, /)"]
+fn graph_floyd_warshall_numpy(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: PyObject,
+) -> PyResult<PyObject> {
+    let n = graph.node_count();
+    // Allocate empty matrix
+    let mut mat = Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY);
+
+    let weight_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = weight_fn.call1(py, (a,))?;
+        res.extract(py)
+    };
+
+    // Build adjacency matrix
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight = weight_callable(&weight)?;
+        mat[[i, j]] = mat[[i, j]].min(edge_weight);
+        mat[[j, i]] = mat[[j, i]].min(edge_weight);
+    }
+
+    // 0 out the diagonal
+    for x in mat.diag_mut() {
+        *x = 0.0;
+    }
+    // Perform the Floyd-Warshall algorithm.
+    // In each loop, this finds the shortest path from point i
+    // to point j using intermediate nodes 0..k
+    for k in 0..n {
+        for i in 0..n {
+            for j in 0..n {
+                let d_ijk = mat[[i, k]] + mat[[k, j]];
+                if d_ijk < mat[[i, j]] {
+                    mat[[i, j]] = d_ijk;
+                }
+            }
+        }
+    }
+    Ok(mat.into_pyarray(py).into())
+}
+
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+///
+/// :returns: A matrix of shortest path distances between nodes. If there is no
+///     path between two nodes then the corresponding matrix entry will be
+///     ``np.inf``.
+/// :rtype: numpy.ndarray
+#[pyfunction]
+#[text_signature = "(graph, weight_fn, /)"]
+fn digraph_floyd_warshall_numpy(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: PyObject,
+) -> PyResult<PyObject> {
+    let n = graph.node_count();
+
+    // Allocate empty matrix
+    let mut mat = Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY);
+
+    let weight_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = weight_fn.call1(py, (a,))?;
+        res.extract(py)
+    };
+
+    // Build adjacency matrix
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight = weight_callable(&weight)?;
+        mat[[i, j]] = mat[[i, j]].min(edge_weight);
+    }
+    // 0 out the diagonal
+    for x in mat.diag_mut() {
+        *x = 0.0;
+    }
+    // Perform the Floyd-Warshall algorithm.
+    // In each loop, this finds the shortest path from point i
+    // to point j using intermediate nodes 0..k
+    for k in 0..n {
+        for i in 0..n {
+            for j in 0..n {
+                let d_ijk = mat[[i, k]] + mat[[k, j]];
+                if d_ijk < mat[[i, j]] {
+                    mat[[i, j]] = d_ijk;
+                }
+            }
+        }
+    }
+    Ok(mat.into_pyarray(py).into())
+}
+
 /// Return a list of layers
 ///  
 /// A layer is a subgraph whose nodes are disjoint, i.e.,
@@ -579,6 +782,8 @@ fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
 ///
 /// :returns: A list of layers, each layer is a list of node data
 /// :rtype: list
+///
+/// :raises InvalidNode: If a node index in ``first_layer`` is not in the graph
 #[pyfunction]
 #[text_signature = "(dag, first_layer, /)"]
 fn layers(
@@ -599,7 +804,16 @@ fn layers(
 
     let mut layer_node_data: Vec<&PyObject> = Vec::new();
     for layer_node in &cur_layer {
-        layer_node_data.push(&dag[*layer_node]);
+        let node_data = match dag.graph.node_weight(*layer_node) {
+            Some(data) => data,
+            None => {
+                return Err(InvalidNode::py_err(format!(
+                    "An index input in 'first_layer' {} is not a valid node index in the graph",
+                    layer_node.index()),
+                ))
+            }
+        };
+        layer_node_data.push(node_data);
     }
     output.push(layer_node_data);
 
@@ -677,44 +891,15 @@ fn digraph_adjacency_matrix(
     graph: &digraph::PyDiGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    let n: usize;
-    if graph.node_removed {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
-        let mut count = 0;
-        for node in graph.graph.node_indices() {
-            node_hash_map.insert(node, count);
-            count += 1;
-        }
-        n = count;
-        node_map = Some(node_hash_map);
-    } else {
-        n = graph.graph.node_bound();
-        node_map = None;
-    }
+    let n = graph.node_count();
     let mut matrix = Array::<f64, _>::zeros((n, n).f());
 
-    let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
+    let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
-        Ok(res.to_object(py))
+        res.extract(py)
     };
-    for edge in graph.graph.edge_references() {
-        let edge_weight_raw = weight_callable(&edge.weight())?;
-        let edge_weight: f64 = edge_weight_raw.extract(py)?;
-        let source = edge.source();
-        let target = edge.target();
-        let i: usize;
-        let j: usize;
-        match &node_map {
-            Some(map) => {
-                i = *map.get(&source).unwrap();
-                j = *map.get(&target).unwrap();
-            }
-            None => {
-                i = source.index();
-                j = target.index();
-            }
-        }
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight = weight_callable(&weight)?;
         matrix[[i, j]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
@@ -726,7 +911,7 @@ fn digraph_adjacency_matrix(
 /// output matrix will be the sum of the edges' weights.
 ///
 /// :param PyGraph graph: The graph used to generate the adjacency matrix from
-/// :param weight_fn callable: A callable object (function, lambda, etc) which
+/// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
 ///     tells retworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
@@ -748,47 +933,19 @@ fn graph_adjacency_matrix(
     graph: &graph::PyGraph,
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    let n: usize;
-    if graph.node_removed {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
-        let mut count = 0;
-        for node in graph.graph.node_indices() {
-            node_hash_map.insert(node, count);
-            count += 1;
-        }
-        n = count;
-        node_map = Some(node_hash_map);
-    } else {
-        n = graph.graph.node_bound();
-        node_map = None;
-    }
+    let n = graph.node_count();
     let mut matrix = Array::<f64, _>::zeros((n, n).f());
 
-    let weight_callable = |a: &PyObject| -> PyResult<PyObject> {
+    let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
-        Ok(res.to_object(py))
+        res.extract(py)
     };
-    for edge in graph.graph.edge_references() {
-        let edge_weight_raw = weight_callable(&edge.weight())?;
-        let edge_weight: f64 = edge_weight_raw.extract(py)?;
-        let source = edge.source();
-        let target = edge.target();
-        let i: usize;
-        let j: usize;
-        match &node_map {
-            Some(map) => {
-                i = *map.get(&source).unwrap();
-                j = *map.get(&target).unwrap();
-            }
-            None => {
-                i = source.index();
-                j = target.index();
-            }
-        }
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight = weight_callable(&weight)?;
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
+
     Ok(matrix.into_pyarray(py).into())
 }
 
@@ -1317,6 +1474,100 @@ pub fn undirected_gnp_random_graph(
     Ok(graph)
 }
 
+/// Return a list of cycles which form a basis for cycles of a given PyGraph
+///
+/// A basis for cycles of a graph is a minimal collection of
+/// cycles such that any cycle in the graph can be written
+/// as a sum of cycles in the basis.  Here summation of cycles
+/// is defined as the exclusive or of the edges.
+///
+/// This is adapted from algorithm CACM 491 [1]_.
+///
+/// :param PyGraph graph: The graph to find the cycle basis in
+/// :param int root: Optional index for starting node for basis
+///
+/// :returns: A list of cycle lists. Each list is a list of node ids which
+///     forms a cycle (loop) in the input graph
+/// :rtype: list
+///
+/// .. [1] Paton, K. An algorithm for finding a fundamental set of
+///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
+#[pyfunction]
+#[text_signature = "(graph, /, root=None)"]
+pub fn cycle_basis(
+    graph: &graph::PyGraph,
+    root: Option<usize>,
+) -> Vec<Vec<usize>> {
+    let mut root_node = root;
+    let mut graph_nodes: HashSet<NodeIndex> =
+        graph.graph.node_indices().collect();
+    let mut cycles: Vec<Vec<usize>> = Vec::new();
+    while !graph_nodes.is_empty() {
+        let temp_value: NodeIndex;
+        // If root_node is not set get an arbitrary node from the set of graph
+        // nodes we've not "examined"
+        let root_index = match root_node {
+            Some(root_value) => NodeIndex::new(root_value),
+            None => {
+                temp_value = *graph_nodes.iter().next().unwrap();
+                graph_nodes.remove(&temp_value);
+                temp_value
+            }
+        };
+        // Stack (ie "pushdown list") of vertices already in the spanning tree
+        let mut stack: Vec<NodeIndex> = Vec::new();
+        stack.push(root_index);
+        // Map of node index to predecessor node index
+        let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        pred.insert(root_index, root_index);
+        // Set of examined nodes during this iteration
+        let mut used: HashMap<NodeIndex, HashSet<NodeIndex>> = HashMap::new();
+        used.insert(root_index, HashSet::new());
+        // Walk the spanning tree
+        while !stack.is_empty() {
+            // Use the last element added so that cycles are easier to find
+            let z = stack.pop().unwrap();
+            for neighbor in graph.graph.neighbors(z) {
+                // A new node was encountered:
+                if !used.contains_key(&neighbor) {
+                    pred.insert(neighbor, z);
+                    stack.push(neighbor);
+                    let mut temp_set: HashSet<NodeIndex> = HashSet::new();
+                    temp_set.insert(z);
+                    used.insert(neighbor, temp_set);
+                // A self loop:
+                } else if z == neighbor {
+                    let mut cycle: Vec<usize> = Vec::new();
+                    cycle.push(z.index());
+                    cycles.push(cycle);
+                // A cycle was found:
+                } else if !used.get(&z).unwrap().contains(&neighbor) {
+                    let pn = used.get(&neighbor).unwrap();
+                    let mut cycle: Vec<NodeIndex> = Vec::new();
+                    cycle.push(neighbor);
+                    cycle.push(z);
+                    let mut p = pred.get(&z).unwrap();
+                    while !pn.contains(p) {
+                        cycle.push(*p);
+                        p = pred.get(p).unwrap();
+                    }
+                    cycle.push(*p);
+                    cycles.push(cycle.iter().map(|x| x.index()).collect());
+                    let neighbor_set = used.get_mut(&neighbor).unwrap();
+                    neighbor_set.insert(z);
+                }
+            }
+        }
+        let mut temp_hashset: HashSet<NodeIndex> = HashSet::new();
+        for key in pred.keys() {
+            temp_hashset.insert(*key);
+        }
+        graph_nodes = graph_nodes.difference(&temp_hashset).copied().collect();
+        root_node = None;
+    }
+    cycles
+}
+
 /// Compute the strongly connected components for a directed graph
 ///
 /// This function is implemented using Kosaraju's algorithm
@@ -1371,6 +1622,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
+    m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
@@ -1383,9 +1636,11 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
+    m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
 
