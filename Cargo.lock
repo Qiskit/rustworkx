@@ -401,6 +401,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9b90d637542bbf29b140fdd38fa308424073fd2cdf641a5680aed8020145e3c"
 dependencies = [
  "ctor",
+ "hashbrown",
  "indoc",
  "inventory",
  "libc",

@@ -972,7 +972,7 @@ impl PyDiGraph {
     ///     specified node.
     /// :rtype: dict
     #[text_signature = "(node, /)"]
-    pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
+    pub fn adj(&mut self, node: usize) -> HashMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.neighbors(index);
         let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
@@ -985,11 +985,7 @@ impl PyDiGraph {
             let edge_w = self.graph.edge_weight(edge.unwrap());
             out_map.insert(neighbor.index(), edge_w.unwrap());
         }
-        let out_dict = PyDict::new(py);
-        for (index, value) in out_map {
-            out_dict.set_item(index, value)?;
-        }
-        Ok(out_dict.into())
+        out_map
     }
 
     /// Get the index and data for either the parent or children of a node.
@@ -1011,10 +1007,9 @@ impl PyDiGraph {
     #[text_signature = "(node, direction, /)"]
     pub fn adj_direction(
         &mut self,
-        py: Python,
         node: usize,
         direction: bool,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<HashMap<usize, &PyObject>> {
         let index = NodeIndex::new(node);
         let dir = if direction {
             petgraph::Direction::Incoming
@@ -1046,11 +1041,7 @@ impl PyDiGraph {
             let edge_w = self.graph.edge_weight(edge);
             out_map.insert(neighbor.index(), edge_w.unwrap());
         }
-        let out_dict = PyDict::new(py);
-        for (index, value) in out_map {
-            out_dict.set_item(index, value)?;
-        }
-        Ok(out_dict.into())
+        Ok(out_map)
     }
 
     /// Get the index and edge data for all parents of a node.
@@ -1479,36 +1470,16 @@ impl PyDiGraph {
         &mut self,
         py: Python,
         other: &PyDiGraph,
-        node_map: PyObject,
+        node_map: HashMap<usize, (usize, PyObject)>,
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<HashMap<usize, usize>> {
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-        let node_map_dict = node_map.cast_as::<PyDict>(py)?;
-        let mut node_map_hashmap: HashMap<usize, (usize, PyObject)> =
-            HashMap::default();
-        for (k, v) in node_map_dict.iter() {
-            node_map_hashmap.insert(k.extract()?, v.extract()?);
-        }
-
-        fn node_weight_callable(
-            py: Python,
-            node_map: &Option<PyObject>,
-            node: &PyObject,
-        ) -> PyResult<PyObject> {
-            match node_map {
-                Some(node_map) => {
-                    let res = node_map.call1(py, (node,))?;
-                    Ok(res.to_object(py))
-                }
-                None => Ok(node.clone_ref(py)),
-            }
-        }
 
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph
         for node in other.graph.node_indices() {
-            let new_index = self.graph.add_node(node_weight_callable(
+            let new_index = self.graph.add_node(weight_transform_callable(
                 py,
                 &node_map_func,
                 &other.graph[node],
@@ -1516,30 +1487,16 @@ impl PyDiGraph {
             new_node_map.insert(node, new_index);
         }
 
-        fn edge_weight_callable(
-            py: Python,
-            edge_map: &Option<PyObject>,
-            edge: &PyObject,
-        ) -> PyResult<PyObject> {
-            match edge_map {
-                Some(edge_map) => {
-                    let res = edge_map.call1(py, (edge,))?;
-                    Ok(res.to_object(py))
-                }
-                None => Ok(edge.clone_ref(py)),
-            }
-        }
-
         // loop over other edges and add to self graph
         for edge in other.graph.edge_references() {
             let new_p_index = new_node_map.get(&edge.source()).unwrap();
             let new_c_index = new_node_map.get(&edge.target()).unwrap();
             let weight =
-                edge_weight_callable(py, &edge_map_func, edge.weight())?;
+                weight_transform_callable(py, &edge_map_func, edge.weight())?;
             self.graph.add_edge(*new_p_index, *new_c_index, weight);
         }
         // Add edges from map
-        for (this_index, (index, weight)) in node_map_hashmap.iter() {
+        for (this_index, (index, weight)) in node_map.iter() {
             let new_index = new_node_map.get(&NodeIndex::new(*index)).unwrap();
             self.graph.add_edge(
                 NodeIndex::new(*this_index),
@@ -1547,11 +1504,10 @@ impl PyDiGraph {
                 weight.clone_ref(py),
             );
         }
-        let out_dict = PyDict::new(py);
-        for (orig_node, new_node) in new_node_map.iter() {
-            out_dict.set_item(orig_node.index(), new_node.index())?;
-        }
-        Ok(out_dict.into())
+        Ok(new_node_map
+            .iter()
+            .map(|(old, new)| (old.index(), new.index()))
+            .collect())
     }
 
     /// Check if the graph is symmetric
@@ -1626,4 +1582,18 @@ fn is_cycle_check_required(
     parents_a.next().is_some()
         && children_b.next().is_some()
         && dag.graph.find_edge(a, b).is_none()
+}
+
+fn weight_transform_callable(
+    py: Python,
+    edge_map: &Option<PyObject>,
+    edge: &PyObject,
+) -> PyResult<PyObject> {
+    match edge_map {
+        Some(edge_map) => {
+            let res = edge_map.call1(py, (edge,))?;
+            Ok(res.to_object(py))
+        }
+        None => Ok(edge.clone_ref(py)),
+    }
 }

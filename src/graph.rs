@@ -734,7 +734,7 @@ impl PyGraph {
     ///     edge with the specified node.
     /// :rtype: dict
     #[text_signature = "(node, /)"]
-    pub fn adj(&mut self, py: Python, node: usize) -> PyResult<PyObject> {
+    pub fn adj(&mut self, node: usize) -> PyResult<HashMap<usize, &PyObject>> {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.neighbors(index);
         let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
@@ -744,11 +744,7 @@ impl PyGraph {
             let edge_w = self.graph.edge_weight(edge.unwrap());
             out_map.insert(neighbor.index(), edge_w.unwrap());
         }
-        let out_dict = PyDict::new(py);
-        for (index, value) in out_map {
-            out_dict.set_item(index, value)?;
-        }
-        Ok(out_dict.into())
+        Ok(out_map)
     }
 
     /// Get the degree for a node
@@ -1046,17 +1042,11 @@ impl PyGraph {
         &mut self,
         py: Python,
         other: &PyGraph,
-        node_map: PyObject,
+        node_map: HashMap<usize, (usize, PyObject)>,
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<HashMap<usize, usize>> {
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-        let node_map_dict = node_map.cast_as::<PyDict>(py)?;
-        let mut node_map_hashmap: HashMap<usize, (usize, PyObject)> =
-            HashMap::default();
-        for (k, v) in node_map_dict.iter() {
-            node_map_hashmap.insert(k.extract()?, v.extract()?);
-        }
 
         fn node_weight_callable(
             py: Python,
@@ -1106,7 +1096,7 @@ impl PyGraph {
             self.graph.add_edge(*new_p_index, *new_c_index, weight);
         }
         // Add edges from map
-        for (this_index, (index, weight)) in node_map_hashmap.iter() {
+        for (this_index, (index, weight)) in node_map.iter() {
             let new_index = new_node_map.get(&NodeIndex::new(*index)).unwrap();
             self.graph.add_edge(
                 NodeIndex::new(*this_index),
@@ -1118,7 +1108,10 @@ impl PyGraph {
         for (orig_node, new_node) in new_node_map.iter() {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
-        Ok(out_dict.into())
+        Ok(new_node_map
+            .iter()
+            .map(|(old, new)| (old.index(), new.index()))
+            .collect())
     }
 }
 
@@ -1129,17 +1122,14 @@ impl PyMappingProtocol for PyGraph {
         Ok(self.graph.node_count())
     }
     fn __getitem__(&'p self, idx: usize) -> PyResult<&'p PyObject> {
-        match self.graph.node_weight(NodeIndex::new(idx as usize)) {
+        match self.graph.node_weight(NodeIndex::new(idx)) {
             Some(data) => Ok(data),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 
     fn __setitem__(&'p mut self, idx: usize, value: PyObject) -> PyResult<()> {
-        let data = match self
-            .graph
-            .node_weight_mut(NodeIndex::new(idx as usize))
-        {
+        let data = match self.graph.node_weight_mut(NodeIndex::new(idx)) {
             Some(node_data) => node_data,
             None => {
                 return Err(PyIndexError::new_err("No node found for index"))
