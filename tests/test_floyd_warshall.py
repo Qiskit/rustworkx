@@ -127,6 +127,22 @@ class TestFloydWarshall(unittest.TestCase):
         self.assertEqual(dist[0, 3], 3)
         self.assertEqual(dist[0, 4], 3)
 
+    def test_directed_floyd_warshall_numpy_cycle_as_undirected(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(7)))
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+        dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: 1,
+                                                     as_undirected=True)
+        expected = numpy.array([[0., 1., 2., 3., 3., 2., 1.],
+                                [1., 0., 1., 2., 3., 3., 2.],
+                                [2., 1., 0., 1., 2., 3., 3.],
+                                [3., 2., 1., 0., 1., 2., 3.],
+                                [3., 3., 2., 1., 0., 1., 2.],
+                                [2., 3., 3., 2., 1., 0., 1.],
+                                [1., 2., 3., 3., 2., 1., 0.]])
+        self.assertTrue(numpy.array_equal(dist, expected))
+
     def test_floyd_warshall_numpy_digraph_three_edges(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(6)))
