@@ -1014,6 +1014,45 @@ impl PyDiGraph {
         Ok(out_dict.into())
     }
 
+    /// Get the neighbors of a node.
+    ///
+    /// This with return a list of neighbor node indices
+    ///
+    /// :param int node: The index of the node to get the neibhors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    pub fn neighbors(&self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors(NodeIndex::new(node))
+            .map(|node| node.index())
+            .collect()
+    }
+
+    /// Get the directed neighbors of a node.
+    ///
+    /// This with return a list of directed neighbor node indices
+    ///
+    /// :param int node: The index of the node to get the neibhors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    pub fn neighbors_directed(
+        &mut self,
+        node: usize,
+        direction: bool,
+    ) -> Vec<usize> {
+        let dir = if direction {
+            petgraph::Direction::Incoming
+        } else {
+            petgraph::Direction::Outgoing
+        };
+        self.graph
+            .neighbors_directed(NodeIndex::new(node), dir)
+            .map(|node| node.index())
+            .collect()
+    }
+
     /// Get the index and edge data for all parents of a node.
     ///
     /// This will return a list of tuples with the parent index the node index
