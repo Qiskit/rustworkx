@@ -35,8 +35,9 @@ use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
-    NodeCount, NodeIndexable, Reversed,
+    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighbors,
+    IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
+    Visitable,
 };
 
 use ndarray::prelude::*;
@@ -251,6 +252,84 @@ fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
         }
     };
     Ok(nodes.iter().map(|node| node.index()).collect())
+}
+
+fn dfs_edges<G>(graph: G, source: Option<usize>) -> Vec<(usize, usize)>
+where
+    G: GraphBase<NodeId = NodeIndex>
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + IntoNeighbors
+        + Visitable,
+    <G as Visitable>::Map: VisitMap<NodeIndex>,
+{
+    let nodes: Vec<NodeIndex> = match source {
+        Some(start) => vec![NodeIndex::new(start)],
+        None => graph
+            .node_identifiers()
+            .map(|ind| NodeIndex::new(graph.to_index(ind)))
+            .collect(),
+    };
+    let mut visited: HashSet<NodeIndex> = HashSet::new();
+    let mut out_vec: Vec<(usize, usize)> = Vec::new();
+    for start in nodes {
+        if visited.contains(&start) {
+            continue;
+        }
+        visited.insert(start);
+        let mut dfs = Dfs::new(graph, start);
+        let mut parent: NodeIndex = start;
+        while let Some(nx) = dfs.next(graph) {
+            if visited.contains(&nx) {
+                continue;
+            }
+            visited.insert(nx);
+            out_vec.push((parent.index(), nx.index()));
+            parent = nx;
+        }
+    }
+    out_vec
+}
+
+/// Get edge list in depth first order
+///
+/// :param PyDiGraph graph: The graph to get the DFS edge list from
+/// :param int source: An optional node index to use as the starting node
+///     for the depth-first search. The edge list will only return edges in
+///     the components reachable from this index. If this is not sspecified
+///     then a source will be chosen arbitrarly and repeated until all
+///     components of the graph are searched.
+///
+/// :returns: A list of edges as a tuple of the form ``(source, target)`` in
+///     depth-first order
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /, source=None)"]
+fn digraph_dfs_edges(
+    graph: &digraph::PyDiGraph,
+    source: Option<usize>,
+) -> Vec<(usize, usize)> {
+    dfs_edges(graph, source)
+}
+
+/// Get edge list in depth first order
+///
+/// :param PyDiGraph graph: The graph to get the DFS edge list from
+/// :param int source: An optional node index to use as the starting node
+///     for the depth-first search. The edge list will only return edges in
+///     the components reachable from this index. If this is not sspecified
+///     then a source will be chosen arbitrarly and repeated until all
+///     components of the graph are searched.
+///
+/// :returns: A list of edges as a tuple of the form ``(source, target)`` in
+///     depth-first order
+#[pyfunction]
+#[text_signature = "(graph, /, source=None)"]
+fn graph_dfs_edges(
+    graph: &graph::PyGraph,
+    source: Option<usize>,
+) -> Vec<(usize, usize)> {
+    dfs_edges(graph, source)
 }
 
 /// Return successors in a breadth-first-search from a source node.
@@ -1628,6 +1707,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;

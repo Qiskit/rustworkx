@@ -68,6 +68,8 @@ Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.cycle_basis
    retworkx.strongly_connected_components
+   retworkx.graph_dfs_edges
+   retworkx.digraph_dfs_edges
 
 Exceptions
 ----------
