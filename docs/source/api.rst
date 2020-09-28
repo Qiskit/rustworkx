@@ -65,6 +65,8 @@ Algorithm Functions
    retworkx.digraph_astar_shortest_path
    retworkx.graph_dijkstra_shortest_path_lengths
    retworkx.digraph_dijkstra_shortest_path_lengths
+   retworkx.graph_k_shortest_path_lengths
+   retworkx.digraph_k_shortest_path_lengths
    retworkx.graph_greedy_color
    retworkx.cycle_basis
    retworkx.strongly_connected_components
