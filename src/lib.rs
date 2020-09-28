@@ -10,16 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-extern crate fixedbitset;
-extern crate hashbrown;
-extern crate ndarray;
-extern crate numpy;
-extern crate petgraph;
-extern crate pyo3;
-extern crate rand;
-extern crate rand_pcg;
-extern crate rayon;
-
 mod astar;
 mod dag_isomorphism;
 mod digraph;
@@ -56,7 +46,7 @@ use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
-use generators::PyInit_generators;
+use crate::generators::PyInit_generators;
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -1754,12 +1744,4 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<graph::PyGraph>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 }

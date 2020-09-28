@@ -67,11 +67,6 @@ use super::{
 /// With check_cycle set to true any calls to :meth:`PyDiGraph.add_edge` will
 /// ensure that no cycles are added, ensuring that the PyDiGraph class truly
 /// represents a directed acyclic graph.
-///
-///  .. note::
-///        When using ``copy.deepcopy()`` or pickling node indexes are not
-///        guaranteed to be preserved.
-///
 #[pyclass(module = "retworkx", subclass)]
 #[text_signature = "(/, check_cycle=False)"]
 pub struct PyDiGraph {
@@ -334,35 +329,52 @@ impl PyDiGraph {
         Ok(out_dict.into())
     }
 
-    fn __setstate__(&mut self, state: PyObject) -> PyResult<()> {
-        let mut node_mapping: HashMap<usize, NodeIndex> = HashMap::new();
+    fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
         self.graph = StableDiGraph::<PyObject, PyObject>::new();
-        let gil = Python::acquire_gil();
-        let py = gil.python();
         let dict_state = state.cast_as::<PyDict>(py)?;
 
         let nodes_dict =
             dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
         let edges_list =
             dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
-        for raw_index in nodes_dict.keys().iter() {
+        let mut node_indices: Vec<usize> = Vec::new();
+        for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
-            let index: usize = tmp_index.extract()?;
-            let raw_data = nodes_dict.get_item(index).unwrap();
-            let node_index = self.graph.add_node(raw_data.into());
-            node_mapping.insert(index, node_index);
+            node_indices.push(tmp_index.extract()?);
+        }
+        let max_index: usize = *node_indices.iter().max().unwrap();
+        if max_index + 1 != node_indices.len() {
+            self.node_removed = true;
+        }
+        let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
+        let mut node_count: usize = 0;
+        while max_index >= self.graph.node_bound() {
+            match nodes_dict.get_item(node_count) {
+                Some(raw_data) => {
+                    self.graph.add_node(raw_data.into());
+                }
+                None => {
+                    let tmp_node = self.graph.add_node(py.None());
+                    tmp_nodes.push(tmp_node);
+                }
+            };
+            node_count += 1;
+        }
+        for tmp_node in tmp_nodes {
+            self.graph.remove_node(tmp_node);
         }
         for raw_edge in edges_list.iter() {
             let edge = raw_edge.downcast::<PyTuple>()?;
             let raw_p_index = edge.get_item(0).downcast::<PyLong>()?;
-            let tmp_p_index: usize = raw_p_index.extract()?;
+            let p_index: usize = raw_p_index.extract()?;
             let raw_c_index = edge.get_item(1).downcast::<PyLong>()?;
-            let tmp_c_index: usize = raw_c_index.extract()?;
+            let c_index: usize = raw_c_index.extract()?;
             let edge_data = edge.get_item(2);
-
-            let p_index = node_mapping.get(&tmp_p_index).unwrap();
-            let c_index = node_mapping.get(&tmp_c_index).unwrap();
-            self.graph.add_edge(*p_index, *c_index, edge_data.into());
+            self.graph.add_edge(
+                NodeIndex::new(p_index),
+                NodeIndex::new(c_index),
+                edge_data.into(),
+            );
         }
         Ok(())
     }
