@@ -992,7 +992,7 @@ fn digraph_adjacency_matrix(
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array::<f64, _>::zeros((n, n));
+    let mut matrix = Array2::<f64>::zeros((n, n));
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
@@ -1034,7 +1034,7 @@ fn graph_adjacency_matrix(
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array::<f64, _>::zeros((n, n));
+    let mut matrix = Array2::<f64>::zeros((n, n));
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
