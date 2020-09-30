@@ -20,7 +20,7 @@ mod graph;
 mod k_shortest_path;
 
 use std::cmp::{Ordering, Reverse};
-use std::collections::BinaryHeap;
+use std::collections::{BTreeSet, BinaryHeap};
 
 use hashbrown::{HashMap, HashSet};
 
@@ -149,6 +149,65 @@ fn dag_longest_path_length(graph: &digraph::PyDiGraph) -> PyResult<usize> {
 #[text_signature = "(graph, /)"]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     algo::connected_components(graph)
+}
+
+/// Find the weakly connected components in a directed graph
+///
+/// :param PyDiGraph graph: The graph to find the weakly connected components
+///     in
+///
+/// :returns: A list of sets where each set it a weakly connected component of
+/// the graph
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn weakly_connected_components(
+    graph: &digraph::PyDiGraph,
+) -> Vec<BTreeSet<usize>> {
+    let mut seen: HashSet<NodeIndex> = HashSet::new();
+    let mut out_vec: Vec<BTreeSet<usize>> = Vec::new();
+    for node in graph.graph.node_indices() {
+        if !seen.contains(&node) {
+            // BFS node generator
+            let mut component_set: BTreeSet<usize> = BTreeSet::new();
+            let mut bfs_seen: HashSet<NodeIndex> = HashSet::new();
+            let mut next_level: HashSet<NodeIndex> = HashSet::new();
+            next_level.insert(node);
+            while !next_level.is_empty() {
+                let this_level = next_level;
+                next_level = HashSet::new();
+                for bfs_node in this_level {
+                    if !bfs_seen.contains(&bfs_node) {
+                        component_set.insert(bfs_node.index());
+                        bfs_seen.insert(bfs_node);
+                        for neighbor in
+                            graph.graph.neighbors_undirected(bfs_node)
+                        {
+                            next_level.insert(neighbor);
+                        }
+                    }
+                }
+            }
+            out_vec.push(component_set);
+            seen.extend(bfs_seen);
+        }
+    }
+    out_vec
+}
+
+/// Check if the graph is weakly connected
+///
+/// :param PyDiGraph graph: The graph to check if it is weakly connected
+///
+/// :returns: Whether the graph is weakly connected or not
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
+    if graph.graph.node_count() == 0 {
+        return Err(NullGraph::py_err("Invalid operation on a NullGraph"));
+    }
+    Ok(weakly_connected_components(graph)[0].len() == graph.graph.node_count())
 }
 
 /// Check that the PyDiGraph or PyDAG doesn't have a cycle
@@ -1700,6 +1759,8 @@ create_exception!(retworkx, DAGHasCycle, Exception);
 create_exception!(retworkx, NoSuitableNeighbors, Exception);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, Exception);
+// Invalid operation on a null graph
+create_exception!(retworkx, NullGraph, Exception);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -1710,10 +1771,13 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
+    m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;

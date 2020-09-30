@@ -46,6 +46,8 @@ Algorithm Functions
    retworkx.dag_longest_path
    retworkx.dag_longest_path_length
    retworkx.number_weakly_connected_components
+   retworkx.weakly_connected_components
+   retworkx.is_weakly_connected
    retworkx.is_directed_acyclic_graph
    retworkx.is_isomorphic
    retworkx.is_isomorphic_node_match
@@ -83,3 +85,4 @@ Exceptions
    retworkx.DAGHasCycle
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
+   retworkx.NullGraph
