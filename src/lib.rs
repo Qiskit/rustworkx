@@ -157,7 +157,7 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 ///     in
 ///
 /// :returns: A list of sets where each set it a weakly connected component of
-/// the graph
+///     the graph
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, /)"]
@@ -201,6 +201,8 @@ pub fn weakly_connected_components(
 ///
 /// :returns: Whether the graph is weakly connected or not
 /// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
