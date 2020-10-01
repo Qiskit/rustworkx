@@ -763,25 +763,22 @@ where
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn graph_floyd_warshall_numpy(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
-
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         mat[[j, i]] = mat[[j, i]].min(edge_weight);
     }
@@ -829,26 +826,23 @@ fn graph_floyd_warshall_numpy(
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(as_undirected = "false", default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
 
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
-
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
     }
     // 0 out the diagonal
@@ -962,6 +956,21 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
+fn weight_callable(
+    py: Python,
+    weight_fn: &Option<PyObject>,
+    weight: PyObject,
+    default: f64,
+) -> PyResult<f64> {
+    match weight_fn {
+        Some(weight_fn) => {
+            let res = weight_fn.call1(py, (weight,))?;
+            res.extract(py)
+        }
+        None => Ok(default),
+    }
+}
+
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -969,7 +978,7 @@ fn layers(
 ///
 /// :param PyDiGraph graph: The DiGraph used to generate the adjacency matrix
 ///     from
-/// :param weight_fn callable: A callable object (function, lambda, etc) which
+/// :param callable weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
 ///     tells retworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
@@ -980,26 +989,27 @@ fn layers(
 ///
 ///         dag_adjacency_matrix(dag, weight_fn: lambda x: float(x))
 ///
-///     to cast the edge object as a float as the weight.
+///     to cast the edge object as a float as the weight. If this is not
+///     specified a default value (either ``default_weight`` or 1) will be used
+///     for all edges.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
 ///
 ///  :return: The adjacency matrix for the input dag as a numpy array
 ///  :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
-
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
@@ -1022,30 +1032,30 @@ fn digraph_adjacency_matrix(
 ///
 ///         graph_adjacency_matrix(graph, weight_fn: lambda x: float(x))
 ///
-///     to cast the edge object as a float as the weight.
+///     to cast the edge object as a float as the weight. If this is not
+///     specified a default value (either ``default_weight`` or 1) will be used
+///     for all edges.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
 ///
 /// :return: The adjacency matrix for the input dag as a numpy array
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
-
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
-
     Ok(matrix.into_pyarray(py).into())
 }
 
