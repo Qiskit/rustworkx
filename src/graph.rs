@@ -38,15 +38,38 @@ use petgraph::visit::{
     Visitable,
 };
 
-/// A class for creating undirected graphs.
+/// A class for creating undirected graphs
 ///
-/// The PyGraph class is constructed using the Rust library
-/// `petgraph <https://github.com/petgraph/petgraph>`__ around the
-/// ``StableGraph`` type. The limitations and quirks with this library and
-/// type dictate how this operates. The biggest thing to be aware of when using
-/// The PyGraph class is that an integer node and edge index is used for
-/// Accessing elements on the graph, it doesn't support associative access via
-/// The data/weight of nodes and edges.
+/// The PyGraph class is used to create an undirected graph. It can be a
+/// multigraph (have multiple edges between nodes). Each node and edge
+/// (although rarely used for edges) is indexed by an integer id. Additionally,
+/// each node and edge contains an arbitrary Python object as a weight/data
+/// payload. You can use this integer for access the data payload for example:
+///
+/// .. jupyter-execute::
+///
+///     import retworkx
+///
+///     graph = retworkx.PyGraph()
+///     data_payload = "An arbitrary Python object"
+///     node_index = graph.add_node(data_payload)
+///     print("Node Index: %s" % node_index)
+///     print(graph[node_index])
+///
+/// The PyDiGraph implements the Python mapping protocol for nodes so in
+/// addition to access you can also update the data payload with:
+///
+/// .. jupyter-execute::
+///
+///     import retworkx
+///
+///     graph = retworkx.PyGraph()
+///     data_payload = "An arbitrary Python object"
+///     node_index = graph.add_node(data_payload)
+///     graph[node_index] = "New Payload"
+///     print("Node Index: %s" % node_index)
+///     print(graph[node_index])
+///
 #[pyclass(module = "retworkx")]
 #[text_signature = "()"]
 pub struct PyGraph {
