@@ -825,7 +825,7 @@ fn graph_floyd_warshall_numpy(
 ///
 ///     to cast the edge object as a float as the weight.
 /// :param as_undirected: If set to true each directed edge will be treated as
-///     bidirection/undirected.
+///     bidirectional/undirected.
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
