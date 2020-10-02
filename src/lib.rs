@@ -772,7 +772,7 @@ fn graph_floyd_warshall_numpy(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     // Allocate empty matrix
-    let mut mat = Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY);
+    let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
@@ -842,7 +842,7 @@ fn digraph_floyd_warshall_numpy(
     let n = graph.node_count();
 
     // Allocate empty matrix
-    let mut mat = Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY);
+    let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
@@ -998,7 +998,7 @@ fn digraph_adjacency_matrix(
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array::<f64, _>::zeros((n, n).f());
+    let mut matrix = Array2::<f64>::zeros((n, n));
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
@@ -1040,7 +1040,7 @@ fn graph_adjacency_matrix(
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array::<f64, _>::zeros((n, n).f());
+    let mut matrix = Array2::<f64>::zeros((n, n));
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;

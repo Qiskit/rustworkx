@@ -1514,6 +1514,28 @@ impl PyDiGraph {
         }
         Ok(out_dict.into())
     }
+
+    /// Check if the graph is symmetric
+    ///
+    /// :returns: True if the graph is symmetric
+    /// :rtype: bool
+    pub fn is_symmetric(&self) -> bool {
+        let mut edges: HashSet<(NodeIndex, NodeIndex)> = HashSet::new();
+        for (source, target) in self
+            .graph
+            .edge_references()
+            .map(|edge| (edge.source(), edge.target()))
+        {
+            let edge = (source, target);
+            let reversed = (target, source);
+            if edges.contains(&reversed) {
+                edges.remove(&reversed);
+            } else {
+                edges.insert(edge);
+            }
+        }
+        edges.is_empty()
+    }
 }
 
 #[pyproto]
