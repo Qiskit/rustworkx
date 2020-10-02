@@ -826,7 +826,7 @@ fn graph_floyd_warshall_numpy(
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(as_undirected = "false", default_weight = "1.0")]
+#[pyfunction(default_weight = "1.0")]
 #[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
