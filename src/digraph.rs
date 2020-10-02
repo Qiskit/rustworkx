@@ -30,6 +30,8 @@ use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableDiGraph;
+use petgraph::stable_graph::StableUnGraph;
+
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
@@ -1535,6 +1537,37 @@ impl PyDiGraph {
             }
         }
         edges.is_empty()
+    }
+
+    /// Generate a new PyGraph object from this graph
+    ///
+    /// This will create a new :class:`~retworkx.PyGraph` object from this
+    /// graph. All edges in this graph will be created as undirected edges in
+    /// the new graph obejct.
+    /// Do note that the node and edge weights/data payloads will be passed
+    /// by reference to the new :class:`~retworkx.PyGraph` object.
+    ///
+    /// :returns: A new PyGraph object with an undirected edge for every
+    ///     directed edge in this graph
+    /// :rtype: PyGraph
+    pub fn to_undirected(&self, py: Python) -> crate::graph::PyGraph {
+        let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        for node_index in self.graph.node_indices() {
+            let node = self.graph[node_index].clone_ref(py);
+            let new_index = new_graph.add_node(node);
+            node_map.insert(node_index, new_index);
+        }
+        for edge in self.edge_references() {
+            let source = node_map.get(&edge.source()).unwrap();
+            let target = node_map.get(&edge.target()).unwrap();
+            let weight = edge.weight().clone_ref(py);
+            new_graph.add_edge(*source, *target, weight);
+        }
+        crate::graph::PyGraph {
+            graph: new_graph,
+            node_removed: false,
+        }
     }
 }
 
