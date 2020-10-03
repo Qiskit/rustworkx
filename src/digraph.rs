@@ -49,7 +49,8 @@ use super::{
 /// multigraph (have multiple edges between nodes). Each node and edge
 /// (although rarely used for edges) is indexed by an integer id. Additionally
 /// each node and edge contains an arbitrary Python object as a weight/data
-/// payload. You can use this integer for access the data payload for example:
+/// payload. You can use the index for access to the data payload as in the
+/// following example:
 ///
 /// .. jupyter-execute::
 ///
@@ -77,9 +78,8 @@ use super::{
 ///
 /// The PyDiGraph class has an option for real time cycle checking which can
 /// be used to ensure any edges added to the graph does not introduce a cycle.
-/// By default the real time cycle checking is disabled for performance,
-/// however you can opt-in to having the PyDiGraph class ensure
-/// that no cycles are added by setting the ``check_cycle`` attribute to True.
+/// By default the real time cycle checking feature is disabled for performance,
+/// however you can enable it by setting the ``check_cycle`` attribute to True.
 /// For example::
 ///
 ///     import retworkx
@@ -97,10 +97,10 @@ use super::{
 /// :meth:`~PyDiGraph.add_edge`, :meth:`~PyDiGraph.add_edges_from`,
 /// :meth:`~PyDiGraph.add_edges_from_no_data`,
 /// :meth:`~PyDiGraph.extend_from_edge_list`,  and
-/// :meth:`~PyDiGraph.extend_from_weighted_edge_list` comes with an increasing
-/// performance penalty as the size of the graph grows. If you're adding a node
-/// and edge at the same time leveraging :meth:`PyDiGraph.add_child` or
-/// :meth:`PyDiGraph.add_parent` will avoid this overhead.
+/// :meth:`~PyDiGraph.extend_from_weighted_edge_list` comes with a performance
+/// penalty that grows as the graph does. If you're adding a node and edge at the 
+/// same time leveraging :meth:`PyDiGraph.add_child` or :meth:`PyDiGraph.add_parent` 
+/// will avoid this overhead.
 #[pyclass(module = "retworkx", subclass)]
 #[text_signature = "(/, check_cycle=False)"]
 pub struct PyDiGraph {

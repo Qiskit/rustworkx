@@ -44,7 +44,8 @@ use petgraph::visit::{
 /// multigraph (have multiple edges between nodes). Each node and edge
 /// (although rarely used for edges) is indexed by an integer id. Additionally,
 /// each node and edge contains an arbitrary Python object as a weight/data
-/// payload. You can use this integer for access the data payload for example:
+/// payload. You can use the index for access to the data payload as in the
+/// following example:
 ///
 /// .. jupyter-execute::
 ///
