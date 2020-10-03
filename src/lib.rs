@@ -915,7 +915,7 @@ fn layers(
         let node_data = match dag.graph.node_weight(*layer_node) {
             Some(data) => data,
             None => {
-                return Err(InvalidNode::py_err(format!(
+                return Err(InvalidNode::new_err(format!(
                     "An index input in 'first_layer' {} is not a valid node index in the graph",
                     layer_node.index()),
                 ))
