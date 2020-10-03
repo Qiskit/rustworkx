@@ -25,8 +25,8 @@ class PyDAG(PyDiGraph):
     multigraph (have multiple edges between nodes). Each node and edge
     (although rarely used for edges) is indexed by an integer id. Additionally,
     each node and edge contains an arbitrary Python object as a weight/data
-    payload. 
-    
+    payload.
+
     You can use the index for access to the data payload as in the
     following example:
 
@@ -56,9 +56,9 @@ class PyDAG(PyDiGraph):
 
     The PyDAG class has an option for real time cycle checking which can
     be used to ensure any edges added to the graph does not introduce a cycle.
-    By default the real time cycle checking feature is disabled for performance,
-    however you can enable it by setting the ``check_cycle`` attribute to True.
-    For example::
+    By default the real time cycle checking feature is disabled for
+    performance, however you can enable it by setting the ``check_cycle``
+    attribute to True. For example::
 
         import retworkx
         dag = retworkx.PyDAG()
@@ -75,8 +75,9 @@ class PyDAG(PyDiGraph):
     :meth:`~PyDAG.add_edge`, :meth:`~PyDigraph.add_edges_from`,
     :meth:`~PyDAG.add_edges_from_no_data`,
     :meth:`~PyDAG.extend_from_edge_list`,  and
-    :meth:`~PyDAG.extend_from_weighted_edge_list` comes with a performance penalty
-    that grows as the graph does.  If you're adding a node and edge at the same time,
-    leveraging :meth:`PyDAG.add_child` or :meth:`PyDAG.add_parent` will avoid this overhead.
+    :meth:`~PyDAG.extend_from_weighted_edge_list` comes with a performance
+    penalty that grows as the graph does.  If you're adding a node and edge at
+    the same time, leveraging :meth:`PyDAG.add_child` or
+    :meth:`PyDAG.add_parent` will avoid this overhead.
     """
     pass

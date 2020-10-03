@@ -98,9 +98,9 @@ use super::{
 /// :meth:`~PyDiGraph.add_edges_from_no_data`,
 /// :meth:`~PyDiGraph.extend_from_edge_list`,  and
 /// :meth:`~PyDiGraph.extend_from_weighted_edge_list` comes with a performance
-/// penalty that grows as the graph does. If you're adding a node and edge at the 
-/// same time leveraging :meth:`PyDiGraph.add_child` or :meth:`PyDiGraph.add_parent` 
-/// will avoid this overhead.
+/// penalty that grows as the graph does. If you're adding a node and edge at
+/// the same time leveraging :meth:`PyDiGraph.add_child` or
+/// :meth:`PyDiGraph.add_parent` will avoid this overhead.
 #[pyclass(module = "retworkx", subclass)]
 #[text_signature = "(/, check_cycle=False)"]
 pub struct PyDiGraph {
