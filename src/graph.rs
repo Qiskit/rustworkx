@@ -263,26 +263,29 @@ impl PyGraph {
             dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
         let edges_list =
             dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
-        let mut index_count = 0;
-        for raw_index in nodes_dict.keys().iter() {
+        let mut node_indices: Vec<usize> = Vec::new();
+        for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
-            let index: usize = tmp_index.extract()?;
-            let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
-            if index > index_count + 1 {
-                let diff = index - (index_count + 1);
-                for _ in 0..diff {
+            node_indices.push(tmp_index.extract()?);
+        }
+        let max_index: usize = *node_indices.iter().max().unwrap();
+        let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
+        let mut node_count: usize = 0;
+        while max_index >= self.graph.node_bound() {
+            match nodes_dict.get_item(node_count) {
+                Some(raw_data) => {
+                    self.graph.add_node(raw_data.into());
+                }
+                None => {
                     let tmp_node = self.graph.add_node(py.None());
                     tmp_nodes.push(tmp_node);
                 }
-            }
-            let raw_data = nodes_dict.get_item(index).unwrap();
-            let out_index = self.graph.add_node(raw_data.into());
-            for tmp_node in tmp_nodes {
-                self.graph.remove_node(tmp_node);
-            }
-            index_count = out_index.index();
+            };
+            node_count += 1;
         }
-
+        for tmp_node in tmp_nodes {
+            self.graph.remove_node(tmp_node);
+        }
         for raw_edge in edges_list.iter() {
             let edge = raw_edge.downcast::<PyTuple>()?;
             let raw_p_index = edge.get_item(0).downcast::<PyLong>()?;
