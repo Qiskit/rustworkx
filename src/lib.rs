@@ -17,6 +17,7 @@ mod dijkstra;
 mod dot_utils;
 mod generators;
 mod graph;
+mod k_shortest_path;
 
 use std::cmp::{Ordering, Reverse};
 use std::collections::BinaryHeap;
@@ -568,6 +569,115 @@ fn graph_greedy_color(
     Ok(out_dict.into())
 }
 
+/// Compute the length of the kth shortest path
+///
+/// Computes the lengths of the kth shortest path from ``start`` to every
+/// reachable node.
+///
+/// Computes in :math:`O(k * (|E| + |V|*log(|V|)))` time (average).
+///
+/// :param PyGraph graph: The graph to find the shortest paths in
+/// :param int start: The node index to find the shortest paths from
+/// :param int k: The kth shortest path to find the lengths of
+/// :param edge_cost: A python callable that will receive an edge payload and
+///     return a float for the cost of that eedge
+/// :param int goal: An optional goal node index, if specified the output
+///     dictionary
+///
+/// :returns: A dict of lengths where the key is the destination node index and
+///     the value is the length of the path.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
+fn digraph_k_shortest_path_lengths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    start: usize,
+    k: usize,
+    edge_cost: PyObject,
+    goal: Option<usize>,
+) -> PyResult<PyObject> {
+    let out_goal = match goal {
+        Some(g) => Some(NodeIndex::new(g)),
+        None => None,
+    };
+    let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
+        let res = edge_cost.call1(py, (edge,))?;
+        Ok(res.extract(py)?)
+    };
+
+    let out_map = k_shortest_path::k_shortest_path(
+        graph,
+        NodeIndex::new(start),
+        out_goal,
+        k,
+        edge_cost_callable,
+    )?;
+    let out_dict = PyDict::new(py);
+    for (index, length) in out_map {
+        if (out_goal.is_some() && out_goal.unwrap() == index)
+            || out_goal.is_none()
+        {
+            out_dict.set_item(index.index(), length)?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
+/// Compute the length of the kth shortest path
+///
+/// Computes the lengths of the kth shortest path from ``start`` to every
+/// reachable node.
+///
+/// Computes in :math:`O(k * (|E| + |V|*log(|V|)))` time (average).
+///
+/// :param PyGraph graph: The graph to find the shortest paths in
+/// :param int start: The node index to find the shortest paths from
+/// :param int k: The kth shortest path to find the lengths of
+/// :param edge_cost: A python callable that will receive an edge payload and
+///     return a float for the cost of that eedge
+/// :param int goal: An optional goal node index, if specified the output
+///     dictionary
+///
+/// :returns: A dict of lengths where the key is the destination node index and
+///     the value is the length of the path.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
+fn graph_k_shortest_path_lengths(
+    py: Python,
+    graph: &graph::PyGraph,
+    start: usize,
+    k: usize,
+    edge_cost: PyObject,
+    goal: Option<usize>,
+) -> PyResult<PyObject> {
+    let out_goal = match goal {
+        Some(g) => Some(NodeIndex::new(g)),
+        None => None,
+    };
+    let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
+        let res = edge_cost.call1(py, (edge,))?;
+        Ok(res.extract(py)?)
+    };
+
+    let out_map = k_shortest_path::k_shortest_path(
+        graph,
+        NodeIndex::new(start),
+        out_goal,
+        k,
+        edge_cost_callable,
+    )?;
+    let out_dict = PyDict::new(py);
+    for (index, length) in out_map {
+        if (out_goal.is_some() && out_goal.unwrap() == index)
+            || out_goal.is_none()
+        {
+            out_dict.set_item(index.index(), length)?;
+        }
+    }
+    Ok(out_dict.into())
+}
 /// Return the shortest path lengths between ever pair of nodes that has a
 /// path connecting them
 ///
@@ -741,7 +851,7 @@ fn graph_floyd_warshall_numpy(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     // Allocate empty matrix
-    let mut mat = Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY);
+    let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
@@ -793,22 +903,25 @@ fn graph_floyd_warshall_numpy(
 ///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 ///
 ///     to cast the edge object as a float as the weight.
+/// :param as_undirected: If set to true each directed edge will be treated as
+///     bidirectional/undirected.
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(as_undirected = "false")]
+#[text_signature = "(graph, weight_fn, /, as_undirected=False)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: PyObject,
+    as_undirected: bool,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
 
     // Allocate empty matrix
-    let mut mat = Array2::<f64>::from_elem((n, n).f(), std::f64::INFINITY);
+    let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
@@ -819,6 +932,9 @@ fn digraph_floyd_warshall_numpy(
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight = weight_callable(&weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
+        if as_undirected {
+            mat[[j, i]] = mat[[j, i]].min(edge_weight);
+        }
     }
     // 0 out the diagonal
     for x in mat.diag_mut() {
@@ -961,7 +1077,7 @@ fn digraph_adjacency_matrix(
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array::<f64, _>::zeros((n, n).f());
+    let mut matrix = Array2::<f64>::zeros((n, n));
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
@@ -1003,7 +1119,7 @@ fn graph_adjacency_matrix(
     weight_fn: PyObject,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array::<f64, _>::zeros((n, n).f());
+    let mut matrix = Array2::<f64>::zeros((n, n));
 
     let weight_callable = |a: &PyObject| -> PyResult<f64> {
         let res = weight_fn.call1(py, (a,))?;
@@ -1709,6 +1825,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
