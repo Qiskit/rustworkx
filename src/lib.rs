@@ -824,17 +824,20 @@ fn graph_floyd_warshall_numpy(
 ///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 ///
 ///     to cast the edge object as a float as the weight.
+/// :param as_undirected: If set to true each directed edge will be treated as
+///     bidirectional/undirected.
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(as_undirected = "false")]
+#[text_signature = "(graph, weight_fn, /, as_undirected=False)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: PyObject,
+    as_undirected: bool,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
 
@@ -850,6 +853,9 @@ fn digraph_floyd_warshall_numpy(
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight = weight_callable(&weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
+        if as_undirected {
+            mat[[j, i]] = mat[[j, i]].min(edge_weight);
+        }
     }
     // 0 out the diagonal
     for x in mat.diag_mut() {

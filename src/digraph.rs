@@ -46,15 +46,42 @@ use super::{
 
 /// A class for creating directed graphs
 ///
-/// The PyDigraph class is constructed using the Rust library
-/// `petgraph <https://github.com/petgraph/petgraph>`__ around the
-/// ``StableGraph`` type. The limitations and quirks with this library and
-/// type dictate how this operates. The biggest thing to be aware of when using
-/// the PyDiGraph class is that an integer node and edge index is used for
-/// accessing elements on the graph, not the data/weight of nodes and edges. By
-/// default the PyDiGraph realtime cycle checking is disabled for performance,
-/// however you can opt-in to having the PyDiGraph class ensure that no cycles
-/// are added by setting the ``check_cycle`` attribute to True. For example::
+/// The PyDiGraph class is used to create a directed graph. It can be a
+/// multigraph (have multiple edges between nodes). Each node and edge
+/// (although rarely used for edges) is indexed by an integer id. Additionally
+/// each node and edge contains an arbitrary Python object as a weight/data
+/// payload. You can use the index for access to the data payload as in the
+/// following example:
+///
+/// .. jupyter-execute::
+///
+///     import retworkx
+///
+///     graph = retworkx.PyDiGraph()
+///     data_payload = "An arbitrary Python object"
+///     node_index = graph.add_node(data_payload)
+///     print("Node Index: %s" % node_index)
+///     print(graph[node_index])
+///
+/// The PyDiGraph implements the Python mapping protocol for nodes so in
+/// addition to access you can also update the data payload with:
+///
+/// .. jupyter-execute::
+///
+///     import retworkx
+///
+///     graph = retworkx.PyDiGraph()
+///     data_payload = "An arbitrary Python object"
+///     node_index = graph.add_node(data_payload)
+///     graph[node_index] = "New Payload"
+///     print("Node Index: %s" % node_index)
+///     print(graph[node_index])
+///
+/// The PyDiGraph class has an option for real time cycle checking which can
+/// be used to ensure any edges added to the graph does not introduce a cycle.
+/// By default the real time cycle checking feature is disabled for performance,
+/// however you can enable it by setting the ``check_cycle`` attribute to True.
+/// For example::
 ///
 ///     import retworkx
 ///     dag = retworkx.PyDiGraph()
@@ -67,7 +94,14 @@ use super::{
 ///
 /// With check_cycle set to true any calls to :meth:`PyDiGraph.add_edge` will
 /// ensure that no cycles are added, ensuring that the PyDiGraph class truly
-/// represents a directed acyclic graph.
+/// represents a directed acyclic graph. Do note that this cycle checking on
+/// :meth:`~PyDiGraph.add_edge`, :meth:`~PyDiGraph.add_edges_from`,
+/// :meth:`~PyDiGraph.add_edges_from_no_data`,
+/// :meth:`~PyDiGraph.extend_from_edge_list`,  and
+/// :meth:`~PyDiGraph.extend_from_weighted_edge_list` comes with a performance
+/// penalty that grows as the graph does. If you're adding a node and edge at
+/// the same time leveraging :meth:`PyDiGraph.add_child` or
+/// :meth:`PyDiGraph.add_parent` will avoid this overhead.
 #[pyclass(module = "retworkx", subclass)]
 #[text_signature = "(/, check_cycle=False)"]
 pub struct PyDiGraph {
@@ -1557,6 +1591,28 @@ impl PyDiGraph {
             cycle_state: algo::DfsSpace::default(),
             check_cycle: self.check_cycle,
         }
+    }
+
+    /// Check if the graph is symmetric
+    ///
+    /// :returns: True if the graph is symmetric
+    /// :rtype: bool
+    pub fn is_symmetric(&self) -> bool {
+        let mut edges: HashSet<(NodeIndex, NodeIndex)> = HashSet::new();
+        for (source, target) in self
+            .graph
+            .edge_references()
+            .map(|edge| (edge.source(), edge.target()))
+        {
+            let edge = (source, target);
+            let reversed = (target, source);
+            if edges.contains(&reversed) {
+                edges.remove(&reversed);
+            } else {
+                edges.insert(edge);
+            }
+        }
+        edges.is_empty()
     }
 }
 
