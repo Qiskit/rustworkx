@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// This module is copied and forked from the upstream petgraph repository,
-// specifically:
+// This module was originally copied and forked from the upstream petgraph
+// repository, specifically:
 // https://github.com/petgraph/petgraph/blob/0.5.1/src/dijkstra.rs
 // this was necessary to modify the error handling to allow python callables
 // to be use for the input functions for edge_cost and return any exceptions
@@ -97,6 +97,7 @@ pub fn dijkstra<G, F, K>(
     start: G::NodeId,
     goal: Option<G::NodeId>,
     mut edge_cost: F,
+    mut path: Option<&mut HashMap<G::NodeId, Vec<G::NodeId>>>,
 ) -> PyResult<HashMap<G::NodeId, K>>
 where
     G: IntoEdges + Visitable,
@@ -134,6 +135,16 @@ where
                 Vacant(ent) => {
                     ent.insert(next_score);
                     visit_next.push(MinScored(next_score, next));
+                    if path.is_some() {
+                        let mut node_path =
+                            path.as_mut().unwrap().get(&node).unwrap().clone();
+                        path.as_mut().unwrap().entry(next).or_insert({
+                            let mut new_vec: Vec<G::NodeId> = Vec::new();
+                            new_vec.append(&mut node_path);
+                            new_vec.push(next);
+                            new_vec
+                        });
+                    }
                 }
             }
         }

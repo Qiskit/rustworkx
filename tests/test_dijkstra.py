@@ -39,6 +39,240 @@ class TestDijkstraDiGraph(unittest.TestCase):
         expected = {4: 23.0}
         self.assertEqual(expected, path)
 
+    def test_dijkstra_path(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        g.add_edges_from(edge_list)
+        paths = retworkx.digraph_dijkstra_shortest_paths(g, a)
+        expected = {
+            1: [0, 1],
+            2: [0, 3, 2],
+            3: [0, 3],
+            4: [0, 3, 4],
+            5: [0, 1, 5],
+        }
+        self.assertEqual(expected, paths)
+
+    def test_dijkstra_path_with_weight_fn(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        g.add_edges_from(edge_list)
+        paths = retworkx.digraph_dijkstra_shortest_paths(
+            g, a, weight_fn=lambda x: x)
+        expected = {
+            1: [0, 1],
+            2: [0, 1, 2],
+            3: [0, 3],
+            4: [0, 3, 4],
+            5: [0, 1, 5],
+        }
+        self.assertEqual(expected, paths)
+
+    def test_dijkstra_path_with_target(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        g.add_edges_from(edge_list)
+        paths = retworkx.digraph_dijkstra_shortest_paths(g, a, target=e)
+        expected = {
+            4: [0, 3, 4],
+        }
+        self.assertEqual(expected, paths)
+
+    def test_dijkstra_path_with_weight_fn_and_target(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        g.add_edges_from(edge_list)
+        paths = retworkx.digraph_dijkstra_shortest_paths(
+            g, a, target=e, weight_fn=lambda x: x)
+        expected = {
+            4: [0, 3, 4],
+        }
+        self.assertEqual(expected, paths)
+
+    def test_dijkstra_path_undirected(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        g.add_edges_from(edge_list)
+        paths = retworkx.digraph_dijkstra_shortest_paths(g, a,
+                                                         as_undirected=True)
+        expected = {
+            1: [0, 1],
+            2: [0, 2],
+            3: [0, 3],
+            4: [0, 3, 4],
+            5: [0, 1, 5],
+        }
+        self.assertEqual(expected, paths)
+
+    def test_dijkstra_path_undirected_with_weight_fn(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        g.add_edges_from(edge_list)
+        paths = retworkx.digraph_dijkstra_shortest_paths(g, a,
+                                                         weight_fn=lambda x: x,
+                                                         as_undirected=True)
+        expected = {
+            1: [0, 1],
+            2: [0, 2],
+            3: [0, 3],
+            4: [0, 3, 4],
+            5: [0, 1, 5],
+        }
+        self.assertEqual(expected, paths)
+
+    def test_dijkstra_path_undirected_with_target(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        g.add_edges_from(edge_list)
+        paths = retworkx.digraph_dijkstra_shortest_paths(g, a,
+                                                         target=e,
+                                                         as_undirected=True)
+        expected = {
+            4: [0, 3, 4],
+        }
+        self.assertEqual(expected, paths)
+
+    def test_dijkstra_path_undirected_with_weight_fn(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        g.add_edges_from(edge_list)
+        paths = retworkx.digraph_dijkstra_shortest_paths(g, a,
+                                                         target=e,
+                                                         weight_fn=lambda x: x,
+                                                         as_undirected=True)
+        expected = {
+            4: [0, 3, 4],
+        }
+        self.assertEqual(expected, paths)
+
     def test_dijkstra_with_no_goal_set(self):
         g = retworkx.PyDAG()
         a = g.add_node("A")
@@ -67,6 +301,15 @@ class TestDijkstraDiGraph(unittest.TestCase):
         g.add_node('B')
         path = retworkx.digraph_dijkstra_shortest_path_lengths(
             g, a, lambda x: float(x))
+        expected = {}
+        self.assertEqual(expected, path)
+
+    def test_dijkstra_path_with_no_path(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node('A')
+        g.add_node('B')
+        path = retworkx.digraph_dijkstra_shortest_paths(
+            g, a)
         expected = {}
         self.assertEqual(expected, path)
 
@@ -112,6 +355,30 @@ class TestDijkstraGraph(unittest.TestCase):
         expected = {4: 20.0}
         self.assertEqual(expected, path)
 
+    def test_dijkstra_path(self):
+        g = retworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        g.add_edge(a, b, 7)
+        g.add_edge(c, a, 9)
+        g.add_edge(a, d, 14)
+        g.add_edge(b, c, 10)
+        g.add_edge(d, c, 2)
+        g.add_edge(d, e, 9)
+        g.add_edge(b, f, 15)
+        g.add_edge(c, f, 11)
+        g.add_edge(e, f, 6)
+        path = retworkx.graph_dijkstra_shortest_paths(
+            g, a, weight_fn=lambda x: float(x), target=e)
+        expected = {
+            4: [0, 3, 4]
+        }
+        self.assertEqual(expected, path)
+
     def test_dijkstra_with_no_goal_set(self):
         g = retworkx.PyGraph()
         a = g.add_node("A")
@@ -134,12 +401,49 @@ class TestDijkstraGraph(unittest.TestCase):
         expected = {1: 1.0, 2: 1.0, 3: 1.0, 4: 2.0, 5: 2.0}
         self.assertEqual(expected, path)
 
+    def test_dijkstra_path_with_no_goal_set(self):
+        g = retworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+        d = g.add_node("D")
+        e = g.add_node("E")
+        f = g.add_node("F")
+        g.add_edge(a, b, 7)
+        g.add_edge(c, a, 9)
+        g.add_edge(a, d, 14)
+        g.add_edge(b, c, 10)
+        g.add_edge(d, c, 2)
+        g.add_edge(d, e, 9)
+        g.add_edge(b, f, 15)
+        g.add_edge(c, f, 11)
+        g.add_edge(e, f, 6)
+        path = retworkx.graph_dijkstra_shortest_paths(
+            g, a)
+        expected = {
+            1: [0, 1],
+            2: [0, 2],
+            3: [0, 3],
+            4: [0, 3, 4],
+            5: [0, 1, 5],
+        }
+        self.assertEqual(expected, path)
+
     def test_dijkstra_with_no_path(self):
         g = retworkx.PyGraph()
         a = g.add_node('A')
         g.add_node('B')
         path = retworkx.graph_dijkstra_shortest_path_lengths(
             g, a, lambda x: float(x))
+        expected = {}
+        self.assertEqual(expected, path)
+
+    def test_dijkstra_path_with_no_path(self):
+        g = retworkx.PyGraph()
+        a = g.add_node('A')
+        g.add_node('B')
+        path = retworkx.graph_dijkstra_shortest_paths(
+            g, a, weight_fn=lambda x: float(x))
         expected = {}
         self.assertEqual(expected, path)
 
