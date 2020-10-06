@@ -53,6 +53,8 @@ Algorithm Functions
    retworkx.descendants
    retworkx.ancestors
    retworkx.lexicographical_topological_sort
+   retworkx.graph_distance_matrix
+   retworkx.digraph_distance_matrix
    retworkx.floyd_warshall
    retworkx.graph_floyd_warshall_numpy
    retworkx.digraph_floyd_warshall_numpy
