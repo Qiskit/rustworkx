@@ -994,8 +994,8 @@ pub fn digraph_distance_matrix(
     parallel_threshold: usize,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array2::<usize>::zeros((n, n));
-    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<usize>| {
+    let mut matrix = Array2::<f64>::zeros((n, n));
+    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
         let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
         let start_index = NodeIndex::new(index);
         let mut level = 0;
@@ -1009,7 +1009,7 @@ pub fn digraph_distance_matrix(
                 if !seen.contains_key(&v) {
                     seen.insert(v, level);
                     found.push(v);
-                    row[[v.index()]] = level;
+                    row[[v.index()]] = level as f64;
                 }
             }
             if seen.len() == n {
@@ -1064,8 +1064,8 @@ pub fn graph_distance_matrix(
     parallel_threshold: usize,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array2::<usize>::zeros((n, n));
-    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<usize>| {
+    let mut matrix = Array2::<f64>::zeros((n, n));
+    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
         let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
         let start_index = NodeIndex::new(index);
         let mut level = 0;
@@ -1079,7 +1079,7 @@ pub fn graph_distance_matrix(
                 if !seen.contains_key(&v) {
                     seen.insert(v, level);
                     found.push(v);
-                    row[[v.index()]] = level;
+                    row[[v.index()]] = level as f64;
                 }
             }
             if seen.len() == n {
