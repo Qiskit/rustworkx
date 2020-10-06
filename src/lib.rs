@@ -968,6 +968,126 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
+
+/// Get the distance matrix for a directed graph
+///
+/// This differs from functions like digraph_floyd_warshall_numpy in that the
+/// edge weight/data payload is not used and each edge is treated as a
+/// distance of 1.
+///
+/// This function is also multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``paralllel_threshold`` (it
+/// defaults to 100). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyDiGraph graph: The graph to get the distance matrix for
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the distance matrix in parallel at. It defaults to 100, but this can
+///     be tuned
+///
+/// :returns: The distance matrix
+/// :rtype: numpy.ndarray
+#[pyfunction(parallel_threshold="100")]
+#[text_signature = "(graph, /, parallel_threshold=100)"]
+pub fn digraph_distance_matrix(py: Python, graph: &digraph::PyDiGraph, parallel_threshold: usize) -> PyResult<PyObject> {
+    let n = graph.node_count();
+    let mut matrix = Array2::<usize>::zeros((n, n));
+    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<usize>| {
+        let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
+        let start_index = NodeIndex::new(index);
+        let mut level = 0;
+        let mut next_level: HashSet<NodeIndex> = HashSet::new();
+        next_level.insert(start_index);
+        while !next_level.is_empty() {
+            let this_level = next_level;
+            next_level = HashSet::new();
+            let mut found: Vec<NodeIndex> = Vec::new();
+            for v in this_level {
+                if !seen.contains_key(&v) {
+                    seen.insert(v, level);
+                    found.push(v);
+                    row[[v.index()]] = level;
+                }
+            }
+            if seen.len() == n {
+                return;
+            }
+            for node in found {
+                for v in graph.graph.neighbors(node) {
+                    next_level.insert(v);
+                }
+            }
+            level += 1
+        }
+    };
+    if n < parallel_threshold {
+        matrix.axis_iter_mut(Axis(0)).into_iter().enumerate().for_each(|(index, row)| bfs_traversal(index, row));
+    } else {
+        matrix.axis_iter_mut(Axis(0)).into_par_iter().enumerate().for_each(|(index, row)| bfs_traversal(index, row));
+    }
+    Ok(matrix.into_pyarray(py).into())
+}
+
+/// Get the distance matrix for an undirected graph
+///
+/// This differs from functions like digraph_floyd_warshall_numpy in that the
+/// edge weight/data payload is not used and each edge is treated as a
+/// distance of 1.
+///
+/// This function is also multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``paralllel_threshold`` (it
+/// defaults to 100). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyGraph graph: The graph to get the distance matrix for
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the distance matrix in parallel at. It defaults to 100, but this can
+///     be tuned
+///
+/// :returns: The distance matrix
+/// :rtype: numpy.ndarray
+#[pyfunction(parallel_threshold="100")]
+#[text_signature = "(graph, /, parallel_threshold=100)"]
+pub fn graph_distance_matrix(py: Python, graph: &graph::PyGraph, parallel_threshold: usize) -> PyResult<PyObject> {
+    let n = graph.node_count();
+    let mut matrix = Array2::<usize>::zeros((n, n));
+    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<usize>| {
+        let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
+        let start_index = NodeIndex::new(index);
+        let mut level = 0;
+        let mut next_level: HashSet<NodeIndex> = HashSet::new();
+        next_level.insert(start_index);
+        while !next_level.is_empty() {
+            let this_level = next_level;
+            next_level = HashSet::new();
+            let mut found: Vec<NodeIndex> = Vec::new();
+            for v in this_level {
+                if !seen.contains_key(&v) {
+                    seen.insert(v, level);
+                    found.push(v);
+                    row[[v.index()]] = level;
+                }
+            }
+            if seen.len() == n {
+                return;
+            }
+            for node in found {
+                for v in graph.graph.neighbors(node) {
+                    next_level.insert(v);
+                }
+            }
+            level += 1
+        }
+    };
+    if n < parallel_threshold {
+        matrix.axis_iter_mut(Axis(0)).enumerate().for_each(|(index, row)| bfs_traversal(index, row));
+    } else {
+        // Parallelize by row and iterate from each row index in BFS order
+        matrix.axis_iter_mut(Axis(0)).into_par_iter().enumerate().for_each(|(index, row)| bfs_traversal(index, row));
+    }
+    Ok(matrix.into_pyarray(py).into())
+}
+
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -1731,6 +1851,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
+    m.add_wrapped(wrap_pyfunction!(graph_distance_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
