@@ -39,3 +39,8 @@ class TestDeepcopy(unittest.TestCase):
         dag_b = copy.deepcopy(dag_a)
         self.assertIsInstance(dag_b, retworkx.PyGraph)
         self.assertEqual([node_a, node_c], dag_b.node_indexes())
+
+    def test_deepcopy_empty(self):
+        dag = retworkx.PyGraph()
+        empty_copy = copy.deepcopy(dag)
+        self.assertEqual(len(empty_copy), 0)
