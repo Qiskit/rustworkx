@@ -976,18 +976,18 @@ fn layers(
 ///
 /// This function is also multithreaded and will run in parallel if the number
 /// of nodes in the graph is above the value of ``paralllel_threshold`` (it
-/// defaults to 100). If the function will be running in parallel the env var
+/// defaults to 300). If the function will be running in parallel the env var
 /// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 ///
 /// :param PyDiGraph graph: The graph to get the distance matrix for
 /// :param int parallel_threshold: The number of nodes to calculate the
-///     the distance matrix in parallel at. It defaults to 100, but this can
+///     the distance matrix in parallel at. It defaults to 300, but this can
 ///     be tuned
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "100")]
-#[text_signature = "(graph, /, parallel_threshold=100)"]
+#[pyfunction(parallel_threshold = "300")]
+#[text_signature = "(graph, /, parallel_threshold=300)"]
 pub fn digraph_distance_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -1046,18 +1046,18 @@ pub fn digraph_distance_matrix(
 ///
 /// This function is also multithreaded and will run in parallel if the number
 /// of nodes in the graph is above the value of ``paralllel_threshold`` (it
-/// defaults to 100). If the function will be running in parallel the env var
+/// defaults to 300). If the function will be running in parallel the env var
 /// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 ///
 /// :param PyGraph graph: The graph to get the distance matrix for
 /// :param int parallel_threshold: The number of nodes to calculate the
-///     the distance matrix in parallel at. It defaults to 100, but this can
+///     the distance matrix in parallel at. It defaults to 300, but this can
 ///     be tuned
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "100")]
-#[text_signature = "(graph, /, parallel_threshold=100)"]
+#[pyfunction(parallel_threshold = "300")]
+#[text_signature = "(graph, /, parallel_threshold=300)"]
 pub fn graph_distance_matrix(
     py: Python,
     graph: &graph::PyGraph,
