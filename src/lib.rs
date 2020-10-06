@@ -968,7 +968,6 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
-
 /// Get the distance matrix for a directed graph
 ///
 /// This differs from functions like digraph_floyd_warshall_numpy in that the
@@ -987,9 +986,13 @@ fn layers(
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold="100")]
+#[pyfunction(parallel_threshold = "100")]
 #[text_signature = "(graph, /, parallel_threshold=100)"]
-pub fn digraph_distance_matrix(py: Python, graph: &digraph::PyDiGraph, parallel_threshold: usize) -> PyResult<PyObject> {
+pub fn digraph_distance_matrix(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    parallel_threshold: usize,
+) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<usize>::zeros((n, n));
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<usize>| {
@@ -1021,9 +1024,16 @@ pub fn digraph_distance_matrix(py: Python, graph: &digraph::PyDiGraph, parallel_
         }
     };
     if n < parallel_threshold {
-        matrix.axis_iter_mut(Axis(0)).into_iter().enumerate().for_each(|(index, row)| bfs_traversal(index, row));
+        matrix
+            .axis_iter_mut(Axis(0))
+            .enumerate()
+            .for_each(|(index, row)| bfs_traversal(index, row));
     } else {
-        matrix.axis_iter_mut(Axis(0)).into_par_iter().enumerate().for_each(|(index, row)| bfs_traversal(index, row));
+        matrix
+            .axis_iter_mut(Axis(0))
+            .into_par_iter()
+            .enumerate()
+            .for_each(|(index, row)| bfs_traversal(index, row));
     }
     Ok(matrix.into_pyarray(py).into())
 }
@@ -1046,9 +1056,13 @@ pub fn digraph_distance_matrix(py: Python, graph: &digraph::PyDiGraph, parallel_
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold="100")]
+#[pyfunction(parallel_threshold = "100")]
 #[text_signature = "(graph, /, parallel_threshold=100)"]
-pub fn graph_distance_matrix(py: Python, graph: &graph::PyGraph, parallel_threshold: usize) -> PyResult<PyObject> {
+pub fn graph_distance_matrix(
+    py: Python,
+    graph: &graph::PyGraph,
+    parallel_threshold: usize,
+) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<usize>::zeros((n, n));
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<usize>| {
@@ -1080,10 +1094,17 @@ pub fn graph_distance_matrix(py: Python, graph: &graph::PyGraph, parallel_thresh
         }
     };
     if n < parallel_threshold {
-        matrix.axis_iter_mut(Axis(0)).enumerate().for_each(|(index, row)| bfs_traversal(index, row));
+        matrix
+            .axis_iter_mut(Axis(0))
+            .enumerate()
+            .for_each(|(index, row)| bfs_traversal(index, row));
     } else {
         // Parallelize by row and iterate from each row index in BFS order
-        matrix.axis_iter_mut(Axis(0)).into_par_iter().enumerate().for_each(|(index, row)| bfs_traversal(index, row));
+        matrix
+            .axis_iter_mut(Axis(0))
+            .into_par_iter()
+            .enumerate()
+            .for_each(|(index, row)| bfs_traversal(index, row));
     }
     Ok(matrix.into_pyarray(py).into())
 }
