@@ -244,7 +244,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         }
         self.assertEqual(expected, paths)
 
-    def test_dijkstra_path_undirected_with_weight_fn(self):
+    def test_dijkstra_path_undirected_with_weight_fn_and_target(self):
         g = retworkx.PyDiGraph()
         a = g.add_node("A")
         b = g.add_node("B")
