@@ -58,7 +58,7 @@ jobs:
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U twine cibuildwheel==1.5.2
+        - pip install -U twine cibuildwheel==1.6.1
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -78,7 +78,7 @@ jobs:
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U twine cibuildwheel==1.5.2
+        - pip install -U twine cibuildwheel==1.6.1
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -98,6 +98,6 @@ jobs:
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - sudo pip install -U twine cibuildwheel==1.5.2
+        - sudo pip install -U twine cibuildwheel==1.6.1
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
