@@ -78,3 +78,34 @@ class TestDistanceMatrix(unittest.TestCase):
                                 [0., 0., 0., 0., 0., 0., 1.],
                                 [0., 0., 0., 0., 0., 0., 0.]])
         self.assertTrue(numpy.array_equal(dist, expected))
+
+    def test_digraph_distance_matrix_as_undirected(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(7)))
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+        dist = retworkx.digraph_distance_matrix(graph, as_undirected=True)
+        expected = numpy.array([[0., 1., 2., 3., 3., 2., 1.],
+                                [1., 0., 1., 2., 3., 3., 2.],
+                                [2., 1., 0., 1., 2., 3., 3.],
+                                [3., 2., 1., 0., 1., 2., 3.],
+                                [3., 3., 2., 1., 0., 1., 2.],
+                                [2., 3., 3., 2., 1., 0., 1.],
+                                [1., 2., 3., 3., 2., 1., 0.]])
+        self.assertTrue(numpy.array_equal(dist, expected))
+
+    def test_digraph_distance_matrix_parallel_as_undirected(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(7)))
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+        dist = retworkx.digraph_distance_matrix(graph, parallel_threshold=5,
+                                                as_undirected=True)
+        expected = numpy.array([[0., 1., 2., 3., 3., 2., 1.],
+                                [1., 0., 1., 2., 3., 3., 2.],
+                                [2., 1., 0., 1., 2., 3., 3.],
+                                [3., 2., 1., 0., 1., 2., 3.],
+                                [3., 3., 2., 1., 0., 1., 2.],
+                                [2., 3., 3., 2., 1., 0., 1.],
+                                [1., 2., 3., 3., 2., 1., 0.]])
+        self.assertTrue(numpy.array_equal(dist, expected))

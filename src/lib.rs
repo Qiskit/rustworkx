@@ -983,15 +983,19 @@ fn layers(
 /// :param int parallel_threshold: The number of nodes to calculate the
 ///     the distance matrix in parallel at. It defaults to 300, but this can
 ///     be tuned
+/// :param bool as_undirected: If set to ``True`` the input directed graph
+///     will be treat as if each edge was bidirectional/undirected in the
+///     output distance matrix.
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "300")]
-#[text_signature = "(graph, /, parallel_threshold=300)"]
+#[pyfunction(parallel_threshold = "300", as_undirected = "false")]
+#[text_signature = "(graph, /, parallel_threshold=300, as_undirected=False)"]
 pub fn digraph_distance_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
     parallel_threshold: usize,
+    as_undirected: bool,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
@@ -1016,8 +1020,19 @@ pub fn digraph_distance_matrix(
                 return;
             }
             for node in found {
-                for v in graph.graph.neighbors(node) {
+                for v in graph
+                    .graph
+                    .neighbors_directed(node, petgraph::Direction::Outgoing)
+                {
                     next_level.insert(v);
+                }
+                if as_undirected {
+                    for v in graph
+                        .graph
+                        .neighbors_directed(node, petgraph::Direction::Incoming)
+                    {
+                        next_level.insert(v);
+                    }
                 }
             }
             level += 1
