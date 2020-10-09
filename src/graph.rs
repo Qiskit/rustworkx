@@ -292,6 +292,9 @@ impl PyGraph {
             let tmp_index = raw_index.downcast::<PyLong>()?;
             node_indices.push(tmp_index.extract()?);
         }
+        if node_indices.is_empty() {
+            return Ok(());
+        }
         let max_index: usize = *node_indices.iter().max().unwrap();
         let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
         let mut node_count: usize = 0;

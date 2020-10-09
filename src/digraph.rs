@@ -378,6 +378,9 @@ impl PyDiGraph {
             let tmp_index = raw_index.downcast::<PyLong>()?;
             node_indices.push(tmp_index.extract()?);
         }
+        if node_indices.is_empty() {
+            return Ok(());
+        }
         let max_index: usize = *node_indices.iter().max().unwrap();
         if max_index + 1 != node_indices.len() {
             self.node_removed = true;
