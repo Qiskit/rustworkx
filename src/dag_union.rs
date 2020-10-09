@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use digraph::PyDiGraph;
+use crate::digraph::PyDiGraph;
 use petgraph::algo;
 use petgraph::graph::EdgeIndex;
 use pyo3::prelude::*;
