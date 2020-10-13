@@ -1045,7 +1045,7 @@ impl PyGraph {
         node_map: HashMap<usize, (usize, PyObject)>,
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
-    ) -> PyResult<HashMap<usize, usize>> {
+    ) -> PyResult<PyObject> {
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
 
         fn node_weight_callable(
@@ -1108,10 +1108,7 @@ impl PyGraph {
         for (orig_node, new_node) in new_node_map.iter() {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
-        Ok(new_node_map
-            .iter()
-            .map(|(old, new)| (old.index(), new.index()))
-            .collect())
+        Ok(out_dict.into())
     }
 }
 
