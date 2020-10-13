@@ -1473,7 +1473,7 @@ impl PyDiGraph {
         node_map: HashMap<usize, (usize, PyObject)>,
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
-    ) -> PyResult<HashMap<usize, usize>> {
+    ) -> PyResult<PyObject> {
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
 
         // TODO: Reimplement this without looping over the graphs
@@ -1504,10 +1504,11 @@ impl PyDiGraph {
                 weight.clone_ref(py),
             );
         }
-        Ok(new_node_map
-            .iter()
-            .map(|(old, new)| (old.index(), new.index()))
-            .collect())
+        let out_dict = PyDict::new(py);
+        for (orig_node, new_node) in new_node_map.iter() {
+            out_dict.set_item(orig_node.index(), new_node.index())?;
+        }
+        Ok(out_dict.into())
     }
 
     /// Check if the graph is symmetric
