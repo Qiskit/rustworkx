@@ -440,8 +440,9 @@ fn lexicographical_topological_sort(
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 fn graph_greedy_color(
+    py: Python,
     graph: &graph::PyGraph,
-) -> PyResult<HashMap<usize, usize>> {
+) -> PyResult<PyObject> {
     let mut colors: HashMap<usize, usize> = HashMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let mut sort_map: HashMap<NodeIndex, usize> = HashMap::new();
@@ -468,7 +469,11 @@ fn graph_greedy_color(
         }
         colors.insert(u_index.index(), count);
     }
-    Ok(colors)
+    let out_dict = PyDict::new(py);
+    for (index, color) in colors {
+        out_dict.set_item(index, color)?;
+    }
+    Ok(out_dict.into())
 }
 
 /// Compute the length of the kth shortest path
