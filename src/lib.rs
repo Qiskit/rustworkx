@@ -1696,6 +1696,86 @@ pub fn strongly_connected_components(
         .collect()
 }
 
+/// Return the first cycle encountered during DFS of a given PyDiGraph
+///
+/// :param PyDiGraph graph: The graph to find the cycle in
+/// :param int root: Optional index for starting node for cycle
+///
+/// :returns: A list describing the cycle. The index of node ids which
+///     forms a cycle (loop) in the input graph
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /, root=None)"]
+pub fn digraph_find_cycle(
+    graph: &digraph::PyDiGraph,
+    root: Option<usize>,
+) -> Vec<(usize, usize)> {
+    let mut root_node = root;
+    let mut graph_nodes: HashSet<NodeIndex> =
+        graph.graph.node_indices().collect();
+    let mut cycle: Vec<(usize, usize)> = Vec::new();
+    let temp_value: NodeIndex;
+    // If root_node is not set get an arbitrary node from the set of graph
+    // nodes we've not "examined"
+    let root_index = match root_node {
+        Some(root_value) => NodeIndex::new(root_value),
+        None => {
+            temp_value = *graph_nodes.iter().next().unwrap();
+            graph_nodes.remove(&temp_value);
+            temp_value
+        }
+    };
+
+    // Stack (ie "pushdown list") of vertices already in the spanning tree
+    let mut stack: Vec<NodeIndex> = Vec::new();
+    stack.push(root_index);
+    // map to store parent of a node
+    let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+    let mut visiting = HashSet::new();
+    let mut visited = HashSet::new();
+    while !stack.is_empty() {
+        let mut z = stack.pop().unwrap();
+        stack.push(z);
+        visiting.insert(z);
+
+        let children = graph
+            .graph
+            .neighbors_directed(z, petgraph::Direction::Outgoing);
+
+        for child in children {
+            //cycle is found
+            if visiting.contains(&child) {
+                cycle.push((z.index(), child.index()));
+                //backtrack
+                loop {
+                    if z == child {
+                        cycle.reverse();
+                        break;
+                    }
+                    cycle.push((pred[&z].index(), z.index()));
+                    z = pred[&z];
+                }
+                return cycle;
+            }
+            //if an unexplored node is encountered
+            if !visited.contains(&child) {
+                stack.push(child);
+                pred.insert(child, z);
+            }
+        }
+
+        let mut top = stack.pop().unwrap();
+        stack.push(top);
+        //if no further children and explored, move to visited
+        if top.index() == z.index() {
+            stack.pop();
+            visiting.remove(&z);
+            visited.insert(z);
+        }
+    }
+    cycle
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -1746,6 +1826,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_class::<digraph::PyDiGraph>()?;
