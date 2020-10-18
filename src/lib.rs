@@ -27,7 +27,7 @@ use hashbrown::{HashMap, HashSet};
 use pyo3::create_exception;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PySet};
+use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
 use pyo3::Python;
@@ -305,7 +305,7 @@ fn bfs_successors(
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
+fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(graph);
@@ -315,13 +315,7 @@ fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    let set = PySet::empty(py).expect("Failed to construct empty set");
-    {
-        for val in out_set {
-            set.add(val).expect("Failed to add to set");
-        }
-    }
-    set.into()
+    out_set
 }
 
 /// Return the descendants of a node in a graph.
@@ -338,11 +332,7 @@ fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn descendants(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-    node: usize,
-) -> PyObject {
+fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(graph, index, None, |_| 1);
@@ -351,13 +341,7 @@ fn descendants(
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    let set = PySet::empty(py).expect("Failed to construct empty set");
-    {
-        for val in out_set {
-            set.add(val).expect("Failed to add to set");
-        }
-    }
-    set.into()
+    out_set
 }
 
 /// Get the lexicographical topological sorted nodes from the provided DAG
