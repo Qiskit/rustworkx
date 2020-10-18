@@ -1048,24 +1048,10 @@ impl PyGraph {
     ) -> PyResult<PyObject> {
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
 
-        fn node_weight_callable(
-            py: Python,
-            node_map: &Option<PyObject>,
-            node: &PyObject,
-        ) -> PyResult<PyObject> {
-            match node_map {
-                Some(node_map) => {
-                    let res = node_map.call1(py, (node,))?;
-                    Ok(res.to_object(py))
-                }
-                None => Ok(node.clone_ref(py)),
-            }
-        }
-
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph
         for node in other.graph.node_indices() {
-            let new_index = self.graph.add_node(node_weight_callable(
+            let new_index = self.graph.add_node(weight_transform_callable(
                 py,
                 &node_map_func,
                 &other.graph[node],
@@ -1073,26 +1059,12 @@ impl PyGraph {
             new_node_map.insert(node, new_index);
         }
 
-        fn edge_weight_callable(
-            py: Python,
-            edge_map: &Option<PyObject>,
-            edge: &PyObject,
-        ) -> PyResult<PyObject> {
-            match edge_map {
-                Some(edge_map) => {
-                    let res = edge_map.call1(py, (edge,))?;
-                    Ok(res.to_object(py))
-                }
-                None => Ok(edge.clone_ref(py)),
-            }
-        }
-
         // loop over other edges and add to self graph
         for edge in other.graph.edge_references() {
             let new_p_index = new_node_map.get(&edge.source()).unwrap();
             let new_c_index = new_node_map.get(&edge.target()).unwrap();
             let weight =
-                edge_weight_callable(py, &edge_map_func, edge.weight())?;
+                weight_transform_callable(py, &edge_map_func, edge.weight())?;
             self.graph.add_edge(*new_p_index, *new_c_index, weight);
         }
         // Add edges from map
@@ -1141,5 +1113,19 @@ impl PyMappingProtocol for PyGraph {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
+    }
+}
+
+fn weight_transform_callable(
+    py: Python,
+    map_fn: &Option<PyObject>,
+    value: &PyObject,
+) -> PyResult<PyObject> {
+    match map_fn {
+        Some(map_fn) => {
+            let res = map_fn.call1(py, (value,))?;
+            Ok(res.to_object(py))
+        }
+        None => Ok(value.clone_ref(py)),
     }
 }

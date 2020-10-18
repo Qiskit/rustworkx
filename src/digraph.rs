@@ -1587,14 +1587,14 @@ fn is_cycle_check_required(
 
 fn weight_transform_callable(
     py: Python,
-    edge_map: &Option<PyObject>,
-    edge: &PyObject,
+    map_fn: &Option<PyObject>,
+    value: &PyObject,
 ) -> PyResult<PyObject> {
-    match edge_map {
-        Some(edge_map) => {
-            let res = edge_map.call1(py, (edge,))?;
+    match map_fn {
+        Some(map_fn) => {
+            let res = map_fn.call1(py, (value,))?;
             Ok(res.to_object(py))
         }
-        None => Ok(edge.clone_ref(py)),
+        None => Ok(value.clone_ref(py)),
     }
 }
