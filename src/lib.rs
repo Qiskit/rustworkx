@@ -1428,12 +1428,19 @@ fn digraph_astar_shortest_path(
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///
-/// The :math:`G_{n,p}` graph algorithm chooses each of the
-/// :math:`n (n - 1)` possible edges with probability :math:`p`.
-/// This algorithm [1]_ runs in :math:`O(n + m)` time, where :math:`m` is the
-/// expected number of edges, which equals :math:`p n (n - 1)/2`.
+/// For number of nodes :math:`n` and probability :math:`p`, the :math:`G_{n,p}`
+/// graph algorithm creates :math:`n` nodes, and for all the :math:`n (n - 1)` possible edges,
+/// each edge is created independently with probability :math:`p`.
+/// In general, for any probability :math:`p`, the expected number of edges returned
+/// is :math:`m = p n (n - 1)`. If :math:`p = 0` or :math:`p = 1`, the returned
+/// graph is not random and will always be an empty or a complete graph respectively.
+/// An empty graph has zero edges and a complete directed graph has :math:`n (n - 1)` edges.
+/// The run time is :math:`O(n + m)` where :math:`m` is the expected number of edges mentioned above.
+/// When :math:`p = 0`, run time always reduces to :math:`O(n)`, as the lower bound.
+/// When :math:`p = 1`, run time always goes to :math:`O(n + n (n - 1))`, as the upper bound.
+/// For other probabilities, this algorithm [1]_ runs in :math:`O(n + m)` time.
 ///
-/// Based on the implementation of the networkx function
+/// For :math:`0 < p < 1`, the algorithm is based on the implementation of the networkx function
 /// ``fast_gnp_random_graph`` [2]_
 ///
 /// :param int num_nodes: The number of nodes to create in the graph
@@ -1466,37 +1473,52 @@ pub fn directed_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability <= 0.0 || probability >= 1.0 {
+    if probability < 0.0 || probability > 1.0 {
         return Err(PyValueError::new_err(
-            "Probability out of range, must be 0 < p < 1",
+            "Probability out of range, must be 0 <= p <= 1",
         ));
     }
-    let mut v: isize = 0;
-    let mut w: isize = -1;
-    let lp: f64 = (1.0 - probability).ln();
-
-    while v < num_nodes {
-        let random: f64 = rng.gen_range(0.0, 1.0);
-        let lr: f64 = (1.0 - random).ln();
-        let ratio: isize = (lr / lp) as isize;
-        w = w + 1 + ratio;
-        // avoid self loops
-        if v == w {
-            w += 1;
-        }
-        while v < num_nodes && num_nodes <= w {
-            w -= v;
-            v += 1;
-            // avoid self loops
-            if v == w {
-                w -= v;
-                v += 1;
+    if probability > 0.0 {
+        if probability == 1.0 {
+            for u in 0..num_nodes {
+                for v in 0..num_nodes {
+                    if u != v {
+                        // exclude self-loops
+                        let u_index = NodeIndex::new(u as usize);
+                        let v_index = NodeIndex::new(v as usize);
+                        inner_graph.add_edge(u_index, v_index, py.None());
+                    }
+                }
             }
-        }
-        if v < num_nodes {
-            let v_index = NodeIndex::new(v as usize);
-            let w_index = NodeIndex::new(w as usize);
-            inner_graph.add_edge(v_index, w_index, py.None());
+        } else {
+            let mut v: isize = 0;
+            let mut w: isize = -1;
+            let lp: f64 = (1.0 - probability).ln();
+
+            while v < num_nodes {
+                let random: f64 = rng.gen_range(0.0, 1.0);
+                let lr: f64 = (1.0 - random).ln();
+                let ratio: isize = (lr / lp) as isize;
+                w = w + 1 + ratio;
+                // avoid self loops
+                if v == w {
+                    w += 1;
+                }
+                while v < num_nodes && num_nodes <= w {
+                    w -= v;
+                    v += 1;
+                    // avoid self loops
+                    if v == w {
+                        w -= v;
+                        v += 1;
+                    }
+                }
+                if v < num_nodes {
+                    let v_index = NodeIndex::new(v as usize);
+                    let w_index = NodeIndex::new(w as usize);
+                    inner_graph.add_edge(v_index, w_index, py.None());
+                }
+            }
         }
     }
 
@@ -1512,12 +1534,19 @@ pub fn directed_gnp_random_graph(
 /// Return a :math:`G_{np}` random undirected graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///
-/// The :math:`G_{n,p}` graph algorithm chooses each of the
-/// :math:`n (n - 1)/2` possible edges with probability :math:`p`.
-/// This algorithm [1]_ runs in :math:`O(n + m)` time, where :math:`m` is the
-/// expected number of edges, which equals :math:`p n (n - 1)/2`.
+/// For number of nodes :math:`n` and probability :math:`p`, the :math:`G_{n,p}`
+/// graph algorithm creates :math:`n` nodes, and for all the :math:`n (n - 1)/2` possible edges,
+/// each edge is created independently with probability :math:`p`.
+/// In general, for any probability :math:`p`, the expected number of edges returned
+/// is :math:`m = p n (n - 1)/2`. If :math:`p = 0` or :math:`p = 1`, the returned
+/// graph is not random and will always be an empty or a complete graph respectively.
+/// An empty graph has zero edges and a complete undirected graph has :math:`n (n - 1)/2` edges.
+/// The run time is :math:`O(n + m)` where :math:`m` is the expected number of edges mentioned above.
+/// When :math:`p = 0`, run time always reduces to :math:`O(n)`, as the lower bound.
+/// When :math:`p = 1`, run time always goes to :math:`O(n + n (n - 1)/2)`, as the upper bound.
+/// For other probabilities, this algorithm [1]_ runs in :math:`O(n + m)` time.
 ///
-/// Based on the implementation of the networkx function
+/// For :math:`0 < p < 1`, the algorithm is based on the implementation of the networkx function
 /// ``fast_gnp_random_graph`` [2]_
 ///
 /// :param int num_nodes: The number of nodes to create in the graph
@@ -1550,28 +1579,40 @@ pub fn undirected_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability <= 0.0 || probability >= 1.0 {
+    if probability < 0.0 || probability > 1.0 {
         return Err(PyValueError::new_err(
-            "Probability out of range, must be 0 < p < 1",
+            "Probability out of range, must be 0 <= p <= 1",
         ));
     }
-    let mut v: isize = 1;
-    let mut w: isize = -1;
-    let lp: f64 = (1.0 - probability).ln();
+    if probability > 0.0 {
+        if probability == 1.0 {
+            for u in 0..num_nodes {
+                for v in u + 1..num_nodes {
+                    let u_index = NodeIndex::new(u as usize);
+                    let v_index = NodeIndex::new(v as usize);
+                    inner_graph.add_edge(u_index, v_index, py.None());
+                }
+            }
+        } else {
+            let mut v: isize = 1;
+            let mut w: isize = -1;
+            let lp: f64 = (1.0 - probability).ln();
 
-    while v < num_nodes {
-        let random: f64 = rng.gen_range(0.0, 1.0);
-        let lr = (1.0 - random).ln();
-        let ratio: isize = (lr / lp) as isize;
-        w = w + 1 + ratio;
-        while w >= v && v < num_nodes {
-            w -= v;
-            v += 1;
-        }
-        if v < num_nodes {
-            let v_index = NodeIndex::new(v as usize);
-            let w_index = NodeIndex::new(w as usize);
-            inner_graph.add_edge(v_index, w_index, py.None());
+            while v < num_nodes {
+                let random: f64 = rng.gen_range(0.0, 1.0);
+                let lr = (1.0 - random).ln();
+                let ratio: isize = (lr / lp) as isize;
+                w = w + 1 + ratio;
+                while w >= v && v < num_nodes {
+                    w -= v;
+                    v += 1;
+                }
+                if v < num_nodes {
+                    let v_index = NodeIndex::new(v as usize);
+                    let w_index = NodeIndex::new(w as usize);
+                    inner_graph.add_edge(v_index, w_index, py.None());
+                }
+            }
         }
     }
 
