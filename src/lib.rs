@@ -1463,7 +1463,7 @@ pub fn directed_gnp_random_graph(
         ));
     }
     if probability > 0.0 {
-        if probability == 1.0 {
+        if (probability - 1.0).abs() < std::f64::EPSILON {
             for u in 0..num_nodes {
                 for v in 0..num_nodes {
                     if u != v {
@@ -1569,7 +1569,7 @@ pub fn undirected_gnp_random_graph(
         ));
     }
     if probability > 0.0 {
-        if probability == 1.0 {
+        if (probability - 1.0).abs() < std::f64::EPSILON {
             for u in 0..num_nodes {
                 for v in u + 1..num_nodes {
                     let u_index = NodeIndex::new(u as usize);
