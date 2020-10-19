@@ -42,6 +42,7 @@ use petgraph::visit::{
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
+use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
@@ -1479,8 +1480,9 @@ pub fn directed_gnp_random_graph(
             let mut w: isize = -1;
             let lp: f64 = (1.0 - probability).ln();
 
+            let between = Uniform::new(0.0, 1.0);
             while v < num_nodes {
-                let random: f64 = rng.gen_range(0.0, 1.0);
+                let random: f64 = between.sample(&mut rng);
                 let lr: f64 = (1.0 - random).ln();
                 let ratio: isize = (lr / lp) as isize;
                 w = w + 1 + ratio;
@@ -1582,8 +1584,9 @@ pub fn undirected_gnp_random_graph(
             let mut w: isize = -1;
             let lp: f64 = (1.0 - probability).ln();
 
+            let between = Uniform::new(0.0, 1.0);
             while v < num_nodes {
-                let random: f64 = rng.gen_range(0.0, 1.0);
+                let random: f64 = between.sample(&mut rng);
                 let lr = (1.0 - random).ln();
                 let ratio: isize = (lr / lp) as isize;
                 w = w + 1 + ratio;
