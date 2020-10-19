@@ -1670,7 +1670,7 @@ pub fn directed_gnm_random_graph(
             let u_index = NodeIndex::new(u as usize);
             let v_index = NodeIndex::new(v as usize);
             // avoid self-loops and multi-graphs
-            if u != v && !inner_graph.find_edge(u_index, v_index).is_some() {
+            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
                 inner_graph.add_edge(u_index, v_index, py.None());
                 created_edges += 1;
             }
@@ -1745,7 +1745,7 @@ pub fn undirected_gnm_random_graph(
             let u_index = NodeIndex::new(u as usize);
             let v_index = NodeIndex::new(v as usize);
             // avoid self-loops and multi-graphs
-            if u != v && !inner_graph.find_edge(u_index, v_index).is_some() {
+            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
                 inner_graph.add_edge(u_index, v_index, py.None());
                 created_edges += 1;
             }
