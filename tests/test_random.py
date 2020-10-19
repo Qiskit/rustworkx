@@ -62,3 +62,90 @@ class TestGNPRandomGraph(unittest.TestCase):
     def test_random_gnp_undirected_invalid_probability(self):
         with self.assertRaises(ValueError):
             retworkx.undirected_gnp_random_graph(23, 123.5)
+
+
+class TestGNMRandomGraph(unittest.TestCase):
+
+    def test_random_gnm_directed(self):
+        graph = retworkx.directed_gnm_random_graph(20, 100)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 100)
+        # with other arguments equal, same seed results in same graph
+        graph_s1 = retworkx.directed_gnm_random_graph(20, 100, seed=10)
+        graph_s2 = retworkx.directed_gnm_random_graph(20, 100, seed=10)
+        self.assertEqual(graph_s1.edge_list(), graph_s2.edge_list())
+
+    def test_random_gnm_directed_empty_graph(self):
+        graph = retworkx.directed_gnm_random_graph(20, 0)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 0)
+        # passing a seed when passing zero edges has no effect
+        graph = retworkx.directed_gnm_random_graph(20, 0, 44)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_gnm_directed_complete_graph(self):
+        n = 20
+        max_m = n * (n - 1)
+        # passing the max edges for the passed number of nodes
+        graph = retworkx.directed_gnm_random_graph(n, max_m)
+        self.assertEqual(len(graph), n)
+        self.assertEqual(len(graph.edges()), max_m)
+        # passing m > the max edges n(n-1) still returns the max edges
+        graph = retworkx.directed_gnm_random_graph(n, max_m + 1)
+        self.assertEqual(len(graph), n)
+        self.assertEqual(len(graph.edges()), max_m)
+        # passing a seed when passing max edges has no effect
+        graph = retworkx.directed_gnm_random_graph(n, max_m, 55)
+        self.assertEqual(len(graph), n)
+        self.assertEqual(len(graph.edges()), max_m)
+
+    def test_random_gnm_directed_invalid_num_nodes(self):
+        with self.assertRaises(ValueError):
+            retworkx.directed_gnm_random_graph(-23, 5)
+
+    def test_random_gnm_directed_invalid_num_edges(self):
+        with self.assertRaises(ValueError):
+            retworkx.directed_gnm_random_graph(23, -5)
+
+    def test_random_gnm_undirected(self):
+        graph = retworkx.undirected_gnm_random_graph(20, 100)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 100)
+        # with other arguments equal, same seed results in same graph
+        graph_s1 = retworkx.undirected_gnm_random_graph(20, 100, seed=10)
+        graph_s2 = retworkx.undirected_gnm_random_graph(20, 100, seed=10)
+        self.assertEqual(graph_s1.edge_list(), graph_s2.edge_list())
+
+    def test_random_gnm_undirected_empty_graph(self):
+        graph = retworkx.undirected_gnm_random_graph(20, 0)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 0)
+        # passing a seed when passing zero edges has no effect
+        graph = retworkx.undirected_gnm_random_graph(20, 0, 44)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_gnm_undirected_complete_graph(self):
+        n = 20
+        max_m = n * (n - 1) // 2
+        # passing the max edges for the passed number of nodes
+        graph = retworkx.undirected_gnm_random_graph(n, max_m)
+        self.assertEqual(len(graph), n)
+        self.assertEqual(len(graph.edges()), max_m)
+        # passing m > the max edges n(n-1)/2 still returns the max edges
+        graph = retworkx.undirected_gnm_random_graph(n, max_m + 1)
+        self.assertEqual(len(graph), n)
+        self.assertEqual(len(graph.edges()), max_m)
+        # passing a seed when passing max edges has no effect
+        graph = retworkx.undirected_gnm_random_graph(n, max_m, 55)
+        self.assertEqual(len(graph), n)
+        self.assertEqual(len(graph.edges()), max_m)
+
+    def test_random_gnm_undirected_invalid_num_nodes(self):
+        with self.assertRaises(ValueError):
+            retworkx.undirected_gnm_random_graph(-23, 5)
+
+    def test_random_gnm_undirected_invalid_probability(self):
+        with self.assertRaises(ValueError):
+            retworkx.undirected_gnm_random_graph(23, -5)

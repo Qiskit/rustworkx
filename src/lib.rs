@@ -1607,6 +1607,157 @@ pub fn undirected_gnp_random_graph(
     Ok(graph)
 }
 
+/// Return a :math:`G_{nm}` of a directed graph
+///
+/// Generates a random directed graph out of all the possible graphs with :math:`n` nodes and
+/// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
+///
+/// For :math:`n` nodes, the maximum edges that can be returned is :math:`n (n - 1)`.
+/// Passing :math:`m` higher than that will still return the maximum number of edges.
+/// If :math:`m = 0`, the returned graph will always be empty (no edges).
+/// When a seed is provided, the results are reproducible. Passing a seed when :math:`m = 0`
+/// or :math:`m >= n (n - 1)` has no effect, as the result will always be an empty or a complete graph respectively.
+///
+/// This algorithm has a time complexity of :math:`O(n + m)`
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int num_edges: The number of edges to create in the graph
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+///
+#[pyfunction]
+#[text_signature = "(num_nodes, num_edges, seed=None, /)"]
+pub fn directed_gnm_random_graph(
+    py: Python,
+    num_nodes: isize,
+    num_edges: isize,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    if num_nodes <= 0 {
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
+    }
+    if num_edges < 0 {
+        return Err(PyValueError::new_err("num_edges must be >= 0"));
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut inner_graph = StableDiGraph::<PyObject, PyObject>::new();
+    for x in 0..num_nodes {
+        inner_graph.add_node(x.to_object(py));
+    }
+    // if number of edges to be created is >= max,
+    // avoid randomly missed trials and directly add edges between every node
+    if num_edges >= num_nodes * (num_nodes - 1) {
+        for u in 0..num_nodes {
+            for v in 0..num_nodes {
+                // avoid self-loops
+                if u != v {
+                    let u_index = NodeIndex::new(u as usize);
+                    let v_index = NodeIndex::new(v as usize);
+                    inner_graph.add_edge(u_index, v_index, py.None());
+                }
+            }
+        }
+    } else {
+        let mut created_edges: isize = 0;
+        while created_edges < num_edges {
+            let u = rng.gen_range(0, num_nodes);
+            let v = rng.gen_range(0, num_nodes);
+            let u_index = NodeIndex::new(u as usize);
+            let v_index = NodeIndex::new(v as usize);
+            // avoid self-loops and multi-graphs
+            if u != v && !inner_graph.find_edge(u_index, v_index).is_some() {
+                inner_graph.add_edge(u_index, v_index, py.None());
+                created_edges += 1;
+            }
+        }
+    }
+    let graph = digraph::PyDiGraph {
+        graph: inner_graph,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+    };
+    Ok(graph)
+}
+
+/// Return a :math:`G_{nm}` of an undirected graph
+///
+/// Generates a random undirected graph out of all the possible graphs with :math:`n` nodes and
+/// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
+///
+/// For :math:`n` nodes, the maximum edges that can be returned is :math:`n (n - 1)/2`.
+/// Passing :math:`m` higher than that will still return the maximum number of edges.
+/// If :math:`m = 0`, the returned graph will always be empty (no edges).
+/// When a seed is provided, the results are reproducible. Passing a seed when :math:`m = 0`
+/// or :math:`m >= n (n - 1)/2` has no effect, as the result will always be an empty or a complete graph respectively.
+///
+/// This algorithm has a time complexity of :math:`O(n + m)`
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int num_edges: The number of edges to create in the graph
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+
+#[pyfunction]
+#[text_signature = "(num_nodes, probability, seed=None, /)"]
+pub fn undirected_gnm_random_graph(
+    py: Python,
+    num_nodes: isize,
+    num_edges: isize,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    if num_nodes <= 0 {
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
+    }
+    if num_edges < 0 {
+        return Err(PyValueError::new_err("num_edges must be >= 0"));
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
+    for x in 0..num_nodes {
+        inner_graph.add_node(x.to_object(py));
+    }
+    // if number of edges to be created is >= max,
+    // avoid randomly missed trials and directly add edges between every node
+    if num_edges >= num_nodes * (num_nodes - 1) / 2 {
+        for u in 0..num_nodes {
+            for v in u + 1..num_nodes {
+                let u_index = NodeIndex::new(u as usize);
+                let v_index = NodeIndex::new(v as usize);
+                inner_graph.add_edge(u_index, v_index, py.None());
+            }
+        }
+    } else {
+        let mut created_edges: isize = 0;
+        while created_edges < num_edges {
+            let u = rng.gen_range(0, num_nodes);
+            let v = rng.gen_range(0, num_nodes);
+            let u_index = NodeIndex::new(u as usize);
+            let v_index = NodeIndex::new(v as usize);
+            // avoid self-loops and multi-graphs
+            if u != v && !inner_graph.find_edge(u_index, v_index).is_some() {
+                inner_graph.add_edge(u_index, v_index, py.None());
+                created_edges += 1;
+            }
+        }
+    }
+    let graph = graph::PyGraph {
+        graph: inner_graph,
+        node_removed: false,
+    };
+    Ok(graph)
+}
+
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
 /// A basis for cycles of a graph is a minimal collection of
@@ -1769,6 +1920,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
