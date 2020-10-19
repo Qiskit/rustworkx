@@ -1700,26 +1700,26 @@ pub fn strongly_connected_components(
 /// empty list is returned if no cycle is found
 ///
 /// :param PyDiGraph graph: The graph to find the cycle in
-/// :param int root: Optional index for starting node for cycle
+/// :param int source: Optional index to find a cycle for. If not specified an
+///     arbitrary node will be selected from the graph.
 ///
 /// :returns: A list describing the cycle. The index of node ids which
 ///     forms a cycle (loop) in the input graph
 /// :rtype: list
 #[pyfunction]
-#[text_signature = "(graph, /, root=None)"]
+#[text_signature = "(graph, /, source=None)"]
 pub fn digraph_find_cycle(
     graph: &digraph::PyDiGraph,
-    root: Option<usize>,
+    source: Option<usize>,
 ) -> Vec<(usize, usize)> {
-    let root_node = root;
     let mut graph_nodes: HashSet<NodeIndex> =
         graph.graph.node_indices().collect();
     let mut cycle: Vec<(usize, usize)> = Vec::new();
     let temp_value: NodeIndex;
-    // If root_node is not set get an arbitrary node from the set of graph
+    // If source is not set get an arbitrary node from the set of graph
     // nodes we've not "examined"
-    let root_index = match root_node {
-        Some(root_value) => NodeIndex::new(root_value),
+    let source_index = match source {
+        Some(source_value) => NodeIndex::new(source_value),
         None => {
             temp_value = *graph_nodes.iter().next().unwrap();
             graph_nodes.remove(&temp_value);
@@ -1729,7 +1729,7 @@ pub fn digraph_find_cycle(
 
     // Stack (ie "pushdown list") of vertices already in the spanning tree
     let mut stack: Vec<NodeIndex> = Vec::new();
-    stack.push(root_index);
+    stack.push(source_index);
     // map to store parent of a node
     let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
     // a node is in the visiting set if at least one of its child is unexamined
