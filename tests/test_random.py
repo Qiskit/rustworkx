@@ -22,6 +22,16 @@ class TestGNPRandomGraph(unittest.TestCase):
         self.assertEqual(len(graph), 20)
         self.assertEqual(len(graph.edges()), 104)
 
+    def test_random_gnp_directed_empty_graph(self):
+        graph = retworkx.directed_gnp_random_graph(20, 0)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_gnp_directed_complete_graph(self):
+        graph = retworkx.directed_gnp_random_graph(20, 1)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 20 * (20 - 1))
+
     def test_random_gnp_directed_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
             retworkx.directed_gnp_random_graph(-23, .5)
@@ -34,6 +44,16 @@ class TestGNPRandomGraph(unittest.TestCase):
         graph = retworkx.undirected_gnp_random_graph(20, .5, seed=10)
         self.assertEqual(len(graph), 20)
         self.assertEqual(len(graph.edges()), 105)
+
+    def test_random_gnp_undirected_empty_graph(self):
+        graph = retworkx.undirected_gnp_random_graph(20, 0)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_gnp_undirected_complete_graph(self):
+        graph = retworkx.undirected_gnp_random_graph(20, 1)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 20 * (20 - 1) / 2)
 
     def test_random_gnp_undirected_invalid_num_nodes(self):
         with self.assertRaises(ValueError):

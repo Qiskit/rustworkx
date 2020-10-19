@@ -27,7 +27,7 @@ rayon = "1.4"
 
 [dependencies.pyo3]
 version = "0.12.3"
-features = ["extension-module"]
+features = ["extension-module", "hashbrown"]
 
 [dependencies.hashbrown]
 version = "0.9"
