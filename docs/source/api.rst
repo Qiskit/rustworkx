@@ -70,6 +70,7 @@ Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.cycle_basis
    retworkx.strongly_connected_components
+   retworkx.digraph_find_cycle
 
 Exceptions
 ----------

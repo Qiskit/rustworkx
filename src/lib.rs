@@ -1696,7 +1696,8 @@ pub fn strongly_connected_components(
         .collect()
 }
 
-/// Return the first cycle encountered during DFS of a given PyDiGraph
+/// Return the first cycle encountered during DFS of a given PyDiGraph,
+/// empty list is returned if no cycle is found
 ///
 /// :param PyDiGraph graph: The graph to find the cycle in
 /// :param int root: Optional index for starting node for cycle
@@ -1710,7 +1711,7 @@ pub fn digraph_find_cycle(
     graph: &digraph::PyDiGraph,
     root: Option<usize>,
 ) -> Vec<(usize, usize)> {
-    let mut root_node = root;
+    let root_node = root;
     let mut graph_nodes: HashSet<NodeIndex> =
         graph.graph.node_indices().collect();
     let mut cycle: Vec<(usize, usize)> = Vec::new();
@@ -1731,11 +1732,12 @@ pub fn digraph_find_cycle(
     stack.push(root_index);
     // map to store parent of a node
     let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+    // a node is in the visiting set if at least one of its child is unexamined
     let mut visiting = HashSet::new();
+    // a node is in visited set if all of its children have been examined
     let mut visited = HashSet::new();
     while !stack.is_empty() {
-        let mut z = stack.pop().unwrap();
-        stack.push(z);
+        let mut z = *stack.last().unwrap();
         visiting.insert(z);
 
         let children = graph
@@ -1764,8 +1766,7 @@ pub fn digraph_find_cycle(
             }
         }
 
-        let mut top = stack.pop().unwrap();
-        stack.push(top);
+        let top = *stack.last().unwrap();
         //if no further children and explored, move to visited
         if top.index() == z.index() {
             stack.pop();
