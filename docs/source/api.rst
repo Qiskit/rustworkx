@@ -35,6 +35,8 @@ Random Circuit Functions
 
     retworkx.directed_gnp_random_graph
     retworkx.undirected_gnp_random_graph
+    retworkx.directed_gnm_random_graph
+    retworkx.undirected_gnm_random_graph
 
 Algorithm Functions
 -------------------
@@ -70,6 +72,7 @@ Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.cycle_basis
    retworkx.strongly_connected_components
+   retworkx.digraph_find_cycle
 
 Exceptions
 ----------
