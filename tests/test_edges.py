@@ -341,3 +341,26 @@ class TestEdges(unittest.TestCase):
         self.assertEqual(1, dag.out_degree(1))
         self.assertEqual(1, dag.out_degree(2))
         self.assertEqual(2, dag.in_degree(3))
+
+    def test_insert_node_between(self):
+        graph = retworkx.PyDiGraph()
+        in_node = graph.add_node('qr[0]')
+        out_node = graph.add_child(in_node, 'qr[0]', 'qr[0]')
+        h_gate = graph.add_node('h')
+        graph.insert_node_between(h_gate, out_node)
+        self.assertEqual(
+            [(in_node, h_gate, 'qr[0]'), (h_gate, out_node, 'qr[0]')],
+            graph.weighted_edge_list())
+
+    def test_insert_node_between_multiple(self):
+        graph = retworkx.PyDiGraph()
+        in_node_0 = graph.add_node('qr[0]')
+        out_node_0 = graph.add_child(in_node_0, 'qr[0]', 'qr[0]')
+        in_node_1 = graph.add_node('qr[1]')
+        out_node_1 = graph.add_child(in_node_1, 'qr[1]', 'qr[1]')
+        cx_gate = graph.add_node('cx')
+        graph.insert_node_between_multiple(cx_gate, [out_node_0, out_node_1])
+        self.assertEqual(
+            {(in_node_0, cx_gate, 'qr[0]'), (cx_gate, out_node_0, 'qr[0]'),
+             (in_node_1, cx_gate, 'qr[1]'), (cx_gate, out_node_1, 'qr[1]')},
+            set(graph.weighted_edge_list()))
