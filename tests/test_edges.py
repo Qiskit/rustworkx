@@ -93,6 +93,26 @@ class TestEdges(unittest.TestCase):
         dag.remove_edge_from_index(0)
         self.assertEqual(['super_edgy'], dag.edges())
 
+    def test_remove_edges_from(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        node_c = graph.add_node('c')
+        graph.add_edge(node_a, node_b, 'edgy')
+        graph.add_edge(node_a, node_c, 'super_edgy')
+        graph.remove_edges_from([(node_a, node_b), (node_a, node_c)])
+        self.assertEqual([], graph.edges())
+
+    def test_remove_edges_from_invalid(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        node_c = graph.add_node('c')
+        graph.add_edge(node_a, node_b, 'edgy')
+        graph.add_edge(node_a, node_c, 'super_edgy')
+        with self.assertRaises(retworkx.NoEdgeBetweenNodes):
+            graph.remove_edges_from([(node_b, node_c), (node_a, node_c)])
+
     def test_remove_edge_from_index(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
