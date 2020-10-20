@@ -209,7 +209,7 @@ pub fn weakly_connected_components(
 #[text_signature = "(graph, /)"]
 pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     if graph.graph.node_count() == 0 {
-        return Err(NullGraph::py_err("Invalid operation on a NullGraph"));
+        return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
     }
     Ok(weakly_connected_components(graph)[0].len() == graph.graph.node_count())
 }
