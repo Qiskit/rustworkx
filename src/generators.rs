@@ -16,7 +16,7 @@ use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
 
-use pyo3::exceptions::IndexError;
+use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
@@ -77,7 +77,7 @@ pub fn directed_cycle_graph(
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
-        return Err(IndexError::py_err(
+        return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
@@ -161,7 +161,7 @@ pub fn cycle_graph(
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
-        return Err(IndexError::py_err(
+        return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
@@ -243,7 +243,7 @@ pub fn directed_path_graph(
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
-        return Err(IndexError::py_err(
+        return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
@@ -319,7 +319,7 @@ pub fn path_graph(
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
-        return Err(IndexError::py_err(
+        return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
@@ -419,7 +419,7 @@ pub fn directed_star_graph(
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
-        return Err(IndexError::py_err(
+        return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
@@ -496,7 +496,7 @@ pub fn star_graph(
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
-        return Err(IndexError::py_err(
+        return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
