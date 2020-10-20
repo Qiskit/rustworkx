@@ -673,6 +673,35 @@ impl PyGraph {
         Ok(())
     }
 
+    /// Remove edges from the graph.
+    ///
+    /// Note if there are multiple edges between the specified nodes only one
+    /// will be removed.
+    ///
+    /// :param list index_list: A list of node index pairs to remove from
+    ///     the graph
+    #[text_signature = "(index_list, /)"]
+    pub fn remove_edges_from(
+        &mut self,
+        index_list: Vec<(usize, usize)>,
+    ) -> PyResult<()> {
+        for (p_index, c_index) in index_list
+            .iter()
+            .map(|(x, y)| (NodeIndex::new(*x), NodeIndex::new(*y)))
+        {
+            let edge_index = match self.graph.find_edge(p_index, c_index) {
+                Some(edge_index) => edge_index,
+                None => {
+                    return Err(NoEdgeBetweenNodes::new_err(
+                        "No edge found between nodes",
+                    ))
+                }
+            };
+            self.graph.remove_edge(edge_index);
+        }
+        Ok(())
+    }
+
     /// Add a new node to the graph.
     ///
     /// :param obj: The python object to attach to the node
