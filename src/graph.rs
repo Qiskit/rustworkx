@@ -785,6 +785,7 @@ impl PyGraph {
     ///
     /// :returns: A list of the neighbor node indicies
     /// :rtype: list
+    #[text_signature = "(node, /)"]
     pub fn neighbors(&self, node: usize) -> Vec<usize> {
         self.graph
             .neighbors(NodeIndex::new(node))

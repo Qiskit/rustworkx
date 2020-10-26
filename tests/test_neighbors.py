@@ -29,9 +29,9 @@ class TestAdj(unittest.TestCase):
         node_a = dag.add_node('a')
         node_b = dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_a, 'c', {'a': 2})
-        res = dag.neighbors_directed(node_a, False)
+        res = dag.successor_indices(node_a)
         self.assertEqual([node_c, node_b], res)
-        res = dag.neighbors_directed(node_a, True)
+        res = dag.predecessor_indices(node_a)
         self.assertEqual([], res)
 
     def test_neighbor_dir_surrounded(self):
@@ -39,9 +39,9 @@ class TestAdj(unittest.TestCase):
         node_a = dag.add_node('a')
         node_b = dag.add_child(node_a, 'b', {'a': 1})
         node_c = dag.add_child(node_b, 'c', {'a': 2})
-        res = dag.neighbors_directed(node_b, False)
+        res = dag.successor_indices(node_b)
         self.assertEqual([node_c], res)
-        res = dag.neighbors_directed(node_b, True)
+        res = dag.predecessor_indices(node_b)
         self.assertEqual([node_a], res)
 
     def test_no_neighbor(self):

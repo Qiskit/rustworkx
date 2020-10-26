@@ -1076,12 +1076,13 @@ impl PyDiGraph {
 
     /// Get the neighbors of a node.
     ///
-    /// This with return a list of neighbor node indices
+    /// This with return a list of neighbor node indices.
     ///
-    /// :param int node: The index of the node to get the neibhors of
+    /// :param int node: The index of the node to get the neighbors of
     ///
     /// :returns: A list of the neighbor node indicies
     /// :rtype: list
+    #[text_signature = "(node, /)"]
     pub fn neighbors(&self, node: usize) -> Vec<usize> {
         self.graph
             .neighbors(NodeIndex::new(node))
@@ -1089,30 +1090,47 @@ impl PyDiGraph {
             .collect()
     }
 
-    /// Get the directed neighbors of a node.
+    /// Get the successor indices of a node.
     ///
-    /// This with return a list of directed neighbor node indices
+    /// This with return a list of the node indicies for the succesors of
+    /// a node
     ///
-    /// :param int node: The index of the node to get the neibhors of
+    /// :param int node: The index of the node to get the successors of
     ///
     /// :returns: A list of the neighbor node indicies
     /// :rtype: list
-    pub fn neighbors_directed(
-        &mut self,
-        node: usize,
-        direction: bool,
-    ) -> Vec<usize> {
-        let dir = if direction {
-            petgraph::Direction::Incoming
-        } else {
-            petgraph::Direction::Outgoing
-        };
+    #[text_signature = "(node, /)"]
+    pub fn successor_indices(&mut self, node: usize) -> Vec<usize> {
         self.graph
-            .neighbors_directed(NodeIndex::new(node), dir)
+            .neighbors_directed(
+                NodeIndex::new(node),
+                petgraph::Direction::Outgoing,
+            )
             .map(|node| node.index())
             .collect()
     }
 
+    /// Get the predecessor indices of a node.
+    ///
+    /// Get the successor indices of a node.
+    ///
+    /// This with return a list of the node indicies for the predecessors of
+    /// a node
+    ///
+    /// :param int node: The index of the node to get the predecessors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
+    pub fn predecessor_indices(&mut self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors_directed(
+                NodeIndex::new(node),
+                petgraph::Direction::Incoming,
+            )
+            .map(|node| node.index())
+            .collect()
+    }
     /// Get the index and edge data for all parents of a node.
     ///
     /// This will return a list of tuples with the parent index the node index
