@@ -15,10 +15,11 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::iter::FromIterator;
 use std::ops::{Index, IndexMut};
 use std::str;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
@@ -34,8 +35,8 @@ use petgraph::stable_graph::StableUnGraph;
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers,
-    IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeIndexable,
-    Visitable,
+    IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeFiltered,
+    NodeIndexable, Visitable,
 };
 
 /// A class for creating undirected graphs
@@ -1125,6 +1126,47 @@ impl PyGraph {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
         Ok(out_dict.into())
+    }
+
+    /// Return a new PyGraph object for a subgraph of this graph
+    ///
+    /// :param list nodes: A list of node indices to generate the subgraph
+    ///     from. If a node index is included that is not present in the graph
+    ///     it will silently be ignored.
+    ///
+    /// :returns: A new PyGraph object representing a subgraph of this graph.
+    ///     It is worth noting that node and edge weight/data payloads are
+    ///     passed by reference so if you update (not replace) an object used
+    ///     as the weight in graph or the subgraph it will also be updated in
+    ///     the other.
+    /// :rtype: PyGraph
+    ///
+    #[text_signature = "(nodes, /)"]
+    pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyGraph {
+        let node_set: HashSet<usize> =
+            HashSet::from_iter(nodes.iter().cloned());
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let node_filter =
+            |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
+        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let filtered = NodeFiltered(self, node_filter);
+        for node in filtered.node_references() {
+            let new_node = out_graph.add_node(node.1.clone_ref(py));
+            node_map.insert(node.0, new_node);
+        }
+        for edge in filtered.edge_references() {
+            let new_source = *node_map.get(&edge.source()).unwrap();
+            let new_target = *node_map.get(&edge.target()).unwrap();
+            out_graph.add_edge(
+                new_source,
+                new_target,
+                edge.weight().clone_ref(py),
+            );
+        }
+        PyGraph {
+            graph: out_graph,
+            node_removed: false,
+        }
     }
 }
 
