@@ -1126,7 +1126,7 @@ impl PyGraph {
     ///     the other.
     /// :rtype: PyGraph
     ///
-    #[text_signature = "(other, node_map, /, node_map_func=None, edge_map_func=None)"]
+    #[text_signature = "(nodes, /)"]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyGraph {
         let node_set: HashSet<usize> =
             HashSet::from_iter(nodes.iter().cloned());
