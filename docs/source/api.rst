@@ -86,3 +86,11 @@ Exceptions
    retworkx.DAGHasCycle
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
+
+Return Iterator Types
+---------------------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.BFSSuccessors
