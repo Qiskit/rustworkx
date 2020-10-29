@@ -20,9 +20,7 @@ script:
   - cd tests && ../test-venv/bin/python -m unittest discover .
 stages:
   - name: Linux non-x86_64
-    if: tag IS present
   - name: deploy
-    if: tag IS blank
 
 jobs:
   fast_finish: true
