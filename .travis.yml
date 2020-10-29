@@ -56,7 +56,6 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      if: tag IS present
       script:
         - pip install -U twine cibuildwheel==1.6.3
         - cibuildwheel --output-dir wheelhouse
@@ -75,7 +74,6 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      if: tag IS present
       script:
         - pip install -U twine cibuildwheel==1.6.3
         - cibuildwheel --output-dir wheelhouse
@@ -94,7 +92,6 @@ jobs:
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
-      if: tag IS present
       script:
         - sudo pip install -U twine cibuildwheel==1.6.3
         - cibuildwheel --output-dir wheelhouse
