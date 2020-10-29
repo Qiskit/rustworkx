@@ -20,9 +20,9 @@ script:
   - cd tests && ../test-venv/bin/python -m unittest discover .
 stages:
   - name: Linux non-x86_64
-    if: tag IS blank
-  - name: deploy
     if: tag IS present
+  - name: deploy
+    if: tag IS blank
 
 jobs:
   fast_finish: true
@@ -60,7 +60,6 @@ jobs:
       script:
         - pip install -U twine cibuildwheel==1.6.3
         - cibuildwheel --output-dir wheelhouse
-        - twine upload wheelhouse/*
     - stage: deploy
       arch: ppc64le
       services:
@@ -80,7 +79,6 @@ jobs:
       script:
         - pip install -U twine cibuildwheel==1.6.3
         - cibuildwheel --output-dir wheelhouse
-        - twine upload wheelhouse/*
     - stage: deploy
       arch: s390x
       services:
@@ -100,4 +98,3 @@ jobs:
       script:
         - sudo pip install -U twine cibuildwheel==1.6.3
         - cibuildwheel --output-dir wheelhouse
-        - twine upload wheelhouse/*
