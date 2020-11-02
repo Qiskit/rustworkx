@@ -11,13 +11,12 @@
 // under the License.
 
 use crate::digraph::PyDiGraph;
+use hashbrown::{HashMap, HashSet};
 use petgraph::algo;
 use petgraph::graph::EdgeIndex;
 use pyo3::prelude::*;
 use pyo3::Python;
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
-use std::collections::HashSet;
 
 /// [Graph] Return a new PyDiGraph by forming a union from`a` and `b` graphs.
 ///
@@ -35,7 +34,7 @@ use std::collections::HashSet;
 /// The nodes from graph `b` will replace nodes from `a`.
 ///
 ///  At this point, only `PyDiGraph` is supported.
-pub fn union(
+pub fn digraph_union(
     py: Python,
     a: &PyDiGraph,
     b: &PyDiGraph,
@@ -50,7 +49,7 @@ pub fn union(
         check_cycle: false,
         node_removed: false,
     };
-    let mut node_map = BTreeMap::new();
+    let mut node_map = HashMap::new();
     let mut edge_map = HashSet::new();
 
     let compare_weights = |a: &PyAny, b: &PyAny| -> PyResult<bool> {
@@ -59,13 +58,14 @@ pub fn union(
     };
 
     for node in second.node_indices() {
-        let node_index = combined.add_node(second[node].clone())?;
+        let node_index = combined.add_node(second[node].clone_ref(py))?;
         node_map.insert(node.index(), node_index);
     }
 
-    for edge in b.all_edges() {
-        let (source, target) = edge.0;
-        let edge_weight = edge.1;
+    for edge in b.weighted_edge_list(py) {
+        let source = edge.0;
+        let target = edge.1;
+        let edge_weight = edge.2;
 
         let new_source = *node_map.get(&source).unwrap();
         let new_target = *node_map.get(&target).unwrap();

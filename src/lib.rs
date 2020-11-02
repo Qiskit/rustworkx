@@ -189,16 +189,33 @@ fn is_isomorphic(
     Ok(res)
 }
 
+/// [Graph] Return a new PyDiGraph by forming a union from`a` and `b` graphs.
+///
+/// The algorithm has three phases:
+///  - adds all nodes from `b` to `a`. operates in O(n), n being number of nodes in `b`.
+///  - merges nodes from `b` over `a` given that:
+///     - `merge_nodes` is `true`. operates in O(n^2), n being number of nodes in `b`.
+///     - respective node in`b` and `a` share the same weight
+///  - adds all edges from `b` to `a`.
+///     - `merge_edges` is `true`
+///     - respective edge in`b` and `a` share the same weight
+///
+/// with the same weight in graphs `a` and `b` and merged those nodes.
+///
+/// The nodes from graph `b` will replace nodes from `a`.
+///
+///  At this point, only `PyDiGraph` is supported.
 #[pyfunction]
 #[text_signature = "(first, second, /)"]
-fn union(
+fn digraph_union(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
     merge_nodes: bool,
     merge_edges: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let res = dag_union::union(py, first, second, merge_nodes, merge_edges)?;
+    let res =
+        dag_union::digraph_union(py, first, second, merge_nodes, merge_edges)?;
     Ok(res)
 }
 
@@ -1763,7 +1780,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
-    m.add_wrapped(wrap_pyfunction!(union))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
