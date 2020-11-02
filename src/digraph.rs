@@ -1568,7 +1568,7 @@ impl PyDiGraph {
     ///
     /// This will create a new :class:`~retworkx.PyGraph` object from this
     /// graph. All edges in this graph will be created as undirected edges in
-    /// the new graph obejct.
+    /// the new graph object.
     /// Do note that the node and edge weights/data payloads will be passed
     /// by reference to the new :class:`~retworkx.PyGraph` object.
     ///
