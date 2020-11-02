@@ -15,6 +15,7 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::iter::FromIterator;
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -30,11 +31,13 @@ use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableDiGraph;
+use petgraph::stable_graph::StableUnGraph;
+
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
     IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
-    NodeIndexable, Visitable,
+    NodeFiltered, NodeIndexable, Visitable,
 };
 
 use super::dot_utils::build_dot;
@@ -1645,6 +1648,49 @@ impl PyDiGraph {
         Ok(out_dict.into())
     }
 
+    /// Return a new PyDiGraph object for a subgraph of this graph
+    ///
+    /// :param list nodes: A list of node indices to generate the subgraph
+    ///     from. If a node index is included that is not present in the graph
+    ///     it will silently be ignored.
+    ///
+    /// :returns: A new PyDiGraph object representing a subgraph of this graph.
+    ///     It is worth noting that node and edge weight/data payloads are
+    ///     passed by reference so if you update (not replace) an object used
+    ///     as the weight in graph or the subgraph it will also be updated in
+    ///     the other.
+    /// :rtype: PyGraph
+    ///
+    #[text_signature = "(nodes, /)"]
+    pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyDiGraph {
+        let node_set: HashSet<usize> =
+            HashSet::from_iter(nodes.iter().cloned());
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let node_filter =
+            |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
+        let mut out_graph = StableDiGraph::<PyObject, PyObject>::new();
+        let filtered = NodeFiltered(self, node_filter);
+        for node in filtered.node_references() {
+            let new_node = out_graph.add_node(node.1.clone_ref(py));
+            node_map.insert(node.0, new_node);
+        }
+        for edge in filtered.edge_references() {
+            let new_source = *node_map.get(&edge.source()).unwrap();
+            let new_target = *node_map.get(&edge.target()).unwrap();
+            out_graph.add_edge(
+                new_source,
+                new_target,
+                edge.weight().clone_ref(py),
+            );
+        }
+        PyDiGraph {
+            graph: out_graph,
+            node_removed: false,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: self.check_cycle,
+        }
+    }
+
     /// Check if the graph is symmetric
     ///
     /// :returns: True if the graph is symmetric
@@ -1665,6 +1711,37 @@ impl PyDiGraph {
             }
         }
         edges.is_empty()
+    }
+
+    /// Generate a new PyGraph object from this graph
+    ///
+    /// This will create a new :class:`~retworkx.PyGraph` object from this
+    /// graph. All edges in this graph will be created as undirected edges in
+    /// the new graph object.
+    /// Do note that the node and edge weights/data payloads will be passed
+    /// by reference to the new :class:`~retworkx.PyGraph` object.
+    ///
+    /// :returns: A new PyGraph object with an undirected edge for every
+    ///     directed edge in this graph
+    /// :rtype: PyGraph
+    pub fn to_undirected(&self, py: Python) -> crate::graph::PyGraph {
+        let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        for node_index in self.graph.node_indices() {
+            let node = self.graph[node_index].clone_ref(py);
+            let new_index = new_graph.add_node(node);
+            node_map.insert(node_index, new_index);
+        }
+        for edge in self.edge_references() {
+            let source = node_map.get(&edge.source()).unwrap();
+            let target = node_map.get(&edge.target()).unwrap();
+            let weight = edge.weight().clone_ref(py);
+            new_graph.add_edge(*source, *target, weight);
+        }
+        crate::graph::PyGraph {
+            graph: new_graph,
+            node_removed: false,
+        }
     }
 }
 
