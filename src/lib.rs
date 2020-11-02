@@ -25,9 +25,9 @@ use std::collections::BinaryHeap;
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::create_exception;
-use pyo3::exceptions::{Exception, ValueError};
+use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PySet};
+use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
 use pyo3::Python;
@@ -42,6 +42,7 @@ use petgraph::visit::{
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
+use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
@@ -58,7 +59,7 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
-            return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
+            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
         }
     };
     if nodes.is_empty() {
@@ -84,7 +85,9 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let first = match dist.keys().max_by_key(|index| dist[index]) {
         Some(first) => first,
         None => {
-            return Err(Exception::py_err("Encountered something unexpected"))
+            return Err(PyException::new_err(
+                "Encountered something unexpected",
+            ))
         }
     };
     let mut v = *first;
@@ -248,7 +251,7 @@ fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
-            return Err(DAGHasCycle::py_err("Sort encountered a cycle"))
+            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
         }
     };
     Ok(nodes.iter().map(|node| node.index()).collect())
@@ -303,7 +306,7 @@ fn bfs_successors(
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
+fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(graph);
@@ -313,13 +316,7 @@ fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    let set = PySet::empty(py).expect("Failed to construct empty set");
-    {
-        for val in out_set {
-            set.add(val).expect("Failed to add to set");
-        }
-    }
-    set.into()
+    out_set
 }
 
 /// Return the descendants of a node in a graph.
@@ -336,11 +333,7 @@ fn ancestors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> PyObject {
 /// :rtype: list
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
-fn descendants(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-    node: usize,
-) -> PyObject {
+fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(graph, index, None, |_| 1);
@@ -349,13 +342,7 @@ fn descendants(
         out_set.insert(n_int);
     }
     out_set.remove(&node);
-    let set = PySet::empty(py).expect("Failed to construct empty set");
-    {
-        for val in out_set {
-            set.add(val).expect("Failed to add to set");
-        }
-    }
-    set.into()
+    out_set
 }
 
 /// Get the lexicographical topological sorted nodes from the provided DAG
@@ -913,7 +900,7 @@ fn layers(
         let node_data = match dag.graph.node_weight(*layer_node) {
             Some(data) => data,
             None => {
-                return Err(InvalidNode::py_err(format!(
+                return Err(InvalidNode::new_err(format!(
                     "An index input in 'first_layer' {} is not a valid node index in the graph",
                     layer_node.index()),
                 ))
@@ -1082,13 +1069,13 @@ fn graph_all_simple_paths(
 ) -> PyResult<Vec<Vec<usize>>> {
     let from_index = NodeIndex::new(from);
     if !graph.graph.contains_node(from_index) {
-        return Err(InvalidNode::py_err(
+        return Err(InvalidNode::new_err(
             "The input index for 'from' is not a valid node index",
         ));
     }
     let to_index = NodeIndex::new(to);
     if !graph.graph.contains_node(to_index) {
-        return Err(InvalidNode::py_err(
+        return Err(InvalidNode::new_err(
             "The input index for 'to' is not a valid node index",
         ));
     }
@@ -1139,13 +1126,13 @@ fn digraph_all_simple_paths(
 ) -> PyResult<Vec<Vec<usize>>> {
     let from_index = NodeIndex::new(from);
     if !graph.graph.contains_node(from_index) {
-        return Err(InvalidNode::py_err(
+        return Err(InvalidNode::new_err(
             "The input index for 'from' is not a valid node index",
         ));
     }
     let to_index = NodeIndex::new(to);
     if !graph.graph.contains_node(to_index) {
-        return Err(InvalidNode::py_err(
+        return Err(InvalidNode::new_err(
             "The input index for 'to' is not a valid node index",
         ));
     }
@@ -1510,7 +1497,7 @@ fn graph_astar_shortest_path(
     let path = match astar_res {
         Some(path) => path,
         None => {
-            return Err(NoPathFound::py_err(
+            return Err(NoPathFound::new_err(
                 "No path found that satisfies goal_fn",
             ))
         }
@@ -1582,7 +1569,7 @@ fn digraph_astar_shortest_path(
     let path = match astar_res {
         Some(path) => path,
         None => {
-            return Err(NoPathFound::py_err(
+            return Err(NoPathFound::new_err(
                 "No path found that satisfies goal_fn",
             ))
         }
@@ -1593,12 +1580,19 @@ fn digraph_astar_shortest_path(
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///
-/// The :math:`G_{n,p}` graph algorithm chooses each of the
-/// :math:`n (n - 1)` possible edges with probability :math:`p`.
-/// This algorithm [1]_ runs in :math:`O(n + m)` time, where :math:`m` is the
-/// expected number of edges, which equals :math:`p n (n - 1)/2`.
+/// For number of nodes :math:`n` and probability :math:`p`, the :math:`G_{n,p}`
+/// graph algorithm creates :math:`n` nodes, and for all the :math:`n (n - 1)` possible edges,
+/// each edge is created independently with probability :math:`p`.
+/// In general, for any probability :math:`p`, the expected number of edges returned
+/// is :math:`m = p n (n - 1)`. If :math:`p = 0` or :math:`p = 1`, the returned
+/// graph is not random and will always be an empty or a complete graph respectively.
+/// An empty graph has zero edges and a complete directed graph has :math:`n (n - 1)` edges.
+/// The run time is :math:`O(n + m)` where :math:`m` is the expected number of edges mentioned above.
+/// When :math:`p = 0`, run time always reduces to :math:`O(n)`, as the lower bound.
+/// When :math:`p = 1`, run time always goes to :math:`O(n + n (n - 1))`, as the upper bound.
+/// For other probabilities, this algorithm [1]_ runs in :math:`O(n + m)` time.
 ///
-/// Based on the implementation of the networkx function
+/// For :math:`0 < p < 1`, the algorithm is based on the implementation of the networkx function
 /// ``fast_gnp_random_graph`` [2]_
 ///
 /// :param int num_nodes: The number of nodes to create in the graph
@@ -1621,7 +1615,7 @@ pub fn directed_gnp_random_graph(
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
     if num_nodes <= 0 {
-        return Err(ValueError::py_err("num_nodes must be > 0"));
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
@@ -1631,37 +1625,53 @@ pub fn directed_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability <= 0.0 || probability >= 1.0 {
-        return Err(ValueError::py_err(
-            "Probability out of range, must be 0 < p < 1",
+    if probability < 0.0 || probability > 1.0 {
+        return Err(PyValueError::new_err(
+            "Probability out of range, must be 0 <= p <= 1",
         ));
     }
-    let mut v: isize = 0;
-    let mut w: isize = -1;
-    let lp: f64 = (1.0 - probability).ln();
-
-    while v < num_nodes {
-        let random: f64 = rng.gen_range(0.0, 1.0);
-        let lr: f64 = (1.0 - random).ln();
-        let ratio: isize = (lr / lp) as isize;
-        w = w + 1 + ratio;
-        // avoid self loops
-        if v == w {
-            w += 1;
-        }
-        while v < num_nodes && num_nodes <= w {
-            w -= v;
-            v += 1;
-            // avoid self loops
-            if v == w {
-                w -= v;
-                v += 1;
+    if probability > 0.0 {
+        if (probability - 1.0).abs() < std::f64::EPSILON {
+            for u in 0..num_nodes {
+                for v in 0..num_nodes {
+                    if u != v {
+                        // exclude self-loops
+                        let u_index = NodeIndex::new(u as usize);
+                        let v_index = NodeIndex::new(v as usize);
+                        inner_graph.add_edge(u_index, v_index, py.None());
+                    }
+                }
             }
-        }
-        if v < num_nodes {
-            let v_index = NodeIndex::new(v as usize);
-            let w_index = NodeIndex::new(w as usize);
-            inner_graph.add_edge(v_index, w_index, py.None());
+        } else {
+            let mut v: isize = 0;
+            let mut w: isize = -1;
+            let lp: f64 = (1.0 - probability).ln();
+
+            let between = Uniform::new(0.0, 1.0);
+            while v < num_nodes {
+                let random: f64 = between.sample(&mut rng);
+                let lr: f64 = (1.0 - random).ln();
+                let ratio: isize = (lr / lp) as isize;
+                w = w + 1 + ratio;
+                // avoid self loops
+                if v == w {
+                    w += 1;
+                }
+                while v < num_nodes && num_nodes <= w {
+                    w -= v;
+                    v += 1;
+                    // avoid self loops
+                    if v == w {
+                        w -= v;
+                        v += 1;
+                    }
+                }
+                if v < num_nodes {
+                    let v_index = NodeIndex::new(v as usize);
+                    let w_index = NodeIndex::new(w as usize);
+                    inner_graph.add_edge(v_index, w_index, py.None());
+                }
+            }
         }
     }
 
@@ -1677,12 +1687,19 @@ pub fn directed_gnp_random_graph(
 /// Return a :math:`G_{np}` random undirected graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///
-/// The :math:`G_{n,p}` graph algorithm chooses each of the
-/// :math:`n (n - 1)/2` possible edges with probability :math:`p`.
-/// This algorithm [1]_ runs in :math:`O(n + m)` time, where :math:`m` is the
-/// expected number of edges, which equals :math:`p n (n - 1)/2`.
+/// For number of nodes :math:`n` and probability :math:`p`, the :math:`G_{n,p}`
+/// graph algorithm creates :math:`n` nodes, and for all the :math:`n (n - 1)/2` possible edges,
+/// each edge is created independently with probability :math:`p`.
+/// In general, for any probability :math:`p`, the expected number of edges returned
+/// is :math:`m = p n (n - 1)/2`. If :math:`p = 0` or :math:`p = 1`, the returned
+/// graph is not random and will always be an empty or a complete graph respectively.
+/// An empty graph has zero edges and a complete undirected graph has :math:`n (n - 1)/2` edges.
+/// The run time is :math:`O(n + m)` where :math:`m` is the expected number of edges mentioned above.
+/// When :math:`p = 0`, run time always reduces to :math:`O(n)`, as the lower bound.
+/// When :math:`p = 1`, run time always goes to :math:`O(n + n (n - 1)/2)`, as the upper bound.
+/// For other probabilities, this algorithm [1]_ runs in :math:`O(n + m)` time.
 ///
-/// Based on the implementation of the networkx function
+/// For :math:`0 < p < 1`, the algorithm is based on the implementation of the networkx function
 /// ``fast_gnp_random_graph`` [2]_
 ///
 /// :param int num_nodes: The number of nodes to create in the graph
@@ -1705,7 +1722,7 @@ pub fn undirected_gnp_random_graph(
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
     if num_nodes <= 0 {
-        return Err(ValueError::py_err("num_nodes must be > 0"));
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
@@ -1715,31 +1732,197 @@ pub fn undirected_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability <= 0.0 || probability >= 1.0 {
-        return Err(ValueError::py_err(
-            "Probability out of range, must be 0 < p < 1",
+    if probability < 0.0 || probability > 1.0 {
+        return Err(PyValueError::new_err(
+            "Probability out of range, must be 0 <= p <= 1",
         ));
     }
-    let mut v: isize = 1;
-    let mut w: isize = -1;
-    let lp: f64 = (1.0 - probability).ln();
+    if probability > 0.0 {
+        if (probability - 1.0).abs() < std::f64::EPSILON {
+            for u in 0..num_nodes {
+                for v in u + 1..num_nodes {
+                    let u_index = NodeIndex::new(u as usize);
+                    let v_index = NodeIndex::new(v as usize);
+                    inner_graph.add_edge(u_index, v_index, py.None());
+                }
+            }
+        } else {
+            let mut v: isize = 1;
+            let mut w: isize = -1;
+            let lp: f64 = (1.0 - probability).ln();
 
-    while v < num_nodes {
-        let random: f64 = rng.gen_range(0.0, 1.0);
-        let lr = (1.0 - random).ln();
-        let ratio: isize = (lr / lp) as isize;
-        w = w + 1 + ratio;
-        while w >= v && v < num_nodes {
-            w -= v;
-            v += 1;
-        }
-        if v < num_nodes {
-            let v_index = NodeIndex::new(v as usize);
-            let w_index = NodeIndex::new(w as usize);
-            inner_graph.add_edge(v_index, w_index, py.None());
+            let between = Uniform::new(0.0, 1.0);
+            while v < num_nodes {
+                let random: f64 = between.sample(&mut rng);
+                let lr = (1.0 - random).ln();
+                let ratio: isize = (lr / lp) as isize;
+                w = w + 1 + ratio;
+                while w >= v && v < num_nodes {
+                    w -= v;
+                    v += 1;
+                }
+                if v < num_nodes {
+                    let v_index = NodeIndex::new(v as usize);
+                    let w_index = NodeIndex::new(w as usize);
+                    inner_graph.add_edge(v_index, w_index, py.None());
+                }
+            }
         }
     }
 
+    let graph = graph::PyGraph {
+        graph: inner_graph,
+        node_removed: false,
+    };
+    Ok(graph)
+}
+
+/// Return a :math:`G_{nm}` of a directed graph
+///
+/// Generates a random directed graph out of all the possible graphs with :math:`n` nodes and
+/// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
+///
+/// For :math:`n` nodes, the maximum edges that can be returned is :math:`n (n - 1)`.
+/// Passing :math:`m` higher than that will still return the maximum number of edges.
+/// If :math:`m = 0`, the returned graph will always be empty (no edges).
+/// When a seed is provided, the results are reproducible. Passing a seed when :math:`m = 0`
+/// or :math:`m >= n (n - 1)` has no effect, as the result will always be an empty or a complete graph respectively.
+///
+/// This algorithm has a time complexity of :math:`O(n + m)`
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int num_edges: The number of edges to create in the graph
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+///
+#[pyfunction]
+#[text_signature = "(num_nodes, num_edges, seed=None, /)"]
+pub fn directed_gnm_random_graph(
+    py: Python,
+    num_nodes: isize,
+    num_edges: isize,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    if num_nodes <= 0 {
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
+    }
+    if num_edges < 0 {
+        return Err(PyValueError::new_err("num_edges must be >= 0"));
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut inner_graph = StableDiGraph::<PyObject, PyObject>::new();
+    for x in 0..num_nodes {
+        inner_graph.add_node(x.to_object(py));
+    }
+    // if number of edges to be created is >= max,
+    // avoid randomly missed trials and directly add edges between every node
+    if num_edges >= num_nodes * (num_nodes - 1) {
+        for u in 0..num_nodes {
+            for v in 0..num_nodes {
+                // avoid self-loops
+                if u != v {
+                    let u_index = NodeIndex::new(u as usize);
+                    let v_index = NodeIndex::new(v as usize);
+                    inner_graph.add_edge(u_index, v_index, py.None());
+                }
+            }
+        }
+    } else {
+        let mut created_edges: isize = 0;
+        let between = Uniform::new(0, num_nodes);
+        while created_edges < num_edges {
+            let u = between.sample(&mut rng);
+            let v = between.sample(&mut rng);
+            let u_index = NodeIndex::new(u as usize);
+            let v_index = NodeIndex::new(v as usize);
+            // avoid self-loops and multi-graphs
+            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
+                inner_graph.add_edge(u_index, v_index, py.None());
+                created_edges += 1;
+            }
+        }
+    }
+    let graph = digraph::PyDiGraph {
+        graph: inner_graph,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+    };
+    Ok(graph)
+}
+
+/// Return a :math:`G_{nm}` of an undirected graph
+///
+/// Generates a random undirected graph out of all the possible graphs with :math:`n` nodes and
+/// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
+///
+/// For :math:`n` nodes, the maximum edges that can be returned is :math:`n (n - 1)/2`.
+/// Passing :math:`m` higher than that will still return the maximum number of edges.
+/// If :math:`m = 0`, the returned graph will always be empty (no edges).
+/// When a seed is provided, the results are reproducible. Passing a seed when :math:`m = 0`
+/// or :math:`m >= n (n - 1)/2` has no effect, as the result will always be an empty or a complete graph respectively.
+///
+/// This algorithm has a time complexity of :math:`O(n + m)`
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int num_edges: The number of edges to create in the graph
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+
+#[pyfunction]
+#[text_signature = "(num_nodes, probability, seed=None, /)"]
+pub fn undirected_gnm_random_graph(
+    py: Python,
+    num_nodes: isize,
+    num_edges: isize,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    if num_nodes <= 0 {
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
+    }
+    if num_edges < 0 {
+        return Err(PyValueError::new_err("num_edges must be >= 0"));
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
+    for x in 0..num_nodes {
+        inner_graph.add_node(x.to_object(py));
+    }
+    // if number of edges to be created is >= max,
+    // avoid randomly missed trials and directly add edges between every node
+    if num_edges >= num_nodes * (num_nodes - 1) / 2 {
+        for u in 0..num_nodes {
+            for v in u + 1..num_nodes {
+                let u_index = NodeIndex::new(u as usize);
+                let v_index = NodeIndex::new(v as usize);
+                inner_graph.add_edge(u_index, v_index, py.None());
+            }
+        }
+    } else {
+        let mut created_edges: isize = 0;
+        let between = Uniform::new(0, num_nodes);
+        while created_edges < num_edges {
+            let u = between.sample(&mut rng);
+            let v = between.sample(&mut rng);
+            let u_index = NodeIndex::new(u as usize);
+            let v_index = NodeIndex::new(v as usize);
+            // avoid self-loops and multi-graphs
+            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
+                inner_graph.add_edge(u_index, v_index, py.None());
+                created_edges += 1;
+            }
+        }
+    }
     let graph = graph::PyGraph {
         graph: inner_graph,
         node_removed: false,
@@ -1861,18 +2044,99 @@ pub fn strongly_connected_components(
         .collect()
 }
 
+/// Return the first cycle encountered during DFS of a given PyDiGraph,
+/// empty list is returned if no cycle is found
+///
+/// :param PyDiGraph graph: The graph to find the cycle in
+/// :param int source: Optional index to find a cycle for. If not specified an
+///     arbitrary node will be selected from the graph.
+///
+/// :returns: A list describing the cycle. The index of node ids which
+///     forms a cycle (loop) in the input graph
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /, source=None)"]
+pub fn digraph_find_cycle(
+    graph: &digraph::PyDiGraph,
+    source: Option<usize>,
+) -> Vec<(usize, usize)> {
+    let mut graph_nodes: HashSet<NodeIndex> =
+        graph.graph.node_indices().collect();
+    let mut cycle: Vec<(usize, usize)> = Vec::new();
+    let temp_value: NodeIndex;
+    // If source is not set get an arbitrary node from the set of graph
+    // nodes we've not "examined"
+    let source_index = match source {
+        Some(source_value) => NodeIndex::new(source_value),
+        None => {
+            temp_value = *graph_nodes.iter().next().unwrap();
+            graph_nodes.remove(&temp_value);
+            temp_value
+        }
+    };
+
+    // Stack (ie "pushdown list") of vertices already in the spanning tree
+    let mut stack: Vec<NodeIndex> = Vec::new();
+    stack.push(source_index);
+    // map to store parent of a node
+    let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+    // a node is in the visiting set if at least one of its child is unexamined
+    let mut visiting = HashSet::new();
+    // a node is in visited set if all of its children have been examined
+    let mut visited = HashSet::new();
+    while !stack.is_empty() {
+        let mut z = *stack.last().unwrap();
+        visiting.insert(z);
+
+        let children = graph
+            .graph
+            .neighbors_directed(z, petgraph::Direction::Outgoing);
+
+        for child in children {
+            //cycle is found
+            if visiting.contains(&child) {
+                cycle.push((z.index(), child.index()));
+                //backtrack
+                loop {
+                    if z == child {
+                        cycle.reverse();
+                        break;
+                    }
+                    cycle.push((pred[&z].index(), z.index()));
+                    z = pred[&z];
+                }
+                return cycle;
+            }
+            //if an unexplored node is encountered
+            if !visited.contains(&child) {
+                stack.push(child);
+                pred.insert(child, z);
+            }
+        }
+
+        let top = *stack.last().unwrap();
+        //if no further children and explored, move to visited
+        if top.index() == z.index() {
+            stack.pop();
+            visiting.remove(&z);
+            visited.insert(z);
+        }
+    }
+    cycle
+}
+
 // The provided node is invalid.
-create_exception!(retworkx, InvalidNode, Exception);
+create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
-create_exception!(retworkx, DAGWouldCycle, Exception);
+create_exception!(retworkx, DAGWouldCycle, PyException);
 // There is no edge present between the provided nodes.
-create_exception!(retworkx, NoEdgeBetweenNodes, Exception);
+create_exception!(retworkx, NoEdgeBetweenNodes, PyException);
 // The specified Directed Graph has a cycle and can't be treated as a DAG.
-create_exception!(retworkx, DAGHasCycle, Exception);
+create_exception!(retworkx, DAGHasCycle, PyException);
 // No neighbors found matching the provided predicate.
-create_exception!(retworkx, NoSuitableNeighbors, Exception);
+create_exception!(retworkx, NoSuitableNeighbors, PyException);
 // No path was found between the specified nodes.
-create_exception!(retworkx, NoPathFound, Exception);
+create_exception!(retworkx, NoPathFound, PyException);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -1911,8 +2175,11 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_class::<digraph::PyDiGraph>()?;
