@@ -1076,9 +1076,10 @@ impl PyDiGraph {
         Ok(out_map)
     }
 
-    /// Get the neighbors of a node.
+    /// Get the neighbors (i.e. successors) of a node.
     ///
-    /// This will return a list of neighbor node indices.
+    /// This will return a list of neighbor node indices. This function
+    /// is equivalent to :meth:`get_successor_nodes`.
     ///
     /// :param int node: The index of the node to get the neighbors of
     ///
