@@ -1078,7 +1078,7 @@ impl PyDiGraph {
 
     /// Get the neighbors of a node.
     ///
-    /// This with return a list of neighbor node indices.
+    /// This will return a list of neighbor node indices.
     ///
     /// :param int node: The index of the node to get the neighbors of
     ///
@@ -1094,7 +1094,7 @@ impl PyDiGraph {
 
     /// Get the successor indices of a node.
     ///
-    /// This with return a list of the node indicies for the succesors of
+    /// This will return a list of the node indicies for the succesors of
     /// a node
     ///
     /// :param int node: The index of the node to get the successors of
@@ -1114,9 +1114,7 @@ impl PyDiGraph {
 
     /// Get the predecessor indices of a node.
     ///
-    /// Get the successor indices of a node.
-    ///
-    /// This with return a list of the node indicies for the predecessors of
+    /// This will return a list of the node indicies for the predecessors of
     /// a node
     ///
     /// :param int node: The index of the node to get the predecessors of
