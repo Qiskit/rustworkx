@@ -22,7 +22,7 @@ fixedbitset = "0.2.0"
 numpy = "0.12.1"
 rand = "0.7"
 rand_pcg = "0.2"
-rayon = "1.4"
+rayon = "1.5"
 
 [dependencies.pyo3]
 version = "0.12.3"
