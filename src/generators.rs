@@ -40,6 +40,8 @@ where
 /// :param list weights: A list of node weights, the first element in the list
 ///     will be the center node of the cycle graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool bidirectional: Adds edges in both directions between two nodes
+///     if set to ``True``. Default value is ``False``
 ///
 /// :returns: The generated cycle graph
 /// :rtype: PyDiGraph
@@ -69,12 +71,19 @@ where
 ///   image
 ///
 #[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False)"]
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    bidirectional: Option<bool>,
 ) -> PyResult<digraph::PyDiGraph> {
+    // boolean flag to indicate if edges should be added in both directions
+    let bidirection = match bidirectional {
+        Some(x) => bidirectional.unwrap(),
+        None => false,
+    };
+
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
@@ -101,13 +110,21 @@ pub fn directed_cycle_graph(
     };
     for (node_a, node_b) in pairwise(nodes) {
         match node_a {
-            Some(node_a) => graph.add_edge(node_a, node_b, py.None()),
+            Some(node_a) => {
+                if bidirection {
+                    graph.add_edge(node_b, node_a, py.None());
+                }
+                graph.add_edge(node_a, node_b, py.None());
+            }
             None => continue,
         };
     }
     let last_node_index = NodeIndex::new(node_len - 1);
     let first_node_index = NodeIndex::new(0);
     graph.add_edge(last_node_index, first_node_index, py.None());
+    if bidirection {
+        graph.add_edge(first_node_index, last_node_index, py.None());
+    }
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -206,6 +223,8 @@ pub fn cycle_graph(
 /// :param list weights: A list of node weights, the first element in the list
 ///     will be the center node of the path graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool bidirectional: Adds edges in both directions between two nodes
+///     if set to ``True``. Default value is ``False``
 ///
 /// :returns: The generated path graph
 /// :rtype: PyDiGraph
@@ -235,12 +254,19 @@ pub fn cycle_graph(
 ///   image
 ///
 #[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False)"]
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    bidirectional: Option<bool>,
 ) -> PyResult<digraph::PyDiGraph> {
+    // boolean variable to store if there should be an edge in both directions
+    let bidirection = match bidirectional {
+        Some(x) => bidirectional.unwrap(),
+        None => false,
+    };
+
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
@@ -262,7 +288,14 @@ pub fn directed_path_graph(
     };
     for (node_a, node_b) in pairwise(nodes) {
         match node_a {
-            Some(node_a) => graph.add_edge(node_a, node_b, py.None()),
+            Some(node_a) => {
+                if bidirection {
+                    graph.add_edge(node_a, node_b, py.None());
+                    graph.add_edge(node_b, node_a, py.None());
+                } else {
+                    graph.add_edge(node_a, node_b, py.None());
+                }
+            }
             None => continue,
         };
     }
@@ -356,8 +389,11 @@ pub fn path_graph(
 /// :param list weights: A list of node weights, the first element in the list
 ///     will be the center node of the star graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param bool inward: if set ``True`` the nodes will be directed towards the
-///     center node
+/// :param bool bidirectional: Adds edges in both directions between two nodes
+///     if set to ``True``. Default value is ``False``.
+/// :param bool inward: If set ``True`` the nodes will be directed towards the
+///     center node. This parameter is ignored if ``bidirectional`` is set to
+///     ``True``.
 ///
 /// :returns: The generated star graph
 /// :rtype: PyDiGraph
@@ -410,13 +446,25 @@ pub fn path_graph(
 ///   image
 ///
 #[pyfunction(inward = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, inward=False)"]
+#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False)"]
 pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
-    inward: bool,
+    bidirectional: Option<bool>,
+    inward: Option<bool>,
 ) -> PyResult<digraph::PyDiGraph> {
+    // boolean variable to store if there should be an edge in both directions
+    let bidirection = match bidirectional {
+        Some(x) => bidirectional.unwrap(),
+        None => false,
+    };
+    //alias for inward parameter
+    let direction = match inward {
+        Some(x) => inward.unwrap(),
+        None => false,
+    };
+
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
@@ -437,10 +485,16 @@ pub fn directed_star_graph(
             .collect(),
     };
     for node in nodes[1..].iter() {
-        if inward {
+        //Add edges in both directions if bidirection is True
+        if bidirection {
             graph.add_edge(*node, nodes[0], py.None());
-        } else {
             graph.add_edge(nodes[0], *node, py.None());
+        } else {
+            if direction {
+                graph.add_edge(*node, nodes[0], py.None());
+            } else {
+                graph.add_edge(nodes[0], *node, py.None());
+            }
         }
     }
     Ok(digraph::PyDiGraph {
