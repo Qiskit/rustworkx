@@ -439,8 +439,8 @@ pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
-    bidirectional: bool,
     inward: bool,
+    bidirectional: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -466,12 +466,10 @@ pub fn directed_star_graph(
         if bidirectional {
             graph.add_edge(*node, nodes[0], py.None());
             graph.add_edge(nodes[0], *node, py.None());
+        } else if inward {
+            graph.add_edge(*node, nodes[0], py.None());
         } else {
-            if inward {
-                graph.add_edge(*node, nodes[0], py.None());
-            } else {
-                graph.add_edge(nodes[0], *node, py.None());
-            }
+            graph.add_edge(nodes[0], *node, py.None());
         }
     }
     Ok(digraph::PyDiGraph {
