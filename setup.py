@@ -4,8 +4,14 @@ try:
 except ImportError:
     import sys
     import subprocess
+
+    if sys.version_info[1] == 5:
+        setuptools_rust = 'setuptools-rust<0.11.4'
+    else:
+        setuptools_rust = 'setuptools-rust'
+
     subprocess.call([sys.executable, '-m', 'pip', 'install',
-                     'setuptools-rust'])
+                     setuptools_rust])
     from setuptools_rust import Binding, RustExtension
 
 
@@ -33,6 +39,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
