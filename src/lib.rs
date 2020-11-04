@@ -816,7 +816,7 @@ fn graph_floyd_warshall_numpy(
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
 #[pyfunction(as_undirected = "false", default_weight = "1.0")]
-#[text_signature = "(graph, weight_fn, /, as_undirected=False, default_weight=1.0)"]
+#[text_signature = "(graph, /, weight_fn=None as_undirected=False, default_weight=1.0)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
