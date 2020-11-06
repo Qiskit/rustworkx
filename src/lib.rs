@@ -1017,7 +1017,7 @@ fn layers(
 /// distance of 1.
 ///
 /// This function is also multithreaded and will run in parallel if the number
-/// of nodes in the graph is above the value of ``paralllel_threshold`` (it
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
 /// defaults to 300). If the function will be running in parallel the env var
 /// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 ///
