@@ -20,7 +20,7 @@ mod graph;
 mod k_shortest_path;
 
 use std::cmp::{Ordering, Reverse};
-use std::collections::BinaryHeap;
+use std::collections::{BTreeSet, BinaryHeap};
 
 use hashbrown::{HashMap, HashSet};
 
@@ -153,6 +153,67 @@ fn dag_longest_path_length(graph: &digraph::PyDiGraph) -> PyResult<usize> {
 #[text_signature = "(graph, /)"]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     algo::connected_components(graph)
+}
+
+/// Find the weakly connected components in a directed graph
+///
+/// :param PyDiGraph graph: The graph to find the weakly connected components
+///     in
+///
+/// :returns: A list of sets where each set it a weakly connected component of
+///     the graph
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn weakly_connected_components(
+    graph: &digraph::PyDiGraph,
+) -> Vec<BTreeSet<usize>> {
+    let mut seen: HashSet<NodeIndex> = HashSet::new();
+    let mut out_vec: Vec<BTreeSet<usize>> = Vec::new();
+    for node in graph.graph.node_indices() {
+        if !seen.contains(&node) {
+            // BFS node generator
+            let mut component_set: BTreeSet<usize> = BTreeSet::new();
+            let mut bfs_seen: HashSet<NodeIndex> = HashSet::new();
+            let mut next_level: HashSet<NodeIndex> = HashSet::new();
+            next_level.insert(node);
+            while !next_level.is_empty() {
+                let this_level = next_level;
+                next_level = HashSet::new();
+                for bfs_node in this_level {
+                    if !bfs_seen.contains(&bfs_node) {
+                        component_set.insert(bfs_node.index());
+                        bfs_seen.insert(bfs_node);
+                        for neighbor in
+                            graph.graph.neighbors_undirected(bfs_node)
+                        {
+                            next_level.insert(neighbor);
+                        }
+                    }
+                }
+            }
+            out_vec.push(component_set);
+            seen.extend(bfs_seen);
+        }
+    }
+    out_vec
+}
+
+/// Check if the graph is weakly connected
+///
+/// :param PyDiGraph graph: The graph to check if it is weakly connected
+///
+/// :returns: Whether the graph is weakly connected or not
+/// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
+    if graph.graph.node_count() == 0 {
+        return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
+    }
+    Ok(weakly_connected_components(graph)[0].len() == graph.graph.node_count())
 }
 
 /// Check that the PyDiGraph or PyDAG doesn't have a cycle
@@ -829,25 +890,22 @@ where
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn graph_floyd_warshall_numpy(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
-
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         mat[[j, i]] = mat[[j, i]].min(edge_weight);
     }
@@ -897,27 +955,24 @@ fn graph_floyd_warshall_numpy(
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(as_undirected = "false")]
-#[text_signature = "(graph, weight_fn, /, as_undirected=False)"]
+#[pyfunction(as_undirected = "false", default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None as_undirected=False, default_weight=1.0)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
     as_undirected: bool,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
 
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
-
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         if as_undirected {
             mat[[j, i]] = mat[[j, i]].min(edge_weight);
@@ -1034,6 +1089,21 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
+fn weight_callable(
+    py: Python,
+    weight_fn: &Option<PyObject>,
+    weight: PyObject,
+    default: f64,
+) -> PyResult<f64> {
+    match weight_fn {
+        Some(weight_fn) => {
+            let res = weight_fn.call1(py, (weight,))?;
+            res.extract(py)
+        }
+        None => Ok(default),
+    }
+}
+
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -1041,7 +1111,7 @@ fn layers(
 ///
 /// :param PyDiGraph graph: The DiGraph used to generate the adjacency matrix
 ///     from
-/// :param weight_fn callable: A callable object (function, lambda, etc) which
+/// :param callable weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
 ///     tells retworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
@@ -1052,26 +1122,27 @@ fn layers(
 ///
 ///         dag_adjacency_matrix(dag, weight_fn: lambda x: float(x))
 ///
-///     to cast the edge object as a float as the weight.
+///     to cast the edge object as a float as the weight. If this is not
+///     specified a default value (either ``default_weight`` or 1) will be used
+///     for all edges.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
 ///
 ///  :return: The adjacency matrix for the input dag as a numpy array
 ///  :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
-
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
@@ -1094,30 +1165,30 @@ fn digraph_adjacency_matrix(
 ///
 ///         graph_adjacency_matrix(graph, weight_fn: lambda x: float(x))
 ///
-///     to cast the edge object as a float as the weight.
+///     to cast the edge object as a float as the weight. If this is not
+///     specified a default value (either ``default_weight`` or 1) will be used
+///     for all edges.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
 ///
 /// :return: The adjacency matrix for the input dag as a numpy array
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
-
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
-
     Ok(matrix.into_pyarray(py).into())
 }
 
@@ -2047,6 +2118,8 @@ create_exception!(retworkx, NoEdgeBetweenNodes, PyException);
 create_exception!(retworkx, DAGHasCycle, PyException);
 // No neighbors found matching the provided predicate.
 create_exception!(retworkx, NoSuitableNeighbors, PyException);
+// Invalid operation on a null graph
+create_exception!(retworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, PyException);
 
@@ -2059,10 +2132,13 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
+    m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
