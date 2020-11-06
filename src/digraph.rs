@@ -1076,6 +1076,62 @@ impl PyDiGraph {
         Ok(out_map)
     }
 
+    /// Get the neighbors (i.e. successors) of a node.
+    ///
+    /// This will return a list of neighbor node indices. This function
+    /// is equivalent to :meth:`successor_indices`.
+    ///
+    /// :param int node: The index of the node to get the neighbors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
+    pub fn neighbors(&self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors(NodeIndex::new(node))
+            .map(|node| node.index())
+            .collect()
+    }
+
+    /// Get the successor indices of a node.
+    ///
+    /// This will return a list of the node indicies for the succesors of
+    /// a node
+    ///
+    /// :param int node: The index of the node to get the successors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
+    pub fn successor_indices(&mut self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors_directed(
+                NodeIndex::new(node),
+                petgraph::Direction::Outgoing,
+            )
+            .map(|node| node.index())
+            .collect()
+    }
+
+    /// Get the predecessor indices of a node.
+    ///
+    /// This will return a list of the node indicies for the predecessors of
+    /// a node
+    ///
+    /// :param int node: The index of the node to get the predecessors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
+    pub fn predecessor_indices(&mut self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors_directed(
+                NodeIndex::new(node),
+                petgraph::Direction::Incoming,
+            )
+            .map(|node| node.index())
+            .collect()
+    }
     /// Get the index and edge data for all parents of a node.
     ///
     /// This will return a list of tuples with the parent index the node index
