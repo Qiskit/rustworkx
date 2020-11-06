@@ -910,41 +910,59 @@ impl PyDiGraph {
         Ok(())
     }
 
-    /// Insert a node between multiple child node and its neighbors
+    /// Insert a node between multiple parents and all their children nodes
     ///
-    /// This essentially iterates over all edges into or out of (as
-    /// dictated by the ``direction`` parameter) the nodes specified in the
-    /// ``nodes_between`` parameter removes those edges and then adds 2 edges,
-    /// one from the parent or child of that edge to ``node`` and the other to
-    /// or from ``node`` to ``node_between``. The edge payloads for the newly
-    /// created edges are copied by reference from the original edge that gets
-    /// removed.
+    /// This essentially iterates over all edges into the nodes specified in
+    /// the ``nodes_between`` parameter removes those edges and then adds 2
+    /// edges, one from the parent or child of that edge to ``node`` and the
+    /// other to or from ``node`` to ``node_between``. The edge payloads for
+    /// the newly created edges are copied by reference from the original
+    /// edge that gets removed.
     ///
     /// :param int node: The node index to insert between
     /// :param int nodes_between: The list of node indices to insert ``node``
     ///     between
-    /// :param bool direction: The direction relative to node_between to insert
-    ///     node. If ``False`` (the default) it will use incoming edges, if
-    ///     ``True`` it will use outgoing.
-    #[args(direction = "false")]
-    #[text_signature = "(node, nodes_between, /, direction=False)"]
-    pub fn insert_node_between_multiple(
+    #[text_signature = "(node, nodes_between, /)"]
+    pub fn insert_node_on_in_edges_multiple(
         &mut self,
         py: Python,
         node: usize,
         nodes_between: Vec<usize>,
-        direction: bool,
     ) -> PyResult<()> {
         for node_between in nodes_between {
-            self.insert_between(py, node, node_between, direction)?;
+            self.insert_between(py, node, node_between, false)?;
+        }
+        Ok(())
+    }
+
+    /// Insert a node between multiple children and all their parent nodes
+    ///
+    /// This essentially iterates over all edges into the nodes specified in
+    /// the ``nodes_between`` parameter removes those edges and then adds 2
+    /// edges, one from the parent or child of that edge to ``node`` and the
+    /// other to or from ``node`` to ``node_between``. The edge payloads for
+    /// the newly created edges are copied by reference from the original
+    /// edge that gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int nodes_between: The list of node indices to insert ``node``
+    ///     between
+    #[text_signature = "(node, nodes_between, /)"]
+    pub fn insert_node_on_out_edges_multiple(
+        &mut self,
+        py: Python,
+        node: usize,
+        nodes_between: Vec<usize>,
+    ) -> PyResult<()> {
+        for node_between in nodes_between {
+            self.insert_between(py, node, node_between, true)?;
         }
         Ok(())
     }
 
     /// Insert a node between a child node and all it's parents
     ///
-    /// This essentially iterates over all edges into or out of (as
-    /// dictated by the ``direction`` parameter) the node specified in the
+    /// This essentially iterates over all edges into the node specified in the
     /// ``node_between`` parameter removes those edges and then adds 2 edges,
     /// one from the parent or child of that edge to ``node`` and the other to
     /// or from ``node`` to ``node_between``. The edge payloads for the newly
@@ -953,19 +971,36 @@ impl PyDiGraph {
     ///
     /// :param int node: The node index to insert between
     /// :param int node_between: The node index to insert ``node`` between
-    /// :param bool direction: The direction relative to node_between to insert
-    ///     node. If ``False`` (the default) it will use incoming edges, if
-    ///     ``True`` it will use outgoing.
-    #[args(direction = "false")]
-    #[text_signature = "(node, node_between, /, direction=False)"]
-    pub fn insert_node_between(
+    #[text_signature = "(node, node_between, /)"]
+    pub fn insert_node_on_in_edges(
         &mut self,
         py: Python,
         node: usize,
         node_between: usize,
-        direction: bool,
     ) -> PyResult<()> {
-        self.insert_between(py, node, node_between, direction)?;
+        self.insert_between(py, node, node_between, false)?;
+        Ok(())
+    }
+
+    /// Insert a node between a parent node and all it's children
+    ///
+    /// This essentially iterates over all edges out of the node specified in
+    /// the ``node_between`` parameter removes those edges and then adds 2
+    /// edges, one from the parent or child of that edge to ``node`` and the
+    /// other to or from ``node`` to ``node_between``. The edge payloads for
+    /// the newly created edges are copied by reference from the original edge
+    /// that gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int node_between: The node index to insert ``node`` between
+    #[text_signature = "(node, node_between, /)"]
+    pub fn insert_node_on_out_edges(
+        &mut self,
+        py: Python,
+        node: usize,
+        node_between: usize,
+    ) -> PyResult<()> {
+        self.insert_between(py, node, node_between, true)?;
         Ok(())
     }
 
