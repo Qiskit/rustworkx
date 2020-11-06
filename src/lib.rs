@@ -1086,6 +1086,7 @@ pub fn digraph_distance_matrix(
             .enumerate()
             .for_each(|(index, row)| bfs_traversal(index, row));
     } else {
+        // Parallelize by row and iterate from each row index in BFS order
         matrix
             .axis_iter_mut(Axis(0))
             .into_par_iter()
