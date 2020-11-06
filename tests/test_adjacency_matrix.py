@@ -30,6 +30,32 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
                 dtype=np.float64),
             res))
 
+    def test_no_weight_fn(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        dag.add_child(node_a, 'b', {'a': 1})
+        dag.add_child(node_a, 'c', {'a': 2})
+        res = retworkx.digraph_adjacency_matrix(dag)
+        self.assertIsInstance(res, np.ndarray)
+        self.assertTrue(np.array_equal(
+            np.array(
+                [[0.0, 1.0, 1.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                dtype=np.float64),
+            res))
+
+    def test_default_weight(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        dag.add_child(node_a, 'b', {'a': 1})
+        dag.add_child(node_a, 'c', {'a': 2})
+        res = retworkx.digraph_adjacency_matrix(dag, default_weight=4)
+        self.assertIsInstance(res, np.ndarray)
+        self.assertTrue(np.array_equal(
+            np.array(
+                [[0.0, 4.0, 4.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                dtype=np.float64),
+            res))
+
     def test_float_cast_weight_func(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
@@ -85,6 +111,36 @@ class TestGraphAdjacencyMatrix(unittest.TestCase):
         self.assertTrue(np.array_equal(
             np.array(
                 [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]],
+                dtype=np.float64),
+            res))
+
+    def test_no_weight_fn(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, 'edge_a')
+        node_c = graph.add_node('c')
+        graph.add_edge(node_b, node_c, 'edge_b')
+        res = retworkx.graph_adjacency_matrix(graph)
+        self.assertIsInstance(res, np.ndarray)
+        self.assertTrue(np.array_equal(
+            np.array(
+                [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]],
+                dtype=np.float64),
+            res))
+
+    def test_default_weight(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, 'edge_a')
+        node_c = graph.add_node('c')
+        graph.add_edge(node_b, node_c, 'edge_b')
+        res = retworkx.graph_adjacency_matrix(graph, default_weight=4)
+        self.assertIsInstance(res, np.ndarray)
+        self.assertTrue(np.array_equal(
+            np.array(
+                [[0.0, 4.0, 0.0], [4.0, 0.0, 4.0], [0.0, 4.0, 0.0]],
                 dtype=np.float64),
             res))
 

@@ -38,3 +38,52 @@ class TestWeaklyConnected(unittest.TestCase):
             G.add_child(node, str(i), {})
         self.assertEqual(retworkx.number_weakly_connected_components(G),
                          100000)
+
+    def test_weakly_connected_components(self):
+        graph = retworkx.PyDiGraph()
+        graph.extend_from_edge_list([
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4)
+        ])
+        components = retworkx.weakly_connected_components(graph)
+        self.assertEqual([{0, 1, 2, 3}, {4, 5, 6, 7}], components)
+
+    def test_is_weakly_connected_false(self):
+        graph = retworkx.PyDiGraph()
+        graph.extend_from_edge_list([
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4)
+        ])
+        self.assertFalse(retworkx.is_weakly_connected(graph))
+
+    def test_is_weakly_connected_true(self):
+        graph = retworkx.PyDiGraph()
+        graph.extend_from_edge_list([
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0),
+            (2, 4),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4)
+        ])
+        self.assertTrue(retworkx.is_weakly_connected(graph))
+
+    def test_is_weakly_connected_null_graph(self):
+        graph = retworkx.PyDiGraph()
+        with self.assertRaises(retworkx.NullGraph):
+            retworkx.is_weakly_connected(graph)
