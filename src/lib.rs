@@ -826,7 +826,7 @@ fn graph_floyd_warshall_numpy(
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
-            weight_callable(py, &weight_fn, weight, default_weight)?;
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         mat[[j, i]] = mat[[j, i]].min(edge_weight);
     }
@@ -893,7 +893,7 @@ fn digraph_floyd_warshall_numpy(
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
-            weight_callable(py, &weight_fn, weight, default_weight)?;
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         if as_undirected {
             mat[[j, i]] = mat[[j, i]].min(edge_weight);
@@ -1010,21 +1010,6 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
-fn weight_callable(
-    py: Python,
-    weight_fn: &Option<PyObject>,
-    weight: PyObject,
-    default: f64,
-) -> PyResult<f64> {
-    match weight_fn {
-        Some(weight_fn) => {
-            let res = weight_fn.call1(py, (weight,))?;
-            res.extract(py)
-        }
-        None => Ok(default),
-    }
-}
-
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -1063,7 +1048,7 @@ fn digraph_adjacency_matrix(
     let mut matrix = Array2::<f64>::zeros((n, n));
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
-            weight_callable(py, &weight_fn, weight, default_weight)?;
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
@@ -1106,7 +1091,7 @@ fn graph_adjacency_matrix(
     let mut matrix = Array2::<f64>::zeros((n, n));
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
-            weight_callable(py, &weight_fn, weight, default_weight)?;
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
