@@ -20,7 +20,6 @@ crate-type = ["cdylib"]
 petgraph = "0.5.1"
 fixedbitset = "0.2.0"
 numpy = "0.12.1"
-ndarray = "0.13.0"
 rand = "0.7"
 rand_pcg = "0.2"
 rayon = "1.5"
@@ -31,4 +30,8 @@ features = ["extension-module", "hashbrown"]
 
 [dependencies.hashbrown]
 version = "0.9"
+features = ["rayon"]
+
+[dependencies.ndarray]
+version = "0.13.0"
 features = ["rayon"]
