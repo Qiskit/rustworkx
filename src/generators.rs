@@ -551,6 +551,265 @@ pub fn star_graph(
     })
 }
 
+/// Generate an undirected mesh graph where every node is connected to every other
+///
+/// :param int num_node: The number of nodes to generate the graph with. Node
+///     weights will be None if this is specified. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param list weights: A list of node weights. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///
+/// :returns: The generated mesh graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
+///
+#[pyfunction]
+#[text_signature = "(/, num_nodes=None, weights=None)"]
+pub fn mesh_graph(
+    py: Python,
+    num_nodes: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    if weights.is_none() && num_nodes.is_none() {
+        return Err(PyIndexError::new_err(
+            "num_nodes and weights list not specified",
+        ));
+    }
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+            }
+            node_list
+        }
+        None => (0..num_nodes.unwrap())
+            .map(|_| graph.add_node(py.None()))
+            .collect(),
+    };
+
+    let nodelen = nodes.len();
+    for i in 0..nodelen - 1 {
+        for j in i + 1..nodelen {
+            graph.add_edge(nodes[i], nodes[j], py.None());
+        }
+    }
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+    })
+}
+
+/// Generate a directed mesh graph where every node is connected to every other
+///
+/// :param int num_node: The number of nodes to generate the graph with. Node
+///     weights will be None if this is specified. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param list weights: A list of node weights. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///
+/// :returns: The generated mesh graph
+/// :rtype: PyDiGraph
+/// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
+///
+#[pyfunction]
+#[text_signature = "(/, num_nodes=None, weights=None)"]
+pub fn directed_mesh_graph(
+    py: Python,
+    num_nodes: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    if weights.is_none() && num_nodes.is_none() {
+        return Err(PyIndexError::new_err(
+            "num_nodes and weights list not specified",
+        ));
+    }
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+            }
+            node_list
+        }
+        None => (0..num_nodes.unwrap())
+            .map(|_| graph.add_node(py.None()))
+            .collect(),
+    };
+    let nodelen = nodes.len();
+    for i in 0..nodelen - 1 {
+        for j in i + 1..nodelen {
+            graph.add_edge(nodes[i], nodes[j], py.None());
+            graph.add_edge(nodes[j], nodes[i], py.None());
+        }
+    }
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+    })
+}
+
+/// Generate an undirected grid graph
+///
+/// :param int rows: The number of rows to generate the graph with. Value
+///     required
+/// :param list cols: The number of rows to generate the graph with. Value
+///     required
+/// :param list weights: A list of node weights.
+///
+/// :returns: The generated star graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``rows`` and ``cols`` or ``weights`` are
+///      specified
+///
+#[pyfunction]
+#[text_signature = "(/, rows=None, cols=None, weights=None)"]
+pub fn grid_graph(
+    py: Python,
+    rows: Option<usize>,
+    cols: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    if weights.is_none() && (rows.is_none() || cols.is_none()) {
+        return Err(PyIndexError::new_err(
+            "dimensions and weights list not specified",
+        ));
+    }
+
+    let rowlen = rows.unwrap();
+    let collen = cols.unwrap();
+    let num_nodes = rowlen * collen;
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+            }
+            node_list
+        }
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    for i in 0..rowlen {
+        for j in 0..collen {
+            if i + 1 < rowlen {
+                graph.add_edge(
+                    nodes[i * collen + j],
+                    nodes[(i + 1) * collen + j],
+                    py.None(),
+                );
+            }
+            if j + 1 < collen {
+                graph.add_edge(
+                    nodes[i * collen + j],
+                    nodes[i * collen + j + 1],
+                    py.None(),
+                );
+            }
+        }
+    }
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+    })
+}
+
+/// Generate a directed grid graph. The edges propagate towards right and
+///     bottom direction if ``bidirectional`` is ``false``
+///
+/// :param int rows: The number of rows to generate the graph with. Value
+///     required
+/// :param list cols: The number of rows to generate the graph with. Value
+///     required
+/// :param list weights: A list of node weights.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes
+///
+/// :returns: The generated star graph
+/// :rtype: PyDiGraph
+/// :raises IndexError: If neither ``rows`` and ``cols`` or ``weights`` are
+///      specified
+///
+#[pyfunction(bidirectional = "false")]
+#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False)"]
+pub fn directed_grid_graph(
+    py: Python,
+    rows: Option<usize>,
+    cols: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    if weights.is_none() && (rows.is_none() || cols.is_none()) {
+        return Err(PyIndexError::new_err(
+            "dimensions and weights list not specified",
+        ));
+    }
+
+    let rowlen = rows.unwrap();
+    let collen = cols.unwrap();
+    let num_nodes = rowlen * collen;
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+            }
+            node_list
+        }
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    for i in 0..rowlen {
+        for j in 0..collen {
+            if i + 1 < rowlen {
+                graph.add_edge(
+                    nodes[i * collen + j],
+                    nodes[(i + 1) * collen + j],
+                    py.None(),
+                );
+                if bidirectional {
+                    graph.add_edge(
+                        nodes[(i + 1) * collen + j],
+                        nodes[i * collen + j],
+                        py.None(),
+                    );
+                }
+            }
+
+            if j + 1 < collen {
+                graph.add_edge(
+                    nodes[i * collen + j],
+                    nodes[i * collen + j + 1],
+                    py.None(),
+                );
+                if bidirectional {
+                    graph.add_edge(
+                        nodes[i * collen + j + 1],
+                        nodes[i * collen + j],
+                        py.None(),
+                    );
+                }
+            }
+        }
+    }
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -559,5 +818,9 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_path_graph))?;
     m.add_wrapped(wrap_pyfunction!(star_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_star_graph))?;
+    m.add_wrapped(wrap_pyfunction!(mesh_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
+    m.add_wrapped(wrap_pyfunction!(grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
     Ok(())
 }
