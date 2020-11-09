@@ -910,97 +910,99 @@ impl PyDiGraph {
         Ok(())
     }
 
-    /// Insert a node between multiple parents and all their children nodes
+    /// Insert a node between a list of reference nodes and all their predecessors
     ///
-    /// This essentially iterates over all edges into the nodes specified in
-    /// the ``nodes_between`` parameter removes those edges and then adds 2
-    /// edges, one from the parent or child of that edge to ``node`` and the
-    /// other to or from ``node`` to ``node_between``. The edge payloads for
+    /// This essentially iterates over all edges into the reference node
+    /// specified in the ``ref_nodes`` parameter removes those edges and then
+    /// adds 2 edges, one from the predecessor of ``ref_node`` to ``node``
+    /// and the other from ``node`` to ``ref_node``. The edge payloads for
     /// the newly created edges are copied by reference from the original
     /// edge that gets removed.
     ///
     /// :param int node: The node index to insert between
-    /// :param int nodes_between: The list of node indices to insert ``node``
-    ///     between
-    #[text_signature = "(node, nodes_between, /)"]
+    /// :param int ref_node: The reference node index to insert ``node``
+    /// between
+    #[text_signature = "(node, ref_nodes, /)"]
     pub fn insert_node_on_in_edges_multiple(
         &mut self,
         py: Python,
         node: usize,
-        nodes_between: Vec<usize>,
+        ref_nodes: Vec<usize>,
     ) -> PyResult<()> {
-        for node_between in nodes_between {
-            self.insert_between(py, node, node_between, false)?;
+        for ref_node in ref_nodes {
+            self.insert_between(py, node, ref_node, false)?;
         }
         Ok(())
     }
 
-    /// Insert a node between multiple children and all their parent nodes
+    /// Insert a node between a list of reference nodes and all their successors
     ///
-    /// This essentially iterates over all edges into the nodes specified in
-    /// the ``nodes_between`` parameter removes those edges and then adds 2
-    /// edges, one from the parent or child of that edge to ``node`` and the
-    /// other to or from ``node`` to ``node_between``. The edge payloads for
-    /// the newly created edges are copied by reference from the original
-    /// edge that gets removed.
+    /// This essentially iterates over all edges out of the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from ``ref_node`` to ``node`` and the other from
+    /// ``node`` to the successor of ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge that
+    /// gets removed.
     ///
     /// :param int node: The node index to insert between
-    /// :param int nodes_between: The list of node indices to insert ``node``
+    /// :param int ref_nodes: The list of node indices to insert ``node``
     ///     between
-    #[text_signature = "(node, nodes_between, /)"]
+    #[text_signature = "(node, ref_nodes, /)"]
     pub fn insert_node_on_out_edges_multiple(
         &mut self,
         py: Python,
         node: usize,
-        nodes_between: Vec<usize>,
+        ref_nodes: Vec<usize>,
     ) -> PyResult<()> {
-        for node_between in nodes_between {
-            self.insert_between(py, node, node_between, true)?;
+        for ref_node in ref_nodes {
+            self.insert_between(py, node, ref_node, true)?;
         }
         Ok(())
     }
 
-    /// Insert a node between a child node and all it's parents
+    /// Insert a node between a reference node and all its predecessor nodes
     ///
-    /// This essentially iterates over all edges into the node specified in the
-    /// ``node_between`` parameter removes those edges and then adds 2 edges,
-    /// one from the parent or child of that edge to ``node`` and the other to
-    /// or from ``node`` to ``node_between``. The edge payloads for the newly
-    /// created edges are copied by reference from the original edge that gets
-    /// removed.
+    /// This essentially iterates over all edges into the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from the predecessor of ``ref_node`` to ``node`` and
+    /// the other from ``node`` to ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge that
+    /// gets removed.
     ///
     /// :param int node: The node index to insert between
-    /// :param int node_between: The node index to insert ``node`` between
-    #[text_signature = "(node, node_between, /)"]
+    /// :param int ref_node: The reference node index to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_node, /)"]
     pub fn insert_node_on_in_edges(
         &mut self,
         py: Python,
         node: usize,
-        node_between: usize,
+        ref_node: usize,
     ) -> PyResult<()> {
-        self.insert_between(py, node, node_between, false)?;
+        self.insert_between(py, node, ref_node, false)?;
         Ok(())
     }
 
-    /// Insert a node between a parent node and all it's children
+    /// Insert a node between a reference node and all its successor nodes
     ///
-    /// This essentially iterates over all edges out of the node specified in
-    /// the ``node_between`` parameter removes those edges and then adds 2
-    /// edges, one from the parent or child of that edge to ``node`` and the
-    /// other to or from ``node`` to ``node_between``. The edge payloads for
-    /// the newly created edges are copied by reference from the original edge
+    /// This essentially iterates over all edges out of the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from ``ref_node`` to ``node`` and the other from
+    /// ``node`` to the successor of ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge
     /// that gets removed.
     ///
     /// :param int node: The node index to insert between
-    /// :param int node_between: The node index to insert ``node`` between
-    #[text_signature = "(node, node_between, /)"]
+    /// :param int ref_node: The reference node index to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_node, /)"]
     pub fn insert_node_on_out_edges(
         &mut self,
         py: Python,
         node: usize,
-        node_between: usize,
+        ref_node: usize,
     ) -> PyResult<()> {
-        self.insert_between(py, node, node_between, true)?;
+        self.insert_between(py, node, ref_node, true)?;
         Ok(())
     }
 
