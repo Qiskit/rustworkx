@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// This module is copied and forked from the upstream petgraph repository,
-// specifically:
+// This module was originally copied and forked from the upstream petgraph
+// repository, specifically:
 // https://github.com/petgraph/petgraph/blob/0.5.1/src/dijkstra.rs
 // this was necessary to modify the error handling to allow python callables
 // to be use for the input functions for edge_cost and return any exceptions
@@ -41,6 +41,11 @@ use crate::astar::MinScored;
 ///
 /// If `goal` is not `None`, then the algorithm terminates once the `goal` node's
 /// cost is calculated.
+///
+/// If `path` is not `None`, then the algorithm will mutate the input
+/// hashbrown::HashMap to insert an entry where the index is the dest node index
+/// the value is a Vec of node indices of the path starting with `start` and
+/// ending at the index.
 ///
 /// Returns a `HashMap` that maps `NodeId` to path cost.
 /// # Example
@@ -97,6 +102,7 @@ pub fn dijkstra<G, F, K>(
     start: G::NodeId,
     goal: Option<G::NodeId>,
     mut edge_cost: F,
+    mut path: Option<&mut HashMap<G::NodeId, Vec<G::NodeId>>>,
 ) -> PyResult<HashMap<G::NodeId, K>>
 where
     G: IntoEdges + Visitable,
@@ -110,6 +116,9 @@ where
     let zero_score = K::default();
     scores.insert(start, zero_score);
     visit_next.push(MinScored(zero_score, start));
+    if path.is_some() {
+        path.as_mut().unwrap().insert(start, vec![start]);
+    }
     while let Some(MinScored(node_score, node)) = visit_next.pop() {
         if visited.is_visited(&node) {
             continue;
@@ -134,6 +143,16 @@ where
                 Vacant(ent) => {
                     ent.insert(next_score);
                     visit_next.push(MinScored(next_score, next));
+                    if path.is_some() {
+                        let mut node_path =
+                            path.as_mut().unwrap().get(&node).unwrap().clone();
+                        path.as_mut().unwrap().entry(next).or_insert({
+                            let mut new_vec: Vec<G::NodeId> = Vec::new();
+                            new_vec.append(&mut node_path);
+                            new_vec.push(next);
+                            new_vec
+                        });
+                    }
                 }
             }
         }
