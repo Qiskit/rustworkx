@@ -361,7 +361,7 @@ where
 /// :param PyDiGraph graph: The graph to get the DFS edge list from
 /// :param int source: An optional node index to use as the starting node
 ///     for the depth-first search. The edge list will only return edges in
-///     the components reachable from this index. If this is not sspecified
+///     the components reachable from this index. If this is not specified
 ///     then a source will be chosen arbitrarly and repeated until all
 ///     components of the graph are searched.
 ///
@@ -379,10 +379,10 @@ fn digraph_dfs_edges(
 
 /// Get edge list in depth first order
 ///
-/// :param PyDiGraph graph: The graph to get the DFS edge list from
+/// :param PyGraph graph: The graph to get the DFS edge list from
 /// :param int source: An optional node index to use as the starting node
 ///     for the depth-first search. The edge list will only return edges in
-///     the components reachable from this index. If this is not sspecified
+///     the components reachable from this index. If this is not specified
 ///     then a source will be chosen arbitrarly and repeated until all
 ///     components of the graph are searched.
 ///
