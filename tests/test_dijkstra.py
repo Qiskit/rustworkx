@@ -61,10 +61,15 @@ class TestDijkstraDiGraph(unittest.TestCase):
         g.add_edges_from(edge_list)
         paths = retworkx.digraph_dijkstra_shortest_paths(g, a)
         expected = {
+            # a -> b
             1: [0, 1],
+            # a -> c: a, d, c
             2: [0, 3, 2],
+            # a -> d
             3: [0, 3],
+            # a -> e: a, d, e
             4: [0, 3, 4],
+            # a -> f: a, b, f
             5: [0, 1, 5],
         }
         self.assertEqual(expected, paths)

@@ -1391,7 +1391,7 @@ fn weight_callable(
 ///
 /// :param PyGraph graph:
 /// :param int source: The node index to find paths from
-/// :param int target: An optional target path to find the path
+/// :param int target: An optional target to find a path to
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float which
 ///     will be used to represent the weight/cost of the edge
