@@ -42,6 +42,13 @@ use crate::astar::MinScored;
 /// If `goal` is not `None`, then the algorithm terminates once the `goal` node's
 /// cost is calculated.
 ///
+/// If `path` is not `None`, then the algorithm will mutate the input
+/// hashbrown::HashMap to insert an entry where the index is the dest node index
+/// the value is a Vec of node indices of the path starting with `start` and ending
+/// at the index. For this to work correctly it is expected that the input HashMap
+/// will have an `(start, vec![start])` entry in it already so that it knows to
+/// include the source node in the path, without this the function may panic.
+///
 /// Returns a `HashMap` that maps `NodeId` to path cost.
 /// # Example
 /// ```rust
