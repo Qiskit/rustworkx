@@ -921,7 +921,7 @@ impl PyDiGraph {
     ///
     /// :param int node: The node index to insert between
     /// :param int ref_node: The reference node index to insert ``node``
-    /// between
+    ///     between
     #[text_signature = "(node, ref_nodes, /)"]
     pub fn insert_node_on_in_edges_multiple(
         &mut self,
