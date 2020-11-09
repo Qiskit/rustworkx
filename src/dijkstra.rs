@@ -44,10 +44,8 @@ use crate::astar::MinScored;
 ///
 /// If `path` is not `None`, then the algorithm will mutate the input
 /// hashbrown::HashMap to insert an entry where the index is the dest node index
-/// the value is a Vec of node indices of the path starting with `start` and ending
-/// at the index. For this to work correctly it is expected that the input HashMap
-/// will have an `(start, vec![start])` entry in it already so that it knows to
-/// include the source node in the path, without this the function may panic.
+/// the value is a Vec of node indices of the path starting with `start` and
+/// ending at the index.
 ///
 /// Returns a `HashMap` that maps `NodeId` to path cost.
 /// # Example
@@ -118,6 +116,9 @@ where
     let zero_score = K::default();
     scores.insert(start, zero_score);
     visit_next.push(MinScored(zero_score, start));
+    if path.is_some() {
+        path.as_mut().unwrap().insert(start, vec![start]);
+    }
     while let Some(MinScored(node_score, node)) = visit_next.pop() {
         if visited.is_visited(&node) {
             continue;

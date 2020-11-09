@@ -1419,7 +1419,6 @@ pub fn graph_dijkstra_shortest_paths(
         None => None,
     };
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
-    paths.insert(start, vec![start]);
     dijkstra::dijkstra(
         graph,
         start,
@@ -1485,7 +1484,6 @@ pub fn digraph_dijkstra_shortest_paths(
         None => None,
     };
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
-    paths.insert(start, vec![start]);
     if as_undirected {
         dijkstra::dijkstra(
             // TODO: Use petgraph undirected adapter after
