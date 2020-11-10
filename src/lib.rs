@@ -934,7 +934,7 @@ fn graph_floyd_warshall_numpy(
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
-            weight_callable(py, &weight_fn, weight, default_weight)?;
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         mat[[j, i]] = mat[[j, i]].min(edge_weight);
     }
@@ -1001,7 +1001,7 @@ fn digraph_floyd_warshall_numpy(
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
-            weight_callable(py, &weight_fn, weight, default_weight)?;
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         if as_undirected {
             mat[[j, i]] = mat[[j, i]].min(edge_weight);
@@ -1275,21 +1275,6 @@ pub fn graph_distance_matrix(
     Ok(matrix.into_pyarray(py).into())
 }
 
-fn weight_callable(
-    py: Python,
-    weight_fn: &Option<PyObject>,
-    weight: PyObject,
-    default: f64,
-) -> PyResult<f64> {
-    match weight_fn {
-        Some(weight_fn) => {
-            let res = weight_fn.call1(py, (weight,))?;
-            res.extract(py)
-        }
-        None => Ok(default),
-    }
-}
-
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -1328,7 +1313,7 @@ fn digraph_adjacency_matrix(
     let mut matrix = Array2::<f64>::zeros((n, n));
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
-            weight_callable(py, &weight_fn, weight, default_weight)?;
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
@@ -1371,7 +1356,7 @@ fn graph_adjacency_matrix(
     let mut matrix = Array2::<f64>::zeros((n, n));
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
-            weight_callable(py, &weight_fn, weight, default_weight)?;
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
@@ -1492,6 +1477,163 @@ fn digraph_all_simple_paths(
     Ok(result)
 }
 
+fn weight_callable(
+    py: Python,
+    weight_fn: &Option<PyObject>,
+    weight: &PyObject,
+    default: f64,
+) -> PyResult<f64> {
+    match weight_fn {
+        Some(weight_fn) => {
+            let res = weight_fn.call1(py, (weight,))?;
+            res.extract(py)
+        }
+        None => Ok(default),
+    }
+}
+
+/// Find the shortest path from a node
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm.
+///
+/// :param PyGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: An optional target to find a path to
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+/// :param bool as_undirected: If set to true the graph will be treated as
+///     undirected for finding the shortest path.
+///
+/// :return: Dictionary of paths. The keys are destination node indices and
+///     the dict values are lists of node indices making the path.
+/// :rtype: dict
+#[pyfunction(default_weight = "1.0", as_undirected = "false")]
+#[text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0)"]
+pub fn graph_dijkstra_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: usize,
+    target: Option<usize>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<PyObject> {
+    let start = NodeIndex::new(source);
+    let goal_index: Option<NodeIndex> = match target {
+        Some(node) => Some(NodeIndex::new(node)),
+        None => None,
+    };
+    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    dijkstra::dijkstra(
+        graph,
+        start,
+        goal_index,
+        |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+        Some(&mut paths),
+    )?;
+
+    let out_dict = PyDict::new(py);
+    for (index, value) in paths {
+        let int_index = index.index();
+        if int_index == source {
+            continue;
+        }
+        if (target.is_some() && target.unwrap() == int_index)
+            || target.is_none()
+        {
+            out_dict.set_item(
+                int_index,
+                value
+                    .iter()
+                    .map(|index| index.index())
+                    .collect::<Vec<usize>>(),
+            )?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
+/// Find the shortest path from a node
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm.
+///
+/// :param PyDiGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: An optional target path to find the path
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+/// :param bool as_undirected: If set to true the graph will be treated as
+///     undirected for finding the shortest path.
+///
+/// :return: Dictionary of paths. The keys are destination node indices and
+///     the dict values are lists of node indices making the path.
+/// :rtype: dict
+#[pyfunction(default_weight = "1.0", as_undirected = "false")]
+#[text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0, as_undirected=False)"]
+pub fn digraph_dijkstra_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: usize,
+    target: Option<usize>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    as_undirected: bool,
+) -> PyResult<PyObject> {
+    let start = NodeIndex::new(source);
+    let goal_index: Option<NodeIndex> = match target {
+        Some(node) => Some(NodeIndex::new(node)),
+        None => None,
+    };
+    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    if as_undirected {
+        dijkstra::dijkstra(
+            // TODO: Use petgraph undirected adapter after
+            // https://github.com/petgraph/petgraph/pull/318 is available in
+            // a petgraph release.
+            &graph.to_undirected(py),
+            start,
+            goal_index,
+            |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+            Some(&mut paths),
+        )?;
+    } else {
+        dijkstra::dijkstra(
+            graph,
+            start,
+            goal_index,
+            |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+            Some(&mut paths),
+        )?;
+    }
+
+    let out_dict = PyDict::new(py);
+    for (index, value) in paths {
+        let int_index = index.index();
+        if int_index == source {
+            continue;
+        }
+        if (target.is_some() && target.unwrap() == int_index)
+            || target.is_none()
+        {
+            out_dict.set_item(
+                int_index,
+                value
+                    .iter()
+                    .map(|index| index.index())
+                    .collect::<Vec<usize>>(),
+            )?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
 /// Compute the lengths of the shortest paths for a PyGraph object using
 /// Dijkstra's algorithm
 ///
@@ -1531,9 +1673,13 @@ fn graph_dijkstra_shortest_path_lengths(
         None => None,
     };
 
-    let res = dijkstra::dijkstra(graph, start, goal_index, |e| {
-        edge_cost_callable(e.weight())
-    })?;
+    let res = dijkstra::dijkstra(
+        graph,
+        start,
+        goal_index,
+        |e| edge_cost_callable(e.weight()),
+        None,
+    )?;
     let out_dict = PyDict::new(py);
     for (index, value) in res {
         let int_index = index.index();
@@ -1586,9 +1732,13 @@ fn digraph_dijkstra_shortest_path_lengths(
         None => None,
     };
 
-    let res = dijkstra::dijkstra(graph, start, goal_index, |e| {
-        edge_cost_callable(e.weight())
-    })?;
+    let res = dijkstra::dijkstra(
+        graph,
+        start,
+        goal_index,
+        |e| edge_cost_callable(e.weight()),
+        None,
+    )?;
     let out_dict = PyDict::new(py);
     for (index, value) in res {
         let int_index = index.index();
@@ -2342,6 +2492,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
