@@ -27,7 +27,7 @@ class TestDfsEdges(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         graph.extend_from_edge_list([(0, 1), (1, 2), (1, 3), (2, 4), (3, 4)])
         edges = retworkx.digraph_dfs_edges(graph, 0)
-        expected = [(0, 1), (1, 2), (2, 4), (4, 3)]
+        expected = [(0, 1), (1, 2), (2, 4), (1, 3)]
         self.assertEqual(expected, edges)
 
     def test_graph_disconnected_dfs_edges(self):

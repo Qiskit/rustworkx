@@ -36,7 +36,7 @@ use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighbors,
+    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighborsDirected,
     IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
     Visitable,
 };
@@ -324,7 +324,8 @@ where
     G: GraphBase<NodeId = NodeIndex>
         + IntoNodeIdentifiers
         + NodeIndexable
-        + IntoNeighbors
+        + IntoNeighborsDirected
+        + NodeCount
         + Visitable,
     <G as Visitable>::Map: VisitMap<NodeIndex>,
 {
@@ -342,15 +343,43 @@ where
             continue;
         }
         visited.insert(start);
-        let mut dfs = Dfs::new(graph, start);
-        let mut parent: NodeIndex = start;
-        while let Some(nx) = dfs.next(graph) {
-            if visited.contains(&nx) {
-                continue;
+        let mut children: Vec<NodeIndex> = graph.neighbors(start).collect();
+        children.reverse();
+        let mut stack: Vec<(NodeIndex, Vec<NodeIndex>)> =
+            vec![(start, children)];
+        // Used to track the last position in children vec across iterations
+        let mut index_map: HashMap<NodeIndex, usize> = HashMap::new();
+        index_map.insert(start, 0);
+        while !stack.is_empty() {
+            let temp_parent = stack.last().unwrap();
+            let parent = temp_parent.0;
+            let children = temp_parent.1.clone();
+            let count = *index_map.get(&parent).unwrap();
+            let mut found = false;
+            let mut index = 0;
+            for child in &children {
+                // Skip children for a parent already inspected.
+                if index < count {
+                    index += 1;
+                    continue;
+                }
+                index += 1;
+                if !visited.contains(&child) {
+                    out_vec.push((parent.index(), child.index()));
+                    visited.insert(*child);
+                    let mut grandchildren: Vec<NodeIndex> =
+                        graph.neighbors(*child).collect();
+                    grandchildren.reverse();
+                    stack.push((*child, grandchildren));
+                    index_map.insert(*child, 0);
+                    *index_map.get_mut(&parent).unwrap() = index;
+                    found = true;
+                    break;
+                }
             }
-            visited.insert(nx);
-            out_vec.push((parent.index(), nx.index()));
-            parent = nx;
+            if !found || children.is_empty() {
+                stack.pop();
+            }
         }
     }
     out_vec
