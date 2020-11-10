@@ -36,7 +36,7 @@ use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighborsDirected,
+    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighbors,
     IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
     Visitable,
 };
@@ -324,7 +324,7 @@ where
     G: GraphBase<NodeId = NodeIndex>
         + IntoNodeIdentifiers
         + NodeIndexable
-        + IntoNeighborsDirected
+        + IntoNeighbors
         + NodeCount
         + Visitable,
     <G as Visitable>::Map: VisitMap<NodeIndex>,
