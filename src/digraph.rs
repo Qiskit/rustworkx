@@ -328,6 +328,52 @@ impl PyDiGraph {
         let edge = self.graph.add_edge(p_index, c_index, edge);
         Ok(edge.index())
     }
+
+    fn insert_between(
+        &mut self,
+        py: Python,
+        node: usize,
+        node_between: usize,
+        direction: bool,
+    ) -> PyResult<()> {
+        let dir = if direction {
+            petgraph::Direction::Outgoing
+        } else {
+            petgraph::Direction::Incoming
+        };
+        let index = NodeIndex::new(node);
+        let node_between_index = NodeIndex::new(node_between);
+        let edges: Vec<(NodeIndex, EdgeIndex, PyObject)> = self
+            .graph
+            .edges_directed(node_between_index, dir)
+            .map(|edge| {
+                if direction {
+                    (edge.target(), edge.id(), edge.weight().clone_ref(py))
+                } else {
+                    (edge.source(), edge.id(), edge.weight().clone_ref(py))
+                }
+            })
+            .collect::<Vec<(NodeIndex, EdgeIndex, PyObject)>>();
+        for (other_index, edge_index, weight) in edges {
+            if direction {
+                self._add_edge(
+                    node_between_index,
+                    index,
+                    weight.clone_ref(py),
+                )?;
+                self._add_edge(index, other_index, weight.clone_ref(py))?;
+            } else {
+                self._add_edge(other_index, index, weight.clone_ref(py))?;
+                self._add_edge(
+                    index,
+                    node_between_index,
+                    weight.clone_ref(py),
+                )?;
+            }
+            self.graph.remove_edge(edge_index);
+        }
+        Ok(())
+    }
 }
 
 #[pymethods]
@@ -861,6 +907,102 @@ impl PyDiGraph {
                 weight,
             )?;
         }
+        Ok(())
+    }
+
+    /// Insert a node between a list of reference nodes and all their predecessors
+    ///
+    /// This essentially iterates over all edges into the reference node
+    /// specified in the ``ref_nodes`` parameter removes those edges and then
+    /// adds 2 edges, one from the predecessor of ``ref_node`` to ``node``
+    /// and the other from ``node`` to ``ref_node``. The edge payloads for
+    /// the newly created edges are copied by reference from the original
+    /// edge that gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int ref_node: The reference node index to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_nodes, /)"]
+    pub fn insert_node_on_in_edges_multiple(
+        &mut self,
+        py: Python,
+        node: usize,
+        ref_nodes: Vec<usize>,
+    ) -> PyResult<()> {
+        for ref_node in ref_nodes {
+            self.insert_between(py, node, ref_node, false)?;
+        }
+        Ok(())
+    }
+
+    /// Insert a node between a list of reference nodes and all their successors
+    ///
+    /// This essentially iterates over all edges out of the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from ``ref_node`` to ``node`` and the other from
+    /// ``node`` to the successor of ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge that
+    /// gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int ref_nodes: The list of node indices to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_nodes, /)"]
+    pub fn insert_node_on_out_edges_multiple(
+        &mut self,
+        py: Python,
+        node: usize,
+        ref_nodes: Vec<usize>,
+    ) -> PyResult<()> {
+        for ref_node in ref_nodes {
+            self.insert_between(py, node, ref_node, true)?;
+        }
+        Ok(())
+    }
+
+    /// Insert a node between a reference node and all its predecessor nodes
+    ///
+    /// This essentially iterates over all edges into the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from the predecessor of ``ref_node`` to ``node`` and
+    /// the other from ``node`` to ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge that
+    /// gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int ref_node: The reference node index to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_node, /)"]
+    pub fn insert_node_on_in_edges(
+        &mut self,
+        py: Python,
+        node: usize,
+        ref_node: usize,
+    ) -> PyResult<()> {
+        self.insert_between(py, node, ref_node, false)?;
+        Ok(())
+    }
+
+    /// Insert a node between a reference node and all its successor nodes
+    ///
+    /// This essentially iterates over all edges out of the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from ``ref_node`` to ``node`` and the other from
+    /// ``node`` to the successor of ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge
+    /// that gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int ref_node: The reference node index to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_node, /)"]
+    pub fn insert_node_on_out_edges(
+        &mut self,
+        py: Python,
+        node: usize,
+        ref_node: usize,
+    ) -> PyResult<()> {
+        self.insert_between(py, node, ref_node, true)?;
         Ok(())
     }
 
