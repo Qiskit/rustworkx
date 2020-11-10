@@ -356,13 +356,8 @@ where
             let children = temp_parent.1.clone();
             let count = *index_map.get(&parent).unwrap();
             let mut found = false;
-            let mut index = 0;
-            for child in &children {
-                // Skip children for a parent already inspected.
-                if index < count {
-                    index += 1;
-                    continue;
-                }
+            let mut index = count;
+            for child in &children[index..] {
                 index += 1;
                 if !visited.contains(&child) {
                     out_vec.push((parent.index(), child.index()));
