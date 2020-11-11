@@ -12,13 +12,13 @@
 
 mod astar;
 mod dag_isomorphism;
-mod dag_union;
 mod digraph;
 mod dijkstra;
 mod dot_utils;
 mod generators;
 mod graph;
 mod k_shortest_path;
+mod union;
 
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeSet, BinaryHeap};
@@ -278,7 +278,7 @@ fn digraph_union(
     merge_edges: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let res =
-        dag_union::digraph_union(py, first, second, merge_nodes, merge_edges)?;
+        union::digraph_union(py, first, second, merge_nodes, merge_edges)?;
     Ok(res)
 }
 

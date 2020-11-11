@@ -70,8 +70,11 @@ pub fn digraph_union(
         let new_source = *node_map.get(&source).unwrap();
         let new_target = *node_map.get(&target).unwrap();
 
-        let edge_index =
-            combined.add_edge(new_source, new_target, edge_weight.clone_ref(py))?;
+        let edge_index = combined.add_edge(
+            new_source,
+            new_target,
+            edge_weight.clone_ref(py),
+        )?;
 
         let edge_node = EdgeIndex::new(edge_index);
 
