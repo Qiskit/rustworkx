@@ -432,8 +432,8 @@ fn graph_dfs_edges(
 ///
 /// :returns: A list of nodes's data and their children in bfs order. The
 ///     BFSSuccessors class that is returned is a custom container class that
-///     implements the iterator protocol and sequence protocol. This can
-///     be used as either a list with index based access or as an iterator.
+///     implements the sequence protocol. This can be used as a python list
+///     with index based access.
 /// :rtype: BFSSuccessors
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
