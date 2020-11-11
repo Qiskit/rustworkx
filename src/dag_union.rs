@@ -71,7 +71,7 @@ pub fn digraph_union(
         let new_target = *node_map.get(&target).unwrap();
 
         let edge_index =
-            combined.add_edge(new_source, new_target, edge_weight.clone())?;
+            combined.add_edge(new_source, new_target, edge_weight.clone_ref(py))?;
 
         let edge_node = EdgeIndex::new(edge_index);
 
@@ -85,8 +85,8 @@ pub fn digraph_union(
 
     if merge_nodes {
         for node in second.node_indices() {
-            let weight = &second[node].clone();
-            let index = a.find_node_by_weight(py, weight.clone());
+            let weight = &second[node].clone_ref(py);
+            let index = a.find_node_by_weight(py, weight.clone_ref(py));
 
             if index.is_some() {
                 let other_node = node_map.get(&node.index());
