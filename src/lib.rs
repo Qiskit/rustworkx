@@ -17,6 +17,7 @@ mod dijkstra;
 mod dot_utils;
 mod generators;
 mod graph;
+mod iterators;
 mod k_shortest_path;
 
 use std::cmp::{Ordering, Reverse};
@@ -429,31 +430,41 @@ fn graph_dfs_edges(
 /// :param PyDiGraph graph: The DAG to get the bfs_successors from
 /// :param int node: The index of the dag node to get the bfs successors for
 ///
-/// :returns: A list of nodes's data and their children in bfs order
-/// :rtype: list
+/// :returns: A list of nodes's data and their children in bfs order. The
+///     BFSSuccessors class that is returned is a custom container class that
+///     implements the sequence protocol. This can be used as a python list
+///     with index based access.
+/// :rtype: BFSSuccessors
 #[pyfunction]
 #[text_signature = "(graph, node, /)"]
 fn bfs_successors(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
-) -> PyResult<PyObject> {
+) -> PyResult<iterators::BFSSuccessors> {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(graph, index);
-    let mut out_list: Vec<(&PyObject, Vec<&PyObject>)> = Vec::new();
+    let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::new();
     while let Some(nx) = bfs.next(graph) {
         let children = graph
             .graph
             .neighbors_directed(nx, petgraph::Direction::Outgoing);
-        let mut succesors: Vec<&PyObject> = Vec::new();
+        let mut succesors: Vec<PyObject> = Vec::new();
         for succ in children {
-            succesors.push(graph.graph.node_weight(succ).unwrap());
+            succesors
+                .push(graph.graph.node_weight(succ).unwrap().clone_ref(py));
         }
         if !succesors.is_empty() {
-            out_list.push((graph.graph.node_weight(nx).unwrap(), succesors));
+            out_list.push((
+                graph.graph.node_weight(nx).unwrap().clone_ref(py),
+                succesors,
+            ));
         }
     }
-    Ok(PyList::new(py, out_list).into())
+    Ok(iterators::BFSSuccessors {
+        bfs_successors: out_list,
+        index: 0,
+    })
 }
 
 /// Return the ancestors of a node in a graph.
@@ -2507,6 +2518,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
+    m.add_class::<iterators::BFSSuccessors>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }

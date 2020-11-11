@@ -95,3 +95,11 @@ Exceptions
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph
+
+Return Iterator Types
+---------------------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.BFSSuccessors
