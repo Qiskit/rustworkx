@@ -21,7 +21,7 @@ mod graph;
 mod k_shortest_path;
 
 use std::cmp::{Ordering, Reverse};
-use std::collections::BinaryHeap;
+use std::collections::{BTreeSet, BinaryHeap};
 
 use hashbrown::{HashMap, HashSet};
 
@@ -37,12 +37,14 @@ use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
-    NodeCount, NodeIndexable, Reversed,
+    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighbors,
+    IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
+    Visitable,
 };
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
+use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
@@ -152,6 +154,67 @@ fn dag_longest_path_length(graph: &digraph::PyDiGraph) -> PyResult<usize> {
 #[text_signature = "(graph, /)"]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     algo::connected_components(graph)
+}
+
+/// Find the weakly connected components in a directed graph
+///
+/// :param PyDiGraph graph: The graph to find the weakly connected components
+///     in
+///
+/// :returns: A list of sets where each set it a weakly connected component of
+///     the graph
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn weakly_connected_components(
+    graph: &digraph::PyDiGraph,
+) -> Vec<BTreeSet<usize>> {
+    let mut seen: HashSet<NodeIndex> = HashSet::new();
+    let mut out_vec: Vec<BTreeSet<usize>> = Vec::new();
+    for node in graph.graph.node_indices() {
+        if !seen.contains(&node) {
+            // BFS node generator
+            let mut component_set: BTreeSet<usize> = BTreeSet::new();
+            let mut bfs_seen: HashSet<NodeIndex> = HashSet::new();
+            let mut next_level: HashSet<NodeIndex> = HashSet::new();
+            next_level.insert(node);
+            while !next_level.is_empty() {
+                let this_level = next_level;
+                next_level = HashSet::new();
+                for bfs_node in this_level {
+                    if !bfs_seen.contains(&bfs_node) {
+                        component_set.insert(bfs_node.index());
+                        bfs_seen.insert(bfs_node);
+                        for neighbor in
+                            graph.graph.neighbors_undirected(bfs_node)
+                        {
+                            next_level.insert(neighbor);
+                        }
+                    }
+                }
+            }
+            out_vec.push(component_set);
+            seen.extend(bfs_seen);
+        }
+    }
+    out_vec
+}
+
+/// Check if the graph is weakly connected
+///
+/// :param PyDiGraph graph: The graph to check if it is weakly connected
+///
+/// :returns: Whether the graph is weakly connected or not
+/// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
+    if graph.graph.node_count() == 0 {
+        return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
+    }
+    Ok(weakly_connected_components(graph)[0].len() == graph.graph.node_count())
 }
 
 /// Check that the PyDiGraph or PyDAG doesn't have a cycle
@@ -285,6 +348,108 @@ fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
         }
     };
     Ok(nodes.iter().map(|node| node.index()).collect())
+}
+
+fn dfs_edges<G>(graph: G, source: Option<usize>) -> Vec<(usize, usize)>
+where
+    G: GraphBase<NodeId = NodeIndex>
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + IntoNeighbors
+        + NodeCount
+        + Visitable,
+    <G as Visitable>::Map: VisitMap<NodeIndex>,
+{
+    let nodes: Vec<NodeIndex> = match source {
+        Some(start) => vec![NodeIndex::new(start)],
+        None => graph
+            .node_identifiers()
+            .map(|ind| NodeIndex::new(graph.to_index(ind)))
+            .collect(),
+    };
+    let mut visited: HashSet<NodeIndex> = HashSet::new();
+    let mut out_vec: Vec<(usize, usize)> = Vec::new();
+    for start in nodes {
+        if visited.contains(&start) {
+            continue;
+        }
+        visited.insert(start);
+        let mut children: Vec<NodeIndex> = graph.neighbors(start).collect();
+        children.reverse();
+        let mut stack: Vec<(NodeIndex, Vec<NodeIndex>)> =
+            vec![(start, children)];
+        // Used to track the last position in children vec across iterations
+        let mut index_map: HashMap<NodeIndex, usize> = HashMap::new();
+        index_map.insert(start, 0);
+        while !stack.is_empty() {
+            let temp_parent = stack.last().unwrap();
+            let parent = temp_parent.0;
+            let children = temp_parent.1.clone();
+            let count = *index_map.get(&parent).unwrap();
+            let mut found = false;
+            let mut index = count;
+            for child in &children[index..] {
+                index += 1;
+                if !visited.contains(&child) {
+                    out_vec.push((parent.index(), child.index()));
+                    visited.insert(*child);
+                    let mut grandchildren: Vec<NodeIndex> =
+                        graph.neighbors(*child).collect();
+                    grandchildren.reverse();
+                    stack.push((*child, grandchildren));
+                    index_map.insert(*child, 0);
+                    *index_map.get_mut(&parent).unwrap() = index;
+                    found = true;
+                    break;
+                }
+            }
+            if !found || children.is_empty() {
+                stack.pop();
+            }
+        }
+    }
+    out_vec
+}
+
+/// Get edge list in depth first order
+///
+/// :param PyDiGraph graph: The graph to get the DFS edge list from
+/// :param int source: An optional node index to use as the starting node
+///     for the depth-first search. The edge list will only return edges in
+///     the components reachable from this index. If this is not specified
+///     then a source will be chosen arbitrarly and repeated until all
+///     components of the graph are searched.
+///
+/// :returns: A list of edges as a tuple of the form ``(source, target)`` in
+///     depth-first order
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /, source=None)"]
+fn digraph_dfs_edges(
+    graph: &digraph::PyDiGraph,
+    source: Option<usize>,
+) -> Vec<(usize, usize)> {
+    dfs_edges(graph, source)
+}
+
+/// Get edge list in depth first order
+///
+/// :param PyGraph graph: The graph to get the DFS edge list from
+/// :param int source: An optional node index to use as the starting node
+///     for the depth-first search. The edge list will only return edges in
+///     the components reachable from this index. If this is not specified
+///     then a source will be chosen arbitrarly and repeated until all
+///     components of the graph are searched.
+///
+/// :returns: A list of edges as a tuple of the form ``(source, target)`` in
+///     depth-first order
+#[pyfunction]
+#[text_signature = "(graph, /, source=None)"]
+fn graph_dfs_edges(
+    graph: &graph::PyGraph,
+    source: Option<usize>,
+) -> Vec<(usize, usize)> {
+    dfs_edges(graph, source)
 }
 
 /// Return successors in a breadth-first-search from a source node.
@@ -780,25 +945,22 @@ where
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn graph_floyd_warshall_numpy(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
-
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         mat[[j, i]] = mat[[j, i]].min(edge_weight);
     }
@@ -848,27 +1010,24 @@ fn graph_floyd_warshall_numpy(
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(as_undirected = "false")]
-#[text_signature = "(graph, weight_fn, /, as_undirected=False)"]
+#[pyfunction(as_undirected = "false", default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None as_undirected=False, default_weight=1.0)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
     as_undirected: bool,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
 
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
 
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
-
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         if as_undirected {
             mat[[j, i]] = mat[[j, i]].min(edge_weight);
@@ -985,6 +1144,163 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
+/// Get the distance matrix for a directed graph
+///
+/// This differs from functions like digraph_floyd_warshall_numpy in that the
+/// edge weight/data payload is not used and each edge is treated as a
+/// distance of 1.
+///
+/// This function is also multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 300). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyDiGraph graph: The graph to get the distance matrix for
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the distance matrix in parallel at. It defaults to 300, but this can
+///     be tuned
+/// :param bool as_undirected: If set to ``True`` the input directed graph
+///     will be treat as if each edge was bidirectional/undirected in the
+///     output distance matrix.
+///
+/// :returns: The distance matrix
+/// :rtype: numpy.ndarray
+#[pyfunction(parallel_threshold = "300", as_undirected = "false")]
+#[text_signature = "(graph, /, parallel_threshold=300, as_undirected=False)"]
+pub fn digraph_distance_matrix(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    parallel_threshold: usize,
+    as_undirected: bool,
+) -> PyResult<PyObject> {
+    let n = graph.node_count();
+    let mut matrix = Array2::<f64>::zeros((n, n));
+    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
+        let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
+        let start_index = NodeIndex::new(index);
+        let mut level = 0;
+        let mut next_level: HashSet<NodeIndex> = HashSet::new();
+        next_level.insert(start_index);
+        while !next_level.is_empty() {
+            let this_level = next_level;
+            next_level = HashSet::new();
+            let mut found: Vec<NodeIndex> = Vec::new();
+            for v in this_level {
+                if !seen.contains_key(&v) {
+                    seen.insert(v, level);
+                    found.push(v);
+                    row[[v.index()]] = level as f64;
+                }
+            }
+            if seen.len() == n {
+                return;
+            }
+            for node in found {
+                for v in graph
+                    .graph
+                    .neighbors_directed(node, petgraph::Direction::Outgoing)
+                {
+                    next_level.insert(v);
+                }
+                if as_undirected {
+                    for v in graph
+                        .graph
+                        .neighbors_directed(node, petgraph::Direction::Incoming)
+                    {
+                        next_level.insert(v);
+                    }
+                }
+            }
+            level += 1
+        }
+    };
+    if n < parallel_threshold {
+        matrix
+            .axis_iter_mut(Axis(0))
+            .enumerate()
+            .for_each(|(index, row)| bfs_traversal(index, row));
+    } else {
+        // Parallelize by row and iterate from each row index in BFS order
+        matrix
+            .axis_iter_mut(Axis(0))
+            .into_par_iter()
+            .enumerate()
+            .for_each(|(index, row)| bfs_traversal(index, row));
+    }
+    Ok(matrix.into_pyarray(py).into())
+}
+
+/// Get the distance matrix for an undirected graph
+///
+/// This differs from functions like digraph_floyd_warshall_numpy in that the
+/// edge weight/data payload is not used and each edge is treated as a
+/// distance of 1.
+///
+/// This function is also multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``paralllel_threshold`` (it
+/// defaults to 300). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyGraph graph: The graph to get the distance matrix for
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the distance matrix in parallel at. It defaults to 300, but this can
+///     be tuned
+///
+/// :returns: The distance matrix
+/// :rtype: numpy.ndarray
+#[pyfunction(parallel_threshold = "300")]
+#[text_signature = "(graph, /, parallel_threshold=300)"]
+pub fn graph_distance_matrix(
+    py: Python,
+    graph: &graph::PyGraph,
+    parallel_threshold: usize,
+) -> PyResult<PyObject> {
+    let n = graph.node_count();
+    let mut matrix = Array2::<f64>::zeros((n, n));
+    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
+        let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
+        let start_index = NodeIndex::new(index);
+        let mut level = 0;
+        let mut next_level: HashSet<NodeIndex> = HashSet::new();
+        next_level.insert(start_index);
+        while !next_level.is_empty() {
+            let this_level = next_level;
+            next_level = HashSet::new();
+            let mut found: Vec<NodeIndex> = Vec::new();
+            for v in this_level {
+                if !seen.contains_key(&v) {
+                    seen.insert(v, level);
+                    found.push(v);
+                    row[[v.index()]] = level as f64;
+                }
+            }
+            if seen.len() == n {
+                return;
+            }
+            for node in found {
+                for v in graph.graph.neighbors(node) {
+                    next_level.insert(v);
+                }
+            }
+            level += 1
+        }
+    };
+    if n < parallel_threshold {
+        matrix
+            .axis_iter_mut(Axis(0))
+            .enumerate()
+            .for_each(|(index, row)| bfs_traversal(index, row));
+    } else {
+        // Parallelize by row and iterate from each row index in BFS order
+        matrix
+            .axis_iter_mut(Axis(0))
+            .into_par_iter()
+            .enumerate()
+            .for_each(|(index, row)| bfs_traversal(index, row));
+    }
+    Ok(matrix.into_pyarray(py).into())
+}
+
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -992,7 +1308,7 @@ fn layers(
 ///
 /// :param PyDiGraph graph: The DiGraph used to generate the adjacency matrix
 ///     from
-/// :param weight_fn callable: A callable object (function, lambda, etc) which
+/// :param callable weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
 ///     tells retworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
@@ -1003,26 +1319,27 @@ fn layers(
 ///
 ///         dag_adjacency_matrix(dag, weight_fn: lambda x: float(x))
 ///
-///     to cast the edge object as a float as the weight.
+///     to cast the edge object as a float as the weight. If this is not
+///     specified a default value (either ``default_weight`` or 1) will be used
+///     for all edges.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
 ///
 ///  :return: The adjacency matrix for the input dag as a numpy array
 ///  :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
-
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
@@ -1045,30 +1362,30 @@ fn digraph_adjacency_matrix(
 ///
 ///         graph_adjacency_matrix(graph, weight_fn: lambda x: float(x))
 ///
-///     to cast the edge object as a float as the weight.
+///     to cast the edge object as a float as the weight. If this is not
+///     specified a default value (either ``default_weight`` or 1) will be used
+///     for all edges.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
 ///
 /// :return: The adjacency matrix for the input dag as a numpy array
 /// :rtype: numpy.ndarray
-#[pyfunction]
-#[text_signature = "(graph, weight_fn, /)"]
+#[pyfunction(default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
-
-    let weight_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (a,))?;
-        res.extract(py)
-    };
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight = weight_callable(&weight)?;
+        let edge_weight =
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
         matrix[[i, j]] += edge_weight;
         matrix[[j, i]] += edge_weight;
     }
-
     Ok(matrix.into_pyarray(py).into())
 }
 
@@ -1186,6 +1503,163 @@ fn digraph_all_simple_paths(
     Ok(result)
 }
 
+fn weight_callable(
+    py: Python,
+    weight_fn: &Option<PyObject>,
+    weight: &PyObject,
+    default: f64,
+) -> PyResult<f64> {
+    match weight_fn {
+        Some(weight_fn) => {
+            let res = weight_fn.call1(py, (weight,))?;
+            res.extract(py)
+        }
+        None => Ok(default),
+    }
+}
+
+/// Find the shortest path from a node
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm.
+///
+/// :param PyGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: An optional target to find a path to
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+/// :param bool as_undirected: If set to true the graph will be treated as
+///     undirected for finding the shortest path.
+///
+/// :return: Dictionary of paths. The keys are destination node indices and
+///     the dict values are lists of node indices making the path.
+/// :rtype: dict
+#[pyfunction(default_weight = "1.0", as_undirected = "false")]
+#[text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0)"]
+pub fn graph_dijkstra_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: usize,
+    target: Option<usize>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<PyObject> {
+    let start = NodeIndex::new(source);
+    let goal_index: Option<NodeIndex> = match target {
+        Some(node) => Some(NodeIndex::new(node)),
+        None => None,
+    };
+    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    dijkstra::dijkstra(
+        graph,
+        start,
+        goal_index,
+        |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+        Some(&mut paths),
+    )?;
+
+    let out_dict = PyDict::new(py);
+    for (index, value) in paths {
+        let int_index = index.index();
+        if int_index == source {
+            continue;
+        }
+        if (target.is_some() && target.unwrap() == int_index)
+            || target.is_none()
+        {
+            out_dict.set_item(
+                int_index,
+                value
+                    .iter()
+                    .map(|index| index.index())
+                    .collect::<Vec<usize>>(),
+            )?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
+/// Find the shortest path from a node
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm.
+///
+/// :param PyDiGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: An optional target path to find the path
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+/// :param bool as_undirected: If set to true the graph will be treated as
+///     undirected for finding the shortest path.
+///
+/// :return: Dictionary of paths. The keys are destination node indices and
+///     the dict values are lists of node indices making the path.
+/// :rtype: dict
+#[pyfunction(default_weight = "1.0", as_undirected = "false")]
+#[text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0, as_undirected=False)"]
+pub fn digraph_dijkstra_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: usize,
+    target: Option<usize>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    as_undirected: bool,
+) -> PyResult<PyObject> {
+    let start = NodeIndex::new(source);
+    let goal_index: Option<NodeIndex> = match target {
+        Some(node) => Some(NodeIndex::new(node)),
+        None => None,
+    };
+    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    if as_undirected {
+        dijkstra::dijkstra(
+            // TODO: Use petgraph undirected adapter after
+            // https://github.com/petgraph/petgraph/pull/318 is available in
+            // a petgraph release.
+            &graph.to_undirected(py),
+            start,
+            goal_index,
+            |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+            Some(&mut paths),
+        )?;
+    } else {
+        dijkstra::dijkstra(
+            graph,
+            start,
+            goal_index,
+            |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+            Some(&mut paths),
+        )?;
+    }
+
+    let out_dict = PyDict::new(py);
+    for (index, value) in paths {
+        let int_index = index.index();
+        if int_index == source {
+            continue;
+        }
+        if (target.is_some() && target.unwrap() == int_index)
+            || target.is_none()
+        {
+            out_dict.set_item(
+                int_index,
+                value
+                    .iter()
+                    .map(|index| index.index())
+                    .collect::<Vec<usize>>(),
+            )?;
+        }
+    }
+    Ok(out_dict.into())
+}
+
 /// Compute the lengths of the shortest paths for a PyGraph object using
 /// Dijkstra's algorithm
 ///
@@ -1225,9 +1699,13 @@ fn graph_dijkstra_shortest_path_lengths(
         None => None,
     };
 
-    let res = dijkstra::dijkstra(graph, start, goal_index, |e| {
-        edge_cost_callable(e.weight())
-    })?;
+    let res = dijkstra::dijkstra(
+        graph,
+        start,
+        goal_index,
+        |e| edge_cost_callable(e.weight()),
+        None,
+    )?;
     let out_dict = PyDict::new(py);
     for (index, value) in res {
         let int_index = index.index();
@@ -1280,9 +1758,13 @@ fn digraph_dijkstra_shortest_path_lengths(
         None => None,
     };
 
-    let res = dijkstra::dijkstra(graph, start, goal_index, |e| {
-        edge_cost_callable(e.weight())
-    })?;
+    let res = dijkstra::dijkstra(
+        graph,
+        start,
+        goal_index,
+        |e| edge_cost_callable(e.weight()),
+        None,
+    )?;
     let out_dict = PyDict::new(py);
     for (index, value) in res {
         let int_index = index.index();
@@ -1510,8 +1992,9 @@ pub fn directed_gnp_random_graph(
             let mut w: isize = -1;
             let lp: f64 = (1.0 - probability).ln();
 
+            let between = Uniform::new(0.0, 1.0);
             while v < num_nodes {
-                let random: f64 = rng.gen_range(0.0, 1.0);
+                let random: f64 = between.sample(&mut rng);
                 let lr: f64 = (1.0 - random).ln();
                 let ratio: isize = (lr / lp) as isize;
                 w = w + 1 + ratio;
@@ -1613,8 +2096,9 @@ pub fn undirected_gnp_random_graph(
             let mut w: isize = -1;
             let lp: f64 = (1.0 - probability).ln();
 
+            let between = Uniform::new(0.0, 1.0);
             while v < num_nodes {
-                let random: f64 = rng.gen_range(0.0, 1.0);
+                let random: f64 = between.sample(&mut rng);
                 let lr = (1.0 - random).ln();
                 let ratio: isize = (lr / lp) as isize;
                 w = w + 1 + ratio;
@@ -1631,6 +2115,159 @@ pub fn undirected_gnp_random_graph(
         }
     }
 
+    let graph = graph::PyGraph {
+        graph: inner_graph,
+        node_removed: false,
+    };
+    Ok(graph)
+}
+
+/// Return a :math:`G_{nm}` of a directed graph
+///
+/// Generates a random directed graph out of all the possible graphs with :math:`n` nodes and
+/// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
+///
+/// For :math:`n` nodes, the maximum edges that can be returned is :math:`n (n - 1)`.
+/// Passing :math:`m` higher than that will still return the maximum number of edges.
+/// If :math:`m = 0`, the returned graph will always be empty (no edges).
+/// When a seed is provided, the results are reproducible. Passing a seed when :math:`m = 0`
+/// or :math:`m >= n (n - 1)` has no effect, as the result will always be an empty or a complete graph respectively.
+///
+/// This algorithm has a time complexity of :math:`O(n + m)`
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int num_edges: The number of edges to create in the graph
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+///
+#[pyfunction]
+#[text_signature = "(num_nodes, num_edges, seed=None, /)"]
+pub fn directed_gnm_random_graph(
+    py: Python,
+    num_nodes: isize,
+    num_edges: isize,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    if num_nodes <= 0 {
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
+    }
+    if num_edges < 0 {
+        return Err(PyValueError::new_err("num_edges must be >= 0"));
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut inner_graph = StableDiGraph::<PyObject, PyObject>::new();
+    for x in 0..num_nodes {
+        inner_graph.add_node(x.to_object(py));
+    }
+    // if number of edges to be created is >= max,
+    // avoid randomly missed trials and directly add edges between every node
+    if num_edges >= num_nodes * (num_nodes - 1) {
+        for u in 0..num_nodes {
+            for v in 0..num_nodes {
+                // avoid self-loops
+                if u != v {
+                    let u_index = NodeIndex::new(u as usize);
+                    let v_index = NodeIndex::new(v as usize);
+                    inner_graph.add_edge(u_index, v_index, py.None());
+                }
+            }
+        }
+    } else {
+        let mut created_edges: isize = 0;
+        let between = Uniform::new(0, num_nodes);
+        while created_edges < num_edges {
+            let u = between.sample(&mut rng);
+            let v = between.sample(&mut rng);
+            let u_index = NodeIndex::new(u as usize);
+            let v_index = NodeIndex::new(v as usize);
+            // avoid self-loops and multi-graphs
+            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
+                inner_graph.add_edge(u_index, v_index, py.None());
+                created_edges += 1;
+            }
+        }
+    }
+    let graph = digraph::PyDiGraph {
+        graph: inner_graph,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+    };
+    Ok(graph)
+}
+
+/// Return a :math:`G_{nm}` of an undirected graph
+///
+/// Generates a random undirected graph out of all the possible graphs with :math:`n` nodes and
+/// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
+///
+/// For :math:`n` nodes, the maximum edges that can be returned is :math:`n (n - 1)/2`.
+/// Passing :math:`m` higher than that will still return the maximum number of edges.
+/// If :math:`m = 0`, the returned graph will always be empty (no edges).
+/// When a seed is provided, the results are reproducible. Passing a seed when :math:`m = 0`
+/// or :math:`m >= n (n - 1)/2` has no effect, as the result will always be an empty or a complete graph respectively.
+///
+/// This algorithm has a time complexity of :math:`O(n + m)`
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int num_edges: The number of edges to create in the graph
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+
+#[pyfunction]
+#[text_signature = "(num_nodes, probability, seed=None, /)"]
+pub fn undirected_gnm_random_graph(
+    py: Python,
+    num_nodes: isize,
+    num_edges: isize,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    if num_nodes <= 0 {
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
+    }
+    if num_edges < 0 {
+        return Err(PyValueError::new_err("num_edges must be >= 0"));
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
+    for x in 0..num_nodes {
+        inner_graph.add_node(x.to_object(py));
+    }
+    // if number of edges to be created is >= max,
+    // avoid randomly missed trials and directly add edges between every node
+    if num_edges >= num_nodes * (num_nodes - 1) / 2 {
+        for u in 0..num_nodes {
+            for v in u + 1..num_nodes {
+                let u_index = NodeIndex::new(u as usize);
+                let v_index = NodeIndex::new(v as usize);
+                inner_graph.add_edge(u_index, v_index, py.None());
+            }
+        }
+    } else {
+        let mut created_edges: isize = 0;
+        let between = Uniform::new(0, num_nodes);
+        while created_edges < num_edges {
+            let u = between.sample(&mut rng);
+            let v = between.sample(&mut rng);
+            let u_index = NodeIndex::new(u as usize);
+            let v_index = NodeIndex::new(v as usize);
+            // avoid self-loops and multi-graphs
+            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
+                inner_graph.add_edge(u_index, v_index, py.None());
+                created_edges += 1;
+            }
+        }
+    }
     let graph = graph::PyGraph {
         graph: inner_graph,
         node_removed: false,
@@ -1752,6 +2389,87 @@ pub fn strongly_connected_components(
         .collect()
 }
 
+/// Return the first cycle encountered during DFS of a given PyDiGraph,
+/// empty list is returned if no cycle is found
+///
+/// :param PyDiGraph graph: The graph to find the cycle in
+/// :param int source: Optional index to find a cycle for. If not specified an
+///     arbitrary node will be selected from the graph.
+///
+/// :returns: A list describing the cycle. The index of node ids which
+///     forms a cycle (loop) in the input graph
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, /, source=None)"]
+pub fn digraph_find_cycle(
+    graph: &digraph::PyDiGraph,
+    source: Option<usize>,
+) -> Vec<(usize, usize)> {
+    let mut graph_nodes: HashSet<NodeIndex> =
+        graph.graph.node_indices().collect();
+    let mut cycle: Vec<(usize, usize)> = Vec::new();
+    let temp_value: NodeIndex;
+    // If source is not set get an arbitrary node from the set of graph
+    // nodes we've not "examined"
+    let source_index = match source {
+        Some(source_value) => NodeIndex::new(source_value),
+        None => {
+            temp_value = *graph_nodes.iter().next().unwrap();
+            graph_nodes.remove(&temp_value);
+            temp_value
+        }
+    };
+
+    // Stack (ie "pushdown list") of vertices already in the spanning tree
+    let mut stack: Vec<NodeIndex> = Vec::new();
+    stack.push(source_index);
+    // map to store parent of a node
+    let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+    // a node is in the visiting set if at least one of its child is unexamined
+    let mut visiting = HashSet::new();
+    // a node is in visited set if all of its children have been examined
+    let mut visited = HashSet::new();
+    while !stack.is_empty() {
+        let mut z = *stack.last().unwrap();
+        visiting.insert(z);
+
+        let children = graph
+            .graph
+            .neighbors_directed(z, petgraph::Direction::Outgoing);
+
+        for child in children {
+            //cycle is found
+            if visiting.contains(&child) {
+                cycle.push((z.index(), child.index()));
+                //backtrack
+                loop {
+                    if z == child {
+                        cycle.reverse();
+                        break;
+                    }
+                    cycle.push((pred[&z].index(), z.index()));
+                    z = pred[&z];
+                }
+                return cycle;
+            }
+            //if an unexplored node is encountered
+            if !visited.contains(&child) {
+                stack.push(child);
+                pred.insert(child, z);
+            }
+        }
+
+        let top = *stack.last().unwrap();
+        //if no further children and explored, move to visited
+        if top.index() == z.index() {
+            stack.pop();
+            visiting.remove(&z);
+            visited.insert(z);
+        }
+    }
+    cycle
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -1762,6 +2480,8 @@ create_exception!(retworkx, NoEdgeBetweenNodes, PyException);
 create_exception!(retworkx, DAGHasCycle, PyException);
 // No neighbors found matching the provided predicate.
 create_exception!(retworkx, NoSuitableNeighbors, PyException);
+// Invalid operation on a null graph
+create_exception!(retworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, PyException);
 
@@ -1774,10 +2494,13 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
+    m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
@@ -1790,10 +2513,14 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
+    m.add_wrapped(wrap_pyfunction!(graph_distance_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
@@ -1801,8 +2528,13 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_class::<digraph::PyDiGraph>()?;

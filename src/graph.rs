@@ -15,10 +15,11 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::iter::FromIterator;
 use std::ops::{Index, IndexMut};
 use std::str;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
@@ -34,8 +35,8 @@ use petgraph::stable_graph::StableUnGraph;
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers,
-    IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeIndexable,
-    Visitable,
+    IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeFiltered,
+    NodeIndexable, Visitable,
 };
 
 /// A class for creating undirected graphs
@@ -673,6 +674,35 @@ impl PyGraph {
         Ok(())
     }
 
+    /// Remove edges from the graph.
+    ///
+    /// Note if there are multiple edges between the specified nodes only one
+    /// will be removed.
+    ///
+    /// :param list index_list: A list of node index pairs to remove from
+    ///     the graph
+    #[text_signature = "(index_list, /)"]
+    pub fn remove_edges_from(
+        &mut self,
+        index_list: Vec<(usize, usize)>,
+    ) -> PyResult<()> {
+        for (p_index, c_index) in index_list
+            .iter()
+            .map(|(x, y)| (NodeIndex::new(*x), NodeIndex::new(*y)))
+        {
+            let edge_index = match self.graph.find_edge(p_index, c_index) {
+                Some(edge_index) => edge_index,
+                None => {
+                    return Err(NoEdgeBetweenNodes::new_err(
+                        "No edge found between nodes",
+                    ))
+                }
+            };
+            self.graph.remove_edge(edge_index);
+        }
+        Ok(())
+    }
+
     /// Add a new node to the graph.
     ///
     /// :param obj: The python object to attach to the node
@@ -745,6 +775,22 @@ impl PyGraph {
             out_map.insert(neighbor.index(), edge_w.unwrap());
         }
         Ok(out_map)
+    }
+
+    /// Get the neighbors of a node.
+    ///
+    /// This with return a list of neighbor node indices
+    ///
+    /// :param int node: The index of the node to get the neibhors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
+    pub fn neighbors(&self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors(NodeIndex::new(node))
+            .map(|node| node.index())
+            .collect()
     }
 
     /// Get the degree for a node
@@ -1081,6 +1127,47 @@ impl PyGraph {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
         Ok(out_dict.into())
+    }
+
+    /// Return a new PyGraph object for a subgraph of this graph
+    ///
+    /// :param list nodes: A list of node indices to generate the subgraph
+    ///     from. If a node index is included that is not present in the graph
+    ///     it will silently be ignored.
+    ///
+    /// :returns: A new PyGraph object representing a subgraph of this graph.
+    ///     It is worth noting that node and edge weight/data payloads are
+    ///     passed by reference so if you update (not replace) an object used
+    ///     as the weight in graph or the subgraph it will also be updated in
+    ///     the other.
+    /// :rtype: PyGraph
+    ///
+    #[text_signature = "(nodes, /)"]
+    pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyGraph {
+        let node_set: HashSet<usize> =
+            HashSet::from_iter(nodes.iter().cloned());
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let node_filter =
+            |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
+        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let filtered = NodeFiltered(self, node_filter);
+        for node in filtered.node_references() {
+            let new_node = out_graph.add_node(node.1.clone_ref(py));
+            node_map.insert(node.0, new_node);
+        }
+        for edge in filtered.edge_references() {
+            let new_source = *node_map.get(&edge.source()).unwrap();
+            let new_target = *node_map.get(&edge.target()).unwrap();
+            out_graph.add_edge(
+                new_source,
+                new_target,
+                edge.weight().clone_ref(py),
+            );
+        }
+        PyGraph {
+            graph: out_graph,
+            node_removed: false,
+        }
     }
 }
 

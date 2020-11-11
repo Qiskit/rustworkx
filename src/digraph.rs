@@ -16,6 +16,7 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::iter::FromIterator;
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -31,11 +32,13 @@ use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableDiGraph;
+use petgraph::stable_graph::StableUnGraph;
+
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
     IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
-    NodeIndexable, Visitable,
+    NodeFiltered, NodeIndexable, Visitable,
 };
 
 use super::dot_utils::build_dot;
@@ -325,6 +328,52 @@ impl PyDiGraph {
         }
         let edge = self.graph.add_edge(p_index, c_index, edge);
         Ok(edge.index())
+    }
+
+    fn insert_between(
+        &mut self,
+        py: Python,
+        node: usize,
+        node_between: usize,
+        direction: bool,
+    ) -> PyResult<()> {
+        let dir = if direction {
+            petgraph::Direction::Outgoing
+        } else {
+            petgraph::Direction::Incoming
+        };
+        let index = NodeIndex::new(node);
+        let node_between_index = NodeIndex::new(node_between);
+        let edges: Vec<(NodeIndex, EdgeIndex, PyObject)> = self
+            .graph
+            .edges_directed(node_between_index, dir)
+            .map(|edge| {
+                if direction {
+                    (edge.target(), edge.id(), edge.weight().clone_ref(py))
+                } else {
+                    (edge.source(), edge.id(), edge.weight().clone_ref(py))
+                }
+            })
+            .collect::<Vec<(NodeIndex, EdgeIndex, PyObject)>>();
+        for (other_index, edge_index, weight) in edges {
+            if direction {
+                self._add_edge(
+                    node_between_index,
+                    index,
+                    weight.clone_ref(py),
+                )?;
+                self._add_edge(index, other_index, weight.clone_ref(py))?;
+            } else {
+                self._add_edge(other_index, index, weight.clone_ref(py))?;
+                self._add_edge(
+                    index,
+                    node_between_index,
+                    weight.clone_ref(py),
+                )?;
+            }
+            self.graph.remove_edge(edge_index);
+        }
+        Ok(())
     }
 }
 
@@ -862,6 +911,102 @@ impl PyDiGraph {
         Ok(())
     }
 
+    /// Insert a node between a list of reference nodes and all their predecessors
+    ///
+    /// This essentially iterates over all edges into the reference node
+    /// specified in the ``ref_nodes`` parameter removes those edges and then
+    /// adds 2 edges, one from the predecessor of ``ref_node`` to ``node``
+    /// and the other from ``node`` to ``ref_node``. The edge payloads for
+    /// the newly created edges are copied by reference from the original
+    /// edge that gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int ref_node: The reference node index to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_nodes, /)"]
+    pub fn insert_node_on_in_edges_multiple(
+        &mut self,
+        py: Python,
+        node: usize,
+        ref_nodes: Vec<usize>,
+    ) -> PyResult<()> {
+        for ref_node in ref_nodes {
+            self.insert_between(py, node, ref_node, false)?;
+        }
+        Ok(())
+    }
+
+    /// Insert a node between a list of reference nodes and all their successors
+    ///
+    /// This essentially iterates over all edges out of the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from ``ref_node`` to ``node`` and the other from
+    /// ``node`` to the successor of ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge that
+    /// gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int ref_nodes: The list of node indices to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_nodes, /)"]
+    pub fn insert_node_on_out_edges_multiple(
+        &mut self,
+        py: Python,
+        node: usize,
+        ref_nodes: Vec<usize>,
+    ) -> PyResult<()> {
+        for ref_node in ref_nodes {
+            self.insert_between(py, node, ref_node, true)?;
+        }
+        Ok(())
+    }
+
+    /// Insert a node between a reference node and all its predecessor nodes
+    ///
+    /// This essentially iterates over all edges into the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from the predecessor of ``ref_node`` to ``node`` and
+    /// the other from ``node`` to ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge that
+    /// gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int ref_node: The reference node index to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_node, /)"]
+    pub fn insert_node_on_in_edges(
+        &mut self,
+        py: Python,
+        node: usize,
+        ref_node: usize,
+    ) -> PyResult<()> {
+        self.insert_between(py, node, ref_node, false)?;
+        Ok(())
+    }
+
+    /// Insert a node between a reference node and all its successor nodes
+    ///
+    /// This essentially iterates over all edges out of the reference node
+    /// specified in the ``ref_node`` parameter removes those edges and then
+    /// adds 2 edges, one from ``ref_node`` to ``node`` and the other from
+    /// ``node`` to the successor of ``ref_node``. The edge payloads for the
+    /// newly created edges are copied by reference from the original edge
+    /// that gets removed.
+    ///
+    /// :param int node: The node index to insert between
+    /// :param int ref_node: The reference node index to insert ``node``
+    ///     between
+    #[text_signature = "(node, ref_node, /)"]
+    pub fn insert_node_on_out_edges(
+        &mut self,
+        py: Python,
+        node: usize,
+        ref_node: usize,
+    ) -> PyResult<()> {
+        self.insert_between(py, node, ref_node, true)?;
+        Ok(())
+    }
+
     /// Remove an edge between 2 nodes.
     ///
     /// Note if there are multiple edges between the specified nodes only one
@@ -895,6 +1040,35 @@ impl PyDiGraph {
     pub fn remove_edge_from_index(&mut self, edge: usize) -> PyResult<()> {
         let edge_index = EdgeIndex::new(edge);
         self.graph.remove_edge(edge_index);
+        Ok(())
+    }
+
+    /// Remove edges from the graph.
+    ///
+    /// Note if there are multiple edges between the specified nodes only one
+    /// will be removed.
+    ///
+    /// :param list index_list: A list of node index pairs to remove from
+    ///     the graph
+    #[text_signature = "(index_list, /)"]
+    pub fn remove_edges_from(
+        &mut self,
+        index_list: Vec<(usize, usize)>,
+    ) -> PyResult<()> {
+        for (p_index, c_index) in index_list
+            .iter()
+            .map(|(x, y)| (NodeIndex::new(*x), NodeIndex::new(*y)))
+        {
+            let edge_index = match self.graph.find_edge(p_index, c_index) {
+                Some(edge_index) => edge_index,
+                None => {
+                    return Err(NoEdgeBetweenNodes::new_err(
+                        "No edge found between nodes",
+                    ))
+                }
+            };
+            self.graph.remove_edge(edge_index);
+        }
         Ok(())
     }
 
@@ -1141,6 +1315,62 @@ impl PyDiGraph {
         Ok(out_map)
     }
 
+    /// Get the neighbors (i.e. successors) of a node.
+    ///
+    /// This will return a list of neighbor node indices. This function
+    /// is equivalent to :meth:`successor_indices`.
+    ///
+    /// :param int node: The index of the node to get the neighbors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
+    pub fn neighbors(&self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors(NodeIndex::new(node))
+            .map(|node| node.index())
+            .collect()
+    }
+
+    /// Get the successor indices of a node.
+    ///
+    /// This will return a list of the node indicies for the succesors of
+    /// a node
+    ///
+    /// :param int node: The index of the node to get the successors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
+    pub fn successor_indices(&mut self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors_directed(
+                NodeIndex::new(node),
+                petgraph::Direction::Outgoing,
+            )
+            .map(|node| node.index())
+            .collect()
+    }
+
+    /// Get the predecessor indices of a node.
+    ///
+    /// This will return a list of the node indicies for the predecessors of
+    /// a node
+    ///
+    /// :param int node: The index of the node to get the predecessors of
+    ///
+    /// :returns: A list of the neighbor node indicies
+    /// :rtype: list
+    #[text_signature = "(node, /)"]
+    pub fn predecessor_indices(&mut self, node: usize) -> Vec<usize> {
+        self.graph
+            .neighbors_directed(
+                NodeIndex::new(node),
+                petgraph::Direction::Incoming,
+            )
+            .map(|node| node.index())
+            .collect()
+    }
     /// Get the index and edge data for all parents of a node.
     ///
     /// This will return a list of tuples with the parent index the node index
@@ -1608,6 +1838,49 @@ impl PyDiGraph {
         Ok(out_dict.into())
     }
 
+    /// Return a new PyDiGraph object for a subgraph of this graph
+    ///
+    /// :param list nodes: A list of node indices to generate the subgraph
+    ///     from. If a node index is included that is not present in the graph
+    ///     it will silently be ignored.
+    ///
+    /// :returns: A new PyDiGraph object representing a subgraph of this graph.
+    ///     It is worth noting that node and edge weight/data payloads are
+    ///     passed by reference so if you update (not replace) an object used
+    ///     as the weight in graph or the subgraph it will also be updated in
+    ///     the other.
+    /// :rtype: PyGraph
+    ///
+    #[text_signature = "(nodes, /)"]
+    pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyDiGraph {
+        let node_set: HashSet<usize> =
+            HashSet::from_iter(nodes.iter().cloned());
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let node_filter =
+            |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
+        let mut out_graph = StableDiGraph::<PyObject, PyObject>::new();
+        let filtered = NodeFiltered(self, node_filter);
+        for node in filtered.node_references() {
+            let new_node = out_graph.add_node(node.1.clone_ref(py));
+            node_map.insert(node.0, new_node);
+        }
+        for edge in filtered.edge_references() {
+            let new_source = *node_map.get(&edge.source()).unwrap();
+            let new_target = *node_map.get(&edge.target()).unwrap();
+            out_graph.add_edge(
+                new_source,
+                new_target,
+                edge.weight().clone_ref(py),
+            );
+        }
+        PyDiGraph {
+            graph: out_graph,
+            node_removed: false,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: self.check_cycle,
+        }
+    }
+
     /// Check if the graph is symmetric
     ///
     /// :returns: True if the graph is symmetric
@@ -1628,6 +1901,37 @@ impl PyDiGraph {
             }
         }
         edges.is_empty()
+    }
+
+    /// Generate a new PyGraph object from this graph
+    ///
+    /// This will create a new :class:`~retworkx.PyGraph` object from this
+    /// graph. All edges in this graph will be created as undirected edges in
+    /// the new graph object.
+    /// Do note that the node and edge weights/data payloads will be passed
+    /// by reference to the new :class:`~retworkx.PyGraph` object.
+    ///
+    /// :returns: A new PyGraph object with an undirected edge for every
+    ///     directed edge in this graph
+    /// :rtype: PyGraph
+    pub fn to_undirected(&self, py: Python) -> crate::graph::PyGraph {
+        let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        for node_index in self.graph.node_indices() {
+            let node = self.graph[node_index].clone_ref(py);
+            let new_index = new_graph.add_node(node);
+            node_map.insert(node_index, new_index);
+        }
+        for edge in self.edge_references() {
+            let source = node_map.get(&edge.source()).unwrap();
+            let target = node_map.get(&edge.target()).unwrap();
+            let weight = edge.weight().clone_ref(py);
+            new_graph.add_edge(*source, *target, weight);
+        }
+        crate::graph::PyGraph {
+            graph: new_graph,
+            node_removed: false,
+        }
     }
 }
 
