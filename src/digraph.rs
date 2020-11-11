@@ -1086,9 +1086,14 @@ impl PyDiGraph {
 
     /// Find node within this graph given a specific weight
     ///
-    /// :param obj: The weight to look for
+    /// This algorithm has a worst case of O(n) since it searches the node
+    /// indices in order. If there is more than one node in the graph with the
+    /// same weight only the first match (by node index) will be returned.
     ///
-    /// returns: the index > 0 if a node was found and otherwise -1
+    /// :param obj: The weight to look for in the graph.
+    ///
+    /// returns: the index of the first node in the graph that is equal to the
+    ///     weight. If no match is found ``None`` will be returned.
     /// rtype: int
     pub fn find_node_by_weight(
         &self,
