@@ -171,7 +171,7 @@ class TestBfsSuccessors(unittest.TestCase):
         with self.assertRaises(IndexError):
             res[8]
 
-    def test_bfs_successors_sequence_stop_iterator(self):
+    def test_bfs_successors_sequence_negative_index(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node(0)
         node_b = dag.add_child(node_a, 1, {})
@@ -185,6 +185,23 @@ class TestBfsSuccessors(unittest.TestCase):
         node_j = dag.add_child(node_i, 9, {})
         dag.add_child(node_j, 10, {})
         res = retworkx.bfs_successors(dag, node_b)
+        self.assertEqual((5, [6]), res[-1])
+        self.assertEqual((4, [5]), res[-3])
+
+    def test_bfs_successors_sequence_stop_iterator(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node(0)
+        node_b = dag.add_child(node_a, 1, {})
+        node_c = dag.add_child(node_b, 2, {})
+        node_d = dag.add_child(node_c, 3, {})
+        node_e = dag.add_child(node_d, 4, {})
+        node_f = dag.add_child(node_e, 5, {})
+        dag.add_child(node_f, 6, {})
+        node_h = dag.add_child(node_c, 7, {})
+        node_i = dag.add_child(node_h, 8, {})
+        node_j = dag.add_child(node_i, 9, {})
+        dag.add_child(node_j, 10, {})
+        res = iter(retworkx.bfs_successors(dag, node_b))
         for _ in range(8):
             next(res)
         with self.assertRaises(StopIteration):
