@@ -1092,9 +1092,9 @@ impl PyDiGraph {
     ///
     /// :param obj: The weight to look for in the graph.
     ///
-    /// returns: the index of the first node in the graph that is equal to the
+    /// :returns: the index of the first node in the graph that is equal to the
     ///     weight. If no match is found ``None`` will be returned.
-    /// rtype: int
+    /// :rtype: int
     pub fn find_node_by_weight(
         &self,
         py: Python,
