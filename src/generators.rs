@@ -660,11 +660,11 @@ pub fn directed_mesh_graph(
 /// :param int rows: The number of rows to generate the graph with.
 ///     If specified, cols also need to be specified
 /// :param list cols: The number of rows to generate the graph with.
-///     If specified, rows also need to be specified. rows*cols 
+///     If specified, rows also need to be specified. rows*cols
 ///     defines the number of nodes in the graph
-/// :param list weights: A list of node weights. If rows and cols 
-///     are not specified, then a linear graph containing all the 
-///     values in weights list is created. 
+/// :param list weights: A list of node weights. If rows and cols
+///     are not specified, then a linear graph containing all the
+///     values in weights list is created.
 ///     If number of nodes(rows*cols) is less than length of
 ///     weights list, the trailing weights are ignored.
 ///     If number of nodes(rows*cols) is greater than length of
@@ -712,7 +712,7 @@ pub fn grid_graph(
             }
 
             let mut node_cnt = num_nodes;
-            
+
             for weight in weights {
                 if node_cnt <= 0 {
                     break;
@@ -760,11 +760,11 @@ pub fn grid_graph(
 //// :param int rows: The number of rows to generate the graph with.
 ///     If specified, cols also need to be specified.
 /// :param list cols: The number of rows to generate the graph with.
-///     If specified, rows also need to be specified. rows*cols 
+///     If specified, rows also need to be specified. rows*cols
 ///     defines the number of nodes in the graph.
-/// :param list weights: A list of node weights. If rows and cols 
-///     are not specified, then a linear graph containing all the 
-///     values in weights list is created. 
+/// :param list weights: A list of node weights. If rows and cols
+///     are not specified, then a linear graph containing all the
+///     values in weights list is created.
 ///     If number of nodes(rows*cols) is less than length of
 ///     weights list, the trailing weights are ignored.
 ///     If number of nodes(rows*cols) is greater than length of
@@ -815,7 +815,7 @@ pub fn directed_grid_graph(
             }
 
             let mut node_cnt = num_nodes;
-            
+
             for weight in weights {
                 if node_cnt <= 0 {
                     break;
