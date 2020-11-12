@@ -1162,7 +1162,7 @@ impl PyDiGraph {
                 if dir == &petgraph::Direction::Outgoing {
                     edges = self.out_edges(u);
                 } else {
-                    edges = self.in_edges(v);
+                    edges = self.in_edges(u);
                 }
 
                 for edge in edges {
