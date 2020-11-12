@@ -73,6 +73,8 @@ Algorithm Functions
    retworkx.digraph_all_simple_paths
    retworkx.graph_astar_shortest_path
    retworkx.digraph_astar_shortest_path
+   retworkx.graph_dijkstra_shortest_paths
+   retworkx.digraph_dijkstra_shortest_paths
    retworkx.graph_dijkstra_shortest_path_lengths
    retworkx.digraph_dijkstra_shortest_path_lengths
    retworkx.graph_k_shortest_path_lengths
@@ -80,6 +82,8 @@ Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.cycle_basis
    retworkx.strongly_connected_components
+   retworkx.graph_dfs_edges
+   retworkx.digraph_dfs_edges
    retworkx.digraph_find_cycle
 
 Exceptions
@@ -95,3 +99,11 @@ Exceptions
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph
+
+Return Iterator Types
+---------------------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.BFSSuccessors
