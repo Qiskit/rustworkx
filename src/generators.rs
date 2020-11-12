@@ -563,6 +563,29 @@ pub fn star_graph(
 /// :rtype: PyGraph
 /// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
 ///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.mesh_graph(4)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
 #[pyfunction]
 #[text_signature = "(/, num_nodes=None, weights=None)"]
 pub fn mesh_graph(
@@ -614,6 +637,29 @@ pub fn mesh_graph(
 /// :rtype: PyDiGraph
 /// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
 ///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.directed_mesh_graph(4)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
 #[pyfunction]
 #[text_signature = "(/, num_nodes=None, weights=None)"]
 pub fn directed_mesh_graph(
@@ -662,18 +708,41 @@ pub fn directed_mesh_graph(
 /// :param list cols: The number of rows to generate the graph with.
 ///     If specified, rows also need to be specified. rows*cols
 ///     defines the number of nodes in the graph
-/// :param list weights: A list of node weights. If rows and cols
-///     are not specified, then a linear graph containing all the
-///     values in weights list is created.
+/// :param list weights: A list of node weights. Nodes are filled row wise.
+///     If rows and cols are not specified, then a linear graph containing
+///     all the values in weights list is created.
 ///     If number of nodes(rows*cols) is less than length of
 ///     weights list, the trailing weights are ignored.
 ///     If number of nodes(rows*cols) is greater than length of
-///     weights list, extra nodes with None weight are appended
+///     weights list, extra nodes with None weight are appended.
 ///
-/// :returns: The generated star graph
+/// :returns: The generated grid graph
 /// :rtype: PyGraph
 /// :raises IndexError: If neither ``rows`` or ``cols`` and ``weights`` are
 ///      specified
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.grid_graph(2, 3)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
 ///
 #[pyfunction]
 #[text_signature = "(/, rows=None, cols=None, weights=None)"]
@@ -757,14 +826,14 @@ pub fn grid_graph(
 /// Generate a directed grid graph. The edges propagate towards right and
 ///     bottom direction if ``bidirectional`` is ``false``
 ///
-//// :param int rows: The number of rows to generate the graph with.
+/// :param int rows: The number of rows to generate the graph with.
 ///     If specified, cols also need to be specified.
 /// :param list cols: The number of rows to generate the graph with.
 ///     If specified, rows also need to be specified. rows*cols
 ///     defines the number of nodes in the graph.
-/// :param list weights: A list of node weights. If rows and cols
-///     are not specified, then a linear graph containing all the
-///     values in weights list is created.
+/// :param list weights: A list of node weights. Nodes are filled row wise.
+///     If rows and cols are not specified, then a linear graph containing
+///     all the values in weights list is created.
 ///     If number of nodes(rows*cols) is less than length of
 ///     weights list, the trailing weights are ignored.
 ///     If number of nodes(rows*cols) is greater than length of
@@ -772,10 +841,33 @@ pub fn grid_graph(
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 ///
-/// :returns: The generated star graph
+/// :returns: The generated grid graph
 /// :rtype: PyDiGraph
 /// :raises IndexError: If neither ``rows`` or ``cols`` and ``weights`` are
 ///      specified
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.directed_grid_graph(2, 3)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
 ///
 #[pyfunction(bidirectional = "false")]
 #[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False)"]
