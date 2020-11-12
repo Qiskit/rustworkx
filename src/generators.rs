@@ -655,17 +655,24 @@ pub fn directed_mesh_graph(
     })
 }
 
-/// Generate an undirected grid graph
+/// Generate an undirected grid graph.
 ///
-/// :param int rows: The number of rows to generate the graph with. Value
-///     required
-/// :param list cols: The number of rows to generate the graph with. Value
-///     required
-/// :param list weights: A list of node weights.
+/// :param int rows: The number of rows to generate the graph with.
+///     If specified, cols also need to be specified
+/// :param list cols: The number of rows to generate the graph with.
+///     If specified, rows also need to be specified. rows*cols 
+///     defines the number of nodes in the graph
+/// :param list weights: A list of node weights. If rows and cols 
+///     are not specified, then a linear graph containing all the 
+///     values in weights list is created. 
+///     If number of nodes(rows*cols) is less than length of
+///     weights list, the trailing weights are ignored.
+///     If number of nodes(rows*cols) is greater than length of
+///     weights list, extra nodes with None weight are appended
 ///
 /// :returns: The generated star graph
 /// :rtype: PyGraph
-/// :raises IndexError: If neither ``rows`` and ``cols`` or ``weights`` are
+/// :raises IndexError: If neither ``rows`` or ``cols`` and ``weights`` are
 ///      specified
 ///
 #[pyfunction]
@@ -683,14 +690,39 @@ pub fn grid_graph(
         ));
     }
 
-    let rowlen = rows.unwrap();
-    let collen = cols.unwrap();
-    let num_nodes = rowlen * collen;
+    let mut rowlen = match rows {
+        Some(rows) => rows,
+        None => 0,
+    };
+
+    let mut collen = match cols {
+        Some(cols) => cols,
+        None => 0,
+    };
+
+    let mut num_nodes = rowlen * collen;
+
     let nodes: Vec<NodeIndex> = match weights {
         Some(weights) => {
             let mut node_list: Vec<NodeIndex> = Vec::new();
+            if num_nodes < weights.len() && rowlen == 0 {
+                collen = weights.len();
+                rowlen = 1;
+                num_nodes = collen;
+            }
+
+            let mut node_cnt = num_nodes;
+            
             for weight in weights {
+                if node_cnt <= 0 {
+                    break;
+                }
                 let index = graph.add_node(weight);
+                node_list.push(index);
+                node_cnt -= 1;
+            }
+            for _i in 0..node_cnt {
+                let index = graph.add_node(py.None());
                 node_list.push(index);
             }
             node_list
@@ -725,17 +757,24 @@ pub fn grid_graph(
 /// Generate a directed grid graph. The edges propagate towards right and
 ///     bottom direction if ``bidirectional`` is ``false``
 ///
-/// :param int rows: The number of rows to generate the graph with. Value
-///     required
-/// :param list cols: The number of rows to generate the graph with. Value
-///     required
-/// :param list weights: A list of node weights.
+//// :param int rows: The number of rows to generate the graph with.
+///     If specified, cols also need to be specified.
+/// :param list cols: The number of rows to generate the graph with.
+///     If specified, rows also need to be specified. rows*cols 
+///     defines the number of nodes in the graph.
+/// :param list weights: A list of node weights. If rows and cols 
+///     are not specified, then a linear graph containing all the 
+///     values in weights list is created. 
+///     If number of nodes(rows*cols) is less than length of
+///     weights list, the trailing weights are ignored.
+///     If number of nodes(rows*cols) is greater than length of
+///     weights list, extra nodes with None weight are appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 ///
 /// :returns: The generated star graph
 /// :rtype: PyDiGraph
-/// :raises IndexError: If neither ``rows`` and ``cols`` or ``weights`` are
+/// :raises IndexError: If neither ``rows`` or ``cols`` and ``weights`` are
 ///      specified
 ///
 #[pyfunction(bidirectional = "false")]
@@ -754,14 +793,39 @@ pub fn directed_grid_graph(
         ));
     }
 
-    let rowlen = rows.unwrap();
-    let collen = cols.unwrap();
-    let num_nodes = rowlen * collen;
+    let mut rowlen = match rows {
+        Some(rows) => rows,
+        None => 0,
+    };
+
+    let mut collen = match cols {
+        Some(cols) => cols,
+        None => 0,
+    };
+
+    let mut num_nodes = rowlen * collen;
+
     let nodes: Vec<NodeIndex> = match weights {
         Some(weights) => {
             let mut node_list: Vec<NodeIndex> = Vec::new();
+            if num_nodes < weights.len() && rowlen == 0 {
+                collen = weights.len();
+                rowlen = 1;
+                num_nodes = collen;
+            }
+
+            let mut node_cnt = num_nodes;
+            
             for weight in weights {
+                if node_cnt <= 0 {
+                    break;
+                }
                 let index = graph.add_node(weight);
+                node_list.push(index);
+                node_cnt -= 1;
+            }
+            for _i in 0..node_cnt {
+                let index = graph.add_node(py.None());
                 node_list.push(index);
             }
             node_list
