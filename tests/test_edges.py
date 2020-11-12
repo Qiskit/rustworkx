@@ -341,3 +341,141 @@ class TestEdges(unittest.TestCase):
         self.assertEqual(1, dag.out_degree(1))
         self.assertEqual(1, dag.out_degree(2))
         self.assertEqual(2, dag.in_degree(3))
+
+    def test_insert_node_on_in_edges(self):
+        graph = retworkx.PyDiGraph()
+        in_node = graph.add_node('qr[0]')
+        out_node = graph.add_child(in_node, 'qr[0]', 'qr[0]')
+        h_gate = graph.add_node('h')
+        graph.insert_node_on_in_edges(h_gate, out_node)
+        self.assertEqual(
+            [(in_node, h_gate, 'qr[0]'), (h_gate, out_node, 'qr[0]')],
+            graph.weighted_edge_list())
+
+    def test_insert_node_on_in_edges_multiple(self):
+        graph = retworkx.PyDiGraph()
+        in_node_0 = graph.add_node('qr[0]')
+        out_node_0 = graph.add_child(in_node_0, 'qr[0]', 'qr[0]')
+        in_node_1 = graph.add_node('qr[1]')
+        out_node_1 = graph.add_child(in_node_1, 'qr[1]', 'qr[1]')
+        cx_gate = graph.add_node('cx')
+        graph.insert_node_on_in_edges_multiple(cx_gate,
+                                               [out_node_0, out_node_1])
+        self.assertEqual(
+            {(in_node_0, cx_gate, 'qr[0]'), (cx_gate, out_node_0, 'qr[0]'),
+             (in_node_1, cx_gate, 'qr[1]'), (cx_gate, out_node_1, 'qr[1]')},
+            set(graph.weighted_edge_list()))
+
+    def test_insert_node_on_in_edges_double(self):
+        graph = retworkx.PyDiGraph()
+        in_node = graph.add_node('qr[0]')
+        out_node = graph.add_child(in_node, 'qr[0]', 'qr[0]')
+        h_gate = graph.add_node('h')
+        z_gate = graph.add_node('z')
+        graph.insert_node_on_in_edges(h_gate, out_node)
+        graph.insert_node_on_in_edges(z_gate, out_node)
+        self.assertEqual(
+            {(in_node, h_gate, 'qr[0]'), (h_gate, z_gate, 'qr[0]'),
+             (z_gate, out_node, 'qr[0]')},
+            set(graph.weighted_edge_list()))
+
+    def test_insert_node_on_in_edges_multiple_double(self):
+        graph = retworkx.PyDiGraph()
+        in_node_0 = graph.add_node('qr[0]')
+        out_node_0 = graph.add_child(in_node_0, 'qr[0]', 'qr[0]')
+        in_node_1 = graph.add_node('qr[1]')
+        out_node_1 = graph.add_child(in_node_1, 'qr[1]', 'qr[1]')
+        cx_gate = graph.add_node('cx')
+        cz_gate = graph.add_node('cz')
+        graph.insert_node_on_in_edges_multiple(cx_gate,
+                                               [out_node_0, out_node_1])
+        graph.insert_node_on_in_edges_multiple(cz_gate,
+                                               [out_node_0, out_node_1])
+        self.assertEqual(
+            {(in_node_0, cx_gate, 'qr[0]'), (cx_gate, cz_gate, 'qr[0]'),
+             (in_node_1, cx_gate, 'qr[1]'), (cx_gate, cz_gate, 'qr[1]'),
+             (cz_gate, out_node_0, 'qr[0]'), (cz_gate, out_node_1, 'qr[1]')},
+            set(graph.weighted_edge_list()))
+
+    def test_insert_node_on_out_edges(self):
+        graph = retworkx.PyDiGraph()
+        in_node = graph.add_node('qr[0]')
+        out_node = graph.add_child(in_node, 'qr[0]', 'qr[0]')
+        h_gate = graph.add_node('h')
+        graph.insert_node_on_out_edges(h_gate, in_node)
+        self.assertEqual(
+            {(in_node, h_gate, 'qr[0]'), (h_gate, out_node, 'qr[0]')},
+            set(graph.weighted_edge_list()))
+
+    def test_insert_node_on_out_edges_multiple(self):
+        graph = retworkx.PyDiGraph()
+        in_node_0 = graph.add_node('qr[0]')
+        out_node_0 = graph.add_child(in_node_0, 'qr[0]', 'qr[0]')
+        in_node_1 = graph.add_node('qr[1]')
+        out_node_1 = graph.add_child(in_node_1, 'qr[1]', 'qr[1]')
+        cx_gate = graph.add_node('cx')
+        graph.insert_node_on_out_edges_multiple(cx_gate,
+                                                [in_node_0, in_node_1])
+        self.assertEqual(
+            {(in_node_0, cx_gate, 'qr[0]'), (cx_gate, out_node_0, 'qr[0]'),
+             (in_node_1, cx_gate, 'qr[1]'), (cx_gate, out_node_1, 'qr[1]')},
+            set(graph.weighted_edge_list()))
+
+    def test_insert_node_on_out_edges_double(self):
+        graph = retworkx.PyDiGraph()
+        in_node = graph.add_node('qr[0]')
+        out_node = graph.add_child(in_node, 'qr[0]', 'qr[0]')
+        h_gate = graph.add_node('h')
+        z_gate = graph.add_node('z')
+        graph.insert_node_on_out_edges(h_gate, in_node)
+        graph.insert_node_on_out_edges(z_gate, in_node)
+        self.assertEqual(
+            {(in_node, z_gate, 'qr[0]'), (z_gate, h_gate, 'qr[0]'),
+             (h_gate, out_node, 'qr[0]')},
+            set(graph.weighted_edge_list()))
+
+    def test_insert_node_on_out_edges_multiple_double(self):
+        graph = retworkx.PyDiGraph()
+        in_node_0 = graph.add_node('qr[0]')
+        out_node_0 = graph.add_child(in_node_0, 'qr[0]', 'qr[0]')
+        in_node_1 = graph.add_node('qr[1]')
+        out_node_1 = graph.add_child(in_node_1, 'qr[1]', 'qr[1]')
+        cx_gate = graph.add_node('cx')
+        cz_gate = graph.add_node('cz')
+        graph.insert_node_on_out_edges_multiple(cx_gate,
+                                                [in_node_0, in_node_1])
+        graph.insert_node_on_out_edges_multiple(cz_gate,
+                                                [in_node_0, in_node_1])
+        self.assertEqual(
+            {(in_node_0, cz_gate, 'qr[0]'), (cz_gate, cx_gate, 'qr[0]'),
+             (in_node_1, cz_gate, 'qr[1]'), (cz_gate, cx_gate, 'qr[1]'),
+             (cx_gate, out_node_0, 'qr[0]'), (cx_gate, out_node_1, 'qr[1]')},
+            set(graph.weighted_edge_list()))
+
+    def test_insert_node_on_in_edges_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(None)
+        node_b = graph.add_node(None)
+        graph.insert_node_on_in_edges(node_b, node_a)
+        self.assertEqual([], graph.edge_list())
+
+    def test_insert_node_on_in_edges_multiple_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(None)
+        node_b = graph.add_node(None)
+        graph.insert_node_on_in_edges_multiple(node_b, [node_a])
+        self.assertEqual([], graph.edge_list())
+
+    def test_insert_node_on_out_edges_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(None)
+        node_b = graph.add_node(None)
+        graph.insert_node_on_out_edges(node_b, node_a)
+        self.assertEqual([], graph.edge_list())
+
+    def test_insert_node_on_out_edges_multiple_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(None)
+        node_b = graph.add_node(None)
+        graph.insert_node_on_out_edges_multiple(node_b, [node_a])
+        self.assertEqual([], graph.edge_list())
