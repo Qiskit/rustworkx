@@ -41,7 +41,7 @@ class TestMeshGraph(unittest.TestCase):
                     ls.append((i, j, None))
             self.assertEqual(graph.out_edges(i), ls)
 
-    def test_path_directed_no_weights_or_num(self):
+    def test_mesh_directed_no_weights_or_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.directed_mesh_graph()
 

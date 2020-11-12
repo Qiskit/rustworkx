@@ -39,10 +39,10 @@ class TestGridGraph(unittest.TestCase):
         self.assertEqual([x for x in range(20)], graph.nodes())
         self.assertEqual(len(graph.edges()), 19)
         for i in range(19):
-            self.assertEqual(graph.out_edges(i), [(i, i+1, None)])
+            self.assertEqual(graph.out_edges(i), [(i, i + 1, None)])
         self.assertEqual(graph.out_edges(19), [])
         for i in range(1, 20):
-            self.assertEqual(graph.in_edges(i), [(i-1, i, None)])
+            self.assertEqual(graph.in_edges(i), [(i - 1, i, None)])
         self.assertEqual(graph.in_edges(0), [])
 
     def test_directed_grid_graph_dimensions_weights(self):
@@ -66,7 +66,7 @@ class TestGridGraph(unittest.TestCase):
         graph = retworkx.generators.directed_grid_graph(
             4, 5, weights=list(range(16)))
         self.assertEqual(len(graph), 20)
-        self.assertEqual([x for x in range(16)]+[None]*4, graph.nodes())
+        self.assertEqual([x for x in range(16)] + [None] * 4, graph.nodes())
         self.assertEqual(len(graph.edges()), 31)
         self.assertEqual(graph.out_edges(0), [(0, 1, None), (0, 5, None)])
         self.assertEqual(graph.out_edges(7), [(7, 8, None), (7, 12, None)])
@@ -99,8 +99,8 @@ class TestGridGraph(unittest.TestCase):
     def test_grid_directed_no_weights_or_dim(self):
         with self.assertRaises(IndexError):
             retworkx.generators.directed_grid_graph()
-            retworkx.generators.directed_grid_graph(rows=5, weights=[1]*5)
-            retworkx.generators.directed_grid_graph(cols=5, weights=[1]*5)
+            retworkx.generators.directed_grid_graph(rows=5, weights=[1] * 5)
+            retworkx.generators.directed_grid_graph(cols=5, weights=[1] * 5)
 
     def test_grid_graph_dimensions(self):
         graph = retworkx.generators.grid_graph(4, 5)
@@ -121,7 +121,7 @@ class TestGridGraph(unittest.TestCase):
 
         graph = retworkx.generators.grid_graph(4, 5, weights=list(range(16)))
         self.assertEqual(len(graph), 20)
-        self.assertEqual([x for x in range(16)] + [None]*4, graph.nodes())
+        self.assertEqual([x for x in range(16)] + [None] * 4, graph.nodes())
         self.assertEqual(len(graph.edges()), 31)
 
         graph = retworkx.generators.grid_graph(4, 5, weights=list(range(24)))
@@ -132,5 +132,5 @@ class TestGridGraph(unittest.TestCase):
     def test_grid_no_weights_or_dim(self):
         with self.assertRaises(IndexError):
             retworkx.generators.grid_graph()
-            retworkx.generators.grid_graph(rows=5, weights=[1]*5)
-            retworkx.generators.grid_graph(cols=5, weights=[1]*5)
+            retworkx.generators.grid_graph(rows=5, weights=[1] * 5)
+            retworkx.generators.grid_graph(cols=5, weights=[1] * 5)
