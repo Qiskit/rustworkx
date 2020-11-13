@@ -783,7 +783,7 @@ pub fn grid_graph(
             let mut node_cnt = num_nodes;
 
             for weight in weights {
-                if node_cnt <= 0 {
+                if node_cnt == 0 {
                     break;
                 }
                 let index = graph.add_node(weight);
@@ -909,7 +909,7 @@ pub fn directed_grid_graph(
             let mut node_cnt = num_nodes;
 
             for weight in weights {
-                if node_cnt <= 0 {
+                if node_cnt == 0 {
                     break;
                 }
                 let index = graph.add_node(weight);
