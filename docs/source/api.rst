@@ -26,6 +26,10 @@ Generators
     retworkx.generators.directed_path_graph
     retworkx.generators.star_graph
     retworkx.generators.directed_star_graph
+    retworkx.generators.mesh_graph
+    retworkx.generators.directed_mesh_graph
+    retworkx.generators.grid_graph
+    retworkx.generators.directed_grid_graph
 
 Random Circuit Functions
 ------------------------
@@ -96,3 +100,11 @@ Exceptions
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph
+
+Return Iterator Types
+---------------------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.BFSSuccessors
