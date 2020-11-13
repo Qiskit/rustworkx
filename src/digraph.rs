@@ -11,6 +11,7 @@
 // under the License.
 
 use std::cmp;
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
@@ -1081,6 +1082,107 @@ impl PyDiGraph {
     pub fn add_node(&mut self, obj: PyObject) -> PyResult<usize> {
         let index = self.graph.add_node(obj);
         Ok(index.index())
+    }
+
+    /// Find node within this graph given a specific weight
+    ///
+    /// This algorithm has a worst case of O(n) since it searches the node
+    /// indices in order. If there is more than one node in the graph with the
+    /// same weight only the first match (by node index) will be returned.
+    ///
+    /// :param obj: The weight to look for in the graph.
+    ///
+    /// :returns: the index of the first node in the graph that is equal to the
+    ///     weight. If no match is found ``None`` will be returned.
+    /// :rtype: int
+    pub fn find_node_by_weight(
+        &self,
+        py: Python,
+        obj: PyObject,
+    ) -> Option<usize> {
+        let mut index = None;
+        for node in self.graph.node_indices() {
+            let weight = self.graph.node_weight(node).unwrap();
+            let weight_compare = |a: &PyAny, b: &PyAny| -> PyResult<bool> {
+                let res = a.compare(b)?;
+                Ok(res == Ordering::Equal)
+            };
+
+            if weight_compare(obj.as_ref(py), weight.as_ref(py)).unwrap() {
+                index = Some(node.index());
+                break;
+            }
+        }
+        index
+    }
+
+    /// Merge two nodes in the graph.
+    ///
+    /// If the nodes have equal weight objects then all the edges into and out of `u` will be added
+    /// to `v` and `u` will be removed from the graph. If the nodes don't have equal weight
+    /// objects then no changes will be made and no error raised
+    ///
+    /// :param int u: The source node that is going to be merged
+    /// :param int v: The target node that is going to be the new node
+    #[text_signature = "(u, v /)"]
+    pub fn merge_nodes(
+        &mut self,
+        py: Python,
+        u: usize,
+        v: usize,
+    ) -> PyResult<()> {
+        let source_node = NodeIndex::new(u);
+        let target_node = NodeIndex::new(v);
+
+        let source_weight = match self.graph.node_weight(source_node) {
+            Some(weight) => weight,
+            None => {
+                return Err(PyIndexError::new_err("No node found for index"))
+            }
+        };
+
+        let target_weight = match self.graph.node_weight(target_node) {
+            Some(weight) => weight,
+            None => {
+                return Err(PyIndexError::new_err("No node found for index"))
+            }
+        };
+
+        let have_same_weights =
+            source_weight.as_ref(py).compare(target_weight.as_ref(py))?
+                == Ordering::Equal;
+
+        if have_same_weights {
+            const DIRECTIONS: [petgraph::Direction; 2] =
+                [petgraph::Direction::Outgoing, petgraph::Direction::Incoming];
+
+            let mut edges_to_add: Vec<(usize, usize, PyObject)> = Vec::new();
+            for dir in &DIRECTIONS {
+                let edges;
+                if dir == &petgraph::Direction::Outgoing {
+                    edges = self.out_edges(u);
+                } else {
+                    edges = self.in_edges(u);
+                }
+
+                for edge in edges {
+                    let s = edge.source();
+                    let d = edge.target();
+
+                    if s == u {
+                        edges_to_add.push((v, d, edge.weight().clone()));
+                    } else {
+                        edges_to_add.push((s, v, edge.weight().clone()));
+                    }
+                }
+            }
+            self.remove_node(u)?;
+            for edge in edges_to_add {
+                self.add_edge(edge.0, edge.1, edge.2)?;
+            }
+        }
+
+        Ok(())
     }
 
     /// Add a new child node to the graph.

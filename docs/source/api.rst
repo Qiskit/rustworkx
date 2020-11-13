@@ -85,6 +85,7 @@ Algorithm Functions
    retworkx.graph_dfs_edges
    retworkx.digraph_dfs_edges
    retworkx.digraph_find_cycle
+   retworkx.digraph_union
 
 Exceptions
 ----------
