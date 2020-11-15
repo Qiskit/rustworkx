@@ -15,7 +15,6 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::iter::FromIterator;
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -1144,8 +1143,7 @@ impl PyGraph {
     ///
     #[text_signature = "(nodes, /)"]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyGraph {
-        let node_set: HashSet<usize> =
-            HashSet::from_iter(nodes.iter().cloned());
+        let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
         let node_filter =
             |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
