@@ -12,9 +12,10 @@
 
 use std::convert::TryInto;
 
-use pyo3::class::PySequenceProtocol;
-use pyo3::exceptions::PyIndexError;
+use pyo3::class::{PyObjectProtocol, PySequenceProtocol};
+use pyo3::exceptions::{PyIndexError, PyNotImplementedError};
 use pyo3::prelude::*;
+use pyo3::types::PySequence;
 
 /// A custom class for the return from :func:`retworkx.bfs_successors`
 ///
@@ -58,6 +59,81 @@ impl PySequenceProtocol for BFSSuccessors {
             Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
         } else {
             Ok(self.bfs_successors[idx as usize].clone())
+        }
+    }
+}
+
+/// A custom class for the return if node indices
+///
+/// This class is a container class for the results of functions that
+/// return a list of node indices. It implements the Python sequence
+/// protocol. So you can treat the return as read-only a sequence/list
+/// that is integer indexed. If you want to use it as an iterator you
+/// can by wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     nodes = retworkx.node_indexes(0)
+///     # Index based access
+///     third_element = nodes[2]
+///     # Use as iterator
+///     nodes_iter = iter(node)
+///     first_element = next(nodes_iter)
+///     second_element = next(nodes_iter)
+///
+#[pyclass(module = "retworkx")]
+pub struct NodeIndices {
+    pub nodes: Vec<usize>,
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for NodeIndices {
+    fn __richcmp__(
+        &self,
+        other: &'p PySequence,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: &PySequence| -> PyResult<bool> {
+            if other.len()? as usize != self.nodes.len() {
+                return Ok(false);
+            }
+            for i in 0..self.nodes.len() {
+                let other_raw = other.get_item(i.try_into().unwrap())?;
+                let other_value: usize = other_raw.extract()?;
+                if other_value != self.nodes[i] {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for NodeIndices {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.nodes.len())
+    }
+
+    fn __getitem__(&'p self, idx: isize) -> PyResult<usize> {
+        if idx >= self.nodes.len().try_into().unwrap() {
+            Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
+        } else {
+            Ok(self.nodes[idx as usize])
         }
     }
 }

@@ -51,6 +51,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
+use crate::iterators::NodeIndices;
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -113,14 +114,16 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
 ///     object must be a DAG without a cycle.
 ///
 /// :returns: The node indices of the longest path on the DAG
-/// :rtype: list
+/// :rtype: NodeIndices
 ///
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
 #[text_signature = "(graph, /)"]
-fn dag_longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
-    longest_path(graph)
+fn dag_longest_path(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
+    Ok(NodeIndices {
+        nodes: longest_path(graph)?,
+    })
 }
 
 /// Find the length of the longest path in a DAG
@@ -336,19 +339,21 @@ fn is_isomorphic_node_match(
 /// :param PyDiGraph graph: The DAG to get the topological sort on
 ///
 /// :returns: A list of node indices topologically sorted.
-/// :rtype: list
+/// :rtype: NodeIndices
 ///
 /// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
 #[pyfunction]
 #[text_signature = "(graph, /)"]
-fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
+fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
         }
     };
-    Ok(nodes.iter().map(|node| node.index()).collect())
+    Ok(NodeIndices {
+        nodes: nodes.iter().map(|node| node.index()).collect(),
+    })
 }
 
 fn dfs_edges<G>(graph: G, source: Option<usize>) -> Vec<(usize, usize)>
@@ -1808,7 +1813,7 @@ fn digraph_dijkstra_shortest_path_lengths(
 ///
 /// :returns: The computed shortest path between node and finish as a list
 ///     of node indices.
-/// :rtype: list
+/// :rtype: NodeIndices
 #[pyfunction]
 #[text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)"]
 fn graph_astar_shortest_path(
@@ -1818,7 +1823,7 @@ fn graph_astar_shortest_path(
     goal_fn: PyObject,
     edge_cost_fn: PyObject,
     estimate_cost_fn: PyObject,
-) -> PyResult<Vec<usize>> {
+) -> PyResult<NodeIndices> {
     let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1858,7 +1863,9 @@ fn graph_astar_shortest_path(
             ))
         }
     };
-    Ok(path.1.into_iter().map(|x| x.index()).collect())
+    Ok(NodeIndices {
+        nodes: path.1.into_iter().map(|x| x.index()).collect(),
+    })
 }
 
 /// Compute the A* shortest path for a PyDiGraph
@@ -1880,7 +1887,7 @@ fn graph_astar_shortest_path(
 ///
 /// :return: The computed shortest path between node and finish as a list
 ///     of node indices.
-/// :rtype: list
+/// :rtype: NodeIndices
 #[pyfunction]
 #[text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)"]
 fn digraph_astar_shortest_path(
@@ -1890,7 +1897,7 @@ fn digraph_astar_shortest_path(
     goal_fn: PyObject,
     edge_cost_fn: PyObject,
     estimate_cost_fn: PyObject,
-) -> PyResult<Vec<usize>> {
+) -> PyResult<NodeIndices> {
     let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1930,7 +1937,9 @@ fn digraph_astar_shortest_path(
             ))
         }
     };
-    Ok(path.1.into_iter().map(|x| x.index()).collect())
+    Ok(NodeIndices {
+        nodes: path.1.into_iter().map(|x| x.index()).collect(),
+    })
 }
 
 /// Return a :math:`G_{np}` directed random graph, also known as an
@@ -2551,6 +2560,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
+    m.add_class::<iterators::NodeIndices>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
