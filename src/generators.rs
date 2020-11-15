@@ -759,16 +759,8 @@ pub fn grid_graph(
         ));
     }
 
-    let mut rowlen = match rows {
-        Some(rows) => rows,
-        None => 0,
-    };
-
-    let mut collen = match cols {
-        Some(cols) => cols,
-        None => 0,
-    };
-
+    let mut rowlen = rows.unwrap_or(0);
+    let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
 
     let nodes: Vec<NodeIndex> = match weights {
@@ -885,16 +877,8 @@ pub fn directed_grid_graph(
         ));
     }
 
-    let mut rowlen = match rows {
-        Some(rows) => rows,
-        None => 0,
-    };
-
-    let mut collen = match cols {
-        Some(cols) => cols,
-        None => 0,
-    };
-
+    let mut rowlen = rows.unwrap_or(0);
+    let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
 
     let nodes: Vec<NodeIndex> = match weights {
