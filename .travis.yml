@@ -52,7 +52,7 @@ jobs:
       env:
         - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
-        - CIBW_SKIP="cp27-* cp34-* pp*"
+        - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
@@ -72,7 +72,7 @@ jobs:
       env:
         - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
-        - CIBW_SKIP="cp27-* cp34-* pp*"
+        - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
@@ -92,7 +92,7 @@ jobs:
       env:
         - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust_no_rustup.sh"
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
-        - CIBW_SKIP="cp27-* cp34-*"
+        - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"

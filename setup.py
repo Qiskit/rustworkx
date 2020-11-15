@@ -5,13 +5,8 @@ except ImportError:
     import sys
     import subprocess
 
-    if sys.version_info[1] == 5:
-        setuptools_rust = 'setuptools-rust<0.11.4'
-    else:
-        setuptools_rust = 'setuptools-rust'
-
     subprocess.call([sys.executable, '-m', 'pip', 'install',
-                     setuptools_rust])
+                     'setuptools-rust'])
     from setuptools_rust import Binding, RustExtension
 
 
@@ -22,7 +17,7 @@ def readme():
 
 setup(
     name="retworkx",
-    version="0.6.0",
+    version="0.7.0",
     description="A python graph library implemented in Rust",
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -35,7 +30,6 @@ setup(
         "Intended Audience :: Science/Research",
         "Programming Language :: Rust",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
@@ -56,6 +50,6 @@ setup(
     include_package_data=True,
     packages=["retworkx"],
     zip_safe=False,
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     install_requires=['numpy>=1.16.0'],
 )
