@@ -29,6 +29,10 @@ class TestCustomReturnTypeComparisons(unittest.TestCase):
         self.assertFalse(retworkx.bfs_successors(
             self.dag, 0) == [('b', ['c'])])
 
+    def test_eq_not_match_inner(self):
+        self.assertFalse(retworkx.bfs_successors(
+            self.dag, 0) == [('a', ['c'])])
+
     def test__eq__different_length(self):
         self.assertFalse(retworkx.bfs_successors(
             self.dag, 0) == [('a', ['b']), ('b', ['c'])])
@@ -43,6 +47,9 @@ class TestCustomReturnTypeComparisons(unittest.TestCase):
 
     def test__ne__not_match(self):
         self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [('b', ['c'])])
+
+    def test_ne_not_match_inner(self):
+        self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [('a', ['c'])])
 
     def test__ne__different_length(self):
         self.assertTrue(retworkx.bfs_successors(
