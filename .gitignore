@@ -11,3 +11,5 @@ docs/source/stubs/
 .tox/
 retworkx/*.so
 retworkx/*pyd
+tools/pgo/qiskit*
+build_pgo/

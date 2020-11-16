@@ -52,8 +52,9 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin"'
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
+          CIBW_ENVIRONMENT: 'RUSTFLAGS="-Cprofile-use=/tmp/pgo-data/merged.profdata"'
           CIBW_SKIP: cp27-* cp34-* pp* *win32
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
+          CIBW_BEFORE_BUILD: pip install -U setuptools-rust && bash tools/pgo/build_pgo.sh
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
       - uses: actions/upload-artifact@v2
         with:
@@ -89,7 +90,8 @@ jobs:
         env:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_SKIP: cp27-* cp34-* pp* *amd64
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
+          CIBW_BEFORE_BUILD: pip install -U setuptools-rust && bash tools/pgo/build_pgo.sh
+          CIBW_ENVIRONMENT: 'RUSTFLAGS="-Cprofile-use=/tmp/pgo-data/merged.profdata"'
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
       - uses: actions/upload-artifact@v2
         with:
