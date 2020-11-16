@@ -85,7 +85,7 @@ class TestBfsSuccessors(unittest.TestCase):
         node_c = dag.add_child(node_b, 'c', {'a': 2})
         dag.add_child(node_c, 'd', {'a': 1})
         res = retworkx.bfs_successors(dag, node_b)
-        self.assertEqual([('b', ['c']), ('c', ['d'])], list(res))
+        self.assertEqual([('b', ['c']), ('c', ['d'])], res)
 
     def test_many_children(self):
         dag = retworkx.PyDAG()
@@ -96,7 +96,7 @@ class TestBfsSuccessors(unittest.TestCase):
         self.assertEqual([('a', [{'numeral': 9}, {'numeral': 8},
                           {'numeral': 7}, {'numeral': 6}, {'numeral': 5},
                           {'numeral': 4}, {'numeral': 3}, {'numeral': 2},
-                          {'numeral': 1}, {'numeral': 0}])], list(res))
+                          {'numeral': 1}, {'numeral': 0}])], res)
 
     def test_bfs_succesors(self):
         dag = retworkx.PyDAG()
@@ -124,7 +124,7 @@ class TestBfsSuccessors(unittest.TestCase):
         }
         self.assertEqual(expected, res)
         self.assertEqual([(7, [8]), (8, [9]), (9, [10])],
-                         list(retworkx.bfs_successors(dag, node_h)))
+                         retworkx.bfs_successors(dag, node_h))
 
     def test_bfs_successors_sequence(self):
         dag = retworkx.PyDAG()
