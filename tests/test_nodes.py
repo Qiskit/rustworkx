@@ -352,3 +352,25 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(graph.node_indexes(), [1, 2, 3])
         self.assertEqual([(3, 1, 'edge1'), (1, 2, 'edge0')],
                          graph.weighted_edge_list())
+
+    def test_merge_nodes_no_match(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(['a', 'a', 'b', 'c'])
+        graph.add_edge(0, 2, 'edge0')
+        graph.add_edge(3, 0, 'edge1')
+        graph.merge_nodes(0, 2)
+        self.assertEqual(graph.node_indexes(), [0, 1, 2, 3])
+        self.assertEqual([(0, 2, 'edge0'), (3, 0, 'edge1')],
+                         graph.weighted_edge_list())
+
+    def test_merge_nodes_invalid_node_first_index(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(['a', 'b'])
+        with self.assertRaises(IndexError):
+            graph.merge_nodes(2, 0)
+
+    def test_merge_nodes_invalid_node_second_index(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(['a', 'b'])
+        with self.assertRaises(IndexError):
+            graph.merge_nodes(0, 3)
