@@ -41,7 +41,7 @@ use petgraph::visit::{
 };
 
 use super::dot_utils::build_dot;
-use super::iterators::NodeIndices;
+use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
     NoSuitableNeighbors, NodesRemoved,
@@ -661,11 +661,14 @@ impl PyDiGraph {
     /// ``source`` and ``target`` are the node indices.
     ///
     /// :returns: An edge list with weights
-    /// :rtype: list
-    pub fn edge_list(&self) -> Vec<(usize, usize)> {
-        self.edge_references()
-            .map(|edge| (edge.source().index(), edge.target().index()))
-            .collect()
+    /// :rtype: EdgeList
+    pub fn edge_list(&self) -> EdgeList {
+        EdgeList {
+            edges: self
+                .edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect(),
+        }
     }
 
     /// Get edge list with weights
@@ -675,20 +678,20 @@ impl PyDiGraph {
     /// payload of the edge.
     ///
     /// :returns: An edge list with weights
-    /// :rtype: list
-    pub fn weighted_edge_list(
-        &self,
-        py: Python,
-    ) -> Vec<(usize, usize, PyObject)> {
-        self.edge_references()
-            .map(|edge| {
-                (
-                    edge.source().index(),
-                    edge.target().index(),
-                    edge.weight().clone_ref(py),
-                )
-            })
-            .collect()
+    /// :rtype: WeightedEdgeList
+    pub fn weighted_edge_list(&self, py: Python) -> WeightedEdgeList {
+        WeightedEdgeList {
+            edges: self
+                .edge_references()
+                .map(|edge| {
+                    (
+                        edge.source().index(),
+                        edge.target().index(),
+                        edge.weight().clone_ref(py),
+                    )
+                })
+                .collect(),
+        }
     }
 
     /// Remove a node from the graph.

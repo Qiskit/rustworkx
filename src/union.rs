@@ -62,7 +62,7 @@ pub fn digraph_union(
         node_map.insert(node.index(), node_index);
     }
 
-    for edge in b.weighted_edge_list(py) {
+    for edge in b.weighted_edge_list(py).edges {
         let source = edge.0;
         let target = edge.1;
         let edge_weight = edge.2;

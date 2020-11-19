@@ -51,7 +51,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::NodeIndices;
+use crate::iterators::{EdgeList, NodeIndices};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -428,14 +428,16 @@ where
 ///
 /// :returns: A list of edges as a tuple of the form ``(source, target)`` in
 ///     depth-first order
-/// :rtype: list
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
 fn digraph_dfs_edges(
     graph: &digraph::PyDiGraph,
     source: Option<usize>,
-) -> Vec<(usize, usize)> {
-    dfs_edges(graph, source)
+) -> EdgeList {
+    EdgeList {
+        edges: dfs_edges(graph, source),
+    }
 }
 
 /// Get edge list in depth first order
@@ -449,13 +451,13 @@ fn digraph_dfs_edges(
 ///
 /// :returns: A list of edges as a tuple of the form ``(source, target)`` in
 ///     depth-first order
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
-fn graph_dfs_edges(
-    graph: &graph::PyGraph,
-    source: Option<usize>,
-) -> Vec<(usize, usize)> {
-    dfs_edges(graph, source)
+fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
+    EdgeList {
+        edges: dfs_edges(graph, source),
+    }
 }
 
 /// Return successors in a breadth-first-search from a source node.
@@ -2424,7 +2426,7 @@ pub fn strongly_connected_components(
 pub fn digraph_find_cycle(
     graph: &digraph::PyDiGraph,
     source: Option<usize>,
-) -> Vec<(usize, usize)> {
+) -> EdgeList {
     let mut graph_nodes: HashSet<NodeIndex> =
         graph.graph.node_indices().collect();
     let mut cycle: Vec<(usize, usize)> = Vec::new();
@@ -2470,7 +2472,7 @@ pub fn digraph_find_cycle(
                     cycle.push((pred[&z].index(), z.index()));
                     z = pred[&z];
                 }
-                return cycle;
+                return EdgeList { edges: cycle };
             }
             //if an unexplored node is encountered
             if !visited.contains(&child) {
@@ -2487,7 +2489,7 @@ pub fn digraph_find_cycle(
             visited.insert(z);
         }
     }
-    cycle
+    EdgeList { edges: cycle }
 }
 
 // The provided node is invalid.
@@ -2561,6 +2563,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::NodeIndices>()?;
+    m.add_class::<iterators::EdgeList>()?;
+    m.add_class::<iterators::WeightedEdgeList>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }

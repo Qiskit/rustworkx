@@ -27,7 +27,7 @@ use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
 use super::dot_utils::build_dot;
-use super::iterators::NodeIndices;
+use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
 use super::{NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -465,11 +465,14 @@ impl PyGraph {
     /// ``source`` and ``target`` are the node indices.
     ///
     /// :returns: An edge list with weights
-    /// :rtype: list
-    pub fn edge_list(&self) -> Vec<(usize, usize)> {
-        self.edge_references()
-            .map(|edge| (edge.source().index(), edge.target().index()))
-            .collect()
+    /// :rtype: EdgeList
+    pub fn edge_list(&self) -> EdgeList {
+        EdgeList {
+            edges: self
+                .edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect(),
+        }
     }
 
     /// Get edge list with weights
@@ -479,20 +482,20 @@ impl PyGraph {
     /// payload of the edge.
     ///
     /// :returns: An edge list with weights
-    /// :rtype: list
-    pub fn weighted_edge_list(
-        &self,
-        py: Python,
-    ) -> Vec<(usize, usize, PyObject)> {
-        self.edge_references()
-            .map(|edge| {
-                (
-                    edge.source().index(),
-                    edge.target().index(),
-                    edge.weight().clone_ref(py),
-                )
-            })
-            .collect()
+    /// :rtype: WeightedEdgeList
+    pub fn weighted_edge_list(&self, py: Python) -> WeightedEdgeList {
+        WeightedEdgeList {
+            edges: self
+                .edge_references()
+                .map(|edge| {
+                    (
+                        edge.source().index(),
+                        edge.target().index(),
+                        edge.weight().clone_ref(py),
+                    )
+                })
+                .collect(),
+        }
     }
 
     /// Remove a node from the graph.
