@@ -15,7 +15,56 @@ import unittest
 import retworkx
 
 
-class TestCustomReturnTypeComparisons(unittest.TestCase):
+class TestBFSSuccessorsComparisons(unittest.TestCase):
+
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node('a')
+        self.dag.add_child(node_a, 'b', "Edgy")
+
+    def test__eq__match(self):
+        self.assertTrue(retworkx.bfs_successors(self.dag, 0) == [('a', ['b'])])
+
+    def test__eq__not_match(self):
+        self.assertFalse(retworkx.bfs_successors(
+            self.dag, 0) == [('b', ['c'])])
+
+    def test_eq_not_match_inner(self):
+        self.assertFalse(retworkx.bfs_successors(
+            self.dag, 0) == [('a', ['c'])])
+
+    def test__eq__different_length(self):
+        self.assertFalse(retworkx.bfs_successors(
+            self.dag, 0) == [('a', ['b']), ('b', ['c'])])
+
+    def test__eq__invalid_type(self):
+        with self.assertRaises(TypeError):
+            retworkx.bfs_successors(self.dag, 0) == ['a']
+
+    def test__ne__match(self):
+        self.assertFalse(retworkx.bfs_successors(
+            self.dag, 0) != [('a', ['b'])])
+
+    def test__ne__not_match(self):
+        self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [('b', ['c'])])
+
+    def test_ne_not_match_inner(self):
+        self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [('a', ['c'])])
+
+    def test__ne__different_length(self):
+        self.assertTrue(retworkx.bfs_successors(
+            self.dag, 0) != [('a', ['b']), ('b', ['c'])])
+
+    def test__ne__invalid_type(self):
+        with self.assertRaises(TypeError):
+            retworkx.bfs_successors(self.dag, 0) != ['a']
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.bfs_successors(self.dag, 0) > [('b', ['c'])]
+
+
+class TestNodeIndicesComparisons(unittest.TestCase):
 
     def setUp(self):
         self.dag = retworkx.PyDAG()
