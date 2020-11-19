@@ -12,9 +12,10 @@
 
 use std::convert::TryInto;
 
-use pyo3::class::PySequenceProtocol;
-use pyo3::exceptions::PyIndexError;
+use pyo3::class::{PyObjectProtocol, PySequenceProtocol};
+use pyo3::exceptions::{PyIndexError, PyNotImplementedError};
 use pyo3::prelude::*;
+use pyo3::types::PySequence;
 
 /// A custom class for the return from :func:`retworkx.bfs_successors`
 ///
@@ -42,6 +43,52 @@ use pyo3::prelude::*;
 pub struct BFSSuccessors {
     pub bfs_successors: Vec<(PyObject, Vec<PyObject>)>,
     pub index: usize,
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for BFSSuccessors {
+    fn __richcmp__(
+        &self,
+        other: &'p PySequence,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: &PySequence| -> PyResult<bool> {
+            if other.len()? as usize != self.bfs_successors.len() {
+                return Ok(false);
+            }
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            for i in 0..self.bfs_successors.len() {
+                let other_raw = other.get_item(i.try_into().unwrap())?;
+                let other_value: (PyObject, Vec<PyObject>) =
+                    other_raw.extract()?;
+                if self.bfs_successors[i].0.as_ref(py).compare(other_value.0)?
+                    != std::cmp::Ordering::Equal
+                {
+                    return Ok(false);
+                }
+                for (index, obj) in self.bfs_successors[i].1.iter().enumerate()
+                {
+                    if obj.as_ref(py).compare(&other_value.1[index])?
+                        != std::cmp::Ordering::Equal
+                    {
+                        return Ok(false);
+                    }
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
 }
 
 #[pyproto]
