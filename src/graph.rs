@@ -27,7 +27,9 @@ use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
 use super::dot_utils::build_dot;
+use super::iterators::NodeIndices;
 use super::{NoEdgeBetweenNodes, NodesRemoved};
+
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::stable_graph::StableUnGraph;
@@ -355,10 +357,12 @@ impl PyGraph {
     /// Return a list of all node indexes.
     ///
     /// :returns: A list of all the node indexes in the graph
-    /// :rtype: list
+    /// :rtype: NodeIndices
     #[text_signature = "()"]
-    pub fn node_indexes(&self) -> Vec<usize> {
-        self.graph.node_indices().map(|node| node.index()).collect()
+    pub fn node_indexes(&self) -> NodeIndices {
+        NodeIndices {
+            nodes: self.graph.node_indices().map(|node| node.index()).collect(),
+        }
     }
 
     /// Return True if there is an edge between node_a to node_b.
@@ -719,15 +723,15 @@ impl PyGraph {
     /// :param list obj_list: A list of python object to attach to the graph.
     ///
     /// :returns indices: A list of int indices of the newly created nodes
-    /// :rtype: list
+    /// :rtype: NodeIndices
     #[text_signature = "(obj_list, /)"]
-    pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> Vec<usize> {
+    pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
         let mut out_list: Vec<usize> = Vec::new();
         for obj in obj_list {
             let node_index = self.graph.add_node(obj);
             out_list.push(node_index.index());
         }
-        out_list
+        NodeIndices { nodes: out_list }
     }
 
     /// Remove nodes from the graph.
@@ -783,13 +787,16 @@ impl PyGraph {
     /// :param int node: The index of the node to get the neibhors of
     ///
     /// :returns: A list of the neighbor node indicies
-    /// :rtype: list
+    /// :rtype: NodeIndices
     #[text_signature = "(node, /)"]
-    pub fn neighbors(&self, node: usize) -> Vec<usize> {
-        self.graph
-            .neighbors(NodeIndex::new(node))
-            .map(|node| node.index())
-            .collect()
+    pub fn neighbors(&self, node: usize) -> NodeIndices {
+        NodeIndices {
+            nodes: self
+                .graph
+                .neighbors(NodeIndex::new(node))
+                .map(|node| node.index())
+                .collect(),
+        }
     }
 
     /// Get the degree for a node

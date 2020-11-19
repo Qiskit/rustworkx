@@ -108,3 +108,4 @@ Return Iterator Types
    :toctree: stubs
 
    retworkx.BFSSuccessors
+   retworkx.NodeIndices

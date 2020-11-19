@@ -41,6 +41,7 @@ use petgraph::visit::{
 };
 
 use super::dot_utils::build_dot;
+use super::iterators::NodeIndices;
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
     NoSuitableNeighbors, NodesRemoved,
@@ -510,10 +511,12 @@ impl PyDiGraph {
     /// Return a list of all node indexes.
     ///
     /// :returns: A list of all the node indexes in the graph
-    /// :rtype: list
+    /// :rtype: NodeIndices
     #[text_signature = "()"]
-    pub fn node_indexes(&self) -> Vec<usize> {
-        self.graph.node_indices().map(|node| node.index()).collect()
+    pub fn node_indexes(&self) -> NodeIndices {
+        NodeIndices {
+            nodes: self.graph.node_indices().map(|node| node.index()).collect(),
+        }
     }
 
     /// Return True if there is an edge from node_a to node_b.
@@ -1327,13 +1330,16 @@ impl PyDiGraph {
     /// :param int node: The index of the node to get the neighbors of
     ///
     /// :returns: A list of the neighbor node indicies
-    /// :rtype: list
+    /// :rtype: NodeIndices
     #[text_signature = "(node, /)"]
-    pub fn neighbors(&self, node: usize) -> Vec<usize> {
-        self.graph
-            .neighbors(NodeIndex::new(node))
-            .map(|node| node.index())
-            .collect()
+    pub fn neighbors(&self, node: usize) -> NodeIndices {
+        NodeIndices {
+            nodes: self
+                .graph
+                .neighbors(NodeIndex::new(node))
+                .map(|node| node.index())
+                .collect(),
+        }
     }
 
     /// Get the successor indices of a node.
@@ -1344,16 +1350,19 @@ impl PyDiGraph {
     /// :param int node: The index of the node to get the successors of
     ///
     /// :returns: A list of the neighbor node indicies
-    /// :rtype: list
+    /// :rtype: NodeIndices
     #[text_signature = "(node, /)"]
-    pub fn successor_indices(&mut self, node: usize) -> Vec<usize> {
-        self.graph
-            .neighbors_directed(
-                NodeIndex::new(node),
-                petgraph::Direction::Outgoing,
-            )
-            .map(|node| node.index())
-            .collect()
+    pub fn successor_indices(&mut self, node: usize) -> NodeIndices {
+        NodeIndices {
+            nodes: self
+                .graph
+                .neighbors_directed(
+                    NodeIndex::new(node),
+                    petgraph::Direction::Outgoing,
+                )
+                .map(|node| node.index())
+                .collect(),
+        }
     }
 
     /// Get the predecessor indices of a node.
@@ -1364,16 +1373,19 @@ impl PyDiGraph {
     /// :param int node: The index of the node to get the predecessors of
     ///
     /// :returns: A list of the neighbor node indicies
-    /// :rtype: list
+    /// :rtype: NodeIndices
     #[text_signature = "(node, /)"]
-    pub fn predecessor_indices(&mut self, node: usize) -> Vec<usize> {
-        self.graph
-            .neighbors_directed(
-                NodeIndex::new(node),
-                petgraph::Direction::Incoming,
-            )
-            .map(|node| node.index())
-            .collect()
+    pub fn predecessor_indices(&mut self, node: usize) -> NodeIndices {
+        NodeIndices {
+            nodes: self
+                .graph
+                .neighbors_directed(
+                    NodeIndex::new(node),
+                    petgraph::Direction::Incoming,
+                )
+                .map(|node| node.index())
+                .collect(),
+        }
     }
     /// Get the index and edge data for all parents of a node.
     ///
@@ -1424,15 +1436,15 @@ impl PyDiGraph {
     ///     as new nodes
     ///
     /// :returns: A list of int indices of the newly created nodes
-    /// :rtype: list
+    /// :rtype: NodeIndices
     #[text_signature = "(obj_list, /)"]
-    pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> Vec<usize> {
+    pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
         let mut out_list: Vec<usize> = Vec::new();
         for obj in obj_list {
             let node_index = self.graph.add_node(obj);
             out_list.push(node_index.index());
         }
-        out_list
+        NodeIndices { nodes: out_list }
     }
 
     /// Remove nodes from the graph.
