@@ -63,11 +63,11 @@ impl PySequenceProtocol for BFSSuccessors {
     }
 }
 
-/// A custom class for the return if node indices
+/// A custom class for the return of node indices
 ///
 /// This class is a container class for the results of functions that
 /// return a list of node indices. It implements the Python sequence
-/// protocol. So you can treat the return as read-only a sequence/list
+/// protocol. So you can treat the return as a read-only sequence/list
 /// that is integer indexed. If you want to use it as an iterator you
 /// can by wrapping it in an ``iter()`` that will yield the results in
 /// order.
