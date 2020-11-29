@@ -88,15 +88,14 @@ jobs:
         run: python setup.py develop
         env:
           CARGO_INCREMENTAL: 0
-          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
-          RUSTDOCFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+          RUSTFLAGS: "-Zinstrument-coverage"
+          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
       - name: Run tests
         run: cd tests && python -m unittest discover . && cd ..
+        env:
+          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
       - name: Run grcov
-        run: |
-          set -e
-          zip -0 ccov.zip `find . \( -name "retworkx*.gc*" \) -print`
-          ./grcov ccov.zip -s . -t lcov --llvm --ignore-not-existing --ignore "/*" -o coveralls.info
+        run: ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o coveralls.info
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
