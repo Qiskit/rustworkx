@@ -69,3 +69,24 @@ class TestCollectRuns(unittest.TestCase):
 
         res = retworkx.collect_runs(dag, filter_function)
         self.assertEqual([['cx', 'cx', 'cx']], res)
+
+    def test_cycle(self):
+        dag = retworkx.PyDiGraph()
+        dag.extend_from_edge_list([(0, 1), (1, 2), (2, 0)])
+        with self.assertRaises(retworkx.DAGHasCycle):
+            retworkx.collect_runs(dag, lambda _: True)
+
+    def test_filter_function_inner_exception(self):
+        dag = retworkx.PyDiGraph()
+        dag.add_node('a')
+        dag.add_child(0, 'b', None)
+
+        def filter_function(node):
+            raise IndexError("Things fail from time to time")
+
+        with self.assertRaises(IndexError):
+            retworkx.collect_runs(dag, filter_function)
+
+    def test_empty(self):
+        dag = retworkx.PyDAG()
+        self.assertEqual([], retworkx.collect_runs(dag, lambda _: True))
