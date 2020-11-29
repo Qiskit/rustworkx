@@ -81,7 +81,7 @@ jobs:
           override: true
           profile: minimal
       - name: Download grcov
-        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.5.9/grcov-linux-x86_64.tar.bz2 | tar jxf -
+        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -
       - name: Install deps
         run: pip install -U setuptools-rust
       - name: Build retworkx
