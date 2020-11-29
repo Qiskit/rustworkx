@@ -1117,7 +1117,9 @@ fn collect_runs(
                 (succ_index, graph.graph[succ_index].clone_ref(py))
             })
             .collect();
-        while successors.len() == 1
+        let mut node_set: HashSet<NodeIndex> =
+            successors.iter().map(|node| node.0).collect();
+        while node_set.len() == 1
             && filter_node(&successors[0].1)?
             && !seen.contains(&successors[0].0)
         {
@@ -1133,6 +1135,7 @@ fn collect_runs(
                     (succ_index, graph.graph[succ_index].clone_ref(py))
                 })
                 .collect();
+            node_set = successors.iter().map(|node| node.0).collect();
         }
         if !group.is_empty() {
             out_list.push(group);
