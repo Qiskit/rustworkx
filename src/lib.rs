@@ -256,24 +256,37 @@ fn is_isomorphic(
     Ok(res)
 }
 
-/// [Graph] Return a new PyDiGraph by forming a union from`a` and `b` graphs.
+/// Return a new PyDiGraph by forming a union from two input PyDiGraph objects
 ///
-/// The algorithm has three phases:
-///  - adds all nodes from `b` to `a`. operates in O(n), n being number of nodes in `b`.
-///  - merges nodes from `b` over `a` given that:
-///     - `merge_nodes` is `true`. operates in O(n^2), n being number of nodes in `b`.
-///     - respective node in`b` and `a` share the same weight
-///  - adds all edges from `b` to `a`.
-///     - `merge_edges` is `true`
-///     - respective edge in`b` and `a` share the same weight
+/// The algorithm in this function operates in three phases:
 ///
-/// with the same weight in graphs `a` and `b` and merged those nodes.
+///  1. Add all the nodes from  ``second`` into ``first``. operates in O(n),
+///     with n being number of nodes in `b`.
+///  2. Merge nodes from ``second`` over ``first`` given that:
 ///
-/// The nodes from graph `b` will replace nodes from `a`.
+///     - The ``merge_nodes`` is ``True``. operates in O(n^2), with n being the
+///       number of nodes in ``second``.
+///     - The respective node in ``second`` and ``first`` share the same
+///       weight/data payload.
 ///
-///  At this point, only `PyDiGraph` is supported.
+///  3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
+///     parameter is ``True`` and the respective edge in ``second`` and
+///     first`` share the same weight/data payload they will be merged
+///     together.
+///
+///  :param PyDiGraph first: The first directed graph object
+///  :param PyDiGraph second: The second directed graph object
+///  :param bool merge_nodes: If set to ``True`` nodes will be merged between
+///     ``second`` and ``first`` if the weights are equal.
+///  :param bool merge_edges: If set to ``True`` edges will be merged between
+///     ``second`` and ``first`` if the weights are equal.
+///
+///  :returns: A new PyDiGraph object that is the union of ``second`` and
+///     ``first``. It's worth noting the weight/data payload objects are
+///     passed by reference from ``first`` and ``second`` to this new object.
+///  :rtype: PyDiGraph
 #[pyfunction]
-#[text_signature = "(first, second, /)"]
+#[text_signature = "(first, second, merge_nodes, merge_edges, /)"]
 fn digraph_union(
     py: Python,
     first: &digraph::PyDiGraph,
