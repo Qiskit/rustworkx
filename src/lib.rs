@@ -1110,32 +1110,26 @@ fn collect_runs(
         }
         seen.insert(node);
         let mut group: Vec<PyObject> = vec![graph.graph[node].clone_ref(py)];
-        let mut successors: Vec<(NodeIndex, PyObject)> = graph
+        let mut successors: Vec<NodeIndex> = graph
             .graph
             .neighbors_directed(node, petgraph::Direction::Outgoing)
-            .map(|succ_index| {
-                (succ_index, graph.graph[succ_index].clone_ref(py))
-            })
             .collect();
-        let mut node_set: HashSet<NodeIndex> =
-            successors.iter().map(|node| node.0).collect();
-        while node_set.len() == 1
-            && filter_node(&successors[0].1)?
-            && !seen.contains(&successors[0].0)
+        successors.dedup();
+
+        while successors.len() == 1
+            && filter_node(&graph.graph[successors[0]])?
+            && !seen.contains(&successors[0])
         {
-            group.push(successors[0].1.clone_ref(py));
-            seen.insert(successors[0].0);
+            group.push(graph.graph[successors[0]].clone_ref(py));
+            seen.insert(successors[0]);
             successors = graph
                 .graph
                 .neighbors_directed(
-                    successors[0].0,
+                    successors[0],
                     petgraph::Direction::Outgoing,
                 )
-                .map(|succ_index| {
-                    (succ_index, graph.graph[succ_index].clone_ref(py))
-                })
                 .collect();
-            node_set = successors.iter().map(|node| node.0).collect();
+            successors.dedup();
         }
         if !group.is_empty() {
             out_list.push(group);
