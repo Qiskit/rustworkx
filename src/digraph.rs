@@ -1163,21 +1163,22 @@ impl PyDiGraph {
 
             let mut edges_to_add: Vec<(usize, usize, PyObject)> = Vec::new();
             for dir in &DIRECTIONS {
-                let edges;
-                if dir == &petgraph::Direction::Outgoing {
-                    edges = self.out_edges(u);
-                } else {
-                    edges = self.in_edges(u);
-                }
-
-                for edge in edges {
+                for edge in self.graph.edges_directed(NodeIndex::new(u), *dir) {
                     let s = edge.source();
                     let d = edge.target();
 
-                    if s == u {
-                        edges_to_add.push((v, d, edge.weight().clone()));
+                    if s.index() == u {
+                        edges_to_add.push((
+                            v,
+                            d.index(),
+                            edge.weight().clone_ref(py),
+                        ));
                     } else {
-                        edges_to_add.push((s, v, edge.weight().clone()));
+                        edges_to_add.push((
+                            s.index(),
+                            v,
+                            edge.weight().clone_ref(py),
+                        ));
                     }
                 }
             }
@@ -1400,16 +1401,16 @@ impl PyDiGraph {
     ///
     /// :returns: A list of tuples of the form:
     ///     ``(parent_index, node_index, edge_data)```
-    /// :rtype: list
+    /// :rtype: WeightedEdgeList
     #[text_signature = "(self, node, /)"]
-    pub fn in_edges(&self, node: usize) -> Vec<(usize, usize, &PyObject)> {
+    pub fn in_edges(&self, py: Python, node: usize) -> WeightedEdgeList {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
         let raw_edges = self.graph.edges_directed(index, dir);
-        let out_list: Vec<(usize, usize, &PyObject)> = raw_edges
-            .map(|x| (x.source().index(), node, x.weight()))
+        let out_list: Vec<(usize, usize, PyObject)> = raw_edges
+            .map(|x| (x.source().index(), node, x.weight().clone_ref(py)))
             .collect();
-        out_list
+        WeightedEdgeList { edges: out_list }
     }
 
     /// Get the index and edge data for all children of a node.
@@ -1421,16 +1422,16 @@ impl PyDiGraph {
     ///
     /// :returns out_edges: A list of tuples of the form:
     ///     ```(node_index, child_index, edge_data)```
-    /// :rtype: list
+    /// :rtype: WeightedEdgeList
     #[text_signature = "(self, node, /)"]
-    pub fn out_edges(&self, node: usize) -> Vec<(usize, usize, &PyObject)> {
+    pub fn out_edges(&self, py: Python, node: usize) -> WeightedEdgeList {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Outgoing;
         let raw_edges = self.graph.edges_directed(index, dir);
-        let out_list: Vec<(usize, usize, &PyObject)> = raw_edges
-            .map(|x| (node, x.target().index(), x.weight()))
+        let out_list: Vec<(usize, usize, PyObject)> = raw_edges
+            .map(|x| (node, x.target().index(), x.weight().clone_ref(py)))
             .collect();
-        out_list
+        WeightedEdgeList { edges: out_list }
     }
 
     /// Add new nodes to the graph.
