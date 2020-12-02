@@ -110,3 +110,5 @@ Return Iterator Types
 
    retworkx.BFSSuccessors
    retworkx.NodeIndices
+   retworkx.EdgeList
+   retworkx.WeightedEdgeList

@@ -100,3 +100,77 @@ class TestNodeIndicesComparisons(unittest.TestCase):
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
             self.dag.node_indexes() > [2, 1]
+
+
+class TestEdgeListComparisons(unittest.TestCase):
+
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node('a')
+        self.dag.add_child(node_a, 'b', "Edgy")
+
+    def test__eq__match(self):
+        self.assertTrue(self.dag.edge_list() == [(0, 1)])
+
+    def test__eq__not_match(self):
+        self.assertFalse(self.dag.edge_list() == [(1, 2)])
+
+    def test__eq__different_length(self):
+        self.assertFalse(self.dag.edge_list() == [(0, 1), (2, 3)])
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(self.dag.edge_list() == ['a', None])
+
+    def test__ne__match(self):
+        self.assertFalse(self.dag.edge_list() != [(0, 1)])
+
+    def test__ne__not_match(self):
+        self.assertTrue(self.dag.edge_list() != [(1, 2)])
+
+    def test__ne__different_length(self):
+        self.assertTrue(self.dag.edge_list() != [(0, 1), (2, 3)])
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(self.dag.edge_list() != ['a', None])
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.dag.edge_list() > [(2, 1)]
+
+
+class TestWeightedEdgeListComparisons(unittest.TestCase):
+
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node('a')
+        self.dag.add_child(node_a, 'b', "Edgy")
+
+    def test__eq__match(self):
+        self.assertTrue(self.dag.weighted_edge_list() == [(0, 1, 'Edgy')])
+
+    def test__eq__not_match(self):
+        self.assertFalse(self.dag.weighted_edge_list() == [(1, 2, None)])
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            self.dag.weighted_edge_list() == [
+                (0, 1, 'Edgy'), (2, 3, 'Not Edgy')])
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(self.dag.weighted_edge_list() == ['a', None])
+
+    def test__ne__match(self):
+        self.assertFalse(self.dag.weighted_edge_list() != [(0, 1, 'Edgy')])
+
+    def test__ne__not_match(self):
+        self.assertTrue(self.dag.weighted_edge_list() != [(1, 2, 'Not Edgy')])
+
+    def test__ne__different_length(self):
+        self.assertTrue(self.dag.node_indexes() != [0, 1, 2, 3])
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(self.dag.weighted_edge_list() != ['a', None])
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.dag.weighted_edge_list() > [(2, 1, 'Not Edgy')]
