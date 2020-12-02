@@ -259,10 +259,10 @@ impl PySequenceProtocol for EdgeList {
     }
 }
 
-/// A custom class for the return of edge lists
+/// A custom class for the return of edge lists with weights
 ///
 /// This class is a container class for the results of functions that
-/// return a list of edges. It implements the Python sequence
+/// return a list of edges with weights. It implements the Python sequence
 /// protocol. So you can treat the return as a read-only sequence/list
 /// that is integer indexed. If you want to use it as an iterator you
 /// can by wrapping it in an ``iter()`` that will yield the results in
@@ -273,7 +273,7 @@ impl PySequenceProtocol for EdgeList {
 ///     import retworkx
 ///
 ///     graph = retworkx.generators.directed_path_graph(5)
-///     edges = retworkx.edge_list()
+///     edges = graph.weighted_edge_list()
 ///     # Index based access
 ///     third_element = edges[2]
 ///     # Use as iterator

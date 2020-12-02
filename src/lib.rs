@@ -2433,7 +2433,7 @@ pub fn strongly_connected_components(
 ///
 /// :returns: A list describing the cycle. The index of node ids which
 ///     forms a cycle (loop) in the input graph
-/// :rtype: list
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
 pub fn digraph_find_cycle(
