@@ -28,9 +28,10 @@ class TestCollectRuns(unittest.TestCase):
         cr_1_out = dag.add_node("cr[1]")
 
         h_gate = dag.add_child(qr_0_in, "h", "qr[0]")
-        x_gate = dag.add_child(h_gate, 'x', 'qr[0]')
+        x_gate = dag.add_child(h_gate, "x", "qr[0]")
         cx_gate = dag.add_child(x_gate, "cx", "qr[0]")
         dag.add_edge(qr_1_in, cx_gate, "qr[1]")
+
         measure_qr_1 = dag.add_child(cx_gate, "measure", "qr[1]")
         dag.add_edge(cr_1_in, measure_qr_1, "cr[1]")
         x_gate = dag.add_child(measure_qr_1, "x", "qr[1]")
