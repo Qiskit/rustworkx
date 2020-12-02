@@ -183,3 +183,160 @@ impl PySequenceProtocol for NodeIndices {
         }
     }
 }
+
+/// A custom class for the return of edge lists
+///
+/// This class is a container class for the results of functions that
+/// return a list of edges. It implements the Python sequence
+/// protocol. So you can treat the return as a read-only sequence/list
+/// that is integer indexed. If you want to use it as an iterator you
+/// can by wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = graph.edge_list()
+///     # Index based access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_element = next(edges_iter)
+///     second_element = next(edges_iter)
+///
+#[pyclass(module = "retworkx")]
+pub struct EdgeList {
+    pub edges: Vec<(usize, usize)>,
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for EdgeList {
+    fn __richcmp__(
+        &self,
+        other: &'p PySequence,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: &PySequence| -> PyResult<bool> {
+            if other.len()? as usize != self.edges.len() {
+                return Ok(false);
+            }
+            for i in 0..self.edges.len() {
+                let other_raw = other.get_item(i.try_into().unwrap())?;
+                let other_value: (usize, usize) = other_raw.extract()?;
+                if other_value != self.edges[i] {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for EdgeList {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.edges.len())
+    }
+
+    fn __getitem__(&'p self, idx: isize) -> PyResult<(usize, usize)> {
+        if idx >= self.edges.len().try_into().unwrap() {
+            Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
+        } else {
+            Ok(self.edges[idx as usize])
+        }
+    }
+}
+
+/// A custom class for the return of edge lists with weights
+///
+/// This class is a container class for the results of functions that
+/// return a list of edges with weights. It implements the Python sequence
+/// protocol. So you can treat the return as a read-only sequence/list
+/// that is integer indexed. If you want to use it as an iterator you
+/// can by wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = graph.weighted_edge_list()
+///     # Index based access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_element = next(edges_iter)
+///     second_element = next(edges_iter)
+///
+#[pyclass(module = "retworkx")]
+pub struct WeightedEdgeList {
+    pub edges: Vec<(usize, usize, PyObject)>,
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for WeightedEdgeList {
+    fn __richcmp__(
+        &self,
+        other: &'p PySequence,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: &PySequence| -> PyResult<bool> {
+            if other.len()? as usize != self.edges.len() {
+                return Ok(false);
+            }
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            for i in 0..self.edges.len() {
+                let other_raw = other.get_item(i.try_into().unwrap())?;
+                let other_value: (usize, usize, PyObject) =
+                    other_raw.extract()?;
+                if other_value.0 != self.edges[i].0
+                    || other_value.1 != self.edges[i].1
+                    || self.edges[i].2.as_ref(py).compare(other_value.2)?
+                        != std::cmp::Ordering::Equal
+                {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for WeightedEdgeList {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.edges.len())
+    }
+
+    fn __getitem__(&'p self, idx: isize) -> PyResult<(usize, usize, PyObject)> {
+        if idx >= self.edges.len().try_into().unwrap() {
+            Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
+        } else {
+            Ok(self.edges[idx as usize].clone())
+        }
+    }
+}
