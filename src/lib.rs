@@ -1085,7 +1085,8 @@ fn digraph_floyd_warshall_numpy(
 /// Collect runs that match a filter function
 ///
 /// A run is a path of nodes where there is only a single successor and all
-/// nodes in the path match the given condition.
+/// nodes in the path match the given condition. Each node in the graph can
+/// appear in only a single run.
 ///
 /// :param PyDiGraph graph: The graph to find runs in
 /// :param filter_fn: The filter function to use for matching nodes. It takes
