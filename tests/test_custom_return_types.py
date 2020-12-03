@@ -125,6 +125,7 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         nodes_copy = pickle.loads(nodes_pickle)
         self.assertEqual(nodes, nodes_copy)
 
+
 class TestEdgeListComparisons(unittest.TestCase):
 
     def setUp(self):
@@ -170,6 +171,7 @@ class TestEdgeListComparisons(unittest.TestCase):
         edges_pickle = pickle.dumps(edges)
         edges_copy = pickle.loads(edges_pickle)
         self.assertEqual(edges, edges_copy)
+
 
 class TestWeightedEdgeListComparisons(unittest.TestCase):
 
