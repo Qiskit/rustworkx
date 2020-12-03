@@ -514,7 +514,6 @@ fn bfs_successors(
     }
     Ok(iterators::BFSSuccessors {
         bfs_successors: out_list,
-        index: 0,
     })
 }
 

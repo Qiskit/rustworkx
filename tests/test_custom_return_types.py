@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+import pickle
 import unittest
 
 import retworkx
@@ -63,6 +65,17 @@ class TestBFSSuccessorsComparisons(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             retworkx.bfs_successors(self.dag, 0) > [('b', ['c'])]
 
+    def test_deepcopy(self):
+        bfs = retworkx.bfs_successors(self.dag, 0)
+        bfs_copy = copy.deepcopy(bfs)
+        self.assertEqual(bfs, bfs_copy)
+
+    def test_pickle(self):
+        bfs = retworkx.bfs_successors(self.dag, 0)
+        bfs_pickle = pickle.dumps(bfs)
+        bfs_copy = pickle.loads(bfs_pickle)
+        self.assertEqual(bfs, bfs_copy)
+
 
 class TestNodeIndicesComparisons(unittest.TestCase):
 
@@ -101,6 +114,17 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.dag.node_indexes() > [2, 1]
 
+    def test_deepcopy(self):
+        nodes = self.dag.node_indexes()
+        nodes_copy = copy.deepcopy(nodes)
+        self.assertEqual(nodes, nodes_copy)
+
+    def test_pickle(self):
+        nodes = self.dag.node_indexes()
+        nodes_pickle = pickle.dumps(nodes)
+        nodes_copy = pickle.loads(nodes_pickle)
+        self.assertEqual(nodes, nodes_copy)
+
 
 class TestEdgeListComparisons(unittest.TestCase):
 
@@ -136,6 +160,17 @@ class TestEdgeListComparisons(unittest.TestCase):
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
             self.dag.edge_list() > [(2, 1)]
+
+    def test_deepcopy(self):
+        edges = self.dag.edge_list()
+        edges_copy = copy.deepcopy(edges)
+        self.assertEqual(edges, edges_copy)
+
+    def test_pickle(self):
+        edges = self.dag.edge_list()
+        edges_pickle = pickle.dumps(edges)
+        edges_copy = pickle.loads(edges_pickle)
+        self.assertEqual(edges, edges_copy)
 
 
 class TestWeightedEdgeListComparisons(unittest.TestCase):
@@ -174,3 +209,14 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
             self.dag.weighted_edge_list() > [(2, 1, 'Not Edgy')]
+
+    def test_deepcopy(self):
+        edges = self.dag.weighted_edge_list()
+        edges_copy = copy.deepcopy(edges)
+        self.assertEqual(edges, edges_copy)
+
+    def test_pickle(self):
+        edges = self.dag.weighted_edge_list()
+        edges_pickle = pickle.dumps(edges)
+        edges_copy = pickle.loads(edges_pickle)
+        self.assertEqual(edges, edges_copy)

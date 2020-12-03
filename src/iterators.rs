@@ -42,7 +42,24 @@ use pyo3::types::PySequence;
 #[pyclass(module = "retworkx")]
 pub struct BFSSuccessors {
     pub bfs_successors: Vec<(PyObject, Vec<PyObject>)>,
-    pub index: usize,
+}
+
+#[pymethods]
+impl BFSSuccessors {
+    #[new]
+    fn new() -> Self {
+        BFSSuccessors {
+            bfs_successors: Vec::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> Vec<(PyObject, Vec<PyObject>)> {
+        self.bfs_successors.clone()
+    }
+
+    fn __setstate__(&mut self, state: Vec<(PyObject, Vec<PyObject>)>) {
+        self.bfs_successors = state;
+    }
 }
 
 #[pyproto]
@@ -136,6 +153,22 @@ pub struct NodeIndices {
     pub nodes: Vec<usize>,
 }
 
+#[pymethods]
+impl NodeIndices {
+    #[new]
+    fn new() -> NodeIndices {
+        NodeIndices { nodes: Vec::new() }
+    }
+
+    fn __getstate__(&self) -> Vec<usize> {
+        self.nodes.clone()
+    }
+
+    fn __setstate__(&mut self, state: Vec<usize>) {
+        self.nodes = state;
+    }
+}
+
 #[pyproto]
 impl<'p> PyObjectProtocol<'p> for NodeIndices {
     fn __richcmp__(
@@ -211,6 +244,22 @@ pub struct EdgeList {
     pub edges: Vec<(usize, usize)>,
 }
 
+#[pymethods]
+impl EdgeList {
+    #[new]
+    fn new() -> EdgeList {
+        EdgeList { edges: Vec::new() }
+    }
+
+    fn __getstate__(&self) -> Vec<(usize, usize)> {
+        self.edges.clone()
+    }
+
+    fn __setstate__(&mut self, state: Vec<(usize, usize)>) {
+        self.edges = state;
+    }
+}
+
 #[pyproto]
 impl<'p> PyObjectProtocol<'p> for EdgeList {
     fn __richcmp__(
@@ -284,6 +333,22 @@ impl PySequenceProtocol for EdgeList {
 #[pyclass(module = "retworkx")]
 pub struct WeightedEdgeList {
     pub edges: Vec<(usize, usize, PyObject)>,
+}
+
+#[pymethods]
+impl WeightedEdgeList {
+    #[new]
+    fn new() -> WeightedEdgeList {
+        WeightedEdgeList { edges: Vec::new() }
+    }
+
+    fn __getstate__(&self) -> Vec<(usize, usize, PyObject)> {
+        self.edges.clone()
+    }
+
+    fn __setstate__(&mut self, state: Vec<(usize, usize, PyObject)>) {
+        self.edges = state;
+    }
 }
 
 #[pyproto]
