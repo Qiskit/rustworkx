@@ -52,9 +52,12 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin"'
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_SKIP: cp27-* cp34-* pp* *win32
+          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2010_x86_64:latest
+          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2010_i686:latest
+          CIBW_SKIP: cp27-* cp34-* cp35-* pp* *win32
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
+
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -88,7 +91,7 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_SKIP: cp27-* cp34-* pp* *amd64
+          CIBW_SKIP: cp27-* cp34-* cp35-* pp* *amd64
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
       - uses: actions/upload-artifact@v2
