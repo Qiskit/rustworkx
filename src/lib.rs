@@ -1084,6 +1084,76 @@ fn digraph_floyd_warshall_numpy(
     Ok(mat.into_pyarray(py).into())
 }
 
+/// Collect runs that match a filter function
+///
+/// A run is a path of nodes where there is only a single successor and all
+/// nodes in the path match the given condition. Each node in the graph can
+/// appear in only a single run.
+///
+/// :param PyDiGraph graph: The graph to find runs in
+/// :param filter_fn: The filter function to use for matching nodes. It takes
+///     in one argument, the node data payload/weight object, and will return a
+///     boolean whether the node matches the conditions or not. If it returns
+///     ``False`` it will skip that node.
+///
+/// :returns: a list of runs, where each run is a list of node data
+///     payload/weight for the nodes in the run
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, filter)"]
+fn collect_runs(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    filter_fn: PyObject,
+) -> PyResult<Vec<Vec<PyObject>>> {
+    let mut out_list: Vec<Vec<PyObject>> = Vec::new();
+    let mut seen: HashSet<NodeIndex> = HashSet::new();
+
+    let filter_node = |node: &PyObject| -> PyResult<bool> {
+        let res = filter_fn.call1(py, (node,))?;
+        Ok(res.extract(py)?)
+    };
+
+    let nodes = match algo::toposort(graph, None) {
+        Ok(nodes) => nodes,
+        Err(_err) => {
+            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
+        }
+    };
+    for node in nodes {
+        if !filter_node(&graph.graph[node])? || seen.contains(&node) {
+            continue;
+        }
+        seen.insert(node);
+        let mut group: Vec<PyObject> = vec![graph.graph[node].clone_ref(py)];
+        let mut successors: Vec<NodeIndex> = graph
+            .graph
+            .neighbors_directed(node, petgraph::Direction::Outgoing)
+            .collect();
+        successors.dedup();
+
+        while successors.len() == 1
+            && filter_node(&graph.graph[successors[0]])?
+            && !seen.contains(&successors[0])
+        {
+            group.push(graph.graph[successors[0]].clone_ref(py));
+            seen.insert(successors[0]);
+            successors = graph
+                .graph
+                .neighbors_directed(
+                    successors[0],
+                    petgraph::Direction::Outgoing,
+                )
+                .collect();
+            successors.dedup();
+        }
+        if !group.is_empty() {
+            out_list.push(group);
+        }
+    }
+    Ok(out_list)
+}
+
 /// Return a list of layers
 ///  
 /// A layer is a subgraph whose nodes are disjoint, i.e.,
@@ -2547,6 +2617,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
+    m.add_wrapped(wrap_pyfunction!(collect_runs))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(graph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
