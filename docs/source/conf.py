@@ -32,6 +32,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'm2r2',
               'jupyter_sphinx.execute',
+              'reno.sphinxext',
              ]
 html_static_path = ['_static']
 templates_path = ['_templates']
@@ -122,14 +123,13 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'qiskit_sphinx_theme'
 
 html_theme_options = {
     'logo_only': False,
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': True,
-    'style_nav_header_background': '#212121',
 }
 
 # Theme options are theme-specific and customize the look and feel of a theme

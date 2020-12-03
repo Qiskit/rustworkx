@@ -9,6 +9,7 @@ Contents:
 
    README
    Retworkx API <api>
+   Release Notes <release_notes>
 
 .. Hiding - Indices and tables
    :ref:`genindex`
