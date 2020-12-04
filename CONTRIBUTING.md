@@ -71,6 +71,9 @@ style in the python code in the repository. You can run it via tox using:
 tox -elint
 ```
 
+This will also run `cargo fmt` in check mode to ensure that you ran `cargo fmt`
+and will fail if the Rust code doesn't conform to the style rules.
+
 ### Building documentation
 
 Just like with tests building documentation is done via tox. This will handle
