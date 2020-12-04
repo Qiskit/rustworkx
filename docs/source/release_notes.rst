@@ -226,49 +226,78 @@ mapping protocol so you can directly interact with graph objects.
 
 Added
 -----
-- A new method, `to_dot()`, was added to `PyGraph` and `PyDiGraph`. It will
-  generate a dot format representation of the object which can be used
-  with Graphivz (or similar tooling) to generate visualizations of the
-  graph.
-- Added a new function, `strongly_connected_components()`, to get the list
-  of strongly connected components of a `PyDiGraph` object.
-- A new method, `compose()`, for combing another graph object of the same
-  type was added to `PyGraph` and `PyDiGraph`.
-- The `PyGraph` and `PyDigraph` classes now implement the Python mapping
-  protocol for interacting with graph nodes. You can now access and
-  interact with node data directly by using standard map access patterns
-  in python. For example, running `graph[1]` will return the data for the
-  index at node 1.
-- A new module, `retworkx.generators`, has been added. Functions in this
-  module can be used for quickly generating graphs of certain shape.
-- A new method, `remove_node_retain_edges()`, has been added to the
-  `PyDiGraph` class. This method can be used to remove a node and add
-  edges from its predecesors to its successors.
-- Two new methods, `edge_list()` and `weighted_edge_list()`, for getting a
-  list of tuples with the edge source and target (with or without edge
-  weights) have been added to `PyGraph` and `PyDigraph`.
-- A new function, `cycle_basis()`, for getting a list of cycles which form
-  a basis for cycles of a `PyGraph` object.
-- Two new functions, `graph_floyd_warshall_numpy()` and
-  `digraph_floyd_warshall_numpy()`, were added for running the Floyd Warshall
-  algorithm and returning all the shortest path lengths as a distance
-  matrix.
-- A new constructor method, `read_edge_list()`, has been added to `PyGraph` and
-  `PyDigraph`. This method will take in a path to an edge list file and
-  will read that file and generate a new object from the contents.
-- A new method, `extend_from_edge_list()`, has been added to `PyGraph` and
-  `PyDiGraph`. This method takes in an edge list and will add both the edges and
-  nodes (if a node index used doesn't exist yet) in the list to the graph.
+- A new method, :meth:`~retworkx.PyGraph.to_dot`, was added to
+  :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
+  (:meth:`~retworkx.PyDiGraph.to_dot`). It will generate a
+  `dot format <https://graphviz.org/doc/info/lang.html>`__ representation of
+  the object which can be used with `Graphivz <https://graphviz.org/>`__ (or
+  similar tooling) to generate visualizations of graphs.
+- Added a new function, :func:`~retworkx.strongly_connected_components`, to get
+  the list of strongly connected components of a :class:`~retworkx.PyDiGraph`
+  object.
+- A new method, :meth:`~retworkx.PyGraph.compose`, for composing another graph
+  object of the same type into a graph was added to :class:`~retworkx.PyGraph`
+  and :class:`~retworkx.PyDiGraph` (:meth:`~retworkx.PyDiGraph.compose`).
+- The :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDigraph` classes now
+  implement the Python mapping protocol for interacting with graph nodes. You
+  can now access and interact with node data directly by using standard map
+  access patterns in Python. For example, accessing a graph like ``graph[1]``
+  will return the weight/data payload for the node at index 1.
+- A new module, :mod:`retworkx.generators`, has been added. Functions in this
+  module can be used for quickly generating graphs of certain shape. To start
+  it includes:
+
+  - :func:`retworkx.generators.cycle_graph`
+  - :func:`retworkx.generators.directed_cycle_graph`
+  - :func:`retworkx.generators.path_graph`
+  - :func:`retworkx.generators.directed_path_graph`
+  - :func:`retworkx.generators.star_graph`
+  - :func:`retworkx.generators.directed_star_graph`
+
+- A new method, :meth:`~retworkx.PyDiGraph.remove_node_retain_edges`, has been
+  added to the :class:`~retworkx.PyDiGraph` class. This method can be used to
+  remove a node and add edges from its predecesors to its successors.
+- Two new methods, :meth:`~retworkx.PyGraph.edge_list` and
+  :meth:`~retworkx.PyGraph.weighted_edge_list`, for getting a list of tuples
+  with the edge source and target (with or without edge weights) have been
+  added to :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
+  (:meth:`~retworkx.PyDiGraph.edge_list` and
+  :meth:`~retworkx.PyDiGraph.weighted_edge_list`)
+- A new function, :func:`~retworkx.cycle_basis`, for getting a list of cycles
+  which form a basis for cycles of a :class:`~retworkx.PyGraph` object.
+- Two new functions, :func:`~retworkx.graph_floyd_warshall_numpy` and
+  :func:`~retworkx.digraph_floyd_warshall_numpy`, were added for running the
+  Floyd Warshall algorithm and returning all the shortest path lengths as a
+  distance matrix.
+- A new constructor method, :meth:`~retworkx.PyGraph.read_edge_list`, has been
+  added to :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDigraph`
+  (:meth:`~retworkx.read_edge_list`). This method will take in a path to an
+  edge list file and will read that file and generate a new object from the
+  contents.
+- Two new methods, :meth:`~retworkx.PyGraph.extend_from_edge_list` and
+  :meth:`~retworkx.PyGraoh.extend_from_weighted_edge_list` has been added
+  to :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
+  (:meth:`~retworkx.PyDiGraph.extend_from_edge_list` and
+  :meth:`~retworkx.PyDiGraph.extend_from_weighted_edge_list`). This method
+  takes in an edge list and will add both the edges and nodes (if a node index
+  used doesn't exist yet) in the list to the graph.
 
 Fixes
 -----
 
-- The limitation with `is_isomorphic()` and `is_isomorphic_node_match()` functions
-  that would cause segfaults when comparing graphs with node removals
-  has been fixed. You can now run either function with any
-  `PyDiGraph`/`PyDAG` objects, even if there are node removals. Fixes #27
-- If an invalid node index was passed as part of the `first_layer`
-  argument to the `layers()` function
+- The limitation with the :func:`~retworkx.is_isomorphic` and
+  :func:`~retworkx.is_isomorphic_node_match` functions that would cause
+  segfaults when comparing graphs with node removals has been fixed. You can
+  now run either function with any
+  :class:`~retworkx.PyDiGraph`/:class:`~retworkx.PyDAG` objects, even if there
+  are node removals. Fixes
+  `#27 <https://github.com/Qiskit/retworkx/issues/27>`__
+- If an invalid node index was passed as part of the ``first_layer``
+  argument to the :func:`~retworkx.layers` function it would previously raise
+  a ``PanicException`` that included a Rust backtrace and no other user
+  actionable details which was caused by an unhandled error. This has been
+  fixed so that an ``IndexError`` is raised and the problematic node index
+  is included in the exception message.
 
 0.4.0
 =====
@@ -283,42 +312,47 @@ contributors in the PyO3 0.11.0 release.
 Added
 -----
 
-- A new class for undirected graphs, `PyGraph`, was added.
-- 2 new functions `graph_adjacency_matrix()` and
-  `digraph_adjacency_matrix()` to get the adjacency matrix of a `PyGraph`
-  and` PyDiGraph` object.
-- A new `PyDiGraph` method, `find_adjacent_node_by_edge()`, was added. This is
+- A new class for undirected graphs, :class:`~retworkx.PyGraph`, was added.
+- 2 new functions :func:`~retworkx.graph_adjacency_matrix` and
+  :func:`~retworkx.digraph_adjacency_matrix` to get the adjacency matrix of a
+  :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` object.
+- A new :class:`~retworkx.PyDiGraph` method,
+  :meth:`~retworkx.PyDiGraph.find_adjacent_node_by_edge`, was added. This is
   used to locate an adjacent node given a condition based on the edge between them.
-- New methods, `add_nodes_from()`, `add_edges_from()`,
-  `add_edges_from_no_data()`, and `remove_nodes_from()` were added to `PyDiGraph`
-  (and `PyGraph`). These methods allow for the addition (and removal) of
-  multiple nodes or edges from a graph in a single call.
-- A new function, `graph_greedy_coloring()`, which is used to return a
-  coloring map from a `PyGraph` object.
-- 2 new functions, `graph_astar_shortest_path()` and `digraph_astar_shortest_path()`,
-  to find the shortest path from a node to a specified goal using the A*
-  search algorithm.
-- 2 new functions, `graph_all_simple_paths()` and
-  `digraph_all_simple_paths()`, to return a list of all the simple paths
-  between 2 nodes in a `PyGraph` or `PyDiGraph` object.
-- 2 new functions, `directed_gnp_random_graph()` and
-  `undirected_gnp_random_graph()`, to generate Gnp random `PyDiGraph` and
-  `PyGraph` objects.
-- 2 new functions, `graph_dijkstra_shortest_path_lengths()` and
-  `digraph_dijkstra_shortest_path_lengths()`, were added for find the shortest paths
-  between nodes in `PyGraph` or `PyDiGraph` object using Dijkstra's
-  algorithm.
+- New methods, :meth:`~retworkx.PyDiGraph.add_nodes_from`,
+  :meth:`~retworkx.PyDiGraph.add_edges_from`,
+  :meth:`~retworkx.PyDiGraph.add_edges_from_no_data`, and
+  :meth:`~retworkx.PyDiGraph.remove_nodes_from` were added to
+  :class:`~retworkx.PyDiGraph`. These methods allow for the addition (and
+  removal) of multiple nodes or edges from a graph in a single call.
+- A new function, :func:`~retworkx.graph_greedy_color`, which is used to
+  return a coloring map from a :class:`~retworkx.PyGraph` object.
+- 2 new functions, :func:`~retworkx.graph_astar_shortest_path` and
+  :func:`~retworkx.digraph_astar_shortest_path`, to find the shortest path
+  from a node to a specified goal using the A* search algorithm.
+- 2 new functions, :func:`~retworkx.graph_all_simple_paths` and
+  :func:`~retworkx.digraph_all_simple_paths`, to return a list of all the
+  simple paths between 2 nodes in a :class:`~retworkx.PyGraph` or a
+  :class:`~retworkx.PyDiGraph` object.
+- 2 new functions, :func:`~retworkx.directed_gnp_random_graph` and
+  :func:`~retworkx.undirected_gnp_random_graph`, to generate :math:`G_{np}`
+  random :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph` objects.
+- 2 new functions, :func:`~retworkx.graph_dijkstra_shortest_path_lengths` and
+  :func:`~retworkx.digraph_dijkstra_shortest_path_lengths`, were added for find
+  the shortest path length between nodes in :class:`~retworkx.PyGraph` or
+  :class:`~retworkx.PyDiGraph` object using Dijkstra's algorithm.
 
-Changed
+Upgrade
 -------
 
-- The `PyDAG` class was renamed `PyDiGraph` to better reflect it's
-  functionality. For backwards compatibility `PyDAG` still exists as a python
-  subclass of `PyDiGraph`. No changes should be required for existing
+- The :class:`~retworkx.PyDAG` class was renamed :class:`~retworkx.PyDiGraph`
+  to better reflect it's functionality. For backwards compatibility
+  :class:`~retworkx.PyDAG` still exists as a Python subclass of
+  :class:`~retworkx.PyDiGraph`. No changes should be required for existing
   users.
-- numpy is now a dependency of retworkx. This is used for the adjacency
-  matrix functions to return numpy arrays. The minimum version of numpy
-  supported is 1.16.0.
+- `numpy <https://numpy.org/>`__ is now a dependency of retworkx. This is used
+  for the adjacency matrix functions to return numpy arrays. The minimum
+  version of numpy supported is 1.16.0.
 
 Fixes
 -----
