@@ -1,6 +1,6 @@
 # Contributing
 
-First read the overall Qiskit project contributing guidelines. These are all
+First read the overall Qiskit project contribution guidelines. These are all
 included in the Qiskit documentation:
 
 https://qiskit.org/documentation/contributing_to_qiskit.html
@@ -53,7 +53,7 @@ what CI is checking.
 
 An additional step is to run [clippy](https://github.com/rust-lang/rust-clippy)
 on your changes. While this is not run in CI (because it's very dependent on
-the rust/cargo version) it often catches issues in your code. You can run it
+the rust/cargo version) it can often catch issues in your code. You can run it
 by running:
 
 ```bash
@@ -87,17 +87,17 @@ you can view locally in a web browser.
 
 ### Release Notes
 
-When making any end user facing changes in a contribution we have to make sure
-we document that when we release a new version of retworkx. The expectation
-is that if your code contribution has user facing changes that you will write
-the release documentation for these changes. This documentation must explain
-what was changed, why it was changed, and how users can either use or adapt
-to the change. The idea behind release documentation is that when a naive
-user with limited internal knowledge of the project is upgrading from the
-previous release to the new one, they should be able to read the release notes,
-understand if they need to update their program which uses retworkx, and how they
-would go about doing that. It ideally should explain why they need to make
-this change too, to provide the necessary context.
+It is important to document any end user facing changes when we release a new 
+version of retworkx.  The expectation is that if your code contribution has 
+user facing changes that you will write the release documentation for these 
+changes. This documentation must explain what was changed, why it was changed, 
+and how users can either use or adapt to the change. The idea behind release 
+documentation is that when a naive user with limited internal knowledge of the 
+project is upgrading from the previous release to the new one, they should be  
+able to read the release notes, understand if they need to update their 
+program which uses retworkx, and how they would go about doing that. It 
+ideally should explain why they need to make this change too, to provide the 
+necessary context.
 
 To make sure we don't forget a release note or if the details of user facing
 changes over a release cycle we require that all user facing changes include
@@ -207,7 +207,7 @@ it has been tagged::
 
 #### Building release notes locally
 
-Building The release notes are part of the standard retworkx documentation
+Building the release notes is part of the standard retworkx documentation
 builds. To check what the rendered html output of the release notes will look
 like for the current state of the repo you can run: `tox -edocs` which will
 build all the documentation into `docs/_build/html` and the release notes in
