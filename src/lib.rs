@@ -231,8 +231,10 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
-    let cycle_detected = algo::is_cyclic_directed(graph);
-    !cycle_detected
+    match algo::toposort(graph, None) {
+        Ok(_nodes) => true,
+        Err(_err) => false,
+    }
 }
 
 /// Determine if 2 graphs are structurally isomorphic
