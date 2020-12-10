@@ -26,8 +26,9 @@ This release also dropped support for Python 3.5. If you want to use
 retworkx with Python 3.5 that last version which supports Python 3.5
 is 0.6.0.
 
-Added
------
+New Features
+------------
+
 - New generator functions for two new generator types, mesh and grid
   were added to :mod:`retworkx.generators` for generating all to all and grid
   graphs respectively.  These functions are:
@@ -54,8 +55,9 @@ Added
 - A new function :func:`~retworkx.collect_runs` has been added. This function is
   used to find linear paths of nodes that match a given condition.
 
-Upgrade
--------
+Upgrade Notes
+-------------
+
 - Support for running retworkx on Python 3.5 has been dropped. The last
   release with support for Python 3.5 is 0.6.0.
 - The :meth:`retworkx.PyDiGraph.node_indexes`,
@@ -107,8 +109,9 @@ Python 3.9. On previous releases Python 3.9 would likely work, but it would
 require building retworkx from source. Also this will likely be the final
 release that supports Python 3.5.
 
-Added
------
+New Features
+------------
+
 - Two new functions, :func:`~retworkx.digraph_k_shortest_path_lengths` and
   :func:`~retworkx.graph_k_shortest_path_lengths`, for finding the k shortest
   path lengths from a node in a :class:`~retworkx.PyDiGraph` and
@@ -183,8 +186,9 @@ Added
   first order from a :class:`~retworkx.PyGraph` and
   :class:`~retworkx.PyDiGraph`.
 
-Upgrade
--------
+Upgrade Notes
+-------------
+
 - The numpy arrays returned by :func:`~retworkx.graph_floyd_warshall_numpy`,
   :func:`~retworkx.digraph_floyd_warshall_numpy`,
   :func:`~retworkx.digraph_adjacency_matrix`, and
@@ -224,8 +228,9 @@ graphs adding more methods to query the state of graph, adding a generator
 module for easily creating graphs of certain shape, and implementing the
 mapping protocol so you can directly interact with graph objects.
 
-Added
------
+New Features
+------------
+
 - A new method, :meth:`~retworkx.PyGraph.to_dot`, was added to
   :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
   (:meth:`~retworkx.PyDiGraph.to_dot`). It will generate a
@@ -309,8 +314,8 @@ compilation with a stable released version of rust. This was made
 possible thanks to all the hard work of the PyO3 maintainers and
 contributors in the PyO3 0.11.0 release.
 
-Added
------
+New Features
+------------
 
 - A new class for undirected graphs, :class:`~retworkx.PyGraph`, was added.
 - 2 new functions :func:`~retworkx.graph_adjacency_matrix` and
@@ -342,8 +347,8 @@ Added
   the shortest path length between nodes in :class:`~retworkx.PyGraph` or
   :class:`~retworkx.PyDiGraph` object using Dijkstra's algorithm.
 
-Upgrade
--------
+Upgrade Notes
+-------------
 
 - The :class:`~retworkx.PyDAG` class was renamed :class:`~retworkx.PyDiGraph`
   to better reflect it's functionality. For backwards compatibility
