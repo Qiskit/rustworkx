@@ -11,6 +11,7 @@
 // under the License.
 
 mod astar;
+mod centrality;
 mod dag_isomorphism;
 mod digraph;
 mod dijkstra;
@@ -1547,6 +1548,32 @@ fn weight_callable(
     }
 }
 
+#[pyfunction(normalized = "true", endpoints = "false")]
+#[text_signature = "(graph, /, normalized=True, endpoints=False)"]
+pub fn graph_betweenness_centrality(
+    py: Python,
+    graph: &graph::PyGraph,
+    normalized: bool,
+    endpoints: bool,
+) -> PyResult<PyObject> {
+    let betweenness =
+        centrality::betweenness_centrality(&graph, endpoints, normalized);
+    Ok(PyList::new(py, betweenness).into())
+}
+
+#[pyfunction(normalized = "true", endpoints = "false")]
+#[text_signature = "(graph, /, normalized=True, endpoints=False)"]
+pub fn digraph_betweenness_centrality(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    normalized: bool,
+    endpoints: bool,
+) -> PyResult<PyObject> {
+    let betweenness =
+        centrality::betweenness_centrality(&graph, endpoints, normalized);
+    Ok(PyList::new(py, betweenness).into())
+}
+
 /// Find the shortest path from a node
 ///
 /// This function will generate the shortest path from a source node using
@@ -2556,6 +2583,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
