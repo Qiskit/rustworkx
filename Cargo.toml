@@ -19,7 +19,7 @@ crate-type = ["cdylib"]
 [dependencies]
 petgraph = "0.5.1"
 fixedbitset = "0.2.0"
-numpy = "0.12.1"
+numpy = "0.12.2"
 rand = "0.7"
 rand_pcg = "0.2"
 rayon = "1.5"
