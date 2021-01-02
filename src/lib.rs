@@ -2076,7 +2076,7 @@ pub fn directed_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability < 0.0 || probability > 1.0 {
+    if !(0.0..=1.0).contains(&probability) {
         return Err(PyValueError::new_err(
             "Probability out of range, must be 0 <= p <= 1",
         ));
@@ -2183,7 +2183,7 @@ pub fn undirected_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability < 0.0 || probability > 1.0 {
+    if !(0.0..=1.0).contains(&probability) {
         return Err(PyValueError::new_err(
             "Probability out of range, must be 0 <= p <= 1",
         ));
