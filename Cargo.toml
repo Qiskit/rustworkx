@@ -33,5 +33,5 @@ version = "0.9"
 features = ["rayon"]
 
 [dependencies.ndarray]
-version = "^0.13.0"
+version = "^0.14.0"
 features = ["rayon"]
