@@ -52,7 +52,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::NodeIndices;
+use crate::iterators::{EdgeList, NodeIndices};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -232,8 +232,10 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
-    let cycle_detected = algo::is_cyclic_directed(graph);
-    !cycle_detected
+    match algo::toposort(graph, None) {
+        Ok(_nodes) => true,
+        Err(_err) => false,
+    }
 }
 
 /// Determine if 2 graphs are structurally isomorphic
@@ -442,14 +444,16 @@ where
 ///
 /// :returns: A list of edges as a tuple of the form ``(source, target)`` in
 ///     depth-first order
-/// :rtype: list
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
 fn digraph_dfs_edges(
     graph: &digraph::PyDiGraph,
     source: Option<usize>,
-) -> Vec<(usize, usize)> {
-    dfs_edges(graph, source)
+) -> EdgeList {
+    EdgeList {
+        edges: dfs_edges(graph, source),
+    }
 }
 
 /// Get edge list in depth first order
@@ -463,13 +467,13 @@ fn digraph_dfs_edges(
 ///
 /// :returns: A list of edges as a tuple of the form ``(source, target)`` in
 ///     depth-first order
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
-fn graph_dfs_edges(
-    graph: &graph::PyGraph,
-    source: Option<usize>,
-) -> Vec<(usize, usize)> {
-    dfs_edges(graph, source)
+fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
+    EdgeList {
+        edges: dfs_edges(graph, source),
+    }
 }
 
 /// Return successors in a breadth-first-search from a source node.
@@ -513,7 +517,6 @@ fn bfs_successors(
     }
     Ok(iterators::BFSSuccessors {
         bfs_successors: out_list,
-        index: 0,
     })
 }
 
@@ -1081,6 +1084,76 @@ fn digraph_floyd_warshall_numpy(
         }
     }
     Ok(mat.into_pyarray(py).into())
+}
+
+/// Collect runs that match a filter function
+///
+/// A run is a path of nodes where there is only a single successor and all
+/// nodes in the path match the given condition. Each node in the graph can
+/// appear in only a single run.
+///
+/// :param PyDiGraph graph: The graph to find runs in
+/// :param filter_fn: The filter function to use for matching nodes. It takes
+///     in one argument, the node data payload/weight object, and will return a
+///     boolean whether the node matches the conditions or not. If it returns
+///     ``False`` it will skip that node.
+///
+/// :returns: a list of runs, where each run is a list of node data
+///     payload/weight for the nodes in the run
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, filter)"]
+fn collect_runs(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    filter_fn: PyObject,
+) -> PyResult<Vec<Vec<PyObject>>> {
+    let mut out_list: Vec<Vec<PyObject>> = Vec::new();
+    let mut seen: HashSet<NodeIndex> = HashSet::new();
+
+    let filter_node = |node: &PyObject| -> PyResult<bool> {
+        let res = filter_fn.call1(py, (node,))?;
+        Ok(res.extract(py)?)
+    };
+
+    let nodes = match algo::toposort(graph, None) {
+        Ok(nodes) => nodes,
+        Err(_err) => {
+            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
+        }
+    };
+    for node in nodes {
+        if !filter_node(&graph.graph[node])? || seen.contains(&node) {
+            continue;
+        }
+        seen.insert(node);
+        let mut group: Vec<PyObject> = vec![graph.graph[node].clone_ref(py)];
+        let mut successors: Vec<NodeIndex> = graph
+            .graph
+            .neighbors_directed(node, petgraph::Direction::Outgoing)
+            .collect();
+        successors.dedup();
+
+        while successors.len() == 1
+            && filter_node(&graph.graph[successors[0]])?
+            && !seen.contains(&successors[0])
+        {
+            group.push(graph.graph[successors[0]].clone_ref(py));
+            seen.insert(successors[0]);
+            successors = graph
+                .graph
+                .neighbors_directed(
+                    successors[0],
+                    petgraph::Direction::Outgoing,
+                )
+                .collect();
+            successors.dedup();
+        }
+        if !group.is_empty() {
+            out_list.push(group);
+        }
+    }
+    Ok(out_list)
 }
 
 /// Return a list of layers
@@ -2030,7 +2103,7 @@ pub fn directed_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability < 0.0 || probability > 1.0 {
+    if !(0.0..=1.0).contains(&probability) {
         return Err(PyValueError::new_err(
             "Probability out of range, must be 0 <= p <= 1",
         ));
@@ -2137,7 +2210,7 @@ pub fn undirected_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability < 0.0 || probability > 1.0 {
+    if !(0.0..=1.0).contains(&probability) {
         return Err(PyValueError::new_err(
             "Probability out of range, must be 0 <= p <= 1",
         ));
@@ -2458,13 +2531,13 @@ pub fn strongly_connected_components(
 ///
 /// :returns: A list describing the cycle. The index of node ids which
 ///     forms a cycle (loop) in the input graph
-/// :rtype: list
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
 pub fn digraph_find_cycle(
     graph: &digraph::PyDiGraph,
     source: Option<usize>,
-) -> Vec<(usize, usize)> {
+) -> EdgeList {
     let mut graph_nodes: HashSet<NodeIndex> =
         graph.graph.node_indices().collect();
     let mut cycle: Vec<(usize, usize)> = Vec::new();
@@ -2510,7 +2583,7 @@ pub fn digraph_find_cycle(
                     cycle.push((pred[&z].index(), z.index()));
                     z = pred[&z];
                 }
-                return cycle;
+                return EdgeList { edges: cycle };
             }
             //if an unexplored node is encountered
             if !visited.contains(&child) {
@@ -2527,7 +2600,7 @@ pub fn digraph_find_cycle(
             visited.insert(z);
         }
     }
-    cycle
+    EdgeList { edges: cycle }
 }
 
 // The provided node is invalid.
@@ -2572,6 +2645,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
+    m.add_wrapped(wrap_pyfunction!(collect_runs))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(graph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
@@ -2603,6 +2677,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::NodeIndices>()?;
+    m.add_class::<iterators::EdgeList>()?;
+    m.add_class::<iterators::WeightedEdgeList>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
