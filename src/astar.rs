@@ -19,10 +19,11 @@
 // and return any exceptions raised in Python instead of panicking
 
 use std::cmp::Ordering;
-use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::collections::{BinaryHeap, HashMap};
-
+use std::collections::BinaryHeap;
 use std::hash::Hash;
+
+use hashbrown::hash_map::Entry::{Occupied, Vacant};
+use hashbrown::HashMap;
 
 use petgraph::visit::{EdgeRef, GraphBase, IntoEdges, VisitMap, Visitable};
 

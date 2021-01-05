@@ -209,6 +209,15 @@ class TestEdges(unittest.TestCase):
         with self.assertRaises(retworkx.DAGWouldCycle):
             dag.add_edges_from([(node_a, node_c, {}), (node_c, node_b, {})])
 
+    def test_is_directed_acyclic_graph(self):
+        dag = retworkx.generators.directed_path_graph(1000)
+        res = retworkx.is_directed_acyclic_graph(dag)
+        self.assertTrue(res)
+
+    def test_is_directed_acyclic_graph_false(self):
+        digraph = retworkx.generators.directed_cycle_graph(1000)
+        self.assertFalse(retworkx.is_directed_acyclic_graph(digraph))
+
     def test_add_edge_from_no_data(self):
         dag = retworkx.PyDAG()
         nodes = list(range(4))

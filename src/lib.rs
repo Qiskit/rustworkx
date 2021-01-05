@@ -51,6 +51,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
+use crate::iterators::{EdgeList, NodeIndices};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -113,14 +114,16 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
 ///     object must be a DAG without a cycle.
 ///
 /// :returns: The node indices of the longest path on the DAG
-/// :rtype: list
+/// :rtype: NodeIndices
 ///
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
 #[text_signature = "(graph, /)"]
-fn dag_longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
-    longest_path(graph)
+fn dag_longest_path(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
+    Ok(NodeIndices {
+        nodes: longest_path(graph)?,
+    })
 }
 
 /// Find the length of the longest path in a DAG
@@ -228,8 +231,10 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
-    let cycle_detected = algo::is_cyclic_directed(graph);
-    !cycle_detected
+    match algo::toposort(graph, None) {
+        Ok(_nodes) => true,
+        Err(_err) => false,
+    }
 }
 
 /// Determine if 2 graphs are structurally isomorphic
@@ -253,24 +258,37 @@ fn is_isomorphic(
     Ok(res)
 }
 
-/// [Graph] Return a new PyDiGraph by forming a union from`a` and `b` graphs.
+/// Return a new PyDiGraph by forming a union from two input PyDiGraph objects
 ///
-/// The algorithm has three phases:
-///  - adds all nodes from `b` to `a`. operates in O(n), n being number of nodes in `b`.
-///  - merges nodes from `b` over `a` given that:
-///     - `merge_nodes` is `true`. operates in O(n^2), n being number of nodes in `b`.
-///     - respective node in`b` and `a` share the same weight
-///  - adds all edges from `b` to `a`.
-///     - `merge_edges` is `true`
-///     - respective edge in`b` and `a` share the same weight
+/// The algorithm in this function operates in three phases:
 ///
-/// with the same weight in graphs `a` and `b` and merged those nodes.
+///  1. Add all the nodes from  ``second`` into ``first``. operates in O(n),
+///     with n being number of nodes in `b`.
+///  2. Merge nodes from ``second`` over ``first`` given that:
 ///
-/// The nodes from graph `b` will replace nodes from `a`.
+///     - The ``merge_nodes`` is ``True``. operates in O(n^2), with n being the
+///       number of nodes in ``second``.
+///     - The respective node in ``second`` and ``first`` share the same
+///       weight/data payload.
 ///
-///  At this point, only `PyDiGraph` is supported.
+///  3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
+///     parameter is ``True`` and the respective edge in ``second`` and
+///     first`` share the same weight/data payload they will be merged
+///     together.
+///
+///  :param PyDiGraph first: The first directed graph object
+///  :param PyDiGraph second: The second directed graph object
+///  :param bool merge_nodes: If set to ``True`` nodes will be merged between
+///     ``second`` and ``first`` if the weights are equal.
+///  :param bool merge_edges: If set to ``True`` edges will be merged between
+///     ``second`` and ``first`` if the weights are equal.
+///
+///  :returns: A new PyDiGraph object that is the union of ``second`` and
+///     ``first``. It's worth noting the weight/data payload objects are
+///     passed by reference from ``first`` and ``second`` to this new object.
+///  :rtype: PyDiGraph
 #[pyfunction]
-#[text_signature = "(first, second, /)"]
+#[text_signature = "(first, second, merge_nodes, merge_edges, /)"]
 fn digraph_union(
     py: Python,
     first: &digraph::PyDiGraph,
@@ -336,19 +354,21 @@ fn is_isomorphic_node_match(
 /// :param PyDiGraph graph: The DAG to get the topological sort on
 ///
 /// :returns: A list of node indices topologically sorted.
-/// :rtype: list
+/// :rtype: NodeIndices
 ///
 /// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
 #[pyfunction]
 #[text_signature = "(graph, /)"]
-fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
+fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
         }
     };
-    Ok(nodes.iter().map(|node| node.index()).collect())
+    Ok(NodeIndices {
+        nodes: nodes.iter().map(|node| node.index()).collect(),
+    })
 }
 
 fn dfs_edges<G>(graph: G, source: Option<usize>) -> Vec<(usize, usize)>
@@ -423,14 +443,16 @@ where
 ///
 /// :returns: A list of edges as a tuple of the form ``(source, target)`` in
 ///     depth-first order
-/// :rtype: list
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
 fn digraph_dfs_edges(
     graph: &digraph::PyDiGraph,
     source: Option<usize>,
-) -> Vec<(usize, usize)> {
-    dfs_edges(graph, source)
+) -> EdgeList {
+    EdgeList {
+        edges: dfs_edges(graph, source),
+    }
 }
 
 /// Get edge list in depth first order
@@ -444,13 +466,13 @@ fn digraph_dfs_edges(
 ///
 /// :returns: A list of edges as a tuple of the form ``(source, target)`` in
 ///     depth-first order
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
-fn graph_dfs_edges(
-    graph: &graph::PyGraph,
-    source: Option<usize>,
-) -> Vec<(usize, usize)> {
-    dfs_edges(graph, source)
+fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
+    EdgeList {
+        edges: dfs_edges(graph, source),
+    }
 }
 
 /// Return successors in a breadth-first-search from a source node.
@@ -494,7 +516,6 @@ fn bfs_successors(
     }
     Ok(iterators::BFSSuccessors {
         bfs_successors: out_list,
-        index: 0,
     })
 }
 
@@ -1062,6 +1083,76 @@ fn digraph_floyd_warshall_numpy(
         }
     }
     Ok(mat.into_pyarray(py).into())
+}
+
+/// Collect runs that match a filter function
+///
+/// A run is a path of nodes where there is only a single successor and all
+/// nodes in the path match the given condition. Each node in the graph can
+/// appear in only a single run.
+///
+/// :param PyDiGraph graph: The graph to find runs in
+/// :param filter_fn: The filter function to use for matching nodes. It takes
+///     in one argument, the node data payload/weight object, and will return a
+///     boolean whether the node matches the conditions or not. If it returns
+///     ``False`` it will skip that node.
+///
+/// :returns: a list of runs, where each run is a list of node data
+///     payload/weight for the nodes in the run
+/// :rtype: list
+#[pyfunction]
+#[text_signature = "(graph, filter)"]
+fn collect_runs(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    filter_fn: PyObject,
+) -> PyResult<Vec<Vec<PyObject>>> {
+    let mut out_list: Vec<Vec<PyObject>> = Vec::new();
+    let mut seen: HashSet<NodeIndex> = HashSet::new();
+
+    let filter_node = |node: &PyObject| -> PyResult<bool> {
+        let res = filter_fn.call1(py, (node,))?;
+        Ok(res.extract(py)?)
+    };
+
+    let nodes = match algo::toposort(graph, None) {
+        Ok(nodes) => nodes,
+        Err(_err) => {
+            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
+        }
+    };
+    for node in nodes {
+        if !filter_node(&graph.graph[node])? || seen.contains(&node) {
+            continue;
+        }
+        seen.insert(node);
+        let mut group: Vec<PyObject> = vec![graph.graph[node].clone_ref(py)];
+        let mut successors: Vec<NodeIndex> = graph
+            .graph
+            .neighbors_directed(node, petgraph::Direction::Outgoing)
+            .collect();
+        successors.dedup();
+
+        while successors.len() == 1
+            && filter_node(&graph.graph[successors[0]])?
+            && !seen.contains(&successors[0])
+        {
+            group.push(graph.graph[successors[0]].clone_ref(py));
+            seen.insert(successors[0]);
+            successors = graph
+                .graph
+                .neighbors_directed(
+                    successors[0],
+                    petgraph::Direction::Outgoing,
+                )
+                .collect();
+            successors.dedup();
+        }
+        if !group.is_empty() {
+            out_list.push(group);
+        }
+    }
+    Ok(out_list)
 }
 
 /// Return a list of layers
@@ -1808,7 +1899,7 @@ fn digraph_dijkstra_shortest_path_lengths(
 ///
 /// :returns: The computed shortest path between node and finish as a list
 ///     of node indices.
-/// :rtype: list
+/// :rtype: NodeIndices
 #[pyfunction]
 #[text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)"]
 fn graph_astar_shortest_path(
@@ -1818,7 +1909,7 @@ fn graph_astar_shortest_path(
     goal_fn: PyObject,
     edge_cost_fn: PyObject,
     estimate_cost_fn: PyObject,
-) -> PyResult<Vec<usize>> {
+) -> PyResult<NodeIndices> {
     let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1858,7 +1949,9 @@ fn graph_astar_shortest_path(
             ))
         }
     };
-    Ok(path.1.into_iter().map(|x| x.index()).collect())
+    Ok(NodeIndices {
+        nodes: path.1.into_iter().map(|x| x.index()).collect(),
+    })
 }
 
 /// Compute the A* shortest path for a PyDiGraph
@@ -1880,7 +1973,7 @@ fn graph_astar_shortest_path(
 ///
 /// :return: The computed shortest path between node and finish as a list
 ///     of node indices.
-/// :rtype: list
+/// :rtype: NodeIndices
 #[pyfunction]
 #[text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)"]
 fn digraph_astar_shortest_path(
@@ -1890,7 +1983,7 @@ fn digraph_astar_shortest_path(
     goal_fn: PyObject,
     edge_cost_fn: PyObject,
     estimate_cost_fn: PyObject,
-) -> PyResult<Vec<usize>> {
+) -> PyResult<NodeIndices> {
     let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1930,7 +2023,9 @@ fn digraph_astar_shortest_path(
             ))
         }
     };
-    Ok(path.1.into_iter().map(|x| x.index()).collect())
+    Ok(NodeIndices {
+        nodes: path.1.into_iter().map(|x| x.index()).collect(),
+    })
 }
 
 /// Return a :math:`G_{np}` directed random graph, also known as an
@@ -1981,7 +2076,7 @@ pub fn directed_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability < 0.0 || probability > 1.0 {
+    if !(0.0..=1.0).contains(&probability) {
         return Err(PyValueError::new_err(
             "Probability out of range, must be 0 <= p <= 1",
         ));
@@ -2088,7 +2183,7 @@ pub fn undirected_gnp_random_graph(
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
-    if probability < 0.0 || probability > 1.0 {
+    if !(0.0..=1.0).contains(&probability) {
         return Err(PyValueError::new_err(
             "Probability out of range, must be 0 <= p <= 1",
         ));
@@ -2409,13 +2504,13 @@ pub fn strongly_connected_components(
 ///
 /// :returns: A list describing the cycle. The index of node ids which
 ///     forms a cycle (loop) in the input graph
-/// :rtype: list
+/// :rtype: EdgeList
 #[pyfunction]
 #[text_signature = "(graph, /, source=None)"]
 pub fn digraph_find_cycle(
     graph: &digraph::PyDiGraph,
     source: Option<usize>,
-) -> Vec<(usize, usize)> {
+) -> EdgeList {
     let mut graph_nodes: HashSet<NodeIndex> =
         graph.graph.node_indices().collect();
     let mut cycle: Vec<(usize, usize)> = Vec::new();
@@ -2461,7 +2556,7 @@ pub fn digraph_find_cycle(
                     cycle.push((pred[&z].index(), z.index()));
                     z = pred[&z];
                 }
-                return cycle;
+                return EdgeList { edges: cycle };
             }
             //if an unexplored node is encountered
             if !visited.contains(&child) {
@@ -2478,7 +2573,7 @@ pub fn digraph_find_cycle(
             visited.insert(z);
         }
     }
-    cycle
+    EdgeList { edges: cycle }
 }
 
 // The provided node is invalid.
@@ -2523,6 +2618,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
+    m.add_wrapped(wrap_pyfunction!(collect_runs))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(graph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
@@ -2551,6 +2647,9 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
+    m.add_class::<iterators::NodeIndices>()?;
+    m.add_class::<iterators::EdgeList>()?;
+    m.add_class::<iterators::WeightedEdgeList>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }

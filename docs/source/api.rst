@@ -66,6 +66,7 @@ Algorithm Functions
    retworkx.floyd_warshall
    retworkx.graph_floyd_warshall_numpy
    retworkx.digraph_floyd_warshall_numpy
+   retworkx.collect_runs
    retworkx.layers
    retworkx.digraph_adjacency_matrix
    retworkx.graph_adjacency_matrix
@@ -108,3 +109,6 @@ Return Iterator Types
    :toctree: stubs
 
    retworkx.BFSSuccessors
+   retworkx.NodeIndices
+   retworkx.EdgeList
+   retworkx.WeightedEdgeList
