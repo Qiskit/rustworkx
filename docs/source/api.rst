@@ -87,6 +87,7 @@ Algorithm Functions
    retworkx.digraph_dfs_edges
    retworkx.digraph_find_cycle
    retworkx.digraph_union
+   retworkx.max_weight_matching
 
 Exceptions
 ----------
