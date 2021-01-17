@@ -236,16 +236,18 @@ fn add_blossom(
     blossom_parents[blossom_b] = Some(blossom);
     // Make list of sub-blossoms and their interconnecting edge endpoints.
     blossom_children[blossom].exists = true;
-    let mut path: Vec<usize> = Vec::new();
+    blossom_children[blossom].nodes.clear();
     blossom_endpoints[blossom].exists = true;
-    let mut local_endpoints: Vec<usize> = Vec::new();
+    blossom_endpoints[blossom].nodes.clear();
     // Trace back from blossom_v to base.
     while blossom_v != blossom_b {
         // Add blossom_v to the new blossom
         blossom_parents[blossom_v] = Some(blossom);
-        path.push(blossom_v);
+        blossom_children[blossom].nodes.push(blossom_v);
         let blossom_v_endpoint_label = label_ends[blossom_v].unwrap();
-        local_endpoints.push(blossom_v_endpoint_label);
+        blossom_endpoints[blossom]
+            .nodes
+            .push(blossom_v_endpoint_label);
         assert!(
             labels[blossom_v] == Some(2)
                 || (labels[blossom_v] == Some(1)
@@ -258,17 +260,19 @@ fn add_blossom(
         blossom_v = in_blossoms[v];
     }
     // Reverse lists, add endpoint that connects the pair of S vertices.
-    path.push(blossom_b);
-    path.reverse();
-    local_endpoints.reverse();
-    local_endpoints.push(2 * edge);
+    blossom_children[blossom].nodes.push(blossom_b);
+    blossom_children[blossom].nodes.reverse();
+    blossom_endpoints[blossom].nodes.reverse();
+    blossom_endpoints[blossom].nodes.push(2 * edge);
     // Trace back from w to base.
     while blossom_w != blossom_b {
         // Add blossom_w to the new blossom
         blossom_parents[blossom_w] = Some(blossom);
-        path.push(blossom_w);
+        blossom_children[blossom].nodes.push(blossom_w);
         let blossom_w_endpoint_label = label_ends[blossom_w].unwrap();
-        local_endpoints.push(blossom_w_endpoint_label ^ 1);
+        blossom_endpoints[blossom]
+            .nodes
+            .push(blossom_w_endpoint_label ^ 1);
         assert!(
             labels[blossom_w] == Some(2)
                 || (labels[blossom_w] == Some(1)
@@ -297,7 +301,8 @@ fn add_blossom(
     }
     // Compute blossom_best_edges[blossom]
     let mut best_edge_to: Vec<Option<usize>> = vec![None; 2 * num_nodes];
-    for bv in path {
+    for bv_ref in &blossom_children[blossom].nodes {
+        let bv = *bv_ref;
         // This sub-blossom does not have a list of least-slack edges;
         // get the information from the vertices.
         let nblists: Vec<Vec<usize>> = if !blossom_best_edges[bv].exists {
@@ -419,16 +424,17 @@ fn expand_blossom(
         let entry_child =
             in_blossoms[endpoints[label_ends[blossom].unwrap() ^ 1]];
         // Decied in which direction we will go around the blossom.
-        let mut j = blossom_children[blossom]
+        let i = blossom_children[blossom]
             .nodes
             .iter()
             .position(|x| *x == entry_child)
             .unwrap();
-        let j_step: i64;
+        let mut j = i as i128;
+        let j_step: i128;
         let endpoint_trick: usize;
-        if j & 1 > 0 {
+        if i & 1 > 0 {
             // Start index is odd; go forward and wrap
-            j -= blossom_children[blossom].nodes.len();
+            j -= blossom_children[blossom].nodes.len() as i128;
             j_step = 1;
             endpoint_trick = 0;
         } else {
@@ -441,10 +447,19 @@ fn expand_blossom(
         while j != 0 {
             // Relabel the T-sub-blossom.
             labels[endpoints[p ^ 1]] = Some(0);
-            labels[endpoints[blossom_endpoints[blossom].nodes
-                [j - endpoint_trick]
-                ^ endpoint_trick
-                ^ 1]] = Some(0);
+            if j < 0 {
+                let length = blossom_endpoints[blossom].nodes.len();
+                let index = length - j.abs() as usize;
+                labels[endpoints[blossom_endpoints[blossom].nodes
+                    [index - endpoint_trick]
+                    ^ endpoint_trick
+                    ^ 1]] = Some(0);
+            } else {
+                labels[endpoints[blossom_endpoints[blossom].nodes
+                    [j as usize - endpoint_trick]
+                    ^ endpoint_trick
+                    ^ 1]] = Some(0);
+            }
             assign_label(
                 endpoints[p ^ 1],
                 2,
@@ -461,45 +476,68 @@ fn expand_blossom(
                 mate,
             )?;
             // Step to the next S-sub-blossom and note it's forwward endpoint.
-            allowed_edge
-                [blossom_endpoints[blossom].nodes[j - endpoint_trick] / 2] =
-                true;
-            if j_step > 0 {
-                j += j_step as usize;
+            if j < 0 {
+                let length = blossom_endpoints[blossom].nodes.len();
+                let index = length - j.abs() as usize;
+                allowed_edge[blossom_endpoints[blossom].nodes
+                    [index - endpoint_trick]
+                    / 2] = true;
             } else {
-                j -= j_step.abs() as usize;
+                allowed_edge[blossom_endpoints[blossom].nodes
+                    [j as usize - endpoint_trick]
+                    / 2] = true;
             }
-            p = blossom_endpoints[blossom].nodes[j - endpoint_trick]
-                ^ endpoint_trick;
+            j += j_step;
+            if j < 0 {
+                let length = blossom_endpoints[blossom].nodes.len();
+                let index = length - j.abs() as usize;
+                p = blossom_endpoints[blossom].nodes[index - endpoint_trick]
+                    ^ endpoint_trick;
+            } else {
+                p = blossom_endpoints[blossom].nodes
+                    [j as usize - endpoint_trick]
+                    ^ endpoint_trick;
+            }
             // Step to the next T-sub-blossom.
             allowed_edge[p / 2] = true;
-            if j_step > 0 {
-                j += j_step as usize;
-            } else {
-                j -= j_step.abs() as usize;
-            }
+            j += j_step;
         }
         // Relabel the base T-sub-blossom WITHOUT stepping through to
         // its mate (so don't call assign_label())
-        let blossom_v = blossom_children[blossom].nodes[j];
+
+        let blossom_v = if j < 0 {
+            let length = blossom_children[blossom].nodes.len();
+            let index = length - j.abs() as usize;
+            blossom_children[blossom].nodes[index]
+        } else {
+            blossom_children[blossom].nodes[j as usize]
+        };
         labels[endpoints[p ^ 1]] = Some(2);
         labels[blossom_v] = Some(2);
         label_ends[endpoints[p ^ 1]] = Some(p);
         label_ends[blossom_v] = Some(p);
         best_edge[blossom_v] = None;
         // Continue along the blossom until we get back to entry_child
-        while blossom_children[blossom].nodes[j] != entry_child {
+        let mut j_index = if j < 0 {
+            let length = blossom_children[blossom].nodes.len();
+            length - j.abs() as usize
+        } else {
+            j as usize
+        };
+        while blossom_children[blossom].nodes[j_index] != entry_child {
             // Examine the vertices of the sub-blossom to see whether
             // it is reachable from a neighboring S-vertex outside the
             // expanding blososm.
-            let bv = blossom_children[blossom].nodes[j];
+            let bv = blossom_children[blossom].nodes[j_index];
             if labels[bv] == Some(1) {
                 // This sub-blossom just got label S through one of its
                 // neighbors; leave it
-                if j_step > 0 {
-                    j += j_step as usize;
+                j += j_step;
+                if j < 0 {
+                    let length = blossom_children[blossom].nodes.len();
+                    j_index = length - j.abs() as usize;
                 } else {
-                    j -= j_step.abs() as usize;
+                    j_index = j as usize;
                 }
                 continue;
             }
@@ -534,10 +572,12 @@ fn expand_blossom(
                     mate,
                 )?;
             }
-            if j_step > 0 {
-                j += j_step as usize;
+            j += j_step;
+            if j < 0 {
+                let length = blossom_children[blossom].nodes.len();
+                j_index = length - j.abs() as usize;
             } else {
-                j -= j_step.abs() as usize;
+                j_index = j as usize;
             }
         }
     }
@@ -569,7 +609,7 @@ fn augment_blossom(
     // Bubble up through the blossom tree from vertex v to an immediate
     // sub-blossom of b.
     let mut tmp = node;
-    while blossom_parents[tmp].unwrap() != blossom {
+    while blossom_parents[tmp] != Some(blossom) {
         tmp = blossom_parents[tmp].unwrap();
     }
     // Recursively deal with the first sub-blossom.
@@ -592,12 +632,12 @@ fn augment_blossom(
         .iter()
         .position(|x| *x == tmp)
         .unwrap();
-    let mut j = i;
-    let j_step: i64;
+    let mut j: i128 = i as i128;
+    let j_step: i128;
     let endpoint_trick: usize;
-    if i & 1 > 0 {
+    if i % 2 != 0 {
         // start index is odd; go forward and wrap.
-        j -= blossom_children[blossom].nodes.len();
+        j -= blossom_children[blossom].nodes.len() as i128;
         j_step = 1;
         endpoint_trick = 0;
     } else {
@@ -608,14 +648,23 @@ fn augment_blossom(
     // Move along the blossom until we get to the base.
     while j != 0 {
         // Step to the next sub-blossom and augment it recursively.
-        if j_step > 0 {
-            j += j_step as usize;
+        j += j_step;
+
+        if j < 0 {
+            let length = blossom_children[blossom].nodes.len();
+            let index = length - j.abs() as usize;
+            tmp = blossom_children[blossom].nodes[index];
         } else {
-            j -= j_step.abs() as usize;
+            tmp = blossom_children[blossom].nodes[j as usize]
         }
-        tmp = blossom_children[blossom].nodes[j];
-        let p = blossom_endpoints[blossom].nodes[j - endpoint_trick]
-            ^ endpoint_trick;
+        let p = if j < 0 {
+            let length = blossom_endpoints[blossom].nodes.len();
+            let index = length - j.abs() as usize - endpoint_trick;
+            blossom_endpoints[blossom].nodes[index] ^ endpoint_trick
+        } else {
+            blossom_endpoints[blossom].nodes[j as usize - endpoint_trick]
+                ^ endpoint_trick
+        };
         if tmp > num_nodes {
             augment_blossom(
                 tmp,
@@ -629,12 +678,14 @@ fn augment_blossom(
                 mate,
             );
         }
-        if j_step > 0 {
-            j += j_step as usize;
+        j += j_step;
+        if j < 0 {
+            let length = blossom_children[blossom].nodes.len();
+            let index = length - j.abs() as usize;
+            tmp = blossom_children[blossom].nodes[index];
         } else {
-            j -= j_step.abs() as usize;
+            tmp = blossom_children[blossom].nodes[j as usize];
         }
-        tmp = blossom_children[blossom].nodes[j];
         if tmp > num_nodes {
             augment_blossom(
                 tmp,
@@ -1078,7 +1129,7 @@ pub fn max_weight_matching(
                 assert!(labels[in_blossoms[v]] == Some(1));
 
                 // Scan it's neighbors
-                for p in &neighbor_endpoints[in_blossoms[v]] {
+                for p in &neighbor_endpoints[v] {
                     let k = *p / 2;
                     let mut kslack = 0;
                     let w = endpoints[*p];

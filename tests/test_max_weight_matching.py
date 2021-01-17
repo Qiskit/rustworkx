@@ -80,7 +80,7 @@ class TestMaxWeightMatching(unittest.TestCase):
         self.assertEqual(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
             {0: 1, 1: 0, 2: 3, 3: 2})
-        graph.extend_weighted_edge_list([(0, 5, 5), (3, 4, 6)])
+        graph.extend_from_weighted_edge_list([(0, 5, 5), (3, 4, 6)])
         self.assertEqual(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
             {0: 5, 1: 2, 2: 1, 3: 4, 4: 3, 5: 0})
