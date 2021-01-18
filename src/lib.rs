@@ -2483,7 +2483,7 @@ pub fn cycle_basis(
 /// A maximal matching cannot add more edges and still be a matching.
 /// The cardinality of a matching is the number of matched edges.
 ///
-/// This function takes time :math:`O(n^3)` where ``n` is the number of nodes
+/// This function takes time :math:`O(n^3)` where ``n`` is the number of nodes
 /// in the graph.
 ///
 /// This method is based on the "blossom" method for finding augmenting
@@ -2493,7 +2493,7 @@ pub fn cycle_basis(
 /// :param PyGraph graph: The undirected graph to compute the max weight
 ///     matching for. Expects to have no parallel edges (multigraphs are
 ///     untested currently).
-/// :param max_cardinality bool: If True, compute the maximum-cardinality
+/// :param bool max_cardinality: If True, compute the maximum-cardinality
 ///     matching with maximum weight among all maximum-cardinality matchings.
 ///     Defaults False.
 /// :param callable weight_fn: An optional callable that will be passed a
