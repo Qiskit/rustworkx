@@ -349,6 +349,7 @@ fn expand_blossom(
     end_stage: bool,
     num_nodes: usize,
     blossom_children: &mut Vec<Vec<usize>>,
+    blossom_parents: &mut Vec<Option<usize>>,
     in_blossoms: &mut Vec<usize>,
     dual_var: &[i128],
     labels: &mut Vec<Option<usize>>,
@@ -364,6 +365,7 @@ fn expand_blossom(
 ) -> PyResult<()> {
     // convert sub-blossoms into top-level blossoms.
     for s in blossom_children[blossom].clone() {
+        blossom_parents[s] = None;
         if s < num_nodes {
             in_blossoms[s] = s
         } else if end_stage && dual_var[s] == 0 {
@@ -373,6 +375,7 @@ fn expand_blossom(
                 end_stage,
                 num_nodes,
                 blossom_children,
+                blossom_parents,
                 in_blossoms,
                 dual_var,
                 labels,
@@ -409,7 +412,7 @@ fn expand_blossom(
         let mut j = i as i128;
         let j_step: i128;
         let endpoint_trick: usize;
-        if i & 1 > 0 {
+        if i & 1 != 0 {
             // Start index is odd; go forward and wrap
             j -= blossom_children[blossom].len() as i128;
             j_step = 1;
@@ -607,7 +610,7 @@ fn augment_blossom(
     let mut j: i128 = i as i128;
     let j_step: i128;
     let endpoint_trick: usize;
-    if i % 2 != 0 {
+    if i & 1 != 0 {
         // start index is odd; go forward and wrap.
         j -= blossom_children[blossom].len() as i128;
         j_step = 1;
@@ -791,9 +794,9 @@ pub fn max_weight_matching(
     weight_fn: Option<PyObject>,
     default_weight: i128,
 ) -> PyResult<HashMap<usize, usize>> {
-    let mut out_map: HashMap<usize, usize> = HashMap::new();
     let num_edges = graph.graph.edge_count();
     let num_nodes = graph.graph.node_count();
+    let mut out_map: HashMap<usize, usize> = HashMap::with_capacity(num_nodes);
     // Exit fast for graph without edges
     if num_edges == 0 {
         return Ok(out_map);
@@ -1143,7 +1146,7 @@ pub fn max_weight_matching(
             for v in 0..num_nodes {
                 if labels[in_blossoms[v]] == Some(0) && best_edge[v].is_some() {
                     let d = slack(best_edge[v].unwrap(), &dual_var, &edges);
-                    if delta_type == -1 || d < delta.unwrap() {
+                    if delta_type == -1 || Some(d) < delta {
                         delta = Some(d);
                         delta_type = 2;
                         delta_edge = best_edge[v];
@@ -1239,6 +1242,7 @@ pub fn max_weight_matching(
                     false,
                     num_nodes,
                     &mut blossom_children,
+                    &mut blossom_parents,
                     &mut in_blossoms,
                     &dual_var,
                     &mut labels,
@@ -1272,6 +1276,7 @@ pub fn max_weight_matching(
                     true,
                     num_nodes,
                     &mut blossom_children,
+                    &mut blossom_parents,
                     &mut in_blossoms,
                     &dual_var,
                     &mut labels,
