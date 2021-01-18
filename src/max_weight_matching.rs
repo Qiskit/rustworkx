@@ -476,28 +476,25 @@ fn expand_blossom(
                 mate,
             )?;
             // Step to the next S-sub-blossom and note it's forwward endpoint.
-            if j < 0 {
+            let endpoint_index = if j < 0 {
+                let tmp = j - endpoint_trick as i128;
                 let length = blossom_endpoints[blossom].nodes.len();
-                let index = length - j.abs() as usize;
-                allowed_edge[blossom_endpoints[blossom].nodes
-                    [index - endpoint_trick]
-                    / 2] = true;
+                let index = length - tmp.abs() as usize;
+                blossom_endpoints[blossom].nodes[index]
             } else {
-                allowed_edge[blossom_endpoints[blossom].nodes
-                    [j as usize - endpoint_trick]
-                    / 2] = true;
-            }
+                blossom_endpoints[blossom].nodes[j as usize - endpoint_trick]
+            };
+            allowed_edge[endpoint_index / 2] = true;
             j += j_step;
-            if j < 0 {
+            p = if j < 0 {
+                let tmp = j - endpoint_trick as i128;
                 let length = blossom_endpoints[blossom].nodes.len();
-                let index = length - j.abs() as usize;
-                p = blossom_endpoints[blossom].nodes[index - endpoint_trick]
-                    ^ endpoint_trick;
+                let index = length - tmp.abs() as usize;
+                blossom_endpoints[blossom].nodes[index] ^ endpoint_trick
             } else {
-                p = blossom_endpoints[blossom].nodes
-                    [j as usize - endpoint_trick]
-                    ^ endpoint_trick;
-            }
+                blossom_endpoints[blossom].nodes[j as usize - endpoint_trick]
+                    ^ endpoint_trick
+            };
             // Step to the next T-sub-blossom.
             allowed_edge[p / 2] = true;
             j += j_step;
@@ -518,6 +515,7 @@ fn expand_blossom(
         label_ends[blossom_v] = Some(p);
         best_edge[blossom_v] = None;
         // Continue along the blossom until we get back to entry_child
+        j += j_step;
         let mut j_index = if j < 0 {
             let length = blossom_children[blossom].nodes.len();
             length - j.abs() as usize
