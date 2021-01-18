@@ -414,7 +414,7 @@ fn expand_blossom(
             }
         }
     }
-    // if we expand a T-blossom during a stage, its a sub-blossoms must be
+    // if we expand a T-blossom during a stage, its sub-blossoms must be
     // relabeled
     if !end_stage && labels[blossom] == Some(2) {
         // start at the sub-blossom through which the expanding blossom
@@ -797,99 +797,6 @@ fn augment_matching(
         }
     }
 }
-
-///// Swap matched/unmatched edges over an alternating path between two
-///// single vertices. The augmenting path runs through the edge, which
-///// connects a pair of S vertices.
-//fn verify_optimum(
-//    max_cardinality: bool,
-//    num_nodes: usize,
-//    num_edges: usize,
-//    edges: &[(usize, usize, i128)],
-//    endpoints: &[usize],
-//    dual_var: &[i128],
-//    blossom_parents: &[Option<usize>],
-//    blossom_endpoints: &[BlossomList],
-//    blossom_base: &[Option<usize>],
-//    mate: &[Option<usize>],
-//) -> bool {
-//    let dual_var_node_min: i128 = *dual_var[..num_nodes].iter().min().unwrap();
-//    let node_dual_offset: i128 = if max_cardinality {
-//        // Vertices may have negative dual;
-//        // find a constant non-negative number to add to all vertex duals.
-//        max(0, -dual_var_node_min)
-//    } else {
-//        0
-//    };
-//    if dual_var_node_min + node_dual_offset < 0 {
-//        return false;
-//    }
-//    if *dual_var[num_nodes..].iter().min().unwrap() < 0 {
-//        return false;
-//    }
-//    // 0. all edges have non-negative slack and
-//    // 1. all matched edges have zero slack;
-//    for (edge, (i, j, weight)) in edges.iter().enumerate().take(num_edges) {
-//        let mut s = dual_var[*i] + dual_var[*j] - 2 * weight;
-//        let mut i_blossoms: Vec<usize> = vec![*i];
-//        let mut j_blossoms: Vec<usize> = vec![*j];
-//        while blossom_parents[*i_blossoms.last().unwrap()].is_some() {
-//            i_blossoms
-//                .push(blossom_parents[*i_blossoms.last().unwrap()].unwrap());
-//        }
-//        while blossom_parents[*j_blossoms.last().unwrap()].is_some() {
-//            j_blossoms
-//                .push(blossom_parents[*j_blossoms.last().unwrap()].unwrap());
-//        }
-//        i_blossoms.reverse();
-//        j_blossoms.reverse();
-//        for (blossom_i, blossom_j) in i_blossoms.iter().zip(j_blossoms.iter()) {
-//            if blossom_i != blossom_j {
-//                break;
-//            }
-//            s += 2 * dual_var[*blossom_i];
-//        }
-//        if s < 0 {
-//            return false;
-//        }
-//        if mate[*i].unwrap() / 2 == edge || mate[*j].unwrap() / 2 == edge {
-//            if mate[*i].unwrap() / 2 != edge || mate[*j].unwrap() / 2 != edge {
-//                return false;
-//            }
-//            if s == 0 {
-//                return false;
-//            }
-//        }
-//    }
-//    // 2. all single vertices have zero dual value;
-//    for node in 0..num_nodes {
-//        if mate[node].is_none() && dual_var[node] + node_dual_offset != 0 {
-//            return false;
-//        }
-//    }
-//    // 3. all blossoms with positive dual value are full.
-//    for blossom in num_nodes..2 * num_nodes {
-//        if blossom_base[blossom].is_some() && dual_var[blossom] > 0 {
-//            if blossom_endpoints[blossom].nodes.len() % 2 != 1 {
-//                return false;
-//            }
-//            for p in [
-//                blossom_endpoints[blossom].nodes[1],
-//                blossom_endpoints[blossom].nodes[2],
-//            ]
-//            .iter()
-//            {
-//                if mate[endpoints[*p]].unwrap() != *p ^ 1 {
-//                    return false;
-//                }
-//                if mate[endpoints[*p ^ 1]].unwrap() != *p {
-//                    return false;
-//                }
-//            }
-//        }
-//    }
-//    true
-//}
 
 /// Compute a maximum-weighted matching in the general undirected weighted
 /// graph given by "edges". If `max_cardinality` is true, only
@@ -1428,20 +1335,6 @@ pub fn max_weight_matching(
             }
         }
     }
-    //    if !verify_optimum(
-    //        max_cardinality,
-    //        num_nodes,
-    //        num_edges,
-    //        &edges,
-    //        &endpoints,
-    //        &dual_var,
-    //        &blossom_parents,
-    //        &blossom_endpoints,
-    //        &blossom_base,
-    //        &mate,
-    //    ) {
-    //        return Err(PyException::new_err("Solution found is not optimal"));
-    //    }
 
     // Transform mate[] such that mate[v] is the vertex to which v is paired
     // Also handle holes in node indices from graph removals by mapping
