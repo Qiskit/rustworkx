@@ -393,7 +393,8 @@ impl PyDiGraph {
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
         let out_dict = PyDict::new(py);
         let node_dict = PyDict::new(py);
-        let mut out_list: Vec<PyObject> = Vec::new();
+        let mut out_list: Vec<PyObject> =
+            Vec::with_capacity(self.graph.edge_count());
         out_dict.set_item("nodes", node_dict)?;
 
         let dir = petgraph::Direction::Incoming;
@@ -822,7 +823,7 @@ impl PyDiGraph {
         &mut self,
         obj_list: Vec<(usize, usize, PyObject)>,
     ) -> PyResult<Vec<usize>> {
-        let mut out_list: Vec<usize> = Vec::new();
+        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
@@ -848,7 +849,7 @@ impl PyDiGraph {
         py: Python,
         obj_list: Vec<(usize, usize)>,
     ) -> PyResult<Vec<usize>> {
-        let mut out_list: Vec<usize> = Vec::new();
+        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
@@ -1443,7 +1444,7 @@ impl PyDiGraph {
     /// :rtype: NodeIndices
     #[text_signature = "(self, obj_list, /)"]
     pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
-        let mut out_list: Vec<usize> = Vec::new();
+        let mut out_list: Vec<usize> = Vec::with_capacity(self.node_count());
         for obj in obj_list {
             let node_index = self.graph.add_node(obj);
             out_list.push(node_index.index());
@@ -1821,7 +1822,8 @@ impl PyDiGraph {
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
-        let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut new_node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(other.node_count());
 
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph
@@ -1874,7 +1876,8 @@ impl PyDiGraph {
     #[text_signature = "(self, nodes, /)"]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyDiGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
-        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(nodes.len());
         let node_filter =
             |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
         let mut out_graph = StableDiGraph::<PyObject, PyObject>::new();
@@ -1937,7 +1940,8 @@ impl PyDiGraph {
     #[text_signature = "(self)"]
     pub fn to_undirected(&self, py: Python) -> crate::graph::PyGraph {
         let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
-        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(self.node_count());
         for node_index in self.graph.node_indices() {
             let node = self.graph[node_index].clone_ref(py);
             let new_index = new_graph.add_node(node);
