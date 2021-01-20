@@ -239,7 +239,7 @@ fn add_blossom(
                     && label_ends[blossom_v]
                         == mate[blossom_base[blossom_v].unwrap()])
         );
-        // Traceone step back.
+        // Trace one step back.
         assert!(label_ends[blossom_v].is_some());
         v = endpoints[blossom_v_endpoint_label];
         blossom_v = in_blossoms[v];
@@ -363,7 +363,7 @@ fn expand_blossom(
     allowed_edge: &mut Vec<bool>,
     unused_blossoms: &mut Vec<usize>,
 ) -> PyResult<()> {
-    // convert sub-blossoms into top-level blossoms.
+    // Convert sub-blossoms into top-level blossoms.
     for s in blossom_children[blossom].clone() {
         blossom_parents[s] = None;
         if s < num_nodes {
@@ -481,7 +481,6 @@ fn expand_blossom(
         }
         // Relabel the base T-sub-blossom WITHOUT stepping through to
         // its mate (so don't call assign_label())
-
         let blossom_v = if j < 0 {
             let length = blossom_children[blossom].len();
             let index = length - j.abs() as usize;
@@ -602,7 +601,7 @@ fn augment_blossom(
             mate,
         );
     }
-    // Decide in which direction we will go round the blossom.
+    // Decide in which direction we will go around the blossom.
     let i = blossom_children[blossom]
         .iter()
         .position(|x| *x == tmp)
@@ -802,8 +801,9 @@ pub fn max_weight_matching(
         return Ok(out_map);
     }
     // Node indicies in the PyGraph may not be contiguous however the
-    // algorithm operates on contiguous indices 0..num_nodes node_map maps the
-    // algorithm index to the PyGraph's index
+    // algorithm operates on contiguous indices 0..num_nodes. node_map maps
+    // the PyGraph's NodeIndex to the contingous usize used inside the
+    // algorithm
     let node_map: HashMap<NodeIndex, usize> = graph
         .graph
         .node_indices()
@@ -829,7 +829,7 @@ pub fn max_weight_matching(
         ));
     }
     // If p is an edge endpoint
-    // endpoint[p] is the node index to which endpoint p is attached
+    // endpoints[p] is the node index to which endpoint p is attached
     let endpoints: Vec<usize> = (0..2 * num_edges)
         .map(|endpoint| {
             let edge_tuple = edges[endpoint / 2];
@@ -857,7 +857,6 @@ pub fn max_weight_matching(
     // single (i.e. endpoint[mate[v]] is v's partner vertex).
     // Initially all vertices are single; updated during augmentation.
     let mut mate: Vec<Option<usize>> = vec![None; num_nodes];
-
     // If b is a top-level blossom
     // label[b] is 0 if b is unlabeled (free);
     //             1 if b is a S-vertex/blossom;
@@ -865,8 +864,8 @@ pub fn max_weight_matching(
     // The label of a vertex/node is found by looking at the label of its
     // top-level containing blossom
     // If v is a node/vertex inside a T-Blossom,
-    // label[v] is LabelType::T_Vertex if and only if v is reachable from
-    // an S_Vertex outside the blossom.
+    // label[v] is 2 if and only if v is reachable from an S_Vertex outside
+    // the blossom.
     let mut labels: Vec<Option<usize>>;
     // If b is a labeled top-level blossom,
     // label_ends[b] is the remote endpoint of the edge through which b is
@@ -889,7 +888,7 @@ pub fn max_weight_matching(
     // blossom_parents[b] is its immediate parent
     // If b is a top-level blossom, blossom_parents[b] is None
     let mut blossom_parents: Vec<Option<usize>> = vec![None; 2 * num_nodes];
-    //  If b is a non-trivial (sub-)blossom,
+    // If b is a non-trivial (sub-)blossom,
     // blossom_children[b] is an ordered list of its sub-blossoms, starting with
     // the base and going round the blossom.
     let mut blossom_children: Vec<Vec<usize>> =
@@ -900,17 +899,18 @@ pub fn max_weight_matching(
         (0..num_nodes).map(Some).collect();
     blossom_base.append(&mut vec![None; num_nodes]);
     // If b is a non-trivial (sub-)blossom,
-    // blossomendps[b] is a list of endpoints on its connecting edges,
-    // such that blossomendps[b][i] is the local endpoint of blossomchilds[b][i]
-    // on the edge that connects it to blossomchilds[b][wrap(i+1)].
+    // blossom_endpoints[b] is a list of endpoints on its connecting edges,
+    // such that blossom_endpoints[b][i] is the local endpoint of
+    // blossom_children[b][i] on the edge that connects it to
+    // blossom_children[b][wrap(i+1)].
     let mut blossom_endpoints: Vec<Vec<usize>> =
         (0..2 * num_nodes).map(|_| Vec::new()).collect();
     // If v is a free vertex (or an unreached vertex inside a T-blossom),
     // best_edge[v] is the edge to an S-vertex with least slack,
-    // or -1 if there is no such edge.
-    // If b is a (possibly trivial) top-level S-blossom,
+    // or None if there is no such edge. If b is a (possibly trivial)
+    // top-level S-blossom,
     // best_edge[b] is the least-slack edge to a different S-blossom,
-    // or -1 if there is no such edge.
+    // or None if there is no such edge.
     let mut best_edge: Vec<Option<usize>>;
     // If b is a non-trivial top-level S-blossom,
     // blossom_best_edges[b] is a list of least-slack edges to neighboring
@@ -979,7 +979,7 @@ pub fn max_weight_matching(
             // A substage tries to find an augmenting path;
             // if found, the path is used to improve the matching and
             // the stage ends. If there is no augmenting path, the
-            // primal-dual method is used to pump some slack out of
+            // primal-dual method is used to find some slack out of
             // the dual variables.
 
             // Continue labeling until all vertices which are reachable
@@ -989,7 +989,7 @@ pub fn max_weight_matching(
                 let v = queue.pop().unwrap();
                 assert!(labels[in_blossoms[v]] == Some(1));
 
-                // Scan it's neighbors
+                // Scan its neighbors
                 for p in &neighbor_endpoints[v] {
                     let k = *p / 2;
                     let mut kslack = 0;
@@ -1093,7 +1093,7 @@ pub fn max_weight_matching(
                             label_ends[w] = Some(*p ^ 1);
                         }
                     } else if labels[in_blossoms[w]] == Some(1) {
-                        // keep track of the least-slack non-allowable edge to
+                        // Leep track of the least-slack non-allowable edge to
                         // a different S-blossom
                         let blossom = in_blossoms[v];
                         if best_edge[blossom].is_none()
@@ -1135,7 +1135,7 @@ pub fn max_weight_matching(
             let mut delta_edge: Option<usize> = None;
             let mut delta_blossom: Option<usize> = None;
 
-            // Compute delta1: the minumum value of any vertex dual.
+            // Compute delta1: the minimum value of any vertex dual.
             if !max_cardinality {
                 delta_type = 1;
                 delta = Some(*dual_var[..num_nodes].iter().min().unwrap());
@@ -1186,7 +1186,7 @@ pub fn max_weight_matching(
                 }
             }
             if delta_type == -1 {
-                //No further improvement possible; max-cardinality optimum
+                // No further improvement possible; max-cardinality optimum
                 // reached. Do a final delta update to make the optimum
                 // verifyable
                 assert!(max_cardinality);
@@ -1295,7 +1295,7 @@ pub fn max_weight_matching(
     }
 
     // Transform mate[] such that mate[v] is the vertex to which v is paired
-    // Also handle holes in node indices from graph removals by mapping
+    // Also handle holes in node indices from PyGraph node removals by mapping
     // linear index to node index.
     let node_list: Vec<NodeIndex> = graph.graph.node_indices().collect();
     for (index, node) in mate.iter().enumerate() {
