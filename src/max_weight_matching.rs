@@ -624,13 +624,13 @@ fn augment_blossom(
         // Step to the next sub-blossom and augment it recursively.
         j += j_step;
 
-        if j < 0 {
+        tmp = if j < 0 {
             let length = blossom_children[blossom].len();
             let index = length - j.abs() as usize;
-            tmp = blossom_children[blossom][index];
+            blossom_children[blossom][index]
         } else {
-            tmp = blossom_children[blossom][j as usize]
-        }
+            blossom_children[blossom][j as usize]
+        };
         let p = if j < 0 {
             let length = blossom_endpoints[blossom].len();
             let index = length - j.abs() as usize - endpoint_trick;
@@ -879,11 +879,7 @@ pub fn max_weight_matching(
     // If v is a top-level vertex, v is itself a blossom (a trivial blossom)
     // and in_blossoms[v] == v.
     // Initially all nodes are top-level trivial blossoms.
-    let mut in_blossoms: Vec<usize> = graph
-        .graph
-        .node_indices()
-        .map(|node| node.index())
-        .collect();
+    let mut in_blossoms: Vec<usize> = (0..num_nodes).collect();
     // if b is a sub-blossom
     // blossom_parents[b] is its immediate parent
     // If b is a top-level blossom, blossom_parents[b] is None

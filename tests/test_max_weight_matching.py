@@ -110,6 +110,34 @@ class TestMaxWeightMatching(unittest.TestCase):
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
             {1: 2, 2: 1, 3: 6, 4: 5, 5: 4, 6: 3})
 
+    def test_s_t_blossom_with_removed_nodes(self):
+        graph = retworkx.PyGraph()
+        graph.extend_from_weighted_edge_list([
+            (1, 2, 9),
+            (1, 3, 8),
+            (2, 3, 10),
+            (1, 4, 5),
+            (4, 5, 4),
+            (1, 6, 3),
+        ])
+        node_id = graph.add_node(None)
+        graph.remove_node(5)
+        graph.add_edge(4, node_id, 4)
+        self.assertEqual(
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            {1: 6, 2: 3, 3: 2, 4: 7, 7: 4, 6: 1})
+        graph.remove_edge(1, 6)
+        graph.remove_edge(4, 7)
+        graph.extend_from_weighted_edge_list([(4, node_id, 3), (1, 6, 4)])
+        self.assertEqual(
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            {1: 6, 2: 3, 3: 2, 4: 7, 7: 4, 6: 1})
+        graph.remove_edge(1, 6)
+        graph.add_edge(3, 6, 4)
+        self.assertEqual(
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            {1: 2, 2: 1, 3: 6, 4: 7, 7: 4, 6: 3})
+
     def test_nested_s_blossom(self):
         graph = retworkx.PyGraph()
         graph.extend_from_weighted_edge_list([
