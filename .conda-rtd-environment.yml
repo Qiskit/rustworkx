@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - rust=1.40.0=1
+  - rust=1.49.0
   - graphviz
   - pip
   - pip:
