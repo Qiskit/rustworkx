@@ -11,5 +11,6 @@ docs/source/stubs/
 .tox/
 retworkx/*.so
 retworkx/*pyd
-tools/pgo/qiskit*
+tools/pgo/qiskit*/
 build_pgo/
+tools/pgo/qiskit-terra/
