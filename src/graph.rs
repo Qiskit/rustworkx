@@ -732,11 +732,10 @@ impl PyGraph {
     /// :rtype: NodeIndices
     #[text_signature = "(self, obj_list, /)"]
     pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
-        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
-        for obj in obj_list {
-            let node_index = self.graph.add_node(obj);
-            out_list.push(node_index.index());
-        }
+        let out_list: Vec<usize> = obj_list
+            .into_iter()
+            .map(|obj| self.graph.add_node(obj).index())
+            .collect();
         NodeIndices { nodes: out_list }
     }
 
