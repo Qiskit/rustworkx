@@ -543,8 +543,7 @@ fn bfs_successors(
 #[text_signature = "(graph, node, /)"]
 fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
-    let mut out_set: HashSet<usize> =
-        HashSet::with_capacity(graph.node_count());
+    let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(graph);
     let res = algo::dijkstra(reverse_graph, index, None, |_| 1);
     for n in res.keys() {
@@ -571,8 +570,7 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 #[text_signature = "(graph, node, /)"]
 fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
-    let mut out_set: HashSet<usize> =
-        HashSet::with_capacity(graph.node_count());
+    let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(graph, index, None, |_| 1);
     for n in res.keys() {
         let n_int = n.index();
