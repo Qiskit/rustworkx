@@ -42,6 +42,35 @@ class TestEdges(unittest.TestCase):
         self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.get_edge_data,
                           node_a, node_b)
 
+    def test_update_edge(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, 'not edgy')
+        graph.update_edge(node_a, node_b, 'Edgy')
+        self.assertEqual([(0, 1, 'Edgy')], graph.weighted_edge_list())
+
+    def test_update_edge_no_edge(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.update_edge,
+                          node_a, node_b, None)
+
+    def test_update_edge_by_index(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        edge_index = graph.add_edge(node_a, node_b, 'not edgy')
+        graph.update_edge_by_index(edge_index, 'Edgy')
+        self.assertEqual([(0, 1, 'Edgy')], graph.weighted_edge_list())
+
+    def test_update_edge_invalid_index(self):
+        graph = retworkx.PyGraph()
+        graph.add_node('a')
+        graph.add_node('b')
+        self.assertRaises(IndexError, graph.update_edge_by_index, 0, None)
+
     def test_no_edge_get_all_edge_data(self):
         graph = retworkx.PyGraph()
         node_a = graph.add_node('a')

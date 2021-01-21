@@ -40,6 +40,33 @@ class TestEdges(unittest.TestCase):
         self.assertRaises(retworkx.NoEdgeBetweenNodes, dag.get_edge_data,
                           node_a, node_b)
 
+    def test_update_edge(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_child(node_a, 'b', 'not edgy')
+        dag.update_edge(node_a, node_b, 'Edgy')
+        self.assertEqual([(0, 1, 'Edgy')], dag.weighted_edge_list())
+
+    def test_update_edge_no_edge(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        node_b = dag.add_node('b')
+        self.assertRaises(retworkx.NoEdgeBetweenNodes, dag.update_edge,
+                          node_a, node_b, None)
+
+    def test_update_edge_by_index(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node('a')
+        dag.add_child(node_a, 'b', 'not edgy')
+        dag.update_edge_by_index(0, 'Edgy')
+        self.assertEqual([(0, 1, 'Edgy')], dag.weighted_edge_list())
+
+    def test_update_edge_invalid_index(self):
+        dag = retworkx.PyDAG()
+        dag.add_node('a')
+        dag.add_node('b')
+        self.assertRaises(IndexError, dag.update_edge_by_index, 0, None)
+
     def test_has_edge(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
