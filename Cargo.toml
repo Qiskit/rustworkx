@@ -35,3 +35,7 @@ features = ["rayon"]
 [dependencies.ndarray]
 version = "^0.14.0"
 features = ["rayon"]
+
+[profile.release]
+lto = 'fat'
+codegen-units = 1
