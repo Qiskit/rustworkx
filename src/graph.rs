@@ -23,7 +23,7 @@ use hashbrown::{HashMap, HashSet};
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
 use super::dot_utils::build_dot;
@@ -76,7 +76,8 @@ use petgraph::visit::{
 ///
 /// :param bool multigraph: When this is set to ``False`` the created PyGraph
 ///     object will not be a multigraph (which is the default behavior). When
-///     ``False`` if parallel edges are added they will be ignored.
+///     ``False`` if parallel edges are added the weight/weight from that
+///     method call will be used to update the existing edge in place.
 ///
 #[pyclass(module = "retworkx")]
 #[text_signature = "()"]
@@ -274,6 +275,8 @@ impl PyGraph {
         let mut out_list: Vec<PyObject> =
             Vec::with_capacity(self.graph.edge_count());
         out_dict.set_item("nodes", node_dict)?;
+        out_dict.set_item("nodes_removed", self.node_removed)?;
+        out_dict.set_item("multigraph", self.multigraph)?;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
             node_dict.set_item(node_index.index(), node_data)?;
@@ -298,6 +301,17 @@ impl PyGraph {
             dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
         let edges_list =
             dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
+        let nodes_removed_raw = dict_state
+            .get_item("nodes_removed")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.node_removed = nodes_removed_raw.extract()?;
+        let multigraph_raw = dict_state
+            .get_item("multigraph")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.multigraph = multigraph_raw.extract()?;
+
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -337,6 +351,11 @@ impl PyGraph {
             self.graph.add_edge(p_index, c_index, edge_data.into());
         }
         Ok(())
+    }
+
+    #[getter]
+    fn multigraph(&self) -> bool {
+        self.multigraph
     }
 
     /// Return a list of all edge data.
@@ -524,29 +543,37 @@ impl PyGraph {
 
     /// Add an edge between 2 nodes.
     ///
-    /// :param int parent: Index of the parent node
-    /// :param int child: Index of the child node
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``edge``.
+    ///
+    /// :param int node_a: Index of the parent node
+    /// :param int node_b: Index of the child node
     /// :param edge: The object to set as the data for the edge. It can be any
     ///     python object.
-    /// :param int parent: Index of the parent node
-    /// :param int child: Index of the child node
-    /// :param edge: The object to set as the data for the edge. It can be any
-    ///     python object.
+    ///
+    /// :returns: The edge index for the newly created (or updated in the case
+    ///     of an existing edge with ``multigraph=False``) edge.
+    /// :rtype: int
     #[text_signature = "(self, node_a, node_b, edge, /)"]
     pub fn add_edge(
         &mut self,
         node_a: usize,
         node_b: usize,
         edge: PyObject,
-    ) -> PyResult<Option<usize>> {
+    ) -> PyResult<usize> {
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
-        if !self.multigraph && self.graph.find_edge(p_index, c_index).is_some()
-        {
-            return Ok(None);
+        if !self.multigraph {
+            let exists = self.graph.find_edge(p_index, c_index);
+            if let Some(index) = exists {
+                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
+                *edge_weight = edge;
+                return Ok(index.index());
+            }
         }
         let edge = self.graph.add_edge(p_index, c_index, edge);
-        Ok(Some(edge.index()))
+        Ok(edge.index())
     }
 
     /// Add new edges to the graph.
@@ -555,6 +582,12 @@ impl PyGraph {
     ///     ``(node_a, node_b, obj)`` to attach to the graph. ``node_a`` and
     ///     ``node_b`` are integer indexes describing where an edge should be
     ///     added, and ``obj`` is the python object for the edge data.
+    ///
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``edge``. This will occur in order
+    /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
+    /// the last entry will be used.
     ///
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
@@ -567,10 +600,15 @@ impl PyGraph {
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
-            if !self.multigraph
-                && self.graph.find_edge(p_index, c_index).is_some()
-            {
-                continue;
+            if !self.multigraph {
+                let exists = self.graph.find_edge(p_index, c_index);
+                if let Some(index) = exists {
+                    let edge_weight =
+                        self.graph.edge_weight_mut(index).unwrap();
+                    *edge_weight = obj.2;
+                    out_list.push(index.index());
+                    continue;
+                }
             }
             let edge = self.graph.add_edge(p_index, c_index, obj.2);
             out_list.push(edge.index());
@@ -586,6 +624,10 @@ impl PyGraph {
     ///     added. Unlike :meth:`add_edges_from` there is no data payload and
     ///     when the edge is created None will be used.
     ///
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``None``.
+    ///
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[text_signature = "(self, obj_list, /)"]
@@ -598,10 +640,15 @@ impl PyGraph {
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
-            if !self.multigraph
-                && self.graph.find_edge(p_index, c_index).is_some()
-            {
-                continue;
+            if !self.multigraph {
+                let exists = self.graph.find_edge(p_index, c_index);
+                if let Some(index) = exists {
+                    let edge_weight =
+                        self.graph.edge_weight_mut(index).unwrap();
+                    *edge_weight = py.None();
+                    out_list.push(index.index());
+                    continue;
+                }
             }
             let edge = self.graph.add_edge(p_index, c_index, py.None());
             out_list.push(edge.index());
@@ -613,6 +660,10 @@ impl PyGraph {
     ///
     /// This method differs from :meth:`add_edges_from_no_data` in that it will
     /// add nodes if a node index is not present in the edge list.
+    ///
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``None``.
     ///
     /// :param list edge_list: A list of tuples of the form ``(source, target)``
     ///     where source and target are integer node indices. If the node index
@@ -629,11 +680,18 @@ impl PyGraph {
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
             }
-            self.graph.add_edge(
-                NodeIndex::new(source),
-                NodeIndex::new(target),
-                py.None(),
-            );
+            let source_index = NodeIndex::new(source);
+            let target_index = NodeIndex::new(target);
+            if !self.multigraph {
+                let exists = self.graph.find_edge(source_index, target_index);
+                if let Some(index) = exists {
+                    let edge_weight =
+                        self.graph.edge_weight_mut(index).unwrap();
+                    *edge_weight = py.None();
+                    continue;
+                }
+            }
+            self.graph.add_edge(source_index, target_index, py.None());
         }
     }
 
@@ -641,6 +699,12 @@ impl PyGraph {
     ///
     /// This method differs from :meth:`add_edges_from` in that it will
     /// add nodes if a node index is not present in the edge list.
+    ///
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``edge``. This will occur in order
+    /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
+    /// the last entry will be used.
     ///
     /// :param list edge_list: A list of tuples of the form
     ///     ``(source, target, weight)`` where source and target are integer
@@ -657,11 +721,18 @@ impl PyGraph {
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
             }
-            self.graph.add_edge(
-                NodeIndex::new(source),
-                NodeIndex::new(target),
-                weight,
-            );
+            let source_index = NodeIndex::new(source);
+            let target_index = NodeIndex::new(target);
+            if !self.multigraph {
+                let exists = self.graph.find_edge(source_index, target_index);
+                if let Some(index) = exists {
+                    let edge_weight =
+                        self.graph.edge_weight_mut(index).unwrap();
+                    *edge_weight = weight;
+                    continue;
+                }
+            }
+            self.graph.add_edge(source_index, target_index, weight);
         }
     }
 
