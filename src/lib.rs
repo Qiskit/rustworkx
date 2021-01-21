@@ -173,7 +173,8 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 pub fn weakly_connected_components(
     graph: &digraph::PyDiGraph,
 ) -> Vec<BTreeSet<usize>> {
-    let mut seen: HashSet<NodeIndex> = HashSet::new();
+    let mut seen: HashSet<NodeIndex> =
+        HashSet::with_capacity(graph.node_count());
     let mut out_vec: Vec<BTreeSet<usize>> = Vec::new();
     for node in graph.graph.node_indices() {
         if !seen.contains(&node) {
@@ -371,7 +372,11 @@ fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
     })
 }
 
-fn dfs_edges<G>(graph: G, source: Option<usize>) -> Vec<(usize, usize)>
+fn dfs_edges<G>(
+    graph: G,
+    source: Option<usize>,
+    edge_count: usize,
+) -> Vec<(usize, usize)>
 where
     G: GraphBase<NodeId = NodeIndex>
         + IntoNodeIdentifiers
@@ -388,8 +393,9 @@ where
             .map(|ind| NodeIndex::new(graph.to_index(ind)))
             .collect(),
     };
-    let mut visited: HashSet<NodeIndex> = HashSet::new();
-    let mut out_vec: Vec<(usize, usize)> = Vec::new();
+    let node_count = graph.node_count();
+    let mut visited: HashSet<NodeIndex> = HashSet::with_capacity(node_count);
+    let mut out_vec: Vec<(usize, usize)> = Vec::with_capacity(edge_count);
     for start in nodes {
         if visited.contains(&start) {
             continue;
@@ -400,7 +406,8 @@ where
         let mut stack: Vec<(NodeIndex, Vec<NodeIndex>)> =
             vec![(start, children)];
         // Used to track the last position in children vec across iterations
-        let mut index_map: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut index_map: HashMap<NodeIndex, usize> =
+            HashMap::with_capacity(node_count);
         index_map.insert(start, 0);
         while !stack.is_empty() {
             let temp_parent = stack.last().unwrap();
@@ -451,7 +458,7 @@ fn digraph_dfs_edges(
     source: Option<usize>,
 ) -> EdgeList {
     EdgeList {
-        edges: dfs_edges(graph, source),
+        edges: dfs_edges(graph, source, graph.graph.edge_count()),
     }
 }
 
@@ -471,7 +478,7 @@ fn digraph_dfs_edges(
 #[text_signature = "(graph, /, source=None)"]
 fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
-        edges: dfs_edges(graph, source),
+        edges: dfs_edges(graph, source, graph.graph.edge_count()),
     }
 }
 
@@ -497,7 +504,8 @@ fn bfs_successors(
 ) -> PyResult<iterators::BFSSuccessors> {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(graph, index);
-    let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::new();
+    let mut out_list: Vec<(PyObject, Vec<PyObject>)> =
+        Vec::with_capacity(graph.node_count());
     while let Some(nx) = bfs.next(graph) {
         let children = graph
             .graph
@@ -596,7 +604,9 @@ fn lexicographical_topological_sort(
         Ok(res.to_object(py))
     };
     // HashMap of node_index indegree
-    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::new();
+    let node_count = dag.node_count();
+    let mut in_degree_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(node_count);
     for node in dag.graph.node_indices() {
         in_degree_map.insert(node, dag.in_degree(node.index()));
     }
@@ -625,7 +635,7 @@ fn lexicographical_topological_sort(
             Some(self.cmp(other))
         }
     }
-    let mut zero_indegree = BinaryHeap::new();
+    let mut zero_indegree = BinaryHeap::with_capacity(node_count);
     for (node, degree) in in_degree_map.iter() {
         if *degree == 0 {
             let map_key_raw = key_callable(&dag.graph[*node])?;
@@ -636,7 +646,7 @@ fn lexicographical_topological_sort(
             });
         }
     }
-    let mut out_list: Vec<&PyObject> = Vec::new();
+    let mut out_list: Vec<&PyObject> = Vec::with_capacity(node_count);
     let dir = petgraph::Direction::Outgoing;
     while let Some(State { node, .. }) = zero_indegree.pop() {
         let neighbors = dag.graph.neighbors_directed(node, dir);
@@ -673,7 +683,8 @@ fn graph_greedy_color(
 ) -> PyResult<PyObject> {
     let mut colors: HashMap<usize, usize> = HashMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let mut sort_map: HashMap<NodeIndex, usize> = HashMap::new();
+    let mut sort_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
     for k in node_vec.iter() {
         sort_map.insert(*k, graph.graph.edges(*k).count());
     }
@@ -847,7 +858,8 @@ fn graph_k_shortest_path_lengths(
 #[pyfunction]
 #[text_signature = "(dag, /)"]
 fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
-    let mut dist: HashMap<(usize, usize), usize> = HashMap::new();
+    let mut dist: HashMap<(usize, usize), usize> =
+        HashMap::with_capacity(dag.node_count());
     for node in dag.graph.node_indices() {
         // Distance from a node to itself is zero
         dist.insert((node.index(), node.index()), 0);
@@ -917,13 +929,15 @@ where
         + IntoEdgeReferences
         + IntoNodeIdentifiers
         + NodeIndexable
+        + NodeCount
         + GraphProp
         + NodesRemoved,
     G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
 {
     let node_map: Option<HashMap<NodeIndex, usize>>;
     if graph.nodes_removed() {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut node_hash_map: HashMap<NodeIndex, usize> =
+            HashMap::with_capacity(graph.node_count());
         for (count, node) in graph.node_identifiers().enumerate() {
             let index = NodeIndex::new(graph.to_index(node));
             node_hash_map.insert(index, count);
@@ -1108,7 +1122,8 @@ fn collect_runs(
     filter_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
     let mut out_list: Vec<Vec<PyObject>> = Vec::new();
-    let mut seen: HashSet<NodeIndex> = HashSet::new();
+    let mut seen: HashSet<NodeIndex> =
+        HashSet::with_capacity(graph.node_count());
 
     let filter_node = |node: &PyObject| -> PyResult<bool> {
         let res = filter_fn.call1(py, (node,))?;
@@ -1278,7 +1293,7 @@ pub fn digraph_distance_matrix(
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
-        let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
         let start_index = NodeIndex::new(index);
         let mut level = 0;
         let mut next_level: HashSet<NodeIndex> = HashSet::new();
@@ -1360,7 +1375,7 @@ pub fn graph_distance_matrix(
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
-        let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
         let start_index = NodeIndex::new(index);
         let mut level = 0;
         let mut next_level: HashSet<NodeIndex> = HashSet::new();
@@ -1654,7 +1669,8 @@ pub fn graph_dijkstra_shortest_paths(
         Some(node) => Some(NodeIndex::new(node)),
         None => None,
     };
-    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
+        HashMap::with_capacity(graph.node_count());
     dijkstra::dijkstra(
         graph,
         start,
@@ -1719,7 +1735,8 @@ pub fn digraph_dijkstra_shortest_paths(
         Some(node) => Some(NodeIndex::new(node)),
         None => None,
     };
-    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
+        HashMap::with_capacity(graph.node_count());
     if as_undirected {
         dijkstra::dijkstra(
             // TODO: Use petgraph undirected adapter after
@@ -2513,7 +2530,8 @@ pub fn digraph_find_cycle(
 ) -> EdgeList {
     let mut graph_nodes: HashSet<NodeIndex> =
         graph.graph.node_indices().collect();
-    let mut cycle: Vec<(usize, usize)> = Vec::new();
+    let mut cycle: Vec<(usize, usize)> =
+        Vec::with_capacity(graph.graph.edge_count());
     let temp_value: NodeIndex;
     // If source is not set get an arbitrary node from the set of graph
     // nodes we've not "examined"
