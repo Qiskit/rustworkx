@@ -56,7 +56,7 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2010_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2010_i686:latest
           CIBW_SKIP: cp27-* cp34-* cp35-* pp* *win32
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
+          CIBW_BEFORE_BUILD: pip install -U setuptools-rust && bash tools/pgo/build_pgo.sh
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
 
       - uses: actions/upload-artifact@v2
