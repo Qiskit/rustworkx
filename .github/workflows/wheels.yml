@@ -1,31 +1,9 @@
 ---
 name: Wheel Builds
 on:
-  push:
-    tags:
-      - '*'
+  pull_request:
+    branches: [ master ]
 jobs:
-  sdist:
-    name: Build sdist
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: '3.7'
-      - name: Install deps
-        run: pip install -U twine setuptools-rust
-      - name: Build sdist
-        run: python setup.py sdist
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./dist/*
-      - name: Upload to PyPI
-        run: twine upload ./dist/*
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -58,15 +36,9 @@ jobs:
           CIBW_SKIP: cp27-* cp34-* cp35-* pp* *win32
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust && bash tools/pgo/build_pgo.sh
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
-
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
   build-win32-wheels:
     name: Build wheels on win32
     runs-on: windows-latest
@@ -99,8 +71,3 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
