@@ -5,7 +5,7 @@
 [![](https://img.shields.io/github/release/Qiskit/retworkx.svg?style=popout-square)](https://github.com/Qiskit/retworkx/releases)
 [![](https://img.shields.io/pypi/dm/retworkx.svg?style=popout-square)](https://pypi.org/project/retworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=master)](https://coveralls.io/github/Qiskit/retworkx?branch=master)
-[![Minimum rustc 1.45](https://img.shields.io/badge/rustc-1.45+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Minimum rustc 1.39](https://img.shields.io/badge/rustc-1.39+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 
   - You can see the full rendered docs at:
     <https://retworkx.readthedocs.io/en/latest/index.html>
@@ -37,7 +37,7 @@ environment.
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able able to build the package
-from the published source package you need to have rust >=1.45 installed (and
+from the published source package you need to have rust >=1.39 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
 rust) to make this simpler, or rely on
