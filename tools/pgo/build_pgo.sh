@@ -4,16 +4,13 @@ if [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; t
     WINDOWS=1
 else
     WINDOWS=0
-
 fi
 
+if [[ $WINDOWS -eq 1 ]] ; then
+    exit 0
+fi
 rm -rf /tmp/pgo-data
 python -m venv build_pgo
-if [[ $WINDOWS -eq 1 ]] ; then
-    source build_pgo/Scripts/activate
-else
-    source build_pgo/bin/activate
-fi
 RUSTFLAGS="-Cprofile-generate=/tmp/pgo-data" pip install .
 pushd tools/pgo
 git clone --depth 1 https://github.com/Qiskit/qiskit-terra
@@ -27,10 +24,8 @@ popd
 python qv.py
 pip install git+https://github.com/Qiskit/qiskit-ignis
 python rb.py
-if [[ !($WINDOWS -eq 1 && `uname -m` != "x86_64") ]] ; then
-    pip install git+https://github.com/Qiskit/qiskit-aqua
-    python abelian.py
-fi
+pip install git+https://github.com/Qiskit/qiskit-aqua
+python abelian.py
 popd
 deactivate
 if [[ "$OSTYPE" == "darwin"* ]]; then
