@@ -16,6 +16,7 @@
 import unittest
 
 import retworkx
+import networkx
 
 
 class TestMaxWeightMatching(unittest.TestCase):
@@ -329,3 +330,25 @@ class TestMaxWeightMatching(unittest.TestCase):
         self.assertEqual(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
             expected)
+
+    def test_gnp_random_against_networkx(self):
+        rx_graph = retworkx.undirected_gnp_random_graph(10, .75, seed=42)
+        nx_graph = networkx.Graph(list(rx_graph.edge_list()))
+        nx_matches = networkx.max_weight_matching(nx_graph)
+        rx_match_dict = retworkx.max_weight_matching(rx_graph)
+        # Convert retworkx dict output to networkx set of tuples
+        rx_matches = {
+            (u, v) for (u, v) in set(map(frozenset, rx_match_dict.items()))}
+        self.assertEqual(nx_matches, rx_matches)
+
+    def test_gnp_random_against_networkx_max_cardinality(self):
+        rx_graph = retworkx.undirected_gnp_random_graph(10, .78, seed=428)
+        nx_graph = networkx.Graph(list(rx_graph.edge_list()))
+        nx_matches = networkx.max_weight_matching(
+            nx_graph, maxcardinality=True)
+        rx_match_dict = retworkx.max_weight_matching(
+            rx_graph, max_cardinality=True)
+        # Convert retworkx dict output to networkx set of tuples
+        rx_matches = {
+            (u, v) for (u, v) in set(map(frozenset, rx_match_dict.items()))}
+        self.assertEqual(nx_matches, rx_matches)
