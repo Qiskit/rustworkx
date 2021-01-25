@@ -88,6 +88,27 @@ Algorithm Functions
    retworkx.digraph_find_cycle
    retworkx.digraph_union
 
+Universal Functions
+-------------------
+
+These functions are algorithm functions that wrap per graph object
+type functions in the algorithms API but can be run with a
+:class:`~retworkx.PyGraph`, :class:`~retworkx.PyDiGraph`, or
+:class:`~retworkx.PyDAG` object.
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.distance_matrix
+   retworkx.floyd_warshall_numpy
+   retworkx.adjacency_matrix
+   retworkx.all_simple_paths
+   retworkx.astar_shortest_path
+   retworkx.dijkstra_shortest_paths
+   retworkx.dijkstra_shortest_path_lengths
+   retworkx.k_shortest_path_lengths
+   retworkx.dfs_edges
+
 Exceptions
 ----------
 
