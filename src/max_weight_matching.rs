@@ -873,7 +873,7 @@ pub fn max_weight_matching(
     // If v is a vertex inside a T-blossom and label[v] == 2,
     // label_ends[v] is the remote endpoint of the edge through which v is
     // reachable from outside the blossom
-    let mut label_ends: Vec<Option<usize>> = vec![None; 2 * num_nodes];
+    let mut label_ends: Vec<Option<usize>>;
     // If v is a vertex/node
     // in_blossoms[v] is the top-level blossom to which v belongs.
     // If v is a top-level vertex, v is itself a blossom (a trivial blossom)
@@ -939,6 +939,7 @@ pub fn max_weight_matching(
 
         // Removal labels from top-level blossoms/vertices
         labels = vec![Some(0); 2 * num_nodes];
+        label_ends = vec![None; 2 * num_nodes];
         // Forget all about least-slack edges.
         best_edge = vec![None; 2 * num_nodes];
         blossom_best_edges
