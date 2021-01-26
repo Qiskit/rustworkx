@@ -868,8 +868,8 @@ pub fn max_weight_matching(
     // the blossom.
     let mut labels: Vec<Option<usize>>;
     // If b is a labeled top-level blossom,
-    // label_ends[b] is the remote endpoint of the edge through which b is
-    // obtained. Its label, or None if b's base vertex is single.
+    // label_ends[b] is the remote endpoint of the edge through which b
+    // obtained its label, or None if b's base vertex is single.
     // If v is a vertex inside a T-blossom and label[v] == 2,
     // label_ends[v] is the remote endpoint of the edge through which v is
     // reachable from outside the blossom
