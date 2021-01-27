@@ -118,7 +118,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
             [[0, 1, 0], [1, 0, 1], [0, 1, 0]],
             dtype=np.int64)
         with self.assertRaises(TypeError):
-            graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
+            retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
 
     def test_random_graph_float_dtype(self):
         input_matrix = np.array(
@@ -127,6 +127,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
         adj_matrix = retworkx.digraph_adjacency_matrix(graph, lambda x: x)
         self.assertTrue(np.array_equal(adj_matrix, input_matrix))
+
 
 class TestGraphAdjacencyMatrix(unittest.TestCase):
     def test_single_neighbor(self):
@@ -240,7 +241,7 @@ class TestGraphAdjacencyMatrix(unittest.TestCase):
             [[0, 1, 0], [1, 0, 1], [0, 1, 0]],
             dtype=np.int64)
         with self.assertRaises(TypeError):
-            graph = retworkx.PyGraph.from_adjacency_matrix(input_matrix)
+            retworkx.PyGraph.from_adjacency_matrix(input_matrix)
 
     def test_random_graph_float_dtype(self):
         input_matrix = np.array(
