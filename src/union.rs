@@ -49,8 +49,8 @@ pub fn digraph_union(
         check_cycle: false,
         node_removed: false,
     };
-    let mut node_map = HashMap::new();
-    let mut edge_map = HashSet::new();
+    let mut node_map = HashMap::with_capacity(second.node_count());
+    let mut edge_map = HashSet::with_capacity(second.edge_count());
 
     let compare_weights = |a: &PyAny, b: &PyAny| -> PyResult<bool> {
         let res = a.compare(b)?;
@@ -62,7 +62,7 @@ pub fn digraph_union(
         node_map.insert(node.index(), node_index);
     }
 
-    for edge in b.weighted_edge_list(py) {
+    for edge in b.weighted_edge_list(py).edges {
         let source = edge.0;
         let target = edge.1;
         let edge_weight = edge.2;
