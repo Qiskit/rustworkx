@@ -9,6 +9,9 @@ features:
 
     .. jupyter-execute::
 
+      import os
+      import tempfile
+
       import numpy as np
       import pydot
       from PIL import Image
