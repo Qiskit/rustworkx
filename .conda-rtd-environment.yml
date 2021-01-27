@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - rust=1.40.0=1
+  - rust=1.49.0
   - graphviz
   - pip
   - pip:
@@ -11,3 +11,5 @@ dependencies:
     - jupyter-sphinx==0.2.3
     - pydot
     - pillow
+    - qiskit-sphinx-theme>=1.7
+    - reno>=3.2.0
