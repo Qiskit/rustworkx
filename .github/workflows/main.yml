@@ -79,7 +79,8 @@ jobs:
         with:
           toolchain: nightly
           override: true
-          profile: minimal
+          profile: default
+          components: llvm-tools-preview
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -
       - name: Install deps
@@ -98,7 +99,7 @@ jobs:
         run: |
           set -e
           mv tests/retworkx*profraw .
-          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o coveralls.info
+          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.info
       - uses: actions/upload-artifact@v2
         with:
           name: coverage
