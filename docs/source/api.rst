@@ -45,6 +45,9 @@ Random Circuit Functions
 Algorithm Functions
 -------------------
 
+Specific Graph Type Methods
+'''''''''''''''''''''''''''
+
 .. autosummary::
    :toctree: stubs
 
@@ -89,7 +92,7 @@ Algorithm Functions
    retworkx.digraph_union
 
 Universal Functions
--------------------
+'''''''''''''''''''
 
 These functions are algorithm functions that wrap per graph object
 type functions in the algorithms API but can be run with a
