@@ -1090,7 +1090,7 @@ pub fn max_weight_matching(
                             label_ends[w] = Some(*p ^ 1);
                         }
                     } else if labels[in_blossoms[w]] == Some(1) {
-                        // Leep track of the least-slack non-allowable edge to
+                        // Keep track of the least-slack non-allowable edge to
                         // a different S-blossom
                         let blossom = in_blossoms[v];
                         if best_edge[blossom].is_none()
