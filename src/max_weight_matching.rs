@@ -922,6 +922,8 @@ pub fn max_weight_matching(
     // If b is a non-trivial blossom,
     // dual_var[b] = z(b) where z(b) is b's variable in the dual optimization
     // problem.
+    // dual_var is for vertex v in 0..num_nodes and blossom b in
+    // num_nodes..2* num nodes
     let mut dual_var: Vec<i128> = vec![max_weight; num_nodes];
     dual_var.append(&mut vec![0; num_nodes]);
     // If allowed_edge[k] is true, edge k has zero slack in the optimization
