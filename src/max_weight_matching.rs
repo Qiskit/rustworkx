@@ -102,7 +102,6 @@ fn assign_label(
     labels[b] = Some(t);
     label_ends[b] = p;
     label_ends[w] = p;
-    label_ends[b] = p;
     best_edge[w] = None;
     best_edge[b] = None;
     if t == 1 {
@@ -356,7 +355,7 @@ fn expand_blossom(
     label_ends: &mut Vec<Option<usize>>,
     best_edge: &mut Vec<Option<usize>>,
     queue: &mut Vec<usize>,
-    blossom_base: &[Option<usize>],
+    blossom_base: &mut Vec<Option<usize>>,
     endpoints: &[usize],
     mate: &[Option<usize>],
     blossom_endpoints: &mut Vec<Vec<usize>>,
@@ -563,6 +562,7 @@ fn expand_blossom(
     label_ends[blossom] = None;
     blossom_children[blossom].clear();
     blossom_endpoints[blossom].clear();
+    blossom_base[blossom] = None;
     best_edge[blossom] = None;
     unused_blossoms.push(blossom);
     Ok(())
@@ -1249,7 +1249,7 @@ pub fn max_weight_matching(
                     &mut label_ends,
                     &mut best_edge,
                     &mut queue,
-                    &blossom_base,
+                    &mut blossom_base,
                     &endpoints,
                     &mate,
                     &mut blossom_endpoints,
@@ -1283,7 +1283,7 @@ pub fn max_weight_matching(
                     &mut label_ends,
                     &mut best_edge,
                     &mut queue,
-                    &blossom_base,
+                    &mut blossom_base,
                     &endpoints,
                     &mate,
                     &mut blossom_endpoints,
