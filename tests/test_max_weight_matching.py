@@ -19,40 +19,54 @@ import retworkx
 import networkx
 
 
+def match_dict_to_set(match):
+    return {(u, v) for (u, v) in set(map(frozenset, match.items()))}
+
+
 class TestMaxWeightMatching(unittest.TestCase):
+
+    def compare_match_sets(self, rx_match, expected_match):
+        for (u, v) in rx_match:
+            if (u, v) not in expected_match and \
+                    (v, u) not in expected_match:
+                self.fail("Element %s and it's reverse %s not found in "
+                          "expected output.\nretworkx output: %s\nexpected "
+                          "output: %s" % (
+                              (u, v), (v, u), rx_match, expected_match))
 
     def test_empty_graph(self):
         graph = retworkx.PyGraph()
-        self.assertEqual(retworkx.max_weight_matching(graph), {})
+        self.assertEqual(retworkx.max_weight_matching(graph), set())
 
     def test_single_edge(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from([0, 1])
         graph.add_edges_from([(0, 1, 1)])
-        self.assertEqual(retworkx.max_weight_matching(graph), {0: 1, 1: 0})
+        self.compare_match_sets(retworkx.max_weight_matching(graph),
+                                {(0, 1), })
 
     def test_single_self_edge(self):
         graph = retworkx.PyGraph()
         graph.extend_from_weighted_edge_list([(0, 0, 100)])
-        self.assertEqual(retworkx.max_weight_matching(graph), {})
+        self.assertEqual(retworkx.max_weight_matching(graph), set())
 
     def test_small_graph(self):
         graph = retworkx.PyGraph()
         graph.extend_from_weighted_edge_list([(1, 2, 10), (2, 3, 11)])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {3: 2, 2: 3})
+            {(2, 3), })
 
     def test_path_graph(self):
         graph = retworkx.PyGraph()
         graph.extend_from_weighted_edge_list(
             [(1, 2, 5), (2, 3, 11), (3, 4, 5)])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {2: 3, 3: 2})
-        self.assertEqual(
+            {(2, 3), })
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, True, weight_fn=lambda x: x),
-            {1: 2, 2: 1, 3: 4, 4: 3})
+            {(1, 2), (3, 4)})
 
     def test_negative_weights(self):
         graph = retworkx.PyGraph()
@@ -63,12 +77,12 @@ class TestMaxWeightMatching(unittest.TestCase):
             (2, 4, -1),
             (3, 4, -6),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 2, 2: 1})
-        self.assertEqual(
+            {(1, 2), })
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, True, weight_fn=lambda x: x),
-            {1: 3, 2: 4, 3: 1, 4: 2})
+            {(1, 3), (2, 4)})
 
     def test_s_blossom(self):
         graph = retworkx.PyGraph()
@@ -78,13 +92,13 @@ class TestMaxWeightMatching(unittest.TestCase):
             (1, 2, 10),
             (2, 3, 7),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {0: 1, 1: 0, 2: 3, 3: 2})
+            {(0, 1), (2, 3)})
         graph.extend_from_weighted_edge_list([(0, 5, 5), (3, 4, 6)])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {0: 5, 1: 2, 2: 1, 3: 4, 4: 3, 5: 0})
+            {(0, 5), (1, 2), (3, 4)})
 
     def test_s_t_blossom(self):
         graph = retworkx.PyGraph()
@@ -96,20 +110,20 @@ class TestMaxWeightMatching(unittest.TestCase):
             (4, 5, 4),
             (1, 6, 3),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 6, 2: 3, 3: 2, 4: 5, 5: 4, 6: 1})
+            {(1, 6), (2, 3), (4, 5)})
         graph.remove_edge(1, 6)
         graph.remove_edge(4, 5)
         graph.extend_from_weighted_edge_list([(4, 5, 3), (1, 6, 4)])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 6, 2: 3, 3: 2, 4: 5, 5: 4, 6: 1})
+            {(1, 6), (2, 3), (4, 5)})
         graph.remove_edge(1, 6)
         graph.add_edge(3, 6, 4)
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 2, 2: 1, 3: 6, 4: 5, 5: 4, 6: 3})
+            {(1, 2), (3, 6), (4, 5)})
 
     def test_s_t_blossom_with_removed_nodes(self):
         graph = retworkx.PyGraph()
@@ -124,20 +138,20 @@ class TestMaxWeightMatching(unittest.TestCase):
         node_id = graph.add_node(None)
         graph.remove_node(5)
         graph.add_edge(4, node_id, 4)
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 6, 2: 3, 3: 2, 4: 7, 7: 4, 6: 1})
+            {(1, 6), (2, 3), (4, 7)})
         graph.remove_edge(1, 6)
         graph.remove_edge(4, 7)
         graph.extend_from_weighted_edge_list([(4, node_id, 3), (1, 6, 4)])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 6, 2: 3, 3: 2, 4: 7, 7: 4, 6: 1})
+            {(1, 6), (2, 3), (4, 7)})
         graph.remove_edge(1, 6)
         graph.add_edge(3, 6, 4)
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 2, 2: 1, 3: 6, 4: 7, 7: 4, 6: 3})
+            {(1, 2), (3, 6), (4, 7)})
 
     def test_nested_s_blossom(self):
         graph = retworkx.PyGraph()
@@ -150,8 +164,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (4, 5, 10),
             (5, 6, 6),
         ])
-        expected = {1: 3, 2: 4, 3: 1, 4: 2, 5: 6, 6: 5}
-        self.assertEqual(
+        expected = {(1, 3), (2, 4), (5, 6)}
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
             expected)
 
@@ -168,9 +182,9 @@ class TestMaxWeightMatching(unittest.TestCase):
             (6, 7, 10),
             (7, 8, 8),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 2, 2: 1, 3: 4, 4: 3, 5: 6, 6: 5, 7: 8, 8: 7})
+            {(1, 2), (3, 4), (5, 6), (7, 8)})
 
     def test_nested_s_blossom_expand(self):
         graph = retworkx.PyGraph()
@@ -186,9 +200,9 @@ class TestMaxWeightMatching(unittest.TestCase):
             (6, 7, 14),
             (7, 8, 12),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 2, 2: 1, 3: 5, 4: 6, 5: 3, 6: 4, 7: 8, 8: 7})
+            {(1, 2), (3, 5), (4, 6), (7, 8)})
 
     def test_s_blossom_relabel_expand(self):
         graph = retworkx.PyGraph()
@@ -202,9 +216,9 @@ class TestMaxWeightMatching(unittest.TestCase):
             (4, 8, 14),
             (5, 7, 13),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4})
+            {(1, 6), (2, 3), (4, 8), (5, 7)})
 
     def test_nested_s_blossom_relabel_expand(self):
         graph = retworkx.PyGraph()
@@ -219,9 +233,10 @@ class TestMaxWeightMatching(unittest.TestCase):
             (4, 7, 7),
             (5, 6, 7),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 8, 2: 3, 3: 2, 4: 7, 5: 6, 6: 5, 7: 4, 8: 1})
+            match_dict_to_set(
+                {1: 8, 2: 3, 3: 2, 4: 7, 5: 6, 6: 5, 7: 4, 8: 1}))
 
     def test_blossom_relabel_multiple_paths(self):
         graph = retworkx.PyGraph()
@@ -237,9 +252,11 @@ class TestMaxWeightMatching(unittest.TestCase):
             (5, 7, 26),
             (9, 10, 5),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9})
+            match_dict_to_set(
+                {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10,
+                 10: 9}))
 
     def test_blossom_relabel_multiple_path_alternate(self):
         graph = retworkx.PyGraph()
@@ -255,9 +272,11 @@ class TestMaxWeightMatching(unittest.TestCase):
             (5, 7, 40),
             (9, 10, 5),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9})
+            match_dict_to_set(
+                {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10,
+                 10: 9}))
 
     def test_blossom_relabel_multiple_paths_least_slack(self):
         graph = retworkx.PyGraph()
@@ -273,9 +292,11 @@ class TestMaxWeightMatching(unittest.TestCase):
             (5, 7, 26),
             (9, 10, 5),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9})
+            match_dict_to_set(
+                {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10,
+                 10: 9}))
 
     def test_nested_blossom_expand_recursively(self):
         graph = retworkx.PyGraph()
@@ -292,9 +313,11 @@ class TestMaxWeightMatching(unittest.TestCase):
             (8, 10, 10),
             (4, 9, 30),
         ])
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            {1: 2, 2: 1, 3: 5, 4: 9, 5: 3, 6: 7, 7: 6, 8: 10, 9: 4, 10: 8})
+            match_dict_to_set(
+                {1: 2, 2: 1, 3: 5, 4: 9, 5: 3, 6: 7, 7: 6, 8: 10, 9: 4,
+                 10: 8}))
 
     def test_nested_blossom_augmented(self):
         graph = retworkx.PyGraph()
@@ -327,9 +350,9 @@ class TestMaxWeightMatching(unittest.TestCase):
             11: 12,
             12: 11,
         }
-        self.assertEqual(
+        self.compare_match_sets(
             retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
-            expected)
+            match_dict_to_set(expected))
 
     def test_gnp_random_against_networkx(self):
         for i in range(1024):
@@ -337,16 +360,16 @@ class TestMaxWeightMatching(unittest.TestCase):
                                                             seed=42 + i)
             nx_graph = networkx.Graph(list(rx_graph.edge_list()))
             nx_matches = networkx.max_weight_matching(nx_graph)
-            rx_match_dict = retworkx.max_weight_matching(rx_graph)
+            rx_matches = retworkx.max_weight_matching(rx_graph)
             # Convert retworkx dict output to networkx set of tuples
-            for (u, v) in set(map(frozenset, rx_match_dict.items())):
+            for (u, v) in rx_matches:
                 if (u, v) not in nx_matches:
                     if (v, u) not in nx_matches:
                         self.fail("seed %s failed. Element %s and it's "
                                   " reverse %s not found "
                                   "in networkx output.\nretworkx output: %s"
                                   "\nnetworkx output: %s\nedge list: %s" % (
-                                      42 + i, (u, v), (v, u), rx_match_dict,
+                                      42 + i, (u, v), (v, u), rx_matches,
                                       nx_matches, list(rx_graph.edge_list())))
 
     def test_gnp_random_against_networkx_max_cardinality(self):
@@ -354,47 +377,47 @@ class TestMaxWeightMatching(unittest.TestCase):
         nx_graph = networkx.Graph(list(rx_graph.edge_list()))
         nx_matches = networkx.max_weight_matching(
             nx_graph, maxcardinality=True)
-        rx_match_dict = retworkx.max_weight_matching(
+        rx_matches = retworkx.max_weight_matching(
             rx_graph, max_cardinality=True)
         # Convert retworkx dict output to networkx set of tuples
-        for (u, v) in set(map(frozenset, rx_match_dict.items())):
+        for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
                     self.fail("seed %s failed. Element %s and it's "
                               " reverse %s not found "
                               "in networkx output.\nretworkx output: %s"
                               "\nnetworkx output: %s\nedge list: %s" % (
-                                  428, (u, v), (v, u), rx_match_dict,
+                                  428, (u, v), (v, u), rx_matches,
                                   nx_matches, list(rx_graph.edge_list())))
 
     def test_gnm_random_against_networkx(self):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 13, seed=42)
         nx_graph = networkx.Graph(list(rx_graph.edge_list()))
         nx_matches = networkx.max_weight_matching(nx_graph)
-        rx_match_dict = retworkx.max_weight_matching(rx_graph)
-        for (u, v) in set(map(frozenset, rx_match_dict.items())):
+        rx_matches = retworkx.max_weight_matching(rx_graph)
+        for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
                     self.fail("seed %s failed. Element %s and it's "
                               " reverse %s not found "
                               "in networkx output.\nretworkx output: %s"
                               "\nnetworkx output: %s\nedge list: %s" % (
-                                  42, (u, v), (v, u), rx_match_dict,
+                                  42, (u, v), (v, u), rx_matches,
                                   nx_matches, list(rx_graph.edge_list())))
 
     def test_gnm_random_against_networkx_max_cardinality(self):
-        rx_graph = retworkx.undirected_gnm_random_graph(10, 12, seed=428)
+        rx_graph = retworkx.undirected_gnm_random_graph(10, 12, seed=42)
         nx_graph = networkx.Graph(list(rx_graph.edge_list()))
         nx_matches = networkx.max_weight_matching(
             nx_graph, maxcardinality=True)
-        rx_match_dict = retworkx.max_weight_matching(
+        rx_matches = retworkx.max_weight_matching(
             rx_graph, max_cardinality=True)
-        for (u, v) in set(map(frozenset, rx_match_dict.items())):
+        for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
                     self.fail("seed %s failed. Element %s and it's "
                               " reverse %s not found "
                               "in networkx output.\nretworkx output: %s"
                               "\nnetworkx output: %s\nedge list: %s" % (
-                                  42, (u, v), (v, u), rx_match_dict,
+                                  42, (u, v), (v, u), rx_matches,
                                   nx_matches, list(rx_graph.edge_list())))

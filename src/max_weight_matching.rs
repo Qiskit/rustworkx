@@ -20,7 +20,7 @@
 use std::cmp::max;
 use std::mem;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
@@ -792,13 +792,14 @@ pub fn max_weight_matching(
     max_cardinality: bool,
     weight_fn: Option<PyObject>,
     default_weight: i128,
-) -> PyResult<HashMap<usize, usize>> {
+) -> PyResult<HashSet<(usize, usize)>> {
     let num_edges = graph.graph.edge_count();
     let num_nodes = graph.graph.node_count();
-    let mut out_map: HashMap<usize, usize> = HashMap::with_capacity(num_nodes);
+    let mut out_set: HashSet<(usize, usize)> =
+        HashSet::with_capacity(num_nodes);
     // Exit fast for graph without edges
     if num_edges == 0 {
-        return Ok(out_map);
+        return Ok(HashSet::new());
     }
     // Node indicies in the PyGraph may not be contiguous however the
     // algorithm operates on contiguous indices 0..num_nodes. node_map maps
@@ -1296,14 +1297,25 @@ pub fn max_weight_matching(
     // Transform mate[] such that mate[v] is the vertex to which v is paired
     // Also handle holes in node indices from PyGraph node removals by mapping
     // linear index to node index.
+    let mut seen: HashSet<(usize, usize)> =
+        HashSet::with_capacity(2 * num_nodes);
     let node_list: Vec<NodeIndex> = graph.graph.node_indices().collect();
     for (index, node) in mate.iter().enumerate() {
         if node.is_some() {
-            out_map.insert(
+            let tmp = (
                 node_list[index].index(),
                 node_list[endpoints[node.unwrap()]].index(),
             );
+            let rev_tmp = (
+                node_list[endpoints[node.unwrap()]].index(),
+                node_list[index].index(),
+            );
+            if !seen.contains(&tmp) && !seen.contains(&rev_tmp) {
+                out_set.insert(tmp);
+                seen.insert(tmp);
+                seen.insert(rev_tmp);
+            }
         }
     }
-    Ok(out_map)
+    Ok(out_set)
 }

@@ -2518,10 +2518,10 @@ pub fn cycle_basis(
 /// :param int default_weight: The ``int`` value to use for all edge weights
 ///     in the graph if ``weight_fn`` is not specified. Defaults to ``1``.
 ///
-/// :returns: A dictionary of matching, the key is the node index and the
-///     value is it's matched node index. Note that both directions will be
-///     listed in the output, for example: ``{0: 1, 1: 0}``.
-/// :rtype: dict
+/// :returns: A set of tuples ofthe matching, Note that only a single
+///     direction will be listed in the output, for example:
+///     ``{(0, 1),}``.
+/// :rtype: set
 ///
 /// .. [1] "Efficient Algorithms for Finding Maximum Matching in Graphs",
 ///     Zvi Galil, ACM Computing Surveys, 1986.
@@ -2534,7 +2534,7 @@ pub fn max_weight_matching(
     max_cardinality: bool,
     weight_fn: Option<PyObject>,
     default_weight: i128,
-) -> PyResult<HashMap<usize, usize>> {
+) -> PyResult<HashSet<(usize, usize)>> {
     max_weight_matching::max_weight_matching(
         py,
         graph,
