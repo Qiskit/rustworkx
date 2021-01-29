@@ -332,14 +332,22 @@ class TestMaxWeightMatching(unittest.TestCase):
             expected)
 
     def test_gnp_random_against_networkx(self):
-        rx_graph = retworkx.undirected_gnp_random_graph(10, .75, seed=42)
-        nx_graph = networkx.Graph(list(rx_graph.edge_list()))
-        nx_matches = networkx.max_weight_matching(nx_graph)
-        rx_match_dict = retworkx.max_weight_matching(rx_graph)
-        # Convert retworkx dict output to networkx set of tuples
-        rx_matches = {
-            (u, v) for (u, v) in set(map(frozenset, rx_match_dict.items()))}
-        self.assertEqual(nx_matches, rx_matches)
+        for i in range(1024):
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            nx_graph = networkx.Graph(list(rx_graph.edge_list()))
+            nx_matches = networkx.max_weight_matching(nx_graph)
+            rx_match_dict = retworkx.max_weight_matching(rx_graph)
+            # Convert retworkx dict output to networkx set of tuples
+            for (u, v) in set(map(frozenset, rx_match_dict.items())):
+                if (u, v) not in nx_matches:
+                    if (v, u) not in nx_matches:
+                        self.fail("seed %s failed. Element %s and it's "
+                                  " reverse %s not found "
+                                  "in networkx output.\nretworkx output: %s"
+                                  "\nnetworkx output: %s\nedge list: %s" % (
+                                      42 + i, (u, v), (v, u), rx_match_dict,
+                                      nx_matches, list(rx_graph.edge_list())))
 
     def test_gnp_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnp_random_graph(10, .78, seed=428)
@@ -349,6 +357,44 @@ class TestMaxWeightMatching(unittest.TestCase):
         rx_match_dict = retworkx.max_weight_matching(
             rx_graph, max_cardinality=True)
         # Convert retworkx dict output to networkx set of tuples
-        rx_matches = {
-            (u, v) for (u, v) in set(map(frozenset, rx_match_dict.items()))}
-        self.assertEqual(nx_matches, rx_matches)
+        for (u, v) in set(map(frozenset, rx_match_dict.items())):
+            if (u, v) not in nx_matches:
+                if (v, u) not in nx_matches:
+                    self.fail("seed %s failed. Element %s and it's "
+                              " reverse %s not found "
+                              "in networkx output.\nretworkx output: %s"
+                              "\nnetworkx output: %s\nedge list: %s" % (
+                                  428, (u, v), (v, u), rx_match_dict,
+                                  nx_matches, list(rx_graph.edge_list())))
+
+    def test_gnm_random_against_networkx(self):
+        rx_graph = retworkx.undirected_gnm_random_graph(10, 13, seed=42)
+        nx_graph = networkx.Graph(list(rx_graph.edge_list()))
+        nx_matches = networkx.max_weight_matching(nx_graph)
+        rx_match_dict = retworkx.max_weight_matching(rx_graph)
+        for (u, v) in set(map(frozenset, rx_match_dict.items())):
+            if (u, v) not in nx_matches:
+                if (v, u) not in nx_matches:
+                    self.fail("seed %s failed. Element %s and it's "
+                              " reverse %s not found "
+                              "in networkx output.\nretworkx output: %s"
+                              "\nnetworkx output: %s\nedge list: %s" % (
+                                  42, (u, v), (v, u), rx_match_dict,
+                                  nx_matches, list(rx_graph.edge_list())))
+
+    def test_gnm_random_against_networkx_max_cardinality(self):
+        rx_graph = retworkx.undirected_gnm_random_graph(10, 12, seed=428)
+        nx_graph = networkx.Graph(list(rx_graph.edge_list()))
+        nx_matches = networkx.max_weight_matching(
+            nx_graph, maxcardinality=True)
+        rx_match_dict = retworkx.max_weight_matching(
+            rx_graph, max_cardinality=True)
+        for (u, v) in set(map(frozenset, rx_match_dict.items())):
+            if (u, v) not in nx_matches:
+                if (v, u) not in nx_matches:
+                    self.fail("seed %s failed. Element %s and it's "
+                              " reverse %s not found "
+                              "in networkx output.\nretworkx output: %s"
+                              "\nnetworkx output: %s\nedge list: %s" % (
+                                  42, (u, v), (v, u), rx_match_dict,
+                                  nx_matches, list(rx_graph.edge_list())))
