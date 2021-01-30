@@ -475,8 +475,8 @@ impl PyDiGraph {
     /// If set to ``True`` adding new edges that would introduce a cycle
     /// will raise a :class:`DAGWouldCycle` exception.
     #[getter]
-    fn get_check_cycle(&self) -> PyResult<bool> {
-        Ok(self.check_cycle)
+    fn get_check_cycle(&self) -> bool {
+        self.check_cycle
     }
 
     #[setter]
