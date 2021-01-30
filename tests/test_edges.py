@@ -67,6 +67,16 @@ class TestEdges(unittest.TestCase):
         dag.add_node('b')
         self.assertRaises(IndexError, dag.update_edge_by_index, 0, None)
 
+    def test_update_edge_parallel_edges(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node('a')
+        node_b = graph.add_node('b')
+        graph.add_edge(node_a, node_b, 'not edgy')
+        edge_index = graph.add_edge(node_a, node_b, 'not edgy')
+        graph.update_edge_by_index(edge_index, 'Edgy')
+        self.assertEqual([(0, 1, 'not edgy'), (0, 1, 'Edgy')],
+                         list(graph.weighted_edge_list()))
+
     def test_has_edge(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node('a')
