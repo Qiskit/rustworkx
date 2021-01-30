@@ -417,7 +417,7 @@ impl PyGraph {
     ///
     /// If there are parallel edges in the graph only one edge will be updated.
     /// if you need to update a specific edge or need to ensure all parallel
-    /// edges get update you should use
+    /// edges get updated you should use
     /// :meth:`~retworkx.PyGraph.update_edge_by_index` instead.
     ///
     /// :param int source: The index for the first node
