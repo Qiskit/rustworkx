@@ -501,7 +501,7 @@ fn bfs_successors(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
-) -> PyResult<iterators::BFSSuccessors> {
+) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> =
@@ -522,9 +522,9 @@ fn bfs_successors(
             ));
         }
     }
-    Ok(iterators::BFSSuccessors {
+    iterators::BFSSuccessors {
         bfs_successors: out_list,
-    })
+    }
 }
 
 /// Return the ancestors of a node in a graph.
@@ -2441,8 +2441,7 @@ pub fn cycle_basis(
             }
         };
         // Stack (ie "pushdown list") of vertices already in the spanning tree
-        let mut stack: Vec<NodeIndex> = Vec::new();
-        stack.push(root_index);
+        let mut stack: Vec<NodeIndex> = vec![root_index];
         // Map of node index to predecessor node index
         let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
         pred.insert(root_index, root_index);
@@ -2463,15 +2462,12 @@ pub fn cycle_basis(
                     used.insert(neighbor, temp_set);
                 // A self loop:
                 } else if z == neighbor {
-                    let mut cycle: Vec<usize> = Vec::new();
-                    cycle.push(z.index());
+                    let cycle: Vec<usize> = vec![z.index()];
                     cycles.push(cycle);
                 // A cycle was found:
                 } else if !used.get(&z).unwrap().contains(&neighbor) {
                     let pn = used.get(&neighbor).unwrap();
-                    let mut cycle: Vec<NodeIndex> = Vec::new();
-                    cycle.push(neighbor);
-                    cycle.push(z);
+                    let mut cycle: Vec<NodeIndex> = vec![neighbor, z];
                     let mut p = pred.get(&z).unwrap();
                     while !pn.contains(p) {
                         cycle.push(*p);
@@ -2547,8 +2543,7 @@ pub fn digraph_find_cycle(
     };
 
     // Stack (ie "pushdown list") of vertices already in the spanning tree
-    let mut stack: Vec<NodeIndex> = Vec::new();
-    stack.push(source_index);
+    let mut stack: Vec<NodeIndex> = vec![source_index];
     // map to store parent of a node
     let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
     // a node is in the visiting set if at least one of its child is unexamined
