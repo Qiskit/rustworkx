@@ -611,6 +611,60 @@ impl PyDiGraph {
         Ok(data)
     }
 
+    /// Update an edge's weight/payload inplace
+    ///
+    /// If there are parallel edges in the graph only one edge will be updated.
+    /// if you need to update a specific edge or need to ensure all parallel
+    /// edges get updated you should use
+    /// :meth:`~retworkx.PyDiGraph.update_edge_by_index` instead.
+    ///
+    /// :param int source: The index for the first node
+    /// :param int target: The index for the second node
+    ///
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[text_signature = "(self, source, target, edge /)"]
+    pub fn update_edge(
+        &mut self,
+        source: usize,
+        target: usize,
+        edge: PyObject,
+    ) -> PyResult<()> {
+        let index_a = NodeIndex::new(source);
+        let index_b = NodeIndex::new(target);
+        let edge_index = match self.graph.find_edge(index_a, index_b) {
+            Some(edge_index) => edge_index,
+            None => {
+                return Err(NoEdgeBetweenNodes::new_err(
+                    "No edge found between nodes",
+                ))
+            }
+        };
+        let data = self.graph.edge_weight_mut(edge_index).unwrap();
+        *data = edge;
+        Ok(())
+    }
+
+    /// Update an edge's weight/payload by the edge index
+    ///
+    /// :param int edge_index: The index for the edge
+    /// :param object edge: The data payload/weight to update the edge with
+    ///
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[text_signature = "(self, source, target, edge /)"]
+    pub fn update_edge_by_index(
+        &mut self,
+        edge_index: usize,
+        edge: PyObject,
+    ) -> PyResult<()> {
+        match self.graph.edge_weight_mut(EdgeIndex::new(edge_index)) {
+            Some(data) => *data = edge,
+            None => {
+                return Err(PyIndexError::new_err("No edge found for index"))
+            }
+        };
+        Ok(())
+    }
+
     /// Return the node data for a given node index
     ///
     /// :param int node: The index for the node
