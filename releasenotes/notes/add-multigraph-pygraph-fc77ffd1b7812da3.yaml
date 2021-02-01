@@ -29,7 +29,7 @@ features:
           os.remove(tmp_path)
       image
 
-    Then trying to adding an edge between ``0`` and ``1`` again will update it's
+    Then trying to add an edge between ``0`` and ``1`` again will update its
     weight/payload.
 
     .. jupyter-execute::
