@@ -120,6 +120,15 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         with self.assertRaises(TypeError):
             retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
 
+    def test_random_graph_different_dtype_astype_no_copy(self):
+        input_matrix = np.array(
+            [[0, 1, 0], [1, 0, 1], [0, 1, 0]],
+            dtype=np.int64)
+        graph = retworkx.PyDiGraph.from_adjacency_matrix(
+            input_matrix.astype(np.float64, copy=False))
+        adj_matrix = retworkx.digraph_adjacency_matrix(graph, lambda x: x)
+        self.assertTrue(np.array_equal(adj_matrix, input_matrix))
+
     def test_random_graph_float_dtype(self):
         input_matrix = np.array(
             [[0, 1, 0], [1, 0, 1], [0, 1, 0]],
@@ -242,6 +251,15 @@ class TestGraphAdjacencyMatrix(unittest.TestCase):
             dtype=np.int64)
         with self.assertRaises(TypeError):
             retworkx.PyGraph.from_adjacency_matrix(input_matrix)
+
+    def test_random_graph_different_dtype_astype_no_copy(self):
+        input_matrix = np.array(
+            [[0, 1, 0], [1, 0, 1], [0, 1, 0]],
+            dtype=np.int64)
+        graph = retworkx.PyGraph.from_adjacency_matrix(
+            input_matrix.astype(np.float64, copy=False))
+        adj_matrix = retworkx.graph_adjacency_matrix(graph, lambda x: x)
+        self.assertTrue(np.array_equal(adj_matrix, input_matrix))
 
     def test_random_graph_float_dtype(self):
         input_matrix = np.array(
