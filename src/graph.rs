@@ -26,6 +26,9 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
+use ndarray::prelude::*;
+use numpy::PyReadonlyArray2;
+
 use super::dot_utils::build_dot;
 use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
 use super::{NoEdgeBetweenNodes, NodesRemoved};
@@ -938,7 +941,7 @@ impl PyGraph {
     ///   image
     ///
     #[staticmethod]
-    #[text_signature = "(self, path, /, comment=None, deliminator=None)"]
+    #[text_signature = "(path, /, comment=None, deliminator=None)"]
     pub fn read_edge_list(
         py: Python,
         path: &str,
@@ -997,6 +1000,55 @@ impl PyGraph {
             graph: out_graph,
             node_removed: false,
         })
+    }
+
+    /// Create a new :class:`~retworkx.PyGraph` object from an adjacency matrix
+    ///
+    /// This method can be used to construct a new :class:`~retworkx.PyGraph`
+    /// object from an input adjacency matrix. The node weights will be the
+    /// index from the matrix. The edge weights will be a float value of the
+    /// value from the matrix.
+    ///
+    /// :param ndarray matrix: The input numpy array adjacency matrix to create
+    ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
+    ///     dimensional array and be a ``float``/``np.float64`` data type.
+    ///
+    /// :returns: A new graph object generated from the adjacency matrix
+    /// :rtype: PyGraph
+    #[staticmethod]
+    #[text_signature = "(matrix, /)"]
+    pub fn from_adjacency_matrix<'p>(
+        py: Python<'p>,
+        matrix: PyReadonlyArray2<'p, f64>,
+    ) -> PyGraph {
+        let array = matrix.as_array();
+        let shape = array.shape();
+        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let _node_indices: Vec<NodeIndex> = (0..shape[0])
+            .map(|node| out_graph.add_node(node.to_object(py)))
+            .collect();
+        array
+            .axis_iter(Axis(0))
+            .enumerate()
+            .for_each(|(index, row)| {
+                let source_index = NodeIndex::new(index);
+                for target_index in 0..row.len() {
+                    if target_index < index {
+                        continue;
+                    }
+                    if row[[target_index]] > 0.0 {
+                        out_graph.add_edge(
+                            source_index,
+                            NodeIndex::new(target_index),
+                            row[[target_index]].to_object(py),
+                        );
+                    }
+                }
+            });
+        PyGraph {
+            graph: out_graph,
+            node_removed: false,
+        }
     }
 
     /// Add another PyGraph object into this PyGraph
