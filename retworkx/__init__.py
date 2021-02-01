@@ -113,9 +113,11 @@ def distance_matrix(graph, parallel_threshold=300):
 
 
 @distance_matrix.register(PyDiGraph)
-def _digraph_distance_matrix(graph, parallel_threshold=300):
+def _digraph_distance_matrix(graph, parallel_threshold=300,
+                             as_undirected=False):
     return digraph_distance_matrix(graph,
-                                   parallel_threshold=parallel_threshold)
+                                   parallel_threshold=parallel_threshold,
+                                   as_undirected=as_undirected)
 
 
 @distance_matrix.register(PyGraph)

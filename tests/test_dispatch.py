@@ -31,6 +31,14 @@ class TestDispatchPyGraph(unittest.TestCase):
         res = retworkx.distance_matrix(self.graph)
         self.assertIsInstance(res, numpy.ndarray)
 
+    def test_distance_matrix_as_undirected(self):
+        if self.class_type == "PyGraph":
+            with self.assertRaises(TypeError):
+                retworkx.distance_matrix(self.graph, as_undirected=True)
+        else:
+            res = retworkx.distance_matrix(self.graph, as_undirected=True)
+            self.assertIsInstance(res, numpy.ndarray)
+
     def test_adjacency_matrix(self):
         res = retworkx.adjacency_matrix(self.graph)
         self.assertIsInstance(res, numpy.ndarray)
