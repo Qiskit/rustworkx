@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    New universal functions that can take in a :class:`~retworkx.PyGraph` or
+    :class:`~retworkx.PyDiGraph` instead of being class specific have been to
+    the retworkx API. These new functions are:
+
+     * :func:`retworkx.distance_matrix`
+     * :func:`retworkx.floyd_warshall_numpy`
+     * :func:`retworkx.adjacency_matrix`
+     * :func:`retworkx.all_simple_paths`
+     * :func:`retworkx.astar_shortest_path`
+     * :func:`retworkx.dijkstra_shortest_paths`
+     * :func:`retworkx.dijkstra_shortest_path_lengths`
+     * :func:`retworkx.k_shortest_path_lengths`
+     * :func:`retworkx.dfs_edges`
