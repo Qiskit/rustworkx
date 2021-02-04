@@ -1,7 +1,7 @@
 [package]
 name = "retworkx"
 description = "A python graph library implemented in Rust"
-version = "0.7.2"
+version = "0.8.0"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 license = "Apache-2.0"
 readme = "README.md"
@@ -20,8 +20,8 @@ crate-type = ["cdylib"]
 petgraph = "0.5.1"
 fixedbitset = "0.2.0"
 numpy = "0.12.1"
-rand = "0.7"
-rand_pcg = "0.2"
+rand = "0.8"
+rand_pcg = "0.3"
 rayon = "1.5"
 
 [dependencies.pyo3]
@@ -35,3 +35,7 @@ features = ["rayon"]
 [dependencies.ndarray]
 version = "^0.13.0"
 features = ["rayon"]
+
+[profile.release]
+lto = 'fat'
+codegen-units = 1
