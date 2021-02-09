@@ -427,7 +427,8 @@ class TestMaxWeightMatching(unittest.TestCase):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 13, seed=42)
         nx_graph = networkx.Graph(list(rx_graph.edge_list()))
         nx_matches = networkx.max_weight_matching(nx_graph)
-        rx_matches = retworkx.max_weight_matching(rx_graph, verify_optimum=True)
+        rx_matches = retworkx.max_weight_matching(rx_graph,
+                                                  verify_optimum=True)
         for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
