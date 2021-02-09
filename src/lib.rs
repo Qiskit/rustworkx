@@ -2517,6 +2517,9 @@ pub fn cycle_basis(
 ///     edge weights.
 /// :param int default_weight: The ``int`` value to use for all edge weights
 ///     in the graph if ``weight_fn`` is not specified. Defaults to ``1``.
+/// :param bool verify_optimum: A boolean flag to run a check that the found
+///     solution is optimum. If set to true an exception will be raised if
+///     the found solution is not optimum. This is mostly useful for testing.
 ///
 /// :returns: A set of tuples ofthe matching, Note that only a single
 ///     direction will be listed in the output, for example:
@@ -2526,14 +2529,19 @@ pub fn cycle_basis(
 /// .. [1] "Efficient Algorithms for Finding Maximum Matching in Graphs",
 ///     Zvi Galil, ACM Computing Surveys, 1986.
 ///
-#[pyfunction(max_cardinality = "false", default_weight = 1)]
-#[text_signature = "(graph, /, max_cardinality=False, weight_fn=None, default_weight=1)"]
+#[pyfunction(
+    max_cardinality = "false",
+    default_weight = 1,
+    verify_optimum = "false"
+)]
+#[text_signature = "(graph, /, max_cardinality=False, weight_fn=None, default_weight=1, verify_optimum=False)"]
 pub fn max_weight_matching(
     py: Python,
     graph: &graph::PyGraph,
     max_cardinality: bool,
     weight_fn: Option<PyObject>,
     default_weight: i128,
+    verify_optimum: bool,
 ) -> PyResult<HashSet<(usize, usize)>> {
     max_weight_matching::max_weight_matching(
         py,
@@ -2541,6 +2549,7 @@ pub fn max_weight_matching(
         max_cardinality,
         weight_fn,
         default_weight,
+        verify_optimum,
     )
 }
 

@@ -42,8 +42,17 @@ class TestMaxWeightMatching(unittest.TestCase):
         graph = retworkx.PyGraph()
         graph.add_nodes_from([0, 1])
         graph.add_edges_from([(0, 1, 1)])
-        self.compare_match_sets(retworkx.max_weight_matching(graph),
-                                {(0, 1), })
+        self.compare_match_sets(
+            retworkx.max_weight_matching(graph, verify_optimum=True),
+            {(0, 1), })
+
+    def test_single_edge_no_verification(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from([0, 1])
+        graph.add_edges_from([(0, 1, 1)])
+        self.compare_match_sets(
+            retworkx.max_weight_matching(graph, verify_optimum=False),
+            {(0, 1), })
 
     def test_single_self_edge(self):
         graph = retworkx.PyGraph()
@@ -54,7 +63,8 @@ class TestMaxWeightMatching(unittest.TestCase):
         graph = retworkx.PyGraph()
         graph.extend_from_weighted_edge_list([(1, 2, 10), (2, 3, 11)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(2, 3), })
 
     def test_path_graph(self):
@@ -62,10 +72,12 @@ class TestMaxWeightMatching(unittest.TestCase):
         graph.extend_from_weighted_edge_list(
             [(1, 2, 5), (2, 3, 11), (3, 4, 5)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(2, 3), })
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, True, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, True, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 2), (3, 4)})
 
     def test_negative_weights(self):
@@ -78,10 +90,12 @@ class TestMaxWeightMatching(unittest.TestCase):
             (3, 4, -6),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 2), })
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, True, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, True, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 3), (2, 4)})
 
     def test_s_blossom(self):
@@ -93,11 +107,13 @@ class TestMaxWeightMatching(unittest.TestCase):
             (2, 3, 7),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(0, 1), (2, 3)})
         graph.extend_from_weighted_edge_list([(0, 5, 5), (3, 4, 6)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(0, 5), (1, 2), (3, 4)})
 
     def test_s_t_blossom(self):
@@ -111,18 +127,21 @@ class TestMaxWeightMatching(unittest.TestCase):
             (1, 6, 3),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 6), (2, 3), (4, 5)})
         graph.remove_edge(1, 6)
         graph.remove_edge(4, 5)
         graph.extend_from_weighted_edge_list([(4, 5, 3), (1, 6, 4)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 6), (2, 3), (4, 5)})
         graph.remove_edge(1, 6)
         graph.add_edge(3, 6, 4)
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 2), (3, 6), (4, 5)})
 
     def test_s_t_blossom_with_removed_nodes(self):
@@ -139,18 +158,21 @@ class TestMaxWeightMatching(unittest.TestCase):
         graph.remove_node(5)
         graph.add_edge(4, node_id, 4)
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 6), (2, 3), (4, 7)})
         graph.remove_edge(1, 6)
         graph.remove_edge(4, 7)
         graph.extend_from_weighted_edge_list([(4, node_id, 3), (1, 6, 4)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 6), (2, 3), (4, 7)})
         graph.remove_edge(1, 6)
         graph.add_edge(3, 6, 4)
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 2), (3, 6), (4, 7)})
 
     def test_nested_s_blossom(self):
@@ -166,7 +188,8 @@ class TestMaxWeightMatching(unittest.TestCase):
         ])
         expected = {(1, 3), (2, 4), (5, 6)}
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             expected)
 
     def test_nested_s_blossom_relabel(self):
@@ -183,7 +206,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (7, 8, 8),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 2), (3, 4), (5, 6), (7, 8)})
 
     def test_nested_s_blossom_expand(self):
@@ -201,7 +225,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (7, 8, 12),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 2), (3, 5), (4, 6), (7, 8)})
 
     def test_s_blossom_relabel_expand(self):
@@ -217,7 +242,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (5, 7, 13),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             {(1, 6), (2, 3), (4, 8), (5, 7)})
 
     def test_nested_s_blossom_relabel_expand(self):
@@ -234,7 +260,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (5, 6, 7),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             match_dict_to_set(
                 {1: 8, 2: 3, 3: 2, 4: 7, 5: 6, 6: 5, 7: 4, 8: 1}))
 
@@ -253,7 +280,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (9, 10, 5),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             match_dict_to_set(
                 {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10,
                  10: 9}))
@@ -273,7 +301,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (9, 10, 5),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             match_dict_to_set(
                 {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10,
                  10: 9}))
@@ -293,7 +322,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (9, 10, 5),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             match_dict_to_set(
                 {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10,
                  10: 9}))
@@ -314,7 +344,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             (4, 9, 30),
         ])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             match_dict_to_set(
                 {1: 2, 2: 1, 3: 5, 4: 9, 5: 3, 6: 7, 7: 6, 8: 10, 9: 4,
                  10: 8}))
@@ -351,7 +382,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             12: 11,
         }
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x),
+            retworkx.max_weight_matching(graph, weight_fn=lambda x: x,
+                                         verify_optimum=True),
             match_dict_to_set(expected))
 
     def test_gnp_random_against_networkx(self):
@@ -360,7 +392,8 @@ class TestMaxWeightMatching(unittest.TestCase):
                                                             seed=42 + i)
             nx_graph = networkx.Graph(list(rx_graph.edge_list()))
             nx_matches = networkx.max_weight_matching(nx_graph)
-            rx_matches = retworkx.max_weight_matching(rx_graph)
+            rx_matches = retworkx.max_weight_matching(rx_graph,
+                                                      verify_optimum=True)
             # Convert retworkx dict output to networkx set of tuples
             for (u, v) in rx_matches:
                 if (u, v) not in nx_matches:
@@ -378,7 +411,7 @@ class TestMaxWeightMatching(unittest.TestCase):
         nx_matches = networkx.max_weight_matching(
             nx_graph, maxcardinality=True)
         rx_matches = retworkx.max_weight_matching(
-            rx_graph, max_cardinality=True)
+            rx_graph, max_cardinality=True, verify_optimum=True)
         # Convert retworkx dict output to networkx set of tuples
         for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
@@ -394,7 +427,7 @@ class TestMaxWeightMatching(unittest.TestCase):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 13, seed=42)
         nx_graph = networkx.Graph(list(rx_graph.edge_list()))
         nx_matches = networkx.max_weight_matching(nx_graph)
-        rx_matches = retworkx.max_weight_matching(rx_graph)
+        rx_matches = retworkx.max_weight_matching(rx_graph, verify_optimum=True)
         for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
@@ -411,7 +444,7 @@ class TestMaxWeightMatching(unittest.TestCase):
         nx_matches = networkx.max_weight_matching(
             nx_graph, maxcardinality=True)
         rx_matches = retworkx.max_weight_matching(
-            rx_graph, max_cardinality=True)
+            rx_graph, max_cardinality=True, verify_optimum=True)
         for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
