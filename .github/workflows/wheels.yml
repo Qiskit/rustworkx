@@ -75,7 +75,7 @@ jobs:
           CIBW_BEFORE_ALL: rustup target add aarch64-apple-darwin
           CIBW_ARCHS_MACOS: arm64
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_ENVIRONMENT: CARGO_BUILD_TARGET="aarch64-apple-darwin"
+          CIBW_ENVIRONMENT: CARGO_BUILD_TARGET="aarch64-apple-darwin" PYO3_CROSS_LIB_DIR="/Library/Frameworks/Python.framework/Versions/3.9/"
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
