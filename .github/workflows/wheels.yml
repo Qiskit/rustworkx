@@ -72,6 +72,7 @@ jobs:
       - name: Build wheels
         uses: joerick/cibuildwheel@v1.9.0
         env:
+          CIBW_BEFORE_ALL: rustup target add aarch64-apple-darwin
           CIBW_ARCHS_MACOS: arm64
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_ENVIRONMENT: CARGO_BUILD_TARGET="aarch64-apple-darwin"
