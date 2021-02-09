@@ -13,6 +13,7 @@
 # These tests are adapated from the networkx test cases:
 # https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/tests/test_matching.py
 
+from itertools import combinations
 import unittest
 
 import retworkx
@@ -21,6 +22,21 @@ import networkx
 
 def match_dict_to_set(match):
     return {(u, v) for (u, v) in set(map(frozenset, match.items()))}
+
+
+def is_matching(matching):
+    return all(
+        len(set(e1) & set(e2)) == 0 for e1, e2 in combinations(matching, 2))
+
+
+def is_maximal_matching(graph, rx_matches):
+    if not all(len(set(e1) & set(e2)) == 0 for e1, e2 in combinations(
+            rx_matches, 2)):
+        return False
+    all_edges = set(map(frozenset, graph.edge_list()))
+    matched_edges = set(map(frozenset, rx_matches))
+    unmatched_edges = all_edges - matched_edges
+    return all(not is_matching(rx_matches | {e}) for e in unmatched_edges)
 
 
 class TestMaxWeightMatching(unittest.TestCase):
@@ -33,6 +49,26 @@ class TestMaxWeightMatching(unittest.TestCase):
                           "expected output.\nretworkx output: %s\nexpected "
                           "output: %s" % (
                               (u, v), (v, u), rx_match, expected_match))
+
+    def compare_rx_nx_sets(self, rx_graph, rx_matches, nx_matches, seed):
+        not_match = False
+        for (u, v) in rx_matches:
+            if (u, v) not in nx_matches:
+                if (v, u) not in nx_matches:
+                    print("seed %s failed. Element %s and it's "
+                          "reverse %s not found in networkx output.\nretworkx"
+                          " output: %s\nnetworkx output: %s\nedge list: %s\n"
+                          "falling back to checking for a valid solution" % (
+                            seed, (u, v), (v, u), rx_matches,
+                            nx_matches, list(rx_graph.edge_list())))
+                    not_match = True
+                    break
+        if not_match:
+            self.assertTrue(is_matching(rx_matches),
+                            "%s is not a valid matching" % rx_matches)
+            self.assertTrue(is_maximal_matching(rx_graph, rx_matches),
+                            "%s is not a maximal matching" % rx_matches)
+
 
     def test_empty_graph(self):
         graph = retworkx.PyGraph()
@@ -394,16 +430,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             nx_matches = networkx.max_weight_matching(nx_graph)
             rx_matches = retworkx.max_weight_matching(rx_graph,
                                                       verify_optimum=True)
-            # Convert retworkx dict output to networkx set of tuples
-            for (u, v) in rx_matches:
-                if (u, v) not in nx_matches:
-                    if (v, u) not in nx_matches:
-                        self.fail("seed %s failed. Element %s and it's "
-                                  " reverse %s not found "
-                                  "in networkx output.\nretworkx output: %s"
-                                  "\nnetworkx output: %s\nedge list: %s" % (
-                                      42 + i, (u, v), (v, u), rx_matches,
-                                      nx_matches, list(rx_graph.edge_list())))
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i)
+
 
     def test_gnp_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnp_random_graph(10, .78, seed=428)
@@ -412,16 +440,7 @@ class TestMaxWeightMatching(unittest.TestCase):
             nx_graph, maxcardinality=True)
         rx_matches = retworkx.max_weight_matching(
             rx_graph, max_cardinality=True, verify_optimum=True)
-        # Convert retworkx dict output to networkx set of tuples
-        for (u, v) in rx_matches:
-            if (u, v) not in nx_matches:
-                if (v, u) not in nx_matches:
-                    self.fail("seed %s failed. Element %s and it's "
-                              " reverse %s not found "
-                              "in networkx output.\nretworkx output: %s"
-                              "\nnetworkx output: %s\nedge list: %s" % (
-                                  428, (u, v), (v, u), rx_matches,
-                                  nx_matches, list(rx_graph.edge_list())))
+        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 428)
 
     def test_gnm_random_against_networkx(self):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 13, seed=42)
@@ -429,15 +448,7 @@ class TestMaxWeightMatching(unittest.TestCase):
         nx_matches = networkx.max_weight_matching(nx_graph)
         rx_matches = retworkx.max_weight_matching(rx_graph,
                                                   verify_optimum=True)
-        for (u, v) in rx_matches:
-            if (u, v) not in nx_matches:
-                if (v, u) not in nx_matches:
-                    self.fail("seed %s failed. Element %s and it's "
-                              " reverse %s not found "
-                              "in networkx output.\nretworkx output: %s"
-                              "\nnetworkx output: %s\nedge list: %s" % (
-                                  42, (u, v), (v, u), rx_matches,
-                                  nx_matches, list(rx_graph.edge_list())))
+        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42)
 
     def test_gnm_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 12, seed=42)
@@ -446,12 +457,4 @@ class TestMaxWeightMatching(unittest.TestCase):
             nx_graph, maxcardinality=True)
         rx_matches = retworkx.max_weight_matching(
             rx_graph, max_cardinality=True, verify_optimum=True)
-        for (u, v) in rx_matches:
-            if (u, v) not in nx_matches:
-                if (v, u) not in nx_matches:
-                    self.fail("seed %s failed. Element %s and it's "
-                              " reverse %s not found "
-                              "in networkx output.\nretworkx output: %s"
-                              "\nnetworkx output: %s\nedge list: %s" % (
-                                  42, (u, v), (v, u), rx_matches,
-                                  nx_matches, list(rx_graph.edge_list())))
+        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42)
