@@ -1,9 +1,8 @@
 ---
 name: Wheel Builds
 on:
-  push:
-    tags:
-      - '*'
+  pull_request:
+    branches: [ master ]
 jobs:
   sdist:
     name: Build sdist
@@ -21,11 +20,11 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./dist/*
-      - name: Upload to PyPI
-        run: twine upload ./dist/*
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+#      - name: Upload to PyPI
+#        run: twine upload ./dist/*
+#        env:
+#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+#          TWINE_USERNAME: retworkx-ci
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -60,11 +59,11 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+#      - name: Upload to PyPI
+#        run: twine upload ./wheelhouse/*.whl
+#        env:
+#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+#          TWINE_USERNAME: retworkx-ci
   build-mac-arm-wheels:
     name: Build wheels on macos for arm
     runs-on: macos-10.15
@@ -79,11 +78,11 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+#      - name: Upload to PyPI
+#        run: twine upload ./wheelhouse/*.whl
+#        env:
+#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+#          TWINE_USERNAME: retworkx-ci
   build-win32-wheels:
     name: Build wheels on win32
     runs-on: windows-latest
@@ -115,8 +114,8 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+#      - name: Upload to PyPI
+#        run: twine upload ./wheelhouse/*.whl
+#        env:
+#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+#          TWINE_USERNAME: retworkx-ci
