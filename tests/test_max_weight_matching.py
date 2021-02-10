@@ -59,8 +59,8 @@ class TestMaxWeightMatching(unittest.TestCase):
                           "reverse %s not found in networkx output.\nretworkx"
                           " output: %s\nnetworkx output: %s\nedge list: %s\n"
                           "falling back to checking for a valid solution" % (
-                            seed, (u, v), (v, u), rx_matches,
-                            nx_matches, list(rx_graph.edge_list())))
+                              seed, (u, v), (v, u), rx_matches,
+                              nx_matches, list(rx_graph.edge_list())))
                     not_match = True
                     break
         if not_match:
@@ -68,7 +68,6 @@ class TestMaxWeightMatching(unittest.TestCase):
                             "%s is not a valid matching" % rx_matches)
             self.assertTrue(is_maximal_matching(rx_graph, rx_matches),
                             "%s is not a maximal matching" % rx_matches)
-
 
     def test_empty_graph(self):
         graph = retworkx.PyGraph()
@@ -431,7 +430,6 @@ class TestMaxWeightMatching(unittest.TestCase):
             rx_matches = retworkx.max_weight_matching(rx_graph,
                                                       verify_optimum=True)
             self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i)
-
 
     def test_gnp_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnp_random_graph(10, .78, seed=428)
