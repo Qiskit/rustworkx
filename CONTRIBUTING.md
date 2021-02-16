@@ -38,7 +38,7 @@ the compiled extension).
 
 Rust is the primary language of retworkx and all the functional code in the
 libraries is written in Rust. The Rust code in retworkx uses
-[rustfmt](https://github.com/rust-lang/rustfmt) to enfore consistent style.
+[rustfmt](https://github.com/rust-lang/rustfmt) to enforce consistent style.
 CI jobs are configured to ensure to check this. Luckily adapting your code is
 as simple as running:
 
@@ -87,16 +87,16 @@ you can view locally in a web browser.
 
 ### Release Notes
 
-It is important to document any end user facing changes when we release a new 
-version of retworkx.  The expectation is that if your code contribution has 
-user facing changes that you will write the release documentation for these 
-changes. This documentation must explain what was changed, why it was changed, 
-and how users can either use or adapt to the change. The idea behind release 
-documentation is that when a naive user with limited internal knowledge of the 
-project is upgrading from the previous release to the new one, they should be  
-able to read the release notes, understand if they need to update their 
-program which uses retworkx, and how they would go about doing that. It 
-ideally should explain why they need to make this change too, to provide the 
+It is important to document any end user facing changes when we release a new
+version of retworkx.  The expectation is that if your code contribution has
+user facing changes that you will write the release documentation for these
+changes. This documentation must explain what was changed, why it was changed,
+and how users can either use or adapt to the change. The idea behind release
+documentation is that when a naive user with limited internal knowledge of the
+project is upgrading from the previous release to the new one, they should be
+able to read the release notes, understand if they need to update their
+program which uses retworkx, and how they would go about doing that. It
+ideally should explain why they need to make this change too, to provide the
 necessary context.
 
 To make sure we don't forget a release note or if the details of user facing
@@ -136,7 +136,7 @@ look something like::
 features:
   - |
     Added a new function, :func:`~retworkx.foo` that adds support for doing
-    something to :class:`~retworkx.PyDiGraph` objects. 
+    something to :class:`~retworkx.PyDiGraph` objects.
   - |
     The :class:`~retworkx.PyDiGraph` class has a new method
     :meth:`~retworkx.PyDiGraph.foo``. This is the equivalent of calling the
