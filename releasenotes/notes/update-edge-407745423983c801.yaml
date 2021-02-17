@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Two new methods, :meth:`~retworkx.PyDiGraph.update_edge` and
+    :meth:`~retworkx.PyDiGraph.update_edge_by_index` were added to the
+    :class:`retworkx.PyDiGraph` and :class:`retworkx.PyGraph` (
+    :meth:`~retworkx.PyGraph.update_edge` and
+    :meth:`~retworkx.PyGraph.update_edge_by_index`) classes. These methods
+    are used to update the data payload/weight of an edge in the graph either
+    by the nodes of an edge or by edge index.

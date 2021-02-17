@@ -24,7 +24,7 @@ class TestNeighbors(unittest.TestCase):
         node_c = graph.add_node('c')
         graph.add_edge(node_a, node_c, {'a': 2})
         res = graph.neighbors(node_a)
-        self.assertEqual([node_c, node_b], res)
+        self.assertCountEqual([node_c, node_b], res)
 
     def test_no_neighbor(self):
         graph = retworkx.PyGraph()

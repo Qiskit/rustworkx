@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Starting with this release wheels will be published for macOS arm64. Only
+    Python 3.9 is supported at first, because it is the only version of
+    Python with native support for arm64 macOS.
