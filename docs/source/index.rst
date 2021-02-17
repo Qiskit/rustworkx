@@ -11,6 +11,7 @@ Contents:
    Retworkx API <api>
    Release Notes <release_notes>
    Contributing Guide <CONTRIBUTING>
+   Retworkx for Networkx users<networkx>
 
 .. Hiding - Indices and tables
    :ref:`genindex`

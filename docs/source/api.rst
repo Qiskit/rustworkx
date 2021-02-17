@@ -91,6 +91,8 @@ Specific Graph Type Methods
    retworkx.digraph_find_cycle
    retworkx.digraph_union
 
+.. _universal-functions:
+
 Universal Functions
 '''''''''''''''''''
 
