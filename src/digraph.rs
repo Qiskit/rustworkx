@@ -24,7 +24,7 @@ use hashbrown::{HashMap, HashSet};
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::Python;
 
 use ndarray::prelude::*;
@@ -109,7 +109,7 @@ use super::{
 /// the same time leveraging :meth:`PyDiGraph.add_child` or
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
 #[pyclass(module = "retworkx", subclass)]
-#[text_signature = "(/, check_cycle=False)"]
+#[text_signature = "(/, check_cycle=False, multigraph=True)"]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
     pub cycle_state: algo::DfsSpace<
@@ -118,6 +118,7 @@ pub struct PyDiGraph {
     >,
     pub check_cycle: bool,
     pub node_removed: bool,
+    pub multigraph: bool,
 }
 
 pub type Edges<'a, E> =
@@ -329,6 +330,14 @@ impl PyDiGraph {
                 ));
             }
         }
+        if !self.multigraph {
+            let exists = self.graph.find_edge(p_index, c_index);
+            if let Some(index) = exists {
+                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
+                *edge_weight = edge;
+                return Ok(index.index());
+            }
+        }
         let edge = self.graph.add_edge(p_index, c_index, edge);
         Ok(edge.index())
     }
@@ -383,13 +392,14 @@ impl PyDiGraph {
 #[pymethods]
 impl PyDiGraph {
     #[new]
-    #[args(check_cycle = "false")]
-    fn new(check_cycle: bool) -> Self {
+    #[args(check_cycle = "false", multigraph = "true")]
+    fn new(check_cycle: bool, multigraph: bool) -> Self {
         PyDiGraph {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
+            multigraph,
         }
     }
 
@@ -399,7 +409,8 @@ impl PyDiGraph {
         let mut out_list: Vec<PyObject> =
             Vec::with_capacity(self.graph.edge_count());
         out_dict.set_item("nodes", node_dict)?;
-
+        out_dict.set_item("nodes_removed", self.node_removed)?;
+        out_dict.set_item("multigraph", self.multigraph)?;
         let dir = petgraph::Direction::Incoming;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
@@ -425,6 +436,16 @@ impl PyDiGraph {
             dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
         let edges_list =
             dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
+        let nodes_removed_raw = dict_state
+            .get_item("nodes_removed")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.node_removed = nodes_removed_raw.extract()?;
+        let multigraph_raw = dict_state
+            .get_item("multigraph")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.multigraph = multigraph_raw.extract()?;
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -488,6 +509,16 @@ impl PyDiGraph {
         Ok(())
     }
 
+    /// Whether the graph is a multigraph (allows multiple edges between
+    /// nodes) or not
+    ///
+    /// If set to ``False`` multiple edges between nodes are not allowed and
+    /// calls that would add a parallel edge will instead update the existing
+    /// edge
+    #[getter]
+    fn multigraph(&self) -> bool {
+        self.multigraph
+    }
     /// Return a list of all edge data.
     ///
     /// :returns: A list of all the edge data objects in the graph
@@ -1772,6 +1803,7 @@ impl PyDiGraph {
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
             node_removed: false,
+            multigraph: true,
         })
     }
 
@@ -1822,6 +1854,7 @@ impl PyDiGraph {
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
             node_removed: false,
+            multigraph: true,
         }
     }
 
@@ -1950,16 +1983,16 @@ impl PyDiGraph {
             let new_c_index = new_node_map.get(&edge.target()).unwrap();
             let weight =
                 weight_transform_callable(py, &edge_map_func, edge.weight())?;
-            self.graph.add_edge(*new_p_index, *new_c_index, weight);
+            self._add_edge(*new_p_index, *new_c_index, weight)?;
         }
         // Add edges from map
         for (this_index, (index, weight)) in node_map.iter() {
             let new_index = new_node_map.get(&NodeIndex::new(*index)).unwrap();
-            self.graph.add_edge(
+            self._add_edge(
                 NodeIndex::new(*this_index),
                 *new_index,
                 weight.clone_ref(py),
-            );
+            )?;
         }
         let out_dict = PyDict::new(py);
         for (orig_node, new_node) in new_node_map.iter() {
@@ -2008,6 +2041,7 @@ impl PyDiGraph {
             node_removed: false,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: self.check_cycle,
+            multigraph: self.multigraph,
         }
     }
 

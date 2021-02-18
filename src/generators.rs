@@ -124,6 +124,7 @@ pub fn directed_cycle_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
@@ -298,6 +299,7 @@ pub fn directed_path_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
@@ -489,6 +491,7 @@ pub fn directed_star_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
@@ -722,6 +725,7 @@ pub fn directed_mesh_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
@@ -977,6 +981,7 @@ pub fn directed_grid_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 

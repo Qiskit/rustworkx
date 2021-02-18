@@ -83,7 +83,7 @@ use petgraph::visit::{
 ///     method call will be used to update the existing edge in place.
 ///
 #[pyclass(module = "retworkx")]
-#[text_signature = "()"]
+#[text_signature = "(/, multigraph=True)"]
 pub struct PyGraph {
     pub graph: StableUnGraph<PyObject, PyObject>,
     pub node_removed: bool,
@@ -356,6 +356,12 @@ impl PyGraph {
         Ok(())
     }
 
+    /// Whether the graph is a multigraph (allows multiple edges between
+    /// nodes) or not
+    ///
+    /// If set to ``False`` multiple edges between nodes are not allowed and
+    /// calls that would add a parallel edge will instead update the existing
+    /// edge
     #[getter]
     fn multigraph(&self) -> bool {
         self.multigraph

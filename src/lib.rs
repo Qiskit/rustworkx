@@ -2148,6 +2148,7 @@ pub fn directed_gnp_random_graph(
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2321,6 +2322,7 @@ pub fn directed_gnm_random_graph(
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
