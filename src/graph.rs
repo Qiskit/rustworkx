@@ -1198,6 +1198,7 @@ impl PyGraph {
         PyGraph {
             graph: out_graph,
             node_removed: false,
+            multigraph: true,
         }
     }
 
