@@ -291,7 +291,8 @@ fn add_blossom(
         in_blossoms[node] = blossom;
     }
     // Compute blossom_best_edges[blossom]
-    let mut best_edge_to: Vec<Option<usize>> = vec![None; 2 * num_nodes];
+    let mut best_edge_to: HashMap<usize, usize> =
+        HashMap::with_capacity(2 * num_nodes);
     for bv_ref in &blossom_children[blossom] {
         let bv = *bv_ref;
         // This sub-blossom does not have a list of least-slack edges;
@@ -317,15 +318,15 @@ fn add_blossom(
                 let blossom_j = in_blossoms[j];
                 if blossom_j != blossom
                     && labels[blossom_j] == Some(1)
-                    && (best_edge_to[blossom_j].is_none()
+                    && (best_edge_to.get(&blossom_j).is_none()
                         || slack(edge_index, &dual_var, &edges)
                             < slack(
-                                best_edge_to[blossom_j].unwrap(),
+                                best_edge_to[&blossom_j],
                                 &dual_var,
                                 &edges,
                             ))
                 {
-                    best_edge_to[blossom_j] = Some(edge_index);
+                    best_edge_to.insert(blossom_j, edge_index);
                 }
             }
         }
@@ -333,11 +334,7 @@ fn add_blossom(
         blossom_best_edges[bv].clear();
         best_edge[bv] = None;
     }
-    blossom_best_edges[blossom] = best_edge_to
-        .iter()
-        .filter(|x| x.is_some())
-        .map(|x| x.unwrap())
-        .collect();
+    blossom_best_edges[blossom] = best_edge_to.values().map(|x| *x).collect();
     //select best_edge[blossom]
     best_edge[blossom] = None;
     for edge_index in &blossom_best_edges[blossom] {
