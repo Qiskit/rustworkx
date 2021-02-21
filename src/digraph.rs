@@ -1391,7 +1391,7 @@ impl PyDiGraph {
     ///
     /// :param int node: The index of the node to get the neighbors of
     ///
-    /// :returns: A list of the neighbor node indicies
+    /// :returns: A list of the neighbor node indices
     /// :rtype: NodeIndices
     #[text_signature = "(self, node, /)"]
     pub fn neighbors(&self, node: usize) -> NodeIndices {
@@ -1400,6 +1400,8 @@ impl PyDiGraph {
                 .graph
                 .neighbors(NodeIndex::new(node))
                 .map(|node| node.index())
+                .collect::<HashSet<usize>>()
+                .drain()
                 .collect(),
         }
     }
