@@ -96,7 +96,7 @@ fn assign_label(
     blossom_children: &[Vec<usize>],
     blossom_base: &[Option<usize>],
     endpoints: &[usize],
-    mate: &[Option<usize>],
+    mate: &HashMap<usize, usize>,
 ) -> PyResult<()> {
     let b = in_blossoms[w];
     assert!(labels[w] == Some(0) && labels[b] == Some(0));
@@ -115,11 +115,11 @@ fn assign_label(
         // with an external mate.)
         let blossom_index: usize = b;
         let base: usize = blossom_base[blossom_index].unwrap();
-        assert!(mate[base].is_some());
+        assert!(mate.get(&base).is_some());
         assign_label(
-            endpoints[mate[base].unwrap()],
+            endpoints[mate[&base]],
             1,
-            match mate[base] {
+            match mate.get(&base) {
                 Some(p) => Some(p ^ 1),
                 None => None,
             },
@@ -148,7 +148,7 @@ fn scan_blossom(
     endpoints: &[usize],
     labels: &mut Vec<Option<usize>>,
     label_ends: &[Option<usize>],
-    mate: &[Option<usize>],
+    mate: &HashMap<usize, usize>,
 ) -> Option<usize> {
     let mut v: Option<usize> = Some(node_a);
     let mut w: Option<usize> = Some(node_b);
@@ -166,7 +166,10 @@ fn scan_blossom(
         path.push(blossom);
         labels[blossom] = Some(5);
         // Trace one step bacl.
-        assert!(label_ends[blossom] == mate[blossom_base[blossom].unwrap()]);
+        assert!(
+            label_ends[blossom]
+                == mate.get(&blossom_base[blossom].unwrap()).copied()
+        );
         if label_ends[blossom].is_none() {
             // The base of blossom is single; stop tracing this path
             v = None;
@@ -213,7 +216,7 @@ fn add_blossom(
     blossom_best_edges: &mut Vec<Vec<usize>>,
     blossom_parents: &mut Vec<Option<usize>>,
     neighbor_endpoints: &[Vec<usize>],
-    mate: &[Option<usize>],
+    mate: &HashMap<usize, usize>,
 ) -> PyResult<()> {
     let (mut v, mut w, _weight) = edges[edge];
     let blossom_b = in_blossoms[base];
@@ -238,7 +241,9 @@ fn add_blossom(
             labels[blossom_v] == Some(2)
                 || (labels[blossom_v] == Some(1)
                     && label_ends[blossom_v]
-                        == mate[blossom_base[blossom_v].unwrap()])
+                        == mate
+                            .get(&blossom_base[blossom_v].unwrap())
+                            .copied())
         );
         // Trace one step back.
         assert!(label_ends[blossom_v].is_some());
@@ -261,7 +266,9 @@ fn add_blossom(
             labels[blossom_w] == Some(2)
                 || (labels[blossom_w] == Some(1)
                     && label_ends[blossom_w]
-                        == mate[blossom_base[blossom_w].unwrap()])
+                        == mate
+                            .get(&blossom_base[blossom_w].unwrap())
+                            .copied())
         );
         // Trace one step back
         assert!(label_ends[blossom_w].is_some());
@@ -359,7 +366,7 @@ fn expand_blossom(
     queue: &mut Vec<usize>,
     blossom_base: &mut Vec<Option<usize>>,
     endpoints: &[usize],
-    mate: &[Option<usize>],
+    mate: &HashMap<usize, usize>,
     blossom_endpoints: &mut Vec<Vec<usize>>,
     allowed_edge: &mut Vec<bool>,
     unused_blossoms: &mut Vec<usize>,
@@ -532,8 +539,7 @@ fn expand_blossom(
                 assert!(labels[v] == Some(2));
                 assert!(in_blossoms[v] == bv);
                 labels[v] = Some(0);
-                labels[endpoints[mate[blossom_base[bv].unwrap()].unwrap()]] =
-                    Some(0);
+                labels[endpoints[mate[&blossom_base[bv].unwrap()]]] = Some(0);
                 assign_label(
                     v,
                     2,
@@ -581,7 +587,7 @@ fn augment_blossom(
     blossom_children: &mut Vec<Vec<usize>>,
     blossom_endpoints: &mut Vec<Vec<usize>>,
     blossom_base: &mut Vec<Option<usize>>,
-    mate: &mut Vec<Option<usize>>,
+    mate: &mut HashMap<usize, usize>,
 ) {
     // Bubble up through the blossom tree from vertex v to an immediate
     // sub-blossom of b.
@@ -676,8 +682,8 @@ fn augment_blossom(
             );
         }
         // Match the edge connecting those sub-blossoms.
-        mate[endpoints[p]] = Some(p ^ 1);
-        mate[endpoints[p ^ 1]] = Some(p);
+        mate.insert(endpoints[p], p ^ 1);
+        mate.insert(endpoints[p ^ 1], p);
     }
     // Rotate the list of sub-blossoms to put the new base at the front.
     let mut children: Vec<usize> = blossom_children[blossom][i..].to_vec();
@@ -705,7 +711,7 @@ fn augment_matching(
     blossom_children: &mut Vec<Vec<usize>>,
     blossom_endpoints: &mut Vec<Vec<usize>>,
     blossom_base: &mut Vec<Option<usize>>,
-    mate: &mut Vec<Option<usize>>,
+    mate: &mut HashMap<usize, usize>,
 ) {
     let (v, w, _weight) = edges[edge];
     for (s_ref, p_ref) in [(v, 2 * edge + 1), (w, 2 * edge)].iter() {
@@ -718,7 +724,8 @@ fn augment_matching(
             let blossom_s = in_blossoms[s];
             assert!(labels[blossom_s] == Some(1));
             assert!(
-                label_ends[blossom_s] == mate[blossom_base[blossom_s].unwrap()]
+                label_ends[blossom_s]
+                    == mate.get(&blossom_base[blossom_s].unwrap()).copied()
             );
             // Augment through the S-blossom from s to base.
             if blossom_s >= num_nodes {
@@ -735,7 +742,7 @@ fn augment_matching(
                 );
             }
             // Update mate[s]
-            mate[s] = Some(p);
+            mate.insert(s, p);
             // Trace one step back.
             if label_ends[blossom_s].is_none() {
                 // Reached a single vertex; stop
@@ -764,7 +771,7 @@ fn augment_matching(
                 );
             }
             // Update mate[j]
-            mate[j] = label_ends[blossom_t];
+            mate.insert(j, label_ends[blossom_t].unwrap());
             // Keep the opposite endpoint;
             // it will be assigned to mate[s] in the next step.
             p = label_ends[blossom_t].unwrap() ^ 1;
@@ -785,7 +792,7 @@ fn verify_optimum(
     blossom_parents: &[Option<usize>],
     blossom_endpoints: &[Vec<usize>],
     blossom_base: &[Option<usize>],
-    mate: &[Option<usize>],
+    mate: &HashMap<usize, usize>,
 ) {
     let dual_var_node_min: i128 = *dual_var[..num_nodes].iter().min().unwrap();
     let node_dual_offset: i128 = if max_cardinality {
@@ -821,26 +828,26 @@ fn verify_optimum(
         }
         assert!(s >= 0);
 
-        if (mate[*i].is_some() && mate[*i].unwrap() / 2 == edge)
-            || (mate[*j].is_some() && mate[*j].unwrap() / 2 == edge)
+        if (mate.get(i).is_some() && mate.get(i).unwrap() / 2 == edge)
+            || (mate.get(j).is_some() && mate.get(j).unwrap() / 2 == edge)
         {
-            assert!(
-                mate[*i].unwrap() / 2 == edge && mate[*j].unwrap() / 2 == edge
-            );
+            assert!(mate[i] / 2 == edge && mate[j] / 2 == edge);
             assert!(s == 0);
         }
     }
     // 2. all single vertices have zero dual value;
     for node in 0..num_nodes {
-        assert!(mate[node].is_some() || dual_var[node] + node_dual_offset == 0);
+        assert!(
+            mate.get(&node).is_some() || dual_var[node] + node_dual_offset == 0
+        );
     }
     // 3. all blossoms with positive dual value are full.
     for blossom in num_nodes..2 * num_nodes {
         if blossom_base[blossom].is_some() && dual_var[blossom] > 0 {
             assert!(blossom_endpoints[blossom].len() % 2 == 1);
             for p in blossom_endpoints[blossom].iter().skip(1).step_by(2) {
-                assert!(mate[endpoints[*p]] == Some(*p ^ 1));
-                assert!(mate[endpoints[*p ^ 1]] == Some(*p));
+                assert!(mate.get(&endpoints[*p]).copied() == Some(p ^ 1));
+                assert!(mate.get(&endpoints[*p ^ 1]) == Some(p));
             }
         }
     }
@@ -934,7 +941,7 @@ pub fn max_weight_matching(
     // mate[v] is the remote endpoint of its matched edge, or None if it is
     // single (i.e. endpoint[mate[v]] is v's partner vertex).
     // Initially all vertices are single; updated during augmentation.
-    let mut mate: Vec<Option<usize>> = vec![None; num_nodes];
+    let mut mate: HashMap<usize, usize> = HashMap::with_capacity(num_nodes);
     // If b is a top-level blossom
     // label[b] is 0 if b is unlabeled (free);
     //             1 if b is a S-vertex/blossom;
@@ -1031,7 +1038,7 @@ pub fn max_weight_matching(
         queue.clear();
         // Label single blossom/vertices with S and put them in queue.
         for v in 0..num_nodes {
-            if mate[v].is_none() && labels[in_blossoms[v]] == Some(0) {
+            if mate.get(&v).is_none() && labels[in_blossoms[v]] == Some(0) {
                 assign_label(
                     v,
                     1,
@@ -1400,21 +1407,19 @@ pub fn max_weight_matching(
     let mut seen: HashSet<(usize, usize)> =
         HashSet::with_capacity(2 * num_nodes);
     let node_list: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    for (index, node) in mate.iter().enumerate() {
-        if node.is_some() {
-            let tmp = (
-                node_list[index].index(),
-                node_list[endpoints[node.unwrap()]].index(),
-            );
-            let rev_tmp = (
-                node_list[endpoints[node.unwrap()]].index(),
-                node_list[index].index(),
-            );
-            if !seen.contains(&tmp) && !seen.contains(&rev_tmp) {
-                out_set.insert(tmp);
-                seen.insert(tmp);
-                seen.insert(rev_tmp);
-            }
+    for (index, node) in mate.iter() {
+        let tmp = (
+            node_list[*index].index(),
+            node_list[endpoints[*node]].index(),
+        );
+        let rev_tmp = (
+            node_list[endpoints[*node]].index(),
+            node_list[*index].index(),
+        );
+        if !seen.contains(&tmp) && !seen.contains(&rev_tmp) {
+            out_set.insert(tmp);
+            seen.insert(tmp);
+            seen.insert(rev_tmp);
         }
     }
     Ok(out_set)
