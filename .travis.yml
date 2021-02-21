@@ -47,9 +47,9 @@ jobs:
     - name: Python 3.7 Tests arm64 Linux
       stage: Linux non-x86_64
       python: 3.7
-      arch: arm64
+      arch: arm64-graviton2
     - stage: deploy
-      arch: arm64
+      arch: arm64-graviton2
       services:
         - docker
       before_install:
