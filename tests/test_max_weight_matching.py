@@ -14,6 +14,7 @@
 # https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/tests/test_matching.py
 
 from itertools import combinations
+import random
 import unittest
 
 import retworkx
@@ -50,7 +51,8 @@ class TestMaxWeightMatching(unittest.TestCase):
                           "output: %s" % (
                               (u, v), (v, u), rx_match, expected_match))
 
-    def compare_rx_nx_sets(self, rx_graph, rx_matches, nx_matches, seed):
+    def compare_rx_nx_sets(self, rx_graph, rx_matches, nx_matches, seed,
+                           nx_graph):
         not_match = False
         for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
@@ -60,7 +62,7 @@ class TestMaxWeightMatching(unittest.TestCase):
                           " output: %s\nnetworkx output: %s\nedge list: %s\n"
                           "falling back to checking for a valid solution" % (
                               seed, (u, v), (v, u), rx_matches,
-                              nx_matches, list(rx_graph.edge_list())))
+                              nx_matches, list(rx_graph.weighted_edge_list())))
                     not_match = True
                     break
         if not_match:
@@ -68,6 +70,14 @@ class TestMaxWeightMatching(unittest.TestCase):
                             "%s is not a valid matching" % rx_matches)
             self.assertTrue(is_maximal_matching(rx_graph, rx_matches),
                             "%s is not a maximal matching" % rx_matches)
+            for (u, v) in rx_matches:
+                for nx_edge in nx_matches:
+                    if u in nx_edge or v in nx_edge:
+                        rx_weight = rx_graph.get_edge_data(u, v)
+                        nx_weight = nx_graph.get_edge_data(*nx_edge)
+                        if not nx_weight:
+                            nx_weight = None
+                        self.assertEqual(rx_weight, nx_weight)
 
     def test_empty_graph(self):
         graph = retworkx.PyGraph()
@@ -429,7 +439,25 @@ class TestMaxWeightMatching(unittest.TestCase):
             nx_matches = networkx.max_weight_matching(nx_graph)
             rx_matches = retworkx.max_weight_matching(rx_graph,
                                                       verify_optimum=True)
-            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i,
+                                    nx_graph)
+
+    def test_gnp_random_against_networkx_with_weight(self):
+        for i in range(1024):
+            random.seed(i)
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            for edge in rx_graph.edge_list():
+                rx_graph.update_edge(*edge, random.randint(0, 5000))
+            nx_graph = networkx.Graph(
+                [(x[0], x[1],
+                  {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
+            nx_matches = networkx.max_weight_matching(nx_graph)
+            rx_matches = retworkx.max_weight_matching(rx_graph,
+                                                      weight_fn=lambda x: x,
+                                                      verify_optimum=True)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i,
+                                    nx_graph)
 
     def test_gnp_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnp_random_graph(10, .78, seed=428)
@@ -438,7 +466,8 @@ class TestMaxWeightMatching(unittest.TestCase):
             nx_graph, maxcardinality=True)
         rx_matches = retworkx.max_weight_matching(
             rx_graph, max_cardinality=True, verify_optimum=True)
-        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 428)
+        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 428,
+                                nx_graph)
 
     def test_gnm_random_against_networkx(self):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 13, seed=42)
@@ -446,7 +475,8 @@ class TestMaxWeightMatching(unittest.TestCase):
         nx_matches = networkx.max_weight_matching(nx_graph)
         rx_matches = retworkx.max_weight_matching(rx_graph,
                                                   verify_optimum=True)
-        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42)
+        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42,
+                                nx_graph)
 
     def test_gnm_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 12, seed=42)
@@ -455,4 +485,5 @@ class TestMaxWeightMatching(unittest.TestCase):
             nx_graph, maxcardinality=True)
         rx_matches = retworkx.max_weight_matching(
             rx_graph, max_cardinality=True, verify_optimum=True)
-        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42)
+        self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42,
+                                nx_graph)
