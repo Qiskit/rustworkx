@@ -466,6 +466,23 @@ class TestMaxWeightMatching(unittest.TestCase):
             self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i,
                                     nx_graph)
 
+    def test_gnp_random_against_networkx_with_negative_weight(self):
+        for i in range(1024):
+            random.seed(i)
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            for edge in rx_graph.edge_list():
+                rx_graph.update_edge(*edge, random.randint(-5000, 5000))
+            nx_graph = networkx.Graph(
+                [(x[0], x[1],
+                  {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
+            nx_matches = networkx.max_weight_matching(nx_graph)
+            rx_matches = retworkx.max_weight_matching(rx_graph,
+                                                      weight_fn=lambda x: x,
+                                                      verify_optimum=True)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i,
+                                    nx_graph)
+
     def test_gnp_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnp_random_graph(10, .78, seed=428)
         nx_graph = networkx.Graph(list(rx_graph.edge_list()))
@@ -483,6 +500,25 @@ class TestMaxWeightMatching(unittest.TestCase):
                                                             seed=42 + i)
             for edge in rx_graph.edge_list():
                 rx_graph.update_edge(*edge, random.randint(0, 5000))
+            nx_graph = networkx.Graph(
+                [(x[0], x[1],
+                  {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
+            nx_matches = networkx.max_weight_matching(nx_graph,
+                                                      maxcardinality=True)
+            rx_matches = retworkx.max_weight_matching(rx_graph,
+                                                      weight_fn=lambda x: x,
+                                                      max_cardinality=True,
+                                                      verify_optimum=True)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i,
+                                    nx_graph)
+
+    def test_gnp_random__networkx_with_negative_weight_max_cardinality(self):
+        for i in range(1024):
+            random.seed(i)
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            for edge in rx_graph.edge_list():
+                rx_graph.update_edge(*edge, random.randint(-5000, 5000))
             nx_graph = networkx.Graph(
                 [(x[0], x[1],
                   {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
