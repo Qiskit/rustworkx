@@ -39,7 +39,7 @@ jobs:
         - sh tools/install_rust.sh
         - export PATH=~/.cargo/bin:$PATH
         - which python
-        - pip install -U pip virtualenv
+        - pip install -U pip virtualenv tox
         - rustup default 1.49.0
     - name: Python 3.7 Tests arm64 Linux
       stage: Linux non-x86_64
