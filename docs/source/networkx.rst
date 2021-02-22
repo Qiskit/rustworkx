@@ -118,6 +118,14 @@ is required that is expected to be added to the node's data payload.
 Edges
 -----
 
+Edges in networkx are accessible by the tuple of the nodes the edge is between.
+In networkx edges only have optional attributes (described below) and no other
+object payloads.
+
+In retworkx any python object can be an edge and have a unique integer index
+assigned to them, just like nodes. However, most functions/methods that work
+with edges use the tuple of node indices the edge is between instead of the
+edge's index.
 
 
 Attributes
@@ -160,10 +168,17 @@ degrees of nodes respectively. These properties provide a real time view into
 the different properties of the graphs and provide additional methods on those
 attributes for looking at graph properties in different ways.
 
-retworkx instead provides different accessor methods that return different
-views of a graph. The :class:`~retworkx.PyDiGraph` and
-:class:`~retworkx.PyGraph` classes also implement the python mapping protocol
-so you can access node 
+retworkx doesn't offer views, but instead provides different accessor methods
+that return copies of the analogous data. There are different functions/methods
+that offer different views on that data. For example,
+:meth:`~retworkx.PyDiGraph.edge_list` is analogous to networkx's ``edges`` view
+and :meth:`~retworkx.PyDiGraph.weighted_edge_list` is equivalent to networkx's
+``edges(data=True)``.
+
+Additionally, in retworkx since everything is integer indexed to access node
+data the :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph` classes
+implement the python mapping protocol so you can access node's data using a
+node's index.
 
 API Equivalents
 ===============
@@ -182,7 +197,7 @@ Class Constructors
      - Only in multigraph flag added in retworkx>= 0.8.0 prior releases
        always allow multiple edges
    * - ``DiGraph()``
-     - :class: `PyDiGraph(multigraph=False) <retworkx.PyDiGraph>`
+     - :class:`PyDiGraph(multigraph=False) <retworkx.PyDiGraph>`
      - Only in multigraph flag added in retworkx>= 0.8.0 prior releases
        always allow multiple edges
    * - ``MultiGraph()``
@@ -194,8 +209,48 @@ Class Constructors
 
 The other thing to note here is that retworkx does not allow initialization
 of a graph when the constructor is called. You will need to call an appropriate
-method of the object to add nodes or edges.
+method of the object to add nodes or edges or use an alternative constructor
+method:
 
+.. list-table::
+   :header-rows: 1
+
+   * - networkx
+     - retworkx
+     - Notes
+   * - .. code-block::
+
+         Graph([(0, 1), (1, 0)])
+
+     - .. code-block::
+
+         graph = PyGraph()
+         graph.extend_from_edge_list([(0, 1), (1, 0)])
+
+     - retworkx input must be a list of 2-tuples, while networkx can be an
+       iterator
+   * - .. code-block::
+
+         Graph([(0, 1, {'weight': 2}), (1, 0, {'weight': 1})])
+
+     - .. code-block::
+
+         graph = PyGraph()
+         graph.extend_from_edge_list([(0, 1, 2), (1, 0, 1)])
+
+     - retworkx input must be a list of 3-tuples, while networkx can be an
+       iterator
+   * - .. code-block::
+
+        Graph(np.array([[0, 1, 1], [1, 0, 1], [1, 0, 1]]))
+
+     - .. code-block::
+
+        PyGraph.from_adjacency_matrix(np.array([[0, 1, 1], [1, 0, 1], [1, 0, 1]], dtype=np.float64))
+
+     - retworkx :meth:`~retworkx.PyDiGraph.from_adjacency_matrix` can only take
+       a float dtype numpy array, you can use
+       ``.astype(np.float64, copy=False)`` to adapt a non-float array.
 
 Graph Modifiers
 ---------------
@@ -229,8 +284,7 @@ Graph Modifiers
        ``None`` if any node indices are missing.
 
 (note the retworkx version links to the :class:`~retworkx.PyDiGraph` version,
-but there will also be an equivalent :class:`~retworkx.PyGraph` method available
-as well)
+but there are also equivalent :class:`~retworkx.PyGraph` methods available)
 
 Functionality Gaps
 ==================
