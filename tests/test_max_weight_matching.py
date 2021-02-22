@@ -53,6 +53,19 @@ class TestMaxWeightMatching(unittest.TestCase):
 
     def compare_rx_nx_sets(self, rx_graph, rx_matches, nx_matches, seed,
                            nx_graph):
+
+        def get_rx_weight(edge):
+            weight = rx_graph.get_edge_data(*edge)
+            if weight is None:
+                return 1
+            return weight
+
+        def get_nx_weight(edge):
+            weight = nx_graph.get_edge_data(*edge)
+            if not weight:
+                return 1
+            return weight['weight']
+
         not_match = False
         for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
@@ -70,14 +83,8 @@ class TestMaxWeightMatching(unittest.TestCase):
                             "%s is not a valid matching" % rx_matches)
             self.assertTrue(is_maximal_matching(rx_graph, rx_matches),
                             "%s is not a maximal matching" % rx_matches)
-            for (u, v) in rx_matches:
-                for nx_edge in nx_matches:
-                    if u in nx_edge or v in nx_edge:
-                        rx_weight = rx_graph.get_edge_data(u, v)
-                        nx_weight = nx_graph.get_edge_data(*nx_edge)
-                        if not nx_weight:
-                            nx_weight = None
-                        self.assertEqual(rx_weight, nx_weight)
+            self.assertEqual(sum(map(get_rx_weight, rx_matches)),
+                             sum(map(get_nx_weight, nx_matches)))
 
     def test_empty_graph(self):
         graph = retworkx.PyGraph()
