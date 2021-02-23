@@ -1,11 +1,12 @@
 ---
 features:
   - |
-    The :class:`~retworkx.PyGraph` constructor now has a new kwarg
-    ``multigraph`` which can optionally be set to ``False`` to disallow
-    adding parallel edges to the graph. If an edge is attempted to be added
-    where one already exists it will update the weight for the edge with the
-    new value. For example:
+    The :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
+    constructors now have a new kwarg ``multigraph`` which can optionally be
+    set to ``False`` to disallow adding parallel edges to the graph. With
+    ``multigraph=False`` if an edge is attempted to be added where one already
+    exists it will update the weight for the edge with the new value. For
+    example:
 
     .. jupyter-execute::
 
