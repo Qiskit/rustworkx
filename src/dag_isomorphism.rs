@@ -221,6 +221,7 @@ fn reindex_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
         cycle_state: algo::DfsSpace::default(),
         check_cycle: dag.check_cycle,
         node_removed: false,
+        multigraph: true,
     }
 }
 

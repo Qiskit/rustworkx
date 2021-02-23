@@ -124,6 +124,7 @@ pub fn directed_cycle_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
@@ -135,6 +136,10 @@ pub fn directed_cycle_graph(
 /// :param list weights: A list of node weights, the first element in the list
 ///     will be the center node of the cycle graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated cycle graph
 /// :rtype: PyGraph
@@ -163,12 +168,13 @@ pub fn directed_cycle_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
 pub fn cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -206,6 +212,7 @@ pub fn cycle_graph(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
     })
 }
 
@@ -292,6 +299,7 @@ pub fn directed_path_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
@@ -303,6 +311,10 @@ pub fn directed_path_graph(
 /// :param list weights: A list of node weights, the first element in the list
 ///     will be the center node of the path graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated path graph
 /// :rtype: PyGraph
@@ -331,12 +343,13 @@ pub fn directed_path_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
 pub fn path_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -366,6 +379,7 @@ pub fn path_graph(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
     })
 }
 
@@ -477,6 +491,7 @@ pub fn directed_star_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
@@ -488,6 +503,10 @@ pub fn directed_star_graph(
 /// :param list weights: A list of node weights, the first element in the list
 ///     will be the center node of the star graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated star graph
 /// :rtype: PyGraph
@@ -516,12 +535,13 @@ pub fn directed_star_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
 pub fn star_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -548,6 +568,7 @@ pub fn star_graph(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
     })
 }
 
@@ -558,6 +579,10 @@ pub fn star_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param list weights: A list of node weights. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated mesh graph
 /// :rtype: PyGraph
@@ -586,12 +611,13 @@ pub fn star_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
 pub fn mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -622,6 +648,7 @@ pub fn mesh_graph(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
     })
 }
 
@@ -698,6 +725,7 @@ pub fn directed_mesh_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
@@ -715,6 +743,10 @@ pub fn directed_mesh_graph(
 ///     weights list, the trailing weights are ignored.
 ///     If number of nodes(rows*cols) is greater than length of
 ///     weights list, extra nodes with None weight are appended.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated grid graph
 /// :rtype: PyGraph
@@ -744,13 +776,14 @@ pub fn directed_mesh_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction]
-#[text_signature = "(/, rows=None, cols=None, weights=None)"]
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"]
 pub fn grid_graph(
     py: Python,
     rows: Option<usize>,
     cols: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
@@ -812,6 +845,7 @@ pub fn grid_graph(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
     })
 }
 
@@ -947,6 +981,7 @@ pub fn directed_grid_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
     })
 }
 
