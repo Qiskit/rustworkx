@@ -2593,6 +2593,126 @@ pub fn digraph_find_cycle(
     EdgeList { edges: cycle }
 }
 
+fn matching_combinations(
+    matching: &HashSet<(usize, usize)>,
+) -> Vec<((usize, usize), (usize, usize))> {
+    let r: usize = 2;
+    let mut out_vec: Vec<((usize, usize), (usize, usize))> = Vec::new();
+    let pool: Vec<(usize, usize)> = matching.iter().cloned().collect();
+    let n = matching.len();
+    if n < r {
+        return out_vec;
+    }
+    let mut indices: Vec<usize> = (0..r).collect();
+    out_vec.push((pool[0], pool[1]));
+    let mut found;
+    let mut index = 0;
+    loop {
+        found = false;
+        for i in (0..r).rev() {
+            if indices[i] != i + n - r {
+                found = true;
+                index = i;
+                break;
+            }
+        }
+        if !found {
+            return out_vec;
+        }
+        indices[index] += 1;
+        for j in (index + 1)..r {
+            indices[j] = indices[j - 1] + 1
+        }
+        out_vec.push((pool[indices[0]], pool[indices[1]]));
+    }
+}
+
+fn _inner_is_matching(
+    graph: &graph::PyGraph,
+    matching: &HashSet<(usize, usize)>,
+) -> bool {
+    let has_edge = |e: &(usize, usize)| -> bool {
+        graph
+            .graph
+            .contains_edge(NodeIndex::new(e.0), NodeIndex::new(e.1))
+    };
+
+    if !matching.iter().all(|e| has_edge(e)) {
+        return false;
+    }
+    let combinations = matching_combinations(matching);
+    combinations.iter().all(|&x| {
+        let tmp_set: HashSet<usize> =
+            [x.0 .0, x.0 .1, x.1 .0, x.1 .1].iter().cloned().collect();
+        tmp_set.len() == 4
+    })
+}
+
+/// Check if matching is valid for graph
+///
+/// A *matching* in a graph is a set of edges in which no two distinct
+/// edges share a common endpoint.
+///
+/// :param PyDiGraph graph: The graph to check if the matching is valid for
+/// :param set matching: A set of node index tuples for each edge in the
+///     matching.
+///
+/// :returns: Whether the provided matching is a valid matching for the graph
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(graph, matching, /)"]
+pub fn is_matching(
+    graph: &graph::PyGraph,
+    matching: HashSet<(usize, usize)>,
+) -> bool {
+    _inner_is_matching(graph, &matching)
+}
+
+/// Check if a matching is a maximal matching for a graph
+///
+/// A *maximal matching* in a graph is a matching in which adding any
+/// edge would cause the set to no longer be a valid matching.
+///
+/// :param PyDiGraph graph: The graph to check if the matching is maximal for.
+/// :param set matching: A set of node index tuples for each edge in the
+///     matching.
+///
+/// :returns: Whether the provided matching is a valid matching and whether it
+///     is maximal or not.
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(graph, matching, /)"]
+pub fn is_maximal_matching(
+    graph: &graph::PyGraph,
+    matching: HashSet<(usize, usize)>,
+) -> bool {
+    if !_inner_is_matching(graph, &matching) {
+        return false;
+    }
+    let edge_list: HashSet<[usize; 2]> = graph
+        .edge_references()
+        .map(|edge| {
+            let mut tmp_array = [edge.source().index(), edge.target().index()];
+            tmp_array.sort_unstable();
+            tmp_array
+        })
+        .collect();
+    let matched_edges: HashSet<[usize; 2]> = matching
+        .iter()
+        .map(|edge| {
+            let mut tmp_array = [edge.0, edge.1];
+            tmp_array.sort_unstable();
+            tmp_array
+        })
+        .collect();
+    let mut unmatched_edges = edge_list.difference(&matched_edges);
+    unmatched_edges.all(|e| {
+        let mut tmp_set = matching.clone();
+        tmp_set.insert((e[0], e[1]));
+        !_inner_is_matching(graph, &tmp_set)
+    })
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -2661,6 +2781,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(is_matching))?;
+    m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
