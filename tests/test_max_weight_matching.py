@@ -25,21 +25,6 @@ def match_dict_to_set(match):
     return {(u, v) for (u, v) in set(map(frozenset, match.items()))}
 
 
-def is_matching(matching):
-    return all(
-        len(set(e1) & set(e2)) == 0 for e1, e2 in combinations(matching, 2))
-
-
-def is_maximal_matching(graph, rx_matches):
-    if not all(len(set(e1) & set(e2)) == 0 for e1, e2 in combinations(
-            rx_matches, 2)):
-        return False
-    all_edges = set(map(frozenset, graph.edge_list()))
-    matched_edges = set(map(frozenset, rx_matches))
-    unmatched_edges = all_edges - matched_edges
-    return all(not is_matching(rx_matches | {e}) for e in unmatched_edges)
-
-
 class TestMaxWeightMatching(unittest.TestCase):
 
     def compare_match_sets(self, rx_match, expected_match):
@@ -79,9 +64,9 @@ class TestMaxWeightMatching(unittest.TestCase):
                     not_match = True
                     break
         if not_match:
-            self.assertTrue(is_matching(rx_matches),
+            self.assertTrue(retworkx.is_matching(rx_graph, rx_matches),
                             "%s is not a valid matching" % rx_matches)
-            self.assertTrue(is_maximal_matching(rx_graph, rx_matches),
+            self.assertTrue(retworkx.is_maximal_matching(rx_graph, rx_matches),
                             "%s is not a maximal matching" % rx_matches)
             self.assertEqual(sum(map(get_rx_weight, rx_matches)),
                              sum(map(get_nx_weight, nx_matches)))
