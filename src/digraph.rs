@@ -23,8 +23,10 @@ use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
+use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::PyTraverseError;
 use pyo3::Python;
 
 use ndarray::prelude::*;
@@ -108,7 +110,7 @@ use super::{
 /// penalty that grows as the graph does. If you're adding a node and edge at
 /// the same time leveraging :meth:`PyDiGraph.add_child` or
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
-#[pyclass(module = "retworkx", subclass)]
+#[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, check_cycle=False, multigraph=True)"]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
@@ -2165,5 +2167,31 @@ fn weight_transform_callable(
             Ok(res.to_object(py))
         }
         None => Ok(value.clone_ref(py)),
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for PyDiGraph {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for node in self
+            .graph
+            .node_indices()
+            .map(|node| self.graph.node_weight(node).unwrap())
+        {
+            visit.call(node)?;
+        }
+        for edge in self
+            .graph
+            .edge_indices()
+            .map(|edge| self.graph.edge_weight(edge).unwrap())
+        {
+            visit.call(edge)?;
+        }
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        self.graph = StableDiGraph::<PyObject, PyObject>::new();
+        self.node_removed = false;
     }
 }

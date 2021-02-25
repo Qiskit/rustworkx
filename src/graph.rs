@@ -22,8 +22,10 @@ use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
+use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::PyTraverseError;
 use pyo3::Python;
 
 use ndarray::prelude::*;
@@ -82,7 +84,7 @@ use petgraph::visit::{
 ///     ``False`` if parallel edges are added the weight/weight from that
 ///     method call will be used to update the existing edge in place.
 ///
-#[pyclass(module = "retworkx")]
+#[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, multigraph=True)"]
 pub struct PyGraph {
     pub graph: StableUnGraph<PyObject, PyObject>,
@@ -1422,6 +1424,32 @@ impl PyMappingProtocol for PyGraph {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for PyGraph {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for node in self
+            .graph
+            .node_indices()
+            .map(|node| self.graph.node_weight(node).unwrap())
+        {
+            visit.call(node)?;
+        }
+        for edge in self
+            .graph
+            .edge_indices()
+            .map(|edge| self.graph.edge_weight(edge).unwrap())
+        {
+            visit.call(edge)?;
+        }
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        self.graph = StableUnGraph::<PyObject, PyObject>::default();
+        self.node_removed = false;
     }
 }
 
