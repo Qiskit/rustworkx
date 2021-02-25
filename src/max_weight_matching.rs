@@ -334,7 +334,7 @@ fn add_blossom(
         blossom_best_edges[bv].clear();
         best_edge[bv] = None;
     }
-    blossom_best_edges[blossom] = best_edge_to.values().map(|x| *x).collect();
+    blossom_best_edges[blossom] = best_edge_to.values().copied().collect();
     //select best_edge[blossom]
     best_edge[blossom] = None;
     for edge_index in &blossom_best_edges[blossom] {
@@ -833,9 +833,9 @@ fn verify_optimum(
         }
     }
     // 2. all single vertices have zero dual value;
-    for node in 0..num_nodes {
+    for (node, dual_var_node) in dual_var.iter().enumerate().take(num_nodes) {
         assert!(
-            mate.get(&node).is_some() || dual_var[node] + node_dual_offset == 0
+            mate.get(&node).is_some() || dual_var_node + node_dual_offset == 0
         );
     }
     // 3. all blossoms with positive dual value are full.

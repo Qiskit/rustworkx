@@ -338,6 +338,7 @@ fn is_isomorphic_node_match(
         Ok(res.is_true(py).unwrap())
     };
 
+    #[allow(clippy::unnecessary_wraps)]
     fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
         Ok(true)
     }
@@ -750,7 +751,7 @@ fn digraph_k_shortest_path_lengths(
     };
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let out_map = k_shortest_path::k_shortest_path(
@@ -805,7 +806,7 @@ fn graph_k_shortest_path_lengths(
     };
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let out_map = k_shortest_path::k_shortest_path(
@@ -1128,7 +1129,7 @@ fn collect_runs(
 
     let filter_node = |node: &PyObject| -> PyResult<bool> {
         let res = filter_fn.call1(py, (node,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let nodes = match algo::toposort(graph, None) {
@@ -1810,7 +1811,7 @@ fn graph_dijkstra_shortest_path_lengths(
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
-        Ok(raw.extract(py)?)
+        raw.extract(py)
     };
 
     let start = NodeIndex::new(node);
@@ -1869,7 +1870,7 @@ fn digraph_dijkstra_shortest_path_lengths(
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
-        Ok(raw.extract(py)?)
+        raw.extract(py)
     };
 
     let start = NodeIndex::new(node);
