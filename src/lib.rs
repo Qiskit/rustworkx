@@ -19,6 +19,7 @@ mod generators;
 mod graph;
 mod iterators;
 mod k_shortest_path;
+mod max_weight_matching;
 mod union;
 
 use std::cmp::{Ordering, Reverse};
@@ -2492,6 +2493,70 @@ pub fn cycle_basis(
     cycles
 }
 
+/// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
+///
+/// A matching is a subset of edges in which no node occurs more than once.
+/// The weight of a matching is the sum of the weights of its edges.
+/// A maximal matching cannot add more edges and still be a matching.
+/// The cardinality of a matching is the number of matched edges.
+///
+/// This function takes time :math:`O(n^3)` where ``n`` is the number of nodes
+/// in the graph.
+///
+/// This method is based on the "blossom" method for finding augmenting
+/// paths and the "primal-dual" method for finding a matching of maximum
+/// weight, both methods invented by Jack Edmonds [1]_.
+///
+/// :param PyGraph graph: The undirected graph to compute the max weight
+///     matching for. Expects to have no parallel edges (multigraphs are
+///     untested currently).
+/// :param bool max_cardinality: If True, compute the maximum-cardinality
+///     matching with maximum weight among all maximum-cardinality matchings.
+///     Defaults False.
+/// :param callable weight_fn: An optional callable that will be passed a
+///     single argument the edge object for each edge in the graph. It is
+///     expected to return an ``int`` weight for that edge. For example,
+///     if the weights are all integers you can use: ``lambda x: x``. If not
+///     specified the value for ``default_weight`` will be used for all
+///     edge weights.
+/// :param int default_weight: The ``int`` value to use for all edge weights
+///     in the graph if ``weight_fn`` is not specified. Defaults to ``1``.
+/// :param bool verify_optimum: A boolean flag to run a check that the found
+///     solution is optimum. If set to true an exception will be raised if
+///     the found solution is not optimum. This is mostly useful for testing.
+///
+/// :returns: A set of tuples ofthe matching, Note that only a single
+///     direction will be listed in the output, for example:
+///     ``{(0, 1),}``.
+/// :rtype: set
+///
+/// .. [1] "Efficient Algorithms for Finding Maximum Matching in Graphs",
+///     Zvi Galil, ACM Computing Surveys, 1986.
+///
+#[pyfunction(
+    max_cardinality = "false",
+    default_weight = 1,
+    verify_optimum = "false"
+)]
+#[text_signature = "(graph, /, max_cardinality=False, weight_fn=None, default_weight=1, verify_optimum=False)"]
+pub fn max_weight_matching(
+    py: Python,
+    graph: &graph::PyGraph,
+    max_cardinality: bool,
+    weight_fn: Option<PyObject>,
+    default_weight: i128,
+    verify_optimum: bool,
+) -> PyResult<HashSet<(usize, usize)>> {
+    max_weight_matching::max_weight_matching(
+        py,
+        graph,
+        max_cardinality,
+        weight_fn,
+        default_weight,
+        verify_optimum,
+    )
+}
+
 /// Compute the strongly connected components for a directed graph
 ///
 /// This function is implemented using Kosaraju's algorithm
@@ -2783,6 +2848,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
+    m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
