@@ -5,7 +5,7 @@ retworkx for networkx users
 This is an introductory guide for existing networkx users on how to use
 retworkx, how it differs from networkx, and key differences to keep in mind.
 
-Some Key differences
+Some Key Differences
 ====================
 
 retworkx (as the name implies) was inspired by networkx and the goal of the
@@ -53,7 +53,7 @@ The use of integer indexes for everything is normally the biggest difference tha
 existing networkx users have to adapt to when migrating to retworkx.
 
 Similarly when there are algorithm functions that operate on a node or edge
-data callback functions are used in retworkx to return statically typed data
+data, callback functions are used in retworkx to return statically typed data
 from node or edge payloads to use for various algorithms. In networkx this is
 typically done using named attributes of nodes or edges (the typical example is
 a node or edge attribute named ``weight`` is used by default for functions that
@@ -79,7 +79,7 @@ while in retworkx you would use::
     dist_matrix = rx.digraph_floyd_warshall_numpy(
         graph, weight_fn=lambda edge: edge[weight])
 
-or more consisesly::
+or more concisely::
 
     import retworkx as rx
     
@@ -112,7 +112,7 @@ on a node. This is described in more detail below.
 
 In retworkx any python object (hashable or not) can be used as a node, however
 nodes can only be accessed by an integer node index (which is returned by any
-function adding a node). There are no optional attributes for nodes if this
+function adding a node). There are no optional attributes for nodes. If this
 is required that is expected to be added to the node's data payload.
 
 Edges
@@ -175,7 +175,7 @@ that offer different views on that data. For example,
 and :meth:`~retworkx.PyDiGraph.weighted_edge_list` is equivalent to networkx's
 ``edges(data=True)``.
 
-Additionally, in retworkx since everything is integer indexed to access node
+Additionally, in retworkx since everything is integer indexed, to access node
 data the :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph` classes
 implement the python mapping protocol so you can access node's data using a
 node's index.
@@ -259,25 +259,25 @@ Graph Modifiers
    :header-rows: 1
  
    * - networkx
-     - retworlx
+     - retworkx
      - Notes
    * - ``add_node()``
      - :meth:`~retworkx.PyDiGraph.add_node`
      - retworkx returns a node index for the newly created node
    * - ``add_nodes_from``
      - :meth:`~retworkx.PyDiGraph.add_nodes_from`
-     - retworkx requires the input to be a list of objects and will returns a
+     - retworkx requires the input to be a list of objects and will return a
        list of node indices for the newly created nodes
    * - ``add_edge``
      - :meth:`~retworkx.PyDiGraph.add_edge`
-     - retworkx requires 3 parameters be used the 2 node indices and the payload
+     - retworkx requires 3 parameters be used, the 2 node indices and the payload
        (networkx works with either 2 or 3)
    * - ``add_edges_from``
      - :meth:`~retworkx.PyDiGraph.add_edges_from`,
        :meth:`~retworkx.PyDiGraph.add_edges_from_no_data`,
        :meth:`~retworkx.PyDiGraph.extend_from_edge_list`,
        :meth:`~retworkx.PyDiGraph.extend_from_weighted_edge_list`
-     - retworkx requires a list of either a 3 or 2 tuple (depend on whether
+     - retworkx requires a list of either a 3 or 2 tuple (depending on whether
        weights/data are expected or not). The difference between the retworkx
        ``extend_from*`` and ``add_edges_from*`` methods are that the
        ``extend_from*`` will create new nodes with a weight/data payload of
@@ -289,7 +289,7 @@ but there are also equivalent :class:`~retworkx.PyGraph` methods available)
 Functionality Gaps
 ==================
 
-networkx is a mature library that has wide user base and extensive feature set,
+networkx is a mature library that has a wide user base and extensive feature set,
 while retworkx by comparison is a much younger library and is missing a lot
 of the features that networkx offers. If you encounter a feature that networkx
 offers which is missing from retworkx that you would like to use please open an
