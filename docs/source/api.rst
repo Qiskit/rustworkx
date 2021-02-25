@@ -90,6 +90,7 @@ Specific Graph Type Methods
    retworkx.digraph_dfs_edges
    retworkx.digraph_find_cycle
    retworkx.digraph_union
+   retworkx.max_weight_matching
 
 .. _universal-functions:
 

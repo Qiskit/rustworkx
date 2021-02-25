@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add a new function, :func:`~retworkx.max_weight_matching` for computing the
+    maximum-weighted matching for a :class:`~retworkx.PyGraph` object.
