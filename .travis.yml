@@ -12,12 +12,9 @@ before_install:
   - sh tools/install_rust.sh
   - export PATH=~/.cargo/bin:$PATH
   - which python
-  - pip install -U pip virtualenv
-install:
-  - virtualenv test-venv
-  - test-venv/bin/pip install -U .
+  - pip install -U pip virtualenv tox
 script:
-  - cd tests && ../test-venv/bin/python -m unittest discover .
+  - tox -epy
 stages:
   - name: Linux non-x86_64
     if: tag IS blank
@@ -37,12 +34,19 @@ jobs:
       stage: Linux non-x86_64
       python: 3.7
       arch: s390x
+      before_install:
+        - which python
+        - sh tools/install_rust.sh
+        - export PATH=~/.cargo/bin:$PATH
+        - which python
+        - pip install -U pip virtualenv tox
+        - rustup default 1.49.0
     - name: Python 3.7 Tests arm64 Linux
       stage: Linux non-x86_64
       python: 3.7
-      arch: arm64
+      arch: arm64-graviton2
     - stage: deploy
-      arch: arm64
+      arch: arm64-graviton2
       services:
         - docker
       before_install:

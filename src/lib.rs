@@ -19,6 +19,7 @@ mod generators;
 mod graph;
 mod iterators;
 mod k_shortest_path;
+mod max_weight_matching;
 mod union;
 
 use std::cmp::{Ordering, Reverse};
@@ -337,6 +338,7 @@ fn is_isomorphic_node_match(
         Ok(res.is_true(py).unwrap())
     };
 
+    #[allow(clippy::unnecessary_wraps)]
     fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
         Ok(true)
     }
@@ -501,7 +503,7 @@ fn bfs_successors(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
-) -> PyResult<iterators::BFSSuccessors> {
+) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> =
@@ -522,9 +524,9 @@ fn bfs_successors(
             ));
         }
     }
-    Ok(iterators::BFSSuccessors {
+    iterators::BFSSuccessors {
         bfs_successors: out_list,
-    })
+    }
 }
 
 /// Return the ancestors of a node in a graph.
@@ -749,7 +751,7 @@ fn digraph_k_shortest_path_lengths(
     };
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let out_map = k_shortest_path::k_shortest_path(
@@ -804,7 +806,7 @@ fn graph_k_shortest_path_lengths(
     };
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let out_map = k_shortest_path::k_shortest_path(
@@ -1127,7 +1129,7 @@ fn collect_runs(
 
     let filter_node = |node: &PyObject| -> PyResult<bool> {
         let res = filter_fn.call1(py, (node,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let nodes = match algo::toposort(graph, None) {
@@ -1809,7 +1811,7 @@ fn graph_dijkstra_shortest_path_lengths(
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
-        Ok(raw.extract(py)?)
+        raw.extract(py)
     };
 
     let start = NodeIndex::new(node);
@@ -1868,7 +1870,7 @@ fn digraph_dijkstra_shortest_path_lengths(
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
-        Ok(raw.extract(py)?)
+        raw.extract(py)
     };
 
     let start = NodeIndex::new(node);
@@ -2148,6 +2150,7 @@ pub fn directed_gnp_random_graph(
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2241,6 +2244,7 @@ pub fn undirected_gnp_random_graph(
     let graph = graph::PyGraph {
         graph: inner_graph,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2320,6 +2324,7 @@ pub fn directed_gnm_random_graph(
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2394,6 +2399,7 @@ pub fn undirected_gnm_random_graph(
     let graph = graph::PyGraph {
         graph: inner_graph,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2439,8 +2445,7 @@ pub fn cycle_basis(
             }
         };
         // Stack (ie "pushdown list") of vertices already in the spanning tree
-        let mut stack: Vec<NodeIndex> = Vec::new();
-        stack.push(root_index);
+        let mut stack: Vec<NodeIndex> = vec![root_index];
         // Map of node index to predecessor node index
         let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
         pred.insert(root_index, root_index);
@@ -2461,15 +2466,12 @@ pub fn cycle_basis(
                     used.insert(neighbor, temp_set);
                 // A self loop:
                 } else if z == neighbor {
-                    let mut cycle: Vec<usize> = Vec::new();
-                    cycle.push(z.index());
+                    let cycle: Vec<usize> = vec![z.index()];
                     cycles.push(cycle);
                 // A cycle was found:
                 } else if !used.get(&z).unwrap().contains(&neighbor) {
                     let pn = used.get(&neighbor).unwrap();
-                    let mut cycle: Vec<NodeIndex> = Vec::new();
-                    cycle.push(neighbor);
-                    cycle.push(z);
+                    let mut cycle: Vec<NodeIndex> = vec![neighbor, z];
                     let mut p = pred.get(&z).unwrap();
                     while !pn.contains(p) {
                         cycle.push(*p);
@@ -2490,6 +2492,70 @@ pub fn cycle_basis(
         root_node = None;
     }
     cycles
+}
+
+/// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
+///
+/// A matching is a subset of edges in which no node occurs more than once.
+/// The weight of a matching is the sum of the weights of its edges.
+/// A maximal matching cannot add more edges and still be a matching.
+/// The cardinality of a matching is the number of matched edges.
+///
+/// This function takes time :math:`O(n^3)` where ``n`` is the number of nodes
+/// in the graph.
+///
+/// This method is based on the "blossom" method for finding augmenting
+/// paths and the "primal-dual" method for finding a matching of maximum
+/// weight, both methods invented by Jack Edmonds [1]_.
+///
+/// :param PyGraph graph: The undirected graph to compute the max weight
+///     matching for. Expects to have no parallel edges (multigraphs are
+///     untested currently).
+/// :param bool max_cardinality: If True, compute the maximum-cardinality
+///     matching with maximum weight among all maximum-cardinality matchings.
+///     Defaults False.
+/// :param callable weight_fn: An optional callable that will be passed a
+///     single argument the edge object for each edge in the graph. It is
+///     expected to return an ``int`` weight for that edge. For example,
+///     if the weights are all integers you can use: ``lambda x: x``. If not
+///     specified the value for ``default_weight`` will be used for all
+///     edge weights.
+/// :param int default_weight: The ``int`` value to use for all edge weights
+///     in the graph if ``weight_fn`` is not specified. Defaults to ``1``.
+/// :param bool verify_optimum: A boolean flag to run a check that the found
+///     solution is optimum. If set to true an exception will be raised if
+///     the found solution is not optimum. This is mostly useful for testing.
+///
+/// :returns: A set of tuples ofthe matching, Note that only a single
+///     direction will be listed in the output, for example:
+///     ``{(0, 1),}``.
+/// :rtype: set
+///
+/// .. [1] "Efficient Algorithms for Finding Maximum Matching in Graphs",
+///     Zvi Galil, ACM Computing Surveys, 1986.
+///
+#[pyfunction(
+    max_cardinality = "false",
+    default_weight = 1,
+    verify_optimum = "false"
+)]
+#[text_signature = "(graph, /, max_cardinality=False, weight_fn=None, default_weight=1, verify_optimum=False)"]
+pub fn max_weight_matching(
+    py: Python,
+    graph: &graph::PyGraph,
+    max_cardinality: bool,
+    weight_fn: Option<PyObject>,
+    default_weight: i128,
+    verify_optimum: bool,
+) -> PyResult<HashSet<(usize, usize)>> {
+    max_weight_matching::max_weight_matching(
+        py,
+        graph,
+        max_cardinality,
+        weight_fn,
+        default_weight,
+        verify_optimum,
+    )
 }
 
 /// Compute the strongly connected components for a directed graph
@@ -2545,8 +2611,7 @@ pub fn digraph_find_cycle(
     };
 
     // Stack (ie "pushdown list") of vertices already in the spanning tree
-    let mut stack: Vec<NodeIndex> = Vec::new();
-    stack.push(source_index);
+    let mut stack: Vec<NodeIndex> = vec![source_index];
     // map to store parent of a node
     let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
     // a node is in the visiting set if at least one of its child is unexamined
@@ -2662,6 +2727,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
