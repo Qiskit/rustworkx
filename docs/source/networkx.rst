@@ -17,12 +17,7 @@ decisions, and other differences the libraries are not identical.
 The biggest difference to keep in mind is networkx is a very dynamic in how it
 can be used. It allows you to treat a graph object associatively (like a python
 dictionary) and interact with the graph using the objects you're putting
-on the graph. While retworkx being written in rust puts more constraints on how
-you interact with graph object. With retworkx you can still attach any Python
-object on the a graph but each node and edge is assigned an integer index.
-That index must be used for accessing nodes and edges on the graph.
-
-For example, in networkx::
+on the graph. For example::
 
     import networkx as nx
     
@@ -31,7 +26,11 @@ For example, in networkx::
     graph.add_node('my_node_b')
     graph.add_edge('my_node_a', 'my_node_b')
 
-In retworkx would be something like::
+While retworkx being written in Rust puts more constraints on how
+you interact with graph object. With retworkx you can still attach any Python
+object on the a graph but each node and edge is assigned an integer index.
+That index must be used for accessing nodes and edges on the graph.
+In retworkx the above example would be something like::
 
     import retworkx as rx
     
