@@ -1,8 +1,8 @@
 ---
 upgrade:
   - |
-    The minimum supported Rust version has increased to 1.45.0, you will need
-    rustc >=1.45.0 now to build retworkx. The previous minimum supported Rust
+    The minimum supported Rust version has increased to 1.42.0, you will need
+    rustc >=1.42.0 now to build retworkx. The previous minimum supported Rust
     version 1.39.0 will no longer be able to compile retworkx. This is due to a
-    change in in the new version of the `pyo3 <https://github.com/PyO3/pyo3>`__
-    library which is used to build the Python bindings.
+    change in in the new version of the
+    `ndarray <https://github.com/rust-ndarray/ndarray>`__ library.
