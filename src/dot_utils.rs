@@ -80,7 +80,7 @@ fn attr_map_to_string<'a>(
     let attr_callable =
         |node: &'a PyObject| -> PyResult<BTreeMap<String, String>> {
             let res = attrs.unwrap().call1(py, (node,))?;
-            Ok(res.extract(py)?)
+            res.extract(py)
         };
 
     let attrs = attr_callable(weight)?;
