@@ -337,6 +337,7 @@ fn is_isomorphic_node_match(
         Ok(res.is_true(py).unwrap())
     };
 
+    #[allow(clippy::unnecessary_wraps)]
     fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
         Ok(true)
     }
