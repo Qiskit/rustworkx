@@ -27,7 +27,7 @@ on the graph. For example::
     graph.add_edge('my_node_a', 'my_node_b')
 
 While retworkx being written in Rust puts more constraints on how
-you interact with graph object. With retworkx you can still attach any Python
+you interact with graph objects. With retworkx you can still attach any Python
 object on the a graph but each node and edge is assigned an integer index.
 That index must be used for accessing nodes and edges on the graph.
 In retworkx the above example would be something like::
