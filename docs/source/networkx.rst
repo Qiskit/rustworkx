@@ -54,7 +54,7 @@ existing networkx users have to adapt to when migrating to retworkx.
 Similarly when there are algorithm functions that operate on a node or edge
 data, callback functions are used in retworkx to return statically typed data
 from node or edge payloads to use for various algorithms. In networkx this is
-typically done using named attributes of nodes or edges (the typical example is
+typically done using named attributes of nodes or edges (the typical example of
 a node or edge attribute named ``weight`` is used by default for functions that
 need a numerical weight).
 
@@ -118,13 +118,13 @@ Edges
 -----
 
 Edges in networkx are accessible by the tuple of the nodes the edge is between.
-In networkx edges only have optional attributes (described below) and no other
-object payloads.
+Edges only have optional attributes (as described below) and no other object 
+payloads.
 
 In retworkx any python object can be an edge and have a unique integer index
-assigned to them, just like nodes. However, most functions/methods that work
-with edges use the tuple of node indices the edge is between instead of the
-edge's index.
+assigned to it, just like nodes. However, edges are in most functions/methods
+referenced by the tuple of the indices of the nodes the edge is between
+instead of the edge's index.
 
 
 Attributes
@@ -134,11 +134,11 @@ networkx has a concept of
 `graph <https://networkx.org/documentation/stable/tutorial.html#graph-attributes>`__,
 `node <https://networkx.org/documentation/stable/tutorial.html#node-attributes>`__,
 and `edge attributes <https://networkx.org/documentation/stable/tutorial.html#edge-attributes>`__
-in addition to the hashable object used for node and edge payloads. But in
-retworkx there is no analogous concept, instead the payloads for nodes or
-edges are any python object (hashable or not). This enables you to build similar
-structures to the attributes concept but also use alternative structures based
-on your use case.
+in addition to the hashable object used for node and edge payloads. Retworkx 
+has no analogous concept. Instead, the payloads for nodes and edges are any 
+python object (hashable or not). This enables you to build similar structures 
+to the attributes concept, but also use alternative structures specific to 
+your use case.
 
 For example, something like::
 
@@ -174,7 +174,7 @@ that offer different views on that data. For example,
 and :meth:`~retworkx.PyDiGraph.weighted_edge_list` is equivalent to networkx's
 ``edges(data=True)``.
 
-Additionally, in retworkx since everything is integer indexed, to access node
+Additionally, since everything in retworkx is integer indexed, to access node
 data the :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph` classes
 implement the python mapping protocol so you can access node's data using a
 node's index.
@@ -289,7 +289,7 @@ Functionality Gaps
 ==================
 
 networkx is a mature library that has a wide user base and extensive feature set,
-while retworkx by comparison is a much younger library and is missing a lot
+while retworkx, by comparison, is a much younger library and is missing a lot
 of the features that networkx offers. If you encounter a feature that networkx
 offers which is missing from retworkx that you would like to use please open an
 "Enhancement request" issue at: https://github.com/Qiskit/retworkx/issues/new/choose
