@@ -2170,8 +2170,14 @@ fn weight_transform_callable(
     }
 }
 
+// Functions to enable Python Garbage Collection
 #[pyproto]
 impl PyGCProtocol for PyDiGraph {
+    // Function for PyTypeObject.tp_traverse [1][2] used to tell Python what
+    // objects the PyDiGraph has strong references to.
+    //
+    // [1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_traverse
+    // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
     fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
         for node in self
             .graph
@@ -2190,6 +2196,12 @@ impl PyGCProtocol for PyDiGraph {
         Ok(())
     }
 
+    // Function for PyTypeObject.tp_clear [1][2] used to tell Python's GC how
+    // to drop all references held by a PyDiGraph object when the GC needs to
+    // break reference cycles.
+    //
+    // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
+    // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
     fn __clear__(&mut self) {
         self.graph = StableDiGraph::<PyObject, PyObject>::new();
         self.node_removed = false;
