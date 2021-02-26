@@ -10,12 +10,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::collections::hash_map::DefaultHasher;
 use std::convert::TryInto;
+use std::hash::Hasher;
 
 use pyo3::class::{PyObjectProtocol, PySequenceProtocol};
 use pyo3::exceptions::{PyIndexError, PyNotImplementedError};
+use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
 use pyo3::types::PySequence;
+use pyo3::PyTraverseError;
 
 /// A custom class for the return from :func:`retworkx.bfs_successors`
 ///
@@ -39,7 +43,7 @@ use pyo3::types::PySequence;
 ///     first_element = next(bfs_iter)
 ///     second_element = nex(bfs_iter)
 ///
-#[pyclass(module = "retworkx")]
+#[pyclass(module = "retworkx", gc)]
 pub struct BFSSuccessors {
     pub bfs_successors: Vec<(PyObject, Vec<PyObject>)>,
 }
@@ -106,6 +110,39 @@ impl<'p> PyObjectProtocol<'p> for BFSSuccessors {
             )),
         }
     }
+
+    fn __str__(&self) -> PyResult<String> {
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        let mut str_vec: Vec<String> =
+            Vec::with_capacity(self.bfs_successors.len());
+        for node in &self.bfs_successors {
+            let mut successor_list: Vec<String> =
+                Vec::with_capacity(node.1.len());
+            for succ in &node.1 {
+                successor_list.push(format!("{}", succ.as_ref(py).str()?));
+            }
+            str_vec.push(format!(
+                "({}, [{}])",
+                node.0.as_ref(py).str()?,
+                successor_list.join(", ")
+            ));
+        }
+        Ok(format!("BFSSuccessors[{}]", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        for index in &self.bfs_successors {
+            hasher.write_isize(index.0.as_ref(py).hash()?);
+            for succ in &index.1 {
+                hasher.write_isize(succ.as_ref(py).hash()?);
+            }
+        }
+        Ok(hasher.finish())
+    }
 }
 
 #[pyproto]
@@ -123,6 +160,23 @@ impl PySequenceProtocol for BFSSuccessors {
         } else {
             Ok(self.bfs_successors[idx as usize].clone())
         }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for BFSSuccessors {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for node in &self.bfs_successors {
+            visit.call(&node.0)?;
+            for succ in &node.1 {
+                visit.call(succ)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        self.bfs_successors = Vec::new();
     }
 }
 
@@ -148,7 +202,7 @@ impl PySequenceProtocol for BFSSuccessors {
 ///     first_element = next(nodes_iter)
 ///     second_element = next(nodes_iter)
 ///
-#[pyclass(module = "retworkx")]
+#[pyclass(module = "retworkx", gc)]
 pub struct NodeIndices {
     pub nodes: Vec<usize>,
 }
@@ -200,6 +254,20 @@ impl<'p> PyObjectProtocol<'p> for NodeIndices {
             )),
         }
     }
+
+    fn __str__(&self) -> PyResult<String> {
+        let str_vec: Vec<String> =
+            self.nodes.iter().map(|n| format!("{}", n)).collect();
+        Ok(format!("NodeIndices[{}]", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.nodes {
+            hasher.write_usize(*index);
+        }
+        Ok(hasher.finish())
+    }
 }
 
 #[pyproto]
@@ -215,6 +283,15 @@ impl PySequenceProtocol for NodeIndices {
             Ok(self.nodes[idx as usize])
         }
     }
+}
+
+#[pyproto]
+impl PyGCProtocol for NodeIndices {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
 }
 
 /// A custom class for the return of edge lists
@@ -239,7 +316,7 @@ impl PySequenceProtocol for NodeIndices {
 ///     first_element = next(edges_iter)
 ///     second_element = next(edges_iter)
 ///
-#[pyclass(module = "retworkx")]
+#[pyclass(module = "retworkx", gc)]
 pub struct EdgeList {
     pub edges: Vec<(usize, usize)>,
 }
@@ -291,6 +368,24 @@ impl<'p> PyObjectProtocol<'p> for EdgeList {
             )),
         }
     }
+
+    fn __str__(&self) -> PyResult<String> {
+        let str_vec: Vec<String> = self
+            .edges
+            .iter()
+            .map(|e| format!("({}, {})", e.0, e.1))
+            .collect();
+        Ok(format!("EdgeList[{}]", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for edge in &self.edges {
+            hasher.write_usize(edge.0);
+            hasher.write_usize(edge.1);
+        }
+        Ok(hasher.finish())
+    }
 }
 
 #[pyproto]
@@ -306,6 +401,15 @@ impl PySequenceProtocol for EdgeList {
             Ok(self.edges[idx as usize])
         }
     }
+}
+
+#[pyproto]
+impl PyGCProtocol for EdgeList {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
 }
 
 /// A custom class for the return of edge lists with weights
@@ -330,7 +434,7 @@ impl PySequenceProtocol for EdgeList {
 ///     first_element = next(edges_iter)
 ///     second_element = next(edges_iter)
 ///
-#[pyclass(module = "retworkx")]
+#[pyclass(module = "retworkx", gc)]
 pub struct WeightedEdgeList {
     pub edges: Vec<(usize, usize, PyObject)>,
 }
@@ -389,6 +493,33 @@ impl<'p> PyObjectProtocol<'p> for WeightedEdgeList {
             )),
         }
     }
+
+    fn __str__(&self) -> PyResult<String> {
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        let mut str_vec: Vec<String> = Vec::with_capacity(self.edges.len());
+        for edge in &self.edges {
+            str_vec.push(format!(
+                "({}, {}, {})",
+                edge.0,
+                edge.1,
+                edge.2.as_ref(py).str()?
+            ));
+        }
+        Ok(format!("WeightedEdgeList[{}]", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        for index in &self.edges {
+            hasher.write_usize(index.0);
+            hasher.write_usize(index.1);
+            hasher.write_isize(index.2.as_ref(py).hash()?);
+        }
+        Ok(hasher.finish())
+    }
 }
 
 #[pyproto]
@@ -403,5 +534,19 @@ impl PySequenceProtocol for WeightedEdgeList {
         } else {
             Ok(self.edges[idx as usize].clone())
         }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for WeightedEdgeList {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for edge in &self.edges {
+            visit.call(&edge.2)?;
+        }
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        self.edges = Vec::new();
     }
 }
