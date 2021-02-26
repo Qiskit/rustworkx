@@ -94,6 +94,8 @@ Specific Graph Type Methods
    retworkx.is_maximal_matching
    retworkx.max_weight_matching
 
+.. _universal-functions:
+
 Universal Functions
 '''''''''''''''''''
 
