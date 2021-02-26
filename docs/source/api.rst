@@ -92,6 +92,8 @@ Specific Graph Type Methods
    retworkx.digraph_union
    retworkx.max_weight_matching
 
+.. _universal-functions:
+
 Universal Functions
 '''''''''''''''''''
 
