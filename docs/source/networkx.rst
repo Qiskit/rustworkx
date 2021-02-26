@@ -119,7 +119,7 @@ Edges
 
 Edges in networkx are accessible by the tuple of the nodes the edge is between.
 Edges only have optional attributes (as described below) and no other object 
-payloads.
+payload.
 
 In retworkx any python object can be an edge and have a unique integer index
 assigned to it, just like nodes. However, edges are in most functions/methods
@@ -134,7 +134,7 @@ networkx has a concept of
 `graph <https://networkx.org/documentation/stable/tutorial.html#graph-attributes>`__,
 `node <https://networkx.org/documentation/stable/tutorial.html#node-attributes>`__,
 and `edge attributes <https://networkx.org/documentation/stable/tutorial.html#edge-attributes>`__
-in addition to the hashable object used for node and edge payloads. Retworkx 
+in addition to the hashable object used for a node's payload. Retworkx
 has no analogous concept. Instead, the payloads for nodes and edges are any 
 python object (hashable or not). This enables you to build similar structures 
 to the attributes concept, but also use alternative structures specific to 
