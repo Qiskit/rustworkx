@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    The :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph` classes
+    now are integrated with Python's garbage collector so they'll properly
+    be cleared when there are no more Python references to an object.
+    In previous releases the Python garbage collector did not know how to
+    interact with :class:`~retworkx.PyDiGraph` or :class:`~retworkx.PyGraph`
+    objects and as a result they would never be freed until Python exited.
+    This has been fixed by adding the garbage collection integration.
