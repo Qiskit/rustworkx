@@ -2703,10 +2703,15 @@ pub fn is_matching(
     _inner_is_matching(graph, &matching)
 }
 
-/// Check if a matching is a maximal matching for a graph
+/// Check if a matching is a maximal (**not** maximum) matching for a graph
 ///
 /// A *maximal matching* in a graph is a matching in which adding any
 /// edge would cause the set to no longer be a valid matching.
+///
+/// .. note::
+///
+///   This is not checking for a *maximum* (globally optimal) matching, but
+///   a *maximal* (locally optimal) matching.
 ///
 /// :param PyDiGraph graph: The graph to check if the matching is maximal for.
 /// :param set matching: A set of node index tuples for each edge in the
