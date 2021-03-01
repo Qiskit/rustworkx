@@ -2659,40 +2659,6 @@ pub fn digraph_find_cycle(
     EdgeList { edges: cycle }
 }
 
-fn matching_combinations(
-    matching: &HashSet<(usize, usize)>,
-) -> Vec<((usize, usize), (usize, usize))> {
-    let r: usize = 2;
-    let mut out_vec: Vec<((usize, usize), (usize, usize))> = Vec::new();
-    let pool: Vec<(usize, usize)> = matching.iter().cloned().collect();
-    let n = matching.len();
-    if n < r {
-        return out_vec;
-    }
-    let mut indices: Vec<usize> = (0..r).collect();
-    out_vec.push((pool[0], pool[1]));
-    let mut found;
-    let mut index = 0;
-    loop {
-        found = false;
-        for i in (0..r).rev() {
-            if indices[i] != i + n - r {
-                found = true;
-                index = i;
-                break;
-            }
-        }
-        if !found {
-            return out_vec;
-        }
-        indices[index] += 1;
-        for j in (index + 1)..r {
-            indices[j] = indices[j - 1] + 1
-        }
-        out_vec.push((pool[indices[0]], pool[indices[1]]));
-    }
-}
-
 fn _inner_is_matching(
     graph: &graph::PyGraph,
     matching: &HashSet<(usize, usize)>,
@@ -2706,12 +2672,15 @@ fn _inner_is_matching(
     if !matching.iter().all(|e| has_edge(e)) {
         return false;
     }
-    let combinations = matching_combinations(matching);
-    combinations.iter().all(|&x| {
-        let tmp_set: HashSet<usize> =
-            [x.0 .0, x.0 .1, x.1 .0, x.1 .1].iter().cloned().collect();
-        tmp_set.len() == 4
-    })
+    let mut found: HashSet<usize> = HashSet::with_capacity(2 * matching.len());
+    for (v1, v2) in matching {
+        if found.contains(v1) || found.contains(v2) {
+            return false;
+        }
+        found.insert(*v1);
+        found.insert(*v2);
+    }
+    true
 }
 
 /// Check if matching is valid for graph
