@@ -1,9 +1,9 @@
 ---
 features:
   - |
-    New universal functions that can take in a :class:`~retworkx.PyGraph` or
-    :class:`~retworkx.PyDiGraph` instead of being class specific have been to
-    the retworkx API. These new functions are:
+    New :ref:`universal-functions` that can take in a :class:`~retworkx.PyGraph`
+    or :class:`~retworkx.PyDiGraph` instead of being class specific have been
+    to the retworkx API. These new functions are:
 
      * :func:`retworkx.distance_matrix`
      * :func:`retworkx.floyd_warshall_numpy`

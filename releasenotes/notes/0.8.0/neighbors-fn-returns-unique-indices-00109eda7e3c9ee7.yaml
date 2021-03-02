@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    The output from :meth:`retworkx.PyDiGraph.neighbors`
+    and :meth:`retworkx.PyGraph.neighbors` methods will no longer
+    include duplicate entries in case of parallel edges between nodes. See
+    `#250 <https://github.com/Qiskit/retworkx/issues/250>`__ for more details.

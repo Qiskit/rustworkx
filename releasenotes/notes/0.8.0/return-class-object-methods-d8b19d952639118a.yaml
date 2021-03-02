@@ -3,7 +3,7 @@ features:
   - |
     The custom return types :class:`~retworkx.BFSSuccessors`,
     :class:`~retworkx.NodeIndices`, :class:`~retworkx.EdgeList`, and
-    :class:`~retworkx.WeightedEdgeList` now implement ``_str__`` so that
+    :class:`~retworkx.WeightedEdgeList` now implement ``__str__`` so that
     running ``str()`` (for example when calling ``print()`` on the object) it
     will return a human readable string with the contents of the custom return
     type.
@@ -19,11 +19,10 @@ features:
     ``hash()`` on the inner unhashable object.
 fixes:
   - |
-    The custom return types :class:`~retworkx.BFSSuccessors`,
+    In previous releases the Python garbage collector did not know how to
+    interact with the custom return types :class:`~retworkx.BFSSuccessors`,
     :class:`~retworkx.NodeIndices`, :class:`~retworkx.EdgeList`, and
-    :class:`~retworkx.WeightedEdgeList` now are integrated with Python's
-    garbage collector so they'll properly be cleared when there are no more
-    Python references to an object. In previous releases the Python garbage
-    collector did not know how to interact with the custom return types and as
-    a result they would never be freed until Python exited. This has been fixed
-    by adding the garbage collection integration.
+    :class:`~retworkx.WeightedEdgeList` and as a result they may never have
+    been freed until Python exited. To fix this issue the custom return type
+    classes now are integrated with Python's garbage collector so they'll
+    properly be cleared when there are no more Python references to an object.
