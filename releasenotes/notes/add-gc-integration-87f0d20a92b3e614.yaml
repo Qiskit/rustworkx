@@ -7,4 +7,4 @@ fixes:
     To fix this issue, the :class:`~retworkx.PyDiGraph` and
     :class:`~retworkx.PyGraph` classes now are integrated with Python's garbage
     collector so they'll properly be cleared when there are no more references
-    to an graph object.
+    to a graph object.
