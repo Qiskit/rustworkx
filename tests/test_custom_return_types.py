@@ -76,6 +76,23 @@ class TestBFSSuccessorsComparisons(unittest.TestCase):
         bfs_copy = pickle.loads(bfs_pickle)
         self.assertEqual(bfs, bfs_copy)
 
+    def test_str(self):
+        res = retworkx.bfs_successors(self.dag, 0)
+        self.assertEqual("BFSSuccessors[(a, [b])]", str(res))
+
+    def test_hash(self):
+        res = retworkx.bfs_successors(self.dag, 0)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_hash_invalid_type(self):
+        self.dag.add_child(0, [1, 2, 3], 'edgy')
+        res = retworkx.bfs_successors(self.dag, 0)
+        with self.assertRaises(TypeError):
+            hash(res)
+
 
 class TestNodeIndicesComparisons(unittest.TestCase):
 
@@ -125,6 +142,17 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         nodes_copy = pickle.loads(nodes_pickle)
         self.assertEqual(nodes, nodes_copy)
 
+    def test_str(self):
+        res = self.dag.node_indexes()
+        self.assertEqual("NodeIndices[0, 1]", str(res))
+
+    def test_hash(self):
+        res = self.dag.node_indexes()
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
 
 class TestEdgeListComparisons(unittest.TestCase):
 
@@ -171,6 +199,17 @@ class TestEdgeListComparisons(unittest.TestCase):
         edges_pickle = pickle.dumps(edges)
         edges_copy = pickle.loads(edges_pickle)
         self.assertEqual(edges, edges_copy)
+
+    def test_str(self):
+        res = self.dag.edge_list()
+        self.assertEqual("EdgeList[(0, 1)]", str(res))
+
+    def test_hash(self):
+        res = self.dag.edge_list()
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
 
 
 class TestWeightedEdgeListComparisons(unittest.TestCase):
@@ -220,3 +259,20 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
         edges_pickle = pickle.dumps(edges)
         edges_copy = pickle.loads(edges_pickle)
         self.assertEqual(edges, edges_copy)
+
+    def test_str(self):
+        res = self.dag.weighted_edge_list()
+        self.assertEqual("WeightedEdgeList[(0, 1, Edgy)]", str(res))
+
+    def test_hash(self):
+        res = self.dag.weighted_edge_list()
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_hash_invalid_type(self):
+        self.dag.add_child(0, 'c', ['edgy', 'not_edgy'])
+        res = self.dag.weighted_edge_list()
+        with self.assertRaises(TypeError):
+            hash(res)
