@@ -109,12 +109,10 @@ fn _rescale(
         } else {
             scale = 1.0 / ((node_count - 1) * (node_count - 2)) as f64;
         }
+    } else if !directed {
+        scale = 0.5;
     } else {
-        if !directed {
-            scale = 0.5;
-        } else {
-            do_scale = false;
-        }
+        do_scale = false;
     }
     if do_scale {
         for i in 0..betweenness.len() as usize {
