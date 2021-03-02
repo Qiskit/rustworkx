@@ -205,7 +205,6 @@ where
     while !Q.is_empty() {
         let v = Q.remove(0);
         sorted_by_distance.push(v);
-        //        let neighbors = graph.neighbors_directed(v, Incoming);
         for w in graph.neighbors(v) {
             if *(distance.get(&w).unwrap()) < 0 {
                 Q.push(w);
