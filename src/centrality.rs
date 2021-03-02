@@ -225,5 +225,5 @@ where
             }
         }
     }
-    return (sorted_by_distance, predecessors, sigma);
+    (sorted_by_distance, predecessors, sigma)
 }
