@@ -10,7 +10,7 @@ features:
   - |
     The custom return types :class:`~retworkx.BFSSuccessors`,
     :class:`~retworkx.NodeIndices`, :class:`~retworkx.EdgeList`, and
-    :class:`~retworkx.WeightedEdgeList` now implement ``_str__`` so that
+    :class:`~retworkx.WeightedEdgeList` now implement ``__hash__`` so that
     running ``hash()`` (for example when insert them into a ``dict``) will
     return a valid hash for the object. The only exception to this is for
     :class:`~retworkx.BFSSuccessors` and :class:`~retworkx.WeightedEdgeList`
