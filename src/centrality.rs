@@ -21,7 +21,7 @@ use petgraph::visit::{
     NodeCount,
     NodeIndexable,
 };
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 // Correspondence to notation in Brandes 2001
 //
