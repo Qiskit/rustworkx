@@ -4,7 +4,7 @@ prelude: >
     for this release are some usability improvements including the introduction
     of new methods for interacting with edges, constructing graphs from
     adjacency matrices, and :ref:`universal-functions` that are not strictly
-    type and will work with either a :class:`~retworkx.PyGraph` or
+    typed and will work with either a :class:`~retworkx.PyGraph` or
     :class:`~retworkx.PyDiGraph` object. It also includes new algorithm
     functions around matchings for a :class:`~retworkx.PyGraph`, including a
     function to find the maximum weight matching.
