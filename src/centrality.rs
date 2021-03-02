@@ -85,7 +85,7 @@ where
         endpoints,
     );
 
-    return Ok(betweenness);
+    Ok(betweenness)
 }
 
 fn _rescale(
