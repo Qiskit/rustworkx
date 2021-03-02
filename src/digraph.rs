@@ -23,8 +23,10 @@ use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
+use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::PyTraverseError;
 use pyo3::Python;
 
 use ndarray::prelude::*;
@@ -108,7 +110,7 @@ use super::{
 /// penalty that grows as the graph does. If you're adding a node and edge at
 /// the same time leveraging :meth:`PyDiGraph.add_child` or
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
-#[pyclass(module = "retworkx", subclass)]
+#[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, check_cycle=False, multigraph=True)"]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
@@ -2165,5 +2167,43 @@ fn weight_transform_callable(
             Ok(res.to_object(py))
         }
         None => Ok(value.clone_ref(py)),
+    }
+}
+
+// Functions to enable Python Garbage Collection
+#[pyproto]
+impl PyGCProtocol for PyDiGraph {
+    // Function for PyTypeObject.tp_traverse [1][2] used to tell Python what
+    // objects the PyDiGraph has strong references to.
+    //
+    // [1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_traverse
+    // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for node in self
+            .graph
+            .node_indices()
+            .map(|node| self.graph.node_weight(node).unwrap())
+        {
+            visit.call(node)?;
+        }
+        for edge in self
+            .graph
+            .edge_indices()
+            .map(|edge| self.graph.edge_weight(edge).unwrap())
+        {
+            visit.call(edge)?;
+        }
+        Ok(())
+    }
+
+    // Function for PyTypeObject.tp_clear [1][2] used to tell Python's GC how
+    // to drop all references held by a PyDiGraph object when the GC needs to
+    // break reference cycles.
+    //
+    // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
+    // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
+    fn __clear__(&mut self) {
+        self.graph = StableDiGraph::<PyObject, PyObject>::new();
+        self.node_removed = false;
     }
 }
