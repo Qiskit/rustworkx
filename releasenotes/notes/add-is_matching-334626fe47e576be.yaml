@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    A new algorithm function, :func:`~retworkx.is_matching`, was added to
+    check if a matching set is valid for given graph.
+  - |
+    A new algorithm function, :func:`~retworkx.is_maxmimal_matching`, was added
+    to check if a matching set is valid and maximal for a given graph.
