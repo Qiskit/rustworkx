@@ -81,8 +81,8 @@ jobs:
       install:
         - echo ""
       env:
-        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
-        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
+        - CIBW_BEFORE_ALL="yum install -y wget && rm -rf rust-installer"
+        - CIBW_BEFORE_BUILD="bash {project}/tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
         - CIBW_TEST_REQUIRES=networkx
