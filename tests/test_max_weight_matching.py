@@ -14,7 +14,6 @@
 # https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/tests/test_matching.py
 
 import random
-import unittest
 
 import fixtures
 import networkx
