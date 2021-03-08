@@ -21,7 +21,7 @@ class TestTransitivity(unittest.TestCase):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(5)))
         graph.add_edges_from_no_data([
-            (0, 1), (0, 2), (0, 3), (0, 4), 
+            (0, 1), (0, 2), (0, 3), (0, 4),
             (1, 2)
         ])
         res = retworkx.transitivity(graph)
@@ -35,7 +35,7 @@ class TestTransitivity(unittest.TestCase):
         ])
         res = retworkx.transitivity(graph)
         self.assertEqual(res, 1.0)
-        
+
     def test_transitivity_star(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(5)))
@@ -44,7 +44,7 @@ class TestTransitivity(unittest.TestCase):
         ])
         res = retworkx.transitivity(graph)
         self.assertEqual(res, 0.0)
-        
+
     def test_transitivity_empty(self):
         graph = retworkx.PyGraph()
         res = retworkx.transitivity(graph)
