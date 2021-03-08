@@ -25,12 +25,54 @@ The easiest way to run the test suite is to use
 [**tox**](https://tox.readthedocs.io/en/latest/#). You can install tox
 with pip: `pip install -U tox`. Tox provides several advantages, but the
 biggest one is that it builds an isolated virtualenv for running tests. This
-means it does not pollute your system python when running.
+means it does not pollute your system python when running. However, by default
+tox will recompile retworkx from source every time it is run even if there
+are no changes made to the rust code. To avoid this you can use the
+`--skip-pkg-install` package if you'd like to rerun tests without recompiling.
+Note, you only want to use this flag if you recently ran tox and there are no
+rust code (or packaged python code) changes to the repo since then. Otherwise
+the retworkx package tox installs in it's virtualenv will be out of date (or
+missing).
 
 Note, if you run tests outside of tox that you can **not** run the tests from
 the root of the repo, this is because retworkx packaging shim will conflict
 with imports from retworkx the installed version of retworkx (which contains
 the compiled extension).
+
+#### Running subsets of tests
+
+f you just want to run a subset of tests you can pass a selection regex to the
+test runner. For example, if you want to run all tests that have "dag" in the
+test id you can run: `tox -epy -- dag`. You can pass arguments directly to the
+test runner after the bare `--`. To see all the options on test selection you
+can refer to the stestr manual:
+
+https://stestr.readthedocs.io/en/stable/MANUAL.html#test-selection
+
+If you want to run a single test module, test class, or individual test method
+you can do this faster with the `-n`/`--no-discover` option. For example:
+
+to run a module:
+```
+tox -epy -- -n test_max_weight_matching
+```
+or to run the same module by path:
+```
+tox -epy -- -n graph/test_nodes.py
+```
+to run a class:
+```
+tox -epy -- -n graph.test_nodes.TestNodes
+```
+to run a method:
+```
+tox -epy -- -n graph.test_nodes.TestNodes.test_no_nodes
+```
+
+It's important to note that tox will be running from the `tests/` directory in
+the repo, so any paths you pass to the test runner via path need to be relative
+to that directory.
+
 
 ### Style
 

@@ -84,7 +84,7 @@ jobs:
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -
       - name: Install deps
-        run: pip install -U setuptools-rust networkx
+        run: pip install -U setuptools-rust networkx testtools fixtures
       - name: Build retworkx
         run: python setup.py develop
         env:
