@@ -2753,6 +2753,60 @@ pub fn is_maximal_matching(
     })
 }
 
+fn _triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
+    let mut triangles: usize = 0;
+
+    let index = NodeIndex::new(node);
+    let mut neighbors: HashSet<NodeIndex> =
+        graph.graph.neighbors(index).collect();
+    neighbors.remove(&index);
+
+    for nodev in &neighbors {
+        triangles += graph
+            .graph
+            .neighbors(*nodev)
+            .filter(|&x| (x != *nodev) && neighbors.contains(&x))
+            .count();
+    }
+
+    let d: usize = neighbors.len();
+    let triples: usize = match d {
+        0 => 0,
+        _ => (d * (d - 1)) / 2,
+    };
+
+    (triangles / 2, triples)
+}
+
+/// The transitivity of a graph is defined as:
+/// .. math::
+///     `c=3 \times \frac{\text{number of triangles}}{{\text{number of connected triples}}}`
+///
+/// A “connected triple” means a single vertex with
+/// edges running to an unordered pair of others.
+///
+/// :param PyGraph graph: Graph to be used.
+///
+/// :returns: Transitivity.
+/// :rtype: float
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn transitivity(graph: &graph::PyGraph) -> f64 {
+    let (triangles, triples) =
+        graph
+            .graph
+            .node_indices()
+            .fold((0, 0), |(sumx, sumy), node| {
+                let (resx, resy) = _triangles(graph, node.index());
+                (sumx + resx, sumy + resy)
+            });
+
+    match triangles {
+        0 => 0.0,
+        _ => triangles as f64 / triples as f64,
+    }
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -2824,6 +2878,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
+    m.add_wrapped(wrap_pyfunction!(transitivity))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
