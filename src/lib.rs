@@ -2779,6 +2779,7 @@ fn _triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
 }
 
 /// The transitivity of a graph is defined as:
+///
 /// .. math::
 ///     `c=3 \times \frac{\text{number of triangles}}{\text{number of connected triples}}`
 ///
