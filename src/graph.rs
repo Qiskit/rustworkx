@@ -258,7 +258,9 @@ impl GetAdjacencyMatrix for PyGraph {
         a: NodeIndex,
         b: NodeIndex,
     ) -> bool {
-        self.graph.is_adjacent(matrix, a, b)
+        let n = self.node_bound();
+        let index = n * a.index() + b.index();
+        matrix.contains(index)
     }
 }
 
