@@ -14,17 +14,26 @@
 # https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/tests/test_matching.py
 
 import random
-import unittest
+
+import fixtures
+import networkx
+import testtools
 
 import retworkx
-import networkx
 
 
 def match_dict_to_set(match):
     return {(u, v) for (u, v) in set(map(frozenset, match.items()))}
 
 
-class TestMaxWeightMatching(unittest.TestCase):
+class TestMaxWeightMatching(testtools.TestCase):
+
+    def setUp(self):
+        super().setUp()
+        stdout = self.useFixture(fixtures.StringStream('stdout')).stream
+        self.useFixture(fixtures.MonkeyPatch('sys.stdout', stdout))
+        stderr = self.useFixture(fixtures.StringStream('stderr')).stream
+        self.useFixture(fixtures.MonkeyPatch('sys.stderr', stderr))
 
     def compare_match_sets(self, rx_match, expected_match):
         for (u, v) in rx_match:
@@ -424,49 +433,49 @@ class TestMaxWeightMatching(unittest.TestCase):
 
     def test_gnp_random_against_networkx(self):
         for i in range(1024):
-            with self.subTest(i=i):
-                rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
-                                                                seed=42 + i)
-                nx_graph = networkx.Graph(list(rx_graph.edge_list()))
-                nx_matches = networkx.max_weight_matching(nx_graph)
-                rx_matches = retworkx.max_weight_matching(rx_graph,
-                                                          verify_optimum=True)
-                self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
-                                        42 + i, nx_graph)
+            # TODO: add back subTest usage on new testtools release
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            nx_graph = networkx.Graph(list(rx_graph.edge_list()))
+            nx_matches = networkx.max_weight_matching(nx_graph)
+            rx_matches = retworkx.max_weight_matching(rx_graph,
+                                                      verify_optimum=True)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
+                                    42 + i, nx_graph)
 
     def test_gnp_random_against_networkx_with_weight(self):
         for i in range(1024):
-            with self.subTest(i=i):
-                random.seed(i)
-                rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
-                                                                seed=42 + i)
-                for edge in rx_graph.edge_list():
-                    rx_graph.update_edge(*edge, random.randint(0, 5000))
-                nx_graph = networkx.Graph(
-                    [(x[0], x[1],
-                     {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
-                nx_matches = networkx.max_weight_matching(nx_graph)
-                rx_matches = retworkx.max_weight_matching(
-                    rx_graph, weight_fn=lambda x: x, verify_optimum=True)
-                self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
-                                        42 + i, nx_graph)
+            # TODO: add back subTest usage on new testtools release
+            random.seed(i)
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            for edge in rx_graph.edge_list():
+                rx_graph.update_edge(*edge, random.randint(0, 5000))
+            nx_graph = networkx.Graph(
+                [(x[0], x[1],
+                 {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
+            nx_matches = networkx.max_weight_matching(nx_graph)
+            rx_matches = retworkx.max_weight_matching(
+                rx_graph, weight_fn=lambda x: x, verify_optimum=True)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
+                                    42 + i, nx_graph)
 
     def test_gnp_random_against_networkx_with_negative_weight(self):
         for i in range(1024):
-            with self.subTest(i=i):
-                random.seed(i)
-                rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
-                                                                seed=42 + i)
-                for edge in rx_graph.edge_list():
-                    rx_graph.update_edge(*edge, random.randint(-5000, 5000))
-                nx_graph = networkx.Graph(
-                    [(x[0], x[1],
-                     {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
-                nx_matches = networkx.max_weight_matching(nx_graph)
-                rx_matches = retworkx.max_weight_matching(
-                    rx_graph, weight_fn=lambda x: x, verify_optimum=True)
-                self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
-                                        42 + i, nx_graph)
+            # TODO: add back subTest usage on new testtools release
+            random.seed(i)
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            for edge in rx_graph.edge_list():
+                rx_graph.update_edge(*edge, random.randint(-5000, 5000))
+            nx_graph = networkx.Graph(
+                [(x[0], x[1],
+                 {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
+            nx_matches = networkx.max_weight_matching(nx_graph)
+            rx_matches = retworkx.max_weight_matching(
+                rx_graph, weight_fn=lambda x: x, verify_optimum=True)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
+                                    42 + i, nx_graph)
 
     def test_gnp_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnp_random_graph(10, .78, seed=428)
@@ -480,41 +489,41 @@ class TestMaxWeightMatching(unittest.TestCase):
 
     def test_gnp_random_against_networkx_with_weight_max_cardinality(self):
         for i in range(1024):
-            with self.subTest(i=i):
-                random.seed(i)
-                rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
-                                                                seed=42 + i)
-                for edge in rx_graph.edge_list():
-                    rx_graph.update_edge(*edge, random.randint(0, 5000))
-                nx_graph = networkx.Graph(
-                    [(x[0], x[1],
-                     {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
-                nx_matches = networkx.max_weight_matching(nx_graph,
-                                                          maxcardinality=True)
-                rx_matches = retworkx.max_weight_matching(
-                    rx_graph, weight_fn=lambda x: x, max_cardinality=True,
-                    verify_optimum=True)
-                self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
-                                        42 + i, nx_graph)
+            # TODO: add back subTest usage on new testtools release
+            random.seed(i)
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            for edge in rx_graph.edge_list():
+                rx_graph.update_edge(*edge, random.randint(0, 5000))
+            nx_graph = networkx.Graph(
+                [(x[0], x[1],
+                 {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
+            nx_matches = networkx.max_weight_matching(nx_graph,
+                                                      maxcardinality=True)
+            rx_matches = retworkx.max_weight_matching(
+                rx_graph, weight_fn=lambda x: x, max_cardinality=True,
+                verify_optimum=True)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
+                                    42 + i, nx_graph)
 
     def test_gnp_random__networkx_with_negative_weight_max_cardinality(self):
         for i in range(1024):
-            with self.subTest(i=i):
-                random.seed(i)
-                rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
-                                                                seed=42 + i)
-                for edge in rx_graph.edge_list():
-                    rx_graph.update_edge(*edge, random.randint(-5000, 5000))
-                nx_graph = networkx.Graph(
-                    [(x[0], x[1],
-                     {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
-                nx_matches = networkx.max_weight_matching(nx_graph,
-                                                          maxcardinality=True)
-                rx_matches = retworkx.max_weight_matching(
-                    rx_graph, weight_fn=lambda x: x, max_cardinality=True,
-                    verify_optimum=True)
-                self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
-                                        42 + i, nx_graph)
+            # TODO: add back subTest usage on new testtools release
+            random.seed(i)
+            rx_graph = retworkx.undirected_gnp_random_graph(10, .75,
+                                                            seed=42 + i)
+            for edge in rx_graph.edge_list():
+                rx_graph.update_edge(*edge, random.randint(-5000, 5000))
+            nx_graph = networkx.Graph(
+                [(x[0], x[1],
+                 {'weight': x[2]}) for x in rx_graph.weighted_edge_list()])
+            nx_matches = networkx.max_weight_matching(nx_graph,
+                                                      maxcardinality=True)
+            rx_matches = retworkx.max_weight_matching(
+                rx_graph, weight_fn=lambda x: x, max_cardinality=True,
+                verify_optimum=True)
+            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches,
+                                    42 + i, nx_graph)
 
     def test_gnm_random_against_networkx(self):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 13, seed=42)
