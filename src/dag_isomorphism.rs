@@ -22,26 +22,24 @@ use super::digraph::PyDiGraph;
 
 use pyo3::prelude::*;
 
-use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
-use petgraph::stable_graph::StableDiGraph;
-use petgraph::visit::{EdgeRef, GetAdjacencyMatrix, IntoEdgeReferences};
+use petgraph::visit::GetAdjacencyMatrix;
 use petgraph::{Directed, Incoming};
 
 #[derive(Debug)]
 struct Vf2State {
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
-    mapping: Vec<NodeIndex>,
+    mapping: HashMap<NodeIndex, NodeIndex>,
     /// out[i] is non-zero if i is in either M_0(s) or Tout_0(s)
     /// These are all the next vertices that are not mapped yet, but
     /// have an outgoing edge from the mapping.
-    out: Vec<usize>,
+    out: HashMap<NodeIndex, usize>,
     /// ins[i] is non-zero if i is in either M_0(s) or Tin_0(s)
     /// These are all the incoming vertices, those not mapped yet, but
     /// have an edge from them into the mapping.
     /// Unused if graph is undirected -- it's identical with out in that case.
-    ins: Vec<usize>,
+    ins: HashMap<NodeIndex, usize>,
     out_size: usize,
     ins_size: usize,
     adjacency_matrix: FixedBitSet,
@@ -54,19 +52,19 @@ impl Vf2State {
         let g = &dag.graph;
         let c0 = g.node_count();
         let mut state = Vf2State {
-            mapping: Vec::with_capacity(c0),
-            out: Vec::with_capacity(c0),
-            ins: Vec::with_capacity(c0 * (g.is_directed() as usize)),
+            mapping: HashMap::with_capacity(c0),
+            out: HashMap::with_capacity(c0),
+            ins: HashMap::with_capacity(c0 * (g.is_directed() as usize)),
             out_size: 0,
             ins_size: 0,
             adjacency_matrix: g.adjacency_matrix(),
             generation: 0,
             _etype: marker::PhantomData,
         };
-        for _ in 0..c0 {
-            state.mapping.push(NodeIndex::end());
-            state.out.push(0);
-            state.ins.push(0);
+        for index in g.node_indices() {
+            state.mapping.insert(index, NodeIndex::end());
+            state.out.insert(index, 0);
+            state.ins.insert(index, 0);
         }
         state
     }
@@ -86,20 +84,20 @@ impl Vf2State {
         let g = &dag.graph;
         self.generation += 1;
         let s = self.generation;
-        self.mapping[from.index()] = to;
+        self.mapping.insert(from, to);
         // update T0 & T1 ins/outs
         // T0out: Node in G0 not in M0 but successor of a node in M0.
         // st.out[0]: Node either in M0 or successor of M0
         for ix in g.neighbors(from) {
-            if self.out[ix.index()] == 0 {
-                self.out[ix.index()] = s;
+            if self.out[&ix] == 0 {
+                self.out.insert(ix, s);
                 self.out_size += 1;
             }
         }
         if g.is_directed() {
             for ix in g.neighbors_directed(from, Incoming) {
-                if self.ins[ix.index()] == 0 {
-                    self.ins[ix.index()] = s;
+                if self.ins[&ix] == 0 {
+                    self.ins.insert(ix, s);
                     self.ins_size += 1;
                 }
             }
@@ -113,19 +111,19 @@ impl Vf2State {
         self.generation -= 1;
 
         // undo (n, m) mapping
-        self.mapping[from.index()] = NodeIndex::end();
+        self.mapping.insert(from, NodeIndex::end());
 
         // unmark in ins and outs
         for ix in g.neighbors(from) {
-            if self.out[ix.index()] == s {
-                self.out[ix.index()] = 0;
+            if self.out[&ix] == s {
+                self.out.insert(ix, 0);
                 self.out_size -= 1;
             }
         }
         if g.is_directed() {
             for ix in g.neighbors_directed(from, Incoming) {
-                if self.ins[ix.index()] == s {
-                    self.ins[ix.index()] = 0;
+                if self.ins[&ix] == s {
+                    self.ins.insert(ix, 0);
                     self.ins_size -= 1;
                 }
             }
@@ -134,33 +132,39 @@ impl Vf2State {
 
     /// Find the next (least) node in the Tout set.
     pub fn next_out_index(&self, from_index: usize) -> Option<usize> {
-        self.out[from_index..]
+        self.out
             .iter()
-            .enumerate()
-            .find(move |&(index, elt)| {
-                *elt > 0 && self.mapping[from_index + index] == NodeIndex::end()
+            .filter(|&(node, elt)| {
+                (*node).index() >= from_index
+                    && *elt > 0
+                    && self.mapping[node] == NodeIndex::end()
             })
-            .map(|(index, _)| index)
+            .min_by_key(|&(&node, _)| node.index())
+            .map(|(&node, _)| node.index())
     }
 
     /// Find the next (least) node in the Tin set.
     pub fn next_in_index(&self, from_index: usize) -> Option<usize> {
-        self.ins[from_index..]
+        self.ins
             .iter()
-            .enumerate()
-            .find(move |&(index, elt)| {
-                *elt > 0 && self.mapping[from_index + index] == NodeIndex::end()
+            .filter(|&(node, elt)| {
+                (*node).index() >= from_index
+                    && *elt > 0
+                    && self.mapping[node] == NodeIndex::end()
             })
-            .map(|(index, _)| index)
+            .min_by_key(|&(&node, _)| node.index())
+            .map(|(&node, _)| node.index())
     }
 
     /// Find the next (least) node in the N - M set.
     pub fn next_rest_index(&self, from_index: usize) -> Option<usize> {
-        self.mapping[from_index..]
+        self.mapping
             .iter()
-            .enumerate()
-            .find(|&(_, elt)| *elt == NodeIndex::end())
-            .map(|(index, _)| index)
+            .filter(|&(&node, elt)| {
+                node.index() >= from_index && *elt == NodeIndex::end()
+            })
+            .min_by_key(|&(&node, _)| node.index())
+            .map(|(&node, _)| node.index())
     }
 }
 
@@ -194,37 +198,6 @@ pub fn is_isomorphic(dag0: &PyDiGraph, dag1: &PyDiGraph) -> PyResult<bool> {
     Ok(res.unwrap_or(false))
 }
 
-fn reindex_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
-    // NOTE: this is a hacky workaround to handle non-contiguous node ids in
-    // VF2. The code which was forked from petgraph was written assuming the
-    // Graph type and not StableGraph so it makes an implicit assumption on
-    // node_bound() == node_count() which isn't true with removals on
-    // StableGraph. This compacts the node ids as a workaround until VF2State
-    // and try_match can be rewitten to handle this (and likely contributed
-    // upstream to petgraph too).
-    let mut new_graph = StableDiGraph::<PyObject, PyObject>::new();
-    let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-    for node_index in dag.graph.node_indices() {
-        let node_data = dag.graph.node_weight(node_index).unwrap();
-        let new_index = new_graph.add_node(node_data.clone_ref(py));
-        id_map.insert(node_index, new_index);
-    }
-    for edge in dag.graph.edge_references() {
-        let edge_w = edge.weight();
-        let p_index = id_map.get(&edge.source()).unwrap();
-        let c_index = id_map.get(&edge.target()).unwrap();
-        new_graph.add_edge(*p_index, *c_index, edge_w.clone_ref(py));
-    }
-
-    PyDiGraph {
-        graph: new_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: dag.check_cycle,
-        node_removed: false,
-        multigraph: true,
-    }
-}
-
 /// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
 ///
 /// Using the VF2 algorithm, examining both syntactic and semantic
@@ -232,7 +205,6 @@ fn reindex_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
 ///
 /// The graphs should not be multigraphs.
 pub fn is_isomorphic_matching<F, G>(
-    py: Python,
     dag0: &PyDiGraph,
     dag1: &PyDiGraph,
     mut node_match: F,
@@ -242,36 +214,15 @@ where
     F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
     G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
 {
-    let inner_temp_dag0: PyDiGraph;
-    let inner_temp_dag1: PyDiGraph;
-    let dag0_out = if dag0.node_removed {
-        inner_temp_dag0 = reindex_graph(py, dag0);
-        &inner_temp_dag0
-    } else {
-        dag0
-    };
-    let dag1_out = if dag1.node_removed {
-        inner_temp_dag1 = reindex_graph(py, dag1);
-        &inner_temp_dag1
-    } else {
-        dag1
-    };
-    let g0 = &dag0_out.graph;
-    let g1 = &dag1_out.graph;
-
+    let g0 = &dag0.graph;
+    let g1 = &dag1.graph;
     if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
     {
         return Ok(false);
     }
 
-    let mut st = [Vf2State::new(&dag0_out), Vf2State::new(&dag1_out)];
-    let res = try_match(
-        &mut st,
-        &dag0_out,
-        &dag1_out,
-        &mut node_match,
-        &mut edge_match,
-    )?;
+    let mut st = [Vf2State::new(dag0), Vf2State::new(dag1)];
+    let res = try_match(&mut st, dag0, dag1, &mut node_match, &mut edge_match)?;
     Ok(res.unwrap_or(false))
 }
 
@@ -396,8 +347,7 @@ where
             OpenList::Out => st[0].next_out_index(start),
             OpenList::In => st[0].next_in_index(start),
             OpenList::Other => st[0].next_rest_index(start),
-        }
-        .map(|c| c + start); // compensate for start offset.
+        };
         match cand0 {
             None => None, // no more candidates
             Some(ix) => {
@@ -447,14 +397,14 @@ where
                 succ_count[j] += 1;
                 // handle the self loop case; it's not in the mapping (yet)
                 let m_neigh = if nodes[j] != n_neigh {
-                    st[j].mapping[n_neigh.index()]
+                    st[j].mapping[&n_neigh]
                 } else {
                     nodes[1 - j]
                 };
                 if m_neigh == end {
                     continue;
                 }
-                let has_edge = g[1 - j].is_adjacent(
+                let has_edge = dag[1 - j].is_adjacent(
                     &st[1 - j].adjacency_matrix,
                     nodes[1 - j],
                     m_neigh,
@@ -474,11 +424,11 @@ where
                 for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
                     pred_count[j] += 1;
                     // the self loop case is handled in outgoing
-                    let m_neigh = st[j].mapping[n_neigh.index()];
+                    let m_neigh = st[j].mapping[&n_neigh];
                     if m_neigh == end {
                         continue;
                     }
-                    let has_edge = g[1 - j].is_adjacent(
+                    let has_edge = dag[1 - j].is_adjacent(
                         &st[1 - j].adjacency_matrix,
                         m_neigh,
                         nodes[1 - j],
@@ -505,7 +455,7 @@ where
                 while let Some((n_edge, n_neigh)) = edges.next(g[j]) {
                     // handle the self loop case; it's not in the mapping (yet)
                     let m_neigh = if nodes[j] != n_neigh {
-                        st[j].mapping[n_neigh.index()]
+                        st[j].mapping[&n_neigh]
                     } else {
                         nodes[1 - j]
                     };
@@ -531,7 +481,7 @@ where
                         g[j].neighbors_directed(nodes[j], Incoming).detach();
                     while let Some((n_edge, n_neigh)) = edges.next(g[j]) {
                         // the self loop case is handled in outgoing
-                        let m_neigh = st[j].mapping[n_neigh.index()];
+                        let m_neigh = st[j].mapping[&n_neigh];
                         if m_neigh == end {
                             continue;
                         }
