@@ -2753,7 +2753,7 @@ pub fn is_maximal_matching(
     })
 }
 
-fn _triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
+fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
     let mut triangles: usize = 0;
 
     let index = NodeIndex::new(node);
@@ -2778,6 +2778,8 @@ fn _triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
     (triangles / 2, triples)
 }
 
+/// Compute the transitivity of an undirected graph.
+///
 /// The transitivity of a graph is defined as:
 ///
 /// .. math::
@@ -2792,13 +2794,105 @@ fn _triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
 /// :rtype: float
 #[pyfunction]
 #[text_signature = "(graph, /)"]
-fn transitivity(graph: &graph::PyGraph) -> f64 {
+fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
     let (triangles, triples) =
         graph
             .graph
             .node_indices()
             .fold((0, 0), |(sumx, sumy), node| {
-                let (resx, resy) = _triangles(graph, node.index());
+                let (resx, resy) = _graph_triangles(graph, node.index());
+                (sumx + resx, sumy + resy)
+            });
+
+    match triangles {
+        0 => 0.0,
+        _ => triangles as f64 / triples as f64,
+    }
+}
+
+fn _digraph_triangles(
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> (usize, usize) {
+    let mut triangles: usize = 0;
+
+    let index = NodeIndex::new(node);
+    let mut out_neighbors: HashSet<NodeIndex> = graph
+        .graph
+        .neighbors_directed(index, petgraph::Direction::Outgoing)
+        .collect();
+    out_neighbors.remove(&index);
+
+    let mut in_neighbors: HashSet<NodeIndex> = graph
+        .graph
+        .neighbors_directed(index, petgraph::Direction::Incoming)
+        .collect();
+    in_neighbors.remove(&index);
+
+    let neighbors = out_neighbors.iter().chain(in_neighbors.iter());
+
+    for nodev in neighbors {
+        triangles += graph
+            .graph
+            .neighbors_directed(*nodev, petgraph::Direction::Outgoing)
+            .chain(
+                graph
+                    .graph
+                    .neighbors_directed(*nodev, petgraph::Direction::Incoming),
+            )
+            .map(|x| {
+                let mut res: usize = 0;
+
+                if (x != *nodev) && out_neighbors.contains(&x) {
+                    res += 1;
+                }
+                if (x != *nodev) && in_neighbors.contains(&x) {
+                    res += 1;
+                }
+                res
+            })
+            .sum::<usize>();
+    }
+
+    let din: usize = in_neighbors.len();
+    let dout: usize = out_neighbors.len();
+
+    let dtot = dout + din;
+    let dbil: usize = out_neighbors.intersection(&in_neighbors).count();
+    let triples: usize = match dtot {
+        0 => 0,
+        _ => dtot * (dtot - 1) - 2 * dbil,
+    };
+
+    (triangles / 2, triples)
+}
+
+/// Compute the transitivity of a directed graph.
+///
+/// The transitivity of a directed graph is defined in [Fag]_, Eq.8:
+///
+/// .. math::
+///     `c=3 \times \frac{\text{number of triangles}}{\text{number of all possible triangles}}`
+///
+/// A triangle is a connected triple of nodes.
+/// Different edge orientations counts as different triangles.
+///
+/// :param PyDiGraph graph: Directed graph to be used.
+///
+/// :returns: Transitivity.
+/// :rtype: float
+///
+/// .. [Fag] Clustering in complex directed networks by G. Fagiolo,
+///    Physical Review E, 76(2), 026107 (2007)
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
+    let (triangles, triples) =
+        graph
+            .graph
+            .node_indices()
+            .fold((0, 0), |(sumx, sumy), node| {
+                let (resx, resy) = _digraph_triangles(graph, node.index());
                 (sumx + resx, sumy + resy)
             });
 
@@ -2879,7 +2973,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
-    m.add_wrapped(wrap_pyfunction!(transitivity))?;
+    m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;

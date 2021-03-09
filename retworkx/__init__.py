@@ -437,3 +437,25 @@ def _digraph_dfs_edges(graph, source):
 @dfs_edges.register(PyGraph)
 def _graph_dfs_edges(graph, source):
     return graph_dfs_edges(graph, source)
+
+@functools.singledispatch
+def transitivity(graph):
+    """Compute the transitivity of a graph.
+
+    :param PyGraph graph: The graph to be used.
+
+    :returns: Transitivity of the graph.
+    :rtype: float
+        raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@transitivity.register(PyDiGraph)
+def _digraph_transitivity(graph):
+    return digraph_transitivity(graph)
+
+
+@transitivity.register(PyGraph)
+def _graph_transitivity(graph):
+    return graph_transitivity(graph)
