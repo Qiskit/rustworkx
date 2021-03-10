@@ -745,10 +745,7 @@ fn digraph_k_shortest_path_lengths(
     edge_cost: PyObject,
     goal: Option<usize>,
 ) -> PyResult<PyObject> {
-    let out_goal = match goal {
-        Some(g) => Some(NodeIndex::new(g)),
-        None => None,
-    };
+    let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
         res.extract(py)
@@ -800,10 +797,7 @@ fn graph_k_shortest_path_lengths(
     edge_cost: PyObject,
     goal: Option<usize>,
 ) -> PyResult<PyObject> {
-    let out_goal = match goal {
-        Some(g) => Some(NodeIndex::new(g)),
-        None => None,
-    };
+    let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
         res.extract(py)
@@ -1549,10 +1543,7 @@ fn graph_all_simple_paths(
         Some(depth) => depth - 2,
         None => 0,
     };
-    let cutoff_petgraph: Option<usize> = match cutoff {
-        Some(depth) => Some(depth - 2),
-        None => None,
-    };
+    let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
         graph,
         from_index,
@@ -1606,10 +1597,7 @@ fn digraph_all_simple_paths(
         Some(depth) => depth - 2,
         None => 0,
     };
-    let cutoff_petgraph: Option<usize> = match cutoff {
-        Some(depth) => Some(depth - 2),
-        None => None,
-    };
+    let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
         graph,
         from_index,
@@ -1667,10 +1655,7 @@ pub fn graph_dijkstra_shortest_paths(
     default_weight: f64,
 ) -> PyResult<PyObject> {
     let start = NodeIndex::new(source);
-    let goal_index: Option<NodeIndex> = match target {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
         HashMap::with_capacity(graph.node_count());
     dijkstra::dijkstra(
@@ -1733,10 +1718,7 @@ pub fn digraph_dijkstra_shortest_paths(
     as_undirected: bool,
 ) -> PyResult<PyObject> {
     let start = NodeIndex::new(source);
-    let goal_index: Option<NodeIndex> = match target {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
         HashMap::with_capacity(graph.node_count());
     if as_undirected {
@@ -1815,10 +1797,7 @@ fn graph_dijkstra_shortest_path_lengths(
     };
 
     let start = NodeIndex::new(node);
-    let goal_index: Option<NodeIndex> = match goal {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
         graph,
@@ -1874,10 +1853,7 @@ fn digraph_dijkstra_shortest_path_lengths(
     };
 
     let start = NodeIndex::new(node);
-    let goal_index: Option<NodeIndex> = match goal {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
         graph,
