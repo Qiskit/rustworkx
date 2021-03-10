@@ -16,7 +16,7 @@
 use fixedbitset::FixedBitSet;
 use std::marker;
 
-use hashbrown::HashMap;
+use std::collections::BTreeMap;
 
 use super::digraph::PyDiGraph;
 
@@ -30,16 +30,16 @@ use petgraph::{Directed, Incoming};
 struct Vf2State {
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
-    mapping: HashMap<NodeIndex, NodeIndex>,
+    mapping: BTreeMap<NodeIndex, NodeIndex>,
     /// out[i] is non-zero if i is in either M_0(s) or Tout_0(s)
     /// These are all the next vertices that are not mapped yet, but
     /// have an outgoing edge from the mapping.
-    out: HashMap<NodeIndex, usize>,
+    out: BTreeMap<NodeIndex, usize>,
     /// ins[i] is non-zero if i is in either M_0(s) or Tin_0(s)
     /// These are all the incoming vertices, those not mapped yet, but
     /// have an edge from them into the mapping.
     /// Unused if graph is undirected -- it's identical with out in that case.
-    ins: HashMap<NodeIndex, usize>,
+    ins: BTreeMap<NodeIndex, usize>,
     out_size: usize,
     ins_size: usize,
     adjacency_matrix: FixedBitSet,
@@ -50,11 +50,10 @@ struct Vf2State {
 impl Vf2State {
     pub fn new(dag: &PyDiGraph) -> Self {
         let g = &dag.graph;
-        let c0 = g.node_count();
         let mut state = Vf2State {
-            mapping: HashMap::with_capacity(c0),
-            out: HashMap::with_capacity(c0),
-            ins: HashMap::with_capacity(c0 * (g.is_directed() as usize)),
+            mapping: BTreeMap::new(),
+            out: BTreeMap::new(),
+            ins: BTreeMap::new(),
             out_size: 0,
             ins_size: 0,
             adjacency_matrix: g.adjacency_matrix(),
@@ -133,37 +132,28 @@ impl Vf2State {
     /// Find the next (least) node in the Tout set.
     pub fn next_out_index(&self, from_index: usize) -> Option<usize> {
         self.out
-            .iter()
-            .filter(|&(node, elt)| {
-                (*node).index() >= from_index
-                    && *elt > 0
-                    && self.mapping[node] == NodeIndex::end()
+            .range(NodeIndex::new(from_index)..)
+            .find(|&(node, elt)| {
+                *elt > 0 && self.mapping[node] == NodeIndex::end()
             })
-            .min_by_key(|&(&node, _)| node.index())
             .map(|(&node, _)| node.index())
     }
 
     /// Find the next (least) node in the Tin set.
     pub fn next_in_index(&self, from_index: usize) -> Option<usize> {
         self.ins
-            .iter()
-            .filter(|&(node, elt)| {
-                (*node).index() >= from_index
-                    && *elt > 0
-                    && self.mapping[node] == NodeIndex::end()
+            .range(NodeIndex::new(from_index)..)
+            .find(|&(node, elt)| {
+                *elt > 0 && self.mapping[node] == NodeIndex::end()
             })
-            .min_by_key(|&(&node, _)| node.index())
             .map(|(&node, _)| node.index())
     }
 
     /// Find the next (least) node in the N - M set.
     pub fn next_rest_index(&self, from_index: usize) -> Option<usize> {
         self.mapping
-            .iter()
-            .filter(|&(&node, elt)| {
-                node.index() >= from_index && *elt == NodeIndex::end()
-            })
-            .min_by_key(|&(&node, _)| node.index())
+            .range(NodeIndex::new(from_index)..)
+            .find(|&(_, &elt)| elt == NodeIndex::end())
             .map(|(&node, _)| node.index())
     }
 }
