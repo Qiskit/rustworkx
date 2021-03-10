@@ -16,7 +16,7 @@
 use fixedbitset::FixedBitSet;
 use std::marker;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::digraph::PyDiGraph;
 
@@ -30,16 +30,16 @@ use petgraph::{Directed, Incoming};
 struct Vf2State {
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
-    mapping: BTreeMap<NodeIndex, NodeIndex>,
+    mapping: BTreeMap<usize, NodeIndex>,
     /// out[i] is non-zero if i is in either M_0(s) or Tout_0(s)
     /// These are all the next vertices that are not mapped yet, but
     /// have an outgoing edge from the mapping.
-    out: BTreeMap<NodeIndex, usize>,
+    out: BTreeSet<usize>,
     /// ins[i] is non-zero if i is in either M_0(s) or Tin_0(s)
     /// These are all the incoming vertices, those not mapped yet, but
     /// have an edge from them into the mapping.
     /// Unused if graph is undirected -- it's identical with out in that case.
-    ins: BTreeMap<NodeIndex, usize>,
+    ins: BTreeSet<usize>,
     out_size: usize,
     ins_size: usize,
     adjacency_matrix: FixedBitSet,
@@ -52,18 +52,17 @@ impl Vf2State {
         let g = &dag.graph;
         let mut state = Vf2State {
             mapping: BTreeMap::new(),
-            out: BTreeMap::new(),
-            ins: BTreeMap::new(),
+            out: BTreeSet::new(),
+            ins: BTreeSet::new(),
             out_size: 0,
             ins_size: 0,
             adjacency_matrix: g.adjacency_matrix(),
             generation: 0,
             _etype: marker::PhantomData,
         };
-        for index in g.node_indices() {
+        for node in g.node_indices() {
+            let index = node.index();
             state.mapping.insert(index, NodeIndex::end());
-            state.out.insert(index, 0);
-            state.ins.insert(index, 0);
         }
         state
     }
@@ -82,21 +81,19 @@ impl Vf2State {
     ) {
         let g = &dag.graph;
         self.generation += 1;
-        let s = self.generation;
-        self.mapping.insert(from, to);
+        let _s = self.generation;
+        self.mapping.insert(from.index(), to);
         // update T0 & T1 ins/outs
         // T0out: Node in G0 not in M0 but successor of a node in M0.
         // st.out[0]: Node either in M0 or successor of M0
         for ix in g.neighbors(from) {
-            if self.out[&ix] == 0 {
-                self.out.insert(ix, s);
+            if self.out.insert(ix.index()) {
                 self.out_size += 1;
             }
         }
         if g.is_directed() {
             for ix in g.neighbors_directed(from, Incoming) {
-                if self.ins[&ix] == 0 {
-                    self.ins.insert(ix, s);
+                if self.ins.insert(ix.index()) {
                     self.ins_size += 1;
                 }
             }
@@ -106,23 +103,21 @@ impl Vf2State {
     /// Restore the state to before the last added mapping
     pub fn pop_mapping(&mut self, from: NodeIndex, dag: &PyDiGraph) {
         let g = &dag.graph;
-        let s = self.generation;
+        let _s = self.generation;
         self.generation -= 1;
 
         // undo (n, m) mapping
-        self.mapping.insert(from, NodeIndex::end());
+        self.mapping.insert(from.index(), NodeIndex::end());
 
         // unmark in ins and outs
         for ix in g.neighbors(from) {
-            if self.out[&ix] == s {
-                self.out.insert(ix, 0);
+            if self.out.remove(&ix.index()) {
                 self.out_size -= 1;
             }
         }
         if g.is_directed() {
             for ix in g.neighbors_directed(from, Incoming) {
-                if self.ins[&ix] == s {
-                    self.ins.insert(ix, 0);
+                if self.ins.remove(&ix.index()) {
                     self.ins_size -= 1;
                 }
             }
@@ -132,29 +127,25 @@ impl Vf2State {
     /// Find the next (least) node in the Tout set.
     pub fn next_out_index(&self, from_index: usize) -> Option<usize> {
         self.out
-            .range(NodeIndex::new(from_index)..)
-            .find(|&(node, elt)| {
-                *elt > 0 && self.mapping[node] == NodeIndex::end()
-            })
-            .map(|(&node, _)| node.index())
+            .range(from_index..)
+            .find(|&node| self.mapping[node] == NodeIndex::end())
+            .map(|&node| node)
     }
 
     /// Find the next (least) node in the Tin set.
     pub fn next_in_index(&self, from_index: usize) -> Option<usize> {
         self.ins
-            .range(NodeIndex::new(from_index)..)
-            .find(|&(node, elt)| {
-                *elt > 0 && self.mapping[node] == NodeIndex::end()
-            })
-            .map(|(&node, _)| node.index())
+            .range(from_index..)
+            .find(|&node| self.mapping[node] == NodeIndex::end())
+            .map(|&node| node)
     }
 
     /// Find the next (least) node in the N - M set.
     pub fn next_rest_index(&self, from_index: usize) -> Option<usize> {
         self.mapping
-            .range(NodeIndex::new(from_index)..)
+            .range(from_index..)
             .find(|&(_, &elt)| elt == NodeIndex::end())
-            .map(|(&node, _)| node.index())
+            .map(|(&node, _)| node)
     }
 }
 
@@ -387,7 +378,7 @@ where
                 succ_count[j] += 1;
                 // handle the self loop case; it's not in the mapping (yet)
                 let m_neigh = if nodes[j] != n_neigh {
-                    st[j].mapping[&n_neigh]
+                    st[j].mapping[&n_neigh.index()]
                 } else {
                     nodes[1 - j]
                 };
@@ -414,7 +405,7 @@ where
                 for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
                     pred_count[j] += 1;
                     // the self loop case is handled in outgoing
-                    let m_neigh = st[j].mapping[&n_neigh];
+                    let m_neigh = st[j].mapping[&n_neigh.index()];
                     if m_neigh == end {
                         continue;
                     }
@@ -445,7 +436,7 @@ where
                 while let Some((n_edge, n_neigh)) = edges.next(g[j]) {
                     // handle the self loop case; it's not in the mapping (yet)
                     let m_neigh = if nodes[j] != n_neigh {
-                        st[j].mapping[&n_neigh]
+                        st[j].mapping[&n_neigh.index()]
                     } else {
                         nodes[1 - j]
                     };
@@ -471,7 +462,7 @@ where
                         g[j].neighbors_directed(nodes[j], Incoming).detach();
                     while let Some((n_edge, n_neigh)) = edges.next(g[j]) {
                         // the self loop case is handled in outgoing
-                        let m_neigh = st[j].mapping[&n_neigh];
+                        let m_neigh = st[j].mapping[&n_neigh.index()];
                         if m_neigh == end {
                             continue;
                         }
