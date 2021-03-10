@@ -119,10 +119,7 @@ fn assign_label(
         assign_label(
             endpoints[mate[&base]],
             1,
-            match mate.get(&base) {
-                Some(p) => Some(p ^ 1),
-                None => None,
-            },
+            mate.get(&base).map(|p| (p ^ 1)),
             num_nodes,
             in_blossoms,
             labels,
