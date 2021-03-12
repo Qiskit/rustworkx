@@ -89,11 +89,7 @@ where
     }
 
     /// Add mapping **from** <-> **to** to the state.
-    pub fn push_mapping(
-        &mut self,
-        from: NodeIndex,
-        to: NodeIndex,
-    ) {
+    pub fn push_mapping(&mut self, from: NodeIndex, to: NodeIndex) {
         self.generation += 1;
         let s = self.generation;
         self.mapping[from.index()] = to;
@@ -117,10 +113,7 @@ where
     }
 
     /// Restore the state to before the last added mapping
-    pub fn pop_mapping(
-        &mut self,
-        from: NodeIndex,
-    ) {
+    pub fn pop_mapping(&mut self, from: NodeIndex) {
         let s = self.generation;
         self.generation -= 1;
 
