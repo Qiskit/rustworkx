@@ -985,6 +985,148 @@ pub fn directed_grid_graph(
     })
 }
 
+/// Generate an undirected hexagonal graph.
+///
+/// :param int rows: The number of rows to generate the graph with.
+///     If specified, cols also need to be specified
+/// :param list cols: The number of rows to generate the graph with.
+///     If specified, rows also need to be specified. rows*cols
+///     defines the number of nodes in the graph
+/// :param list weights: A list of node weights. Nodes are filled row wise.
+///     If rows and cols are not specified, then a linear graph containing
+///     all the values in weights list is created.
+///     If number of nodes(rows*cols) is less than length of
+///     weights list, the trailing weights are ignored.
+///     If number of nodes(rows*cols) is greater than length of
+///     weights list, extra nodes with None weight are appended.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated grid graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``rows`` or ``cols`` and ``weights`` are
+///      specified
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.hexagonal_graph(2, 2)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"]
+pub fn hexagonal_graph(
+    py: Python,
+    rows: Option<usize>,
+    cols: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    if weights.is_none() && (rows.is_none() || cols.is_none()) {
+        return Err(PyIndexError::new_err(
+            "dimensions and weights list not specified",
+        ));
+    }
+
+    let mut row_len = rows.unwrap_or(0);
+    let mut col_len = cols.unwrap_or(0);
+
+    // Needs two times the number of nodes vertically
+    row_len = 2 * row_len + 2;
+    col_len += 1;
+    let mut num_nodes = row_len * col_len;
+
+    // TODO: implement for weights
+    let nodes: Vec<NodeIndex> = match weights {
+        // Not tested
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            if num_nodes < weights.len() && row_len == 0 {
+                col_len = weights.len();
+                row_len = 1;
+                num_nodes = col_len;
+            }
+
+            let mut node_cnt = num_nodes;
+
+            for weight in weights {
+                if node_cnt == 0 {
+                    break;
+                }
+                let index = graph.add_node(weight);
+                node_list.push(index);
+                node_cnt -= 1;
+            }
+            for _i in 0..node_cnt {
+                let index = graph.add_node(py.None());
+                node_list.push(index);
+            }
+            node_list
+        }
+
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    // Add column edges works for
+    for i in 0..col_len {
+        for j in 0..(row_len - 1) {
+            if i + 1 < row_len {
+                graph.add_edge(
+                    nodes[i * row_len + j],
+                    nodes[i * row_len + (j + 1)],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    // Add row edges
+    for i in 0..(col_len - 1) {
+        for j in 0..row_len {
+            if i % 2 == j % 2 {
+                graph.add_edge(
+                    nodes[i * row_len + j],
+                    nodes[(i + 1) * row_len + j],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    // Remove corner nodes
+    graph.remove_node(nodes[row_len - 1]);
+    graph.remove_node(
+        nodes[(col_len - 1) * row_len + (row_len - 1) * ((col_len - 1) % 2)],
+    );
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -997,5 +1139,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(hexagonal_graph))?;
     Ok(())
 }
