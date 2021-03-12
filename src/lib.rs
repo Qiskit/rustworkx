@@ -349,22 +349,23 @@ fn digraph_union(
 ///     not.
 /// :rtype: bool
 #[pyfunction]
-#[text_signature = "(first, second, matcher, /)"]
+#[text_signature = "(first, second, node_matcher, edge_matcher /)"]
 fn digraph_is_isomorphic_node_match(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-    matcher: PyObject,
+    node_matcher: PyObject,
+    edge_matcher: PyObject,
 ) -> PyResult<bool> {
     let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
-        let res = matcher.call1(py, (a, b))?;
+        let res = node_matcher.call1(py, (a, b))?;
         Ok(res.is_true(py).unwrap())
     };
 
-    #[allow(clippy::unnecessary_wraps)]
-    fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
-        Ok(true)
-    }
+    let compare_edges = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+        let res = edge_matcher.call1(py, (a, b))?;
+        Ok(res.is_true(py).unwrap())
+    };
     let res = dag_isomorphism::is_isomorphic_matching(
         py,
         &first.graph,
@@ -398,22 +399,23 @@ fn digraph_is_isomorphic_node_match(
 ///     not.
 /// :rtype: bool
 #[pyfunction]
-#[text_signature = "(first, second, matcher, /)"]
+#[text_signature = "(first, second, node_matcher, edge_matcher /)"]
 fn graph_is_isomorphic_node_match(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
-    matcher: PyObject,
+    node_matcher: PyObject,
+    edge_matcher: PyObject,
 ) -> PyResult<bool> {
     let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
-        let res = matcher.call1(py, (a, b))?;
+        let res = node_matcher.call1(py, (a, b))?;
         Ok(res.is_true(py).unwrap())
     };
 
-    #[allow(clippy::unnecessary_wraps)]
-    fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
-        Ok(true)
-    }
+    let compare_edges = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+        let res = edge_matcher.call1(py, (a, b))?;
+        Ok(res.is_true(py).unwrap())
+    };
     let res = dag_isomorphism::is_isomorphic_matching(
         py,
         &first.graph,

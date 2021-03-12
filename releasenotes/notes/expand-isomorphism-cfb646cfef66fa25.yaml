@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    :func:`~retworkx.is_isomorphic` can take in a :class:`~retworkx.PyGraph`
+    or :class:`~retworkx.PyDiGraph` and two functions to compare node 
+    and edge data.
