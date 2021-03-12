@@ -253,10 +253,11 @@ fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
 #[pyfunction]
 #[text_signature = "(first, second, /)"]
 fn is_isomorphic(
+    py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
 ) -> PyResult<bool> {
-    let res = dag_isomorphism::is_isomorphic(first, second)?;
+    let res = dag_isomorphism::is_isomorphic(py, &first.graph, &second.graph)?;
     Ok(res)
 }
 
@@ -344,8 +345,8 @@ fn is_isomorphic_node_match(
     }
     let res = dag_isomorphism::is_isomorphic_matching(
         py,
-        first,
-        second,
+        &first.graph,
+        &second.graph,
         compare_nodes,
         compare_edges,
     )?;
