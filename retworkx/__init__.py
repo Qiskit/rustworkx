@@ -437,3 +437,70 @@ def _digraph_dfs_edges(graph, source):
 @dfs_edges.register(PyGraph)
 def _graph_dfs_edges(graph, source):
     return graph_dfs_edges(graph, source)
+
+@functools.singledispatch
+def is_isomorphic(first, second):
+    """Determine if 2 graphs are structurally isomorphic
+
+    This checks if 2 graphs are structurally isomorphic (it doesn't match
+    the contents of the nodes or edges on the graphs).
+
+    :param first: The first graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param second: The second graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+
+    :returns: ``True`` if the 2 graphs are structurally isomorphic, ``False``
+        if they are not
+    :rtype: bool
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@is_isomorphic.register(PyDiGraph)
+def _digraph_is_isomorphic(first, second):
+    return digraph_is_isomorphic(first, second)
+
+
+@is_isomorphic.register(PyGraph)
+def _graph_is_isomorphic(first, second):
+    return graph_is_isomorphic(first, second)
+
+
+@functools.singledispatch
+def is_isomorphic_node_match(first, second, matcher):
+    """Determine if 2 graphs are isomorphic
+
+    This checks if 2 graphs are isomorphic both structurally and also
+    comparing the node data using the provided matcher function. The matcher
+    function takes in 2 node data objects and will compare them. A simple
+    example that checks if they're just equal would be::
+
+        graph_a = retworkx.PyDAG()
+        graph_b = retworkx.PyDAG()
+        retworkx.is_isomorphic_node_match(graph_a, graph_b,
+                                        lambda x, y: x == y)
+
+    :param first: The first graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param second: The second graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param callable matcher: A python callable object that takes 2 positional
+        one for each node data object. If the return of this
+        function evaluates to True then the nodes passed to it are vieded
+        as matching.
+
+    :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are not.
+    :rtype: bool
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@is_isomorphic_node_match.register(PyDiGraph)
+def _digraph_is_isomorphic_node_match(first, second, matcher):
+    return digraph_is_isomorphic_node_match(first, second, matcher)
+
+
+@is_isomorphic_node_match.register(PyGraph)
+def _graph_is_isomorphic_node_match(first, second):
+    return graph_is_isomorphic_node_match(first, second, matcher)

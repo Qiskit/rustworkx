@@ -58,8 +58,10 @@ Specific Graph Type Methods
    retworkx.weakly_connected_components
    retworkx.is_weakly_connected
    retworkx.is_directed_acyclic_graph
-   retworkx.is_isomorphic
-   retworkx.is_isomorphic_node_match
+   retworkx.digraph_is_isomorphic
+   retworkx.graph_is_isomorphic
+   retworkx.digraph_is_isomorphic_node_match
+   retworkx.graph_is_isomorphic_node_match
    retworkx.topological_sort
    retworkx.descendants
    retworkx.ancestors
@@ -116,6 +118,8 @@ type functions in the algorithms API but can be run with a
    retworkx.dijkstra_shortest_path_lengths
    retworkx.k_shortest_path_lengths
    retworkx.dfs_edges
+   retworkx.is_isomorphic
+   retworkx.is_isomorphic_node_match
 
 Exceptions
 ----------

@@ -252,10 +252,32 @@ fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
 /// :rtype: bool
 #[pyfunction]
 #[text_signature = "(first, second, /)"]
-fn is_isomorphic(
+fn digraph_is_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
+) -> PyResult<bool> {
+    let res = dag_isomorphism::is_isomorphic(py, &first.graph, &second.graph)?;
+    Ok(res)
+}
+
+/// Determine if 2 graphs are structurally isomorphic
+///
+/// This checks if 2 graphs are structurally isomorphic (it doesn't match
+/// the contents of the nodes or edges on the graphs).
+///
+/// :param PyGraph first: The first graph to compare
+/// :param PyGraph second: The second graph to compare
+///
+/// :returns: ``True`` if the 2 graphs are structurally isomorphic, ``False``
+///     if they are not
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(first, second, /)"]
+fn graph_is_isomorphic(
+    py: Python,
+    first: &graph::PyGraph,
+    second: &graph::PyGraph,
 ) -> PyResult<bool> {
     let res = dag_isomorphism::is_isomorphic(py, &first.graph, &second.graph)?;
     Ok(res)
@@ -328,10 +350,59 @@ fn digraph_union(
 /// :rtype: bool
 #[pyfunction]
 #[text_signature = "(first, second, matcher, /)"]
-fn is_isomorphic_node_match(
+fn digraph_is_isomorphic_node_match(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
+    matcher: PyObject,
+) -> PyResult<bool> {
+    let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+        let res = matcher.call1(py, (a, b))?;
+        Ok(res.is_true(py).unwrap())
+    };
+
+    #[allow(clippy::unnecessary_wraps)]
+    fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
+        Ok(true)
+    }
+    let res = dag_isomorphism::is_isomorphic_matching(
+        py,
+        &first.graph,
+        &second.graph,
+        compare_nodes,
+        compare_edges,
+    )?;
+    Ok(res)
+}
+
+/// Determine if 2 graphs are isomorphic
+///
+/// This checks if 2 graphs are isomorphic both structurally and also
+/// comparing the node data using the provided matcher function. The matcher
+/// function takes in 2 node data objects and will compare them. A simple
+/// example that checks if they're just equal would be::
+///
+///     graph_a = retworkx.PyGraph()
+///     graph_b = retworkx.PyGraph()
+///     retworkx.is_isomorphic_node_match(graph_a, graph_b,
+///                                       lambda x, y: x == y)
+///
+/// :param PyGraph first: The first graph to compare
+/// :param PyGraph second: The second graph to compare
+/// :param callable matcher: A python callable object that takes 2 positional
+///     one for each node data object. If the return of this
+///     function evaluates to True then the nodes passed to it are vieded as
+///     matching.
+///
+/// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
+///     not.
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(first, second, matcher, /)"]
+fn graph_is_isomorphic_node_match(
+    py: Python,
+    first: &graph::PyGraph,
+    second: &graph::PyGraph,
     matcher: PyObject,
 ) -> PyResult<bool> {
     let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -2762,9 +2833,11 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
-    m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
-    m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic_node_match))?;
+    m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
