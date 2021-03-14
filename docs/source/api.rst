@@ -94,7 +94,7 @@ Specific Graph Type Methods
    retworkx.is_maximal_matching
    retworkx.max_weight_matching
    retworkx.graph_core_number
-   retworkx.diWgraph_core_number
+   retworkx.digraph_core_number
 
 .. _universal-functions:
 
