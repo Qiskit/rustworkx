@@ -2827,7 +2827,7 @@ pub fn digraph_core_number(
         let ki = (*k).index();
         cores.insert(*k, graph.in_degree(ki) + graph.out_degree(ki));
         degree_map.insert(*k, graph.in_degree(ki) + graph.out_degree(ki));
-        nbrs.insert(*k, graph.graph.neighbors(*k).collect());
+        nbrs.insert(*k, graph.graph.neighbors_undirected(*k).collect());
     }
     node_vec.par_sort_by_key(|k| degree_map.get(k));
 
