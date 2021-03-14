@@ -2729,6 +2729,141 @@ pub fn is_maximal_matching(
     })
 }
 
+/// Return the core number for each node
+///
+/// A k-core is a maximal subgraph that contains nodes of degree k or more.
+///
+/// :param PyGraph: The graph to get core numbers
+///
+/// :returns: A dictionary keyed by node index to the core number
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn graph_core_number(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<PyObject> {
+    let mut cores: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
+    let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let mut degree_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
+    let mut nbrs: HashMap<NodeIndex, Vec<NodeIndex>> =
+        HashMap::with_capacity(graph.node_count());
+    let mut node_pos: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
+
+    for k in node_vec.iter() {
+        let ki = (*k).index();
+        cores.insert(*k, graph.degree(ki));
+        degree_map.insert(*k, graph.degree(ki));
+        nbrs.insert(*k, graph.graph.neighbors(*k).collect());
+    }
+    node_vec.par_sort_by_key(|k| degree_map.get(k));
+
+    let mut bin_boundaries = vec![0];
+    let mut curr_degree = 0;
+    for (i, v) in node_vec.iter().enumerate() {
+        node_pos.insert(*v, i);
+        let v_degree = degree_map[v];
+        if v_degree > curr_degree {
+            bin_boundaries.extend([i].repeat(v_degree - curr_degree));
+            curr_degree = v_degree;
+        }
+    }
+
+    for v_ind in 0..node_vec.len() - 1 {
+        let v = node_vec[v_ind];
+        let v_nbrs = nbrs[&v].clone();
+        for u in v_nbrs {
+            if cores[&u] > cores[&v] {
+                nbrs.get_mut(&u).unwrap().retain(|&n| n == v);
+                let pos = node_pos[&u];
+                let bin_start = bin_boundaries[cores[&u]];
+                *node_pos.get_mut(&u).unwrap() = bin_start;
+                *node_pos.get_mut(&node_vec[bin_start]).unwrap() = pos;
+                node_vec.swap(bin_start, pos);
+                bin_boundaries[cores[&u]] += 1;
+                *cores.get_mut(&u).unwrap() -= 1;
+            }
+        }
+    }
+
+    let out_dict = PyDict::new(py);
+    for (v_index, core) in cores {
+        out_dict.set_item(v_index.index(), core)?;
+    }
+    Ok(out_dict.into())
+}
+
+/// Return the core number for each node
+///
+/// A k-core is a maximal subgraph that contains nodes of degree k or more.
+/// For directed graphs, the degree is calculated as in_degree + out_degree.
+///
+/// :param PyDiGraph: The directed graph to get core numbers
+///
+/// :returns: A dictionary keyed by node index to the core number
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn digraph_core_number(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+) -> PyResult<PyObject> {
+    let mut cores: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
+    let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let mut degree_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
+    let mut nbrs: HashMap<NodeIndex, Vec<NodeIndex>> =
+        HashMap::with_capacity(graph.node_count());
+    let mut node_pos: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
+
+    for k in node_vec.iter() {
+        let ki = (*k).index();
+        cores.insert(*k, graph.in_degree(ki) + graph.out_degree(ki));
+        degree_map.insert(*k, graph.in_degree(ki) + graph.out_degree(ki));
+        nbrs.insert(*k, graph.graph.neighbors(*k).collect());
+    }
+    node_vec.par_sort_by_key(|k| degree_map.get(k));
+
+    let mut bin_boundaries = vec![0];
+    let mut curr_degree = 0;
+    for (i, v) in node_vec.iter().enumerate() {
+        node_pos.insert(*v, i);
+        let v_degree = degree_map[v];
+        if v_degree > curr_degree {
+            bin_boundaries.extend([i].repeat(v_degree - curr_degree));
+            curr_degree = v_degree;
+        }
+    }
+
+    for v_ind in 0..node_vec.len() - 1 {
+        let v = node_vec[v_ind];
+        let v_nbrs = nbrs[&v].clone();
+        for u in v_nbrs {
+            if cores[&u] > cores[&v] {
+                nbrs.get_mut(&u).unwrap().retain(|&n| n == v);
+                let pos = node_pos[&u];
+                let bin_start = bin_boundaries[cores[&u]];
+                *node_pos.get_mut(&u).unwrap() = bin_start;
+                *node_pos.get_mut(&node_vec[bin_start]).unwrap() = pos;
+                node_vec.swap(bin_start, pos);
+                bin_boundaries[cores[&u]] += 1;
+                *cores.get_mut(&u).unwrap() -= 1;
+            }
+        }
+    }
+
+    let out_dict = PyDict::new(py);
+    for (v_index, core) in cores {
+        out_dict.set_item(v_index.index(), core)?;
+    }
+    Ok(out_dict.into())
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -2800,6 +2935,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
+    m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
