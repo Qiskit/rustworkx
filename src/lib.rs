@@ -2767,7 +2767,9 @@ pub fn graph_core_number(
         node_pos.insert(*v, i);
         let v_degree = degree_map[v];
         if v_degree > curr_degree {
-            bin_boundaries.extend([i].repeat(v_degree - curr_degree));
+            for _ in 1..v_degree - curr_degree {
+                bin_boundaries.push(i);
+            }
             curr_degree = v_degree;
         }
     }
@@ -2835,7 +2837,9 @@ pub fn digraph_core_number(
         node_pos.insert(*v, i);
         let v_degree = degree_map[v];
         if v_degree > curr_degree {
-            bin_boundaries.extend([i].repeat(v_degree - curr_degree));
+            for _ in 1..v_degree - curr_degree {
+                bin_boundaries.push(i);
+            }
             curr_degree = v_degree;
         }
     }
