@@ -437,3 +437,29 @@ def _digraph_dfs_edges(graph, source):
 @dfs_edges.register(PyGraph)
 def _graph_dfs_edges(graph, source):
     return graph_dfs_edges(graph, source)
+
+
+@functools.singledispatch
+def core_number(graph):
+    """Return the core number for each node
+
+    A k-core is a maximal subgraph that contains nodes of degree k or more.
+
+    :param graph: The graph to get core numbers. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+
+    :returns: A dictionary keyed by node index to the core number
+    :rtype: dict
+        raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@core_number.register(PyGraph)
+def _graph_core_number(graph):
+    return graph_core_number(graph)
+
+
+@core_number.register(PyDiGraph)
+def _digraph_core_number(graph):
+    return digraph_core_number(graph)
