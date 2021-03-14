@@ -2779,7 +2779,7 @@ pub fn graph_core_number(
         let v_nbrs = nbrs[&v].clone();
         for u in v_nbrs {
             if cores[&u] > cores[&v] {
-                nbrs.get_mut(&u).unwrap().retain(|&n| n == v);
+                nbrs.get_mut(&u).unwrap().retain(|&n| n != v);
                 let pos = node_pos[&u];
                 let bin_start = bin_boundaries[cores[&u]];
                 *node_pos.get_mut(&u).unwrap() = bin_start;
@@ -2849,7 +2849,7 @@ pub fn digraph_core_number(
         let v_nbrs = nbrs[&v].clone();
         for u in v_nbrs {
             if cores[&u] > cores[&v] {
-                nbrs.get_mut(&u).unwrap().retain(|&n| n == v);
+                nbrs.get_mut(&u).unwrap().retain(|&n| n != v);
                 let pos = node_pos[&u];
                 let bin_start = bin_boundaries[cores[&u]];
                 *node_pos.get_mut(&u).unwrap() = bin_start;
