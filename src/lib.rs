@@ -2767,14 +2767,14 @@ pub fn graph_core_number(
         node_pos.insert(*v, i);
         let v_degree = degree_map[v];
         if v_degree > curr_degree {
-            for _ in 1..v_degree - curr_degree {
+            for _ in 0..v_degree - curr_degree {
                 bin_boundaries.push(i);
             }
             curr_degree = v_degree;
         }
     }
 
-    for v_ind in 0..node_vec.len() - 1 {
+    for v_ind in 0..node_vec.len() {
         let v = node_vec[v_ind];
         let v_nbrs = nbrs[&v].clone();
         for u in v_nbrs {
@@ -2837,14 +2837,14 @@ pub fn digraph_core_number(
         node_pos.insert(*v, i);
         let v_degree = degree_map[v];
         if v_degree > curr_degree {
-            for _ in 1..v_degree - curr_degree {
+            for _ in 0..v_degree - curr_degree {
                 bin_boundaries.push(i);
             }
             curr_degree = v_degree;
         }
     }
 
-    for v_ind in 0..node_vec.len() - 1 {
+    for v_ind in 0..node_vec.len() {
         let v = node_vec[v_ind];
         let v_nbrs = nbrs[&v].clone();
         for u in v_nbrs {
