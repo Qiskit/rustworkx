@@ -93,6 +93,8 @@ Specific Graph Type Methods
    retworkx.is_matching
    retworkx.is_maximal_matching
    retworkx.max_weight_matching
+   retworkx.graph_core_number
+   retworkx.diWgraph_core_number
 
 .. _universal-functions:
 
@@ -116,6 +118,7 @@ type functions in the algorithms API but can be run with a
    retworkx.dijkstra_shortest_path_lengths
    retworkx.k_shortest_path_lengths
    retworkx.dfs_edges
+   retworkx.core_number
 
 Exceptions
 ----------
