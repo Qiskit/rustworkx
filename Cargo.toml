@@ -29,7 +29,7 @@ version = "0.12.3"
 features = ["extension-module", "hashbrown"]
 
 [dependencies.hashbrown]
-version = "0.9"
+version = "0.11"
 features = ["rayon"]
 
 [dependencies.ndarray]
