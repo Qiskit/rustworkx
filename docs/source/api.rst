@@ -31,6 +31,7 @@ Generators
     retworkx.generators.grid_graph
     retworkx.generators.directed_grid_graph
     retworkx.generators.hexagonal_graph
+    retworkx.generators.complete_graph
 
 Random Circuit Functions
 ------------------------
