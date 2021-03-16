@@ -11,6 +11,7 @@
 // under the License.
 
 use std::iter;
+use itertools::Itertools;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
@@ -1087,6 +1088,89 @@ pub fn hexagonal_graph(
     })
 }
 
+/// Generate an undirected complete graph
+///
+/// :param int num_node: The number of nodes to generate the graph with. Node
+///     weights will be None if this is specified. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param list weights: A list of node weights, the first element in the list
+///     will be the center node of the path graph. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated complete graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.complete_graph(10)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+pub fn complete_graph(
+    py: Python,
+    num_nodes: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    
+    if weights.is_none() && num_nodes.is_none() {
+        return Err(PyIndexError::new_err(
+            "num_nodes and weights list not specified",
+        ));
+    }
+    
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+            }
+            node_list
+        }
+        None => (0..num_nodes.unwrap())
+            .map(|_| graph.add_node(py.None()))
+            .collect(),
+    };
+
+
+    for node in (0..num_nodes.unwrap()).combinations(2).unique() {
+        graph.add_edge(nodes[node[0]], nodes[node[1]], py.None());
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -1100,5 +1184,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_graph))?;
+    m.add_wrapped(wrap_pyfunction!(complete_graph))?;
     Ok(())
 }
