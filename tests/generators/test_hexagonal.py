@@ -11,23 +11,26 @@
 # under the License.
 
 import unittest
-
 import retworkx
 
 
 class TestHexagonalGraph(unittest.TestCase):
 
-    def test_hexagonal_graph(self):
+    def test_hexagonal_graph_2_2(self):
         graph = retworkx.generators.hexagonal_graph(2,2)
         self.assertEqual(len(graph), 16)
         self.assertEqual(len(graph.edges()), 19)
 
-    # def test_hexagonal_graph_weights(self):
-    #     graph = retworkx.generators.hexagonal_graph(1, 1, weights=list(range(6)))
-    #     self.assertEqual(len(graph), 6)
-    #     self.assertEqual(len(graph.edges()), 6)
-    #     self.assertEqual([x for x in range(6)], graph.nodes())
+    def test_hexagonal_graph_3_2(self):
+        graph = retworkx.generators.hexagonal_graph(3,2)
+        self.assertEqual(len(graph), 22)
+        self.assertEqual(len(graph.edges()), 27)
 
-    def test_hexagonal_no_weights_or_num(self):
+    def test_hexagonal_graph_2_4(self):
+        graph = retworkx.generators.hexagonal_graph(2,4)
+        self.assertEqual(len(graph), 28)
+        self.assertEqual(len(graph.edges()), 35)
+
+    def test_hexagonal_no_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.hexagonal_graph()
