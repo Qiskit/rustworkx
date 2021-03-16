@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added new generators for constructing a complete graph(:func:`retworkx.generators.complete_graph`) 
+    and a hexagonal graph (:func:`retworkx.generators.hexagonal_graph`).
