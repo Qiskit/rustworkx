@@ -444,7 +444,13 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
 
     This checks if 2 graphs are isomorphic both structurally and also
     comparing the node and edge data using the provided matcher functions.
-    The matcher functions take in 2 data objects and will compare them.
+    The matcher functions take in 2 data objects and will compare them. A simple
+    example that checks if they're just equal would be::
+    
+            graph_a = retworkx.PyGraph()
+            graph_b = retworkx.PyGraph()
+            retworkx.is_isomorphic(graph_a, graph_b,
+                                lambda x, y: x == y)
 
     :param first: The first graph to compare. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
@@ -459,8 +465,8 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
         function evaluates to True then the edges passed to it are vieded
         as matching.
 
-    :returns: ``True`` if the 2 graphs are structurally isomorphic, ``False``
-        if they are not
+    :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are 
+        not.
     :rtype: bool
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
@@ -468,29 +474,11 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
 
 @is_isomorphic.register(PyDiGraph)
 def _digraph_is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
-    if (node_matcher is None) and (edge_matcher is None):
-        return digraph_is_isomorphic(first, second)
-
-    if node_matcher is None:
-        node_matcher = lambda x, y: True
-
-    if edge_matcher is None:
-        edge_matcher = lambda x, y: True
-
-    return digraph_is_isomorphic_node_match(first, second, node_matcher, edge_matcher)
+    return digraph_is_isomorphic(first, second, node_matcher, edge_matcher)
 
 @is_isomorphic.register(PyGraph)
 def _graph_is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
-    if (node_matcher is None) and (edge_matcher is None):
-        return graph_is_isomorphic(first, second)
-
-    if node_matcher is None:
-        node_matcher = lambda x, y: True
-
-    if edge_matcher is None:
-        edge_matcher = lambda x, y: True
-
-    return graph_is_isomorphic_node_match(first, second, node_matcher, edge_matcher)
+    return graph_is_isomorphic(first, second, node_matcher, edge_matcher)
 
 
 @functools.singledispatch
@@ -524,9 +512,9 @@ def is_isomorphic_node_match(first, second, matcher):
 
 @is_isomorphic_node_match.register(PyDiGraph)
 def _digraph_is_isomorphic_node_match(first, second, matcher):
-    return digraph_is_isomorphic_node_match(first, second, matcher, lambda x, y: x == y)
+    return digraph_is_isomorphic(first, second, matcher)
 
 
 @is_isomorphic_node_match.register(PyGraph)
 def _graph_is_isomorphic_node_match(first, second, matcher):
-    return graph_is_isomorphic_node_match(first, second, matcher, lambda x, y: x == y)
+    return graph_is_isomorphic(first, second, matcher)

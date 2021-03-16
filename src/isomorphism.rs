@@ -256,8 +256,8 @@ pub fn is_isomorphic_matching<Ty, F, G>(
     py: Python,
     g0: &StableGraph<PyObject, PyObject, Ty>,
     g1: &StableGraph<PyObject, PyObject, Ty>,
-    mut node_match: F,
-    mut edge_match: G,
+    mut node_match: Option<F>,
+    mut edge_match: Option<G>,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
@@ -291,7 +291,7 @@ where
 }
 
 trait SemanticMatcher<T> {
-    fn enabled() -> bool;
+    fn enabled(&self) -> bool;
     fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
 }
 
@@ -299,7 +299,7 @@ struct NoSemanticMatch;
 
 impl<T> SemanticMatcher<T> for NoSemanticMatch {
     #[inline]
-    fn enabled() -> bool {
+    fn enabled(&self) -> bool {
         false
     }
     #[inline]
@@ -308,17 +308,17 @@ impl<T> SemanticMatcher<T> for NoSemanticMatch {
     }
 }
 
-impl<T, F> SemanticMatcher<T> for F
+impl<T, F> SemanticMatcher<T> for Option<F>
 where
     F: FnMut(&T, &T) -> PyResult<bool>,
 {
     #[inline]
-    fn enabled() -> bool {
-        true
+    fn enabled(&self) -> bool {
+        self.is_some()
     }
     #[inline]
     fn eq(&mut self, a: &T, b: &T) -> PyResult<bool> {
-        let res = self(a, b)?;
+        let res = (self.as_mut().unwrap())(a, b)?;
         Ok(res)
     }
 }
@@ -507,12 +507,13 @@ where
             }
         }
         // semantic feasibility: compare associated data for nodes
-        let match_result = node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?;
-        if F::enabled() && !match_result {
+        if node_match.enabled()
+            && !node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?
+        {
             return Ok(false);
         }
         // semantic feasibility: compare associated data for edges
-        if G::enabled() {
+        if edge_match.enabled() {
             // outgoing edges
             for j in graph_indices.clone() {
                 let mut edges = g[j].neighbors(nodes[j]).detach();

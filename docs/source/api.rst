@@ -60,8 +60,6 @@ Specific Graph Type Methods
    retworkx.is_directed_acyclic_graph
    retworkx.digraph_is_isomorphic
    retworkx.graph_is_isomorphic
-   retworkx.digraph_is_isomorphic_node_match
-   retworkx.graph_is_isomorphic_node_match
    retworkx.topological_sort
    retworkx.descendants
    retworkx.ancestors
