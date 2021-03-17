@@ -296,16 +296,16 @@ dependencies = [
 
 [[package]]
 name = "numpy"
-version = "0.12.2"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fd9e8e652becf4ba6c11803945f8bf463c23f482f704bb33f70ae9d22482d10"
+checksum = "a7073fae1e0b82409533a29c6f804b79783d7b2d3c07728fdc4d884eda8cd4f0"
 dependencies = [
  "cfg-if 0.1.10",
  "libc",
  "ndarray",
  "num-complex",
  "num-traits",
- "pyo3",
+ "pyo3 0.13.2",
 ]
 
 [[package]]
@@ -401,10 +401,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyo3"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4837b8e8e18a102c23f79d1e9a110b597ea3b684c95e874eb1ad88f8683109c3"
+dependencies = [
+ "cfg-if 1.0.0",
+ "ctor",
+ "indoc",
+ "inventory",
+ "libc",
+ "parking_lot",
+ "paste",
+ "pyo3-macros",
+ "unindent",
+]
+
+[[package]]
 name = "pyo3-derive-backend"
 version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "10ecd0eb6ed7b3d9965b4f4370b5b9e99e3e5e8742000e1c452c018f8c2a322f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pyo3-macros"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a47f2c300ceec3e58064fd5f8f5b61230f2ffd64bde4970c81fdd0563a2db1bb"
+dependencies = [
+ "pyo3-macros-backend",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pyo3-macros-backend"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87b097e5d84fcbe3e167f400fbedd657820a375b034c78bd852050749a575d66"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -529,7 +568,7 @@ dependencies = [
  "ndarray",
  "numpy",
  "petgraph",
- "pyo3",
+ "pyo3 0.12.4",
  "rand",
  "rand_pcg",
  "rayon",
