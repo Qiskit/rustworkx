@@ -745,10 +745,7 @@ fn digraph_k_shortest_path_lengths(
     edge_cost: PyObject,
     goal: Option<usize>,
 ) -> PyResult<PyObject> {
-    let out_goal = match goal {
-        Some(g) => Some(NodeIndex::new(g)),
-        None => None,
-    };
+    let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
         res.extract(py)
@@ -800,10 +797,7 @@ fn graph_k_shortest_path_lengths(
     edge_cost: PyObject,
     goal: Option<usize>,
 ) -> PyResult<PyObject> {
-    let out_goal = match goal {
-        Some(g) => Some(NodeIndex::new(g)),
-        None => None,
-    };
+    let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
         res.extract(py)
@@ -1549,10 +1543,7 @@ fn graph_all_simple_paths(
         Some(depth) => depth - 2,
         None => 0,
     };
-    let cutoff_petgraph: Option<usize> = match cutoff {
-        Some(depth) => Some(depth - 2),
-        None => None,
-    };
+    let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
         graph,
         from_index,
@@ -1606,10 +1597,7 @@ fn digraph_all_simple_paths(
         Some(depth) => depth - 2,
         None => 0,
     };
-    let cutoff_petgraph: Option<usize> = match cutoff {
-        Some(depth) => Some(depth - 2),
-        None => None,
-    };
+    let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
         graph,
         from_index,
@@ -1667,10 +1655,7 @@ pub fn graph_dijkstra_shortest_paths(
     default_weight: f64,
 ) -> PyResult<PyObject> {
     let start = NodeIndex::new(source);
-    let goal_index: Option<NodeIndex> = match target {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
         HashMap::with_capacity(graph.node_count());
     dijkstra::dijkstra(
@@ -1733,10 +1718,7 @@ pub fn digraph_dijkstra_shortest_paths(
     as_undirected: bool,
 ) -> PyResult<PyObject> {
     let start = NodeIndex::new(source);
-    let goal_index: Option<NodeIndex> = match target {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
         HashMap::with_capacity(graph.node_count());
     if as_undirected {
@@ -1815,10 +1797,7 @@ fn graph_dijkstra_shortest_path_lengths(
     };
 
     let start = NodeIndex::new(node);
-    let goal_index: Option<NodeIndex> = match goal {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
         graph,
@@ -1874,10 +1853,7 @@ fn digraph_dijkstra_shortest_path_lengths(
     };
 
     let start = NodeIndex::new(node);
-    let goal_index: Option<NodeIndex> = match goal {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
         graph,
@@ -2659,6 +2635,100 @@ pub fn digraph_find_cycle(
     EdgeList { edges: cycle }
 }
 
+fn _inner_is_matching(
+    graph: &graph::PyGraph,
+    matching: &HashSet<(usize, usize)>,
+) -> bool {
+    let has_edge = |e: &(usize, usize)| -> bool {
+        graph
+            .graph
+            .contains_edge(NodeIndex::new(e.0), NodeIndex::new(e.1))
+    };
+
+    if !matching.iter().all(|e| has_edge(e)) {
+        return false;
+    }
+    let mut found: HashSet<usize> = HashSet::with_capacity(2 * matching.len());
+    for (v1, v2) in matching {
+        if found.contains(v1) || found.contains(v2) {
+            return false;
+        }
+        found.insert(*v1);
+        found.insert(*v2);
+    }
+    true
+}
+
+/// Check if matching is valid for graph
+///
+/// A *matching* in a graph is a set of edges in which no two distinct
+/// edges share a common endpoint.
+///
+/// :param PyDiGraph graph: The graph to check if the matching is valid for
+/// :param set matching: A set of node index tuples for each edge in the
+///     matching.
+///
+/// :returns: Whether the provided matching is a valid matching for the graph
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(graph, matching, /)"]
+pub fn is_matching(
+    graph: &graph::PyGraph,
+    matching: HashSet<(usize, usize)>,
+) -> bool {
+    _inner_is_matching(graph, &matching)
+}
+
+/// Check if a matching is a maximal (**not** maximum) matching for a graph
+///
+/// A *maximal matching* in a graph is a matching in which adding any
+/// edge would cause the set to no longer be a valid matching.
+///
+/// .. note::
+///
+///   This is not checking for a *maximum* (globally optimal) matching, but
+///   a *maximal* (locally optimal) matching.
+///
+/// :param PyDiGraph graph: The graph to check if the matching is maximal for.
+/// :param set matching: A set of node index tuples for each edge in the
+///     matching.
+///
+/// :returns: Whether the provided matching is a valid matching and whether it
+///     is maximal or not.
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(graph, matching, /)"]
+pub fn is_maximal_matching(
+    graph: &graph::PyGraph,
+    matching: HashSet<(usize, usize)>,
+) -> bool {
+    if !_inner_is_matching(graph, &matching) {
+        return false;
+    }
+    let edge_list: HashSet<[usize; 2]> = graph
+        .edge_references()
+        .map(|edge| {
+            let mut tmp_array = [edge.source().index(), edge.target().index()];
+            tmp_array.sort_unstable();
+            tmp_array
+        })
+        .collect();
+    let matched_edges: HashSet<[usize; 2]> = matching
+        .iter()
+        .map(|edge| {
+            let mut tmp_array = [edge.0, edge.1];
+            tmp_array.sort_unstable();
+            tmp_array
+        })
+        .collect();
+    let mut unmatched_edges = edge_list.difference(&matched_edges);
+    unmatched_edges.all(|e| {
+        let mut tmp_set = matching.clone();
+        tmp_set.insert((e[0], e[1]));
+        !_inner_is_matching(graph, &tmp_set)
+    })
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -2727,6 +2797,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(is_matching))?;
+    m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;

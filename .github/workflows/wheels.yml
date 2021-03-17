@@ -8,6 +8,7 @@ jobs:
   sdist:
     name: Build sdist
     runs-on: ubuntu-latest
+    needs: ["build_wheels", "build-win32-wheels"]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -56,6 +57,7 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2010_i686:latest
           CIBW_SKIP: cp27-* cp34-* cp35-* pp* *win32
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
+          CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
       - uses: actions/upload-artifact@v2
         with:
@@ -119,6 +121,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_SKIP: cp27-* cp34-* cp35-* pp* *amd64
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
+          CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
       - uses: actions/upload-artifact@v2
         with:

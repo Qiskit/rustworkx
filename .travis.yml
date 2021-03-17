@@ -44,9 +44,10 @@ jobs:
     - name: Python 3.7 Tests arm64 Linux
       stage: Linux non-x86_64
       python: 3.7
-      arch: arm64-graviton2
+      arch: arm64
     - stage: deploy
-      arch: arm64-graviton2
+      arch: arm64
+      python: 3.7
       services:
         - docker
       before_install:
@@ -58,35 +59,43 @@ jobs:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
+        - CIBW_TEST_REQUIRES=networkx testtools fixtures
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U twine importlib-metadata keyring cibuildwheel==1.6.4
+        - pip install -U twine importlib-metadata keyring cibuildwheel==1.9.0
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
       arch: ppc64le
+      python: 3.7
       services:
         - docker
       before_install:
-        - echo ""
+        - which python
+        - sh tools/install_rust.sh
+        - export PATH=~/.cargo/bin:$PATH
+        - which python
+        - pip install -U pip virtualenv tox
       install:
         - echo ""
       env:
-        - CIBW_BEFORE_ALL="yum install -y wget && {package}/tools/install_rust.sh"
-        - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
+        - CIBW_BEFORE_ALL="yum install -y wget && rm -rf rust-installer"
+        - CIBW_BEFORE_BUILD="bash {project}/tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
+        - CIBW_TEST_REQUIRES=networkx testtools fixtures
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U twine importlib-metadata keyring cibuildwheel==1.6.4
+        - pip install -U twine importlib-metadata keyring cibuildwheel==1.9.0
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
       arch: s390x
+      python: 3.7
       services:
         - docker
       before_install:
@@ -98,10 +107,11 @@ jobs:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
+        - CIBW_TEST_REQUIRES=networkx testtools fixtures
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - sudo pip install -U twine importlib-metadata keyring cibuildwheel==1.6.4
+        - sudo pip install -U twine importlib-metadata keyring cibuildwheel==1.9.0
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
