@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::iter;
 use itertools::Itertools;
+use std::iter;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
@@ -1047,7 +1047,8 @@ pub fn hexagonal_graph(
     collen += 1;
     let num_nodes = rowlen * collen;
 
-    let nodes: Vec<NodeIndex> = (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
+    let nodes: Vec<NodeIndex> =
+        (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
 
     // Add column edges
     for i in 0..collen {
@@ -1136,15 +1137,14 @@ pub fn complete_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
-    
+
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    
+
     let nodes: Vec<NodeIndex> = match weights {
         Some(weights) => {
             let mut node_list: Vec<NodeIndex> = Vec::new();
@@ -1159,8 +1159,7 @@ pub fn complete_graph(
             .collect(),
     };
 
-
-    for node in (0..num_nodes.unwrap()).combinations(2).unique() {
+    for node in (0..nodes.len()).combinations(2).unique() {
         graph.add_edge(nodes[node[0]], nodes[node[1]], py.None());
     }
 
