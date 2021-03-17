@@ -5,7 +5,7 @@
 [![](https://img.shields.io/github/release/Qiskit/retworkx.svg?style=popout-square)](https://github.com/Qiskit/retworkx/releases)
 [![](https://img.shields.io/pypi/dm/retworkx.svg?style=popout-square)](https://pypi.org/project/retworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=master)](https://coveralls.io/github/Qiskit/retworkx?branch=master)
-[![Minimum rustc 1.42](https://img.shields.io/badge/rustc-1.42+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 
   - You can see the full rendered docs at:
     <https://retworkx.readthedocs.io/en/latest/index.html>
