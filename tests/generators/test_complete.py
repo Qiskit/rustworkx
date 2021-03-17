@@ -20,7 +20,7 @@ class TestCompleteGraph(unittest.TestCase):
         for n in range(2, 10):
             graph = retworkx.generators.complete_graph(n)
             self.assertEqual(len(graph), n)
-            self.assertEqual(len(graph.edges()), n*(n-1)//2)
+            self.assertEqual(len(graph.edges()), n * (n - 1) // 2)
 
     def test_complete_graph_weights(self):
         graph = retworkx.generators.complete_graph(20, weights=list(range(20)))
