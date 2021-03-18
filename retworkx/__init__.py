@@ -338,7 +338,11 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
     """Find the shortest path from all nodes
 
     This function will generate the shortest path from all nodes int the graph
-    using Dijkstra's algorithm.
+    using Dijkstra's algorithm. This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
 
     :param graph: The input graph to use. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
@@ -367,7 +371,11 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
     """Find the shortest path from a node
 
     This function will generate the shortest path from a source node using
-    Dijkstra's algorithm.
+    Dijkstra's algorithm. This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
 
     :param graph: The input graph to use. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`

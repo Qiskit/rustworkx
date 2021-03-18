@@ -1879,7 +1879,11 @@ fn digraph_dijkstra_shortest_path_lengths(
 /// :class:`~retworkx.PyDiGraph` object
 ///
 /// This function will generate the shortest path from a source node using
-/// Dijkstra's algorithm.
+/// Dijkstra's algorithm. This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
 ///
 /// :param graph: The input :class:`~retworkx.PyDiGraph` to use
 /// :param weight_fn: A weight function for an edge. It will accept
@@ -1958,7 +1962,11 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
 /// object
 ///
 /// This function will generate the shortest path from a source node using
-/// Dijkstra's algorithm.
+/// Dijkstra's algorithm. This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
 ///
 /// :param graph: The input :class:`~retworkx.PyDiGraph` object to use
 /// :param edge_cost_fn: A weight function for an edge. It will accept
