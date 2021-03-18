@@ -73,6 +73,15 @@ class TestDispatchPyGraph(unittest.TestCase):
         res = retworkx.dfs_edges(self.graph, 0)
         self.assertIsInstance(list(res), list)
 
+    def test_all_pairs_dijkstra_shortest_paths(self):
+        res = retworkx.all_pairs_dijkstra_shortest_paths(self.graph,
+                                                         lambda _: 1)
+        self.assertIsInstance(res, dict)
+
+    def test_all_pairs_dijkstra_path_lengthss(self):
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.graph, lambda _: 1)
+        self.assertIsInstance(res, dict)
+
 
 class TestDispatchPyDiGraph(TestDispatchPyGraph):
 

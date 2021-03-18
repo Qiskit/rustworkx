@@ -172,6 +172,36 @@ class TestDijkstraDiGraph(unittest.TestCase):
         with self.assertRaises(TypeError):
             retworkx.digraph_dijkstra_shortest_path_lengths(g, 0, lambda x: x)
 
+    def test_dijkstra_all_pair_path_lengths(self):
+        lengths = retworkx.digraph_all_pairs_dijkstra_path_lengths(
+            self.graph, float)
+        expected = {
+            0: {1: 7.0, 2: 16.0, 3: 14.0, 4: 23.0, 5: 22.0},
+            1: {0: 19.0, 2: 10.0, 3: 33.0, 4: 42.0, 5: 15.0},
+            2: {0: 9.0, 1: 16.0, 3: 23.0, 4: 32.0, 5: 11.0},
+            3: {0: 11.0, 1: 18.0, 2: 2.0, 4: 9.0, 5: 13.0},
+            4: {5: 6.0},
+            5: {}
+        }
+        self.assertEqual(expected, lengths)
+
+    def test_dijkstra_all_pair_paths(self):
+        lengths = retworkx.digraph_all_pairs_dijkstra_shortest_paths(
+            self.graph, float)
+        expected = {
+            0: {1: [0, 1], 2: [0, 1, 2], 3: [0, 3], 4: [0, 3, 4],
+                5: [0, 1, 5]},
+            1: {0: [1, 2, 0], 2: [1, 2], 3: [1, 2, 0, 3], 4: [1, 2, 0, 3, 4],
+                5: [1, 5]},
+            2: {0: [2, 0], 1: [2, 0, 1], 3: [2, 0, 3], 4: [2, 0, 3, 4],
+                5: [2, 5]},
+            3: {0: [3, 2, 0], 1: [3, 2, 0, 1], 2: [3, 2], 4: [3, 4],
+                5: [3, 2, 5]},
+            4: {5: [4, 5]},
+            5: {}
+        }
+        self.assertEqual(expected, lengths)
+
 
 class TestDijkstraGraph(unittest.TestCase):
 
@@ -263,3 +293,31 @@ class TestDijkstraGraph(unittest.TestCase):
         with self.assertRaises(TypeError):
             retworkx.graph_dijkstra_shortest_path_lengths(
                 g, 0, lambda x: x)
+
+    def test_dijkstra_all_pair_path_lengths(self):
+        lengths = retworkx.graph_all_pairs_dijkstra_path_lengths(
+            self.graph, float)
+        expected = {
+            0: {1: 7.0, 2: 9.0, 3: 11.0, 4: 20.0, 5: 20.0},
+            1: {0: 7.0, 2: 10.0, 3: 12.0, 4: 21.0, 5: 15.0},
+            2: {0: 9.0, 1: 10.0, 3: 2.0, 4: 11.0, 5: 11.0},
+            3: {0: 11.0, 1: 12.0, 2: 2.0, 4: 9.0, 5: 13.0},
+            4: {0: 20.0, 1: 21.0, 2: 11.0, 3: 9.0, 5: 6.0},
+            5: {0: 20.0, 1: 15.0, 2: 11.0, 3: 13.0, 4: 6.0}
+        }
+        self.assertEqual(expected, lengths)
+
+    def test_dijkstra_all_pair_paths(self):
+        lengths = retworkx.graph_all_pairs_dijkstra_shortest_paths(
+            self.graph, float)
+        expected = {
+            0: {1: [0, 1], 2: [0, 2], 3: [0, 3], 4: [0, 3, 4], 5: [0, 1, 5]},
+            1: {0: [1, 0], 2: [1, 2], 3: [1, 0, 3], 4: [1, 0, 3, 4],
+                5: [1, 5]},
+            2: {0: [2, 0], 1: [2, 1], 3: [2, 3], 4: [2, 3, 4], 5: [2, 5]},
+            3: {0: [3, 0], 1: [3, 2, 1], 2: [3, 2], 4: [3, 4], 5: [3, 2, 5]},
+            4: {0: [4, 3, 0], 1: [4, 5, 1], 2: [4, 5, 2], 3: [4, 3],
+                5: [4, 5]},
+            5: {0: [5, 2, 0], 1: [5, 1], 2: [5, 2], 3: [5, 4, 3], 4: [5, 4]}
+        }
+        self.assertEqual(expected, lengths)
