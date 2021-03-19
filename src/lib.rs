@@ -38,6 +38,8 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::stable_graph::EdgeReference;
+use petgraph::unionfind::UnionFind;
 use petgraph::visit::{
     Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighbors,
     IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
@@ -52,7 +54,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices};
+use crate::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -2729,6 +2731,44 @@ pub fn is_maximal_matching(
     })
 }
 
+/// Find the minimum spanning tree of a graph
+///
+/// This function implements Kruskal's algorithm.
+///
+/// :param PyGraph graph:
+///
+/// :returns: The N - |c| edges of the Minimum Spanning Tree (or Forest, if |c| > 1)
+/// :rtype: WeightedEdgeList
+#[pyfunction]
+#[text_signature = "(graph,)"]
+pub fn minimum_spanning_tree_edges(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> WeightedEdgeList {
+
+    let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
+    let mut edge_list: Vec<EdgeReference<PyObject>> = graph.graph.edge_references().collect();
+
+    edge_list.sort_by(|a, b|{
+        let weight_a = a.weight().as_ref(py);
+        let weight_b = b.weight().as_ref(py);
+        weight_a.compare(weight_b).unwrap()
+    });
+
+    let mut answer: Vec<(usize, usize, PyObject)> = Vec::new();
+    for edge in edge_list.iter() {
+        let u = edge.source().index();
+        let v = edge.target().index();
+        let w = edge.weight().clone();
+        if subgraphs.union(u, v) {
+            answer.push((u, v, w));
+        }
+    }
+
+    WeightedEdgeList{ edges: answer}
+
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -2800,6 +2840,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
+    m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree_edges))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
