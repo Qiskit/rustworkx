@@ -459,11 +459,11 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
         It should be the same type as the first graph.
     :param callable node_matcher: A python callable object that takes 2 positional
         one for each node data object. If the return of this
-        function evaluates to True then the nodes passed to it are vieded
+        function evaluates to True then the nodes passed to it are viewed
         as matching.
     :param callable edge_matcher: A python callable object that takes 2 positional
         one for each edge data object. If the return of this
-        function evaluates to True then the edges passed to it are vieded
+        function evaluates to True then the edges passed to it are viewed
         as matching.
 
     :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are 
