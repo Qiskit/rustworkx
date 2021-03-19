@@ -277,3 +277,57 @@ class TestIsomorphic(unittest.TestCase):
         self.assertTrue(
             retworkx.is_isomorphic(
                 g_a, g_b, lambda x, y: x == y))
+
+    def test_isomorphic_compare_edges_identical_undirected(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+
+        nodes = g_a.add_nodes_from(['a_1', 'a_2', 'a_3'])
+        g_a.add_edges_from([
+            (nodes[0], nodes[1], 'a_1'), (nodes[1], nodes[2], 'a_2')
+        ])
+
+        nodes = g_b.add_nodes_from(['a_1', 'a_2', 'a_3'])
+        g_b.add_edges_from([
+            (nodes[0], nodes[1], 'a_1'), (nodes[1], nodes[2], 'a_2')
+        ])
+        self.assertTrue(
+            retworkx.is_isomorphic(
+                g_a, g_b, edge_matcher=lambda x, y: x == y))
+
+    def test_isomorphic_removed_nodes_in_second_graph(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+
+        nodes = g_a.add_nodes_from(['a_1', 'a_2', 'a_3'])
+        g_a.add_edges_from([
+            (nodes[0], nodes[1], 'a_1'), (nodes[1], nodes[2], 'a_2')
+        ])
+
+        nodes = g_b.add_nodes_from(['a_0', 'a_2', 'a_1', 'a_3'])
+        g_b.add_edges_from([
+            (nodes[0], nodes[1], 'e_01'), (nodes[0], nodes[3], 'e_03'),
+            (nodes[2], nodes[1], 'a_1'), (nodes[1], nodes[3], 'a_2')
+        ])
+        g_b.remove_node(nodes[0])
+        self.assertTrue(
+            retworkx.is_isomorphic(
+                g_a, g_b, lambda x, y: x == y))
+
+    def test_isomorphic_node_count_not_equal(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+
+        nodes = g_a.add_nodes_from(['a_1', 'a_2', 'a_3'])
+        g_a.add_edges_from([
+            (nodes[0], nodes[1], 'a_1')
+        ])
+
+        nodes = g_b.add_nodes_from(['a_0', 'a_1'])
+        g_b.add_edges_from([
+            (nodes[0], nodes[1], 'a_1')
+        ])
+        g_b.remove_node(nodes[0])
+        self.assertFalse(
+            retworkx.is_isomorphic(
+                g_a, g_b))

@@ -331,7 +331,7 @@ fn digraph_is_isomorphic(
         }
     });
 
-    let res = isomorphism::is_isomorphic_matching(
+    let res = isomorphism::is_isomorphic(
         py,
         &first.graph,
         &second.graph,
@@ -390,7 +390,7 @@ fn graph_is_isomorphic(
         }
     });
 
-    let res = isomorphism::is_isomorphic_matching(
+    let res = isomorphism::is_isomorphic(
         py,
         &first.graph,
         &second.graph,

@@ -456,6 +456,7 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
     :param second: The second graph to compare. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        It should be the same type as the first graph.
     :param callable node_matcher: A python callable object that takes 2 positional
         one for each node data object. If the return of this
         function evaluates to True then the nodes passed to it are vieded
@@ -499,6 +500,7 @@ def is_isomorphic_node_match(first, second, matcher):
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
     :param second: The second graph to compare. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        It should be the same type as the first graph.
     :param callable matcher: A python callable object that takes 2 positional
         one for each node data object. If the return of this
         function evaluates to True then the nodes passed to it are vieded

@@ -169,52 +169,6 @@ where
     }
 }
 
-/// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
-///
-/// Using the VF2 algorithm, only matching graph syntactically (graph
-/// structure).
-///
-/// The graphs should not be multigraphs.
-///
-/// **Reference**
-///
-/// * Luigi P. Cordella, Pasquale Foggia, Carlo Sansone, Mario Vento;
-///   *A (Sub)Graph Isomorphism Algorithm for Matching Large Graphs*
-pub fn is_isomorphic<Ty>(
-    py: Python,
-    g0: &StableGraph<PyObject, PyObject, Ty>,
-    g1: &StableGraph<PyObject, PyObject, Ty>,
-) -> PyResult<bool>
-where
-    Ty: EdgeType,
-{
-    let inner_temp_g0: StableGraph<PyObject, PyObject, Ty>;
-    let inner_temp_g1: StableGraph<PyObject, PyObject, Ty>;
-    let g0_out = if g0.nodes_removed() {
-        inner_temp_g0 = reindex_graph(py, g0);
-        &inner_temp_g0
-    } else {
-        g0
-    };
-    let g1_out = if g1.nodes_removed() {
-        inner_temp_g1 = reindex_graph(py, g1);
-        &inner_temp_g1
-    } else {
-        g1
-    };
-    let g0 = &g0_out;
-    let g1 = &g1_out;
-    if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
-    {
-        return Ok(false);
-    }
-
-    let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
-    let res =
-        try_match(&mut st, g0, g1, &mut NoSemanticMatch, &mut NoSemanticMatch)?;
-    Ok(res.unwrap_or(false))
-}
-
 fn reindex_graph<Ty>(
     py: Python,
     graph: &StableGraph<PyObject, PyObject, Ty>,
@@ -252,7 +206,7 @@ where
 /// graph isomorphism (graph structure and matching node and edge weights).
 ///
 /// The graphs should not be multigraphs.
-pub fn is_isomorphic_matching<Ty, F, G>(
+pub fn is_isomorphic<Ty, F, G>(
     py: Python,
     g0: &StableGraph<PyObject, PyObject, Ty>,
     g1: &StableGraph<PyObject, PyObject, Ty>,
