@@ -194,7 +194,7 @@ where
         let edge_w = edge.weight();
         let p_index = id_map[&edge.source()];
         let c_index = id_map[&edge.target()];
-        new_graph.add_edge(*p_index, *c_index, edge_w.clone_ref(py));
+        new_graph.add_edge(p_index, c_index, edge_w.clone_ref(py));
     }
 
     new_graph
