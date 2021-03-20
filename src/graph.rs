@@ -86,6 +86,7 @@ use petgraph::visit::{
 ///
 #[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, multigraph=True)"]
+#[derive(Clone)]
 pub struct PyGraph {
     pub graph: StableUnGraph<PyObject, PyObject>,
     pub node_removed: bool,
