@@ -24,23 +24,72 @@ class TestMinimumSpanningTree(unittest.TestCase):
         self.d = self.graph.add_node("D")
         self.e = self.graph.add_node("E")
         self.f = self.graph.add_node("F")
+        
         edge_list = [
-            (self.a, self.b, 7),
-            (self.c, self.a, 9),
-            (self.a, self.d, 14),
-            (self.b, self.c, 10),
-            (self.d, self.c, 2),
-            (self.d, self.e, 9),
-            (self.b, self.f, 15),
-            (self.c, self.f, 11),
-            (self.e, self.f, 6),
+            (self.a, self.b, 3),
+            (self.a, self.d, 2),
+            (self.b, self.c, 4),
+            (self.c, self.d, 1),
+            (self.a, self.f, 1),
+            (self.b, self.f, 6),
+            (self.d, self.e, 5),
+            (self.c, self.e, 7)
         ]
         self.graph.add_edges_from(edge_list)
 
-    def test_kruskal(self):
-        path = retworkx.minimum_spanning_tree_edges(self.graph)
-        print("Unit Test {}".format(path))
-        # self.assertEqual(1, path)
+        self.expected_edges = [
+            (self.a, self.b, 3),
+            (self.a, self.d, 2),
+            (self.c, self.d, 1),
+            (self.a, self.f, 1),
+            (self.d, self.e, 5),
+        ]
 
-if __name__ == "__main__":
-    unittest.main()
+    def assertEqualEdgeList(self, expected, actual):
+        self.assertEqual(len(expected), len(actual))
+        for edge in actual:
+            self.assertTrue(edge in expected)
+
+    def test_edges(self):
+        mst_edges = retworkx.minimum_spanning_edges(self.graph)
+        self.assertEqual(len(self.graph.nodes()) - 1, len(mst_edges))
+        for edge in mst_edges:
+            self.assertTrue(edge in self.expected_edges)
+
+    def test_tree(self):
+        mst_graph = retworkx.minimum_spanning_tree(self.graph)
+        self.assertEqual(self.graph.nodes(), mst_graph.nodes())
+        self.assertEqual(len(self.graph.nodes()) - 1, len(mst_graph.edge_list()))
+        self.assertEqualEdgeList(self.expected_edges, mst_graph.weighted_edge_list())
+
+    def test_forest(self):
+        s = self.graph.add_node("S")
+        t = self.graph.add_node("T")
+        u = self.graph.add_node("U")
+        self.graph.add_edges_from(
+            [(s, t, 10), (t, u, 9) , (s, u, 8)]
+        )
+        forest_expected_edges = self.expected_edges + [(s, u, 8), (t, u, 9)]
+
+        msf_graph = retworkx.minimum_spanning_tree(self.graph)
+        self.assertEqual(self.graph.nodes(), msf_graph.nodes())
+        self.assertEqual(len(self.graph.nodes()) - 2, len(msf_graph.edge_list()))
+        self.assertEqualEdgeList(forest_expected_edges, msf_graph.weighted_edge_list())
+
+    def test_isolated(self):
+        s = self.graph.add_node("S")
+
+        msf_graph = retworkx.minimum_spanning_tree(self.graph)
+        self.assertEqual("S", msf_graph.nodes()[s])
+        self.assertEqual(self.graph.nodes(), msf_graph.nodes())
+        self.assertEqual(len(self.graph.nodes()) - 2, len(msf_graph.edge_list()))
+        self.assertEqualEdgeList(self.expected_edges, msf_graph.weighted_edge_list())
+
+    def test_multigraph(self):
+        mutligraph = retworkx.PyGraph(multigraph=True)
+        mutligraph.extend_from_weighted_edge_list(
+            [(0, 1, 1), (0, 2, 3), (1, 2, 2), (0, 0, -10), (1, 2, 1)]
+        )
+
+        mst_graph = retworkx.minimum_spanning_tree(mutligraph)
+        self.assertEqualEdgeList([(0, 1, 1), (1, 2, 1)], mst_graph.weighted_edge_list())
