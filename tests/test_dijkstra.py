@@ -235,10 +235,10 @@ class TestDijkstraDiGraph(unittest.TestCase):
             retworkx.digraph_all_pairs_dijkstra_path_lengths(graph, float))
 
     def test_dijkstra_all_pair_shortest_paths_empty_graph(self):
-        graph = retworkx.PyGraph()
+        graph = retworkx.PyDiGraph()
         self.assertEqual(
             {},
-            retworkx.graph_all_pairs_dijkstra_shortest_paths(graph, float))
+            retworkx.digraph_all_pairs_dijkstra_shortest_paths(graph, float))
 
     def test_dijkstra_all_pair_path_lengths_graph_no_edges(self):
         graph = retworkx.PyDiGraph()
