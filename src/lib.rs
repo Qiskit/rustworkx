@@ -2745,11 +2745,11 @@ pub fn minimum_spanning_tree_edges(
     py: Python,
     graph: &graph::PyGraph,
 ) -> WeightedEdgeList {
-
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
-    let mut edge_list: Vec<EdgeReference<PyObject>> = graph.graph.edge_references().collect();
+    let mut edge_list: Vec<EdgeReference<PyObject>> =
+        graph.graph.edge_references().collect();
 
-    edge_list.sort_by(|a, b|{
+    edge_list.sort_by(|a, b| {
         let weight_a = a.weight().as_ref(py);
         let weight_b = b.weight().as_ref(py);
         weight_a.compare(weight_b).unwrap()
@@ -2765,8 +2765,31 @@ pub fn minimum_spanning_tree_edges(
         }
     }
 
-    WeightedEdgeList{ edges: answer}
+    WeightedEdgeList { edges: answer }
+}
 
+/// Find the minimum spanning tree of a graph
+///
+/// This function implements Kruskal's algorithm.
+///
+/// :param PyGraph graph:
+///
+/// :returns: A PyGraph Minimum Spanning Tree (or Forest, if |c| > 1)
+/// :rtype: PyGraph
+#[pyfunction]
+#[text_signature = "(graph,)"]
+pub fn minimum_spanning_tree(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<graph::PyGraph> {
+    let mut spanning_tree = (*graph).clone();
+    spanning_tree.graph.clear_edges();
+
+    for edge in minimum_spanning_tree_edges(py, graph).edges.iter() {
+        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone())?;
+    }
+
+    Ok(spanning_tree)
 }
 
 // The provided node is invalid.
@@ -2841,6 +2864,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
     m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree_edges))?;
+    m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
