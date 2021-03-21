@@ -2741,7 +2741,7 @@ pub fn is_maximal_matching(
 /// :rtype: WeightedEdgeList
 #[pyfunction]
 #[text_signature = "(graph,)"]
-pub fn minimum_spanning_tree_edges(
+pub fn minimum_spanning_edges(
     py: Python,
     graph: &graph::PyGraph,
 ) -> WeightedEdgeList {
@@ -2785,7 +2785,7 @@ pub fn minimum_spanning_tree(
     let mut spanning_tree = (*graph).clone();
     spanning_tree.graph.clear_edges();
 
-    for edge in minimum_spanning_tree_edges(py, graph).edges.iter() {
+    for edge in minimum_spanning_edges(py, graph).edges.iter() {
         spanning_tree.add_edge(edge.0, edge.1, edge.2.clone())?;
     }
 
@@ -2863,7 +2863,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
-    m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree_edges))?;
+    m.add_wrapped(wrap_pyfunction!(minimum_spanning_edges))?;
     m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
