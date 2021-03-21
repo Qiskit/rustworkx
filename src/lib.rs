@@ -1956,6 +1956,15 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
     graph: &digraph::PyDiGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<PyObject> {
+    if graph.node_count() == 0 {
+        return Ok(PyDict::new(py).into());
+    } else if graph.graph.edge_count() == 0 {
+        let out_dict = PyDict::new(py);
+        for i in graph.graph.node_indices() {
+            out_dict.set_item(i.index(), PyDict::new(py))?;
+        }
+        return Ok(out_dict.into());
+    }
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -2039,6 +2048,15 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
     graph: &digraph::PyDiGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<PyObject> {
+    if graph.node_count() == 0 {
+        return Ok(PyDict::new(py).into());
+    } else if graph.graph.edge_count() == 0 {
+        let out_dict = PyDict::new(py);
+        for i in graph.graph.node_indices() {
+            out_dict.set_item(i.index(), PyDict::new(py))?;
+        }
+        return Ok(out_dict.into());
+    }
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -2128,6 +2146,15 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
     graph: &graph::PyGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<PyObject> {
+    if graph.node_count() == 0 {
+        return Ok(PyDict::new(py).into());
+    } else if graph.graph.edge_count() == 0 {
+        let out_dict = PyDict::new(py);
+        for i in graph.graph.node_indices() {
+            out_dict.set_item(i.index(), PyDict::new(py))?;
+        }
+        return Ok(out_dict.into());
+    }
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -2208,6 +2235,15 @@ pub fn graph_all_pairs_dijkstra_shortest_paths(
     graph: &graph::PyGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<PyObject> {
+    if graph.node_count() == 0 {
+        return Ok(PyDict::new(py).into());
+    } else if graph.graph.edge_count() == 0 {
+        let out_dict = PyDict::new(py);
+        for i in graph.graph.node_indices() {
+            out_dict.set_item(i.index(), PyDict::new(py))?;
+        }
+        return Ok(out_dict.into());
+    }
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);

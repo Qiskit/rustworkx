@@ -202,6 +202,60 @@ class TestDijkstraDiGraph(unittest.TestCase):
         }
         self.assertEqual(expected, lengths)
 
+    def test_dijkstra_all_pair_path_lengths_with_node_removal(self):
+        self.graph.remove_node(3)
+        lengths = retworkx.digraph_all_pairs_dijkstra_path_lengths(
+            self.graph, float)
+        expected = {
+            0: {1: 7.0, 2: 17.0, 5: 22.0},
+            1: {0: 19.0, 2: 10.0, 5: 15.0},
+            2: {0: 9.0, 1: 16.0, 5: 11.0},
+            4: {5: 6.0},
+            5: {}
+        }
+        self.assertEqual(expected, lengths)
+
+    def test_dijkstra_all_pair_paths_with_node_removal(self):
+        self.graph.remove_node(3)
+        lengths = retworkx.digraph_all_pairs_dijkstra_shortest_paths(
+            self.graph, float)
+        expected = {
+            0: {1: [0, 1], 2: [0, 1, 2], 5: [0, 1, 5]},
+            1: {0: [1, 2, 0], 2: [1, 2], 5: [1, 5]},
+            2: {0: [2, 0], 1: [2, 0, 1], 5: [2, 5]},
+            4: {5: [4, 5]},
+            5: {}
+        }
+        self.assertEqual(expected, lengths)
+
+    def test_dijkstra_all_pair_path_lengths_empty_graph(self):
+        graph = retworkx.PyDiGraph()
+        self.assertEqual(
+            {},
+            retworkx.digraph_all_pairs_dijkstra_path_lengths(graph, float))
+
+    def test_dijkstra_all_pair_shortest_paths_empty_graph(self):
+        graph = retworkx.PyGraph()
+        self.assertEqual(
+            {},
+            retworkx.graph_all_pairs_dijkstra_shortest_paths(graph, float))
+
+    def test_dijkstra_all_pair_path_lengths_graph_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(1000)))
+        expected = {x: {} for x in range(1000)}
+        self.assertEqual(
+            expected,
+            retworkx.digraph_all_pairs_dijkstra_path_lengths(graph, float))
+
+    def test_dijkstra_all_pair_shortest_paths_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(1000)))
+        expected = {x: {} for x in range(1000)}
+        self.assertEqual(
+            expected,
+            retworkx.digraph_all_pairs_dijkstra_shortest_paths(graph, float))
+
 
 class TestDijkstraGraph(unittest.TestCase):
 
@@ -321,3 +375,57 @@ class TestDijkstraGraph(unittest.TestCase):
             5: {0: [5, 2, 0], 1: [5, 1], 2: [5, 2], 3: [5, 4, 3], 4: [5, 4]}
         }
         self.assertEqual(expected, lengths)
+
+    def test_dijkstra_all_pair_path_lengths_with_node_removal(self):
+        self.graph.remove_node(3)
+        lengths = retworkx.graph_all_pairs_dijkstra_path_lengths(
+            self.graph, float)
+        expected = {
+            0: {1: 7.0, 2: 9.0, 4: 26.0, 5: 20.0},
+            1: {0: 7.0, 2: 10.0, 4: 21.0, 5: 15.0},
+            2: {0: 9.0, 1: 10.0, 4: 17.0, 5: 11.0},
+            4: {0: 26.0, 1: 21.0, 2: 17.0, 5: 6.0},
+            5: {0: 20.0, 1: 15.0, 2: 11.0, 4: 6.0}
+        }
+        self.assertEqual(expected, lengths)
+
+    def test_dijkstra_all_pair_paths_with_node_removal(self):
+        self.graph.remove_node(3)
+        lengths = retworkx.graph_all_pairs_dijkstra_shortest_paths(
+            self.graph, float)
+        expected = {
+            0: {1: [0, 1], 2: [0, 2], 4: [0, 1, 5, 4], 5: [0, 1, 5]},
+            1: {0: [1, 0], 2: [1, 2], 4: [1, 5, 4], 5: [1, 5]},
+            2: {0: [2, 0], 1: [2, 1], 4: [2, 5, 4], 5: [2, 5]},
+            4: {0: [4, 5, 2, 0], 1: [4, 5, 1], 2: [4, 5, 2], 5: [4, 5]},
+            5: {0: [5, 2, 0], 1: [5, 1], 2: [5, 2], 4: [5, 4]}
+        }
+        self.assertEqual(expected, lengths)
+
+    def test_dijkstra_all_pair_path_lengths_empty_graph(self):
+        graph = retworkx.PyGraph()
+        self.assertEqual(
+            {},
+            retworkx.graph_all_pairs_dijkstra_path_lengths(graph, float))
+
+    def test_dijkstra_all_pair_shortest_paths_empty_graph(self):
+        graph = retworkx.PyGraph()
+        self.assertEqual(
+            {},
+            retworkx.graph_all_pairs_dijkstra_shortest_paths(graph, float))
+
+    def test_dijkstra_all_pair_path_lengths_graph_no_edges(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(1000)))
+        expected = {x: {} for x in range(1000)}
+        self.assertEqual(
+            expected,
+            retworkx.graph_all_pairs_dijkstra_path_lengths(graph, float))
+
+    def test_dijkstra_all_pair_shortest_paths_no_edges(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(1000)))
+        expected = {x: {} for x in range(1000)}
+        self.assertEqual(
+            expected,
+            retworkx.graph_all_pairs_dijkstra_shortest_paths(graph, float))

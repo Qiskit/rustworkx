@@ -334,6 +334,7 @@ def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None,
                                          weight_fn=weight_fn,
                                          default_weight=default_weight)
 
+
 @functools.singledispatch
 def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
     """Find the shortest path from all nodes
@@ -367,6 +368,7 @@ def _digraph_all_pairsdijkstra_shortest_path(graph, edge_cost_fn):
 def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
     return graph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
 
+
 @functools.singledispatch
 def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
     """Find the shortest path from a node
@@ -380,9 +382,9 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
 
     :param graph: The input graph to use. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :param edge_cost_fn: An optional weight function for an edge. It will accept
-        a single argument, the edge's weight object and will return a float
-        which will be used to represent the weight/cost of the edge
+    :param edge_cost_fn: An optional weight function for an edge. It will
+        accept a single argument, the edge's weight object and will return a
+        float which will be used to represent the weight/cost of the edge
 
     :return: Dictionary of paths. The keys are destination node indices and
         the dict values are lists of node indices making the path.
