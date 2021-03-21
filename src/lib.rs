@@ -2731,13 +2731,13 @@ pub fn is_maximal_matching(
     })
 }
 
-/// Find the minimum spanning tree of a graph
+/// Find the edges in the minimum spanning tree or forest of a graph
+/// using Kruskal's algorithm. 
 ///
-/// This function implements Kruskal's algorithm.
+/// :param PyGraph graph: Undirected weighted graph with comparable weights
 ///
-/// :param PyGraph graph:
-///
-/// :returns: The N - |c| edges of the Minimum Spanning Tree (or Forest, if |c| > 1)
+/// :returns: The :math:`N - |c|` edges of the Minimum Spanning Tree (or Forest, if :math:`|c| > 1`)
+///     where :math:`N` is the number of nodes and :math:`|c|` is the number of connected components of the graph
 /// :rtype: WeightedEdgeList
 #[pyfunction]
 #[text_signature = "(graph,)"]
@@ -2768,13 +2768,14 @@ pub fn minimum_spanning_edges(
     WeightedEdgeList { edges: answer }
 }
 
-/// Find the minimum spanning tree of a graph
+/// Find the minimum spanning tree or forest of a graph
+/// using Kruskal's algorithm. 
 ///
-/// This function implements Kruskal's algorithm.
+/// :param PyGraph graph: Undirected weighted graph with comparable weights
 ///
-/// :param PyGraph graph:
-///
-/// :returns: A PyGraph Minimum Spanning Tree (or Forest, if |c| > 1)
+/// :returns: A Minimum Spanning Tree (or Forest, if the graph is not connected).
+/// 
+///     Note: The new graph will keep the same node indexes, but edge indexes might differ. 
 /// :rtype: PyGraph
 #[pyfunction]
 #[text_signature = "(graph,)"]
