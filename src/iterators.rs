@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::float_cmp)]
+
 use std::collections::hash_map::DefaultHasher;
 use std::convert::TryInto;
 use std::hash::Hasher;
@@ -777,7 +779,6 @@ impl<'p> PyObjectProtocol<'p> for PathLengthMapping {
                 match other_ref.get_item(key) {
                     Ok(other_raw) => {
                         let other_value: f64 = other_raw.extract()?;
-                        #[allow(clippy::float_cmp)]
                         if other_value != *value {
                             return Ok(false);
                         }

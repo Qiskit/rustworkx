@@ -1,0 +1,37 @@
+---
+features:
+  - |
+    Two new return types :class:`~retworkx.PathMapping` and
+    :class:`~retworkx.PathLengthMapping`. These classes are returned from
+    functions that previously returened a dictionary of paths or a dictionary
+    of path lengths. They both implement the Python mapping protocol and can
+    be used inplace as a read-only dict.
+upgrade:
+  - |
+    The functions:
+
+    * :func:`retworkx.digraph_k_shortest_path_lengths`
+    * :func:`retworkx.graph_k_shortest_path_lengths`
+    * :func:`retworkx.k_shortest_path_lengths`
+    * :func:`retworkx.digraph_dijkstra_shortest_path_lengths`
+    * :func:`retworkx.graph_dijkstra_shortest_path_lengths`
+    * :func:`retworkx.dijkstra_shortest_path_lengths`
+
+    no longer are returning a ``dict`` and instead are returning
+    :class:`retworkx.PathLengthMapping` objects. This new return type
+    is much faster to build and it implements the python mapping protocol in a
+    read-only fashion and should not be noticeable unless explicit type
+    checking or mutating the result were done.
+
+  - |
+    The functions:
+
+    * :func:`retworkx.digraph_dijkstra_shortest_paths`
+    * :func:`retworkx.graph_dijkstra_shortest_paths`
+    * :func:`retworkx.dijkstra_shortest_paths`
+
+    no longer are returning a ``dict`` and instead are returning
+    :class:`retworkx.PathMapping` objects. This new return type
+    is much faster to build and it implements the python mapping protocol in a
+    read-only fashion and should not be noticeable unless explicit type
+    checking or mutating the result were done.
