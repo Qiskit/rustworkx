@@ -343,4 +343,5 @@ class TestIsomorphic(unittest.TestCase):
         node_b = dag_b.add_node('a_1')
         dag_b.add_child(node_b, 'a_2', 'a_1')
         dag_b.add_child(node_b, 'a_3', 'a_2')
-        self.assertTrue(retworkx.is_isomorphic(dag_a, dag_b, default_order=True))
+        self.assertTrue(retworkx.is_isomorphic(dag_a, dag_b, 
+                                            default_order=True))
