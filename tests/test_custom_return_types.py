@@ -361,6 +361,11 @@ class TestPathMapping(unittest.TestCase):
         # Assert hash is stable
         self.assertEqual(hash_res, hash(res))
 
+    def test_index_error(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        with self.assertRaises(IndexError):
+            res[42]
+
 
 class TestPathLengthMapping(unittest.TestCase):
 
@@ -458,3 +463,8 @@ class TestPathLengthMapping(unittest.TestCase):
         self.assertIsInstance(hash_res, int)
         # Assert hash is stable
         self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        with self.assertRaises(IndexError):
+            res[42]
