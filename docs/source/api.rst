@@ -143,3 +143,5 @@ Return Iterator Types
    retworkx.NodeIndices
    retworkx.EdgeList
    retworkx.WeightedEdgeList
+   retworkx.PathMapping
+   retworkx.PathLengthMapping

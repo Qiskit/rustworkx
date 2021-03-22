@@ -14,8 +14,10 @@ use std::collections::hash_map::DefaultHasher;
 use std::convert::TryInto;
 use std::hash::Hasher;
 
-use pyo3::class::{PyObjectProtocol, PySequenceProtocol};
-use pyo3::exceptions::{PyIndexError, PyNotImplementedError};
+use hashbrown::HashMap;
+
+use pyo3::class::{PyMappingProtocol, PyObjectProtocol, PySequenceProtocol};
+use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
 use pyo3::types::PySequence;
@@ -549,4 +551,299 @@ impl PyGCProtocol for WeightedEdgeList {
     fn __clear__(&mut self) {
         self.edges = Vec::new();
     }
+}
+
+/// A custom class for the return of paths to target nodes
+///
+/// This class is a container class for the results of functions that
+/// return a mapping of target nodes and paths. It implements the Python
+/// mapping protocol. So you can treat the return as a read-only
+/// mapping/dict. If you want to use it as an iterator you can by
+/// wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.dijkstra_shortest_paths(0)
+///     # Target node access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_target = next(edges_iter)
+///     first_path = edges[first_target]
+///     second_target = next(edges_iter)
+///     second_path = edges[second_target]
+///
+#[pyclass(module = "retworkx", gc)]
+pub struct PathMapping {
+    pub paths: HashMap<usize, Vec<usize>>,
+}
+
+#[pymethods]
+impl PathMapping {
+    #[new]
+    fn new() -> PathMapping {
+        PathMapping {
+            paths: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, Vec<usize>> {
+        self.paths.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, Vec<usize>>) {
+        self.paths = state;
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for PathMapping {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.paths.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.paths {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: &PySequence =
+                            other_raw.downcast::<PySequence>()?;
+                        if value.len() as isize != other_value.len()? {
+                            return Ok(false);
+                        }
+                        for (i, item) in value.iter().enumerate() {
+                            let other_item_raw =
+                                other_value.get_item(i as isize)?;
+                            let other_item_value: usize =
+                                other_item_raw.extract()?;
+                            if other_item_value != *item {
+                                return Ok(false);
+                            }
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> = Vec::with_capacity(self.paths.len());
+        for path in &self.paths {
+            str_vec.push(format!(
+                "{}: {}",
+                path.0,
+                format!(
+                    "[{}]",
+                    path.1
+                        .iter()
+                        .map(|n| format!("{}", n))
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                ),
+            ));
+        }
+        Ok(format!("PathMapping{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.paths {
+            hasher.write_usize(*index.0);
+            for node in index.1 {
+                hasher.write_usize(*node);
+            }
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for PathMapping {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.paths.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<NodeIndices> {
+        match self.paths.get(&idx) {
+            Some(data) => Ok(NodeIndices {
+                nodes: data.clone(),
+            }),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for PathMapping {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+/// A custom class for the return of path lengths to target nodes
+///
+/// This class is a container class for the results of functions that
+/// return a mapping of target nodes and paths. It implements the Python
+/// mapping protocol. So you can treat the return as a read-only
+/// mapping/dict. If you want to use it as an iterator you can by
+/// wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.dijkstra_shortest_path_lengths(0)
+///     # Target node access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_target = next(edges_iter)
+///     first_path = edges[first_target]
+///     second_target = next(edges_iter)
+///     second_path = edges[second_target]
+///
+#[pyclass(module = "retworkx", gc)]
+pub struct PathLengthMapping {
+    pub path_lengths: HashMap<usize, f64>,
+}
+
+#[pymethods]
+impl PathLengthMapping {
+    #[new]
+    fn new() -> PathLengthMapping {
+        PathLengthMapping {
+            path_lengths: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, f64> {
+        self.path_lengths.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, f64>) {
+        self.path_lengths = state;
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for PathLengthMapping {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.path_lengths.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.path_lengths {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: f64 = other_raw.extract()?;
+                        #[allow(clippy::float_cmp)]
+                        if other_value != *value {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> =
+            Vec::with_capacity(self.path_lengths.len());
+        for path in &self.path_lengths {
+            str_vec.push(format!("{}: {}", path.0, path.1,));
+        }
+        Ok(format!("PathLengthMapping{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.path_lengths {
+            hasher.write_usize(*index.0);
+            hasher.write(&index.1.to_be_bytes());
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for PathLengthMapping {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.path_lengths.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<f64> {
+        match self.path_lengths.get(&idx) {
+            Some(data) => Ok(*data),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for PathLengthMapping {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
 }

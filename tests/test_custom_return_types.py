@@ -276,3 +276,185 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
         res = self.dag.weighted_edge_list()
         with self.assertRaises(TypeError):
             hash(res)
+
+
+class TestPathMapping(unittest.TestCase):
+
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node('a')
+        self.dag.add_child(node_a, 'b', "Edgy")
+
+    def test__eq__match(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 1]})
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {2: [0, 1]})
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 2]})
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {
+                1: [0, 1], 2: [0, 2]})
+
+    def test_eq__same_type(self):
+        self.assertEqual(retworkx.dijkstra_shortest_paths(self.dag, 0),
+                         retworkx.dijkstra_shortest_paths(self.dag, 0))
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == ['a', None])
+
+    def test__eq__invalid_inner_type(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {0: {'a': None}})
+
+    def test__ne__match(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 1]})
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != {2: [0, 1]})
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 2]})
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != {
+                1: [0, 1], 2: [0, 2]})
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != ['a', None])
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.dijkstra_shortest_paths(self.dag, 0) > {1: [0, 2]}
+
+    def test_deepcopy(self):
+        paths = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        paths_copy = copy.deepcopy(paths)
+        self.assertEqual(paths, paths_copy)
+
+    def test_pickle(self):
+        paths = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        paths_pickle = pickle.dumps(paths)
+        paths_copy = pickle.loads(paths_pickle)
+        self.assertEqual(paths, paths_copy)
+
+    def test_str(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        self.assertEqual("PathMapping{1: [0, 1]}", str(res))
+
+    def test_hash(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+
+class TestPathLengthMapping(unittest.TestCase):
+
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node('a')
+        self.dag.add_child(node_a, 'b', "Edgy")
+        self.fn = lambda _: 1.0
+
+    def test__eq__match(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) == {1: 1.0})
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) == {2: 1.0})
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) == {1: 2.0})
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) == {
+                1: 1.0, 2: 2.0})
+
+    def test_eq__same_type(self):
+        self.assertEqual(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn),
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn))
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) == ['a', None])
+
+    def test__eq__invalid_inner_type(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) == {0: 'a'})
+
+    def test__ne__match(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) != {1: 1.0})
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) != {2: 1.0})
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) != {1: 2.0})
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) != {1: 1.0, 2: 2.0})
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) != ['a', None])
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.dijkstra_shortest_path_lengths(
+                self.dag, 0, self.fn) > {1: 1.0}
+
+    def test_deepcopy(self):
+        paths = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        paths_copy = copy.deepcopy(paths)
+        self.assertEqual(paths, paths_copy)
+
+    def test_pickle(self):
+        paths = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        paths_pickle = pickle.dumps(paths)
+        paths_copy = pickle.loads(paths_pickle)
+        self.assertEqual(paths, paths_copy)
+
+    def test_str(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0,
+                                                      lambda _: 3.14)
+        self.assertEqual("PathLengthMapping{1: 3.14}", str(res))
+
+    def test_hash(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
