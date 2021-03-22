@@ -441,7 +441,8 @@ def _graph_dfs_edges(graph, source):
 
 
 @functools.singledispatch
-def is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
+def is_isomorphic(first, second, node_matcher=None, edge_matcher=None,
+                  default_order=None):
     """Determine if 2 graphs are isomorphic
 
     This checks if 2 graphs are isomorphic both structurally and also
@@ -467,23 +468,32 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
         positional one for each edge data object. If the return of this
         function evaluates to True then the edges passed to it are viewed
         as matching.
+    :param bool default_order:  If set to true, the algorithm matches the nodes
+        in order specified by their ids. Otherwise, it uses a heuristic
+        matching order based in [VF2]_ paper.
 
     :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are
         not.
     :rtype: bool
+
+    .. [VF2] VF2++  An Improved Subgraph Isomorphism Algorithm
+        by Alpár Jüttner and Péter Madarasi
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
 @is_isomorphic.register(PyDiGraph)
 def _digraph_is_isomorphic(first, second, node_matcher=None,
-                           edge_matcher=None):
-    return digraph_is_isomorphic(first, second, node_matcher, edge_matcher)
+                           edge_matcher=None, default_order=None):
+    return digraph_is_isomorphic(first, second, node_matcher,
+                                 edge_matcher, default_order)
 
 
 @is_isomorphic.register(PyGraph)
-def _graph_is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
-    return graph_is_isomorphic(first, second, node_matcher, edge_matcher)
+def _graph_is_isomorphic(first, second, node_matcher=None,
+                         edge_matcher=None, default_order=None):
+    return graph_is_isomorphic(first, second, node_matcher,
+                               edge_matcher, default_order)
 
 
 @functools.singledispatch

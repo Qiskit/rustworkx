@@ -14,6 +14,7 @@
 // It has then been modified to function with PyDiGraph inputs instead of Graph.
 
 use fixedbitset::FixedBitSet;
+use std::iter::FromIterator;
 use std::marker;
 
 use hashbrown::{HashMap, HashSet};
@@ -63,19 +64,7 @@ where
     }
 }
 
-struct SimpleSorter;
-
-impl<Ty> NodeSorter<Ty> for SimpleSorter
-where
-    Ty: EdgeType,
-{
-    fn sort(&self, graph: &Graph<Ty>) -> Vec<usize> {
-        let n: usize = graph.node_count();
-        (0..n).collect()
-    }
-}
-
-pub struct Vf2ppSorter;
+struct Vf2ppSorter;
 
 impl<Ty> NodeSorter<Ty> for Vf2ppSorter
 where
@@ -153,8 +142,7 @@ where
             seen[root] = true;
             next_level.insert(root);
             while !next_level.is_empty() {
-                let this_level: Vec<usize> =
-                    next_level.iter().map(|&node| node).collect();
+                let this_level = Vec::from_iter(next_level);
                 let this_level = process(this_level);
 
                 next_level = HashSet::new();
@@ -363,14 +351,15 @@ pub fn is_isomorphic<Ty, F, G>(
     g1: &Graph<Ty>,
     mut node_match: Option<F>,
     mut edge_match: Option<G>,
+    default_order: Option<bool>,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
     F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
     G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
 {
-    let inner_temp_g0: Graph<Ty>;
-    let inner_temp_g1: Graph<Ty>;
+    let mut inner_temp_g0: Graph<Ty>;
+    let mut inner_temp_g1: Graph<Ty>;
     let g0_out = if g0.nodes_removed() {
         inner_temp_g0 = reindex_graph(py, g0);
         &inner_temp_g0
@@ -383,8 +372,20 @@ where
     } else {
         g1
     };
-    let g0 = &Vf2ppSorter.reorder(py, g0_out);
-    let g1 = &Vf2ppSorter.reorder(py, g1_out);
+    let g0 = match default_order {
+        Some(true) => g0_out,
+        _ => {
+            inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
+            &inner_temp_g0
+        }
+    };
+    let g1 = match default_order {
+        Some(true) => g1_out,
+        _ => {
+            inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);
+            &inner_temp_g1
+        }
+    };
     if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
     {
         return Ok(false);
@@ -673,7 +674,7 @@ where
             for n_neigh in g[j].neighbors(nodes[j]) {
                 let index = n_neigh.index();
                 if st[j].out[index] == 0
-                    && (st[j].ins.len() == 0 || st[j].ins[index] == 0)
+                    && (st[j].ins.is_empty() || st[j].ins[index] == 0)
                 {
                     new_count[j] += 1;
                 }

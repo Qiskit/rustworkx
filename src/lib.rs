@@ -304,10 +304,16 @@ fn digraph_union(
 ///     one for each edge data object. If the return of this
 ///     function evaluates to True then the edges passed to it are vieded
 ///     as matching.
+/// :param bool default_order:  If set to true, the algorithm matches the nodes
+///    in order specified by their ids. Otherwise, it uses a heuristic
+///    matching order based in [VF2]_ paper.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
+///
+/// .. [VF2] VF2++  An Improved Subgraph Isomorphism Algorithm
+///    by Alpár Jüttner and Péter Madarasi
 #[pyfunction]
 #[text_signature = "(first, second, node_matcher=None, edge_matcher=None, /)"]
 fn digraph_is_isomorphic(
@@ -316,6 +322,7 @@ fn digraph_is_isomorphic(
     second: &digraph::PyDiGraph,
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
+    default_order: Option<bool>,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -337,6 +344,7 @@ fn digraph_is_isomorphic(
         &second.graph,
         compare_nodes,
         compare_edges,
+        default_order,
     )?;
     Ok(res)
 }
@@ -363,10 +371,16 @@ fn digraph_is_isomorphic(
 ///     one for each edge data object. If the return of this
 ///     function evaluates to True then the edges passed to it are vieded
 ///     as matching.
+/// :param bool default_order:  If set to true, the algorithm matches the nodes
+///    in order specified by their ids. Otherwise, it uses a heuristic
+///    matching order based in [VF2]_ paper.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
+///
+/// .. [VF2] VF2++  An Improved Subgraph Isomorphism Algorithm
+///    by Alpár Jüttner and Péter Madarasi
 #[pyfunction]
 #[text_signature = "(first, second, node_matcher=None, edge_matcher=None, /)"]
 fn graph_is_isomorphic(
@@ -375,6 +389,7 @@ fn graph_is_isomorphic(
     second: &graph::PyGraph,
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
+    default_order: Option<bool>,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -396,6 +411,7 @@ fn graph_is_isomorphic(
         &second.graph,
         compare_nodes,
         compare_edges,
+        default_order,
     )?;
     Ok(res)
 }
