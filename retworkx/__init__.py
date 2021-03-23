@@ -526,16 +526,19 @@ def _digraph_is_isomorphic_node_match(first, second, matcher):
 def _graph_is_isomorphic_node_match(first, second, matcher):
     return graph_is_isomorphic(first, second, matcher)
 
+
 @functools.singledispatch
 def complement(graph):
     """Compute the complement of a graph.
-    :param graph: The graph to be used.
+
+    :param graph: The graph to be used, can be either a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+
     :returns: The complement of the graph.
     :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
 
-    .. note:: 
-        Paralell edges and self-loops are never created, 
+    .. note::
+        Paralell edges and self-loops are never created,
         even if multigraph is set to True
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
