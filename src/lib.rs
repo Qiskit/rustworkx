@@ -2801,11 +2801,16 @@ fn graph_complement(
             graph.graph.neighbors(node_a).collect();
         for node_b in graph.graph.node_indices() {
             if node_a != node_b && !old_neighbors.contains(&node_b) {
-                complement_graph.add_edge(
-                    node_a.index(),
-                    node_b.index(),
-                    py.None(),
-                )?;
+                if !complement_graph.multigraph
+                    || !complement_graph.has_edge(node_a.index(), node_b.index())
+                {
+                    // avoid creating parallel edges in multigraph
+                    complement_graph.add_edge(
+                        node_a.index(),
+                        node_b.index(),
+                        py.None(),
+                    )?;
+                }
             }
         }
     }
