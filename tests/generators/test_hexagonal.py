@@ -31,6 +31,7 @@ class TestHexagonalGraph(unittest.TestCase):
         self.assertEqual(len(graph), 28)
         self.assertEqual(len(graph.edges()), 35)
 
-    def test_hexagonal_no_num(self):
-        with self.assertRaises(IndexError):
-            retworkx.generators.hexagonal_graph()
+    def test_hexagonal_graph_0_0(self):
+        graph = retworkx.generators.hexagonal_graph(0, 0)
+        self.assertEqual(len(graph), 0)
+        self.assertEqual(len(graph.edges()), 0)
