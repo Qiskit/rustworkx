@@ -988,7 +988,7 @@ pub fn directed_grid_graph(
 /// Generate an undirected hexagonal graph.
 ///
 /// :param int rows: The number of rows to generate the graph with.
-/// :param list cols: The number of rows to generate the graph with.
+/// :param list cols: The number of columns to generate the graph with.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
