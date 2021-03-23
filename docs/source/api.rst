@@ -107,6 +107,7 @@ type functions in the algorithms API but can be run with a
 .. autosummary::
    :toctree: stubs
 
+   retworkx.complement
    retworkx.distance_matrix
    retworkx.floyd_warshall_numpy
    retworkx.adjacency_matrix
