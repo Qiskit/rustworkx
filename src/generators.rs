@@ -1026,8 +1026,8 @@ pub fn directed_grid_graph(
 #[text_signature = "(/, rows=None, cols=None, multigraph=True)"]
 pub fn hexagonal_graph(
     py: Python,
-    rows: Option<usize>,
-    cols: Option<usize>,
+    rows: usize,
+    cols: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
