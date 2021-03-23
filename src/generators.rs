@@ -1032,14 +1032,8 @@ pub fn hexagonal_graph(
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
 
-    if rows.is_none() || cols.is_none() {
-        return Err(PyIndexError::new_err(
-            "dimensions and weights list not specified",
-        ));
-    }
-
-    let mut rowlen = rows.unwrap_or(0);
-    let mut collen = cols.unwrap_or(0);
+    let mut rowlen = rows;
+    let mut collen = cols;
 
     // Needs two times the number of nodes vertically
     rowlen = 2 * rowlen + 2;
@@ -1052,13 +1046,11 @@ pub fn hexagonal_graph(
     // Add column edges
     for i in 0..collen {
         for j in 0..(rowlen - 1) {
-            if i + 1 < rowlen {
-                graph.add_edge(
-                    nodes[i * rowlen + j],
-                    nodes[i * rowlen + (j + 1)],
-                    py.None(),
-                );
-            }
+            graph.add_edge(
+                nodes[i * rowlen + j],
+                nodes[i * rowlen + (j + 1)],
+                py.None(),
+            );
         }
     }
 
