@@ -112,6 +112,7 @@ use super::{
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
 #[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, check_cycle=False, multigraph=True)"]
+#[derive(Clone)]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
     pub cycle_state: algo::DfsSpace<
