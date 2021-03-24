@@ -2819,14 +2819,14 @@ fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
-    let (triangles, triples) =
-        graph
-            .graph
-            .node_indices()
-            .fold((0, 0), |(sumx, sumy), node| {
-                let (resx, resy) = _graph_triangles(graph, node.index());
-                (sumx + resx, sumy + resy)
-            });
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let (triangles, triples) = node_indices
+        .par_iter()
+        .map(|node| _graph_triangles(graph, node.index()))
+        .reduce(
+            || (0, 0),
+            |(sumx, sumy), (resx, resy)| (sumx + resx, sumy + resy),
+        );
 
     match triangles {
         0 => 0.0,
@@ -2911,14 +2911,14 @@ fn _digraph_triangles(
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
-    let (triangles, triples) =
-        graph
-            .graph
-            .node_indices()
-            .fold((0, 0), |(sumx, sumy), node| {
-                let (resx, resy) = _digraph_triangles(graph, node.index());
-                (sumx + resx, sumy + resy)
-            });
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let (triangles, triples) = node_indices
+        .par_iter()
+        .map(|node| _digraph_triangles(graph, node.index()))
+        .reduce(
+            || (0, 0),
+            |(sumx, sumy), (resx, resy)| (sumx + resx, sumy + resy),
+        );
 
     match triangles {
         0 => 0.0,
