@@ -1063,14 +1063,23 @@ fn graph_floyd_warshall_numpy(
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
     for k in 0..n {
-        for i in 0..n {
-            for j in 0..n {
-                let d_ijk = mat[[i, k]] + mat[[k, j]];
-                if d_ijk < mat[[i, j]] {
-                    mat[[i, j]] = d_ijk;
-                }
-            }
-        }
+        let row_k = mat.slice(s![k, ..]).to_owned();
+        let col_k = mat.slice(s![.., k]).to_owned();
+        mat.axis_iter_mut(Axis(0))
+            .into_par_iter()
+            .enumerate()
+            .for_each(|(i, mut row_i)| {
+                row_i.axis_iter_mut(Axis(0)).enumerate().for_each(
+                    |(j, mut m_ij)| {
+                        let d_ijk = col_k[i] + row_k[j];
+                        m_ij.map_inplace(|x| {
+                            if d_ijk < *x {
+                                *x = d_ijk;
+                            }
+                        })
+                    },
+                )
+            })
     }
     Ok(mat.into_pyarray(py).into())
 }
