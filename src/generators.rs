@@ -1042,7 +1042,7 @@ pub fn heavy_hex_graph(
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
-    
+
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -1051,13 +1051,13 @@ pub fn heavy_hex_graph(
 
     let rows = rows.unwrap_or(0);
     let cols = cols.unwrap_or(0);
-    
+
     let rowlen = 9 * rows;
     let collen = 9 * cols;
 
-    let n_col = collen / 2 ;
+    let n_col = collen / 2;
 
-    let num_nodes = 3 * (n_col) + 9 * (collen - n_col) ;
+    let num_nodes = 3 * (n_col) + 9 * (collen - n_col);
 
     let nodes: Vec<NodeIndex> = match weights {
         Some(weights) => {
@@ -1081,8 +1081,6 @@ pub fn heavy_hex_graph(
         }
         None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
     };
-
-    
 
     // Add vertical edges
     for i in 0..(collen - n_col) {
@@ -1142,7 +1140,6 @@ pub fn heavy_hex_graph(
             }
         }
     }
-
 
     Ok(graph::PyGraph {
         graph,
