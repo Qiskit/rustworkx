@@ -192,12 +192,15 @@ class TestFloydWarshall(unittest.TestCase):
             (3, 0, -1),
         ])
         dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: x)
-        expected = numpy.array(
-            [[-2, -1, -2, -3],
-             [-3, -2, -3, -4],
-             [-2, -1, -2, -3],
-             [-3, -2, -3, -4]], dtype=numpy.float64)
-        self.assertTrue(numpy.array_equal(dist, expected))
+        floyd_graph = retworkx.PyDiGraph()
+        floyd_graph.add_nodes_from(list(range(4)))
+        floyd_graph.add_edges_from(
+            [(i, j, dist[i][j]) for i in range(4) for j in range(4)]
+        )
+        second_dist = retworkx.digraph_floyd_warshall_numpy(
+            floyd_graph, lambda x: x
+        )
+        self.assertTrue(numpy.all(second_dist < dist))
 
     def test_numpy_directed_no_edges(self):
         graph = retworkx.PyDiGraph()
