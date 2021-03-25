@@ -111,12 +111,15 @@ class TestFloydWarshall(unittest.TestCase):
             (3, 0, -1),
         ])
         dist = retworkx.graph_floyd_warshall_numpy(graph, lambda x: x)
-        expected = numpy.array(
-            [[-6, -7, -8, -13],
-             [-7, -8, -9, -14],
-             [-8, -9, -10, -15],
-             [-13, -14, -15, -20]], dtype=numpy.float64)
-        self.assertTrue(numpy.array_equal(dist, expected))
+        floyd_graph = retworkx.PyGraph()
+        floyd_graph.add_nodes_from(list(range(4)))
+        floyd_graph.add_edges_from(
+            [(i, j, dist[i][j]) for i in range(4) for j in range(4)]
+        )
+        second_dist = retworkx.graph_floyd_warshall_numpy(
+            floyd_graph, lambda x: x
+        )
+        self.assertTrue(numpy.all(second_dist < dist))
 
     def test_floyd_warshall_numpy_cycle(self):
         graph = retworkx.PyGraph()
