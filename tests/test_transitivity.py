@@ -83,3 +83,8 @@ class TestTransitivity(unittest.TestCase):
         ])
         res = retworkx.transitivity(graph)
         self.assertEqual(res, 1.0)
+
+    def test_transitivity_empty_directed(self):
+        graph = retworkx.PyDiGraph()
+        res = retworkx.transitivity(graph)
+        self.assertEqual(res, 0.0)
