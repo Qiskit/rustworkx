@@ -351,7 +351,7 @@ pub fn is_isomorphic<Ty, F, G>(
     g1: &Graph<Ty>,
     mut node_match: Option<F>,
     mut edge_match: Option<G>,
-    default_order: Option<bool>,
+    id_order: Option<bool>,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
@@ -372,14 +372,14 @@ where
     } else {
         g1
     };
-    let g0 = match default_order {
+    let g0 = match id_order {
         Some(true) => g0_out,
         _ => {
             inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
             &inner_temp_g0
         }
     };
-    let g1 = match default_order {
+    let g1 = match id_order {
         Some(true) => g1_out,
         _ => {
             inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);

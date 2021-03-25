@@ -332,7 +332,7 @@ class TestIsomorphic(unittest.TestCase):
             retworkx.is_isomorphic(
                 g_a, g_b))
 
-    def test_isomorphic_identical_default_order(self):
+    def test_isomorphic_identical_id_order(self):
         dag_a = retworkx.PyDAG()
         dag_b = retworkx.PyDAG()
 
@@ -345,4 +345,4 @@ class TestIsomorphic(unittest.TestCase):
         dag_b.add_child(node_b, 'a_3', 'a_2')
         self.assertTrue(
             retworkx.is_isomorphic(
-                dag_a, dag_b, default_order=True))
+                dag_a, dag_b, id_order=True))
