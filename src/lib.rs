@@ -2812,8 +2812,11 @@ fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
 /// A “connected triple” means a single vertex with
 /// edges running to an unordered pair of others.
 ///
-/// It's worh noting that the function implicitly assumes that there is
-/// no parallel edges or self loops.
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops.it may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
 ///
 /// :param PyGraph graph: Graph to be used.
 ///
@@ -2904,8 +2907,11 @@ fn _digraph_triangles(
 /// A triangle is a connected triple of nodes.
 /// Different edge orientations counts as different triangles.
 ///
-/// It's worh noting that the function implicitly assumes that there is
-/// no parallel edges or self loops.
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops.it may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
 ///
 /// :param PyDiGraph graph: Directed graph to be used.
 ///

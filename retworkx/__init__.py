@@ -531,8 +531,11 @@ def _graph_is_isomorphic_node_match(first, second, matcher):
 def transitivity(graph):
     """Compute the transitivity of a graph.
 
-    It's worh noting that the function implicitly assumes that there is
-    no parallel edges or self loops.
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops.it may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
 
     :param graph: The graph to be used. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
