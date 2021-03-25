@@ -1135,14 +1135,18 @@ fn digraph_floyd_warshall_numpy(
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
     for k in 0..n {
-        for i in 0..n {
-            for j in 0..n {
-                let d_ijk = mat[[i, k]] + mat[[k, j]];
-                if d_ijk < mat[[i, j]] {
-                    mat[[i, j]] = d_ijk;
-                }
-            }
-        }
+        let row_k = mat.slice(s![k, ..]).to_owned();
+        mat.axis_iter_mut(Axis(0))
+            .into_par_iter()
+            .for_each(|mut row_i| {
+                let m_ik = row_i[k];
+                row_i.iter_mut().zip(row_k.iter()).for_each(|(m_ij, m_kj)| {
+                    let d_ijk = m_ik + *m_kj;
+                    if d_ijk < *m_ij {
+                        *m_ij = d_ijk;
+                    }
+                })
+            })
     }
     Ok(mat.into_pyarray(py).into())
 }
