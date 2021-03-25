@@ -1064,21 +1064,16 @@ fn graph_floyd_warshall_numpy(
     // to point j using intermediate nodes 0..k
     for k in 0..n {
         let row_k = mat.slice(s![k, ..]).to_owned();
-        let col_k = mat.slice(s![.., k]).to_owned();
         mat.axis_iter_mut(Axis(0))
             .into_par_iter()
-            .enumerate()
-            .for_each(|(i, mut row_i)| {
-                row_i.axis_iter_mut(Axis(0)).enumerate().for_each(
-                    |(j, mut m_ij)| {
-                        let d_ijk = col_k[i] + row_k[j];
-                        m_ij.map_inplace(|x| {
-                            if d_ijk < *x {
-                                *x = d_ijk;
-                            }
-                        })
-                    },
-                )
+            .for_each(|mut row_i| {
+                let m_ik = row_i[k];
+                row_i.iter_mut().zip(row_k.iter()).for_each(|(m_ij, m_kj)| {
+                    let d_ijk = m_ik + *m_kj;
+                    if d_ijk < *m_ij {
+                        *m_ij = d_ijk;
+                    }
+                })
             })
     }
     Ok(mat.into_pyarray(py).into())
