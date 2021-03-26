@@ -159,7 +159,7 @@ class TestGeometricRandomGraph(unittest.TestCase):
         self.assertEqual(len(graph.edges()), 0)
 
     def test_random_geometric_complete(self):
-        r = 1.42 # > sqrt(2)
+        r = 1.42  # > sqrt(2)
         graph = retworkx.random_geometric_graph(10, r)
         self.assertEqual(len(graph), 10)
         self.assertEqual(len(graph.edges()), 45)
@@ -188,13 +188,14 @@ class TestGeometricRandomGraph(unittest.TestCase):
 
     def test_random_geometric_pos_inf_norm(self):
         pos = [[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]
-        graph = retworkx.random_geometric_graph(3, 0.11, pos=pos, p=float('inf'))
+        graph = retworkx.random_geometric_graph(3, 0.11, pos=pos,
+                                                p=float('inf'))
         self.assertEqual(set(graph.edge_list()), {(0, 1), (1, 2)})
 
     def test_random_geometric_num_nodes_invalid(self):
         with self.assertRaises(ValueError):
-            graph = retworkx.random_geometric_graph(0, 1.0)
+            retworkx.random_geometric_graph(0, 1.0)
 
     def test_random_geometric_pos_num_nodes_incomp(self):
         with self.assertRaises(ValueError):
-            graph = retworkx.random_geometric_graph(3, 0.15, pos=[[0.5, 0.5]])
+            retworkx.random_geometric_graph(3, 0.15, pos=[[0.5, 0.5]])
