@@ -26,6 +26,17 @@ class TestNeighbors(unittest.TestCase):
         res = graph.neighbors(node_a)
         self.assertCountEqual([node_c, node_b], res)
 
+    def test_unique_neighbors_on_graphs(self):
+        dag = retworkx.PyGraph()
+        node_a = dag.add_node('a')
+        node_b = dag.add_node('b')
+        node_c = dag.add_node('c')
+        dag.add_edge(node_a, node_b, ['edge a->b'])
+        dag.add_edge(node_a, node_b, ['edge a->b bis'])
+        dag.add_edge(node_a, node_c, ['edge a->c'])
+        res = dag.neighbors(node_a)
+        self.assertCountEqual([node_c, node_b], res)
+
     def test_no_neighbor(self):
         graph = retworkx.PyGraph()
         node_a = graph.add_node('a')
