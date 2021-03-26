@@ -82,10 +82,10 @@ class TestCompose(unittest.TestCase):
         self.assertTrue(graph.get_all_edge_data(0, 2), ['qr[0]'])
         # cx -> qr[1]
         self.assertTrue(graph.has_edge(4, 5))
-        self.assertTrue(graph.get_all_edge_data(0, 2), ['qr[1]'])    
+        self.assertTrue(graph.get_all_edge_data(0, 2), ['qr[1]'])
 
     def test_compose_digraph_onto_graph_error(self):
-            digraph = retworkx.PyDiGraph()
-            graph = retworkx.PyGraph()
-            with self.assertRaises(TypeError):
-                graph.compose(digraph, {})
+        digraph = retworkx.PyDiGraph()
+        graph = retworkx.PyGraph()
+        with self.assertRaises(TypeError):
+            graph.compose(digraph, {})

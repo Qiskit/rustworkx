@@ -14,8 +14,9 @@ import unittest
 
 import retworkx
 
+
 class TestKShortestpath(unittest.TestCase):
-    
+
     def test_graph_k_shortest_path_lengths(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(8)))

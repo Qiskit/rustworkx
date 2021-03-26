@@ -15,6 +15,7 @@ import unittest
 import retworkx
 import numpy as np
 
+
 class TestGraphAdjacencyMatrix(unittest.TestCase):
     def test_single_neighbor(self):
         graph = retworkx.PyGraph()

@@ -68,8 +68,8 @@ class TestDot(unittest.TestCase):
         self.assertIsNone(res)
         with open(self.path, 'r') as fd:
             res = fd.read()
-        self.assertEqual(expected, res) 
-    
+        self.assertEqual(expected, res)
+
     def test_graph_empty_dicts(self):
         graph = retworkx.undirected_gnp_random_graph(3, .9, seed=42)
         dot_str = graph.to_dot(lambda _: {}, lambda _: {})

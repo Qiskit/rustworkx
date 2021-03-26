@@ -14,6 +14,7 @@ import unittest
 
 import retworkx
 
+
 class TestGraphAllSimplePaths(unittest.TestCase):
     def setUp(self):
         super().setUp()

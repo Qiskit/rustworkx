@@ -14,6 +14,7 @@ import unittest
 
 import retworkx
 
+
 class TestDijkstraGraph(unittest.TestCase):
 
     def setUp(self):

@@ -14,6 +14,7 @@ import unittest
 
 import retworkx
 
+
 class TestAstarGraph(unittest.TestCase):
 
     def test_astar_null_heuristic(self):

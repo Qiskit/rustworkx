@@ -16,6 +16,7 @@ import unittest
 
 import retworkx
 
+
 class TestEdgeList(unittest.TestCase):
 
     def test_empty_edge_list_graph(self):

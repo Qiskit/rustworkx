@@ -16,7 +16,6 @@ import retworkx
 
 
 class TestKShortestpath(unittest.TestCase):
-
     def test_digraph_k_shortest_path_lengths(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(8)))

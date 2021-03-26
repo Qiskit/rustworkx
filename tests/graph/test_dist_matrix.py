@@ -48,4 +48,3 @@ class TestDistanceMatrix(unittest.TestCase):
                                 [2., 3., 3., 2., 1., 0., 1.],
                                 [1., 2., 3., 3., 2., 1., 0.]])
         self.assertTrue(numpy.array_equal(dist, expected))
-        

@@ -91,4 +91,3 @@ class TestAstarDigraph(unittest.TestCase):
         with self.assertRaises(TypeError):
             retworkx.digraph_astar_shortest_path(g, 0, lambda x: x,
                                                  lambda y: 1, lambda z: 0)
-                                                 
