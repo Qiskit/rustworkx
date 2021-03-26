@@ -41,6 +41,7 @@ Random Circuit Functions
     retworkx.undirected_gnp_random_graph
     retworkx.directed_gnm_random_graph
     retworkx.undirected_gnm_random_graph
+    retworkx.random_geometric_graph
 
 Algorithm Functions
 -------------------
