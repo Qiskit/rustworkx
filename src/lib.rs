@@ -3015,9 +3015,15 @@ where
     Ok(out_dict.into())
 }
 
-/// Return the core number for each node in the graph
+/// Return the core number for each node in the graph.
 ///
 /// A k-core is a maximal subgraph that contains nodes of degree k or more.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
 ///
 /// :param PyGraph: The graph to get core numbers
 ///
@@ -3032,10 +3038,16 @@ pub fn graph_core_number(
     _core_number(py, &graph.graph)
 }
 
-/// Return the core number for each node in the digraph
+/// Return the core number for each node in the directed graph.
 ///
 /// A k-core is a maximal subgraph that contains nodes of degree k or more.
 /// For directed graphs, the degree is calculated as in_degree + out_degree.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
 ///
 /// :param PyDiGraph: The directed graph to get core numbers
 ///
@@ -3045,9 +3057,10 @@ pub fn graph_core_number(
 #[text_signature = "(graph, /)"]
 pub fn digraph_core_number(
     py: Python,
-    digraph: &digraph::PyDiGraph,
+    graph: &digraph::PyDiGraph,
 ) -> PyResult<PyObject> {
-    _core_number(py, &digraph.graph)
+    _core_number(py, &graph.graph)
+}
 
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);

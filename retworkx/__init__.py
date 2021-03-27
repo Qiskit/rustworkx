@@ -565,10 +565,10 @@ def _graph_transitivity(graph):
 
 @functools.singledispatch
 def core_number(graph):
-    """Return the core number for each node in the graph
+    """Return the core number for each node in the graph.
 
     A k-core is a maximal subgraph that contains nodes of degree k or more.
-    
+
     .. note::
 
         The function implicitly assumes that there are no parallel edges
