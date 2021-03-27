@@ -11,12 +11,12 @@
 // under the License.
 
 mod astar;
-mod dag_isomorphism;
 mod digraph;
 mod dijkstra;
 mod dot_utils;
 mod generators;
 mod graph;
+mod isomorphism;
 mod iterators;
 mod k_shortest_path;
 mod max_weight_matching;
@@ -240,27 +240,6 @@ fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
     }
 }
 
-/// Determine if 2 graphs are structurally isomorphic
-///
-/// This checks if 2 graphs are structurally isomorphic (it doesn't match
-/// the contents of the nodes or edges on the graphs).
-///
-/// :param PyDiGraph first: The first graph to compare
-/// :param PyDiGraph second: The second graph to compare
-///
-/// :returns: ``True`` if the 2 graphs are structurally isomorphic, ``False``
-///     if they are not
-/// :rtype: bool
-#[pyfunction]
-#[text_signature = "(first, second, /)"]
-fn is_isomorphic(
-    first: &digraph::PyDiGraph,
-    second: &digraph::PyDiGraph,
-) -> PyResult<bool> {
-    let res = dag_isomorphism::is_isomorphic(first, second)?;
-    Ok(res)
-}
-
 /// Return a new PyDiGraph by forming a union from two input PyDiGraph objects
 ///
 /// The algorithm in this function operates in three phases:
@@ -304,49 +283,118 @@ fn digraph_union(
     Ok(res)
 }
 
-/// Determine if 2 DAGs are isomorphic
+/// Determine if 2 directed graphs are isomorphic
 ///
 /// This checks if 2 graphs are isomorphic both structurally and also
-/// comparing the node data using the provided matcher function. The matcher
-/// function takes in 2 node data objects and will compare them. A simple
+/// comparing the node data and edge data using the provided matcher functions.
+/// The matcher function takes in 2 data objects and will compare them. A simple
 /// example that checks if they're just equal would be::
 ///
-///     graph_a = retworkx.PyDAG()
-///     graph_b = retworkx.PyDAG()
-///     retworkx.is_isomorphic_node_match(graph_a, graph_b,
-///                                       lambda x, y: x == y)
+///     graph_a = retworkx.PyDiGraph()
+///     graph_b = retworkx.PyDiGraph()
+///     retworkx.is_isomorphic(graph_a, graph_b,
+///                            lambda x, y: x == y)
 ///
 /// :param PyDiGraph first: The first graph to compare
 /// :param PyDiGraph second: The second graph to compare
-/// :param callable matcher: A python callable object that takes 2 positional
+/// :param callable node_matcher: A python callable object that takes 2 positional
 ///     one for each node data object. If the return of this
-///     function evaluates to True then the nodes passed to it are vieded as
-///     matching.
+///     function evaluates to True then the nodes passed to it are vieded
+///     as matching.
+/// :param callable edge_matcher: A python callable object that takes 2 positional
+///     one for each edge data object. If the return of this
+///     function evaluates to True then the edges passed to it are vieded
+///     as matching.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
 #[pyfunction]
-#[text_signature = "(first, second, matcher, /)"]
-fn is_isomorphic_node_match(
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, /)"]
+fn digraph_is_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-    matcher: PyObject,
+    node_matcher: Option<PyObject>,
+    edge_matcher: Option<PyObject>,
 ) -> PyResult<bool> {
-    let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
-        let res = matcher.call1(py, (a, b))?;
-        Ok(res.is_true(py).unwrap())
-    };
+    let compare_nodes = node_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
 
-    #[allow(clippy::unnecessary_wraps)]
-    fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
-        Ok(true)
-    }
-    let res = dag_isomorphism::is_isomorphic_matching(
+    let compare_edges = edge_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let res = isomorphism::is_isomorphic(
         py,
-        first,
-        second,
+        &first.graph,
+        &second.graph,
+        compare_nodes,
+        compare_edges,
+    )?;
+    Ok(res)
+}
+
+/// Determine if 2 undirected graphs are isomorphic
+///
+/// This checks if 2 graphs are isomorphic both structurally and also
+/// comparing the node data and edge data using the provided matcher functions.
+/// The matcher function takes in 2 data objects and will compare them. A simple
+/// example that checks if they're just equal would be::
+///
+///     graph_a = retworkx.PyGraph()
+///     graph_b = retworkx.PyGraph()
+///     retworkx.is_isomorphic(graph_a, graph_b,
+///                            lambda x, y: x == y)
+///
+/// :param PyGraph first: The first graph to compare
+/// :param PyGraph second: The second graph to compare
+/// :param callable node_matcher: A python callable object that takes 2 positional
+///     one for each node data object. If the return of this
+///     function evaluates to True then the nodes passed to it are vieded
+///     as matching.
+/// :param callable edge_matcher: A python callable object that takes 2 positional
+///     one for each edge data object. If the return of this
+///     function evaluates to True then the edges passed to it are vieded
+///     as matching.
+///
+/// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
+///     not.
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, /)"]
+fn graph_is_isomorphic(
+    py: Python,
+    first: &graph::PyGraph,
+    second: &graph::PyGraph,
+    node_matcher: Option<PyObject>,
+    edge_matcher: Option<PyObject>,
+) -> PyResult<bool> {
+    let compare_nodes = node_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let compare_edges = edge_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let res = isomorphism::is_isomorphic(
+        py,
+        &first.graph,
+        &second.graph,
         compare_nodes,
         compare_edges,
     )?;
@@ -2861,9 +2909,9 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
-    m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
-    m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
