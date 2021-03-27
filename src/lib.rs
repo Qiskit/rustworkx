@@ -36,7 +36,6 @@ use pyo3::wrap_pymodule;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
@@ -44,6 +43,7 @@ use petgraph::visit::{
     IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
     Visitable,
 };
+use petgraph::EdgeType;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -2738,8 +2738,7 @@ where
     Ty: EdgeType,
 {
     let node_num = graph.node_count();
-    let mut cores: HashMap<NodeIndex, usize> =
-        HashMap::with_capacity(node_num);
+    let mut cores: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_num);
     let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
     let mut degree_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(node_num);
@@ -2757,7 +2756,7 @@ where
         degree_map.insert(*k, k_deg);
     }
     node_vec.par_sort_by_key(|k| degree_map.get(k));
-    
+
     let mut bin_boundaries = vec![0];
     let mut curr_degree = 0;
     for (i, v) in node_vec.iter().enumerate() {
