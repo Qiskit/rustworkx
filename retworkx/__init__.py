@@ -525,3 +525,39 @@ def _digraph_is_isomorphic_node_match(first, second, matcher):
 @is_isomorphic_node_match.register(PyGraph)
 def _graph_is_isomorphic_node_match(first, second, matcher):
     return graph_is_isomorphic(first, second, matcher)
+
+
+@functools.singledispatch
+def transitivity(graph):
+    """Compute the transitivity of a graph.
+
+    This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
+
+    .. note::
+
+        The function implicitly assumes that there are no parallel edges
+        or self loops. It may produce incorrect/unexpected results if the
+        input graph has self loops or parallel edges.
+
+    :param graph: The graph to be used. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+
+    :returns: Transitivity of the graph.
+    :rtype: float
+        raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@transitivity.register(PyDiGraph)
+def _digraph_transitivity(graph):
+    return digraph_transitivity(graph)
+
+
+@transitivity.register(PyGraph)
+def _graph_transitivity(graph):
+    return graph_transitivity(graph)
