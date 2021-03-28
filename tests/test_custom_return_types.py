@@ -366,6 +366,31 @@ class TestPathMapping(unittest.TestCase):
         with self.assertRaises(IndexError):
             res[42]
 
+    def test_keys(self):
+        keys = retworkx.dijkstra_shortest_paths(self.dag, 0).keys()
+        self.assertEqual([1], list(keys))
+
+    def test_values(self):
+        values = retworkx.dijkstra_shortest_paths(self.dag, 0).values()
+        self.assertEqual([[0, 1]], list(values))
+
+    def test_items(self):
+        items = retworkx.dijkstra_shortest_paths(self.dag, 0).items()
+        self.assertEqual([(1, [0, 1])], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(
+            retworkx.dijkstra_shortest_paths(self.dag, 0))
+        output = list(mapping_iter)
+        self.assertEqual(output, [1])
+
+    def test_contains(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        self.assertIn(1, res)
+
+    def test_not_contains(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        self.assertNotIn(0, res)
 
 class TestPathLengthMapping(unittest.TestCase):
 
@@ -468,3 +493,32 @@ class TestPathLengthMapping(unittest.TestCase):
         res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
         with self.assertRaises(IndexError):
             res[42]
+
+    def test_keys(self):
+        keys = retworkx.dijkstra_shortest_path_lengths(self.dag, 0,
+                                                       self.fn).keys()
+        self.assertEqual([1], list(keys))
+
+    def test_values(self):
+        values = retworkx.dijkstra_shortest_path_lengths(self.dag, 0,
+                                                         self.fn).values()
+        self.assertEqual([1.0], list(values))
+
+    def test_items(self):
+        items = retworkx.dijkstra_shortest_path_lengths(self.dag, 0,
+                                                        self.fn).items()
+        self.assertEqual([(1, 1.0)], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(retworkx.dijkstra_shortest_path_lengths(self.dag, 0,
+                                                                    self.fn))
+        output = list(mapping_iter)
+        self.assertEqual(output, [1])
+
+    def test_contains(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        self.assertIn(1, res)
+
+    def test_not_contains(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        self.assertNotIn(0, res)

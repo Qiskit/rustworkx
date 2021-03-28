@@ -18,6 +18,7 @@ use std::hash::Hasher;
 
 use hashbrown::HashMap;
 
+use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
 use pyo3::class::{PyMappingProtocol, PyObjectProtocol, PySequenceProtocol};
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::{PyGCProtocol, PyVisit};
@@ -207,6 +208,7 @@ impl PyGCProtocol for BFSSuccessors {
 ///     second_element = next(nodes_iter)
 ///
 #[pyclass(module = "retworkx", gc)]
+#[derive(Clone)]
 pub struct NodeIndices {
     pub nodes: Vec<usize>,
 }
@@ -600,6 +602,36 @@ impl PathMapping {
     fn __setstate__(&mut self, state: HashMap<usize, Vec<usize>>) {
         self.paths = state;
     }
+
+    fn keys(&self) -> PathMappingKeys {
+        PathMappingKeys {
+            path_keys: self.paths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> PathMappingValues {
+        PathMappingValues {
+            path_values: self
+                .paths
+                .values()
+                .map(|v| NodeIndices { nodes: v.to_vec() })
+                .collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> PathMappingItems {
+        let items: Vec<(usize, NodeIndices)> = self
+            .paths
+            .iter()
+            .map(|(k, v)| (*k, NodeIndices { nodes: v.to_vec() }))
+            .collect();
+        PathMappingItems {
+            path_items: items,
+            iter_pos: 0,
+        }
+    }
 }
 
 #[pyproto]
@@ -706,12 +738,107 @@ impl PyMappingProtocol for PathMapping {
 }
 
 #[pyproto]
+impl PySequenceProtocol for PathMapping {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.paths.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.paths.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for PathMapping {
+    fn __iter__(slf: PyRef<Self>) -> PathMappingKeys {
+        PathMappingKeys {
+            path_keys: slf.paths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
 impl PyGCProtocol for PathMapping {
     fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
         Ok(())
     }
 
     fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathMappingKeys {
+    pub path_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathMappingKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathMappingKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.path_keys.len() {
+            let res = IterNextOutput::Yield(slf.path_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathMappingValues {
+    pub path_values: Vec<NodeIndices>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathMappingValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathMappingValues> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<NodeIndices, &'static str> {
+        if slf.iter_pos < slf.path_values.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_values[slf.iter_pos].clone());
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathMappingItems {
+    pub path_items: Vec<(usize, NodeIndices)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathMappingItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathMappingItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, NodeIndices), &'static str> {
+        if slf.iter_pos < slf.path_items.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_items[slf.iter_pos].clone());
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
 }
 
 /// A custom class for the return of path lengths to target nodes
@@ -758,6 +885,29 @@ impl PathLengthMapping {
 
     fn __setstate__(&mut self, state: HashMap<usize, f64>) {
         self.path_lengths = state;
+    }
+
+    fn keys(&self) -> PathLengthMappingKeys {
+        PathLengthMappingKeys {
+            path_length_keys: self.path_lengths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> PathLengthMappingValues {
+        PathLengthMappingValues {
+            path_length_values: self.path_lengths.values().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> PathLengthMappingItems {
+        let items: Vec<(usize, f64)> =
+            self.path_lengths.iter().map(|(k, v)| (*k, *v)).collect();
+        PathLengthMappingItems {
+            path_length_items: items,
+            iter_pos: 0,
+        }
     }
 }
 
@@ -827,6 +977,17 @@ impl<'p> PyObjectProtocol<'p> for PathLengthMapping {
 }
 
 #[pyproto]
+impl PySequenceProtocol for PathLengthMapping {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.path_lengths.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.path_lengths.contains_key(&index))
+    }
+}
+
+#[pyproto]
 impl PyMappingProtocol for PathLengthMapping {
     /// Return the number of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
@@ -841,10 +1002,92 @@ impl PyMappingProtocol for PathLengthMapping {
 }
 
 #[pyproto]
+impl PyIterProtocol for PathLengthMapping {
+    fn __iter__(slf: PyRef<Self>) -> PathLengthMappingKeys {
+        PathLengthMappingKeys {
+            path_length_keys: slf.path_lengths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
 impl PyGCProtocol for PathLengthMapping {
     fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
         Ok(())
     }
 
     fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathLengthMappingKeys {
+    pub path_length_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathLengthMappingKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathLengthMappingKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.path_length_keys.len() {
+            let res = IterNextOutput::Yield(slf.path_length_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathLengthMappingValues {
+    pub path_length_values: Vec<f64>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathLengthMappingValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathLengthMappingValues> {
+        slf.into()
+    }
+    fn __next__(mut slf: PyRefMut<Self>) -> IterNextOutput<f64, &'static str> {
+        if slf.iter_pos < slf.path_length_values.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_length_values[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathLengthMappingItems {
+    pub path_length_items: Vec<(usize, f64)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathLengthMappingItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathLengthMappingItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, f64), &'static str> {
+        if slf.iter_pos < slf.path_length_items.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_length_items[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
 }
