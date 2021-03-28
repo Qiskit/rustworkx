@@ -392,6 +392,7 @@ class TestPathMapping(unittest.TestCase):
         res = retworkx.dijkstra_shortest_paths(self.dag, 0)
         self.assertNotIn(0, res)
 
+
 class TestPathLengthMapping(unittest.TestCase):
 
     def setUp(self):
@@ -510,7 +511,8 @@ class TestPathLengthMapping(unittest.TestCase):
         self.assertEqual([(1, 1.0)], list(items))
 
     def test_iter(self):
-        mapping_iter = iter(retworkx.dijkstra_shortest_path_lengths(self.dag, 0,
+        mapping_iter = iter(retworkx.dijkstra_shortest_path_lengths(self.dag,
+                                                                    0,
                                                                     self.fn))
         output = list(mapping_iter)
         self.assertEqual(output, [1])
