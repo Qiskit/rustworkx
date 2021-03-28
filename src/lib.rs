@@ -2959,6 +2959,10 @@ where
     Ty: EdgeType,
 {
     let node_num = graph.node_count();
+    if node_num == 0 {
+        return Ok(PyDict::new(py).into());
+    }
+
     let mut cores: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_num);
     let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
     let mut degree_map: HashMap<NodeIndex, usize> =
@@ -2978,15 +2982,18 @@ where
     }
     node_vec.par_sort_by_key(|k| degree_map.get(k));
 
-    let mut bin_boundaries = vec![0];
+    let mut bin_boundaries = vec![0; degree_map[&node_vec[node_num - 1]] + 1];
     let mut curr_degree = 0;
+    let mut curr_bin = 1;
     for (i, v) in node_vec.iter().enumerate() {
         node_pos.insert(*v, i);
         let v_degree = degree_map[v];
         if v_degree > curr_degree {
-            for _ in 0..v_degree - curr_degree {
-                bin_boundaries.push(i);
+            let last_bin = curr_bin + v_degree - curr_degree;
+            for j in curr_bin..last_bin {
+                bin_boundaries[j] += i;
             }
+            curr_bin = last_bin;
             curr_degree = v_degree;
         }
     }
