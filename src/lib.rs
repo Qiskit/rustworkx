@@ -2967,13 +2967,14 @@ where
     let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
     let mut degree_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(node_num);
-    let mut nbrs: HashMap<NodeIndex, Vec<NodeIndex>> =
+    let mut nbrs: HashMap<NodeIndex, HashSet<NodeIndex>> =
         HashMap::with_capacity(node_num);
     let mut node_pos: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(node_num);
 
     for k in node_vec.iter() {
-        let k_nbrs: Vec<NodeIndex> = graph.neighbors_undirected(*k).collect();
+        let k_nbrs: HashSet<NodeIndex> =
+            graph.neighbors_undirected(*k).collect();
         let k_deg = k_nbrs.len();
 
         nbrs.insert(*k, k_nbrs);
@@ -3002,7 +3003,7 @@ where
         let v_nbrs = nbrs[&v].clone();
         for u in v_nbrs {
             if cores[&u] > cores[&v] {
-                nbrs.get_mut(&u).unwrap().retain(|&n| n != v);
+                nbrs.get_mut(&u).unwrap().remove(&v);
                 let pos = node_pos[&u];
                 let bin_start = bin_boundaries[cores[&u]];
                 *node_pos.get_mut(&u).unwrap() = bin_start;
