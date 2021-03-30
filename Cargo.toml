@@ -33,7 +33,7 @@ version = "0.9"
 features = ["rayon"]
 
 [dependencies.ndarray]
-version = "^0.13.1"
+version = "^0.15.1"
 features = ["rayon"]
 
 [profile.release]
