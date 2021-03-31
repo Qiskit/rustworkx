@@ -594,6 +594,7 @@ def _digraph_core_number(graph):
 def _graph_core_number(graph):
     return graph_core_number(graph)
 
+
 @functools.singledispatch
 def complement(graph):
     """Compute the complement of a graph.
