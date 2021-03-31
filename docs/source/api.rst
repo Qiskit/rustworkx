@@ -95,6 +95,8 @@ Specific Graph Type Methods
    retworkx.max_weight_matching
    retworkx.graph_transitivity
    retworkx.digraph_transitivity
+   retworkx.graph_core_number
+   retworkx.digraph_core_number
 
 .. _universal-functions:
 
@@ -121,6 +123,7 @@ type functions in the algorithms API but can be run with a
    retworkx.is_isomorphic
    retworkx.is_isomorphic_node_match
    retworkx.transitivity
+   retworkx.core_number
 
 Exceptions
 ----------
