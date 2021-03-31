@@ -561,3 +561,35 @@ def _digraph_transitivity(graph):
 @transitivity.register(PyGraph)
 def _graph_transitivity(graph):
     return graph_transitivity(graph)
+
+
+@functools.singledispatch
+def core_number(graph):
+    """Return the core number for each node in the graph.
+
+    A k-core is a maximal subgraph that contains nodes of degree k or more.
+
+    .. note::
+
+        The function implicitly assumes that there are no parallel edges
+        or self loops. It may produce incorrect/unexpected results if the
+        input graph has self loops or parallel edges.
+
+    :param graph: The graph to get core numbers. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+
+    :returns: A dictionary keyed by node index to the core number
+    :rtype: dict
+        raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@core_number.register(PyDiGraph)
+def _digraph_core_number(graph):
+    return digraph_core_number(graph)
+
+
+@core_number.register(PyGraph)
+def _graph_core_number(graph):
+    return graph_core_number(graph)
