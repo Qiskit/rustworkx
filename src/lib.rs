@@ -3099,7 +3099,7 @@ pub fn minimum_spanning_edges(
     for edge in edge_list.iter() {
         let u = edge.source().index();
         let v = edge.target().index();
-        let w = edge.weight().clone();
+        let w = edge.weight().clone_ref(py);
         if subgraphs.union(u, v) {
             answer.push((u, v, w));
         }
@@ -3127,7 +3127,7 @@ pub fn minimum_spanning_tree(
     spanning_tree.graph.clear_edges();
 
     for edge in minimum_spanning_edges(py, graph).edges.iter() {
-        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone())?;
+        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py))?;
     }
 
     Ok(spanning_tree)
