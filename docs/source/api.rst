@@ -30,6 +30,7 @@ Generators
     retworkx.generators.directed_mesh_graph
     retworkx.generators.grid_graph
     retworkx.generators.directed_grid_graph
+    retworkx.generators.binomial_tree_graph
 
 Random Circuit Functions
 ------------------------
