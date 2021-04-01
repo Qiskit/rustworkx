@@ -73,6 +73,13 @@ class TestDispatchPyGraph(unittest.TestCase):
         res = retworkx.dfs_edges(self.graph, 0)
         self.assertIsInstance(list(res), list)
 
+    def test_is_isomorphic_nodes_incompatible_raises(self):
+        with self.assertRaises(TypeError):
+            if self.class_type == "PyGraph":
+                retworkx.is_isomorphic(self.graph, retworkx.PyDiGraph())
+            else:
+                retworkx.is_isomorphic(self.graph, retworkx.PyGraph())
+
 
 class TestDispatchPyDiGraph(TestDispatchPyGraph):
 
