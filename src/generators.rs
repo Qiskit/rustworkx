@@ -10,11 +10,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::convert::TryInto;
 use std::iter;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
@@ -985,6 +987,105 @@ pub fn directed_grid_graph(
     })
 }
 
+/// Generate an undirected binomial tree of order n recursively.
+///
+/// :param int order: Order of the binomial tree.
+/// :param list weights: A list of node weights. It must have 2**order values.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A binomail tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``order`` or ``weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.binomial_tree(4)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, order=None, weights=None, multigraph=True)"]
+pub fn binomial_tree_graph(
+    py: Python,
+    order: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    if order.is_none() {
+        return Err(PyIndexError::new_err("order should be specified"));
+    }
+
+    // try_into is used to convert from usize to u32
+    let num_nodes = usize::pow(2, order.unwrap().try_into().unwrap());
+
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+            }
+
+            node_list
+        }
+
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    let mut n = 1;
+
+    for _ in 0..order.unwrap() {
+        let edges: Vec<(NodeIndex, NodeIndex)> = graph
+            .edge_references()
+            .map(|e| (e.source(), e.target()))
+            .collect();
+
+        for (source, target) in edges {
+            let source_index = source.index();
+            let target_index = target.index();
+
+            graph.add_edge(
+                nodes[source_index + n],
+                nodes[target_index + n],
+                py.None(),
+            );
+        }
+
+        graph.add_edge(nodes[0], nodes[n], py.None());
+
+        n *= 2;
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -997,5 +1098,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(binomial_tree_graph))?;
     Ok(())
 }
