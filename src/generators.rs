@@ -1010,7 +1010,7 @@ pub fn directed_grid_graph(
 ///
 ///   import retworkx.generators
 ///
-///   graph = retworkx.generators.binomial_tree(4)
+///   graph = retworkx.generators.binomial_tree_graph(4)
 ///   dot_str = graph.to_dot(
 ///       lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
