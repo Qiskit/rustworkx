@@ -31,5 +31,5 @@ class TestBinomailTreeGraph(unittest.TestCase):
         self.assertEqual(len(graph.edges()), 3)
 
     def test_binomial_tree_no_order(self):
-        with self.assertRaises(IndexError):
+        with self.assertRaises(TypeError):
             retworkx.generators.binomial_tree_graph(weights=list(range(4)))
