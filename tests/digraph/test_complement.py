@@ -80,4 +80,3 @@ class TestComplement(unittest.TestCase):
                 complement_graph,
             )
         )
-
