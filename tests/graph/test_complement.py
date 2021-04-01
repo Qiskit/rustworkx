@@ -81,65 +81,6 @@ class TestComplement(unittest.TestCase):
             )
         )
 
-    def test_clique_directed(self):
-        N = 5
-        graph = retworkx.PyDiGraph()
-        graph.extend_from_edge_list(
-            [(i, j) for i in range(N) for j in range(N) if i != j]
-        )
-
-        complement_graph = retworkx.complement(graph)
-        self.assertEqual(graph.nodes(), complement_graph.nodes())
-        self.assertEqual(0, len(complement_graph.edges()))
-
-    def test_empty_directed(self):
-        N = 5
-        graph = retworkx.PyDiGraph()
-        graph.add_nodes_from([i for i in range(N)])
-
-        expected_graph = retworkx.PyDiGraph()
-        expected_graph.extend_from_edge_list(
-            [(i, j) for i in range(N) for j in range(N) if i != j]
-        )
-
-        complement_graph = retworkx.complement(graph)
-        self.assertTrue(
-            retworkx.is_isomorphic(
-                expected_graph,
-                complement_graph,
-            )
-        )
-
-    def test_complement_directed(self):
-        N = 8
-        graph = retworkx.PyDiGraph()
-        graph.extend_from_edge_list(
-            [
-                (i, j)
-                for i in range(N)
-                for j in range(N)
-                if i != j and (i + j) % 3 == 0
-            ]
-        )
-
-        expected_graph = retworkx.PyDiGraph()
-        expected_graph.extend_from_edge_list(
-            [
-                (i, j)
-                for i in range(N)
-                for j in range(N)
-                if i != j and (i + j) % 3 != 0
-            ]
-        )
-
-        complement_graph = retworkx.complement(graph)
-        self.assertTrue(
-            retworkx.is_isomorphic(
-                expected_graph,
-                complement_graph,
-            )
-        )
-
     def test_multigraph(self):
         graph = retworkx.PyGraph(multigraph=True)
         graph.extend_from_edge_list([(0, 0), (0, 1), (1, 1), (2, 2), (1, 0)])
