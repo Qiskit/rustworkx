@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    :func:`~retworkx.is_isomorphic` and :func:`~retworkx.is_isomorphic_node_match` 
-    match the nodes in order specified  by a heuristic matching order proposed 
-    in VF2++ paper. If you want to use the order based on node ids, you should 
-    set `id_order=True`.
+    :func:`~retworkx.is_isomorphic` and :func:`~retworkx.is_isomorphic_node_match`
+    match the nodes in order specified  by a heuristic matching order proposed
+    in VF2++ paper, if `id_order=False`. If you want to use the order based on
+    node ids, you should set `id_order=True`.

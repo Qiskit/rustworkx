@@ -147,9 +147,10 @@ where
 
                 next_level = HashSet::new();
                 for bfs_node in this_level {
-                    for neighbor in
-                        graph.neighbors_undirected(graph.from_index(bfs_node))
-                    {
+                    for neighbor in graph.neighbors_directed(
+                        graph.from_index(bfs_node),
+                        Outgoing,
+                    ) {
                         let neigh = graph.to_index(neighbor);
                         if !seen[neigh] {
                             seen[neigh] = true;
@@ -373,18 +374,18 @@ where
         g1
     };
     let g0 = match id_order {
-        Some(true) => g0_out,
-        _ => {
+        Some(false) => {
             inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
             &inner_temp_g0
         }
+        _ => g0_out,
     };
     let g1 = match id_order {
-        Some(true) => g1_out,
-        _ => {
+        Some(false) => {
             inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);
             &inner_temp_g1
         }
+        _ => g1_out,
     };
     if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
     {

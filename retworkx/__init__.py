@@ -442,7 +442,7 @@ def _graph_dfs_edges(graph, source):
 
 @functools.singledispatch
 def is_isomorphic(first, second, node_matcher=None, edge_matcher=None,
-                  id_order=None):
+                  id_order=True):
     """Determine if 2 graphs are isomorphic
 
     This checks if 2 graphs are isomorphic both structurally and also
@@ -454,6 +454,11 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None,
             graph_b = retworkx.PyGraph()
             retworkx.is_isomorphic(graph_a, graph_b,
                                 lambda x, y: x == y)
+
+    .. note::
+
+        For better performance on large graphs, consider setting
+        `id_order=False`.
 
     :param first: The first graph to compare. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
@@ -468,9 +473,9 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None,
         positional one for each edge data object. If the return of this
         function evaluates to True then the edges passed to it are viewed
         as matching.
-    :param bool id_order:  If set to true, the algorithm matches the nodes
-        in order specified by their ids. Otherwise, it uses a heuristic
-        matching order based in [VF2]_ paper.
+    :param bool (default=True) id_order:  If set to true, the algorithm matches
+        the nodes in order specified by their ids. Otherwise, it uses a
+        heuristic matching order based in [VF2]_ paper.
 
     :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are
         not.
@@ -484,20 +489,20 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None,
 
 @is_isomorphic.register(PyDiGraph)
 def _digraph_is_isomorphic(first, second, node_matcher=None,
-                           edge_matcher=None, id_order=None):
+                           edge_matcher=None, id_order=True):
     return digraph_is_isomorphic(first, second, node_matcher,
                                  edge_matcher, id_order)
 
 
 @is_isomorphic.register(PyGraph)
 def _graph_is_isomorphic(first, second, node_matcher=None,
-                         edge_matcher=None, id_order=None):
+                         edge_matcher=None, id_order=True):
     return graph_is_isomorphic(first, second, node_matcher,
                                edge_matcher, id_order)
 
 
 @functools.singledispatch
-def is_isomorphic_node_match(first, second, matcher, id_order=None):
+def is_isomorphic_node_match(first, second, matcher, id_order=True):
     """Determine if 2 graphs are isomorphic
 
     This checks if 2 graphs are isomorphic both structurally and also
@@ -510,6 +515,11 @@ def is_isomorphic_node_match(first, second, matcher, id_order=None):
         retworkx.is_isomorphic_node_match(graph_a, graph_b,
                                         lambda x, y: x == y)
 
+    .. note::
+
+        For better performance on large graphs, consider setting
+        `id_order=False`.
+
     :param first: The first graph to compare. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
     :param second: The second graph to compare. Can either be a
@@ -519,9 +529,9 @@ def is_isomorphic_node_match(first, second, matcher, id_order=None):
         one for each node data object. If the return of this
         function evaluates to True then the nodes passed to it are vieded
         as matching.
-    :param bool id_order:  If set to true, the algorithm matches the nodes
-        in order specified by their ids. Otherwise, it uses a heuristic
-        matching order based in [VF2]_ paper.
+    :param bool (default=True) id_order:  If set to true, the algorithm matches
+        the nodes in order specified by their ids. Otherwise, it uses a
+        heuristic matching order based in [VF2]_ paper.
 
     :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
         not.
@@ -531,13 +541,13 @@ def is_isomorphic_node_match(first, second, matcher, id_order=None):
 
 
 @is_isomorphic_node_match.register(PyDiGraph)
-def _digraph_is_isomorphic_node_match(first, second, matcher, id_order=None):
-    return digraph_is_isomorphic(first, second, matcher, id_order)
+def _digraph_is_isomorphic_node_match(first, second, matcher, id_order=True):
+    return digraph_is_isomorphic(first, second, matcher, id_order=id_order)
 
 
 @is_isomorphic_node_match.register(PyGraph)
-def _graph_is_isomorphic_node_match(first, second, matcher, id_order=None):
-    return graph_is_isomorphic(first, second, matcher, id_order)
+def _graph_is_isomorphic_node_match(first, second, matcher, id_order=True):
+    return graph_is_isomorphic(first, second, matcher, id_order=id_order)
 
 
 @functools.singledispatch

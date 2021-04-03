@@ -295,6 +295,10 @@ fn digraph_union(
 ///     retworkx.is_isomorphic(graph_a, graph_b,
 ///                            lambda x, y: x == y)
 ///
+/// .. note::
+///
+///     For better performance on large graphs, consider setting `id_order=False`.
+///
 /// :param PyDiGraph first: The first graph to compare
 /// :param PyDiGraph second: The second graph to compare
 /// :param callable node_matcher: A python callable object that takes 2 positional
@@ -305,15 +309,15 @@ fn digraph_union(
 ///     one for each edge data object. If the return of this
 ///     function evaluates to True then the edges passed to it are vieded
 ///     as matching.
-/// :param bool id_order:  If set to true, the algorithm matches the nodes
-///    in order specified by their ids. Otherwise, it uses a heuristic
-///    matching order based in [VF2]_ paper.
+/// :param bool (default=True) id_order:  If set to true, the algorithm matches the
+///     nodes in order specified by their ids. Otherwise, it uses a heuristic
+///     matching order based in [VF2]_ paper.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
 #[pyfunction]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, /)"]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"]
 fn digraph_is_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
@@ -359,6 +363,10 @@ fn digraph_is_isomorphic(
 ///     retworkx.is_isomorphic(graph_a, graph_b,
 ///                            lambda x, y: x == y)
 ///
+/// .. note::
+///
+///     For better performance on large graphs, consider setting `id_order=False`.
+///
 /// :param PyGraph first: The first graph to compare
 /// :param PyGraph second: The second graph to compare
 /// :param callable node_matcher: A python callable object that takes 2 positional
@@ -369,15 +377,15 @@ fn digraph_is_isomorphic(
 ///     one for each edge data object. If the return of this
 ///     function evaluates to True then the edges passed to it are vieded
 ///     as matching.
-/// :param bool id_order:  If set to true, the algorithm matches the nodes
-///    in order specified by their ids. Otherwise, it uses a heuristic
-///    matching order based in [VF2]_ paper.
+/// :param bool (default=True) id_order:  If set to true, the algorithm matches the
+///     nodes in order specified by their ids. Otherwise, it uses a heuristic
+///     matching order based in [VF2]_ paper.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
 #[pyfunction]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, /)"]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"]
 fn graph_is_isomorphic(
     py: Python,
     first: &graph::PyGraph,
