@@ -3084,16 +3084,37 @@ pub fn digraph_core_number(
 pub fn minimum_spanning_edges(
     py: Python,
     graph: &graph::PyGraph,
-) -> WeightedEdgeList {
+) -> PyResult<WeightedEdgeList> {
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
     let mut edge_list: Vec<EdgeReference<PyObject>> =
         graph.graph.edge_references().collect();
 
+    let mut first_sort_err: Option<PyErr> = None;
+
     edge_list.sort_by(|a, b| {
-        let weight_a = a.weight().as_ref(py);
-        let weight_b = b.weight().as_ref(py);
-        weight_a.compare(weight_b).unwrap()
+        if first_sort_err.is_none() {
+            let weight_a = a.weight().as_ref(py);
+            let weight_b = b.weight().as_ref(py);
+            let result = match weight_a.compare(weight_b) {
+                Ok(r) => r,
+                Err(e) => {
+                    // error occured, store error in a variable an continue sorting
+                    // because the closure *must* return a cmp::Ordering
+                    first_sort_err = Some(e);
+                    Ordering::Equal
+                }
+            };
+            result
+        } else {
+            // error occurred previously, sorting no longer makes sense
+            Ordering::Equal
+        }
     });
+
+    if let Some(sort_err) = first_sort_err {
+        // recover possible error after sort_by concluded
+        return Err(sort_err);
+    }
 
     let mut answer: Vec<(usize, usize, PyObject)> = Vec::new();
     for edge in edge_list.iter() {
@@ -3105,7 +3126,7 @@ pub fn minimum_spanning_edges(
         }
     }
 
-    WeightedEdgeList { edges: answer }
+    Ok(WeightedEdgeList { edges: answer })
 }
 
 /// Find the minimum spanning tree or forest of a graph
@@ -3126,7 +3147,7 @@ pub fn minimum_spanning_tree(
     let mut spanning_tree = (*graph).clone();
     spanning_tree.graph.clear_edges();
 
-    for edge in minimum_spanning_edges(py, graph).edges.iter() {
+    for edge in minimum_spanning_edges(py, graph)?.edges.iter() {
         spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py))?;
     }
 
