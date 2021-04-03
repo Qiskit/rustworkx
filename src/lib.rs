@@ -43,6 +43,7 @@ use petgraph::visit::{
     IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
     Visitable,
 };
+use petgraph::EdgeType;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -2787,6 +2788,297 @@ pub fn is_maximal_matching(
     })
 }
 
+fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
+    let mut triangles: usize = 0;
+
+    let index = NodeIndex::new(node);
+    let mut neighbors: HashSet<NodeIndex> =
+        graph.graph.neighbors(index).collect();
+    neighbors.remove(&index);
+
+    for nodev in &neighbors {
+        triangles += graph
+            .graph
+            .neighbors(*nodev)
+            .filter(|&x| (x != *nodev) && neighbors.contains(&x))
+            .count();
+    }
+
+    let d: usize = neighbors.len();
+    let triples: usize = match d {
+        0 => 0,
+        _ => (d * (d - 1)) / 2,
+    };
+
+    (triangles / 2, triples)
+}
+
+/// Compute the transitivity of an undirected graph.
+///
+/// The transitivity of a graph is defined as:
+///
+/// .. math::
+///     `c=3 \times \frac{\text{number of triangles}}{\text{number of connected triples}}`
+///
+/// A “connected triple” means a single vertex with
+/// edges running to an unordered pair of others.
+///
+/// This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph graph: Graph to be used.
+///
+/// :returns: Transitivity.
+/// :rtype: float
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let (triangles, triples) = node_indices
+        .par_iter()
+        .map(|node| _graph_triangles(graph, node.index()))
+        .reduce(
+            || (0, 0),
+            |(sumx, sumy), (resx, resy)| (sumx + resx, sumy + resy),
+        );
+
+    match triangles {
+        0 => 0.0,
+        _ => triangles as f64 / triples as f64,
+    }
+}
+
+fn _digraph_triangles(
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> (usize, usize) {
+    let mut triangles: usize = 0;
+
+    let index = NodeIndex::new(node);
+    let mut out_neighbors: HashSet<NodeIndex> = graph
+        .graph
+        .neighbors_directed(index, petgraph::Direction::Outgoing)
+        .collect();
+    out_neighbors.remove(&index);
+
+    let mut in_neighbors: HashSet<NodeIndex> = graph
+        .graph
+        .neighbors_directed(index, petgraph::Direction::Incoming)
+        .collect();
+    in_neighbors.remove(&index);
+
+    let neighbors = out_neighbors.iter().chain(in_neighbors.iter());
+
+    for nodev in neighbors {
+        triangles += graph
+            .graph
+            .neighbors_directed(*nodev, petgraph::Direction::Outgoing)
+            .chain(
+                graph
+                    .graph
+                    .neighbors_directed(*nodev, petgraph::Direction::Incoming),
+            )
+            .map(|x| {
+                let mut res: usize = 0;
+
+                if (x != *nodev) && out_neighbors.contains(&x) {
+                    res += 1;
+                }
+                if (x != *nodev) && in_neighbors.contains(&x) {
+                    res += 1;
+                }
+                res
+            })
+            .sum::<usize>();
+    }
+
+    let din: usize = in_neighbors.len();
+    let dout: usize = out_neighbors.len();
+
+    let dtot = dout + din;
+    let dbil: usize = out_neighbors.intersection(&in_neighbors).count();
+    let triples: usize = match dtot {
+        0 => 0,
+        _ => dtot * (dtot - 1) - 2 * dbil,
+    };
+
+    (triangles / 2, triples)
+}
+
+/// Compute the transitivity of a directed graph.
+///
+/// The transitivity of a directed graph is defined in [Fag]_, Eq.8:
+///
+/// .. math::
+///     `c=3 \times \frac{\text{number of triangles}}{\text{number of all possible triangles}}`
+///
+/// A triangle is a connected triple of nodes.
+/// Different edge orientations counts as different triangles.
+///
+/// This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyDiGraph graph: Directed graph to be used.
+///
+/// :returns: Transitivity.
+/// :rtype: float
+///
+/// .. [Fag] Clustering in complex directed networks by G. Fagiolo,
+///    Physical Review E, 76(2), 026107 (2007)
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let (triangles, triples) = node_indices
+        .par_iter()
+        .map(|node| _digraph_triangles(graph, node.index()))
+        .reduce(
+            || (0, 0),
+            |(sumx, sumy), (resx, resy)| (sumx + resx, sumy + resy),
+        );
+
+    match triangles {
+        0 => 0.0,
+        _ => triangles as f64 / triples as f64,
+    }
+}
+
+pub fn _core_number<Ty>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+) -> PyResult<PyObject>
+where
+    Ty: EdgeType,
+{
+    let node_num = graph.node_count();
+    if node_num == 0 {
+        return Ok(PyDict::new(py).into());
+    }
+
+    let mut cores: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_num);
+    let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
+    let mut degree_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(node_num);
+    let mut nbrs: HashMap<NodeIndex, HashSet<NodeIndex>> =
+        HashMap::with_capacity(node_num);
+    let mut node_pos: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(node_num);
+
+    for k in node_vec.iter() {
+        let k_nbrs: HashSet<NodeIndex> =
+            graph.neighbors_undirected(*k).collect();
+        let k_deg = k_nbrs.len();
+
+        nbrs.insert(*k, k_nbrs);
+        cores.insert(*k, k_deg);
+        degree_map.insert(*k, k_deg);
+    }
+    node_vec.par_sort_by_key(|k| degree_map.get(k));
+
+    let mut bin_boundaries: Vec<usize> =
+        Vec::with_capacity(degree_map[&node_vec[node_num - 1]] + 1);
+    bin_boundaries.push(0);
+    let mut curr_degree = 0;
+    for (i, v) in node_vec.iter().enumerate() {
+        node_pos.insert(*v, i);
+        let v_degree = degree_map[v];
+        if v_degree > curr_degree {
+            for _ in 0..v_degree - curr_degree {
+                bin_boundaries.push(i);
+            }
+            curr_degree = v_degree;
+        }
+    }
+
+    for v_ind in 0..node_vec.len() {
+        let v = node_vec[v_ind];
+        let v_nbrs = nbrs[&v].clone();
+        for u in v_nbrs {
+            if cores[&u] > cores[&v] {
+                nbrs.get_mut(&u).unwrap().remove(&v);
+                let pos = node_pos[&u];
+                let bin_start = bin_boundaries[cores[&u]];
+                *node_pos.get_mut(&u).unwrap() = bin_start;
+                *node_pos.get_mut(&node_vec[bin_start]).unwrap() = pos;
+                node_vec.swap(bin_start, pos);
+                bin_boundaries[cores[&u]] += 1;
+                *cores.get_mut(&u).unwrap() -= 1;
+            }
+        }
+    }
+
+    let out_dict = PyDict::new(py);
+    for (v_index, core) in cores {
+        out_dict.set_item(v_index.index(), core)?;
+    }
+    Ok(out_dict.into())
+}
+
+/// Return the core number for each node in the graph.
+///
+/// A k-core is a maximal subgraph that contains nodes of degree k or more.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph: The graph to get core numbers
+///
+/// :returns: A dictionary keyed by node index to the core number
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn graph_core_number(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<PyObject> {
+    _core_number(py, &graph.graph)
+}
+
+/// Return the core number for each node in the directed graph.
+///
+/// A k-core is a maximal subgraph that contains nodes of degree k or more.
+/// For directed graphs, the degree is calculated as in_degree + out_degree.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyDiGraph: The directed graph to get core numbers
+///
+/// :returns: A dictionary keyed by node index to the core number
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn digraph_core_number(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+) -> PyResult<PyObject> {
+    _core_number(py, &graph.graph)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -2858,6 +3150,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
+    m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
+    m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
