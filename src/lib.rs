@@ -3070,15 +3070,17 @@ pub fn digraph_core_number(
 }
 
 /// Compute the complement of a graph.
-/// :param graph: The graph to be used.
-///     :class:`~retworkx.PyGraph`
-
-///     :returns: The complement of the graph.
-///     :rtype: :class:`~retworkx.PyGraph`
+///
+/// :param PyGraph graph: The graph to be used.
+///
+/// :returns: The complement of the graph.
+/// :rtype: PyGraph
 ///
 /// .. note::
-///     Paralell edges and self-loops are never created,
-///     even if multigraph is set to True
+///
+///     Parallel edges and self-loops are never created,
+///     even if the :attr:`~retworkx.PyGraph.multigraph`
+///     attribute is set to ``True``
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 fn graph_complement(
@@ -3112,15 +3114,17 @@ fn graph_complement(
 }
 
 /// Compute the complement of a graph.
-/// :param graph: The graph to be used.
-///     :class:`~retworkx.PyDiGraph`.
-
-///     :returns: The complement of the graph.
-///     :rtype: :class:`~retworkx.PyDiGraph`
+///
+/// :param PyDiGraph graph: The graph to be used.
+///
+/// :returns: The complement of the graph.
+/// :rtype: :class:`~retworkx.PyDiGraph`
 ///
 /// .. note::
-///     Paralell edges and self-loops are never created,
-///     even if multigraph is set to True
+///
+///     Parallel edges and self-loops are never created,
+///     even if the :attr:`~retworkx.PyDiGraph.multigraph`
+///     attribute is set to ``True``
 #[pyfunction]
 #[text_signature = "(graph, /)"]
 fn digraph_complement(

@@ -606,8 +606,8 @@ def complement(graph):
     :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
 
     .. note::
-        Paralell edges and self-loops are never created,
-        even if multigraph is set to True
+        Parallel edges and self-loops are never created,
+        even if the ``multigraph`` is set to ``True``
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
