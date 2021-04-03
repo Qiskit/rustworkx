@@ -3091,7 +3091,7 @@ pub fn minimum_spanning_edges(
 
     let mut first_sort_err: Option<PyErr> = None;
 
-    edge_list.sort_by(|a, b| {
+    edge_list.sort_unstable_by(|a, b| {
         if first_sort_err.is_none() {
             let weight_a = a.weight().as_ref(py);
             let weight_b = b.weight().as_ref(py);
