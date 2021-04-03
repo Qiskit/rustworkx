@@ -2431,7 +2431,7 @@ pub fn undirected_gnm_random_graph(
 
 #[inline]
 fn pnorm(x: f64, p: f64) -> f64 {
-    if p == 1.0 || p == f64::INFINITY {
+    if p == 1.0 || p == std::f64::INFINITY {
         x.abs()
     } else if p == 2.0 {
         x * x
@@ -2443,7 +2443,7 @@ fn pnorm(x: f64, p: f64) -> f64 {
 fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
     let it = x.iter().zip(y.iter()).map(|(xi, yi)| pnorm(xi - yi, p));
 
-    if p == f64::INFINITY {
+    if p == std::f64::INFINITY {
         it.fold(-1.0, |max, x| if x > max { x } else { max })
     } else {
         it.sum()
