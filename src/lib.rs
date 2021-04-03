@@ -2431,7 +2431,7 @@ pub fn undirected_gnm_random_graph(
 
 #[inline]
 fn pnorm(x: f64, p: f64) -> f64 {
-    if p == 1.0 || p == std::f64::INFINITY {
+    if p == 1.0 || p == f64::INFINITY {
         x.abs()
     } else if p == 2.0 {
         x * x
@@ -2443,7 +2443,7 @@ fn pnorm(x: f64, p: f64) -> f64 {
 fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
     let it = x.iter().zip(y.iter()).map(|(xi, yi)| pnorm(xi - yi, p));
 
-    if p == std::f64::INFINITY {
+    if p == f64::INFINITY {
         it.fold(-1.0, |max, x| if x > max { x } else { max })
     } else {
         it.sum()
@@ -2475,7 +2475,7 @@ fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
 /// :rtype: PyGraph
 #[pyfunction]
 #[text_signature = "(num_nodes, radius, dim=2, pos=None, p=2.0, seed=None, /)"]
-fn random_geometric_graph(
+pub fn random_geometric_graph(
     py: Python,
     num_nodes: usize,
     radius: f64,
@@ -3240,6 +3240,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
@@ -3254,7 +3255,6 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
-    m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
