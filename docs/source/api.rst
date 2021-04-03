@@ -97,6 +97,8 @@ Specific Graph Type Methods
    retworkx.digraph_transitivity
    retworkx.graph_core_number
    retworkx.digraph_core_number
+   retworkx.graph_complement
+   retworkx.digraph_complement
 
 .. _universal-functions:
 
