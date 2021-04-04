@@ -3103,30 +3103,21 @@ pub fn minimum_spanning_edges(
 ) -> PyResult<WeightedEdgeList> {
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
 
-    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> = Vec::with_capacity(graph.graph.edge_count());
+    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> =
+        Vec::with_capacity(graph.graph.edge_count());
     for edge in graph.edge_references() {
-        edge_list.push((
-            weight_callable(py, &weight_fn, &edge.weight(), default_weight)?,
-            edge,
-        ));
+        let weight =
+            weight_callable(py, &weight_fn, &edge.weight(), default_weight)?;
+        if weight.is_nan() {
+            return Err(PyValueError::new_err("NaN found as an edge weight"));
+        }
+        edge_list.push((weight, edge));
     }
 
-    edge_list.sort_unstable_by(|a, b| {
+    edge_list.par_sort_unstable_by(|a, b| {
         let weight_a = a.0;
         let weight_b = b.0;
-        if weight_a == weight_b {
-            Ordering::Equal
-        } else if weight_a < weight_b {
-            Ordering::Less
-        } else if weight_a > weight_b {
-            Ordering::Greater
-        } else if weight_a.is_nan() && weight_b.is_nan() {
-            Ordering::Equal
-        } else if weight_a.is_nan() {
-            Ordering::Greater
-        } else {
-            Ordering::Less
-        }
+        weight_a.partial_cmp(&weight_b).unwrap_or(Ordering::Less)
     });
 
     let mut answer: Vec<(usize, usize, PyObject)> = Vec::new();
