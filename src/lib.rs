@@ -3078,6 +3078,90 @@ pub fn digraph_core_number(
     _core_number(py, &graph.graph)
 }
 
+/// Compute the complement of a graph.
+///
+/// :param PyGraph graph: The graph to be used.
+///
+/// :returns: The complement of the graph.
+/// :rtype: PyGraph
+///
+/// .. note::
+///
+///     Parallel edges and self-loops are never created,
+///     even if the :attr:`~retworkx.PyGraph.multigraph`
+///     attribute is set to ``True``
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn graph_complement(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<graph::PyGraph> {
+    let mut complement_graph = graph.clone(); // keep same node indexes
+    complement_graph.graph.clear_edges();
+
+    for node_a in graph.graph.node_indices() {
+        let old_neighbors: HashSet<NodeIndex> =
+            graph.graph.neighbors(node_a).collect();
+        for node_b in graph.graph.node_indices() {
+            if node_a != node_b && !old_neighbors.contains(&node_b) {
+                if !complement_graph.multigraph
+                    || !complement_graph
+                        .has_edge(node_a.index(), node_b.index())
+                {
+                    // avoid creating parallel edges in multigraph
+                    complement_graph.add_edge(
+                        node_a.index(),
+                        node_b.index(),
+                        py.None(),
+                    )?;
+                }
+            }
+        }
+    }
+
+    Ok(complement_graph)
+}
+
+/// Compute the complement of a graph.
+///
+/// :param PyDiGraph graph: The graph to be used.
+///
+/// :returns: The complement of the graph.
+/// :rtype: :class:`~retworkx.PyDiGraph`
+///
+/// .. note::
+///
+///     Parallel edges and self-loops are never created,
+///     even if the :attr:`~retworkx.PyDiGraph.multigraph`
+///     attribute is set to ``True``
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn digraph_complement(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut complement_graph = graph.clone(); // keep same node indexes
+    complement_graph.graph.clear_edges();
+
+    for node_a in graph.graph.node_indices() {
+        let old_neighbors: HashSet<NodeIndex> = graph
+            .graph
+            .neighbors_directed(node_a, petgraph::Direction::Outgoing)
+            .collect();
+        for node_b in graph.graph.node_indices() {
+            if node_a != node_b && !old_neighbors.contains(&node_b) {
+                complement_graph.add_edge(
+                    node_a.index(),
+                    node_b.index(),
+                    py.None(),
+                )?;
+            }
+        }
+    }
+
+    Ok(complement_graph)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -3153,6 +3237,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
+    m.add_wrapped(wrap_pyfunction!(graph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
