@@ -3080,11 +3080,11 @@ pub fn digraph_core_number(
 ///     tells retworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
-///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
+///         minimum_spanning_edges(graph, weight_fn: lambda x: 1)
 ///
 ///     to return a weight of 1 for all edges. Also::
 ///
-///         minimum_spanning_tree(graph, weight_fn: lambda x: float(x))
+///         minimum_spanning_edges(graph, weight_fn: lambda x: float(x))
 ///
 ///     to cast the edge object as a float as the weight.
 /// :param float default_weight: If ``weight_fn`` isn't specified this optional
