@@ -3074,50 +3074,64 @@ pub fn digraph_core_number(
 /// Find the edges in the minimum spanning tree or forest of a graph
 /// using Kruskal's algorithm.
 ///
-/// :param PyGraph graph: Undirected weighted graph with comparable weights
+/// :param PyGraph graph: Undirected graph
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         minimum_spanning_tree(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
 ///
 /// :returns: The :math:`N - |c|` edges of the Minimum Spanning Tree (or Forest, if :math:`|c| > 1`)
 ///     where :math:`N` is the number of nodes and :math:`|c|` is the number of connected components of the graph
 /// :rtype: WeightedEdgeList
-#[pyfunction]
-#[text_signature = "(graph,)"]
+#[pyfunction(weight_fn = "None", default_weight = "1.0")]
+#[text_signature = "(graph, weight_fn=None, default_weight=1.0)"]
 pub fn minimum_spanning_edges(
     py: Python,
     graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<WeightedEdgeList> {
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
-    let mut edge_list: Vec<EdgeReference<PyObject>> =
-        graph.graph.edge_references().collect();
 
-    let mut first_sort_err: Option<PyErr> = None;
+    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> = Vec::new();
+    for edge in graph.edge_references() {
+        edge_list.push((
+            weight_callable(py, &weight_fn, &edge.weight(), default_weight)?,
+            edge,
+        ));
+    }
 
     edge_list.sort_unstable_by(|a, b| {
-        if first_sort_err.is_none() {
-            let weight_a = a.weight().as_ref(py);
-            let weight_b = b.weight().as_ref(py);
-            let result = match weight_a.compare(weight_b) {
-                Ok(r) => r,
-                Err(e) => {
-                    // error occured, store error in a variable an continue sorting
-                    // because the closure *must* return a cmp::Ordering
-                    first_sort_err = Some(e);
-                    Ordering::Equal
-                }
-            };
-            result
-        } else {
-            // error occurred previously, sorting no longer makes sense
+        let weight_a = a.0;
+        let weight_b = b.0;
+        if weight_a == weight_b {
             Ordering::Equal
+        } else if weight_a < weight_b {
+            Ordering::Less
+        } else if weight_a > weight_b {
+            Ordering::Greater
+        } else if weight_a.is_nan() && weight_b.is_nan() {
+            Ordering::Equal
+        } else if weight_a.is_nan() {
+            Ordering::Greater
+        } else {
+            Ordering::Less
         }
     });
 
-    if let Some(sort_err) = first_sort_err {
-        // recover possible error after sort_by concluded
-        return Err(sort_err);
-    }
-
     let mut answer: Vec<(usize, usize, PyObject)> = Vec::new();
-    for edge in edge_list.iter() {
+    for float_edge_pair in edge_list.iter() {
+        let edge = float_edge_pair.1;
         let u = edge.source().index();
         let v = edge.target().index();
         let w = edge.weight().clone_ref(py);
@@ -3132,22 +3146,41 @@ pub fn minimum_spanning_edges(
 /// Find the minimum spanning tree or forest of a graph
 /// using Kruskal's algorithm.
 ///
-/// :param PyGraph graph: Undirected weighted graph with comparable weights
+/// :param PyGraph graph: Undirected graph
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         minimum_spanning_tree(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
 ///
 /// :returns: A Minimum Spanning Tree (or Forest, if the graph is not connected).
 ///
 ///     Note: The new graph will keep the same node indexes, but edge indexes might differ.
 /// :rtype: PyGraph
-#[pyfunction]
-#[text_signature = "(graph,)"]
+#[pyfunction(weight_fn = "None", default_weight = "1.0")]
+#[text_signature = "(graph, weight_fn=None, default_weight=1.0)"]
 pub fn minimum_spanning_tree(
     py: Python,
     graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
 ) -> PyResult<graph::PyGraph> {
     let mut spanning_tree = (*graph).clone();
     spanning_tree.graph.clear_edges();
 
-    for edge in minimum_spanning_edges(py, graph)?.edges.iter() {
+    for edge in minimum_spanning_edges(py, graph, weight_fn, default_weight)?
+        .edges
+        .iter()
+    {
         spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py))?;
     }
 
