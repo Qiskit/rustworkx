@@ -141,3 +141,12 @@ class TestMinimumSpanningTree(unittest.TestCase):
                 mst_graph_weight_2,
             )
         )
+
+    def test_nan_weight(self):
+        invalid_graph = retworkx.PyGraph()
+        invalid_graph.extend_from_weighted_edge_list(
+            [(0, 1, 0.5), (0, 2, float("nan"))]
+        )
+
+        with self.assertRaises(ValueError):
+            retworkx.minimum_spanning_tree(invalid_graph, lambda x: x)
