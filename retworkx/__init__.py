@@ -624,3 +624,18 @@ def _digraph_complement(graph):
 @complement.register(PyGraph)
 def _graph_complement(graph):
     return graph_complement(graph)
+
+
+@functools.singledispatch
+def random_layout(graph, center=None, seed=None):
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@random_layout.register(PyDiGraph)
+def _digraph_random_layoutcomplement(graph, center=None, seed=None):
+    return digraph_random_layout(graph, center=None, seed=None)
+
+
+@random_layout.register(PyGraph)
+def _graph_complement(graph, center=None, seed=None):
+    return graph_random_layout(graph, center=center, seed=seed)

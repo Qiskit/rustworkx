@@ -55,7 +55,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use crate::iterators::{EdgeList, NodeIndices, Pos2DMapping, WeightedEdgeList};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -3263,6 +3263,50 @@ fn digraph_complement(
     Ok(complement_graph)
 }
 
+fn _random_layout<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    center: Option<(f64, f64)>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let random_tuple: (f64, f64) = rng.gen();
+                match center {
+                    Some(center) => (
+                        n.index(),
+                        (random_tuple.0 + center.0, random_tuple.1 + center.1),
+                    ),
+                    None => (n.index(), random_tuple),
+                }
+            })
+            .collect(),
+    }
+}
+
+#[pyfunction]
+pub fn graph_random_layout(
+    graph: &graph::PyGraph,
+    center: Option<(f64, f64)>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
+#[pyfunction]
+pub fn digraph_random_layout(
+    graph: &digraph::PyDiGraph,
+    center: Option<(f64, f64)>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -3342,12 +3386,15 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
+    m.add_class::<iterators::Pos2DMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
