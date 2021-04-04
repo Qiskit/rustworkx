@@ -3155,8 +3155,11 @@ pub fn minimum_spanning_edges(
 ///
 /// :returns: A Minimum Spanning Tree (or Forest, if the graph is not connected).
 ///
-///     Note: The new graph will keep the same node indexes, but edge indexes might differ.
 /// :rtype: PyGraph
+///
+/// .. note::
+///
+///     The new graph will keep the same node indexes, but edge indexes might differ.
 #[pyfunction(weight_fn = "None", default_weight = "1.0")]
 #[text_signature = "(graph, weight_fn=None, default_weight=1.0)"]
 pub fn minimum_spanning_tree(
