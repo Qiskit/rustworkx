@@ -593,3 +593,30 @@ def _digraph_core_number(graph):
 @core_number.register(PyGraph)
 def _graph_core_number(graph):
     return graph_core_number(graph)
+
+
+@functools.singledispatch
+def complement(graph):
+    """Compute the complement of a graph.
+
+    :param graph: The graph to be used, can be either a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+
+    :returns: The complement of the graph.
+    :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+
+    .. note::
+        Parallel edges and self-loops are never created,
+        even if the ``multigraph`` is set to ``True``
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@complement.register(PyDiGraph)
+def _digraph_complement(graph):
+    return digraph_complement(graph)
+
+
+@complement.register(PyGraph)
+def _graph_complement(graph):
+    return graph_complement(graph)
