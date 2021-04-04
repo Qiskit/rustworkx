@@ -3134,8 +3134,8 @@ pub fn minimum_spanning_edges(
         let edge = float_edge_pair.1;
         let u = edge.source().index();
         let v = edge.target().index();
-        let w = edge.weight().clone_ref(py);
         if subgraphs.union(u, v) {
+            let w = edge.weight().clone_ref(py);
             answer.push((u, v, w));
         }
     }
