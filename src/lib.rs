@@ -3084,7 +3084,7 @@ pub fn digraph_core_number(
 ///
 ///     to return a weight of 1 for all edges. Also::
 ///
-///         minimum_spanning_edges(graph, weight_fn: lambda x: float(x))
+///         minimum_spanning_edges(graph, weight_fn: float)
 ///
 ///     to cast the edge object as a float as the weight.
 /// :param float default_weight: If ``weight_fn`` isn't specified this optional
@@ -3103,7 +3103,7 @@ pub fn minimum_spanning_edges(
 ) -> PyResult<WeightedEdgeList> {
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
 
-    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> = Vec::new();
+    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> = Vec::with_capacity(graph.graph.edge_count());
     for edge in graph.edge_references() {
         edge_list.push((
             weight_callable(py, &weight_fn, &edge.weight(), default_weight)?,
@@ -3156,7 +3156,7 @@ pub fn minimum_spanning_edges(
 ///
 ///     to return a weight of 1 for all edges. Also::
 ///
-///         minimum_spanning_tree(graph, weight_fn: lambda x: float(x))
+///         minimum_spanning_tree(graph, weight_fn: float)
 ///
 ///     to cast the edge object as a float as the weight.
 /// :param float default_weight: If ``weight_fn`` isn't specified this optional
