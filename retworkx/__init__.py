@@ -207,23 +207,23 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 @functools.singledispatch
 def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    """Return the adjacency matrix for a graph object
+    """Find all-pairs shortest path lengths using Floyd's algorithm
 
-    In the case where there are multiple edges between nodes the value in the
-    output matrix will be the sum of the edges' weights.
+    Floyd's algorithm is used for finding shortest paths in dense graphs
+    or graphs with negative weights (where Dijkstra's algorithm fails).
 
-    :param graph: The graph used to generate the adjacency matrix from. Can
+    :param graph: The graph to run Floyd's algorithm on. Can
         either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :param callable weight_fn: A callable object (function, lambda, etc) which
         will be passed the edge object and expected to return a ``float``. This
         tells retworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
 
-            adjacency_matrix(graph, weight_fn: lambda x: 1)
+            floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
 
         to return a weight of 1 for all edges. Also::
 
-            adjacency_matrix(graph, weight_fn: lambda x: float(x))
+            floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
@@ -231,8 +231,10 @@ def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
 
-     :return: The adjacency matrix for the input dag as a numpy array
-     :rtype: numpy.ndarray
+    :returns: A matrix of shortest path distances between nodes. If there is no
+        path between two nodes then the corresponding matrix entry will be
+        ``np.inf``.
+    :rtype: numpy.ndarray
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
