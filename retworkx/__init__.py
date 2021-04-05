@@ -247,14 +247,16 @@ def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
 
 @floyd_warshall_numpy.register(PyDiGraph)
 def _digraph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    return digraph_adjacency_matrix(graph, weight_fn=weight_fn,
-                                    default_weight=default_weight)
+    return digrap_floyd_warshall_numpy(
+        graph, weight_fn=weight_fn, default_weight=default_weight
+    )
 
 
 @floyd_warshall_numpy.register(PyGraph)
 def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    return graph_adjacency_matrix(graph, weight_fn=weight_fn,
-                                  default_weight=default_weight)
+    return graph_floyd_warshall_numpy(
+        graph, weight_fn=weight_fn, default_weight=default_weight
+    )
 
 
 @functools.singledispatch
