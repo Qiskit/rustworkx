@@ -38,6 +38,8 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::stable_graph::EdgeReference;
+use petgraph::unionfind::UnionFind;
 use petgraph::visit::{
     Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighbors,
     IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
@@ -53,7 +55,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices};
+use crate::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -3069,6 +3071,116 @@ pub fn digraph_core_number(
     _core_number(py, &graph.graph)
 }
 
+/// Find the edges in the minimum spanning tree or forest of a graph
+/// using Kruskal's algorithm.
+///
+/// :param PyGraph graph: Undirected graph
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         minimum_spanning_edges(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         minimum_spanning_edges(graph, weight_fn: float)
+///
+///     to cast the edge object as a float as the weight.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :returns: The :math:`N - |c|` edges of the Minimum Spanning Tree (or Forest, if :math:`|c| > 1`)
+///     where :math:`N` is the number of nodes and :math:`|c|` is the number of connected components of the graph
+/// :rtype: WeightedEdgeList
+#[pyfunction(weight_fn = "None", default_weight = "1.0")]
+#[text_signature = "(graph, weight_fn=None, default_weight=1.0)"]
+pub fn minimum_spanning_edges(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<WeightedEdgeList> {
+    let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
+
+    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> =
+        Vec::with_capacity(graph.graph.edge_count());
+    for edge in graph.edge_references() {
+        let weight =
+            weight_callable(py, &weight_fn, &edge.weight(), default_weight)?;
+        if weight.is_nan() {
+            return Err(PyValueError::new_err("NaN found as an edge weight"));
+        }
+        edge_list.push((weight, edge));
+    }
+
+    edge_list.par_sort_unstable_by(|a, b| {
+        let weight_a = a.0;
+        let weight_b = b.0;
+        weight_a.partial_cmp(&weight_b).unwrap_or(Ordering::Less)
+    });
+
+    let mut answer: Vec<(usize, usize, PyObject)> = Vec::new();
+    for float_edge_pair in edge_list.iter() {
+        let edge = float_edge_pair.1;
+        let u = edge.source().index();
+        let v = edge.target().index();
+        if subgraphs.union(u, v) {
+            let w = edge.weight().clone_ref(py);
+            answer.push((u, v, w));
+        }
+    }
+
+    Ok(WeightedEdgeList { edges: answer })
+}
+
+/// Find the minimum spanning tree or forest of a graph
+/// using Kruskal's algorithm.
+///
+/// :param PyGraph graph: Undirected graph
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         minimum_spanning_tree(graph, weight_fn: float)
+///
+///     to cast the edge object as a float as the weight.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :returns: A Minimum Spanning Tree (or Forest, if the graph is not connected).
+///
+/// :rtype: PyGraph
+///
+/// .. note::
+///
+///     The new graph will keep the same node indexes, but edge indexes might differ.
+#[pyfunction(weight_fn = "None", default_weight = "1.0")]
+#[text_signature = "(graph, weight_fn=None, default_weight=1.0)"]
+pub fn minimum_spanning_tree(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<graph::PyGraph> {
+    let mut spanning_tree = (*graph).clone();
+    spanning_tree.graph.clear_edges();
+
+    for edge in minimum_spanning_edges(py, graph, weight_fn, default_weight)?
+        .edges
+        .iter()
+    {
+        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py))?;
+    }
+
+    Ok(spanning_tree)
+}
+
 /// Compute the complement of a graph.
 ///
 /// :param PyGraph graph: The graph to be used.
@@ -3224,6 +3336,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
+    m.add_wrapped(wrap_pyfunction!(minimum_spanning_edges))?;
+    m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree))?;
     m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
