@@ -55,7 +55,9 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices, PathLengthMapping, PathMapping, WeightedEdgeList};
+use crate::iterators::{
+    EdgeList, NodeIndices, PathLengthMapping, PathMapping, WeightedEdgeList,
+};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
