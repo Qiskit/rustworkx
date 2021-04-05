@@ -613,15 +613,9 @@ def networkx_converter(graph):
     :rtype: :class:`~retworkx.PyDiGraph` or :class:`~retworkx.PyGraph`
     """
     if graph.is_directed():
-        if graph.is_multigraph():
-            new_graph = PyDiGraph()
-        else:
-            new_graph = PyDiGraph(multigraph=False)
+        new_graph = PyDiGraph(multigraph=graph.is_multigraph())
     else:
-        if graph.is_multigraph():
-            new_graph = PyGraph()
-        else:
-            new_graph = PyGraph(multigraph=False)
+        new_graph = PyGraph(multigraph=graph.is_multigraph())
     nodes = list(graph.nodes)
     node_indices = dict(zip(nodes, new_graph.add_nodes_from(nodes)))
     new_graph.add_edges_from(
