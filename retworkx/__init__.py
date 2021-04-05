@@ -241,7 +241,7 @@ def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
 
 @floyd_warshall_numpy.register(PyDiGraph)
 def _digraph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    return digrap_floyd_warshall_numpy(
+    return digraph_floyd_warshall_numpy(
         graph, weight_fn=weight_fn, default_weight=default_weight
     )
 
