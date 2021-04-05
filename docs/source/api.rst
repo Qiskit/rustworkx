@@ -93,6 +93,8 @@ Specific Graph Type Methods
    retworkx.is_matching
    retworkx.is_maximal_matching
    retworkx.max_weight_matching
+   retworkx.minimum_spanning_edges
+   retworkx.minimum_spanning_tree
    retworkx.graph_transitivity
    retworkx.digraph_transitivity
    retworkx.graph_core_number
