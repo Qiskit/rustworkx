@@ -12,6 +12,8 @@
 
 use std::iter::Iterator;
 
+use hashbrown::HashSet;
+
 use pyo3::prelude::*;
 
 use petgraph::graph::NodeIndex;
@@ -22,8 +24,20 @@ type NT = f64;
 pub type Point = (NT, NT);
 type Graph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
+const LBOUND: NT = 1e-8;
+
+#[inline]
 fn l2norm(x: Point) -> NT {
     (x.0 * x.0 + x.1 * x.1).sqrt()
+}
+
+#[inline]
+fn max(x: NT, y: NT) -> NT {
+    if x > y {
+        x
+    } else {
+        y
+    }
 }
 
 pub trait Force {
@@ -40,7 +54,7 @@ pub trait Force {
 
         for y in ys {
             let d = (y.0 - x.0, y.1 - x.1);
-            let dnorm = l2norm(d);
+            let dnorm = max(l2norm(d), LBOUND);
             let f = self.eval(&d, dnorm);
 
             ftot.0 += f * d.0 / dnorm;
@@ -105,7 +119,7 @@ impl AdaptiveCoolingScheme {
         AdaptiveCoolingScheme {
             _step: step,
             _tau: 0.9,
-            _cost: f64::INFINITY,
+            _cost: std::f64::INFINITY,
             _progress: 0,
         }
     }
@@ -155,6 +169,7 @@ impl CoolingScheme for LinearCoolingScheme {
 pub fn evolve<Ty, Fa, Fr, C>(
     graph: &Graph<Ty>,
     mut pos: Vec<Point>,
+    fixed: HashSet<usize>,
     f_a: Fa,
     f_r: Fr,
     mut cs: C,
@@ -167,15 +182,17 @@ where
     Fr: Force,
     C: CoolingScheme,
 {
-    let nnodes = graph.node_count();
-
-    let mut step = cs.update_step(f64::INFINITY);
+    let mut step = cs.update_step(std::f64::INFINITY);
 
     for _ in 0..niter {
         let mut energy = 0.0;
         let mut converged = true;
 
-        for v in 0..nnodes {
+        for v in graph.node_indices() {
+            let v = v.index();
+            if fixed.contains(&v) {
+                continue;
+            }
             // attractive forces
             let ys = graph
                 .neighbors_undirected(NodeIndex::new(v))
@@ -183,15 +200,18 @@ where
             let fa = f_a.total(&pos[v], ys);
 
             // repulsive forces
-            let ys = (0..nnodes).filter(|&n| n != v).map(|n| &pos[n]);
+            let ys = graph
+                .node_indices()
+                .filter(|&n| n.index() != v)
+                .map(|n| &pos[n.index()]);
             let fr = f_r.total(&pos[v], ys);
 
             // update current position
             let f = (fa.0 + fr.0, fa.1 + fr.1);
-            let fsq = f.0 * f.0 + f.1 * f.1;
-            energy += fsq;
+            let f2 = f.0 * f.0 + f.1 * f.1;
+            energy += f2;
 
-            let fnorm = fsq.sqrt();
+            let fnorm = max(f2.sqrt(), LBOUND);
             let dx = step * f.0 / fnorm;
             let dy = step * f.1 / fnorm;
             pos[v].0 += dx;

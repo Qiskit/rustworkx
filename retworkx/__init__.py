@@ -593,3 +593,57 @@ def _digraph_core_number(graph):
 @core_number.register(PyGraph)
 def _graph_core_number(graph):
     return graph_core_number(graph)
+
+
+@functools.singledispatch
+def spring_layout(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
+           niter=50, tol=1e-6, seed=None):
+    """
+    Position nodes using Fruchterman-Reingold force-directed algorithm.
+    
+    The algorithm simulates a force-directed representation of the network
+    treating edges as springs holding nodes close, while treating nodes
+    as repelling objects, sometimes called an anti-gravity force.
+    Simulation continues until the positions are close to an equilibrium.
+
+    :param graph: Graph to be used. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param dict (default=None) pos:
+        Initial node positions as a dictionary with node ids as keys and values
+        as a coordinate tuple. If None, then use random initial positions.
+    :param dict (default=None) fixed: Nodes to keep fixed at initial position.
+        Error raised if fixed specified and pos not.
+    :param float (default=None) k:
+        Optimal distance between nodes. If None the distance is set to
+        1/sqrt(n) where n is the number of nodes.  Increase this value
+        to move nodes farther apart.
+    :param int (default=2) p:
+        Repulsive force exponent.
+    :param bool (default=True) adaptive_cooling:
+        Use an adaptive cooling scheme. If set to False,
+        a linear cooling scheme is used.
+    :param int (default=50) niter:
+        Maximum number of iterations.
+    :param float (default = 1e-6) tol:
+        Threshold for relative error in node position changes.
+        The iteration stops if the error is below this threshold.
+    :param int seed: An optional seed to use for the random number generator
+
+    :returns: A dictionary of positions keyed by node id.
+    :rtype: dict
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@spring_layout.register(PyDiGraph)
+def _digraph_spring_layout(graph, pos=None, fixed=None, k=None, p=2,
+                    adaptive_cooling=True, niter=50, tol=1e-6, seed=None):
+    return digraph_spring_layout(graph, pos, fixed, k, p, adaptive_cooling,
+                          niter, tol, seed)
+
+
+@spring_layout.register(PyGraph)
+def _graph_spring_layout(graph, pos=None, fixed=None, k=None, p=2,
+                  adaptive_cooling=True, niter=50, tol=1e-6, seed=None):
+    return graph_spring_layout(graph, pos, fixed, k, p, adaptive_cooling,
+                        niter, tol, seed)

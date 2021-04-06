@@ -3070,6 +3070,74 @@ pub fn digraph_core_number(
     _core_number(py, &graph.graph)
 }
 
+fn _spring_layout<Ty>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    p: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    niter: Option<usize>,
+    tol: Option<f64>,
+    seed: Option<u64>,
+) -> PyResult<HashMap<usize, layout::Point>>
+where
+    Ty: EdgeType,
+{
+    if fixed.is_some() && pos.is_none() {
+        return Err(PyValueError::new_err("`fixed` specified but `pos` not."));
+    }
+
+    let pos = pos.unwrap_or_else(|| {
+        let mut rng: Pcg64 = match seed {
+            Some(seed) => Pcg64::seed_from_u64(seed),
+            None => Pcg64::from_entropy(),
+        };
+
+        let dist = Uniform::new(0.0, 1.0);
+
+        graph
+            .node_indices()
+            .map(|n| {
+                (n.index(), (dist.sample(&mut rng), dist.sample(&mut rng)))
+            })
+            .collect()
+    });
+
+    let mut vpos = vec![(0.0, 0.0); graph.node_bound()];
+    for (n, p) in pos.into_iter() {
+        vpos[n] = p;
+    }
+
+    let fixed = fixed.unwrap_or(HashSet::default());
+    let k = k.unwrap_or(1.0 / (graph.node_count() as f64).sqrt());
+    let f_a = layout::AttractiveForce::new(k);
+    let f_r = layout::RepulsiveForce::new(k, p.unwrap_or(2));
+
+    let niter = niter.unwrap_or(50);
+    let tol = tol.unwrap_or(1e-6);
+    let step = 0.1;
+
+    let pos = match adaptive_cooling {
+        Some(false) => {
+            let cs = layout::LinearCoolingScheme::new(step, niter);
+            layout::evolve(graph, vpos, fixed, f_a, f_r, cs, niter, tol)
+        }
+        _ => {
+            let cs = layout::AdaptiveCoolingScheme::new(step);
+            layout::evolve(graph, vpos, fixed, f_a, f_r, cs, niter, tol)
+        }
+    };
+
+    Ok(graph
+        .node_indices()
+        .map(|n| {
+            let n = n.index();
+            (n, pos[n])
+        })
+        .collect())
+}
+
 /// Position nodes using Fruchterman-Reingold force-directed algorithm.
 ///
 /// The algorithm simulates a force-directed representation of the network
@@ -3079,12 +3147,15 @@ pub fn digraph_core_number(
 //
 /// :param PyGraph graph: Graph to be used.
 /// :param dict (default=None) pos:
-///     Initial node positions.
+///     Initial node positions as a dictionary with node ids as keys and
+///     values as a coordinate tuple. If None, then use random initial positions.
+/// :param dict (default=None) fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and pos not.
 /// :param float (default=None) k:
 ///     Optimal distance between nodes. If None the distance is set to
 ///     1/sqrt(n) where n is the number of nodes.  Increase this value
 ///     to move nodes farther apart.
-/// :param int (default=1) p:
+/// :param int (default=2) p:
 ///     Repulsive force exponent.
 /// :param bool (default=True) adaptive_cooling:
 ///     Use an adaptive cooling scheme. If set to False,
@@ -3096,53 +3167,89 @@ pub fn digraph_core_number(
 ///     The iteration stops if the error is below this threshold.
 /// :param int seed: An optional seed to use for the random number generator
 ///
-/// :returns: A dictionary of positions keyed by node.
+/// :returns: A dictionary of positions keyed by node id.
 /// :rtype: dict
 #[pyfunction]
-#[text_signature = "(graph, pos=None, k=None, p=1, adaptive_cooling=True, niter=50, tol=1e-6, seed=None, /)"]
-pub fn layout(
+#[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True, niter=50, tol=1e-6, seed=None, /)"]
+pub fn graph_spring_layout(
     graph: &graph::PyGraph,
-    pos: Option<Vec<layout::Point>>,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
     k: Option<f64>,
     p: Option<i32>,
     adaptive_cooling: Option<bool>,
     niter: Option<usize>,
     tol: Option<f64>,
     seed: Option<u64>,
-) -> Vec<layout::Point> {
-    let nnodes = graph.node_count();
+) -> PyResult<HashMap<usize, layout::Point>> {
+    _spring_layout(
+        &graph.graph,
+        pos,
+        fixed,
+        k,
+        p,
+        adaptive_cooling,
+        niter,
+        tol,
+        seed,
+    )
+}
 
-    let pos = pos.unwrap_or_else(|| {
-        let mut rng: Pcg64 = match seed {
-            Some(seed) => Pcg64::seed_from_u64(seed),
-            None => Pcg64::from_entropy(),
-        };
-
-        let dist = Uniform::new(0.0, 1.0);
-
-        (0..nnodes)
-            .map(|_| (dist.sample(&mut rng), dist.sample(&mut rng)))
-            .collect()
-    });
-
-    let k = k.unwrap_or(1.0 / (nnodes as f64).sqrt());
-    let f_a = layout::AttractiveForce::new(k);
-    let f_r = layout::RepulsiveForce::new(k, p.unwrap_or(1));
-
-    let niter = niter.unwrap_or(50);
-    let tol = tol.unwrap_or(1e-6);
-    let step = 0.1;
-
-    match adaptive_cooling {
-        Some(false) => {
-            let cs = layout::LinearCoolingScheme::new(step, niter);
-            layout::evolve(&graph.graph, pos, f_a, f_r, cs, niter, tol)
-        }
-        _ => {
-            let cs = layout::AdaptiveCoolingScheme::new(step);
-            layout::evolve(&graph.graph, pos, f_a, f_r, cs, niter, tol)
-        }
-    }
+/// Position nodes using Fruchterman-Reingold force-directed algorithm.
+///
+/// The algorithm simulates a force-directed representation of the network
+/// treating edges as springs holding nodes close, while treating nodes
+/// as repelling objects, sometimes called an anti-gravity force.
+/// Simulation continues until the positions are close to an equilibrium.
+//
+/// :param PyDiGraph graph: Graph to be used.
+/// :param dict (default=None) pos:
+///     Initial node positions as a dictionary with node ids as keys and
+///     values as a coordinate tuple. If None, then use random initial positions.
+/// :param dict (default=None) fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and pos not.
+/// :param float (default=None) k:
+///     Optimal distance between nodes. If None the distance is set to
+///     1/sqrt(n) where n is the number of nodes.  Increase this value
+///     to move nodes farther apart.
+/// :param int (default=2) p:
+///     Repulsive force exponent.
+/// :param bool (default=True) adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to False,
+///     a linear cooling scheme is used.
+/// :param int (default=50) niter:
+///     Maximum number of iterations.
+/// :param float (default = 1e-6) tol:
+//      Threshold for relative error in node position changes.
+///     The iteration stops if the error is below this threshold.
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True, niter=50, tol=1e-6, seed=None, /)"]
+pub fn digraph_spring_layout(
+    graph: &digraph::PyDiGraph,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    p: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    niter: Option<usize>,
+    tol: Option<f64>,
+    seed: Option<u64>,
+) -> PyResult<HashMap<usize, layout::Point>> {
+    _spring_layout(
+        &graph.graph,
+        pos,
+        fixed,
+        k,
+        p,
+        adaptive_cooling,
+        niter,
+        tol,
+        seed,
+    )
 }
 
 // The provided node is invalid.
@@ -3220,7 +3327,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
-    m.add_wrapped(wrap_pyfunction!(layout))?;
+    m.add_wrapped(wrap_pyfunction!(graph_spring_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;

@@ -124,6 +124,7 @@ type functions in the algorithms API but can be run with a
    retworkx.is_isomorphic_node_match
    retworkx.transitivity
    retworkx.core_number
+   retworkx.spring_layout
 
 Exceptions
 ----------
