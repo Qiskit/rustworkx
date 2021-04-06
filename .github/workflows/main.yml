@@ -24,6 +24,8 @@ jobs:
         run: cargo build
       - name: Rust Format
         run: cargo fmt -- --check
+      - name: Clippy
+        run: cargo clippy -- -D warnings
       - name: Python Lint
         run: flake8 setup.py tests
   tests:

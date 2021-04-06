@@ -413,17 +413,16 @@ fn expand_blossom(
             .unwrap();
         let mut j = i as i128;
         let j_step: i128;
-        let endpoint_trick: usize;
-        if i & 1 != 0 {
+        let endpoint_trick: usize = if i & 1 != 0 {
             // Start index is odd; go forward and wrap
             j -= blossom_children[blossom].len() as i128;
             j_step = 1;
-            endpoint_trick = 0;
+            0
         } else {
             // start index is even; go backward
             j_step = -1;
-            endpoint_trick = 1;
-        }
+            1
+        };
         // Move along the blossom until we get to the base
         let mut p = label_ends[blossom].unwrap();
         while j != 0 {
@@ -610,17 +609,16 @@ fn augment_blossom(
         .unwrap();
     let mut j: i128 = i as i128;
     let j_step: i128;
-    let endpoint_trick: usize;
-    if i & 1 != 0 {
+    let endpoint_trick: usize = if i & 1 != 0 {
         // start index is odd; go forward and wrap.
         j -= blossom_children[blossom].len() as i128;
         j_step = 1;
-        endpoint_trick = 0;
+        0
     } else {
         // Start index is even; go backward.
         j_step = -1;
-        endpoint_trick = 1;
-    }
+        1
+    };
     // Move along the blossom until we get to the base.
     while j != 0 {
         // Step to the next sub-blossom and augment it recursively.
@@ -912,12 +910,11 @@ pub fn max_weight_matching(
     let endpoints: Vec<usize> = (0..2 * num_edges)
         .map(|endpoint| {
             let edge_tuple = edges[endpoint / 2];
-            let out_value: usize;
-            if endpoint % 2 == 0 {
-                out_value = edge_tuple.0;
+            let out_value: usize = if endpoint % 2 == 0 {
+                edge_tuple.0
             } else {
-                out_value = edge_tuple.1;
-            }
+                edge_tuple.1
+            };
             out_value
         })
         .collect();
@@ -1117,11 +1114,11 @@ pub fn max_weight_matching(
                                 &label_ends,
                                 &mate,
                             );
-                            if base.is_some() {
+                            match base {
                                 // Found a new blossom; add it to the blossom
                                 // bookkeeping and turn it into an S-blossom.
-                                add_blossom(
-                                    base.unwrap(),
+                                Some(base) => add_blossom(
+                                    base,
                                     k,
                                     &mut blossom_children,
                                     num_nodes,
@@ -1140,27 +1137,28 @@ pub fn max_weight_matching(
                                     &mut blossom_parents,
                                     &neighbor_endpoints,
                                     &mate,
-                                )?;
-                            } else {
+                                )?,
                                 // Found an augmenting path; augment the
                                 // matching and end this stage.
-                                augment_matching(
-                                    k,
-                                    num_nodes,
-                                    &edges,
-                                    &in_blossoms,
-                                    &labels,
-                                    &label_ends,
-                                    &blossom_parents,
-                                    &endpoints,
-                                    &mut blossom_children,
-                                    &mut blossom_endpoints,
-                                    &mut blossom_base,
-                                    &mut mate,
-                                );
-                                augmented = true;
-                                break;
-                            }
+                                None => {
+                                    augment_matching(
+                                        k,
+                                        num_nodes,
+                                        &edges,
+                                        &in_blossoms,
+                                        &labels,
+                                        &label_ends,
+                                        &blossom_parents,
+                                        &endpoints,
+                                        &mut blossom_children,
+                                        &mut blossom_endpoints,
+                                        &mut blossom_base,
+                                        &mut mate,
+                                    );
+                                    augmented = true;
+                                    break;
+                                }
+                            };
                         } else if labels[w] == Some(0) {
                             // w is inside a T-blossom, but w itself has not
                             // yet been reached from outside the blossom;
