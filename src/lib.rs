@@ -991,18 +991,17 @@ where
         + NodesRemoved,
     G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
 {
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    if graph.nodes_removed() {
+    let node_map: Option<HashMap<NodeIndex, usize>> = if graph.nodes_removed() {
         let mut node_hash_map: HashMap<NodeIndex, usize> =
             HashMap::with_capacity(graph.node_count());
         for (count, node) in graph.node_identifiers().enumerate() {
             let index = NodeIndex::new(graph.to_index(node));
             node_hash_map.insert(index, count);
         }
-        node_map = Some(node_hash_map);
+        Some(node_hash_map)
     } else {
-        node_map = None;
-    }
+        None
+    };
 
     graph.edge_references().map(move |edge| {
         let i: usize;
@@ -3217,22 +3216,21 @@ fn graph_complement(
         let old_neighbors: HashSet<NodeIndex> =
             graph.graph.neighbors(node_a).collect();
         for node_b in graph.graph.node_indices() {
-            if node_a != node_b && !old_neighbors.contains(&node_b) {
-                if !complement_graph.multigraph
+            if node_a != node_b
+                && !old_neighbors.contains(&node_b)
+                && (!complement_graph.multigraph
                     || !complement_graph
-                        .has_edge(node_a.index(), node_b.index())
-                {
-                    // avoid creating parallel edges in multigraph
-                    complement_graph.add_edge(
-                        node_a.index(),
-                        node_b.index(),
-                        py.None(),
-                    )?;
-                }
+                        .has_edge(node_a.index(), node_b.index()))
+            {
+                // avoid creating parallel edges in multigraph
+                complement_graph.add_edge(
+                    node_a.index(),
+                    node_b.index(),
+                    py.None(),
+                )?;
             }
         }
     }
-
     Ok(complement_graph)
 }
 
