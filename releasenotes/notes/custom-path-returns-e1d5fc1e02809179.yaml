@@ -3,7 +3,7 @@ features:
   - |
     Two new return types :class:`~retworkx.PathMapping` and
     :class:`~retworkx.PathLengthMapping`. These classes are returned from
-    functions that previously returened a dictionary of paths or a dictionary
+    functions that previously returned a dictionary of paths or a dictionary
     of path lengths. They both implement the Python mapping protocol and can
     be used inplace as a read-only dict.
 upgrade:
