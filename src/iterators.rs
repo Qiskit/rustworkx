@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::upper_case_acronyms)]
+
 use std::collections::hash_map::DefaultHasher;
 use std::convert::TryInto;
 use std::hash::Hasher;
