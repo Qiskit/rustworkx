@@ -208,6 +208,7 @@ fn recenter(pos: &mut Vec<Point>, center: Point) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn evolve<Ty, Fa, Fr, C>(
     graph: &Graph<Ty>,
     mut pos: Vec<Point>,

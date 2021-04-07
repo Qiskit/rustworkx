@@ -3264,6 +3264,7 @@ fn digraph_complement(
     Ok(complement_graph)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn _spring_layout<Ty>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     pos: Option<HashMap<usize, layout::Point>>,
@@ -3370,6 +3371,7 @@ where
 #[pyfunction]
 #[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
                      niter=50, tol=1e-6, scale=1, center=None, seed=None, /)"]
+#[allow(clippy::too_many_arguments)]
 pub fn graph_spring_layout(
     graph: &graph::PyGraph,
     pos: Option<HashMap<usize, layout::Point>>,
@@ -3436,6 +3438,7 @@ pub fn graph_spring_layout(
 #[pyfunction]
 #[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
                      niter=50, tol=1e-6, scale=1, center=None, seed=None, /)"]
+#[allow(clippy::too_many_arguments)]
 pub fn digraph_spring_layout(
     graph: &digraph::PyDiGraph,
     pos: Option<HashMap<usize, layout::Point>>,
