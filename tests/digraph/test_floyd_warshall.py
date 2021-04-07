@@ -189,5 +189,6 @@ class TestFloydWarshall(unittest.TestCase):
         self.assertEqual(dist[0, 3], 6)
         self.assertEqual(dist[0, 4], 8)
 
+
 class TestParallelFloydWarshall(TestFloydWarshall):
     parallel_threshold = 0
