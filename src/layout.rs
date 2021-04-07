@@ -173,11 +173,11 @@ fn rescale(pos: &mut Vec<Point>, scale: Nt, indices: Vec<usize>) {
         return;
     }
     // find mean in each dimension
-    let mut mu: Point = indices
-        .iter()
-        .map(|&n| pos[n])
-        .reduce(|[sumx, sumy], [px, py]| [sumx + px, sumy + py])
-        .unwrap();
+    let mut mu: Point = [0.0, 0.0];
+    for &n in &indices {
+        mu[0] += pos[n][0];
+        mu[1] += pos[n][1];
+    }
     mu[0] /= n as Nt;
     mu[1] /= n as Nt;
 
