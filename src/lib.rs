@@ -1019,11 +1019,12 @@ where
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
 /// or graphs with negative weights (where Dijkstra's algorithm fails).
 ///
-/// This function is multithreaded and will run
-/// launch a thread pool with threads equal to the number of CPUs by default.
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
 /// You can tune the number of threads with the ``RAYON_NUM_THREADS``
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
-/// limit the thread pool to 4 threads.
+/// limit the thread pool to 4 threads if parallelization was enabled.
 ///
 /// :param PyGraph graph: The graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
@@ -1038,6 +1039,9 @@ where
 ///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 ///
 ///     to cast the edge object as a float as the weight.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
@@ -1108,11 +1112,12 @@ fn graph_floyd_warshall_numpy(
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
 /// or graphs with negative weights (where Dijkstra's algorithm fails).
 ///
-/// This function is multithreaded and will run
-/// launch a thread pool with threads equal to the number of CPUs by default.
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
 /// You can tune the number of threads with the ``RAYON_NUM_THREADS``
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
-/// limit the thread pool to 4 threads.
+/// limit the thread pool to 4 threads if parallelization was enabled.
 ///
 /// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
@@ -1129,6 +1134,9 @@ fn graph_floyd_warshall_numpy(
 ///     to cast the edge object as a float as the weight.
 /// :param as_undirected: If set to true each directed edge will be treated as
 ///     bidirectional/undirected.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be

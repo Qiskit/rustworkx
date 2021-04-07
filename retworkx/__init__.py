@@ -214,11 +214,12 @@ def floyd_warshall_numpy(
     Floyd's algorithm is used for finding shortest paths in dense graphs
     or graphs with negative weights (where Dijkstra's algorithm fails).
 
-    This function is multithreaded and will run
-    launch a thread pool with threads equal to the number of CPUs by default.
+    This function is multithreaded and will launch a pool with threads equal
+    to the number of CPUs by default if the number of nodes in the graph is
+    above the value of ``parallel_threshold`` (it defaults to 300).
     You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
-    limit the thread pool to 4 threads.
+    limit the thread pool to 4 threads if parallelization was enabled.
 
     :param graph: The graph to run Floyd's algorithm on. Can
         either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
@@ -238,6 +239,9 @@ def floyd_warshall_numpy(
         for all edges.
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
+    :param int parallel_threshold: The number of nodes to execute
+        the algorithm in parallel at. It defaults to 300, but this can
+        be tuned
 
     :returns: A matrix of shortest path distances between nodes. If there is no
         path between two nodes then the corresponding matrix entry will be
