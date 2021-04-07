@@ -599,6 +599,7 @@ def _graph_core_number(graph):
     return graph_core_number(graph)
 
 
+@functools.singledispatch
 def complement(graph):
     """Compute the complement of a graph.
 
@@ -668,7 +669,7 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
     :returns: A dictionary of positions keyed by node id.
     :rtype: dict
     """
-        raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
 @spring_layout.register(PyDiGraph)
