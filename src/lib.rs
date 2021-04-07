@@ -3079,6 +3079,8 @@ fn _spring_layout<Ty>(
     adaptive_cooling: Option<bool>,
     niter: Option<usize>,
     tol: Option<f64>,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
     seed: Option<u64>,
 ) -> PyResult<HashMap<usize, layout::Point>>
 where
@@ -3088,28 +3090,22 @@ where
         return Err(PyValueError::new_err("`fixed` specified but `pos` not."));
     }
 
-    let pos = pos.unwrap_or_else(|| {
-        let mut rng: Pcg64 = match seed {
-            Some(seed) => Pcg64::seed_from_u64(seed),
-            None => Pcg64::from_entropy(),
-        };
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
 
-        let dist = Uniform::new(0.0, 1.0);
+    let dist = Uniform::new(0.0, 1.0);
 
-        graph
-            .node_indices()
-            .map(|n| {
-                (n.index(), (dist.sample(&mut rng), dist.sample(&mut rng)))
-            })
-            .collect()
-    });
-
-    let mut vpos = vec![(0.0, 0.0); graph.node_bound()];
+    let pos = pos.unwrap_or_default();
+    let mut vpos: Vec<layout::Point> = (0..graph.node_bound())
+        .map(|_| [dist.sample(&mut rng), dist.sample(&mut rng)])
+        .collect();
     for (n, p) in pos.into_iter() {
         vpos[n] = p;
     }
 
-    let fixed = fixed.unwrap_or(HashSet::default());
+    let fixed = fixed.unwrap_or_default();
     let k = k.unwrap_or(1.0 / (graph.node_count() as f64).sqrt());
     let f_a = layout::AttractiveForce::new(k);
     let f_r = layout::RepulsiveForce::new(k, p.unwrap_or(2));
@@ -3121,11 +3117,15 @@ where
     let pos = match adaptive_cooling {
         Some(false) => {
             let cs = layout::LinearCoolingScheme::new(step, niter);
-            layout::evolve(graph, vpos, fixed, f_a, f_r, cs, niter, tol)
+            layout::evolve(
+                graph, vpos, fixed, f_a, f_r, cs, niter, tol, scale, center,
+            )
         }
         _ => {
             let cs = layout::AdaptiveCoolingScheme::new(step);
-            layout::evolve(graph, vpos, fixed, f_a, f_r, cs, niter, tol)
+            layout::evolve(
+                graph, vpos, fixed, f_a, f_r, cs, niter, tol, scale, center,
+            )
         }
     };
 
@@ -3148,8 +3148,8 @@ where
 /// :param PyGraph graph: Graph to be used.
 /// :param dict (default=None) pos:
 ///     Initial node positions as a dictionary with node ids as keys and
-///     values as a coordinate tuple. If None, then use random initial positions.
-/// :param dict (default=None) fixed: Nodes to keep fixed at initial position.
+///     values as a coordinate list. If None, then use random initial positions.
+/// :param set (default=None) fixed: Nodes to keep fixed at initial position.
 ///     Error raised if fixed specified and pos not.
 /// :param float (default=None) k:
 ///     Optimal distance between nodes. If None the distance is set to
@@ -3165,12 +3165,17 @@ where
 /// :param float (default = 1e-6) tol:
 //      Threshold for relative error in node position changes.
 ///     The iteration stops if the error is below this threshold.
+/// :param float or None (default=1) scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is None, no rescaling is performed.
+/// :param list center (default=None) – Coordinate pair around which to center
+///     the layout. Not used unless fixed is None.
 /// :param int seed: An optional seed to use for the random number generator
 ///
 /// :returns: A dictionary of positions keyed by node id.
 /// :rtype: dict
 #[pyfunction]
-#[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True, niter=50, tol=1e-6, seed=None, /)"]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
+                     niter=50, tol=1e-6, scale=1, center=None, seed=None, /)"]
 pub fn graph_spring_layout(
     graph: &graph::PyGraph,
     pos: Option<HashMap<usize, layout::Point>>,
@@ -3180,6 +3185,8 @@ pub fn graph_spring_layout(
     adaptive_cooling: Option<bool>,
     niter: Option<usize>,
     tol: Option<f64>,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
     seed: Option<u64>,
 ) -> PyResult<HashMap<usize, layout::Point>> {
     _spring_layout(
@@ -3191,6 +3198,8 @@ pub fn graph_spring_layout(
         adaptive_cooling,
         niter,
         tol,
+        scale,
+        center,
         seed,
     )
 }
@@ -3205,8 +3214,8 @@ pub fn graph_spring_layout(
 /// :param PyDiGraph graph: Graph to be used.
 /// :param dict (default=None) pos:
 ///     Initial node positions as a dictionary with node ids as keys and
-///     values as a coordinate tuple. If None, then use random initial positions.
-/// :param dict (default=None) fixed: Nodes to keep fixed at initial position.
+///     values as a coordinate list. If None, then use random initial positions.
+/// :param set (default=None) fixed: Nodes to keep fixed at initial position.
 ///     Error raised if fixed specified and pos not.
 /// :param float (default=None) k:
 ///     Optimal distance between nodes. If None the distance is set to
@@ -3222,12 +3231,17 @@ pub fn graph_spring_layout(
 /// :param float (default = 1e-6) tol:
 //      Threshold for relative error in node position changes.
 ///     The iteration stops if the error is below this threshold.
+/// :param float or None (default=1) scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is None, no rescaling is performed.
+/// :param list center (default=None) – Coordinate pair around which to center
+///     the layout. Not used unless fixed is None.
 /// :param int seed: An optional seed to use for the random number generator
 ///
 /// :returns: A dictionary of positions keyed by node id.
 /// :rtype: dict
 #[pyfunction]
-#[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True, niter=50, tol=1e-6, seed=None, /)"]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
+                     niter=50, tol=1e-6, scale=1, center=None, seed=None, /)"]
 pub fn digraph_spring_layout(
     graph: &digraph::PyDiGraph,
     pos: Option<HashMap<usize, layout::Point>>,
@@ -3237,6 +3251,8 @@ pub fn digraph_spring_layout(
     adaptive_cooling: Option<bool>,
     niter: Option<usize>,
     tol: Option<f64>,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
     seed: Option<u64>,
 ) -> PyResult<HashMap<usize, layout::Point>> {
     _spring_layout(
@@ -3248,6 +3264,8 @@ pub fn digraph_spring_layout(
         adaptive_cooling,
         niter,
         tol,
+        scale,
+        center,
         seed,
     )
 }

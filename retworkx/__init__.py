@@ -596,11 +596,12 @@ def _graph_core_number(graph):
 
 
 @functools.singledispatch
-def spring_layout(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
-           niter=50, tol=1e-6, seed=None):
+def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
+                  adaptive_cooling=True, niter=50, tol=1e-6,
+                  scale=1, center=None, seed=None):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
-    
+
     The algorithm simulates a force-directed representation of the network
     treating edges as springs holding nodes close, while treating nodes
     as repelling objects, sometimes called an anti-gravity force.
@@ -610,8 +611,8 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=Tru
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
     :param dict (default=None) pos:
         Initial node positions as a dictionary with node ids as keys and values
-        as a coordinate tuple. If None, then use random initial positions.
-    :param dict (default=None) fixed: Nodes to keep fixed at initial position.
+        as a coordinate list. If None, then use random initial positions.
+    :param set (default=None) fixed: Nodes to keep fixed at initial position.
         Error raised if fixed specified and pos not.
     :param float (default=None) k:
         Optimal distance between nodes. If None the distance is set to
@@ -627,6 +628,11 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=Tru
     :param float (default = 1e-6) tol:
         Threshold for relative error in node position changes.
         The iteration stops if the error is below this threshold.
+    :param float or None (default=1) scale: Scale factor for positions.
+        Not used unless fixed is None. If scale is None, no rescaling is
+        performed.
+    :param list center (default=None) – Coordinate pair around which to center
+        the layout. Not used unless fixed is None.
     :param int seed: An optional seed to use for the random number generator
 
     :returns: A dictionary of positions keyed by node id.
@@ -637,13 +643,15 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=Tru
 
 @spring_layout.register(PyDiGraph)
 def _digraph_spring_layout(graph, pos=None, fixed=None, k=None, p=2,
-                    adaptive_cooling=True, niter=50, tol=1e-6, seed=None):
+                           adaptive_cooling=True, niter=50, tol=1e-6,
+                           scale=1, center=None, seed=None):
     return digraph_spring_layout(graph, pos, fixed, k, p, adaptive_cooling,
-                          niter, tol, seed)
+                                 niter, tol, scale, center, seed)
 
 
 @spring_layout.register(PyGraph)
 def _graph_spring_layout(graph, pos=None, fixed=None, k=None, p=2,
-                  adaptive_cooling=True, niter=50, tol=1e-6, seed=None):
+                         adaptive_cooling=True, niter=50, tol=1e-6,
+                         scale=1, center=None, seed=None):
     return graph_spring_layout(graph, pos, fixed, k, p, adaptive_cooling,
-                        niter, tol, seed)
+                               niter, tol, scale, center, seed)
