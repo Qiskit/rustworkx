@@ -101,6 +101,8 @@ Specific Graph Type Methods
    retworkx.digraph_core_number
    retworkx.graph_complement
    retworkx.digraph_complement
+   retworkx.graph_random_layout
+   retworkx.digraph_random_layout
 
 .. _universal-functions:
 
@@ -129,6 +131,7 @@ type functions in the algorithms API but can be run with a
    retworkx.is_isomorphic_node_match
    retworkx.transitivity
    retworkx.core_number
+   retworkx.random_layout
 
 Exceptions
 ----------
