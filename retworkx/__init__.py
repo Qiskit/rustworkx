@@ -206,7 +206,9 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 
 @functools.singledispatch
-def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300,
+):
     """Find all-pairs shortest path lengths using Floyd's algorithm
 
     Floyd's algorithm is used for finding shortest paths in dense graphs
@@ -246,16 +248,26 @@ def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
 
 
 @floyd_warshall_numpy.register(PyDiGraph)
-def _digraph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def _digraph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
     return digraph_floyd_warshall_numpy(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 
 @floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def _graph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
     return graph_floyd_warshall_numpy(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 
