@@ -166,9 +166,12 @@ impl CoolingScheme for LinearCoolingScheme {
     }
 }
 
+// Rescale so that pos in [-scale, scale].
 fn rescale(pos: &mut Vec<Point>, scale: Nt, indices: Vec<usize>) {
     let n = indices.len();
-
+    if n == 0 {
+        return;
+    }
     // find mean in each dimension
     let mut mu: Point = indices
         .iter()

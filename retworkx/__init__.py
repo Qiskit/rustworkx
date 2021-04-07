@@ -631,12 +631,13 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
     :param float or None (default=1) scale: Scale factor for positions.
         Not used unless fixed is None. If scale is None, no rescaling is
         performed.
-    :param list center (default=None) – Coordinate pair around which to center
+    :param list (default=None) center: Coordinate pair around which to center
         the layout. Not used unless fixed is None.
     :param int seed: An optional seed to use for the random number generator
 
     :returns: A dictionary of positions keyed by node id.
     :rtype: dict
+        raise TypeError("Invalid Input Type %s for graph" % type(graph))
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
