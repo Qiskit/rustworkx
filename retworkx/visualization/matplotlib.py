@@ -59,45 +59,128 @@ import retworkx
 
 
 __all__ = [
-    "draw",
-    "draw_retworkx",
-    "draw_retworkx_nodes",
-    "draw_retworkx_edges",
-    "draw_retworkx_labels",
-    "draw_retworkx_edge_labels",
+    "mpl_draw",
 ]
 
 
-def draw(graph, pos=None, ax=None, **kwds):
-    """Draw a graph with Matplotlib.
+def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=True, **kwds):
+    r"""Draw a graph with Matplotlib.
 
-    Draw the graph as a simple representation with no node
-    labels or edge labels and using the full Matplotlib figure area
-    and no axis labels by default.  See draw_retworkx() for more
-    full-featured drawing that allows title, axis labels etc.
+    .. note
 
-    Parameters
-    ----------
-    graph: A retworkx graph
+        Matplotlib is an optional dependency and will not be installed with
+        retworkx by default. If you intend to use this function make sure that
+        you install matplotlib with either ``pip install matplotlib`` or
+        ``pip install 'retworkx[mpl]'``
 
-    pos : dictionary, optional
-        A dictionary with nodes as keys and positions as values.
-        If not specified a spring layout positioning will be computed.
-        See :py:mod:`retworkx.drawing.layout` for functions that
-        compute node positions.
+    :param graph: A retworkx graph, either a :class:`~retworkx.PyGraph` or a
+        :class:`~retworkx.PyDiGraph`.
+    :param dict pos: An optional dictionary (or
+        a :class:`~retworkx.Pos2DMapping` object) with nodes as keys and
+        positions as values. If not specified a spring layout positioning will
+        be computed. See `layout_functions` for functions that compute
+        node positions.
+    :param matplotlib.Axes ax: An optional Matplotlib Axes object to draw the
+        graph in.
+    :param bool arrows: For :class:`~retworkx.PyDiGraph` objects if ``True``
+        draw arrowheads. (defaults to ``True``) Note, that the Arrows will
+        be the same color as edges.
+    :param str arrowstyle: An optional string for directed graphs to choose
+        the style of the arrowsheads. See
+        :class:`matplotlib.patches.ArrowStyle` for more options. By default the
+        value is set to ``'-\|>'``.
+    :param int arrow_size: For directed graphs, choose the size of the arrow
+        head's length and width. See
+        :class:`matplotlib.patches.FancyArrowPatch` attribute and constructor
+        kwarg ``mutation_scale`` for more info. Defaults to 10.
+    :param bool with_labels: Set to ``True`` to draw labels on the nodes.
+        Defaults to ``True``.
+    :param list node_list: An optional list of node indices in the graph to
+        draw. If not specified all nodes will be drawn.
+    :param list edge_list: An option list of edges in the graph to draw. If not
+        specified all edges will be drawn
+    :param int|list node_size: Optional size of nodes. If an array is
+        specified it must be the same length as node_list. Defaults to 300
+    :param node_color: Optional node color. Can be a single color or
+        a sequence of colors with the same length as node_list. Color can be
+        string or rgb (or rgba) tuple of floats from 0-1. If numeric values
+        are specified they will be mapped to colors using the ``cmap`` and
+        ``vmin``,``vmax`` parameters. See :func:`matplotlib.scatter` for more
+        details. Defaults to ``'#1f78b4'``)
+    :param str node_shape: The optional shape node. The specification is the
+        same as the :func:`matplotlib.pyplot.scatter` function's ``marker``
+        kwarg, valid options are one of
+        ``['s', 'o', '^', '>', 'v', '<', 'd', 'p', 'h', '8']``. Defaults to
+        ``'o'``
+    :param float alpha: Optional value for node and edge transparency
+    :param matplotlib.colors.Colormap cmap: An optional Matplotlib colormap
+        object for mapping intensities of nodes
+    :param float vmin: Optional minimum value for node colormap scaling
+    :param float vmax: Optional minimum value for node colormap scaling
+    :param float|sequence linewidths: An optional line width for symbol
+        borders. If a sequence is specified it must be the same length as
+        node_list. Defaults to 1.0
+    :param float|sequence width: An optional width to use for edges. Can
+        either be a float or sequence  of floats. If a sequence is specified
+        it must be the same length as node_list. Defaults to 1.0
+    :param str|sequence edge_color: color or array of colors (default='k')
+        Edge color. Can be a single color or a sequence of colors with the same
+        length as edge_list. Color can be string or rgb (or rgba) tuple of
+        floats from 0-1. If numeric values are specified they will be
+        mapped to colors using the ``edge_cmap`` and ``edge_vmin``,
+        ``edge_vmax`` parameters.
+    :param matplotlib.colors.Colormap edge_cmap: An optional Matplotlib
+        colormap for mapping intensities of edges.
+    :param float edge_vmin: Optional minimum value for edge colormap scaling
+    :param float edge_vmax: Optional maximum value for node colormap scaling
+    :param str style: An optional string to specify the edge line style.
+        For example, ``'-'``, ``'--'``, ``'-.'``, ``':'`` or words like
+        ``'solid'`` or ``'dashed'``. See the
+        :class:`matplotlib.patches.FancyArrowPatch` attribute and kwarg
+        ``linestyle`` for more details. Defaults to ``'solid'``.
+    :param func labels: An optional callback function that will be passed a
+        node payload and return a string label for the node. For example::
 
-    ax : Matplotlib Axes object, optional
-        Draw the graph in specified Matplotlib axes.
+            labels=str
 
-    kwds : optional keywords
-        See retworkx.draw_retworkx() for a description of optional keywords.
+        could be used to just return a string cast of the node's data payload.
+        Or something like::
 
-    With pyplot use::
+            labels=lambda node: node['label']
+
+        could be used if the node payloads are dictionaries.
+    :param int font_size: An optional fontsize to use for text labels, By
+        default a value of 12 is used for nodes and 10 for edges.
+    :param str font_color: An optional font color for strings. By default
+        ``'k'`` (ie black) is set.
+    :param str font_weight: An optional string used to specify the font weight.
+        By default a value of ``'normal'`` is used.
+    :param str font_family: An optional font family to use for strings. By
+        default ``'sans-serif'`` is used.
+    :param str label: An optional string label to use for the graph legend.
+    :param str connectionstyle: An optional value used to create a curved arc
+        of rounding radius rad. For example,
+        ``connectionstyle='arc3,rad=0.2'``. See
+        :class:`matplotlib.patches.ConnectionStyle` and
+        :class:`matplotlib.patches.FancyArrowPatch` for more info. By default
+        this is set to ``"arc3"``.
+
+    :returns: A matplotlib figure for the visualization if not running with an
+        interactive backend (like in jupyter) or if ``ax`` is not set.
+    :rtype: matplotlib.figure.Figure
+
+    For Example:
+
+    .. jupyter-execute::
 
         import matplotlib.pyplot as plt
-        G = retworkx.directed_random_gnp_graph()
-        retworkx.draw(G)  # retworkx draw()
-        plt.draw()  # pyplot draw()
+
+        import retworkx
+        from retworkx.visualization import mpl_draw
+
+        G = retworkx.generators.directed_path_graph(25)
+        mpl_draw(G)
+        plt.draw()
     """
     try:
         import matplotlib.pyplot as plt
@@ -116,13 +199,12 @@ def draw(graph, pos=None, ax=None, **kwds):
         else:
             ax = cf.gca()
 
-    if "with_labels" not in kwds:
-        kwds["with_labels"] = "labels" in kwds
-
-    draw_retworkx(graph, pos=pos, ax=ax, **kwds)
+    draw_retworkx(graph, pos=pos, ax=ax, arrows=arrows,
+                  with_labels=with_labels, **kwds)
     ax.set_axis_off()
     plt.draw_if_interactive()
-    return cf
+    if not plt.isinteractive() and ax is not None:
+        return cf
 
 
 def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
@@ -143,102 +225,6 @@ def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
         See :mod:`retworkx.drawing.layout` for functions that
         compute node positions.
 
-    arrows : bool (default=True)
-        For directed graphs, if True draw arrowheads.
-        Note: Arrows will be the same color as edges.
-
-    arrowstyle : str (default='-\|>')
-        For directed graphs, choose the style of the arrowsheads.
-        See `matplotlib.patches.ArrowStyle` for more options.
-
-    arrowsize : int (default=10)
-        For directed graphs, choose the size of the arrow head's length and
-        width. See `matplotlib.patches.FancyArrowPatch` for attribute
-        `mutation_scale` for more info.
-
-    with_labels :  bool (default=True)
-        Set to True to draw labels on the nodes.
-
-    ax : Matplotlib Axes object, optional
-        Draw the graph in the specified Matplotlib axes.
-
-    nodelist : list (default=graph.node_indexes())
-        Draw only specified nodes
-
-    edgelist : list (default=list(graph.edge_list()))
-        Draw only specified edges
-
-    node_size : scalar or array (default=300)
-        Size of nodes.  If an array is specified it must be the
-        same length as nodelist.
-
-    node_color : color or array of colors (default='#1f78b4')
-        Node color. Can be a single color or a sequence of colors with the same
-        length as nodelist. Color can be string or rgb (or rgba) tuple of
-        floats from 0-1. If numeric values are specified they will be
-        mapped to colors using the cmap and vmin,vmax parameters. See
-        matplotlib.scatter for more details.
-
-    node_shape :  string (default='o')
-        The shape of the node.  Specification is as matplotlib.scatter
-        marker, one of 'so^>v<dph8'.
-
-    alpha : float or None (default=None)
-        The node and edge transparency
-
-    cmap : Matplotlib colormap, optional
-        Colormap for mapping intensities of nodes
-
-    vmin,vmax : float, optional
-        Minimum and maximum for node colormap scaling
-
-    linewidths : scalar or sequence (default=1.0)
-        Line width of symbol border
-
-    width : float or array of floats (default=1.0)
-        Line width of edges
-
-    edge_color : color or array of colors (default='k')
-        Edge color. Can be a single color or a sequence of colors with the same
-        length as edgelist. Color can be string or rgb (or rgba) tuple of
-        floats from 0-1. If numeric values are specified they will be
-        mapped to colors using the edge_cmap and edge_vmin,edge_vmax
-        parameters.
-
-    edge_cmap : Matplotlib colormap, optional
-        Colormap for mapping intensities of edges
-
-    edge_vmin,edge_vmax : floats, optional
-        Minimum and maximum for edge colormap scaling
-
-    style : string (default=solid line)
-        Edge line style e.g.: '-', '--', '-.', ':'
-        or words like 'solid' or 'dashed'.
-        (See `matplotlib.patches.FancyArrowPatch`: `linestyle`)
-
-    labels : dictionary (default=None)
-        Node labels in a dictionary of text labels keyed by node
-
-    font_size : int (default=12 for nodes, 10 for edges)
-        Font size for text labels
-
-    font_color : string (default='k' black)
-        Font color string
-
-    font_weight : string (default='normal')
-        Font weight
-
-    font_family : string (default='sans-serif')
-        Font family
-
-    label : string, optional
-        Label for graph legend
-
-    kwds : optional keywords
-        See :func:`retworkx.visualization.draw_retworkx_nodes()`,
-        :func:`retworkx.visualization.draw_retworkx_edges()`, and
-        :func:`retworkx.visualization.draw_retworkx_labels()` for a
-        description of optional keywords.
 
     Notes
     -----
@@ -254,7 +240,7 @@ def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
                           "matplotlib with:\n'pip install matplotlib'") from e
 
     valid_node_kwds = (
-        "nodelist",
+        "node_list",
         "node_size",
         "node_color",
         "node_shape",
@@ -269,20 +255,20 @@ def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
     )
 
     valid_edge_kwds = (
-        "edgelist",
+        "edge_list",
         "width",
         "edge_color",
         "style",
         "alpha",
         "arrowstyle",
-        "arrowsize",
+        "arrow_size",
         "edge_cmap",
         "edge_vmin",
         "edge_vmax",
         "ax",
         "label",
         "node_size",
-        "nodelist",
+        "node_list",
         "node_shape",
         "connectionstyle",
         "min_source_margin",
@@ -308,6 +294,10 @@ def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
         invalid_args = ", ".join([k for k in kwds if k not in valid_kwds])
         raise ValueError(f"Received invalid argument(s): {invalid_args}")
 
+    label_fn = kwds.pop('labels', None)
+    if label_fn:
+        kwds['labels'] = {x: label_fn(graph[x]) for x in graph.node_indexes}
+
     node_kwds = {k: v for k, v in kwds.items() if k in valid_node_kwds}
     edge_kwds = {k: v for k, v in kwds.items() if k in valid_edge_kwds}
     label_kwds = {k: v for k, v in kwds.items() if k in valid_label_kwds}
@@ -326,7 +316,7 @@ def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
 def draw_retworkx_nodes(
     graph,
     pos,
-    nodelist=None,
+    node_list=None,
     node_size=300,
     node_color="#1f78b4",
     node_shape="o",
@@ -352,15 +342,15 @@ def draw_retworkx_nodes(
     :param Axes ax: An optional Matplotlib Axes object, if specified it will
         draw the graph in the specified Matplotlib axes.
 
-    :param list nodelist: If specified only draw the specified node indices.
+    :param list node_list: If specified only draw the specified node indices.
         If not specified all nodes in the graph will be drawn.
 
     :param float|array node_size: Size of nodes. If an array it must be the
-        same length as nodelist. Defaults to 300
+        same length as node_list. Defaults to 300
 
     node_color : color or array of colors (default='#1f78b4')
         Node color. Can be a single color or a sequence of colors with the same
-        length as nodelist. Color can be string or rgb (or rgba) tuple of
+        length as node_list. Color can be string or rgb (or rgba) tuple of
         floats from 0-1. If numeric values are specified they will be
         mapped to colors using the cmap and vmin,vmax parameters. See
         matplotlib.scatter for more details.
@@ -408,20 +398,21 @@ def draw_retworkx_nodes(
     if ax is None:
         ax = plt.gca()
 
-    if nodelist is None:
-        nodelist = graph.node_indexes()
+    if node_list is None:
+        node_list = graph.node_indexes()
 
-    # empty nodelist, no drawing
-    if len(nodelist) == 0:
+    # empty node_list, no drawing
+    if len(node_list) == 0:
         return mpl.collections.PathCollection(None)
 
     try:
-        xy = np.asarray([pos[v] for v in nodelist])
+        xy = np.asarray([pos[v] for v in node_list])
     except KeyError as e:
         raise IndexError(f"Node {e} has no position.") from e
 
     if isinstance(alpha, Iterable):
-        node_color = apply_alpha(node_color, alpha, nodelist, cmap, vmin, vmax)
+        node_color = apply_alpha(node_color, alpha, node_list, cmap, vmin,
+                                 vmax)
         alpha = None
 
     node_collection = ax.scatter(
@@ -454,13 +445,13 @@ def draw_retworkx_nodes(
 def draw_retworkx_edges(
     graph,
     pos,
-    edgelist=None,
+    edge_list=None,
     width=1.0,
     edge_color="k",
     style="solid",
     alpha=None,
     arrowstyle=None,
-    arrowsize=10,
+    arrow_size=10,
     edge_cmap=None,
     edge_vmin=None,
     edge_vmax=None,
@@ -468,7 +459,7 @@ def draw_retworkx_edges(
     arrows=True,
     label=None,
     node_size=300,
-    nodelist=None,
+    node_list=None,
     node_shape="o",
     connectionstyle="arc3",
     min_source_margin=0,
@@ -486,7 +477,7 @@ def draw_retworkx_edges(
         A dictionary with nodes as keys and positions as values.
         Positions should be sequences of length 2.
 
-    edgelist : collection of edge tuples (default=graph.edge_list())
+    edge_list : collection of edge tuples (default=graph.edge_list())
         Draw only specified edges
 
     width : float or array of floats (default=1.0)
@@ -494,7 +485,7 @@ def draw_retworkx_edges(
 
     edge_color : color or array of colors (default='k')
         Edge color. Can be a single color or a sequence of colors with the same
-        length as edgelist. Color can be string or rgb (or rgba) tuple of
+        length as edge_list. Color can be string or rgb (or rgba) tuple of
         floats from 0-1. If numeric values are specified they will be
         mapped to colors using the edge_cmap and edge_vmin,edge_vmax
         parameters.
@@ -528,22 +519,16 @@ def draw_retworkx_edges(
 
         See `matplotlib.patches.ArrowStyle` for more options.
 
-    arrowsize : int (default=10)
+    arrow_size : int (default=10)
         For directed graphs, choose the size of the arrow head's length and
         width. See `matplotlib.patches.FancyArrowPatch` for attribute
-        `mutation_scale` for more info.
-
-    connectionstyle : string (default="arc3")
-        Pass the connectionstyle parameter to create curved arc of rounding
-        radius rad. For example, connectionstyle='arc3,rad=0.2'.
-        See `matplotlib.patches.ConnectionStyle` and
-        `matplotlib.patches.FancyArrowPatch` for more info.
+        ``mutation_scale`` for more info.
 
     node_size : scalar or array (default=300)
         Size of nodes. Though the nodes are not drawn with this function, the
         node size is used in determining edge positioning.
 
-    nodelist : list, optional (default=graph.node_indexes())
+    node_list : list, optional (default=graph.node_indexes())
        This provides the node order for the `node_size` array (if it is an
        array).
 
@@ -595,21 +580,21 @@ def draw_retworkx_edges(
     if ax is None:
         ax = plt.gca()
 
-    if edgelist is None:
-        edgelist = graph.edge_list()
+    if edge_list is None:
+        edge_list = graph.edge_list()
 
-    if len(edgelist) == 0:  # no edges!
+    if len(edge_list) == 0:  # no edges!
         return []
 
-    if nodelist is None:
-        nodelist = list(graph.node_indexes())
+    if node_list is None:
+        node_list = list(graph.node_indexes())
 
     # FancyArrowPatch handles color=None different from LineCollection
     if edge_color is None:
         edge_color = "k"
 
     # set edge positions
-    edge_pos = np.asarray([(pos[e[0]], pos[e[1]]) for e in edgelist])
+    edge_pos = np.asarray([(pos[e[0]], pos[e[1]]) for e in edge_list])
 
     # Check if edge_color is an array of floats and map to edge_cmap.
     # This is the only case handled differently from matplotlib
@@ -639,7 +624,7 @@ def draw_retworkx_edges(
 
     # Draw arrows with `matplotlib.patches.FancyarrowPatch`
     arrow_collection = []
-    mutation_scale = arrowsize  # scale factor of arrow head
+    mutation_scale = arrow_size  # scale factor of arrow head
 
     # compute view
     miretworkx = np.amin(np.ravel(edge_pos[:, :, 0]))
@@ -649,7 +634,7 @@ def draw_retworkx_edges(
     w = maxx - miretworkx
     h = maxy - miny
 
-    base_connection_style = mpl.patches.ConnectionStyle(connectionstyle)
+    base_connectionstyle = mpl.patches.ConnectionStyle(connectionstyle)
 
     # Fallback for self-loop scale. Left outside of _connectionstyle so it is
     # only computed once
@@ -685,7 +670,7 @@ def draw_retworkx_edges(
                                 [1, 4, 4, 4, 4, 4, 4])
         # if not, fall back to the user specified behavior
         else:
-            ret = base_connection_style(posA, posB, *args, **kwargs)
+            ret = base_connectionstyle(posA, posB, *args, **kwargs)
 
         return ret
 
@@ -697,9 +682,9 @@ def draw_retworkx_edges(
         shrink_source = 0  # space from source to tail
         shrink_target = 0  # space from  head to target
         if np.iterable(node_size):  # many node sizes
-            source, target = edgelist[i][:2]
-            source_node_size = node_size[nodelist.index(source)]
-            target_node_size = node_size[nodelist.index(target)]
+            source, target = edge_list[i][:2]
+            source_node_size = node_size[node_list.index(source)]
+            target_node_size = node_size[node_list.index(target)]
             shrink_source = to_marker_edge(source_node_size, node_shape)
             shrink_target = to_marker_edge(target_node_size, node_shape)
         else:
@@ -1032,7 +1017,7 @@ def apply_alpha(colors, alpha, elem_list, cmap=None, vmin=None, vmax=None):
 
     colors : color string or array of floats (default='r')
         Color of element. Can be a single color format string,
-        or a sequence of colors with the same length as nodelist.
+        or a sequence of colors with the same length as node_list.
         If numeric values are specified they will be mapped to
         colors using the cmap and vmin,vmax parameters.  See
         matplotlib.scatter for more details.
