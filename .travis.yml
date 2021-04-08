@@ -30,6 +30,9 @@ jobs:
       stage: Linux non-x86_64
       python: 3.7
       arch: ppc64le
+      before_install:
+        - which python
+        - pip install -U pip virtualenv tox
     - name: Python 3.7 Tests s390x Linux
       stage: Linux non-x86_64
       python: 3.7
