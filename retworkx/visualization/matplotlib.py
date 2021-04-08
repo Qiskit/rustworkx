@@ -63,10 +63,10 @@ __all__ = [
 ]
 
 
-def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=True, **kwds):
+def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=False, **kwds):
     r"""Draw a graph with Matplotlib.
 
-    .. note
+    .. note::
 
         Matplotlib is an optional dependency and will not be installed with
         retworkx by default. If you intend to use this function make sure that
@@ -93,8 +93,9 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=True, **kwds):
         head's length and width. See
         :class:`matplotlib.patches.FancyArrowPatch` attribute and constructor
         kwarg ``mutation_scale`` for more info. Defaults to 10.
-    :param bool with_labels: Set to ``True`` to draw labels on the nodes.
-        Defaults to ``True``.
+    :param bool with_labels: Set to ``True`` to draw labels on the nodes. Edge
+        labels will only be drawn if the ``edge_labels`` parameter is set to a
+        function. Defaults to ``False``.
     :param list node_list: An optional list of node indices in the graph to
         draw. If not specified all nodes will be drawn.
     :param list edge_list: An option list of edges in the graph to draw. If not
@@ -149,6 +150,18 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=True, **kwds):
             labels=lambda node: node['label']
 
         could be used if the node payloads are dictionaries.
+    :param func edge_labels: An optional callback function that will be passed
+        an edge payload and return a string label for the edge. For example::
+
+            edge_labels=str
+
+        could be used to just return a string cast of the edge's data payload.
+        Or something like::
+
+            edge_labels=lambda edge: edge['label']
+
+        could be used if the edge payloads are dictionaries. If this is set
+        edge labels will be drawn in the visualization.
     :param int font_size: An optional fontsize to use for text labels, By
         default a value of 12 is used for nodes and 10 for edges.
     :param str font_color: An optional font color for strings. By default
@@ -186,7 +199,7 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=True, **kwds):
         import matplotlib.pyplot as plt
     except ImportError as e:
         raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.draw_retworkx_nodes(). You can install "
+                          "retworkx.visualization.mpl_draw(). You can install "
                           "matplotlib with:\n'pip install matplotlib'") from e
     if ax is None:
         cf = plt.gcf()
@@ -199,15 +212,15 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=True, **kwds):
         else:
             ax = cf.gca()
 
-    draw_retworkx(graph, pos=pos, ax=ax, arrows=arrows,
-                  with_labels=with_labels, **kwds)
+    draw_graph(graph, pos=pos, ax=ax, arrows=arrows,
+               with_labels=with_labels, **kwds)
     ax.set_axis_off()
     plt.draw_if_interactive()
     if not plt.isinteractive() and ax is not None:
         return cf
 
 
-def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
+def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
     r"""Draw the graph using Matplotlib.
 
     Draw the graph with Matplotlib with options for node positions,
@@ -236,7 +249,7 @@ def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
         import matplotlib.pyplot as plt
     except ImportError as e:
         raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.draw_retworkx_nodes(). You can install "
+                          "retworkx.visualization.mpl_draw(). You can install "
                           "matplotlib with:\n'pip install matplotlib'") from e
 
     valid_node_kwds = (
@@ -297,6 +310,11 @@ def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
     label_fn = kwds.pop('labels', None)
     if label_fn:
         kwds['labels'] = {x: label_fn(graph[x]) for x in graph.node_indexes}
+    edge_label_fn = kwds.pop('edge_labels', None)
+    if edge_label_fn:
+        kwds['edge_labels'] = {
+            (x[0],
+             x[1]): edge_label_fn(x[2]) for x in graph.weighted_edge_list()}
 
     node_kwds = {k: v for k, v in kwds.items() if k in valid_node_kwds}
     edge_kwds = {k: v for k, v in kwds.items() if k in valid_edge_kwds}
@@ -306,14 +324,16 @@ def draw_retworkx(graph, pos=None, arrows=True, with_labels=True, **kwds):
     if pos is None:
         pos = retworkx.random_layout(graph)  # default to random layout
 
-    draw_retworkx_nodes(graph, pos, **node_kwds)
-    draw_retworkx_edges(graph, pos, arrows=arrows, **edge_kwds)
+    draw_nodes(graph, pos, **node_kwds)
+    draw_edges(graph, pos, arrows=arrows, **edge_kwds)
     if with_labels:
-        draw_retworkx_labels(graph, pos, **label_kwds)
+        draw_labels(graph, pos, **label_kwds)
+    if edge_label_fn:
+        draw_edge_labels(graph, pos, **label_kwds)
     plt.draw_if_interactive()
 
 
-def draw_retworkx_nodes(
+def draw_nodes(
     graph,
     pos,
     node_list=None,
@@ -392,7 +412,7 @@ def draw_retworkx_nodes(
         import matplotlib.pyplot as plt
     except ImportError as e:
         raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.draw_retworkx_nodes(). You can install "
+                          "retworkx.visualization.mpl_draw(). You can install "
                           "matplotlib with:\n'pip install matplotlib'") from e
 
     if ax is None:
@@ -442,7 +462,7 @@ def draw_retworkx_nodes(
     return node_collection
 
 
-def draw_retworkx_edges(
+def draw_edges(
     graph,
     pos,
     edge_list=None,
@@ -568,7 +588,7 @@ def draw_retworkx_edges(
         import matplotlib.pyplot as plt
     except ImportError as e:
         raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.draw_retworkx_nodes(). You can install "
+                          "retworkx.visualization.mpl_draw(). You can install "
                           "matplotlib with:\n'pip install matplotlib'") from e
 
     if arrowstyle is None:
@@ -747,7 +767,7 @@ def draw_retworkx_edges(
     return arrow_collection
 
 
-def draw_retworkx_labels(
+def draw_labels(
     graph,
     pos,
     labels=None,
@@ -817,7 +837,7 @@ def draw_retworkx_labels(
         import matplotlib.pyplot as plt
     except ImportError as e:
         raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.draw_retworkx_nodes(). You can install "
+                          "retworkx.visualization.mpl_draw(). You can install "
                           "matplotlib with:\n'pip install matplotlib'") from e
 
     if ax is None:
@@ -860,7 +880,7 @@ def draw_retworkx_labels(
     return text_items
 
 
-def draw_retworkx_edge_labels(
+def draw_edge_labels(
     graph,
     pos,
     edge_labels=None,
@@ -938,7 +958,7 @@ def draw_retworkx_edge_labels(
         import matplotlib.pyplot as plt
     except ImportError as e:
         raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.draw_retworkx_nodes(). You can install "
+                          "retworkx.visualization.mpl_draw(). You can install "
                           "matplotlib with:\n'pip install matplotlib'") from e
 
     if ax is None:
@@ -1052,7 +1072,7 @@ def apply_alpha(colors, alpha, elem_list, cmap=None, vmin=None, vmax=None):
         import matplotlib.cm  # call as mpl.cm
     except ImportError as e:
         raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.draw_retworkx_nodes(). You can install "
+                          "retworkx.visualization.mpl_draw(). You can install "
                           "matplotlib with:\n'pip install matplotlib'") from e
 
     # If we have been provided with a list of numbers as long as elem_list,
