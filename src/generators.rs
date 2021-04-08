@@ -995,7 +995,7 @@ pub fn directed_grid_graph(
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated hexagonal graph with the following nodes deleted:
-///           ```2*rowlen + 1``` and
+///           ```2*row + 1``` and
 ///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
 ///
 /// :rtype: PyGraph
