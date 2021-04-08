@@ -994,7 +994,10 @@ pub fn directed_grid_graph(
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: The generated hexagonal graph
+/// :returns: The generated hexagonal graph with the following nodes deleted:
+///           ```2*rowlen + 1``` and
+///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
+///
 /// :rtype: PyGraph
 /// :raises IndexError: If neither ``rows`` or ``cols`` are
 ///      specified
