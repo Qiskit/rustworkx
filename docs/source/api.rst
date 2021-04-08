@@ -1,11 +1,11 @@
 .. _retworkx:
 
-======================
+######################
 Retworkx API Reference
-======================
+######################
 
 Graph Classes
--------------
+=============
 
 .. autosummary::
    :toctree: stubs
@@ -15,7 +15,7 @@ Graph Classes
     retworkx.PyDAG
 
 Generators
-----------
+==========
 
 .. autosummary::
    :toctree: stubs
@@ -32,7 +32,7 @@ Generators
     retworkx.generators.directed_grid_graph
 
 Random Circuit Functions
-------------------------
+========================
 
 .. autosummary::
    :toctree: stubs
@@ -43,10 +43,10 @@ Random Circuit Functions
     retworkx.undirected_gnm_random_graph
 
 Algorithm Functions
--------------------
+===================
 
 Specific Graph Type Methods
-'''''''''''''''''''''''''''
+---------------------------
 
 .. autosummary::
    :toctree: stubs
@@ -101,13 +101,11 @@ Specific Graph Type Methods
    retworkx.digraph_core_number
    retworkx.graph_complement
    retworkx.digraph_complement
-   retworkx.graph_random_layout
-   retworkx.digraph_random_layout
 
 .. _universal-functions:
 
 Universal Functions
-'''''''''''''''''''
+-------------------
 
 These functions are algorithm functions that wrap per graph object
 type functions in the algorithms API but can be run with a
@@ -133,8 +131,18 @@ type functions in the algorithms API but can be run with a
    retworkx.core_number
    retworkx.random_layout
 
+Layout Functions
+================
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.random_layout
+   retworkx.graph_random_layout
+   retworkx.digraph_random_layout
+
 Exceptions
-----------
+==========
 
 .. autosummary::
    :toctree: stubs
@@ -147,8 +155,8 @@ Exceptions
    retworkx.NoPathFound
    retworkx.NullGraph
 
-Return Iterator Types
----------------------
+Custom Return Types
+===================
 
 .. autosummary::
    :toctree: stubs
@@ -157,3 +165,4 @@ Return Iterator Types
    retworkx.NodeIndices
    retworkx.EdgeList
    retworkx.WeightedEdgeList
+   retworkx.Pos2DMapping
