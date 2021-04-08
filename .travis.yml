@@ -13,6 +13,8 @@ before_install:
   - export PATH=~/.cargo/bin:$PATH
   - which python
   - pip install -U pip virtualenv tox
+before_cache:
+  - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
 script:
   - tox -epy
 stages:
@@ -30,6 +32,10 @@ jobs:
       stage: Linux non-x86_64
       python: 3.7
       arch: ppc64le
+      before_install:
+        - which python
+        - sudo chown travis -R $TRAVIS_HOME/.cargo
+        - pip install -U pip virtualenv tox
     - name: Python 3.7 Tests s390x Linux
       stage: Linux non-x86_64
       python: 3.7
