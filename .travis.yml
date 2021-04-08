@@ -13,6 +13,8 @@ before_install:
   - export PATH=~/.cargo/bin:$PATH
   - which python
   - pip install -U pip virtualenv tox
+before_cache:
+  - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
 script:
   - tox -epy
 stages:
