@@ -1027,14 +1027,13 @@ pub fn directed_grid_graph(
 #[text_signature = "(/, order=None, weights=None, multigraph=True)"]
 pub fn binomial_tree_graph(
     py: Python,
-    order: usize,
+    order: u32,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
 
-    // try_into is used to convert from usize to u32
-    let num_nodes = usize::pow(2, order.try_into().unwrap());
+    let num_nodes = usize::pow(2, order);
 
     let nodes: Vec<NodeIndex> = match weights {
         Some(weights) => {
