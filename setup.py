@@ -53,6 +53,6 @@ setup(
     python_requires=">=3.6",
     install_requires=['numpy>=1.16.0'],
     extras_require={
-        'mpl': ['matplotlib>=3.4'],
+        'mpl': ['matplotlib>=3.0'],
     }
 )
