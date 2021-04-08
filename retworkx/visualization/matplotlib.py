@@ -216,7 +216,7 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=False, **kwds):
                with_labels=with_labels, **kwds)
     ax.set_axis_off()
     plt.draw_if_interactive()
-    if not plt.isinteractive() and ax is not None:
+    if not plt.isinteractive() or ax is None:
         return cf
 
 
@@ -252,7 +252,7 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
                           "retworkx.visualization.mpl_draw(). You can install "
                           "matplotlib with:\n'pip install matplotlib'") from e
 
-    valid_node_kwds = (
+    valid_node_kwds = {
         "node_list",
         "node_size",
         "node_color",
@@ -265,9 +265,9 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
         "linewidths",
         "edgecolors",
         "label",
-    )
+    }
 
-    valid_edge_kwds = (
+    valid_edge_kwds = {
         "edge_list",
         "width",
         "edge_color",
@@ -286,10 +286,11 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
         "connectionstyle",
         "min_source_margin",
         "min_target_margin",
-    )
+    }
 
-    valid_label_kwds = (
+    valid_label_kwds = {
         "labels",
+        "edge_labels",
         "font_size",
         "font_color",
         "font_family",
@@ -299,9 +300,24 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
         "ax",
         "horizontalalignment",
         "verticalalignment",
-    )
+    }
 
-    valid_kwds = valid_node_kwds + valid_edge_kwds + valid_label_kwds
+    valid_edge_label_kwds = {
+        "edge_labels",
+        "font_size",
+        "font_color",
+        "font_family",
+        "font_weight",
+        "alpha",
+        "bbox",
+        "ax",
+        "rotate",
+        "horizontalalignment",
+        "verticalalignment",
+    }
+
+    valid_kwds = valid_node_kwds | valid_edge_kwds | valid_label_kwds | \
+        valid_edge_label_kwds
 
     if any([k not in valid_kwds for k in kwds]):
         invalid_args = ", ".join([k for k in kwds if k not in valid_kwds])
@@ -309,7 +325,7 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
 
     label_fn = kwds.pop('labels', None)
     if label_fn:
-        kwds['labels'] = {x: label_fn(graph[x]) for x in graph.node_indexes}
+        kwds['labels'] = {x: label_fn(graph[x]) for x in graph.node_indexes()}
     edge_label_fn = kwds.pop('edge_labels', None)
     if edge_label_fn:
         kwds['edge_labels'] = {
@@ -319,6 +335,8 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
     node_kwds = {k: v for k, v in kwds.items() if k in valid_node_kwds}
     edge_kwds = {k: v for k, v in kwds.items() if k in valid_edge_kwds}
     label_kwds = {k: v for k, v in kwds.items() if k in valid_label_kwds}
+    edge_label_kwds = {
+        k: v for k, v in kwds.items() if k in valid_edge_label_kwds}
 
     # TODO: switch default to use spring layout when #280 is closed
     if pos is None:
@@ -329,7 +347,7 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
     if with_labels:
         draw_labels(graph, pos, **label_kwds)
     if edge_label_fn:
-        draw_edge_labels(graph, pos, **label_kwds)
+        draw_edge_labels(graph, pos, **edge_label_kwds)
     plt.draw_if_interactive()
 
 
