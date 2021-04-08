@@ -22,11 +22,11 @@ from retworkx.visualization import mpl_draw
 try:
     import matplotlib as mpl
     import matplotlib.pyplot as plt
+    mpl.use("PS")
+    plt.rcParams["text.usetex"] = False
     HAS_MPL = True
 except ImportError:
     HAS_MPL = False
-mpl.use("PS")
-plt.rcParams["text.usetex"] = False
 
 SAVE_IMAGES = os.getenv("RETWORKX_TEST_PRESERVE_IMAGES", None)
 
