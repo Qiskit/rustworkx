@@ -334,6 +334,8 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
 
     node_kwds = {k: v for k, v in kwds.items() if k in valid_node_kwds}
     edge_kwds = {k: v for k, v in kwds.items() if k in valid_edge_kwds}
+    if isinstance(edge_kwds.get('alpha'), list):
+        del edge_kwds['alpha']
     label_kwds = {k: v for k, v in kwds.items() if k in valid_label_kwds}
     edge_label_kwds = {
         k: v for k, v in kwds.items() if k in valid_edge_label_kwds}
