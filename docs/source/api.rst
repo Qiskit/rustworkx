@@ -94,10 +94,14 @@ Specific Graph Type Methods
    retworkx.is_matching
    retworkx.is_maximal_matching
    retworkx.max_weight_matching
+   retworkx.minimum_spanning_edges
+   retworkx.minimum_spanning_tree
    retworkx.graph_transitivity
    retworkx.digraph_transitivity
    retworkx.graph_core_number
    retworkx.digraph_core_number
+   retworkx.graph_complement
+   retworkx.digraph_complement
 
 .. _universal-functions:
 
@@ -112,6 +116,7 @@ type functions in the algorithms API but can be run with a
 .. autosummary::
    :toctree: stubs
 
+   retworkx.complement
    retworkx.distance_matrix
    retworkx.floyd_warshall_numpy
    retworkx.adjacency_matrix
