@@ -3301,7 +3301,7 @@ fn _random_layout<Ty: EdgeType>(
 ///     ``float`` values for the center position
 /// :param int seed: An optional seed to set for the random number generator.
 ///
-/// :returns: The complement of the graph.
+/// :returns: The random layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
 #[text_signature = "(graph, / center=None, seed=None)"]
@@ -3320,7 +3320,7 @@ pub fn graph_random_layout(
 ///     ``float`` values for the center position
 /// :param int seed: An optional seed to set for the random number generator.
 ///
-/// :returns: The complement of the graph.
+/// :returns: The random layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
 #[text_signature = "(graph, / center=None, seed=None)"]

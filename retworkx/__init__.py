@@ -635,7 +635,7 @@ def random_layout(graph, center=None, seed=None):
         ``float`` values for the center position
     :param int seed: An optional seed to set for the random number generator.
 
-    :returns: The complement of the graph.
+    :returns: The random layout of the graph.
     :rtype: Pos2DMapping
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
