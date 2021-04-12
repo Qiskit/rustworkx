@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    Added a new layou function, :func:`retworkx.random_layout` (and it's
+    Added a new layout function, :func:`retworkx.random_layout` (and it's
     equivalent per type variants :func:`retworkx.graph_random_layout` and
     :func:`retworkx.diraph_random_layout`) to generate a random layout which
     can be used for visualizations.
