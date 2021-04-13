@@ -18,18 +18,33 @@ use std::marker;
 
 use hashbrown::HashMap;
 
-use super::digraph::PyDiGraph;
+use super::NodesRemoved;
 
 use pyo3::prelude::*;
 
-use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
-use petgraph::stable_graph::StableDiGraph;
-use petgraph::visit::{EdgeRef, GetAdjacencyMatrix, IntoEdgeReferences};
+use petgraph::stable_graph::StableGraph;
+use petgraph::visit::{
+    EdgeRef, GetAdjacencyMatrix, IntoEdgeReferences, NodeIndexable,
+};
+use petgraph::EdgeType;
 use petgraph::{Directed, Incoming};
 
+impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
+where
+    Ty: EdgeType,
+{
+    fn nodes_removed(&self) -> bool {
+        self.node_bound() != self.node_count()
+    }
+}
+
 #[derive(Debug)]
-struct Vf2State {
+struct Vf2State<'a, Ty>
+where
+    Ty: EdgeType,
+{
+    graph: &'a StableGraph<PyObject, PyObject, Ty>,
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
     mapping: Vec<NodeIndex>,
@@ -49,26 +64,23 @@ struct Vf2State {
     _etype: marker::PhantomData<Directed>,
 }
 
-impl Vf2State {
-    pub fn new(dag: &PyDiGraph) -> Self {
-        let g = &dag.graph;
+impl<'a, Ty> Vf2State<'a, Ty>
+where
+    Ty: EdgeType,
+{
+    pub fn new(g: &'a StableGraph<PyObject, PyObject, Ty>) -> Self {
         let c0 = g.node_count();
-        let mut state = Vf2State {
-            mapping: Vec::with_capacity(c0),
-            out: Vec::with_capacity(c0),
-            ins: Vec::with_capacity(c0 * (g.is_directed() as usize)),
+        Vf2State {
+            graph: g,
+            mapping: vec![NodeIndex::end(); c0],
+            out: vec![0; c0],
+            ins: vec![0; c0 * (g.is_directed() as usize)],
             out_size: 0,
             ins_size: 0,
             adjacency_matrix: g.adjacency_matrix(),
             generation: 0,
             _etype: marker::PhantomData,
-        };
-        for _ in 0..c0 {
-            state.mapping.push(NodeIndex::end());
-            state.out.push(0);
-            state.ins.push(0);
         }
-        state
     }
 
     /// Return **true** if we have a complete mapping
@@ -77,27 +89,21 @@ impl Vf2State {
     }
 
     /// Add mapping **from** <-> **to** to the state.
-    pub fn push_mapping(
-        &mut self,
-        from: NodeIndex,
-        to: NodeIndex,
-        dag: &PyDiGraph,
-    ) {
-        let g = &dag.graph;
+    pub fn push_mapping(&mut self, from: NodeIndex, to: NodeIndex) {
         self.generation += 1;
         let s = self.generation;
         self.mapping[from.index()] = to;
         // update T0 & T1 ins/outs
         // T0out: Node in G0 not in M0 but successor of a node in M0.
         // st.out[0]: Node either in M0 or successor of M0
-        for ix in g.neighbors(from) {
+        for ix in self.graph.neighbors(from) {
             if self.out[ix.index()] == 0 {
                 self.out[ix.index()] = s;
                 self.out_size += 1;
             }
         }
-        if g.is_directed() {
-            for ix in g.neighbors_directed(from, Incoming) {
+        if self.graph.is_directed() {
+            for ix in self.graph.neighbors_directed(from, Incoming) {
                 if self.ins[ix.index()] == 0 {
                     self.ins[ix.index()] = s;
                     self.ins_size += 1;
@@ -107,8 +113,7 @@ impl Vf2State {
     }
 
     /// Restore the state to before the last added mapping
-    pub fn pop_mapping(&mut self, from: NodeIndex, dag: &PyDiGraph) {
-        let g = &dag.graph;
+    pub fn pop_mapping(&mut self, from: NodeIndex) {
         let s = self.generation;
         self.generation -= 1;
 
@@ -116,14 +121,14 @@ impl Vf2State {
         self.mapping[from.index()] = NodeIndex::end();
 
         // unmark in ins and outs
-        for ix in g.neighbors(from) {
+        for ix in self.graph.neighbors(from) {
             if self.out[ix.index()] == s {
                 self.out[ix.index()] = 0;
                 self.out_size -= 1;
             }
         }
-        if g.is_directed() {
-            for ix in g.neighbors_directed(from, Incoming) {
+        if self.graph.is_directed() {
+            for ix in self.graph.neighbors_directed(from, Incoming) {
                 if self.ins[ix.index()] == s {
                     self.ins[ix.index()] = 0;
                     self.ins_size -= 1;
@@ -164,37 +169,13 @@ impl Vf2State {
     }
 }
 
-/// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
-///
-/// Using the VF2 algorithm, only matching graph syntactically (graph
-/// structure).
-///
-/// The graphs should not be multigraphs.
-///
-/// **Reference**
-///
-/// * Luigi P. Cordella, Pasquale Foggia, Carlo Sansone, Mario Vento;
-///   *A (Sub)Graph Isomorphism Algorithm for Matching Large Graphs*
-pub fn is_isomorphic(dag0: &PyDiGraph, dag1: &PyDiGraph) -> PyResult<bool> {
-    let g0 = &dag0.graph;
-    let g1 = &dag1.graph;
-    if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
-    {
-        return Ok(false);
-    }
-
-    let mut st = [Vf2State::new(dag0), Vf2State::new(dag1)];
-    let res = try_match(
-        &mut st,
-        dag0,
-        dag1,
-        &mut NoSemanticMatch,
-        &mut NoSemanticMatch,
-    )?;
-    Ok(res.unwrap_or(false))
-}
-
-fn reindex_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
+fn reindex_graph<Ty>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+) -> StableGraph<PyObject, PyObject, Ty>
+where
+    Ty: EdgeType,
+{
     // NOTE: this is a hacky workaround to handle non-contiguous node ids in
     // VF2. The code which was forked from petgraph was written assuming the
     // Graph type and not StableGraph so it makes an implicit assumption on
@@ -202,27 +183,21 @@ fn reindex_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
     // StableGraph. This compacts the node ids as a workaround until VF2State
     // and try_match can be rewitten to handle this (and likely contributed
     // upstream to petgraph too).
-    let mut new_graph = StableDiGraph::<PyObject, PyObject>::new();
+    let mut new_graph = StableGraph::<PyObject, PyObject, Ty>::default();
     let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-    for node_index in dag.graph.node_indices() {
-        let node_data = dag.graph.node_weight(node_index).unwrap();
+    for node_index in graph.node_indices() {
+        let node_data = graph.node_weight(node_index).unwrap();
         let new_index = new_graph.add_node(node_data.clone_ref(py));
         id_map.insert(node_index, new_index);
     }
-    for edge in dag.graph.edge_references() {
+    for edge in graph.edge_references() {
         let edge_w = edge.weight();
-        let p_index = id_map.get(&edge.source()).unwrap();
-        let c_index = id_map.get(&edge.target()).unwrap();
-        new_graph.add_edge(*p_index, *c_index, edge_w.clone_ref(py));
+        let p_index = id_map[&edge.source()];
+        let c_index = id_map[&edge.target()];
+        new_graph.add_edge(p_index, c_index, edge_w.clone_ref(py));
     }
 
-    PyDiGraph {
-        graph: new_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: dag.check_cycle,
-        node_removed: false,
-        multigraph: true,
-    }
+    new_graph
 }
 
 /// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
@@ -231,52 +206,46 @@ fn reindex_graph(py: Python, dag: &PyDiGraph) -> PyDiGraph {
 /// graph isomorphism (graph structure and matching node and edge weights).
 ///
 /// The graphs should not be multigraphs.
-pub fn is_isomorphic_matching<F, G>(
+pub fn is_isomorphic<Ty, F, G>(
     py: Python,
-    dag0: &PyDiGraph,
-    dag1: &PyDiGraph,
-    mut node_match: F,
-    mut edge_match: G,
+    g0: &StableGraph<PyObject, PyObject, Ty>,
+    g1: &StableGraph<PyObject, PyObject, Ty>,
+    mut node_match: Option<F>,
+    mut edge_match: Option<G>,
 ) -> PyResult<bool>
 where
+    Ty: EdgeType,
     F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
     G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
 {
-    let inner_temp_dag0: PyDiGraph;
-    let inner_temp_dag1: PyDiGraph;
-    let dag0_out = if dag0.node_removed {
-        inner_temp_dag0 = reindex_graph(py, dag0);
-        &inner_temp_dag0
+    let inner_temp_g0: StableGraph<PyObject, PyObject, Ty>;
+    let inner_temp_g1: StableGraph<PyObject, PyObject, Ty>;
+    let g0_out = if g0.nodes_removed() {
+        inner_temp_g0 = reindex_graph(py, g0);
+        &inner_temp_g0
     } else {
-        dag0
+        g0
     };
-    let dag1_out = if dag1.node_removed {
-        inner_temp_dag1 = reindex_graph(py, dag1);
-        &inner_temp_dag1
+    let g1_out = if g1.nodes_removed() {
+        inner_temp_g1 = reindex_graph(py, g1);
+        &inner_temp_g1
     } else {
-        dag1
+        g1
     };
-    let g0 = &dag0_out.graph;
-    let g1 = &dag1_out.graph;
-
+    let g0 = &g0_out;
+    let g1 = &g1_out;
     if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
     {
         return Ok(false);
     }
 
-    let mut st = [Vf2State::new(&dag0_out), Vf2State::new(&dag1_out)];
-    let res = try_match(
-        &mut st,
-        &dag0_out,
-        &dag1_out,
-        &mut node_match,
-        &mut edge_match,
-    )?;
+    let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
+    let res = try_match(&mut st, g0, g1, &mut node_match, &mut edge_match)?;
     Ok(res.unwrap_or(false))
 }
 
 trait SemanticMatcher<T> {
-    fn enabled() -> bool;
+    fn enabled(&self) -> bool;
     fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
 }
 
@@ -284,7 +253,7 @@ struct NoSemanticMatch;
 
 impl<T> SemanticMatcher<T> for NoSemanticMatch {
     #[inline]
-    fn enabled() -> bool {
+    fn enabled(&self) -> bool {
         false
     }
     #[inline]
@@ -293,39 +262,38 @@ impl<T> SemanticMatcher<T> for NoSemanticMatch {
     }
 }
 
-impl<T, F> SemanticMatcher<T> for F
+impl<T, F> SemanticMatcher<T> for Option<F>
 where
     F: FnMut(&T, &T) -> PyResult<bool>,
 {
     #[inline]
-    fn enabled() -> bool {
-        true
+    fn enabled(&self) -> bool {
+        self.is_some()
     }
     #[inline]
     fn eq(&mut self, a: &T, b: &T) -> PyResult<bool> {
-        let res = self(a, b)?;
+        let res = (self.as_mut().unwrap())(a, b)?;
         Ok(res)
     }
 }
 
 /// Return Some(bool) if isomorphism is decided, else None.
-fn try_match<F, G>(
-    mut st: &mut [Vf2State; 2],
-    dag0: &PyDiGraph,
-    dag1: &PyDiGraph,
+fn try_match<Ty, F, G>(
+    mut st: &mut [Vf2State<Ty>; 2],
+    g0: &StableGraph<PyObject, PyObject, Ty>,
+    g1: &StableGraph<PyObject, PyObject, Ty>,
     node_match: &mut F,
     edge_match: &mut G,
 ) -> PyResult<Option<bool>>
 where
+    Ty: EdgeType,
     F: SemanticMatcher<PyObject>,
     G: SemanticMatcher<PyObject>,
 {
-    let g0 = &dag0.graph;
-    let g1 = &dag1.graph;
     if st[0].is_complete() {
         return Ok(Some(true));
     }
-    let dag = [dag0, dag1];
+
     let g = [g0, g1];
     let graph_indices = 0..2;
     let end = NodeIndex::end();
@@ -350,7 +318,7 @@ where
     }
 
     let next_candidate =
-        |st: &mut [Vf2State; 2]| -> Option<(NodeIndex, NodeIndex, OpenList)> {
+        |st: &mut [Vf2State<'_, Ty>; 2]| -> Option<(NodeIndex, NodeIndex, OpenList)> {
             let mut to_index;
             let mut from_index = None;
             let mut open_list = OpenList::Out;
@@ -386,7 +354,7 @@ where
                 _ => None,
             }
         };
-    let next_from_ix = |st: &mut [Vf2State; 2],
+    let next_from_ix = |st: &mut [Vf2State<'_, Ty>; 2],
                         nx: NodeIndex,
                         open_list: OpenList|
      -> Option<NodeIndex> {
@@ -407,21 +375,21 @@ where
         }
     };
     //fn pop_state(nodes: [NodeIndex<Ix>; 2]) {
-    let pop_state = |st: &mut [Vf2State; 2], nodes: [NodeIndex; 2]| {
+    let pop_state = |st: &mut [Vf2State<'_, Ty>; 2], nodes: [NodeIndex; 2]| {
         // Restore state.
         for j in graph_indices.clone() {
-            st[j].pop_mapping(nodes[j], dag[j]);
+            st[j].pop_mapping(nodes[j]);
         }
     };
     //fn push_state(nodes: [NodeIndex<Ix>; 2]) {
-    let push_state = |st: &mut [Vf2State; 2], nodes: [NodeIndex; 2]| {
+    let push_state = |st: &mut [Vf2State<'_, Ty>; 2], nodes: [NodeIndex; 2]| {
         // Add mapping nx <-> mx to the state
         for j in graph_indices.clone() {
-            st[j].push_mapping(nodes[j], nodes[1 - j], dag[j]);
+            st[j].push_mapping(nodes[j], nodes[1 - j]);
         }
     };
     //fn is_feasible(nodes: [NodeIndex<Ix>; 2]) -> bool {
-    let mut is_feasible = |st: &mut [Vf2State; 2],
+    let mut is_feasible = |st: &mut [Vf2State<'_, Ty>; 2],
                            nodes: [NodeIndex; 2]|
      -> PyResult<bool> {
         // Check syntactic feasibility of mapping by ensuring adjacencies
@@ -493,12 +461,13 @@ where
             }
         }
         // semantic feasibility: compare associated data for nodes
-        let match_result = node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?;
-        if F::enabled() && !match_result {
+        if node_match.enabled()
+            && !node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?
+        {
             return Ok(false);
         }
         // semantic feasibility: compare associated data for edges
-        if G::enabled() {
+        if edge_match.enabled() {
             // outgoing edges
             for j in graph_indices.clone() {
                 let mut edges = g[j].neighbors(nodes[j]).detach();
