@@ -1083,8 +1083,8 @@ pub fn hexagonal_lattice_graph(
     })
 }
 
-/// Generate a directed hexagonal lattice graph. The edges propagate towards right and
-///     bottom direction if ``bidirectional`` is ``false``
+/// Generate a directed hexagonal lattice graph. The edges propagate towards right 
+///     and bottom direction if ``bidirectional`` is ``false``
 ///
 /// :param int rows: The number of rows to generate the graph with.
 /// :param int cols: The number of rows to generate the graph with.
