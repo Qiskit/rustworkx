@@ -1083,16 +1083,15 @@ pub fn hexagonal_lattice_graph(
     })
 }
 
-/// Generate a directed hexagonal lattice graph. The edges propagate towards right 
-///     and bottom direction if ``bidirectional`` is ``false``
+/// Generate a directed hexagonal lattice graph. The edges propagate towards  
+///     right and bottom direction if ``bidirectional`` is ``false``
 ///
 /// :param int rows: The number of rows to generate the graph with.
 /// :param int cols: The number of rows to generate the graph with.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 ///
-/// :returns: The generated directed hexagonal lattice graph with the following 
-///           nodes deleted:
+/// :returns: The generated directed hexagonal lattice graph with the following nodes deleted:
 ///           ```2*row + 1``` and
 ///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
 ///
@@ -1135,7 +1134,6 @@ pub fn directed_hexagonal_lattice_graph(
 
     let mut rowlen = rows;
     let mut collen = cols;
-    
     // Needs two times the number of nodes vertically
     rowlen = 2 * rowlen + 2;
     collen += 1;
@@ -1143,7 +1141,6 @@ pub fn directed_hexagonal_lattice_graph(
 
     let nodes: Vec<NodeIndex> =
         (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
-
 
     // Add column edges
     for i in 0..collen {
@@ -1158,7 +1155,7 @@ pub fn directed_hexagonal_lattice_graph(
                     nodes[i * rowlen + (j + 1)],
                     nodes[i * rowlen + j],
                     py.None(),
-                );  
+                );
             }
         }
     }
@@ -1177,7 +1174,7 @@ pub fn directed_hexagonal_lattice_graph(
                         nodes[(i + 1) * rowlen + j],
                         nodes[i * rowlen + j],
                         py.None(),
-                    );  
+                    );
                 }
             }
         }
