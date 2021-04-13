@@ -1027,7 +1027,7 @@ pub fn directed_grid_graph(
 ///
 #[pyfunction(multigraph = true)]
 #[text_signature = "(/, rows=None, cols=None, multigraph=True)"]
-pub fn hexagonal_graph(
+pub fn hexagonal_lattice_graph(
     py: Python,
     rows: usize,
     cols: usize,
@@ -1095,6 +1095,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
-    m.add_wrapped(wrap_pyfunction!(hexagonal_graph))?;
+    m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     Ok(())
 }

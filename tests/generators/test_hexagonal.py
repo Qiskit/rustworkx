@@ -14,24 +14,24 @@ import unittest
 import retworkx
 
 
-class TestHexagonalGraph(unittest.TestCase):
+class TestHexagonalLatticeGraph(unittest.TestCase):
 
     def test_hexagonal_graph_2_2(self):
-        graph = retworkx.generators.hexagonal_graph(2, 2)
+        graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
         self.assertEqual(len(graph), 16)
         self.assertEqual(len(graph.edges()), 19)
 
     def test_hexagonal_graph_3_2(self):
-        graph = retworkx.generators.hexagonal_graph(3, 2)
+        graph = retworkx.generators.hexagonal_lattice_graph(3, 2)
         self.assertEqual(len(graph), 22)
         self.assertEqual(len(graph.edges()), 27)
 
     def test_hexagonal_graph_2_4(self):
-        graph = retworkx.generators.hexagonal_graph(2, 4)
+        graph = retworkx.generators.hexagonal_lattice_graph(2, 4)
         self.assertEqual(len(graph), 28)
         self.assertEqual(len(graph.edges()), 35)
 
     def test_hexagonal_graph_0_0(self):
-        graph = retworkx.generators.hexagonal_graph(0, 0)
+        graph = retworkx.generators.hexagonal_lattice_graph(0, 0)
         self.assertEqual(len(graph), 0)
         self.assertEqual(len(graph.edges()), 0)
