@@ -26,7 +26,7 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         self.assertEqual(len(graph), 22)
         self.assertEqual(len(graph.edges()), 27)
 
-    def test_hexagonal_graph_2_4(self):
+    def test_directed_hexagonal_graph_2_4(self):
         graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 4)
         self.assertEqual(len(graph), 28)
         self.assertEqual(len(graph.edges()), 35)
