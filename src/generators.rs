@@ -1109,7 +1109,7 @@ pub fn hexagonal_lattice_graph(
 ///
 ///   import retworkx.generators
 ///
-///   graph = retworkx.generators.directed_hexagonal_grid_graph(2, 3)
+///   graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 3)
 ///   dot_str = graph.to_dot(
 ///       lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
