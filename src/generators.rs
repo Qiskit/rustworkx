@@ -1012,7 +1012,7 @@ pub fn directed_grid_graph(
 ///
 ///   import retworkx.generators
 ///
-///   graph = retworkx.generators.hexagonal_graph(2, 2)
+///   graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
 ///   dot_str = graph.to_dot(
 ///       lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
