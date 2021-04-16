@@ -156,11 +156,11 @@ class TestEdgeList(unittest.TestCase):
             self.assertEqual(edge_file.read(), expected)
 
     def test_invalid_return_type_weight_fn(self):
-       path = os.path.join(tempfile.gettempdir(), 'fail.txt')
-       graph = retworkx.undirected_gnm_random_graph(5, 4)
-       self.addCleanup(os.remove, path)
-       with self.assertRaises(TypeError):
-           graph.write_edge_list(path, weight_fn=lambda _: 4.5)
+        path = os.path.join(tempfile.gettempdir(), 'fail.txt')
+        graph = retworkx.undirected_gnm_random_graph(5, 4)
+        self.addCleanup(os.remove, path)
+        with self.assertRaises(TypeError):
+            graph.write_edge_list(path, weight_fn=lambda _: 4.5)
 
     def test_weight_fn_raises(self):
         path = os.path.join(tempfile.gettempdir(), 'fail.txt')
