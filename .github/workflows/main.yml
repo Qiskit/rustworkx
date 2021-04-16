@@ -2,9 +2,9 @@
 name: CI Jobs
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 jobs:
   build_lint:
     name: Build, rustfmt, and python lint
