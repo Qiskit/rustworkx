@@ -3267,7 +3267,7 @@ fn digraph_complement(
 
 fn _random_layout<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
-    center: Option<(f64, f64)>,
+    center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
     let mut rng: Pcg64 = match seed {
@@ -3283,8 +3283,8 @@ fn _random_layout<Ty: EdgeType>(
                     Some(center) => (
                         n.index(),
                         [
-                            random_tuple[0] + center.0,
-                            random_tuple[1] + center.1,
+                            random_tuple[0] + center[0],
+                            random_tuple[1] + center[1],
                         ],
                     ),
                     None => (n.index(), random_tuple),
@@ -3307,7 +3307,7 @@ fn _random_layout<Ty: EdgeType>(
 #[text_signature = "(graph, / center=None, seed=None)"]
 pub fn graph_random_layout(
     graph: &graph::PyGraph,
-    center: Option<(f64, f64)>,
+    center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
     _random_layout(&graph.graph, center, seed)
@@ -3326,7 +3326,7 @@ pub fn graph_random_layout(
 #[text_signature = "(graph, / center=None, seed=None)"]
 pub fn digraph_random_layout(
     graph: &digraph::PyDiGraph,
-    center: Option<(f64, f64)>,
+    center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
     _random_layout(&graph.graph, center, seed)
