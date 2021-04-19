@@ -278,6 +278,7 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
             hash(res)
 
 
+
 class TestPathMapping(unittest.TestCase):
 
     def setUp(self):
@@ -524,3 +525,116 @@ class TestPathLengthMapping(unittest.TestCase):
     def test_not_contains(self):
         res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
         self.assertNotIn(0, res)
+
+
+class TestPos2DMapping(unittest.TestCase):
+
+    def setUp(self):
+        self.dag = retworkx.PyDiGraph()
+        self.dag.add_node('a')
+
+    def test__eq__match(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+        self.assertTrue(res == {0: (0.4883489113112722, 0.6545867364101975)})
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            retworkx.random_layout(self.dag, seed=10244242) == {2: 1.0})
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            retworkx.random_layout(self.dag, seed=10244242) == {1: 2.0})
+
+    def test__eq__different_length(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+        self.assertFalse(res == {1: 1.0, 2: 2.0})
+
+    def test_eq__same_type(self):
+        self.assertEqual(
+            retworkx.random_layout(self.dag, seed=10244242),
+            retworkx.random_layout(self.dag, seed=10244242))
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(
+            retworkx.random_layout(self.dag, seed=10244242) == {'a': None})
+
+    def test__ne__match(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+        self.assertFalse(res != {0: (0.4883489113112722, 0.6545867364101975)})
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            retworkx.random_layout(self.dag, seed=10244242) != {2: 1.0})
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            retworkx.random_layout(self.dag, seed=10244242) != {1: 2.0})
+
+    def test__ne__different_length(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+
+        self.assertTrue(res != {1: 1.0, 2: 2.0})
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(
+            retworkx.random_layout(self.dag, seed=10244242) != ['a', None])
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.random_layout(self.dag, seed=10244242) > {1: 1.0}
+
+    def test_deepcopy(self):
+        positions = retworkx.random_layout(self.dag)
+        positions_copy = copy.deepcopy(positions)
+        self.assertEqual(positions_copy, positions)
+
+    def test_pickle(self):
+        pos = retworkx.random_layout(self.dag)
+        pos_pickle = pickle.dumps(pos)
+        pos_copy = pickle.loads(pos_pickle)
+        self.assertEqual(pos, pos_copy)
+
+    def test_str(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+        self.assertEqual(
+            "Pos2DMapping{0: (0.4883489113112722, 0.6545867364101975)}",
+            str(res))
+
+    def test_hash(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = retworkx.random_layout(self.dag, seed=10244242).keys()
+        self.assertEqual([0], list(keys))
+
+    def test_values(self):
+        values = retworkx.random_layout(self.dag, seed=10244242).values()
+        expected = [[0.4883489113112722, 0.6545867364101975]]
+        self.assertEqual(expected, list(values))
+
+    def test_items(self):
+        items = retworkx.random_layout(self.dag, seed=10244242).items()
+        self.assertEqual([(0, [0.4883489113112722, 0.6545867364101975])],
+                         list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(retworkx.random_layout(self.dag, seed=10244242))
+        output = list(mapping_iter)
+        self.assertEqual(output, [0])
+
+    def test_contains(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+        self.assertIn(0, res)
+
+    def test_not_contains(self):
+        res = retworkx.random_layout(self.dag, seed=10244242)
+        self.assertNotIn(1, res)

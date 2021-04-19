@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::float_cmp)]
+
 mod astar;
 mod digraph;
 mod dijkstra;
@@ -56,7 +58,8 @@ use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
-    EdgeList, NodeIndices, PathLengthMapping, PathMapping, WeightedEdgeList,
+    EdgeList, NodeIndices, PathLengthMapping, PathMapping, Pos2DMapping,
+    WeightedEdgeList,
 };
 
 trait NodesRemoved {
@@ -3274,6 +3277,73 @@ fn digraph_complement(
     Ok(complement_graph)
 }
 
+fn _random_layout<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let random_tuple: [f64; 2] = rng.gen();
+                match center {
+                    Some(center) => (
+                        n.index(),
+                        [
+                            random_tuple[0] + center[0],
+                            random_tuple[1] + center[1],
+                        ],
+                    ),
+                    None => (n.index(), random_tuple),
+                }
+            })
+            .collect(),
+    }
+}
+
+/// Generate a random layout
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
+pub fn graph_random_layout(
+    graph: &graph::PyGraph,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
+/// Generate a random layout
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
+pub fn digraph_random_layout(
+    graph: &digraph::PyDiGraph,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -3353,6 +3423,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
@@ -3361,6 +3433,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::WeightedEdgeList>()?;
     m.add_class::<iterators::PathMapping>()?;
     m.add_class::<iterators::PathLengthMapping>()?;
+    m.add_class::<iterators::Pos2DMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
