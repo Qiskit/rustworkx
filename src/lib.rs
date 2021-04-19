@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::float_cmp)]
+
 mod astar;
 mod digraph;
 mod dijkstra;
@@ -3265,7 +3267,7 @@ fn digraph_complement(
 
 fn _random_layout<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
-    center: Option<(f64, f64)>,
+    center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
     let mut rng: Pcg64 = match seed {
@@ -3276,11 +3278,14 @@ fn _random_layout<Ty: EdgeType>(
         pos_map: graph
             .node_indices()
             .map(|n| {
-                let random_tuple: (f64, f64) = rng.gen();
+                let random_tuple: [f64; 2] = rng.gen();
                 match center {
                     Some(center) => (
                         n.index(),
-                        (random_tuple.0 + center.0, random_tuple.1 + center.1),
+                        [
+                            random_tuple[0] + center[0],
+                            random_tuple[1] + center[1],
+                        ],
                     ),
                     None => (n.index(), random_tuple),
                 }
@@ -3289,19 +3294,39 @@ fn _random_layout<Ty: EdgeType>(
     }
 }
 
+/// Generate a random layout
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
 #[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
 pub fn graph_random_layout(
     graph: &graph::PyGraph,
-    center: Option<(f64, f64)>,
+    center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
     _random_layout(&graph.graph, center, seed)
 }
 
+/// Generate a random layout
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
 #[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
 pub fn digraph_random_layout(
     graph: &digraph::PyDiGraph,
-    center: Option<(f64, f64)>,
+    center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
     _random_layout(&graph.graph, center, seed)

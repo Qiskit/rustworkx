@@ -556,9 +556,17 @@ impl PyGCProtocol for WeightedEdgeList {
     }
 }
 
+/// A class representing a mapping of node indices to 2D positions
+///
+/// This class is equivalent to having a dict of the form::
+///
+///     {1: [0, 1], 3: [0.5, 1.2]}
+///
+/// It is used to efficiently represent a retworkx generated 2D layout for a
+/// graph. It behaves as a drop in replacement for a readonly ``dict``.
 #[pyclass(module = "retworkx", gc)]
 pub struct Pos2DMapping {
-    pub pos_map: HashMap<usize, (f64, f64)>,
+    pub pos_map: HashMap<usize, [f64; 2]>,
 }
 
 #[pymethods]
@@ -570,11 +578,11 @@ impl Pos2DMapping {
         }
     }
 
-    fn __getstate__(&self) -> HashMap<usize, (f64, f64)> {
+    fn __getstate__(&self) -> HashMap<usize, [f64; 2]> {
         self.pos_map.clone()
     }
 
-    fn __setstate__(&mut self, state: HashMap<usize, (f64, f64)>) {
+    fn __setstate__(&mut self, state: HashMap<usize, [f64; 2]>) {
         self.pos_map = state;
     }
 
@@ -593,7 +601,7 @@ impl Pos2DMapping {
     }
 
     fn items(&self) -> Pos2DMappingItems {
-        let items: Vec<(usize, (f64, f64))> =
+        let items: Vec<(usize, [f64; 2])> =
             self.pos_map.iter().map(|(k, v)| (*k, *v)).collect();
         Pos2DMappingItems {
             pos_items: items,
@@ -619,7 +627,7 @@ impl<'p> PyObjectProtocol<'p> for Pos2DMapping {
             for (key, value) in &self.pos_map {
                 match other_ref.get_item(key) {
                     Ok(other_raw) => {
-                        let other_value: (f64, f64) = other_raw.extract()?;
+                        let other_value: [f64; 2] = other_raw.extract()?;
                         if other_value != *value {
                             return Ok(false);
                         }
@@ -651,12 +659,7 @@ impl<'p> PyObjectProtocol<'p> for Pos2DMapping {
     fn __str__(&self) -> PyResult<String> {
         let mut str_vec: Vec<String> = Vec::with_capacity(self.pos_map.len());
         for path in &self.pos_map {
-            str_vec.push(format!(
-                "{}: ({}, {})",
-                path.0,
-                (path.1).0,
-                ((path.1).1)
-            ));
+            str_vec.push(format!("{}: ({}, {})", path.0, path.1[0], path.1[1]));
         }
         Ok(format!("Pos2DMapping{{{}}}", str_vec.join(", ")))
     }
@@ -665,8 +668,8 @@ impl<'p> PyObjectProtocol<'p> for Pos2DMapping {
         let mut hasher = DefaultHasher::new();
         for index in &self.pos_map {
             hasher.write_usize(*index.0);
-            hasher.write(&(index.1).0.to_be_bytes());
-            hasher.write(&(index.1).1.to_be_bytes());
+            hasher.write(&index.1[0].to_be_bytes());
+            hasher.write(&index.1[1].to_be_bytes());
         }
         Ok(hasher.finish())
     }
@@ -689,7 +692,7 @@ impl PyMappingProtocol for Pos2DMapping {
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.pos_map.len())
     }
-    fn __getitem__(&'p self, idx: usize) -> PyResult<(f64, f64)> {
+    fn __getitem__(&'p self, idx: usize) -> PyResult<[f64; 2]> {
         match self.pos_map.get(&idx) {
             Some(data) => Ok(*data),
             None => Err(PyIndexError::new_err("No node found for index")),
@@ -742,7 +745,7 @@ impl PyIterProtocol for Pos2DMappingKeys {
 
 #[pyclass(module = "retworkx")]
 pub struct Pos2DMappingValues {
-    pub pos_values: Vec<(f64, f64)>,
+    pub pos_values: Vec<[f64; 2]>,
     iter_pos: usize,
 }
 
@@ -753,7 +756,7 @@ impl PyIterProtocol for Pos2DMappingValues {
     }
     fn __next__(
         mut slf: PyRefMut<Self>,
-    ) -> IterNextOutput<(f64, f64), &'static str> {
+    ) -> IterNextOutput<[f64; 2], &'static str> {
         if slf.iter_pos < slf.pos_values.len() {
             let res = IterNextOutput::Yield(slf.pos_values[slf.iter_pos]);
             slf.iter_pos += 1;
@@ -766,7 +769,7 @@ impl PyIterProtocol for Pos2DMappingValues {
 
 #[pyclass(module = "retworkx")]
 pub struct Pos2DMappingItems {
-    pub pos_items: Vec<(usize, (f64, f64))>,
+    pub pos_items: Vec<(usize, [f64; 2])>,
     iter_pos: usize,
 }
 
@@ -777,7 +780,7 @@ impl PyIterProtocol for Pos2DMappingItems {
     }
     fn __next__(
         mut slf: PyRefMut<Self>,
-    ) -> IterNextOutput<(usize, (f64, f64)), &'static str> {
+    ) -> IterNextOutput<(usize, [f64; 2]), &'static str> {
         if slf.iter_pos < slf.pos_items.len() {
             let res = IterNextOutput::Yield(slf.pos_items[slf.iter_pos]);
             slf.iter_pos += 1;
