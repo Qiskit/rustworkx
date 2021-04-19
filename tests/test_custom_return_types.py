@@ -278,7 +278,6 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
             hash(res)
 
 
-
 class TestPathMapping(unittest.TestCase):
 
     def setUp(self):
