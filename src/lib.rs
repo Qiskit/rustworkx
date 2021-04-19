@@ -3266,6 +3266,7 @@ fn digraph_complement(
 
 #[allow(clippy::too_many_arguments)]
 fn _spring_layout<Ty>(
+    py: Python,
     graph: &StableGraph<PyObject, PyObject, Ty>,
     pos: Option<HashMap<usize, layout::Point>>,
     fixed: Option<HashSet<usize>>,
@@ -3274,6 +3275,8 @@ fn _spring_layout<Ty>(
     adaptive_cooling: Option<bool>,
     niter: Option<usize>,
     tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
     scale: Option<f64>,
     center: Option<layout::Point>,
     seed: Option<u64>,
@@ -3309,17 +3312,30 @@ where
     let tol = tol.unwrap_or(1e-6);
     let step = 0.1;
 
+    let mut weights: HashMap<(usize, usize), f64> = HashMap::default();
+    graph.edge_references().for_each(|e| {
+        let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)
+            .unwrap();
+        let source = e.source().index();
+        let target = e.target().index();
+
+        weights.insert((source, target), w);
+        weights.insert((target, source), w);
+    });
+
     let pos = match adaptive_cooling {
         Some(false) => {
             let cs = layout::LinearCoolingScheme::new(step, niter);
             layout::evolve(
-                graph, vpos, fixed, f_a, f_r, cs, niter, tol, scale, center,
+                graph, vpos, fixed, f_a, f_r, cs, niter, tol, weights, scale,
+                center,
             )
         }
         _ => {
             let cs = layout::AdaptiveCoolingScheme::new(step);
             layout::evolve(
-                graph, vpos, fixed, f_a, f_r, cs, niter, tol, scale, center,
+                graph, vpos, fixed, f_a, f_r, cs, niter, tol, weights, scale,
+                center,
             )
         }
     };
@@ -3360,6 +3376,11 @@ where
 /// :param float (default = 1e-6) tol:
 //      Threshold for relative error in node position changes.
 ///     The iteration stops if the error is below this threshold.
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float
+///     which will be used to represent the weight of the edge.
+/// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+///     this optional float value will be used for the weight/cost of each edge
 /// :param float or None (default=1) scale: Scale factor for positions.
 ///     Not used unless fixed is None. If scale is None, no rescaling is performed.
 /// :param list center (default=None) – Coordinate pair around which to center
@@ -3373,6 +3394,7 @@ where
                      niter=50, tol=1e-6, scale=1, center=None, seed=None, /)"]
 #[allow(clippy::too_many_arguments)]
 pub fn graph_spring_layout(
+    py: Python,
     graph: &graph::PyGraph,
     pos: Option<HashMap<usize, layout::Point>>,
     fixed: Option<HashSet<usize>>,
@@ -3381,11 +3403,14 @@ pub fn graph_spring_layout(
     adaptive_cooling: Option<bool>,
     niter: Option<usize>,
     tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
     scale: Option<f64>,
     center: Option<layout::Point>,
     seed: Option<u64>,
 ) -> PyResult<HashMap<usize, layout::Point>> {
     _spring_layout(
+        py,
         &graph.graph,
         pos,
         fixed,
@@ -3394,6 +3419,8 @@ pub fn graph_spring_layout(
         adaptive_cooling,
         niter,
         tol,
+        weight_fn,
+        default_weight,
         scale,
         center,
         seed,
@@ -3427,6 +3454,11 @@ pub fn graph_spring_layout(
 /// :param float (default = 1e-6) tol:
 //      Threshold for relative error in node position changes.
 ///     The iteration stops if the error is below this threshold.
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float
+///     which will be used to represent the weight of the edge.
+/// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+///     this optional float value will be used for the weight/cost of each edge
 /// :param float or None (default=1) scale: Scale factor for positions.
 ///     Not used unless fixed is None. If scale is None, no rescaling is performed.
 /// :param list center (default=None) – Coordinate pair around which to center
@@ -3440,6 +3472,7 @@ pub fn graph_spring_layout(
                      niter=50, tol=1e-6, scale=1, center=None, seed=None, /)"]
 #[allow(clippy::too_many_arguments)]
 pub fn digraph_spring_layout(
+    py: Python,
     graph: &digraph::PyDiGraph,
     pos: Option<HashMap<usize, layout::Point>>,
     fixed: Option<HashSet<usize>>,
@@ -3448,11 +3481,14 @@ pub fn digraph_spring_layout(
     adaptive_cooling: Option<bool>,
     niter: Option<usize>,
     tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
     scale: Option<f64>,
     center: Option<layout::Point>,
     seed: Option<u64>,
 ) -> PyResult<HashMap<usize, layout::Point>> {
     _spring_layout(
+        py,
         &graph.graph,
         pos,
         fixed,
@@ -3461,6 +3497,8 @@ pub fn digraph_spring_layout(
         adaptive_cooling,
         niter,
         tol,
+        weight_fn,
+        default_weight,
         scale,
         center,
         seed,

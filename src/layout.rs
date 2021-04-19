@@ -12,7 +12,7 @@
 
 use std::iter::Iterator;
 
-use hashbrown::HashSet;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::prelude::*;
 
@@ -45,20 +45,21 @@ pub trait Force {
     // given the difference x - y and the l2 - norm ||x - y||.
     fn eval(&self, dif: &Point, dnorm: Nt) -> Nt;
 
-    // total force in Point x.
-    fn total<'a, I>(&self, x: &Point, ys: I) -> (Nt, Nt)
+    // total force in Point x
+    // from (points, weights) in ys.
+    fn total<'a, I>(&self, x: &Point, ys: I) -> [Nt; 2]
     where
-        I: Iterator<Item = &'a Point>,
+        I: Iterator<Item = (&'a Point, Nt)>,
     {
-        let mut ftot = (0.0, 0.0);
+        let mut ftot = [0.0, 0.0];
 
-        for y in ys {
+        for (y, w) in ys {
             let d = [y[0] - x[0], y[1] - x[1]];
             let dnorm = max(l2norm(d), LBOUND);
-            let f = self.eval(&d, dnorm);
+            let f = w * self.eval(&d, dnorm);
 
-            ftot.0 += f * d[0] / dnorm;
-            ftot.1 += f * d[1] / dnorm;
+            ftot[0] += f * d[0] / dnorm;
+            ftot[1] += f * d[1] / dnorm;
         }
 
         ftot
@@ -218,6 +219,7 @@ pub fn evolve<Ty, Fa, Fr, C>(
     mut cs: C,
     niter: usize,
     tol: f64,
+    weights: HashMap<(usize, usize), f64>,
     scale: Option<Nt>,
     center: Option<Point>,
 ) -> Vec<Point>
@@ -239,26 +241,28 @@ where
                 continue;
             }
             // attractive forces
-            let ys = graph
-                .neighbors_undirected(NodeIndex::new(v))
-                .map(|n| &pos[n.index()]);
+            let ys = graph.neighbors_undirected(NodeIndex::new(v)).map(|n| {
+                let n = n.index();
+                (&pos[n], weights[&(v, n)])
+            });
             let fa = f_a.total(&pos[v], ys);
 
             // repulsive forces
-            let ys = graph
-                .node_indices()
-                .filter(|&n| n.index() != v)
-                .map(|n| &pos[n.index()]);
+            let ys =
+                graph.node_indices().filter(|&n| n.index() != v).map(|n| {
+                    let n = n.index();
+                    (&pos[n], 1.0)
+                });
             let fr = f_r.total(&pos[v], ys);
 
             // update current position
-            let f = (fa.0 + fr.0, fa.1 + fr.1);
-            let f2 = f.0 * f.0 + f.1 * f.1;
+            let f = [fa[0] + fr[0], fa[1] + fr[1]];
+            let f2 = f[0] * f[0] + f[1] * f[1];
             energy += f2;
 
             let fnorm = max(f2.sqrt(), LBOUND);
-            let dx = step * f.0 / fnorm;
-            let dy = step * f.1 / fnorm;
+            let dx = step * f[0] / fnorm;
+            let dy = step * f[1] / fnorm;
             pos[v][0] += dx;
             pos[v][1] += dy;
 

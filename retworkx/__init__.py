@@ -629,7 +629,8 @@ def _graph_complement(graph):
 @functools.singledispatch
 def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
                   adaptive_cooling=True, niter=50, tol=1e-6,
-                  scale=1, center=None, seed=None):
+                  weight_fn=None, default_weight=1, scale=1,
+                  center=None, seed=None):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
 
@@ -659,6 +660,11 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
     :param float (default = 1e-6) tol:
         Threshold for relative error in node position changes.
         The iteration stops if the error is below this threshold.
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float
+        which will be used to represent the weight of the edge.
+    :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+        this optional float value will be used for the weight/cost of each edge
     :param float or None (default=1) scale: Scale factor for positions.
         Not used unless fixed is None. If scale is None, no rescaling is
         performed.
@@ -675,14 +681,18 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
 @spring_layout.register(PyDiGraph)
 def _digraph_spring_layout(graph, pos=None, fixed=None, k=None, p=2,
                            adaptive_cooling=True, niter=50, tol=1e-6,
-                           scale=1, center=None, seed=None):
+                           weight_fn=None, default_weight=1, scale=1,
+                           center=None, seed=None):
     return digraph_spring_layout(graph, pos, fixed, k, p, adaptive_cooling,
-                                 niter, tol, scale, center, seed)
+                                 niter, tol, weight_fn, default_weight, scale,
+                                 center, seed)
 
 
 @spring_layout.register(PyGraph)
 def _graph_spring_layout(graph, pos=None, fixed=None, k=None, p=2,
                          adaptive_cooling=True, niter=50, tol=1e-6,
-                         scale=1, center=None, seed=None):
+                         weight_fn=None, default_weight=1, scale=1,
+                         center=None, seed=None):
     return graph_spring_layout(graph, pos, fixed, k, p, adaptive_cooling,
-                               niter, tol, scale, center, seed)
+                               niter, tol, weight_fn, default_weight, scale,
+                               center, seed)
