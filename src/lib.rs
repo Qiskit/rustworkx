@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::float_cmp)]
+
 mod astar;
 mod digraph;
 mod dijkstra;
@@ -56,7 +58,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use crate::iterators::{EdgeList, NodeIndices, Pos2DMapping, WeightedEdgeList};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -3280,7 +3282,7 @@ fn _spring_layout<Ty>(
     scale: Option<f64>,
     center: Option<layout::Point>,
     seed: Option<u64>,
-) -> PyResult<HashMap<usize, layout::Point>>
+) -> PyResult<Pos2DMapping>
 where
     Ty: EdgeType,
 {
@@ -3340,13 +3342,15 @@ where
         }
     };
 
-    Ok(graph
-        .node_indices()
-        .map(|n| {
-            let n = n.index();
-            (n, pos[n])
-        })
-        .collect())
+    Ok(Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let n = n.index();
+                (n, pos[n])
+            })
+            .collect(),
+    })
 }
 
 /// Position nodes using Fruchterman-Reingold force-directed algorithm.
@@ -3391,7 +3395,8 @@ where
 /// :rtype: dict
 #[pyfunction]
 #[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
-                     niter=50, tol=1e-6, scale=1, center=None, seed=None, /)"]
+                     niter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     center=None, seed=None, /)"]
 #[allow(clippy::too_many_arguments)]
 pub fn graph_spring_layout(
     py: Python,
@@ -3408,7 +3413,7 @@ pub fn graph_spring_layout(
     scale: Option<f64>,
     center: Option<layout::Point>,
     seed: Option<u64>,
-) -> PyResult<HashMap<usize, layout::Point>> {
+) -> PyResult<Pos2DMapping> {
     _spring_layout(
         py,
         &graph.graph,
@@ -3469,7 +3474,8 @@ pub fn graph_spring_layout(
 /// :rtype: dict
 #[pyfunction]
 #[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
-                     niter=50, tol=1e-6, scale=1, center=None, seed=None, /)"]
+                     niter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     center=None, seed=None, /)"]
 #[allow(clippy::too_many_arguments)]
 pub fn digraph_spring_layout(
     py: Python,
@@ -3486,7 +3492,7 @@ pub fn digraph_spring_layout(
     scale: Option<f64>,
     center: Option<layout::Point>,
     seed: Option<u64>,
-) -> PyResult<HashMap<usize, layout::Point>> {
+) -> PyResult<Pos2DMapping> {
     _spring_layout(
         py,
         &graph.graph,
@@ -3503,6 +3509,74 @@ pub fn digraph_spring_layout(
         center,
         seed,
     )
+}
+
+fn _random_layout<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+
+    Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let random_tuple: [f64; 2] = rng.gen();
+                match center {
+                    Some(center) => (
+                        n.index(),
+                        [
+                            random_tuple[0] + center[0],
+                            random_tuple[1] + center[1],
+                        ],
+                    ),
+                    None => (n.index(), random_tuple),
+                }
+            })
+            .collect(),
+    }
+}
+
+/// Generate a random layout
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
+pub fn graph_random_layout(
+    graph: &graph::PyGraph,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
+/// Generate a random layout
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
+pub fn digraph_random_layout(
+    graph: &digraph::PyDiGraph,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
 }
 
 // The provided node is invalid.
@@ -3584,6 +3658,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_spring_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
@@ -3592,6 +3668,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
+    m.add_class::<iterators::Pos2DMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
