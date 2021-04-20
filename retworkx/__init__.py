@@ -624,3 +624,86 @@ def _digraph_complement(graph):
 @complement.register(PyGraph)
 def _graph_complement(graph):
     return graph_complement(graph)
+
+
+@functools.singledispatch
+def bipartite_layout(graph,
+                     first_nodes,
+                     horizontal=False,
+                     scale=1,
+                     center=None,
+                     aspect_ratio=4 / 3):
+    """Generate a bipartite layout of the graph
+
+    :param graph: The graph to generate the layout for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param set first_nodes: The set of node indexes on the left (or top if
+        horitontal is true)
+    :param bool is_horizontal: An optional bool specifying the oritation of the
+        layout
+    :param float scale: An optional scaling factor to scale positions
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param float aspect_ratio: An optional number for the ratio of the width to
+        the height of the layout.
+
+    :returns: The bipartite layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bipartite_layout.register(PyDiGraph)
+def _digraph_bipartite_layout(graph,
+                              first_nodes,
+                              horizontal=False,
+                              scale=1,
+                              center=None,
+                              aspect_ratio=4 / 3):
+    return digraph_bipartite_layout(graph,
+                                    first_nodes,
+                                    horizontal=horizontal,
+                                    scale=scale,
+                                    center=center,
+                                    aspect_ratio=aspect_ratio)
+
+
+@bipartite_layout.register(PyGraph)
+def _graph_bipartite_layout(graph,
+                            first_nodes,
+                            horizontal=False,
+                            scale=1,
+                            center=None,
+                            aspect_ratio=4 / 3):
+    return graph_bipartite_layout(graph,
+                                  first_nodes,
+                                  horizontal=horizontal,
+                                  scale=scale,
+                                  center=center,
+                                  aspect_ratio=aspect_ratio)
+
+
+@functools.singledispatch
+def circular_layout(graph, scale=1, center=None):
+    """Generate a circular layout of the graph
+
+    :param graph: The graph to generate the layout for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param float scale: An optional scaling factor to scale positions
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+
+    :returns: The circular layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@circular_layout.register(PyDiGraph)
+def _digraph_circular_layout(graph, scale=1, center=None):
+    return digraph_circular_layout(graph, scale=scale, center=center)
+
+
+@circular_layout.register(PyGraph)
+def _graph_circular_layout(graph, scale=1, center=None):
+    return graph_circular_layout(graph, scale=scale, center=center)

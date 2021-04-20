@@ -19,6 +19,7 @@ mod graph;
 mod isomorphism;
 mod iterators;
 mod k_shortest_path;
+mod layouts;
 mod max_weight_matching;
 mod union;
 
@@ -55,7 +56,7 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use crate::iterators::{EdgeList, NodeIndices, Pos2DMapping, WeightedEdgeList};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -3263,6 +3264,116 @@ fn digraph_complement(
     Ok(complement_graph)
 }
 
+/// Generate a bipartite layout of the graph
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param set first_nodes: The set of node indexes on the left (or top if
+///     horitontal is true)
+/// :param bool is_horizontal: An optional bool specifying the oritation of the
+///     layout
+/// :param float scale: An optional scaling factor to scale positions
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param float aspect_ratio: An optional number for the ratio of the width to
+///     the height of the layout.
+///
+/// :returns: The bipartite layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, left_nodes, /, horitontal=False, scale=1, 
+                     center=None, aspect_ratio=4/3)"]
+pub fn graph_bipartite_layout(
+    graph: &graph::PyGraph,
+    first_nodes: HashSet<usize>,
+    horizontal: Option<bool>,
+    scale: Option<f64>,
+    center: Option<layouts::Point>,
+    aspect_ratio: Option<f64>,
+) -> Pos2DMapping {
+    layouts::bipartite_layout(
+        &graph.graph,
+        first_nodes,
+        horizontal,
+        scale,
+        center,
+        aspect_ratio,
+    )
+}
+
+/// Generate a bipartite layout of the graph
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param set first_nodes: The set of node indexes on the left (or top if
+///     horizontal is true)
+/// :param bool is_horizontal: An optional bool specifying the oritation of the
+///     layout
+/// :param float scale: An optional scaling factor to scale positions
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param float aspect_ratio: An optional number for the ratio of the width to
+///     the height of the layout.
+///
+/// :returns: The bipartite layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, first_nodes, /, horitontal=False, scale=1, 
+                     center=None, aspect_ratio=4/3)"]
+pub fn digraph_bipartite_layout(
+    graph: &digraph::PyDiGraph,
+    first_nodes: HashSet<usize>,
+    horizontal: Option<bool>,
+    scale: Option<f64>,
+    center: Option<layouts::Point>,
+    aspect_ratio: Option<f64>,
+) -> Pos2DMapping {
+    layouts::bipartite_layout(
+        &graph.graph,
+        first_nodes,
+        horizontal,
+        scale,
+        center,
+        aspect_ratio,
+    )
+}
+
+/// Generate a circular layout of the graph
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param float scale: An optional scaling factor to scale positions
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+///
+/// :returns: The circular layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, /, scale=1, center=None)"]
+pub fn graph_circular_layout(
+    graph: &graph::PyGraph,
+    scale: Option<f64>,
+    center: Option<layouts::Point>,
+) -> Pos2DMapping {
+    layouts::circular_layout(&graph.graph, scale, center)
+}
+
+/// Generate a circular layout of the graph
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param float scale: An optional scaling factor to scale positions
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+///
+/// :returns: The circular layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, /, scale=1, center=None)"]
+pub fn digraph_circular_layout(
+    graph: &digraph::PyDiGraph,
+    scale: Option<f64>,
+    center: Option<layouts::Point>,
+) -> Pos2DMapping {
+    layouts::circular_layout(&graph.graph, scale, center)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -3342,12 +3453,17 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bipartite_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bipartite_layout))?;
+    m.add_wrapped(wrap_pyfunction!(graph_circular_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_circular_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
+    m.add_class::<iterators::Pos2DMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
