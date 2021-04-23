@@ -987,18 +987,7 @@ pub fn directed_grid_graph(
 
 /// Generate an undirected heavy hex graph.
 ///
-/// :param int rows: The number of rows to generate the graph with.
-///     If specified, cols also need to be specified
-/// :param list cols: The number of rows to generate the graph with.
-///     If specified, rows also need to be specified. rows*cols
-///     defines the number of nodes in the graph
-/// :param list weights: A list of node weights. Nodes are filled row wise.
-///     If rows and cols are not specified, then a linear graph containing
-///     all the values in weights list is created.
-///     If number of nodes(rows*cols) is less than length of
-///     weights list, the trailing weights are ignored.
-///     If number of nodes(rows*cols) is greater than length of
-///     weights list, extra nodes with None weight are appended.
+/// :param int d: distance of the code.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1006,8 +995,7 @@ pub fn directed_grid_graph(
 ///
 /// :returns: The generated heavy hex graph
 /// :rtype: PyGraph
-/// :raises IndexError: If neither ``rows`` or ``cols`` and ``weights`` are
-///      specified
+/// :raises IndexError: If d is even.
 ///
 /// .. jupyter-execute::
 ///
@@ -1019,7 +1007,7 @@ pub fn directed_grid_graph(
 ///
 ///   import retworkx.generators
 ///
-///   graph = retworkx.generators.heavy_hex_graph(1, 1)
+///   graph = retworkx.generators.heavy_hex_graph(3)
 ///   dot_str = graph.to_dot(
 ///       lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
@@ -1033,107 +1021,89 @@ pub fn directed_grid_graph(
 ///   image
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"]
+#[text_signature = "(/, d=None, multigraph=True)"]
 pub fn heavy_hex_graph(
     py: Python,
-    rows: Option<usize>,
-    cols: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    d: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
 
-    if weights.is_none() && (rows.is_none() || cols.is_none()) {
-        return Err(PyIndexError::new_err(
-            "dimensions and weights list not specified",
-        ));
+    if d % 2 == 0 {
+        return Err(PyIndexError::new_err("d must be odd"));
     }
 
-    let rows = rows.unwrap_or(0);
-    let cols = cols.unwrap_or(0);
+    let num_data = d * d;
+    let num_syndrome = (d - 1) * (d + 1) / 2;
+    let num_flag = d * (d - 1);
 
-    let rowlen = 9 * rows;
-    let collen = 9 * cols;
+    let nodes_data: Vec<NodeIndex> =
+        (0..num_data).map(|_| graph.add_node(py.None())).collect();
+    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
+        .map(|_| graph.add_node(py.None()))
+        .collect();
+    let nodes_flag: Vec<NodeIndex> =
+        (0..num_flag).map(|_| graph.add_node(py.None())).collect();
 
-    let n_col = collen / 2;
+    // connect data and flags
+    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
+        for (j, flag) in flag_chunk.iter().enumerate() {
+            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
+            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
+        }
+    }
 
-    let num_nodes = 3 * (n_col) + 9 * (collen - n_col);
+    // connect data and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
+        if i % 2 == 0 {
+            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
+            graph.add_edge(
+                syndrome_chunk[0],
+                nodes_data[(i + 1) * d],
+                py.None(),
+            );
+        } else if i % 2 == 1 {
+            graph.add_edge(
+                nodes_data[(i + 1) * d - 1],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            graph.add_edge(
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                nodes_data[(i + 2) * d - 1],
+                py.None(),
+            );
+        }
+    }
 
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            let mut node_cnt = num_nodes;
-
-            for weight in weights {
-                if node_cnt == 0 {
-                    break;
+    // connect flag and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
+        if i % 2 == 0 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != 0 {
+                    graph.add_edge(
+                        nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
+                        *syndrome,
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + 2 * (j - 1) + 1],
+                        py.None(),
+                    );
                 }
-                let index = graph.add_node(weight);
-                node_list.push(index);
-                node_cnt -= 1;
             }
-
-            for _i in 0..node_cnt {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
-            }
-            node_list
-        }
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
-    };
-
-    // Add vertical edges
-    for i in 0..(collen - n_col) {
-        for j in 0..(rowlen) {
-            if j + 1 < rowlen {
-                graph.add_edge(
-                    nodes[j + 12 * i],
-                    nodes[j + 12 * i + 1],
-                    py.None(),
-                );
-            }
-        }
-    }
-
-    // Set auxiliary list to track vertical nodes
-    let nodes_middle = [9, 10, 11];
-    let nodes_right = [0, 3, 7];
-
-    // Add horizontal edges
-    for i in 0..n_col {
-        for j in 0..(rowlen / 3) {
-            if i % 2 == 0 {
-                graph.add_edge(
-                    nodes[nodes_right[j] + 12 * i],
-                    nodes[nodes_middle[j] + 12 * i],
-                    py.None(),
-                );
-                graph.add_edge(
-                    nodes[nodes_right[j] + 12 * (i + 1)],
-                    nodes[nodes_middle[j] + 12 * i],
-                    py.None(),
-                );
-            } else {
-                if j == 1 {
+        } else if i % 2 == 1 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != syndrome_chunk.len() - 1 {
                     graph.add_edge(
-                        nodes[nodes_right[j] + 12 * i + 2],
-                        nodes[nodes_middle[j] + 12 * i],
+                        nodes_flag[i * (d - 1) + 2 * j],
+                        *syndrome,
                         py.None(),
                     );
                     graph.add_edge(
-                        nodes[nodes_right[j] + 12 * (i + 1) + 2],
-                        nodes[nodes_middle[j] + 12 * i],
-                        py.None(),
-                    );
-                } else {
-                    graph.add_edge(
-                        nodes[nodes_right[j] + 12 * i + 1],
-                        nodes[nodes_middle[j] + 12 * i],
-                        py.None(),
-                    );
-                    graph.add_edge(
-                        nodes[nodes_right[j] + 12 * (i + 1) + 1],
-                        nodes[nodes_middle[j] + 12 * i],
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + 2 * j],
                         py.None(),
                     );
                 }
