@@ -195,10 +195,7 @@ pub fn spiral_layout<Ty: EdgeType>(
     let node_num = graph.node_count();
     let mut pos: Vec<Point> = Vec::with_capacity(node_num);
 
-    let ros = match resolution {
-        Some(resolution) => resolution,
-        None => 0.35,
-    };
+    let ros = resolution.unwrap_or(0.35);
 
     if node_num == 1 {
         pos.push([0.0, 0.0]);
@@ -243,15 +240,12 @@ fn recenter(pos: &mut Vec<Point>, center: Option<Point>) {
         return;
     }
     let dim = pos[0].len();
-    match center {
-        Some(center) => {
-            for n in 0..num_pos {
-                for d in 0..dim {
-                    pos[n][d] += center[d];
-                }
+    if let Some(center) = center {
+        for p in pos.iter_mut().take(num_pos) {
+            for (d, c) in center.iter().enumerate().take(dim) {
+                p[d] += c;
             }
         }
-        None => (),
     }
 }
 
@@ -261,10 +255,7 @@ fn rescale(pos: &mut Vec<Point>, scale: Option<f64>) {
         return;
     }
     let dim = pos[0].len();
-    let sc = match scale {
-        Some(scale) => scale,
-        None => 1.0,
-    };
+    let sc = scale.unwrap_or(1.0);
 
     let mut lim = 0.0;
     for d in 0..dim {
@@ -280,8 +271,8 @@ fn rescale(pos: &mut Vec<Point>, scale: Option<f64>) {
     if lim > 0.0 {
         let mult = sc / lim;
         pos.iter_mut().for_each(|t| {
-            for d in 0..dim {
-                t[d] *= mult;
+            for td in t.iter_mut().take(dim) {
+                *td *= mult;
             }
         });
     }
