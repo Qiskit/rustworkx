@@ -1,10 +1,11 @@
 # retworkx
 
 [![License](https://img.shields.io/github/license/Qiskit/retworkx.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://img.shields.io/travis/com/Qiskit/retworkx/master.svg?style=popout-square)](https://travis-ci.com/Qiskit/retworkx)
+![Build Status](https://github.com/Qiskit/retworkx/actions/workflows/main.yml/badge.svg?branch=main)
+[![Build Status](https://img.shields.io/travis/com/Qiskit/retworkx/main.svg?style=popout-square)](https://travis-ci.com/Qiskit/retworkx)
 [![](https://img.shields.io/github/release/Qiskit/retworkx.svg?style=popout-square)](https://github.com/Qiskit/retworkx/releases)
 [![](https://img.shields.io/pypi/dm/retworkx.svg?style=popout-square)](https://pypi.org/project/retworkx/)
-[![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=master)](https://coveralls.io/github/Qiskit/retworkx?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/retworkx?branch=main)
 [![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 
   - You can see the full rendered docs at:
