@@ -12,7 +12,7 @@
 
 use std::iter::Iterator;
 
-use hashbrown::HashSet;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::prelude::*;
 
@@ -34,6 +34,11 @@ pub fn bipartite_layout<Ty: EdgeType>(
     aspect_ratio: Option<f64>,
 ) -> Pos2DMapping {
     let node_num = graph.node_count();
+    if node_num == 0 {
+        return Pos2DMapping {
+            pos_map: HashMap::new(),
+        };
+    }
     let left_num = first_nodes.len();
     let right_num = node_num - left_num;
     let mut pos: Vec<Point> = Vec::with_capacity(node_num);
