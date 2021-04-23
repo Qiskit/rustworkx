@@ -627,6 +627,29 @@ def _graph_complement(graph):
 
 
 @functools.singledispatch
+def random_layout(graph, center=None, seed=None):
+    """Generate a random layout
+    :param PyGraph graph: The graph to generate the layout for
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param int seed: An optional seed to set for the random number generator.
+    :returns: The random layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@random_layout.register(PyDiGraph)
+def _digraph_random_layout(graph, center=None, seed=None):
+    return digraph_random_layout(graph, center=center, seed=seed)
+
+
+@random_layout.register(PyGraph)
+def _graph_random_layout(graph, center=None, seed=None):
+    return graph_random_layout(graph, center=center, seed=seed)
+
+
+@functools.singledispatch
 def bipartite_layout(graph,
                      first_nodes,
                      horizontal=False,
