@@ -31,6 +31,6 @@ class TestHeavyHexGraph(unittest.TestCase):
         self.assertEqual(len(graph.edges()),
                          2 * d * (d - 1) + (d + 1) * (d - 1))
 
-    def test_heavy_hex_graph_even_d(self):        
+    def test_heavy_hex_graph_even_d(self):
         with self.assertRaises(IndexError):
             retworkx.generators.heavy_hex_graph(2)
