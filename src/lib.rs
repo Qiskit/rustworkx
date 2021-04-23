@@ -3350,7 +3350,7 @@ pub fn digraph_random_layout(
 /// :rtype: Pos2DMapping
 #[pyfunction]
 #[text_signature = "(graph, first_nodes, /, horitontal=False, scale=1, 
-                     center=None, aspect_ratio=4/3)"]
+                     center=None, aspect_ratio=1.33333333333333)"]
 pub fn graph_bipartite_layout(
     graph: &graph::PyGraph,
     first_nodes: HashSet<usize>,
@@ -3386,7 +3386,7 @@ pub fn graph_bipartite_layout(
 /// :rtype: Pos2DMapping
 #[pyfunction]
 #[text_signature = "(graph, first_nodes, /, horitontal=False, scale=1, 
-                     center=None, aspect_ratio=4/3)"]
+                     center=None, aspect_ratio=1.33333333333333)"]
 pub fn digraph_bipartite_layout(
     graph: &digraph::PyDiGraph,
     first_nodes: HashSet<usize>,
