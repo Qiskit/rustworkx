@@ -130,6 +130,10 @@ type functions in the algorithms API but can be run with a
    retworkx.transitivity
    retworkx.core_number
    retworkx.random_layout
+   retworkx.bipartite_layout
+   retworkx.circular_layout
+   retworkx.shell_layout
+   retworkx.spiral_layout
 
 Layout Functions
 ================
