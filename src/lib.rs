@@ -3280,7 +3280,7 @@ fn digraph_complement(
 /// :returns: The bipartite layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[text_signature = "(graph, left_nodes, /, horitontal=False, scale=1, 
+#[text_signature = "(graph, first_nodes, /, horitontal=False, scale=1, 
                      center=None, aspect_ratio=4/3)"]
 pub fn graph_bipartite_layout(
     graph: &graph::PyGraph,
@@ -3374,6 +3374,107 @@ pub fn digraph_circular_layout(
     layouts::circular_layout(&graph.graph, scale, center)
 }
 
+/// Generate a shell layout of the graph
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param list nlist: The list of lists of indexes which represents each shell
+/// :param float rotate: Angle (in radians) by which to rotate the starting
+///     position of each shell relative to the starting position of the
+///     previous shell
+/// :param float scale: An optional scaling factor to scale positions
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+///
+/// :returns: The shell layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)"]
+pub fn graph_shell_layout(
+    graph: &graph::PyGraph,
+    nlist: Option<Vec<Vec<usize>>>,
+    rotate: Option<f64>,
+    scale: Option<f64>,
+    center: Option<layouts::Point>,
+) -> Pos2DMapping {
+    layouts::shell_layout(&graph.graph, nlist, rotate, scale, center)
+}
+
+/// Generate a shell layout of the graph
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param list nlist: The list of lists of indexes which represents each shell
+/// :param float rotate: Angle by which to rotate the starting position of each shell
+///     relative to the starting position of the previous shell (in radians)
+/// :param float scale: An optional scaling factor to scale positions
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+///
+/// :returns: The shell layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)"]
+pub fn digraph_shell_layout(
+    graph: &digraph::PyDiGraph,
+    nlist: Option<Vec<Vec<usize>>>,
+    rotate: Option<f64>,
+    scale: Option<f64>,
+    center: Option<layouts::Point>,
+) -> Pos2DMapping {
+    layouts::shell_layout(&graph.graph, nlist, rotate, scale, center)
+}
+
+/// Generate a spiral layout of the graph
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param float scale: An optional scaling factor to scale positions
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param float resolution: The compactness of the spiral layout returned.
+///     Lower values result in more compressed spiral layouts.
+/// :param bool equidistant: If true, nodes will be plotted equidistant from
+///     each other.
+///
+/// :returns: The spiral layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, /, scale=1, center=None, resolution=0.35, 
+                     equidistant=False)"]
+pub fn graph_spiral_layout(
+    graph: &graph::PyGraph,
+    scale: Option<f64>,
+    center: Option<layouts::Point>,
+    resolution: Option<f64>,
+    equidistant: Option<bool>,
+) -> Pos2DMapping {
+    layouts::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
+}
+
+/// Generate a spiral layout of the graph
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param float scale: An optional scaling factor to scale positions
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param float resolution: The compactness of the spiral layout returned.
+///     Lower values result in more compressed spiral layouts.
+/// :param bool equidistant: If true, nodes will be plotted equidistant from
+///     each other.
+///
+/// :returns: The spiral layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, /, scale=1, center=None, resolution=0.35, 
+                     equidistant=False)"]
+pub fn digraph_spiral_layout(
+    graph: &digraph::PyDiGraph,
+    scale: Option<f64>,
+    center: Option<layouts::Point>,
+    resolution: Option<f64>,
+    equidistant: Option<bool>,
+) -> Pos2DMapping {
+    layouts::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -3457,6 +3558,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_bipartite_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_circular_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_circular_layout))?;
+    m.add_wrapped(wrap_pyfunction!(graph_shell_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_shell_layout))?;
+    m.add_wrapped(wrap_pyfunction!(graph_spiral_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_spiral_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;

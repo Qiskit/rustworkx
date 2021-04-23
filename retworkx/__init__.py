@@ -707,3 +707,76 @@ def _digraph_circular_layout(graph, scale=1, center=None):
 @circular_layout.register(PyGraph)
 def _graph_circular_layout(graph, scale=1, center=None):
     return graph_circular_layout(graph, scale=scale, center=center)
+
+
+@functools.singledispatch
+def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
+    """
+    Generate a shell layout of the graph
+
+    :param graph: The graph to generate the layout for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param list nlist: The list of lists of indexes which represents each shell
+    :param float rotate: Angle (in radians) by which to rotate the starting
+        position of each shell relative to the starting position of the
+        previous shell
+    :param float scale: An optional scaling factor to scale positions
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+
+    :returns: The shell layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@shell_layout.register(PyDiGraph)
+def _digraph_shell_layout(graph, nlist=None, rotate=None, scale=1,
+                          center=None):
+    return digraph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale,
+                                center=center)
+
+
+@shell_layout.register(PyGraph)
+def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1,
+                        center=None):
+    return graph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale,
+                              center=center)
+
+
+@functools.singledispatch
+def spiral_layout(graph, scale=1, center=None, resolution=0.35,
+                  equidistant=False):
+    """
+    Generate a spiral layout of the graph
+
+    :param graph: The graph to generate the layout for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param float scale: An optional scaling factor to scale positions
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param float resolution: The compactness of the spiral layout returned.
+        Lower values result in more compressed spiral layouts.
+    :param bool equidistant: If true, nodes will be plotted equidistant from
+        each other.
+
+    :returns: The spiral layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@spiral_layout.register(PyDiGraph)
+def _digraph_spiral_layout(graph, scale=1, center=None, resolution=0.35,
+                           equidistant=False):
+    return digraph_spiral_layout(graph, scale=scale, center=center,
+                                 resolution=resolution,
+                                 equidistant=equidistant)
+
+
+@spiral_layout.register(PyGraph)
+def _graph_spiral_layout(graph, scale=1, center=None, resolution=0.35,
+                         equidistant=False):
+    return graph_spiral_layout(graph, scale=scale, center=center,
+                               resolution=resolution,
+                               equidistant=equidistant)

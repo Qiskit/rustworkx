@@ -33,7 +33,6 @@ pub fn bipartite_layout<Ty: EdgeType>(
     center: Option<Point>,
     aspect_ratio: Option<f64>,
 ) -> Pos2DMapping {
-    let nodes = graph.node_indices();
     let node_num = graph.node_count();
     let left_num = first_nodes.len();
     let right_num = node_num - left_num;
@@ -63,7 +62,7 @@ pub fn bipartite_layout<Ty: EdgeType>(
     let mut lc = 0;
     let mut rc = 0;
 
-    for node in nodes {
+    for node in graph.node_indices() {
         let n = node.index();
 
         let (x, y);
@@ -88,7 +87,8 @@ pub fn bipartite_layout<Ty: EdgeType>(
     recenter(&mut pos, center);
 
     Pos2DMapping {
-        pos_map: nodes
+        pos_map: graph
+            .node_indices()
             .map(|n| {
                 let n = n.index();
                 (n, pos[n])
@@ -102,7 +102,6 @@ pub fn circular_layout<Ty: EdgeType>(
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
-    let nodes = graph.node_indices();
     let node_num = graph.node_count();
     let mut pos: Vec<Point> = Vec::with_capacity(node_num);
     let pi = std::f64::consts::PI;
@@ -120,7 +119,116 @@ pub fn circular_layout<Ty: EdgeType>(
     recenter(&mut pos, center);
 
     Pos2DMapping {
-        pos_map: nodes
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let n = n.index();
+                (n, pos[n])
+            })
+            .collect(),
+    }
+}
+
+pub fn shell_layout<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    nlist: Option<Vec<Vec<usize>>>,
+    rotate: Option<f64>,
+    scale: Option<f64>,
+    center: Option<Point>,
+) -> Pos2DMapping {
+    let node_num = graph.node_count();
+    let mut pos: Vec<Point> = vec![[0.0, 0.0]; node_num];
+    let pi = std::f64::consts::PI;
+
+    let shell_list: Vec<Vec<usize>> = match nlist {
+        Some(nlist) => nlist,
+        None => vec![(0..node_num).collect()],
+    };
+    let shell_num = shell_list.len();
+
+    let radius_bump = match scale {
+        Some(scale) => scale / shell_num as f64,
+        None => 1.0 / shell_num as f64,
+    };
+
+    let mut radius = match node_num {
+        1 => 0.0,
+        _ => radius_bump,
+    };
+
+    let rot_angle = match rotate {
+        Some(rotate) => rotate,
+        None => pi / shell_num as f64,
+    };
+
+    let mut first_theta = rot_angle;
+    for shell in shell_list {
+        let shell_len = shell.len();
+        for i in 0..shell_len {
+            let angle = 2.0 * pi * i as f64 / shell_len as f64 + first_theta;
+            pos[shell[i]] = [radius * angle.cos(), radius * angle.sin()];
+        }
+        radius += radius_bump;
+        first_theta += rot_angle;
+    }
+
+    recenter(&mut pos, center);
+
+    Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let n = n.index();
+                (n, pos[n])
+            })
+            .collect(),
+    }
+}
+
+pub fn spiral_layout<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    scale: Option<f64>,
+    center: Option<Point>,
+    resolution: Option<f64>,
+    equidistant: Option<bool>,
+) -> Pos2DMapping {
+    let node_num = graph.node_count();
+    let mut pos: Vec<Point> = Vec::with_capacity(node_num);
+
+    let ros = match resolution {
+        Some(resolution) => resolution,
+        None => 0.35,
+    };
+
+    if node_num == 1 {
+        pos.push([0.0, 0.0]);
+    } else if equidistant == Some(true) {
+        let mut theta: f64 = ros;
+        let chord = 1.0;
+        let step = 0.5;
+        for _ in 0..node_num {
+            let r = step * theta;
+            theta += chord / r;
+            pos.push([theta.cos() * r, theta.sin() * r]);
+        }
+    } else {
+        let mut angle: f64 = 0.0;
+        let mut dist = 0.0;
+        let step = 1.0;
+        let radius = node_num as f64;
+        while dist < radius {
+            pos.push([dist * angle.cos(), dist * angle.sin()]);
+            dist += step;
+            angle += ros;
+        }
+    }
+
+    rescale(&mut pos, scale);
+    recenter(&mut pos, center);
+
+    Pos2DMapping {
+        pos_map: graph
+            .node_indices()
             .map(|n| {
                 let n = n.index();
                 (n, pos[n])
