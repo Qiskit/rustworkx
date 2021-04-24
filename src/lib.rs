@@ -1032,6 +1032,13 @@ where
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
 /// or graphs with negative weights (where Dijkstra's algorithm fails).
 ///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
 /// :param PyGraph graph: The graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
@@ -1045,18 +1052,22 @@ where
 ///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 ///
 ///     to cast the edge object as a float as the weight.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0")]
-#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
+#[pyfunction(parallel_threshold = "300", default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
 fn graph_floyd_warshall_numpy(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     // Allocate empty matrix
@@ -1077,14 +1088,33 @@ fn graph_floyd_warshall_numpy(
     // Perform the Floyd-Warshall algorithm.
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
-    for k in 0..n {
-        for i in 0..n {
-            for j in 0..n {
-                let d_ijk = mat[[i, k]] + mat[[k, j]];
-                if d_ijk < mat[[i, j]] {
-                    mat[[i, j]] = d_ijk;
+    if n < parallel_threshold {
+        for k in 0..n {
+            for i in 0..n {
+                for j in 0..n {
+                    let d_ijk = mat[[i, k]] + mat[[k, j]];
+                    if d_ijk < mat[[i, j]] {
+                        mat[[i, j]] = d_ijk;
+                    }
                 }
             }
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.slice(s![k, ..]).to_owned();
+            mat.axis_iter_mut(Axis(0))
+                .into_par_iter()
+                .for_each(|mut row_i| {
+                    let m_ik = row_i[k];
+                    row_i.iter_mut().zip(row_k.iter()).for_each(
+                        |(m_ij, m_kj)| {
+                            let d_ijk = m_ik + *m_kj;
+                            if d_ijk < *m_ij {
+                                *m_ij = d_ijk;
+                            }
+                        },
+                    )
+                })
         }
     }
     Ok(mat.into_pyarray(py).into())
@@ -1094,6 +1124,13 @@ fn graph_floyd_warshall_numpy(
 ///
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
 /// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
 ///
 /// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
@@ -1110,19 +1147,27 @@ fn graph_floyd_warshall_numpy(
 ///     to cast the edge object as a float as the weight.
 /// :param as_undirected: If set to true each directed edge will be treated as
 ///     bidirectional/undirected.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(as_undirected = "false", default_weight = "1.0")]
-#[text_signature = "(graph, /, weight_fn=None as_undirected=False, default_weight=1.0)"]
+#[pyfunction(
+    parallel_threshold = "300",
+    as_undirected = "false",
+    default_weight = "1.0"
+)]
+#[text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
 
@@ -1145,14 +1190,33 @@ fn digraph_floyd_warshall_numpy(
     // Perform the Floyd-Warshall algorithm.
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
-    for k in 0..n {
-        for i in 0..n {
-            for j in 0..n {
-                let d_ijk = mat[[i, k]] + mat[[k, j]];
-                if d_ijk < mat[[i, j]] {
-                    mat[[i, j]] = d_ijk;
+    if n < parallel_threshold {
+        for k in 0..n {
+            for i in 0..n {
+                for j in 0..n {
+                    let d_ijk = mat[[i, k]] + mat[[k, j]];
+                    if d_ijk < mat[[i, j]] {
+                        mat[[i, j]] = d_ijk;
+                    }
                 }
             }
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.slice(s![k, ..]).to_owned();
+            mat.axis_iter_mut(Axis(0))
+                .into_par_iter()
+                .for_each(|mut row_i| {
+                    let m_ik = row_i[k];
+                    row_i.iter_mut().zip(row_k.iter()).for_each(
+                        |(m_ij, m_kj)| {
+                            let d_ijk = m_ik + *m_kj;
+                            if d_ijk < *m_ij {
+                                *m_ij = d_ijk;
+                            }
+                        },
+                    )
+                })
         }
     }
     Ok(mat.into_pyarray(py).into())
