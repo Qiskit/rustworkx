@@ -206,11 +206,20 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 
 @functools.singledispatch
-def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300,
+):
     """Find all-pairs shortest path lengths using Floyd's algorithm
 
     Floyd's algorithm is used for finding shortest paths in dense graphs
     or graphs with negative weights (where Dijkstra's algorithm fails).
+
+    This function is multithreaded and will launch a pool with threads equal
+    to the number of CPUs by default if the number of nodes in the graph is
+    above the value of ``parallel_threshold`` (it defaults to 300).
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads if parallelization was enabled.
 
     :param graph: The graph to run Floyd's algorithm on. Can
         either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
@@ -230,6 +239,9 @@ def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
         for all edges.
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
+    :param int parallel_threshold: The number of nodes to execute
+        the algorithm in parallel at. It defaults to 300, but this can
+        be tuned
 
     :returns: A matrix of shortest path distances between nodes. If there is no
         path between two nodes then the corresponding matrix entry will be
@@ -240,16 +252,26 @@ def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
 
 
 @floyd_warshall_numpy.register(PyDiGraph)
-def _digraph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def _digraph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
     return digraph_floyd_warshall_numpy(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 
 @floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def _graph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
     return graph_floyd_warshall_numpy(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 
