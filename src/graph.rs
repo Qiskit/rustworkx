@@ -86,6 +86,7 @@ use petgraph::visit::{
 ///
 #[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, multigraph=True)"]
+#[derive(Clone)]
 pub struct PyGraph {
     pub graph: StableUnGraph<PyObject, PyObject>,
     pub node_removed: bool,
@@ -1038,16 +1039,23 @@ impl PyGraph {
         graph_attr: Option<BTreeMap<String, String>>,
         filename: Option<String>,
     ) -> PyResult<Option<PyObject>> {
-        if filename.is_some() {
-            let mut file = File::create(filename.unwrap())?;
-            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(None)
-        } else {
-            let mut file = Vec::<u8>::new();
-            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(Some(
-                PyString::new(py, str::from_utf8(&file)?).to_object(py),
-            ))
+        match filename {
+            Some(filename) => {
+                let mut file = File::create(filename)?;
+                build_dot(
+                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                )?;
+                Ok(None)
+            }
+            None => {
+                let mut file = Vec::<u8>::new();
+                build_dot(
+                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                )?;
+                Ok(Some(
+                    PyString::new(py, str::from_utf8(&file)?).to_object(py),
+                ))
+            }
         }
     }
 

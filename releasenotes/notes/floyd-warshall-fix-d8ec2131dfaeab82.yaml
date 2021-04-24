@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fix bug in :func:`~retworkx.floyd_warshall_numpy` in which the dispatcher mistakenly called 
+    :func:`~retworkx.adjacency_matrix` instead of :func:`~retworkx.graph_floyd_warshall_numpy`
+    and :func:`~retworkx.digraph_floyd_warshall_numpy`.

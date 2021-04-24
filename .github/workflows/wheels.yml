@@ -68,7 +68,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
           TWINE_USERNAME: retworkx-ci
   build-mac-arm-wheels:
-    name: Build wheels on macos for arm
+    name: Build wheels on macos for arm and universal2
     runs-on: macos-10.15
     steps:
       - uses: actions/checkout@v2
@@ -76,7 +76,7 @@ jobs:
         uses: joerick/cibuildwheel@v1.9.0
         env:
           CIBW_BEFORE_ALL: rustup target add aarch64-apple-darwin
-          CIBW_ARCHS_MACOS: arm64
+          CIBW_ARCHS_MACOS: arm64 universal2
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_ENVIRONMENT: CARGO_BUILD_TARGET="aarch64-apple-darwin" PYO3_CROSS_LIB_DIR="/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9"
       - uses: actions/upload-artifact@v2
@@ -86,7 +86,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.8'
-      - name: Install cibuildwheel
+      - name: Install twine
         run: |
           python -m pip install twine
       - name: Upload to PyPI
