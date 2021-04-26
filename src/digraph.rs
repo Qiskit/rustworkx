@@ -112,6 +112,7 @@ use super::{
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
 #[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, check_cycle=False, multigraph=True)"]
+#[derive(Clone)]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
     pub cycle_state: algo::DfsSpace<
@@ -1685,16 +1686,23 @@ impl PyDiGraph {
         graph_attr: Option<BTreeMap<String, String>>,
         filename: Option<String>,
     ) -> PyResult<Option<PyObject>> {
-        if filename.is_some() {
-            let mut file = File::create(filename.unwrap())?;
-            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(None)
-        } else {
-            let mut file = Vec::<u8>::new();
-            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(Some(
-                PyString::new(py, str::from_utf8(&file)?).to_object(py),
-            ))
+        match filename {
+            Some(filename) => {
+                let mut file = File::create(filename)?;
+                build_dot(
+                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                )?;
+                Ok(None)
+            }
+            None => {
+                let mut file = Vec::<u8>::new();
+                build_dot(
+                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                )?;
+                Ok(Some(
+                    PyString::new(py, str::from_utf8(&file)?).to_object(py),
+                ))
+            }
         }
     }
 
