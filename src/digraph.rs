@@ -46,7 +46,7 @@ use petgraph::visit::{
 };
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{EdgeList, NodeIndices, NodeMap, WeightedEdgeList};
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
     NoSuitableNeighbors, NodesRemoved,
@@ -2009,6 +2009,119 @@ impl PyDiGraph {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
         Ok(out_dict.into())
+    }
+
+    /// Substitute a node with a PyDigraph object
+    ///
+    /// :param int node: The node to replace with the PyDiGraph object
+    /// :param PyDiGraph other: The other graph to replace ``node`` with
+    /// :param callable edge_map_fn: A callable object that will take 3 position
+    ///     parameters, ``(source, target, weight)`` to represent an edge either to
+    ///     or from ``node`` in this graph. The expected return value from this
+    ///     callable is the node index of the node in ``other`` that an edge should
+    ///     be to/from. If None is returned, that edge will be skipped and not
+    ///     be copied.
+    /// :param callable node_filter: An callable object that will receive a node's
+    ///     payload object from ``other`` and return ``True`` whether to include it
+    ///     in the graph
+    /// :param callable edge_weight_map
+    #[text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None)"]
+    fn substitute_node_with_subgraph(
+        &mut self,
+        py: Python,
+        node: usize,
+        other: &PyDiGraph,
+        edge_map_fn: PyObject,
+        node_filter: Option<PyObject>,
+        edge_weight_map: Option<PyObject>,
+    ) -> PyResult<NodeMap> {
+        let weight_map_fn = |obj: &PyObject,
+                             weight_fn: &Option<PyObject>|
+         -> PyResult<PyObject> {
+            match weight_fn {
+                Some(weight_fn) => weight_fn.call1(py, (obj,)),
+                None => Ok(obj.clone_ref(py)),
+            }
+        };
+        let map_fn = |source: usize,
+                      target: usize,
+                      weight: &PyObject|
+         -> PyResult<Option<usize>> {
+            let res = edge_map_fn.call1(py, (source, target, weight))?;
+            res.extract(py)
+        };
+        let filter_fn =
+            |obj: &PyObject, filter_fn: &Option<PyObject>| -> PyResult<bool> {
+                match filter_fn {
+                    Some(filter) => {
+                        let res = filter.call1(py, (obj,))?;
+                        res.extract(py)
+                    }
+                    None => Ok(true),
+                }
+            };
+        // Copy nodes from other to self
+        let mut out_map: HashMap<usize, usize> =
+            HashMap::with_capacity(other.node_count());
+        for node in other.graph.node_indices() {
+            let node_weight = other[node].clone_ref(py);
+            if !filter_fn(&node_weight, &node_filter)? {
+                continue;
+            }
+            let new_index = self.graph.add_node(node_weight);
+            out_map.insert(node.index(), new_index.index());
+        }
+        // If no nodes are copied bail here since there is nothing left
+        // to do.
+        if out_map.is_empty() {
+            return Ok(NodeMap { node_map: out_map });
+        }
+        // Copy edges from other to self
+        for edge in other.graph.edge_references().filter(|edge| {
+            out_map.contains_key(&edge.target().index())
+                && out_map.contains_key(&edge.source().index())
+        }) {
+            self._add_edge(
+                NodeIndex::new(out_map[&edge.source().index()]),
+                NodeIndex::new(out_map[&edge.target().index()]),
+                weight_map_fn(edge.weight(), &edge_weight_map)?,
+            )?;
+        }
+        // Add edges to/from node to nodes in other
+        let node_index: NodeIndex = NodeIndex::new(node);
+        let in_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
+            .graph
+            .edges_directed(node_index, petgraph::Direction::Incoming)
+            .map(|edge| {
+                (edge.source(), edge.target(), edge.weight().clone_ref(py))
+            })
+            .collect();
+        let out_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
+            .graph
+            .edges_directed(node_index, petgraph::Direction::Outgoing)
+            .map(|edge| {
+                (edge.source(), edge.target(), edge.weight().clone_ref(py))
+            })
+            .collect();
+        for (source, target, weight) in in_edges {
+            let old_index = map_fn(source.index(), target.index(), &weight)?;
+            let target_out = match old_index {
+                Some(old_index) => NodeIndex::new(out_map[&old_index]),
+                None => continue,
+            };
+            self._add_edge(source, target_out, weight)?;
+        }
+        for (source, target, weight) in out_edges {
+            let old_index = map_fn(source.index(), target.index(), &weight)?;
+            let source_out = match old_index {
+                Some(old_index) => NodeIndex::new(out_map[&old_index]),
+                None => continue,
+            };
+            self._add_edge(source_out, target, weight)?;
+        }
+        // Remove node
+        self.graph.remove_node(node_index);
+        Ok(NodeMap { node_map: out_map })
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph

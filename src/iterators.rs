@@ -556,6 +556,238 @@ impl PyGCProtocol for WeightedEdgeList {
     }
 }
 
+/// A class representing a mapping of node indices to node indices
+///
+/// This class is equivalent to having a dict of the form::
+///
+///     {1: 0, 3: 1}
+///
+#[pyclass(module = "retworkx", gc)]
+pub struct NodeMap {
+    pub node_map: HashMap<usize, usize>,
+}
+
+#[pymethods]
+impl NodeMap {
+    #[new]
+    fn new() -> NodeMap {
+        NodeMap {
+            node_map: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, usize> {
+        self.node_map.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, usize>) {
+        self.node_map = state;
+    }
+
+    fn keys(&self) -> NodeMapKeys {
+        NodeMapKeys {
+            node_map_keys: self.node_map.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> NodeMapValues {
+        NodeMapValues {
+            node_map_values: self.node_map.values().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> NodeMapItems {
+        let items: Vec<(usize, usize)> =
+            self.node_map.iter().map(|(k, v)| (*k, *v)).collect();
+        NodeMapItems {
+            node_map_items: items,
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for NodeMap {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.node_map.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.node_map {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: usize = other_raw.extract()?;
+                        if other_value != *value {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> = Vec::with_capacity(self.node_map.len());
+        for path in &self.node_map {
+            str_vec.push(format!("{}: {}", path.0, path.1));
+        }
+        Ok(format!("NodeMap{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.node_map {
+            hasher.write_usize(*index.0);
+            hasher.write_usize(*index.1);
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for NodeMap {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.node_map.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.node_map.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for NodeMap {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.node_map.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<usize> {
+        match self.node_map.get(&idx) {
+            Some(data) => Ok(*data),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for NodeMap {
+    fn __iter__(slf: PyRef<Self>) -> NodeMapKeys {
+        NodeMapKeys {
+            node_map_keys: slf.node_map.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for NodeMap {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct NodeMapKeys {
+    pub node_map_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for NodeMapKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<NodeMapKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.node_map_keys.len() {
+            let res = IterNextOutput::Yield(slf.node_map_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct NodeMapValues {
+    pub node_map_values: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for NodeMapValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<NodeMapValues> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.node_map_values.len() {
+            let res = IterNextOutput::Yield(slf.node_map_values[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct NodeMapItems {
+    pub node_map_items: Vec<(usize, usize)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for NodeMapItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<NodeMapItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, usize), &'static str> {
+        if slf.iter_pos < slf.node_map_items.len() {
+            let res = IterNextOutput::Yield(slf.node_map_items[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
 /// A class representing a mapping of node indices to 2D positions
 ///
 /// This class is equivalent to having a dict of the form::
