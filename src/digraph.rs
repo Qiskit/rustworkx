@@ -1450,7 +1450,7 @@ impl PyDiGraph {
     /// :returns: A list of the neighbor node indicies
     /// :rtype: NodeIndices
     #[text_signature = "(self, node, /)"]
-    pub fn successor_indices(&mut self, node: usize) -> NodeIndices {
+    pub fn successor_indices(&self, node: usize) -> NodeIndices {
         NodeIndices {
             nodes: self
                 .graph
@@ -1473,7 +1473,7 @@ impl PyDiGraph {
     /// :returns: A list of the neighbor node indicies
     /// :rtype: NodeIndices
     #[text_signature = "(self, node, /)"]
-    pub fn predecessor_indices(&mut self, node: usize) -> NodeIndices {
+    pub fn predecessor_indices(&self, node: usize) -> NodeIndices {
         NodeIndices {
             nodes: self
                 .graph
