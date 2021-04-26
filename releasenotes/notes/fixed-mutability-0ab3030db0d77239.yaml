@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    Fixed an issue where calling :meth:`retworkx.PyDiGraph.successor_indices`
+    or :meth:`retworkx.PyDiGraph.predecessor_indices` would raise a
+    ``RuntimeError`` exception if they were called in a context where retworkx
+    is already working with a reference to a :class:`~retworkx.PyDiGraph`
+    (primarily if it were called in a callback function for another
+    :class:`~retworkx.PyDiGraph` method).
