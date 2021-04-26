@@ -995,7 +995,7 @@ pub fn directed_grid_graph(
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: A binomail tree with 2^n vertices and 2^n - 1 edges.
+/// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyGraph
 /// :raises IndexError: If neither ``order`` or ``weights`` are specified
 ///
@@ -1080,6 +1080,110 @@ pub fn binomial_tree_graph(
     })
 }
 
+/// Generate an undirected binomial tree of order n recursively.
+/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
+///
+/// :param int order: Order of the binomial tree.
+/// :param list weights: A list of node weights. It must have 2**order values.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes
+///
+/// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyDiGraph
+/// :raises IndexError: If neither ``rows`` or ``cols`` and ``weights`` are
+///      specified
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.directed_binomial_tree_graph(4)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(bidirectional = "false")]
+#[text_signature = "(/, order=None, weights=None, multigraph=True)"]
+pub fn directed_binomial_tree_graph(
+    py: Python,
+    order: u32,
+    weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+
+    let num_nodes = usize::pow(2, order);
+
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+            }
+
+            node_list
+        }
+
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    let mut n = 1;
+
+    for _ in 0..order {
+        let edges: Vec<(NodeIndex, NodeIndex)> = graph
+            .edge_references()
+            .map(|e| (e.source(), e.target()))
+            .collect();
+
+        for (source, target) in edges {
+            let source_index = source.index();
+            let target_index = target.index();
+
+            graph.add_edge(
+                nodes[source_index + n],
+                nodes[target_index + n],
+                py.None(),
+            );
+
+            if bidirectional {
+                graph.add_edge(
+                    nodes[source_index + n],
+                    nodes[target_index + n],
+                    py.None(),
+                );
+            }
+        }
+
+        graph.add_edge(nodes[0], nodes[n], py.None());
+
+        n *= 2;
+    }
+
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -1093,5 +1197,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(binomial_tree_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     Ok(())
 }
