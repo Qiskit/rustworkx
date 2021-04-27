@@ -31,6 +31,11 @@ use petgraph::visit::{
 use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing};
 
+use rayon::iter::{
+    IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator,
+};
+use rayon::slice::ParallelSliceMut;
+
 type Graph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
 // NOTE: assumes contiguous node ids.
@@ -102,7 +107,7 @@ where
             // repeatedly bring largest element in front.
             for i in 0..vd.len() {
                 let (index, &item) = vd[i..]
-                    .iter()
+                    .par_iter()
                     .enumerate()
                     .max_by_key(|&(_, &node)| {
                         (conn_in[node], dout[node], conn_out[node], din[node])
@@ -162,7 +167,7 @@ where
         };
 
         let mut sorted_nodes: Vec<usize> = (0..n).collect();
-        sorted_nodes.sort_unstable_by_key(|&node| (dout[node], din[node]));
+        sorted_nodes.par_sort_unstable_by_key(|&node| (dout[node], din[node]));
         sorted_nodes.reverse();
 
         for node in sorted_nodes {
@@ -613,60 +618,35 @@ where
                 return Ok(false);
             }
         }
-        // R_out
-        let mut out_count = [0, 0];
-        for j in graph_indices.clone() {
-            for n_neigh in g[j].neighbors(nodes[j]) {
-                let index = n_neigh.index();
-                if st[j].out[index] > 0 && st[j].mapping[index] == end {
-                    out_count[j] += 1;
-                }
-            }
-        }
-        if out_count[0] != out_count[1] {
-            return Ok(false);
-        }
-        if g[0].is_directed() {
-            let mut out_count = [0, 0];
-            for j in graph_indices.clone() {
-                for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
+        macro_rules! rule {
+            ($arr:ident, $j:expr, $dir:expr) => {{
+                let mut count = 0;
+                for n_neigh in g[$j].neighbors_directed(nodes[$j], $dir) {
                     let index = n_neigh.index();
-                    if st[j].out[index] > 0 && st[j].mapping[index] == end {
-                        out_count[j] += 1;
+                    if st[$j].$arr[index] > 0 && st[$j].mapping[index] == end {
+                        count += 1;
                     }
                 }
-            }
-            if out_count[0] != out_count[1] {
-                return Ok(false);
-            }
+                count
+            }};
+        }
+        // R_out
+        if rule!(out, 0, Outgoing) != rule!(out, 1, Outgoing) {
+            return Ok(false);
+        }
+        if g[0].is_directed()
+            && rule!(out, 0, Incoming) != rule!(out, 1, Incoming)
+        {
+            return Ok(false);
         }
         // R_in
         if g[0].is_directed() {
-            let mut in_count = [0, 0];
-            for j in graph_indices.clone() {
-                for n_neigh in g[j].neighbors(nodes[j]) {
-                    let index = n_neigh.index();
-                    if st[j].ins[index] > 0 && st[j].mapping[index] == end {
-                        in_count[j] += 1;
-                    }
-                }
-            }
-            if in_count[0] != in_count[1] {
+            if rule!(ins, 0, Outgoing) != rule!(ins, 1, Outgoing) {
                 return Ok(false);
             }
-            if g[0].is_directed() {
-                let mut in_count = [0, 0];
-                for j in graph_indices.clone() {
-                    for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
-                        let index = n_neigh.index();
-                        if st[j].ins[index] > 0 && st[j].mapping[index] == end {
-                            in_count[j] += 1;
-                        }
-                    }
-                }
-                if in_count[0] != in_count[1] {
-                    return Ok(false);
-                }
+
+            if rule!(ins, 0, Incoming) != rule!(ins, 1, Incoming) {
+                return Ok(false);
             }
         }
         // R_new
