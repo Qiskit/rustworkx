@@ -206,47 +206,73 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 
 @functools.singledispatch
-def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    """Return the adjacency matrix for a graph object
+def floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300,
+):
+    """Find all-pairs shortest path lengths using Floyd's algorithm
 
-    In the case where there are multiple edges between nodes the value in the
-    output matrix will be the sum of the edges' weights.
+    Floyd's algorithm is used for finding shortest paths in dense graphs
+    or graphs with negative weights (where Dijkstra's algorithm fails).
 
-    :param graph: The graph used to generate the adjacency matrix from. Can
+    This function is multithreaded and will launch a pool with threads equal
+    to the number of CPUs by default if the number of nodes in the graph is
+    above the value of ``parallel_threshold`` (it defaults to 300).
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads if parallelization was enabled.
+
+    :param graph: The graph to run Floyd's algorithm on. Can
         either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :param callable weight_fn: A callable object (function, lambda, etc) which
         will be passed the edge object and expected to return a ``float``. This
         tells retworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
 
-            adjacency_matrix(graph, weight_fn: lambda x: 1)
+            floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
 
         to return a weight of 1 for all edges. Also::
 
-            adjacency_matrix(graph, weight_fn: lambda x: float(x))
+            floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
         for all edges.
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
+    :param int parallel_threshold: The number of nodes to execute
+        the algorithm in parallel at. It defaults to 300, but this can
+        be tuned
 
-     :return: The adjacency matrix for the input dag as a numpy array
-     :rtype: numpy.ndarray
+    :returns: A matrix of shortest path distances between nodes. If there is no
+        path between two nodes then the corresponding matrix entry will be
+        ``np.inf``.
+    :rtype: numpy.ndarray
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
 @floyd_warshall_numpy.register(PyDiGraph)
-def _digraph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    return digraph_adjacency_matrix(graph, weight_fn=weight_fn,
-                                    default_weight=default_weight)
+def _digraph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
+    return digraph_floyd_warshall_numpy(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
+    )
 
 
 @floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    return graph_adjacency_matrix(graph, weight_fn=weight_fn,
-                                  default_weight=default_weight)
+def _graph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
+    return graph_floyd_warshall_numpy(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
+    )
 
 
 @functools.singledispatch
@@ -616,3 +642,55 @@ def _digraph_core_number(graph):
 @core_number.register(PyGraph)
 def _graph_core_number(graph):
     return graph_core_number(graph)
+
+
+@functools.singledispatch
+def complement(graph):
+    """Compute the complement of a graph.
+
+    :param graph: The graph to be used, can be either a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+
+    :returns: The complement of the graph.
+    :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+
+    .. note::
+        Parallel edges and self-loops are never created,
+        even if the ``multigraph`` is set to ``True``
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@complement.register(PyDiGraph)
+def _digraph_complement(graph):
+    return digraph_complement(graph)
+
+
+@complement.register(PyGraph)
+def _graph_complement(graph):
+    return graph_complement(graph)
+
+
+@functools.singledispatch
+def random_layout(graph, center=None, seed=None):
+    """Generate a random layout
+
+    :param PyGraph graph: The graph to generate the layout for
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param int seed: An optional seed to set for the random number generator.
+
+    :returns: The random layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@random_layout.register(PyDiGraph)
+def _digraph_random_layout(graph, center=None, seed=None):
+    return digraph_random_layout(graph, center=center, seed=seed)
+
+
+@random_layout.register(PyGraph)
+def _graph_random_layout(graph, center=None, seed=None):
+    return graph_random_layout(graph, center=center, seed=seed)
