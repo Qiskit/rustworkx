@@ -2106,7 +2106,15 @@ impl PyDiGraph {
         for (source, target, weight) in in_edges {
             let old_index = map_fn(source.index(), target.index(), &weight)?;
             let target_out = match old_index {
-                Some(old_index) => NodeIndex::new(out_map[&old_index]),
+                Some(old_index) => match out_map.get(&old_index) {
+                    Some(new_index) => NodeIndex::new(*new_index),
+                    None => {
+                        return Err(PyIndexError::new_err(format!(
+                            "No mapped index {} found",
+                            old_index
+                        )))
+                    }
+                },
                 None => continue,
             };
             self._add_edge(source, target_out, weight)?;
@@ -2114,7 +2122,15 @@ impl PyDiGraph {
         for (source, target, weight) in out_edges {
             let old_index = map_fn(source.index(), target.index(), &weight)?;
             let source_out = match old_index {
-                Some(old_index) => NodeIndex::new(out_map[&old_index]),
+                Some(old_index) => match out_map.get(&old_index) {
+                    Some(new_index) => NodeIndex::new(*new_index),
+                    None => {
+                        return Err(PyIndexError::new_err(format!(
+                            "No mapped index {} found",
+                            old_index
+                        )))
+                    }
+                },
                 None => continue,
             };
             self._add_edge(source_out, target, weight)?;
