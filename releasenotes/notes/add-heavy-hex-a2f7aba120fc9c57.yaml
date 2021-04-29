@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added new generator for constructing a heavy hex graph (:func:`retworkx.generators.heavy_hex_graph`).
+
