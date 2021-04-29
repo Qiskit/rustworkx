@@ -30,6 +30,7 @@ Generators
     retworkx.generators.directed_mesh_graph
     retworkx.generators.grid_graph
     retworkx.generators.directed_grid_graph
+    retworkx.generators.heavy_square_graph
 
 Random Circuit Functions
 ========================

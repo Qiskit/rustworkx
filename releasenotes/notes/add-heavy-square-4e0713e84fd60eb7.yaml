@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added new generator for constructing a heavy square graph (:func:`retworkx.generators.heavy_square_graph`).
