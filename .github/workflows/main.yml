@@ -2,9 +2,9 @@
 name: CI Jobs
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 jobs:
   build_lint:
     name: Build, rustfmt, and python lint
@@ -24,6 +24,8 @@ jobs:
         run: cargo build
       - name: Rust Format
         run: cargo fmt -- --check
+      - name: Clippy
+        run: cargo clippy -- -D warnings
       - name: Python Lint
         run: flake8 setup.py tests
   tests:
@@ -42,7 +44,7 @@ jobs:
         ]
         include:
           # Test minimal supported Rust version
-          - rust: 1.39.0
+          - rust: 1.41.1
             python-version: 3.8
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"

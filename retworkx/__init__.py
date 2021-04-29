@@ -6,6 +6,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+
 import sys
 import functools
 
@@ -205,47 +206,73 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 
 @functools.singledispatch
-def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    """Return the adjacency matrix for a graph object
+def floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300,
+):
+    """Find all-pairs shortest path lengths using Floyd's algorithm
 
-    In the case where there are multiple edges between nodes the value in the
-    output matrix will be the sum of the edges' weights.
+    Floyd's algorithm is used for finding shortest paths in dense graphs
+    or graphs with negative weights (where Dijkstra's algorithm fails).
 
-    :param graph: The graph used to generate the adjacency matrix from. Can
+    This function is multithreaded and will launch a pool with threads equal
+    to the number of CPUs by default if the number of nodes in the graph is
+    above the value of ``parallel_threshold`` (it defaults to 300).
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads if parallelization was enabled.
+
+    :param graph: The graph to run Floyd's algorithm on. Can
         either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :param callable weight_fn: A callable object (function, lambda, etc) which
         will be passed the edge object and expected to return a ``float``. This
         tells retworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
 
-            adjacency_matrix(graph, weight_fn: lambda x: 1)
+            floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
 
         to return a weight of 1 for all edges. Also::
 
-            adjacency_matrix(graph, weight_fn: lambda x: float(x))
+            floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
         for all edges.
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
+    :param int parallel_threshold: The number of nodes to execute
+        the algorithm in parallel at. It defaults to 300, but this can
+        be tuned
 
-     :return: The adjacency matrix for the input dag as a numpy array
-     :rtype: numpy.ndarray
+    :returns: A matrix of shortest path distances between nodes. If there is no
+        path between two nodes then the corresponding matrix entry will be
+        ``np.inf``.
+    :rtype: numpy.ndarray
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
 @floyd_warshall_numpy.register(PyDiGraph)
-def _digraph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    return digraph_adjacency_matrix(graph, weight_fn=weight_fn,
-                                    default_weight=default_weight)
+def _digraph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
+    return digraph_floyd_warshall_numpy(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
+    )
 
 
 @floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
-    return graph_adjacency_matrix(graph, weight_fn=weight_fn,
-                                  default_weight=default_weight)
+def _graph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
+    return graph_floyd_warshall_numpy(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
+    )
 
 
 @functools.singledispatch
@@ -437,3 +464,210 @@ def _digraph_dfs_edges(graph, source):
 @dfs_edges.register(PyGraph)
 def _graph_dfs_edges(graph, source):
     return graph_dfs_edges(graph, source)
+
+
+@functools.singledispatch
+def is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
+    """Determine if 2 graphs are isomorphic
+
+    This checks if 2 graphs are isomorphic both structurally and also
+    comparing the node and edge data using the provided matcher functions.
+    The matcher functions take in 2 data objects and will compare them. A
+    simple example that checks if they're just equal would be::
+
+            graph_a = retworkx.PyGraph()
+            graph_b = retworkx.PyGraph()
+            retworkx.is_isomorphic(graph_a, graph_b,
+                                lambda x, y: x == y)
+
+    :param first: The first graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param second: The second graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        It should be the same type as the first graph.
+    :param callable node_matcher: A python callable object that takes 2
+        positional one for each node data object. If the return of this
+        function evaluates to True then the nodes passed to it are viewed
+        as matching.
+    :param callable edge_matcher: A python callable object that takes 2
+        positional one for each edge data object. If the return of this
+        function evaluates to True then the edges passed to it are viewed
+        as matching.
+
+    :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are
+        not.
+    :rtype: bool
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@is_isomorphic.register(PyDiGraph)
+def _digraph_is_isomorphic(first, second, node_matcher=None,
+                           edge_matcher=None):
+    return digraph_is_isomorphic(first, second, node_matcher, edge_matcher)
+
+
+@is_isomorphic.register(PyGraph)
+def _graph_is_isomorphic(first, second, node_matcher=None, edge_matcher=None):
+    return graph_is_isomorphic(first, second, node_matcher, edge_matcher)
+
+
+@functools.singledispatch
+def is_isomorphic_node_match(first, second, matcher):
+    """Determine if 2 graphs are isomorphic
+
+    This checks if 2 graphs are isomorphic both structurally and also
+    comparing the node data using the provided matcher function. The matcher
+    function takes in 2 node data objects and will compare them. A simple
+    example that checks if they're just equal would be::
+
+        graph_a = retworkx.PyDAG()
+        graph_b = retworkx.PyDAG()
+        retworkx.is_isomorphic_node_match(graph_a, graph_b,
+                                        lambda x, y: x == y)
+
+    :param first: The first graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param second: The second graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        It should be the same type as the first graph.
+    :param callable matcher: A python callable object that takes 2 positional
+        one for each node data object. If the return of this
+        function evaluates to True then the nodes passed to it are vieded
+        as matching.
+
+    :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
+        not.
+    :rtype: bool
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@is_isomorphic_node_match.register(PyDiGraph)
+def _digraph_is_isomorphic_node_match(first, second, matcher):
+    return digraph_is_isomorphic(first, second, matcher)
+
+
+@is_isomorphic_node_match.register(PyGraph)
+def _graph_is_isomorphic_node_match(first, second, matcher):
+    return graph_is_isomorphic(first, second, matcher)
+
+
+@functools.singledispatch
+def transitivity(graph):
+    """Compute the transitivity of a graph.
+
+    This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
+
+    .. note::
+
+        The function implicitly assumes that there are no parallel edges
+        or self loops. It may produce incorrect/unexpected results if the
+        input graph has self loops or parallel edges.
+
+    :param graph: The graph to be used. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+
+    :returns: Transitivity of the graph.
+    :rtype: float
+        raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@transitivity.register(PyDiGraph)
+def _digraph_transitivity(graph):
+    return digraph_transitivity(graph)
+
+
+@transitivity.register(PyGraph)
+def _graph_transitivity(graph):
+    return graph_transitivity(graph)
+
+
+@functools.singledispatch
+def core_number(graph):
+    """Return the core number for each node in the graph.
+
+    A k-core is a maximal subgraph that contains nodes of degree k or more.
+
+    .. note::
+
+        The function implicitly assumes that there are no parallel edges
+        or self loops. It may produce incorrect/unexpected results if the
+        input graph has self loops or parallel edges.
+
+    :param graph: The graph to get core numbers. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+
+    :returns: A dictionary keyed by node index to the core number
+    :rtype: dict
+        raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@core_number.register(PyDiGraph)
+def _digraph_core_number(graph):
+    return digraph_core_number(graph)
+
+
+@core_number.register(PyGraph)
+def _graph_core_number(graph):
+    return graph_core_number(graph)
+
+
+@functools.singledispatch
+def complement(graph):
+    """Compute the complement of a graph.
+
+    :param graph: The graph to be used, can be either a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+
+    :returns: The complement of the graph.
+    :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+
+    .. note::
+        Parallel edges and self-loops are never created,
+        even if the ``multigraph`` is set to ``True``
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@complement.register(PyDiGraph)
+def _digraph_complement(graph):
+    return digraph_complement(graph)
+
+
+@complement.register(PyGraph)
+def _graph_complement(graph):
+    return graph_complement(graph)
+
+
+@functools.singledispatch
+def random_layout(graph, center=None, seed=None):
+    """Generate a random layout
+
+    :param PyGraph graph: The graph to generate the layout for
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param int seed: An optional seed to set for the random number generator.
+
+    :returns: The random layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@random_layout.register(PyDiGraph)
+def _digraph_random_layout(graph, center=None, seed=None):
+    return digraph_random_layout(graph, center=center, seed=seed)
+
+
+@random_layout.register(PyGraph)
+def _graph_random_layout(graph, center=None, seed=None):
+    return graph_random_layout(graph, center=center, seed=seed)
