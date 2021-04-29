@@ -51,6 +51,13 @@ class TestDispatchPyGraph(unittest.TestCase):
         res = retworkx.floyd_warshall_numpy(self.graph)
         self.assertIsInstance(res, numpy.ndarray)
 
+        if self.class_type == "PyGraph":
+            expected_res = retworkx.graph_floyd_warshall_numpy(self.graph)
+        else:
+            expected_res = retworkx.digraph_floyd_warshall_numpy(self.graph)
+
+        self.assertTrue(numpy.array_equal(expected_res, res))
+
     def test_astar_shortest_path(self):
         res = retworkx.astar_shortest_path(self.graph, 0, lambda _: True,
                                            lambda _: 1, lambda _: 1)
