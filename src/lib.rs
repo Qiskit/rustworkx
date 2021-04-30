@@ -57,7 +57,10 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices, Pos2DMapping, WeightedEdgeList};
+use crate::iterators::{
+    EdgeList, NodeIndices, PathLengthMapping, PathMapping, Pos2DMapping,
+    WeightedEdgeList,
+};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -787,7 +790,7 @@ fn graph_greedy_color(
 ///
 /// :returns: A dict of lengths where the key is the destination node index and
 ///     the value is the length of the path.
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
 fn digraph_k_shortest_path_lengths(
@@ -797,7 +800,7 @@ fn digraph_k_shortest_path_lengths(
     k: usize,
     edge_cost: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
@@ -811,15 +814,19 @@ fn digraph_k_shortest_path_lengths(
         k,
         edge_cost_callable,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, length) in out_map {
-        if (out_goal.is_some() && out_goal.unwrap() == index)
-            || out_goal.is_none()
-        {
-            out_dict.set_item(index.index(), length)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: out_map
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the length of the kth shortest path
@@ -839,7 +846,7 @@ fn digraph_k_shortest_path_lengths(
 ///
 /// :returns: A dict of lengths where the key is the destination node index and
 ///     the value is the length of the path.
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
 fn graph_k_shortest_path_lengths(
@@ -849,7 +856,7 @@ fn graph_k_shortest_path_lengths(
     k: usize,
     edge_cost: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
@@ -863,15 +870,19 @@ fn graph_k_shortest_path_lengths(
         k,
         edge_cost_callable,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, length) in out_map {
-        if (out_goal.is_some() && out_goal.unwrap() == index)
-            || out_goal.is_none()
-        {
-            out_dict.set_item(index.index(), length)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: out_map
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 /// Return the shortest path lengths between ever pair of nodes that has a
 /// path connecting them
@@ -1769,7 +1780,7 @@ pub fn graph_dijkstra_shortest_paths(
     target: Option<usize>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
-) -> PyResult<PyObject> {
+) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
@@ -1782,25 +1793,24 @@ pub fn graph_dijkstra_shortest_paths(
         Some(&mut paths),
     )?;
 
-    let out_dict = PyDict::new(py);
-    for (index, value) in paths {
-        let int_index = index.index();
-        if int_index == source {
-            continue;
-        }
-        if (target.is_some() && target.unwrap() == int_index)
-            || target.is_none()
-        {
-            out_dict.set_item(
-                int_index,
-                value
-                    .iter()
-                    .map(|index| index.index())
-                    .collect::<Vec<usize>>(),
-            )?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathMapping {
+        paths: paths
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == source
+                    || target.is_some() && target.unwrap() != k_int
+                {
+                    None
+                } else {
+                    Some((
+                        k.index(),
+                        v.iter().map(|x| x.index()).collect::<Vec<usize>>(),
+                    ))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Find the shortest path from a node
@@ -1832,7 +1842,7 @@ pub fn digraph_dijkstra_shortest_paths(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     as_undirected: bool,
-) -> PyResult<PyObject> {
+) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
@@ -1857,26 +1867,24 @@ pub fn digraph_dijkstra_shortest_paths(
             Some(&mut paths),
         )?;
     }
-
-    let out_dict = PyDict::new(py);
-    for (index, value) in paths {
-        let int_index = index.index();
-        if int_index == source {
-            continue;
-        }
-        if (target.is_some() && target.unwrap() == int_index)
-            || target.is_none()
-        {
-            out_dict.set_item(
-                int_index,
-                value
-                    .iter()
-                    .map(|index| index.index())
-                    .collect::<Vec<usize>>(),
-            )?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathMapping {
+        paths: paths
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == source
+                    || target.is_some() && target.unwrap() != k_int
+                {
+                    None
+                } else {
+                    Some((
+                        k_int,
+                        v.iter().map(|x| x.index()).collect::<Vec<usize>>(),
+                    ))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the lengths of the shortest paths for a PyGraph object using
@@ -1896,7 +1904,7 @@ pub fn digraph_dijkstra_shortest_paths(
 /// :returns: A dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, node, edge_cost_fn, /, goal=None)"]
 fn graph_dijkstra_shortest_path_lengths(
@@ -1905,7 +1913,7 @@ fn graph_dijkstra_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1922,17 +1930,19 @@ fn graph_dijkstra_shortest_path_lengths(
         |e| edge_cost_callable(e.weight()),
         None,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, value) in res {
-        let int_index = index.index();
-        if int_index == node {
-            continue;
-        }
-        if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
-            out_dict.set_item(int_index, value)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: res
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == node || goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the lengths of the shortest paths for a PyDiGraph object using
@@ -1952,7 +1962,7 @@ fn graph_dijkstra_shortest_path_lengths(
 /// :returns: A dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, node, edge_cost_fn, /, goal=None)"]
 fn digraph_dijkstra_shortest_path_lengths(
@@ -1961,7 +1971,7 @@ fn digraph_dijkstra_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1978,17 +1988,19 @@ fn digraph_dijkstra_shortest_path_lengths(
         |e| edge_cost_callable(e.weight()),
         None,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, value) in res {
-        let int_index = index.index();
-        if int_index == node {
-            continue;
-        }
-        if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
-            out_dict.set_item(int_index, value)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: res
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == node || goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the A* shortest path for a PyGraph
@@ -3483,6 +3495,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
+    m.add_class::<iterators::PathMapping>()?;
+    m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
