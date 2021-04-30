@@ -31,24 +31,25 @@ use petgraph::visit::{
 use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing};
 
-use rayon::iter::{
-    IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator,
-};
 use rayon::slice::ParallelSliceMut;
 
-type Graph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
 // NOTE: assumes contiguous node ids.
-pub trait NodeSorter<Ty>
+trait NodeSorter<Ty>
 where
     Ty: EdgeType,
 {
-    fn sort(&self, _: &Graph<Ty>) -> Vec<usize>;
+    fn sort(&self, _: &StablePyGraph<Ty>) -> Vec<usize>;
 
-    fn reorder(&self, py: Python, graph: &Graph<Ty>) -> Graph<Ty> {
+    fn reorder(
+        &self,
+        py: Python,
+        graph: &StablePyGraph<Ty>,
+    ) -> StablePyGraph<Ty> {
         let order = self.sort(graph);
 
-        let mut new_graph = Graph::<Ty>::default();
+        let mut new_graph = StablePyGraph::<Ty>::default();
         let mut id_map: Vec<usize> = vec![0; graph.node_count()];
         for node in order {
             let node_index = graph.from_index(node);
@@ -75,7 +76,7 @@ impl<Ty> NodeSorter<Ty> for Vf2ppSorter
 where
     Ty: EdgeType,
 {
-    fn sort(&self, graph: &Graph<Ty>) -> Vec<usize> {
+    fn sort(&self, graph: &StablePyGraph<Ty>) -> Vec<usize> {
         let n = graph.node_count();
 
         let dout: Vec<usize> = (0..n)
@@ -107,7 +108,7 @@ where
             // repeatedly bring largest element in front.
             for i in 0..vd.len() {
                 let (index, &item) = vd[i..]
-                    .par_iter()
+                    .iter()
                     .enumerate()
                     .max_by_key(|&(_, &node)| {
                         (conn_in[node], dout[node], conn_out[node], din[node])
@@ -178,7 +179,7 @@ where
     }
 }
 
-impl<'a, Ty> NodesRemoved for &'a Graph<Ty>
+impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
@@ -192,7 +193,7 @@ struct Vf2State<'a, Ty>
 where
     Ty: EdgeType,
 {
-    graph: &'a Graph<Ty>,
+    graph: &'a StablePyGraph<Ty>,
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
     mapping: Vec<NodeIndex>,
@@ -216,7 +217,7 @@ impl<'a, Ty> Vf2State<'a, Ty>
 where
     Ty: EdgeType,
 {
-    pub fn new(g: &'a Graph<Ty>) -> Self {
+    pub fn new(g: &'a StablePyGraph<Ty>) -> Self {
         let c0 = g.node_count();
         Vf2State {
             graph: g,
@@ -317,7 +318,7 @@ where
     }
 }
 
-fn reindex_graph<Ty>(py: Python, graph: &Graph<Ty>) -> Graph<Ty>
+fn reindex_graph<Ty>(py: Python, graph: &StablePyGraph<Ty>) -> StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
@@ -328,7 +329,7 @@ where
     // StableGraph. This compacts the node ids as a workaround until VF2State
     // and try_match can be rewitten to handle this (and likely contributed
     // upstream to petgraph too).
-    let mut new_graph = Graph::<Ty>::default();
+    let mut new_graph = StablePyGraph::<Ty>::default();
     let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
     for node_index in graph.node_indices() {
         let node_data = graph.node_weight(node_index).unwrap();
@@ -353,8 +354,8 @@ where
 /// The graphs should not be multigraphs.
 pub fn is_isomorphic<Ty, F, G>(
     py: Python,
-    g0: &Graph<Ty>,
-    g1: &Graph<Ty>,
+    g0: &StablePyGraph<Ty>,
+    g1: &StablePyGraph<Ty>,
     mut node_match: Option<F>,
     mut edge_match: Option<G>,
     id_order: Option<bool>,
@@ -364,8 +365,8 @@ where
     F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
     G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
 {
-    let mut inner_temp_g0: Graph<Ty>;
-    let mut inner_temp_g1: Graph<Ty>;
+    let mut inner_temp_g0: StablePyGraph<Ty>;
+    let mut inner_temp_g1: StablePyGraph<Ty>;
     let g0_out = if g0.nodes_removed() {
         inner_temp_g0 = reindex_graph(py, g0);
         &inner_temp_g0
@@ -438,8 +439,8 @@ where
 /// Return Some(bool) if isomorphism is decided, else None.
 fn try_match<Ty, F, G>(
     mut st: &mut [Vf2State<Ty>; 2],
-    g0: &Graph<Ty>,
-    g1: &Graph<Ty>,
+    g0: &StablePyGraph<Ty>,
+    g1: &StablePyGraph<Ty>,
     node_match: &mut F,
     edge_match: &mut G,
 ) -> PyResult<Option<bool>>
