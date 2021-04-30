@@ -65,16 +65,16 @@ class TestDispatchPyGraph(unittest.TestCase):
 
     def test_dijkstra_shortest_paths(self):
         res = retworkx.dijkstra_shortest_paths(self.graph, 0)
-        self.assertIsInstance(res, dict)
+        self.assertIsInstance(res, retworkx.PathMapping)
 
     def test_dijkstra_shortest_path_lengths(self):
         res = retworkx.dijkstra_shortest_path_lengths(self.graph, 0,
                                                       lambda _: 1)
-        self.assertIsInstance(res, dict)
+        self.assertIsInstance(res, retworkx.PathLengthMapping)
 
     def test_k_shortest_path_lengths(self):
         res = retworkx.k_shortest_path_lengths(self.graph, 0, 2, lambda _: 1)
-        self.assertIsInstance(res, dict)
+        self.assertIsInstance(res, retworkx.PathLengthMapping)
 
     def test_dfs_edges(self):
         res = retworkx.dfs_edges(self.graph, 0)
