@@ -58,8 +58,8 @@ use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
-    AllPairsPathLengthMapping, EdgeList, NodeIndices, PathLengthMapping,
-    PathMapping, Pos2DMapping, WeightedEdgeList,
+    AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices,
+    PathLengthMapping, PathMapping, Pos2DMapping, WeightedEdgeList,
 };
 
 trait NodesRemoved {
@@ -2028,7 +2028,7 @@ fn digraph_dijkstra_shortest_path_lengths(
 ///             2: {0: 1.0},
 ///         }
 ///
-/// :rtype: dict
+/// :rtype: AllPairsPathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, edge_cost_fn, /)"]
 pub fn digraph_all_pairs_dijkstra_path_lengths(
@@ -2135,22 +2135,33 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
 ///             2: {0: [2, 0]},
 ///         }
 ///
-/// :rtype: dict
+/// :rtype: AllPairsPathMapping
 #[pyfunction]
 #[text_signature = "(graph, edge_cost_fn, /)"]
 pub fn digraph_all_pairs_dijkstra_shortest_paths(
     py: Python,
     graph: &digraph::PyDiGraph,
     edge_cost_fn: PyObject,
-) -> PyResult<PyObject> {
+) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {
-        return Ok(PyDict::new(py).into());
+        return Ok(AllPairsPathMapping {
+            paths: HashMap::new(),
+        });
     } else if graph.graph.edge_count() == 0 {
-        let out_dict = PyDict::new(py);
-        for i in graph.graph.node_indices() {
-            out_dict.set_item(i.index(), PyDict::new(py))?;
-        }
-        return Ok(out_dict.into());
+        return Ok(AllPairsPathMapping {
+            paths: graph
+                .graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathMapping {
+                            paths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
     }
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
@@ -2176,8 +2187,8 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let out_map: Vec<(usize, HashMap<NodeIndex, Vec<NodeIndex>>)> =
-        node_indices
+    Ok(AllPairsPathMapping {
+        paths: node_indices
             .into_par_iter()
             .map(|x| {
                 let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
@@ -2190,26 +2201,31 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
                     Some(&mut paths),
                 )
                 .unwrap();
-                (x.index(), paths)
+                let index = x.index();
+                let out_paths = PathMapping {
+                    paths: paths
+                        .iter()
+                        .filter_map(|path_mapping| {
+                            let path_index = path_mapping.0.index();
+                            if index != path_index {
+                                Some((
+                                    path_index,
+                                    path_mapping
+                                        .1
+                                        .iter()
+                                        .map(|x| x.index())
+                                        .collect(),
+                                ))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                };
+                (index, out_paths)
             })
-            .collect();
-    let out_dict = PyDict::new(py);
-    for (index, entries) in out_map {
-        let inner_dict = PyDict::new(py);
-        for (map_index, val) in entries {
-            if map_index.index() == index {
-                continue;
-            }
-            inner_dict.set_item(
-                map_index.index(),
-                val.iter()
-                    .map(|index| index.index())
-                    .collect::<Vec<usize>>(),
-            )?;
-        }
-        out_dict.set_item(index, inner_dict)?;
-    }
-    Ok(out_dict.into())
+            .collect(),
+    })
 }
 
 /// Calculate the the shortest length from all nodes in a
@@ -2233,7 +2249,7 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
 ///             2: {0: 1.0},
 ///         }
 ///
-/// :rtype: dict
+/// :rtype: AllPairsPathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, edge_cost_fn, /)"]
 pub fn graph_all_pairs_dijkstra_path_lengths(
@@ -2337,22 +2353,33 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
 ///             2: {0: [2, 0]},
 ///         }
 ///
-/// :rtype: dict
+/// :rtype: AllPairsPathMapping
 #[pyfunction]
 #[text_signature = "(graph, edge_cost_fn, /)"]
 pub fn graph_all_pairs_dijkstra_shortest_paths(
     py: Python,
     graph: &graph::PyGraph,
     edge_cost_fn: PyObject,
-) -> PyResult<PyObject> {
+) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {
-        return Ok(PyDict::new(py).into());
+        return Ok(AllPairsPathMapping {
+            paths: HashMap::new(),
+        });
     } else if graph.graph.edge_count() == 0 {
-        let out_dict = PyDict::new(py);
-        for i in graph.graph.node_indices() {
-            out_dict.set_item(i.index(), PyDict::new(py))?;
-        }
-        return Ok(out_dict.into());
+        return Ok(AllPairsPathMapping {
+            paths: graph
+                .graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathMapping {
+                            paths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
     }
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
@@ -2378,8 +2405,8 @@ pub fn graph_all_pairs_dijkstra_shortest_paths(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let out_map: Vec<(usize, HashMap<NodeIndex, Vec<NodeIndex>>)> =
-        node_indices
+    Ok(AllPairsPathMapping {
+        paths: node_indices
             .into_par_iter()
             .map(|x| {
                 let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
@@ -2392,26 +2419,31 @@ pub fn graph_all_pairs_dijkstra_shortest_paths(
                     Some(&mut paths),
                 )
                 .unwrap();
-                (x.index(), paths)
+                let index = x.index();
+                let out_paths = PathMapping {
+                    paths: paths
+                        .iter()
+                        .filter_map(|path_mapping| {
+                            let path_index = path_mapping.0.index();
+                            if index != path_index {
+                                Some((
+                                    path_index,
+                                    path_mapping
+                                        .1
+                                        .iter()
+                                        .map(|x| x.index())
+                                        .collect(),
+                                ))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                };
+                (index, out_paths)
             })
-            .collect();
-    let out_dict = PyDict::new(py);
-    for (index, entries) in out_map {
-        let inner_dict = PyDict::new(py);
-        for (map_index, val) in entries {
-            if map_index.index() == index {
-                continue;
-            }
-            inner_dict.set_item(
-                map_index.index(),
-                val.iter()
-                    .map(|index| index.index())
-                    .collect::<Vec<usize>>(),
-            )?;
-        }
-        out_dict.set_item(index, inner_dict)?;
-    }
-    Ok(out_dict.into())
+            .collect(),
+    })
 }
 
 /// Compute the A* shortest path for a PyGraph
@@ -3914,6 +3946,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
     m.add_class::<iterators::AllPairsPathLengthMapping>()?;
+    m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
