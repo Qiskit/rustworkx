@@ -58,8 +58,8 @@ use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
-    EdgeList, NodeIndices, PathLengthMapping, PathMapping, Pos2DMapping,
-    WeightedEdgeList,
+    AllPairsPathLengthMapping, EdgeList, NodeIndices, PathLengthMapping,
+    PathMapping, Pos2DMapping, WeightedEdgeList,
 };
 
 trait NodesRemoved {
@@ -2035,15 +2035,26 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
     edge_cost_fn: PyObject,
-) -> PyResult<PyObject> {
+) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
-        return Ok(PyDict::new(py).into());
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: HashMap::new(),
+        });
     } else if graph.graph.edge_count() == 0 {
-        let out_dict = PyDict::new(py);
-        for i in graph.graph.node_indices() {
-            out_dict.set_item(i.index(), PyDict::new(py))?;
-        }
-        return Ok(out_dict.into());
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: graph
+                .graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathLengthMapping {
+                            path_lengths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
     }
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
@@ -2069,30 +2080,34 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let out_map: Vec<(usize, Vec<(usize, f64)>)> = node_indices
+    let out_map: HashMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
-            let out_vec: Vec<(usize, f64)> =
-                dijkstra::dijkstra(graph, x, None, |e| edge_cost(e.id()), None)
-                    .unwrap()
-                    .iter()
-                    .map(|(index, cost)| (index.index(), *cost))
-                    .collect();
-            (x.index(), out_vec)
+            let out_map = PathLengthMapping {
+                path_lengths: dijkstra::dijkstra(
+                    graph,
+                    x,
+                    None,
+                    |e| edge_cost(e.id()),
+                    None,
+                )
+                .unwrap()
+                .iter()
+                .filter_map(|(index, cost)| {
+                    if *index == x {
+                        None
+                    } else {
+                        Some((index.index(), *cost))
+                    }
+                })
+                .collect(),
+            };
+            (x.index(), out_map)
         })
         .collect();
-    let out_dict = PyDict::new(py);
-    for (index, entries) in out_map {
-        let inner_dict = PyDict::new(py);
-        for (map_index, val) in entries {
-            if map_index == index {
-                continue;
-            }
-            inner_dict.set_item(map_index, val)?;
-        }
-        out_dict.set_item(index, inner_dict)?;
-    }
-    Ok(out_dict.into())
+    Ok(AllPairsPathLengthMapping {
+        path_lengths: out_map,
+    })
 }
 
 /// Find the shortest path from all nodes in a :class:`~retworkx.PyDiGraph`
@@ -2225,15 +2240,26 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
     edge_cost_fn: PyObject,
-) -> PyResult<PyObject> {
+) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
-        return Ok(PyDict::new(py).into());
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: HashMap::new(),
+        });
     } else if graph.graph.edge_count() == 0 {
-        let out_dict = PyDict::new(py);
-        for i in graph.graph.node_indices() {
-            out_dict.set_item(i.index(), PyDict::new(py))?;
-        }
-        return Ok(out_dict.into());
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: graph
+                .graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathLengthMapping {
+                            path_lengths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
     }
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
@@ -2260,30 +2286,34 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
     };
 
     let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let out_map: Vec<(usize, Vec<(usize, f64)>)> = node_indices
+    let out_map: HashMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
-            let out_vec: Vec<(usize, f64)> =
-                dijkstra::dijkstra(graph, x, None, |e| edge_cost(e.id()), None)
-                    .unwrap()
-                    .iter()
-                    .map(|(index, cost)| (index.index(), *cost))
-                    .collect();
-            (x.index(), out_vec)
+            let out_map = PathLengthMapping {
+                path_lengths: dijkstra::dijkstra(
+                    graph,
+                    x,
+                    None,
+                    |e| edge_cost(e.id()),
+                    None,
+                )
+                .unwrap()
+                .iter()
+                .filter_map(|(index, cost)| {
+                    if *index == x {
+                        None
+                    } else {
+                        Some((index.index(), *cost))
+                    }
+                })
+                .collect(),
+            };
+            (x.index(), out_map)
         })
         .collect();
-    let out_dict = PyDict::new(py);
-    for (index, entries) in out_map {
-        let inner_dict = PyDict::new(py);
-        for (map_index, val) in entries {
-            if map_index == index {
-                continue;
-            }
-            inner_dict.set_item(map_index, val)?;
-        }
-        out_dict.set_item(index, inner_dict)?;
-    }
-    Ok(out_dict.into())
+    Ok(AllPairsPathLengthMapping {
+        path_lengths: out_map,
+    })
 }
 
 /// Find the shortest path from all nodes in a :class:`~retworkx.PyGraph`
@@ -3883,6 +3913,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathMapping>()?;
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
+    m.add_class::<iterators::AllPairsPathLengthMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
