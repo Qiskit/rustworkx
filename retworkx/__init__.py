@@ -671,3 +671,33 @@ def _digraph_random_layout(graph, center=None, seed=None):
 @random_layout.register(PyGraph)
 def _graph_random_layout(graph, center=None, seed=None):
     return graph_random_layout(graph, center=center, seed=seed)
+
+
+def networkx_converter(graph):
+    """Convert a networkx graph object into a retworkx graph object.
+
+    .. note::
+
+        networkx is **not** a dependency of retworkx and this function
+        is provided as a convenience method for users of both networkx and
+        retworkx. This function will not work unless you install networkx
+        independently.
+
+    :param networkx.Graph graph: The networkx graph to convert.
+
+    :returns: A retworkx graph, either a :class:`~retworkx.PyDiGraph` or a
+        :class:`~retworkx.PyGraph` based on whether the input graph is directed
+        or not.
+    :rtype: :class:`~retworkx.PyDiGraph` or :class:`~retworkx.PyGraph`
+    """
+    if graph.is_directed():
+        new_graph = PyDiGraph(multigraph=graph.is_multigraph())
+    else:
+        new_graph = PyGraph(multigraph=graph.is_multigraph())
+    nodes = list(graph.nodes)
+    node_indices = dict(zip(nodes, new_graph.add_nodes_from(nodes)))
+    new_graph.add_edges_from(
+        [(node_indices[x[0]],
+          node_indices[x[1]],
+          x[2]) for x in graph.edges(data=True)])
+    return new_graph

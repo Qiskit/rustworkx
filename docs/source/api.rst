@@ -141,6 +141,14 @@ Layout Functions
    retworkx.graph_random_layout
    retworkx.digraph_random_layout
 
+Converters
+----------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.networkx_converter
+
 Exceptions
 ==========
 
