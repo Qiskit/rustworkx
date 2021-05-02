@@ -206,11 +206,20 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 
 @functools.singledispatch
-def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300,
+):
     """Find all-pairs shortest path lengths using Floyd's algorithm
 
     Floyd's algorithm is used for finding shortest paths in dense graphs
     or graphs with negative weights (where Dijkstra's algorithm fails).
+
+    This function is multithreaded and will launch a pool with threads equal
+    to the number of CPUs by default if the number of nodes in the graph is
+    above the value of ``parallel_threshold`` (it defaults to 300).
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads if parallelization was enabled.
 
     :param graph: The graph to run Floyd's algorithm on. Can
         either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
@@ -230,6 +239,9 @@ def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
         for all edges.
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
+    :param int parallel_threshold: The number of nodes to execute
+        the algorithm in parallel at. It defaults to 300, but this can
+        be tuned
 
     :returns: A matrix of shortest path distances between nodes. If there is no
         path between two nodes then the corresponding matrix entry will be
@@ -240,16 +252,26 @@ def floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
 
 
 @floyd_warshall_numpy.register(PyDiGraph)
-def _digraph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def _digraph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
     return digraph_floyd_warshall_numpy(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 
 @floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0):
+def _graph_floyd_warshall_numpy(
+    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
+):
     return graph_floyd_warshall_numpy(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 
@@ -624,3 +646,58 @@ def _digraph_complement(graph):
 @complement.register(PyGraph)
 def _graph_complement(graph):
     return graph_complement(graph)
+
+
+@functools.singledispatch
+def random_layout(graph, center=None, seed=None):
+    """Generate a random layout
+
+    :param PyGraph graph: The graph to generate the layout for
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param int seed: An optional seed to set for the random number generator.
+
+    :returns: The random layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@random_layout.register(PyDiGraph)
+def _digraph_random_layout(graph, center=None, seed=None):
+    return digraph_random_layout(graph, center=center, seed=seed)
+
+
+@random_layout.register(PyGraph)
+def _graph_random_layout(graph, center=None, seed=None):
+    return graph_random_layout(graph, center=center, seed=seed)
+
+
+def networkx_converter(graph):
+    """Convert a networkx graph object into a retworkx graph object.
+
+    .. note::
+
+        networkx is **not** a dependency of retworkx and this function
+        is provided as a convenience method for users of both networkx and
+        retworkx. This function will not work unless you install networkx
+        independently.
+
+    :param networkx.Graph graph: The networkx graph to convert.
+
+    :returns: A retworkx graph, either a :class:`~retworkx.PyDiGraph` or a
+        :class:`~retworkx.PyGraph` based on whether the input graph is directed
+        or not.
+    :rtype: :class:`~retworkx.PyDiGraph` or :class:`~retworkx.PyGraph`
+    """
+    if graph.is_directed():
+        new_graph = PyDiGraph(multigraph=graph.is_multigraph())
+    else:
+        new_graph = PyGraph(multigraph=graph.is_multigraph())
+    nodes = list(graph.nodes)
+    node_indices = dict(zip(nodes, new_graph.add_nodes_from(nodes)))
+    new_graph.add_edges_from(
+        [(node_indices[x[0]],
+          node_indices[x[1]],
+          x[2]) for x in graph.edges(data=True)])
+    return new_graph

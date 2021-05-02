@@ -10,14 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
 use std::collections::hash_map::DefaultHasher;
 use std::convert::TryInto;
 use std::hash::Hasher;
 
-use pyo3::class::{PyObjectProtocol, PySequenceProtocol};
-use pyo3::exceptions::{PyIndexError, PyNotImplementedError};
+use hashbrown::HashMap;
+
+use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
+use pyo3::class::{PyMappingProtocol, PyObjectProtocol, PySequenceProtocol};
+use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
 use pyo3::types::PySequence;
@@ -205,6 +208,7 @@ impl PyGCProtocol for BFSSuccessors {
 ///     second_element = next(nodes_iter)
 ///
 #[pyclass(module = "retworkx", gc)]
+#[derive(Clone)]
 pub struct NodeIndices {
     pub nodes: Vec<usize>,
 }
@@ -550,5 +554,775 @@ impl PyGCProtocol for WeightedEdgeList {
 
     fn __clear__(&mut self) {
         self.edges = Vec::new();
+    }
+}
+
+/// A class representing a mapping of node indices to 2D positions
+///
+/// This class is equivalent to having a dict of the form::
+///
+///     {1: [0, 1], 3: [0.5, 1.2]}
+///
+/// It is used to efficiently represent a retworkx generated 2D layout for a
+/// graph. It behaves as a drop in replacement for a readonly ``dict``.
+#[pyclass(module = "retworkx", gc)]
+pub struct Pos2DMapping {
+    pub pos_map: HashMap<usize, [f64; 2]>,
+}
+
+#[pymethods]
+impl Pos2DMapping {
+    #[new]
+    fn new() -> Pos2DMapping {
+        Pos2DMapping {
+            pos_map: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, [f64; 2]> {
+        self.pos_map.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, [f64; 2]>) {
+        self.pos_map = state;
+    }
+
+    fn keys(&self) -> Pos2DMappingKeys {
+        Pos2DMappingKeys {
+            pos_keys: self.pos_map.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> Pos2DMappingValues {
+        Pos2DMappingValues {
+            pos_values: self.pos_map.values().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> Pos2DMappingItems {
+        let items: Vec<(usize, [f64; 2])> =
+            self.pos_map.iter().map(|(k, v)| (*k, *v)).collect();
+        Pos2DMappingItems {
+            pos_items: items,
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for Pos2DMapping {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.pos_map.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.pos_map {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: [f64; 2] = other_raw.extract()?;
+                        if other_value != *value {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> = Vec::with_capacity(self.pos_map.len());
+        for path in &self.pos_map {
+            str_vec.push(format!("{}: ({}, {})", path.0, path.1[0], path.1[1]));
+        }
+        Ok(format!("Pos2DMapping{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.pos_map {
+            hasher.write_usize(*index.0);
+            hasher.write(&index.1[0].to_be_bytes());
+            hasher.write(&index.1[1].to_be_bytes());
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for Pos2DMapping {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.pos_map.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.pos_map.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for Pos2DMapping {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.pos_map.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<[f64; 2]> {
+        match self.pos_map.get(&idx) {
+            Some(data) => Ok(*data),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for Pos2DMapping {
+    fn __iter__(slf: PyRef<Self>) -> Pos2DMappingKeys {
+        Pos2DMappingKeys {
+            pos_keys: slf.pos_map.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for Pos2DMapping {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct Pos2DMappingKeys {
+    pub pos_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for Pos2DMappingKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<Pos2DMappingKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.pos_keys.len() {
+            let res = IterNextOutput::Yield(slf.pos_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct Pos2DMappingValues {
+    pub pos_values: Vec<[f64; 2]>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for Pos2DMappingValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<Pos2DMappingValues> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<[f64; 2], &'static str> {
+        if slf.iter_pos < slf.pos_values.len() {
+            let res = IterNextOutput::Yield(slf.pos_values[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct Pos2DMappingItems {
+    pub pos_items: Vec<(usize, [f64; 2])>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for Pos2DMappingItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<Pos2DMappingItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, [f64; 2]), &'static str> {
+        if slf.iter_pos < slf.pos_items.len() {
+            let res = IterNextOutput::Yield(slf.pos_items[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+/// A custom class for the return of paths to target nodes
+///
+/// This class is a container class for the results of functions that
+/// return a mapping of target nodes and paths. It implements the Python
+/// mapping protocol. So you can treat the return as a read-only
+/// mapping/dict. If you want to use it as an iterator you can by
+/// wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.dijkstra_shortest_paths(0)
+///     # Target node access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_target = next(edges_iter)
+///     first_path = edges[first_target]
+///     second_target = next(edges_iter)
+///     second_path = edges[second_target]
+///
+#[pyclass(module = "retworkx", gc)]
+pub struct PathMapping {
+    pub paths: HashMap<usize, Vec<usize>>,
+}
+
+#[pymethods]
+impl PathMapping {
+    #[new]
+    fn new() -> PathMapping {
+        PathMapping {
+            paths: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, Vec<usize>> {
+        self.paths.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, Vec<usize>>) {
+        self.paths = state;
+    }
+
+    fn keys(&self) -> PathMappingKeys {
+        PathMappingKeys {
+            path_keys: self.paths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> PathMappingValues {
+        PathMappingValues {
+            path_values: self
+                .paths
+                .values()
+                .map(|v| NodeIndices { nodes: v.to_vec() })
+                .collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> PathMappingItems {
+        let items: Vec<(usize, NodeIndices)> = self
+            .paths
+            .iter()
+            .map(|(k, v)| (*k, NodeIndices { nodes: v.to_vec() }))
+            .collect();
+        PathMappingItems {
+            path_items: items,
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for PathMapping {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.paths.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.paths {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: &PySequence =
+                            other_raw.downcast::<PySequence>()?;
+                        if value.len() as isize != other_value.len()? {
+                            return Ok(false);
+                        }
+                        for (i, item) in value.iter().enumerate() {
+                            let other_item_raw =
+                                other_value.get_item(i as isize)?;
+                            let other_item_value: usize =
+                                other_item_raw.extract()?;
+                            if other_item_value != *item {
+                                return Ok(false);
+                            }
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> = Vec::with_capacity(self.paths.len());
+        for path in &self.paths {
+            str_vec.push(format!(
+                "{}: {}",
+                path.0,
+                format!(
+                    "[{}]",
+                    path.1
+                        .iter()
+                        .map(|n| format!("{}", n))
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                ),
+            ));
+        }
+        Ok(format!("PathMapping{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.paths {
+            hasher.write_usize(*index.0);
+            for node in index.1 {
+                hasher.write_usize(*node);
+            }
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for PathMapping {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.paths.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<NodeIndices> {
+        match self.paths.get(&idx) {
+            Some(data) => Ok(NodeIndices {
+                nodes: data.clone(),
+            }),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for PathMapping {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.paths.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.paths.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for PathMapping {
+    fn __iter__(slf: PyRef<Self>) -> PathMappingKeys {
+        PathMappingKeys {
+            path_keys: slf.paths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for PathMapping {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathMappingKeys {
+    pub path_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathMappingKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathMappingKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.path_keys.len() {
+            let res = IterNextOutput::Yield(slf.path_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathMappingValues {
+    pub path_values: Vec<NodeIndices>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathMappingValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathMappingValues> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<NodeIndices, &'static str> {
+        if slf.iter_pos < slf.path_values.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_values[slf.iter_pos].clone());
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathMappingItems {
+    pub path_items: Vec<(usize, NodeIndices)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathMappingItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathMappingItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, NodeIndices), &'static str> {
+        if slf.iter_pos < slf.path_items.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_items[slf.iter_pos].clone());
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+/// A custom class for the return of path lengths to target nodes
+///
+/// This class is a container class for the results of functions that
+/// return a mapping of target nodes and paths. It implements the Python
+/// mapping protocol. So you can treat the return as a read-only
+/// mapping/dict. If you want to use it as an iterator you can by
+/// wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.dijkstra_shortest_path_lengths(0)
+///     # Target node access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_target = next(edges_iter)
+///     first_path = edges[first_target]
+///     second_target = next(edges_iter)
+///     second_path = edges[second_target]
+///
+#[pyclass(module = "retworkx", gc)]
+pub struct PathLengthMapping {
+    pub path_lengths: HashMap<usize, f64>,
+}
+
+#[pymethods]
+impl PathLengthMapping {
+    #[new]
+    fn new() -> PathLengthMapping {
+        PathLengthMapping {
+            path_lengths: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, f64> {
+        self.path_lengths.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, f64>) {
+        self.path_lengths = state;
+    }
+
+    fn keys(&self) -> PathLengthMappingKeys {
+        PathLengthMappingKeys {
+            path_length_keys: self.path_lengths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> PathLengthMappingValues {
+        PathLengthMappingValues {
+            path_length_values: self.path_lengths.values().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> PathLengthMappingItems {
+        let items: Vec<(usize, f64)> =
+            self.path_lengths.iter().map(|(k, v)| (*k, *v)).collect();
+        PathLengthMappingItems {
+            path_length_items: items,
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for PathLengthMapping {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.path_lengths.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.path_lengths {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: f64 = other_raw.extract()?;
+                        if other_value != *value {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> =
+            Vec::with_capacity(self.path_lengths.len());
+        for path in &self.path_lengths {
+            str_vec.push(format!("{}: {}", path.0, path.1,));
+        }
+        Ok(format!("PathLengthMapping{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.path_lengths {
+            hasher.write_usize(*index.0);
+            hasher.write(&index.1.to_be_bytes());
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for PathLengthMapping {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.path_lengths.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.path_lengths.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for PathLengthMapping {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.path_lengths.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<f64> {
+        match self.path_lengths.get(&idx) {
+            Some(data) => Ok(*data),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for PathLengthMapping {
+    fn __iter__(slf: PyRef<Self>) -> PathLengthMappingKeys {
+        PathLengthMappingKeys {
+            path_length_keys: slf.path_lengths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for PathLengthMapping {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathLengthMappingKeys {
+    pub path_length_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathLengthMappingKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathLengthMappingKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.path_length_keys.len() {
+            let res = IterNextOutput::Yield(slf.path_length_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathLengthMappingValues {
+    pub path_length_values: Vec<f64>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathLengthMappingValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathLengthMappingValues> {
+        slf.into()
+    }
+    fn __next__(mut slf: PyRefMut<Self>) -> IterNextOutput<f64, &'static str> {
+        if slf.iter_pos < slf.path_length_values.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_length_values[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct PathLengthMappingItems {
+    pub path_length_items: Vec<(usize, f64)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for PathLengthMappingItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<PathLengthMappingItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, f64), &'static str> {
+        if slf.iter_pos < slf.path_length_items.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_length_items[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
     }
 }
