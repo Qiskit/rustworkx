@@ -1,11 +1,11 @@
 .. _retworkx:
 
-======================
+######################
 Retworkx API Reference
-======================
+######################
 
 Graph Classes
--------------
+=============
 
 .. autosummary::
    :toctree: stubs
@@ -15,7 +15,7 @@ Graph Classes
     retworkx.PyDAG
 
 Generators
-----------
+==========
 
 .. autosummary::
    :toctree: stubs
@@ -32,7 +32,7 @@ Generators
     retworkx.generators.directed_grid_graph
 
 Random Circuit Functions
-------------------------
+========================
 
 .. autosummary::
    :toctree: stubs
@@ -43,10 +43,10 @@ Random Circuit Functions
     retworkx.undirected_gnm_random_graph
 
 Algorithm Functions
--------------------
+===================
 
 Specific Graph Type Methods
-'''''''''''''''''''''''''''
+---------------------------
 
 .. autosummary::
    :toctree: stubs
@@ -105,7 +105,7 @@ Specific Graph Type Methods
 .. _universal-functions:
 
 Universal Functions
-'''''''''''''''''''
+-------------------
 
 These functions are algorithm functions that wrap per graph object
 type functions in the algorithms API but can be run with a
@@ -129,6 +129,17 @@ type functions in the algorithms API but can be run with a
    retworkx.is_isomorphic_node_match
    retworkx.transitivity
    retworkx.core_number
+   retworkx.random_layout
+
+Layout Functions
+================
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.random_layout
+   retworkx.graph_random_layout
+   retworkx.digraph_random_layout
 
 Converters
 ----------
@@ -139,7 +150,7 @@ Converters
    retworkx.networkx_converter
 
 Exceptions
-----------
+==========
 
 .. autosummary::
    :toctree: stubs
@@ -152,8 +163,8 @@ Exceptions
    retworkx.NoPathFound
    retworkx.NullGraph
 
-Return Iterator Types
----------------------
+Custom Return Types
+===================
 
 .. autosummary::
    :toctree: stubs
@@ -162,3 +173,6 @@ Return Iterator Types
    retworkx.NodeIndices
    retworkx.EdgeList
    retworkx.WeightedEdgeList
+   retworkx.PathMapping
+   retworkx.PathLengthMapping
+   retworkx.Pos2DMapping

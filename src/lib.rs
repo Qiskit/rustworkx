@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::float_cmp)]
+
 mod astar;
 mod digraph;
 mod dijkstra;
@@ -55,7 +57,10 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use crate::iterators::{
+    EdgeList, NodeIndices, PathLengthMapping, PathMapping, Pos2DMapping,
+    WeightedEdgeList,
+};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -785,7 +790,7 @@ fn graph_greedy_color(
 ///
 /// :returns: A dict of lengths where the key is the destination node index and
 ///     the value is the length of the path.
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
 fn digraph_k_shortest_path_lengths(
@@ -795,7 +800,7 @@ fn digraph_k_shortest_path_lengths(
     k: usize,
     edge_cost: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
@@ -809,15 +814,19 @@ fn digraph_k_shortest_path_lengths(
         k,
         edge_cost_callable,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, length) in out_map {
-        if (out_goal.is_some() && out_goal.unwrap() == index)
-            || out_goal.is_none()
-        {
-            out_dict.set_item(index.index(), length)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: out_map
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the length of the kth shortest path
@@ -837,7 +846,7 @@ fn digraph_k_shortest_path_lengths(
 ///
 /// :returns: A dict of lengths where the key is the destination node index and
 ///     the value is the length of the path.
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
 fn graph_k_shortest_path_lengths(
@@ -847,7 +856,7 @@ fn graph_k_shortest_path_lengths(
     k: usize,
     edge_cost: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
@@ -861,15 +870,19 @@ fn graph_k_shortest_path_lengths(
         k,
         edge_cost_callable,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, length) in out_map {
-        if (out_goal.is_some() && out_goal.unwrap() == index)
-            || out_goal.is_none()
-        {
-            out_dict.set_item(index.index(), length)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: out_map
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 /// Return the shortest path lengths between ever pair of nodes that has a
 /// path connecting them
@@ -1019,6 +1032,13 @@ where
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
 /// or graphs with negative weights (where Dijkstra's algorithm fails).
 ///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
 /// :param PyGraph graph: The graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
@@ -1032,18 +1052,22 @@ where
 ///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 ///
 ///     to cast the edge object as a float as the weight.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0")]
-#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
+#[pyfunction(parallel_threshold = "300", default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
 fn graph_floyd_warshall_numpy(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     // Allocate empty matrix
@@ -1064,14 +1088,33 @@ fn graph_floyd_warshall_numpy(
     // Perform the Floyd-Warshall algorithm.
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
-    for k in 0..n {
-        for i in 0..n {
-            for j in 0..n {
-                let d_ijk = mat[[i, k]] + mat[[k, j]];
-                if d_ijk < mat[[i, j]] {
-                    mat[[i, j]] = d_ijk;
+    if n < parallel_threshold {
+        for k in 0..n {
+            for i in 0..n {
+                for j in 0..n {
+                    let d_ijk = mat[[i, k]] + mat[[k, j]];
+                    if d_ijk < mat[[i, j]] {
+                        mat[[i, j]] = d_ijk;
+                    }
                 }
             }
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.slice(s![k, ..]).to_owned();
+            mat.axis_iter_mut(Axis(0))
+                .into_par_iter()
+                .for_each(|mut row_i| {
+                    let m_ik = row_i[k];
+                    row_i.iter_mut().zip(row_k.iter()).for_each(
+                        |(m_ij, m_kj)| {
+                            let d_ijk = m_ik + *m_kj;
+                            if d_ijk < *m_ij {
+                                *m_ij = d_ijk;
+                            }
+                        },
+                    )
+                })
         }
     }
     Ok(mat.into_pyarray(py).into())
@@ -1081,6 +1124,13 @@ fn graph_floyd_warshall_numpy(
 ///
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
 /// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
 ///
 /// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
@@ -1097,19 +1147,27 @@ fn graph_floyd_warshall_numpy(
 ///     to cast the edge object as a float as the weight.
 /// :param as_undirected: If set to true each directed edge will be treated as
 ///     bidirectional/undirected.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(as_undirected = "false", default_weight = "1.0")]
-#[text_signature = "(graph, /, weight_fn=None as_undirected=False, default_weight=1.0)"]
+#[pyfunction(
+    parallel_threshold = "300",
+    as_undirected = "false",
+    default_weight = "1.0"
+)]
+#[text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
 
@@ -1132,14 +1190,33 @@ fn digraph_floyd_warshall_numpy(
     // Perform the Floyd-Warshall algorithm.
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
-    for k in 0..n {
-        for i in 0..n {
-            for j in 0..n {
-                let d_ijk = mat[[i, k]] + mat[[k, j]];
-                if d_ijk < mat[[i, j]] {
-                    mat[[i, j]] = d_ijk;
+    if n < parallel_threshold {
+        for k in 0..n {
+            for i in 0..n {
+                for j in 0..n {
+                    let d_ijk = mat[[i, k]] + mat[[k, j]];
+                    if d_ijk < mat[[i, j]] {
+                        mat[[i, j]] = d_ijk;
+                    }
                 }
             }
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.slice(s![k, ..]).to_owned();
+            mat.axis_iter_mut(Axis(0))
+                .into_par_iter()
+                .for_each(|mut row_i| {
+                    let m_ik = row_i[k];
+                    row_i.iter_mut().zip(row_k.iter()).for_each(
+                        |(m_ij, m_kj)| {
+                            let d_ijk = m_ik + *m_kj;
+                            if d_ijk < *m_ij {
+                                *m_ij = d_ijk;
+                            }
+                        },
+                    )
+                })
         }
     }
     Ok(mat.into_pyarray(py).into())
@@ -1703,7 +1780,7 @@ pub fn graph_dijkstra_shortest_paths(
     target: Option<usize>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
-) -> PyResult<PyObject> {
+) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
@@ -1716,25 +1793,24 @@ pub fn graph_dijkstra_shortest_paths(
         Some(&mut paths),
     )?;
 
-    let out_dict = PyDict::new(py);
-    for (index, value) in paths {
-        let int_index = index.index();
-        if int_index == source {
-            continue;
-        }
-        if (target.is_some() && target.unwrap() == int_index)
-            || target.is_none()
-        {
-            out_dict.set_item(
-                int_index,
-                value
-                    .iter()
-                    .map(|index| index.index())
-                    .collect::<Vec<usize>>(),
-            )?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathMapping {
+        paths: paths
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == source
+                    || target.is_some() && target.unwrap() != k_int
+                {
+                    None
+                } else {
+                    Some((
+                        k.index(),
+                        v.iter().map(|x| x.index()).collect::<Vec<usize>>(),
+                    ))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Find the shortest path from a node
@@ -1766,7 +1842,7 @@ pub fn digraph_dijkstra_shortest_paths(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     as_undirected: bool,
-) -> PyResult<PyObject> {
+) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
@@ -1791,26 +1867,24 @@ pub fn digraph_dijkstra_shortest_paths(
             Some(&mut paths),
         )?;
     }
-
-    let out_dict = PyDict::new(py);
-    for (index, value) in paths {
-        let int_index = index.index();
-        if int_index == source {
-            continue;
-        }
-        if (target.is_some() && target.unwrap() == int_index)
-            || target.is_none()
-        {
-            out_dict.set_item(
-                int_index,
-                value
-                    .iter()
-                    .map(|index| index.index())
-                    .collect::<Vec<usize>>(),
-            )?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathMapping {
+        paths: paths
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == source
+                    || target.is_some() && target.unwrap() != k_int
+                {
+                    None
+                } else {
+                    Some((
+                        k_int,
+                        v.iter().map(|x| x.index()).collect::<Vec<usize>>(),
+                    ))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the lengths of the shortest paths for a PyGraph object using
@@ -1830,7 +1904,7 @@ pub fn digraph_dijkstra_shortest_paths(
 /// :returns: A dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, node, edge_cost_fn, /, goal=None)"]
 fn graph_dijkstra_shortest_path_lengths(
@@ -1839,7 +1913,7 @@ fn graph_dijkstra_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1856,17 +1930,19 @@ fn graph_dijkstra_shortest_path_lengths(
         |e| edge_cost_callable(e.weight()),
         None,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, value) in res {
-        let int_index = index.index();
-        if int_index == node {
-            continue;
-        }
-        if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
-            out_dict.set_item(int_index, value)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: res
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == node || goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the lengths of the shortest paths for a PyDiGraph object using
@@ -1886,7 +1962,7 @@ fn graph_dijkstra_shortest_path_lengths(
 /// :returns: A dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, node, edge_cost_fn, /, goal=None)"]
 fn digraph_dijkstra_shortest_path_lengths(
@@ -1895,7 +1971,7 @@ fn digraph_dijkstra_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
@@ -1912,17 +1988,19 @@ fn digraph_dijkstra_shortest_path_lengths(
         |e| edge_cost_callable(e.weight()),
         None,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, value) in res {
-        let int_index = index.index();
-        if int_index == node {
-            continue;
-        }
-        if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
-            out_dict.set_item(int_index, value)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: res
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == node || goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the A* shortest path for a PyGraph
@@ -3263,6 +3341,73 @@ fn digraph_complement(
     Ok(complement_graph)
 }
 
+fn _random_layout<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let random_tuple: [f64; 2] = rng.gen();
+                match center {
+                    Some(center) => (
+                        n.index(),
+                        [
+                            random_tuple[0] + center[0],
+                            random_tuple[1] + center[1],
+                        ],
+                    ),
+                    None => (n.index(), random_tuple),
+                }
+            })
+            .collect(),
+    }
+}
+
+/// Generate a random layout
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
+pub fn graph_random_layout(
+    graph: &graph::PyGraph,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
+/// Generate a random layout
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
+pub fn digraph_random_layout(
+    graph: &digraph::PyDiGraph,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -3342,12 +3487,17 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
+    m.add_class::<iterators::PathMapping>()?;
+    m.add_class::<iterators::PathLengthMapping>()?;
+    m.add_class::<iterators::Pos2DMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
