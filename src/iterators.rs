@@ -1332,26 +1332,18 @@ impl PyIterProtocol for PathLengthMappingItems {
 /// A custom class for the return of path lengths to target nodes from all nodes
 ///
 /// This class is a container class for the results of functions that
-/// return a mapping of target nodes and paths. It implements the Python
-/// mapping protocol. So you can treat the return as a read-only
-/// mapping/dict. If you want to use it as an iterator you can by
-/// wrapping it in an ``iter()`` that will yield the results in
-/// order.
+/// return a mapping of target nodes and paths from all nodes. It implements
+/// the Python mapping protocol. So you can treat the return as a read-only
+/// mapping/dict.
 ///
 /// For example::
 ///
 ///     import retworkx
 ///
 ///     graph = retworkx.generators.directed_path_graph(5)
-///     edges = retworkx.dijkstra_shortest_path_lengths(0)
+///     edges = retworkx.all_pairs_dijkstra_shortest_path_lengths(graph)
 ///     # Target node access
-///     third_element = edges[2]
-///     # Use as iterator
-///     edges_iter = iter(edges)
-///     first_target = next(edges_iter)
-///     first_path = edges[first_target]
-///     second_target = next(edges_iter)
-///     second_path = edges[second_target]
+///     third_node_shortest_path_lengths = edges[2]
 ///
 #[pyclass(module = "retworkx", gc)]
 pub struct AllPairsPathLengthMapping {
@@ -1478,7 +1470,10 @@ impl<'p> PyObjectProtocol<'p> for AllPairsPathLengthMapping {
         for path in &self.path_lengths {
             str_vec.push(format!("{}: {}", path.0, path.1.__str__()?,));
         }
-        Ok(format!("AllPathLengthMapping{{{}}}", str_vec.join(", ")))
+        Ok(format!(
+            "AllPairsPathLengthMapping{{{}}}",
+            str_vec.join(", ")
+        ))
     }
 
     fn __hash__(&self) -> PyResult<u64> {
@@ -1611,29 +1606,21 @@ impl PyIterProtocol for AllPairsPathLengthMappingItems {
     }
 }
 
-/// A custom class for the return of paths to target nodes
+/// A custom class for the return of paths to target nodes from all nodes
 ///
 /// This class is a container class for the results of functions that
-/// return a mapping of target nodes and paths. It implements the Python
-/// mapping protocol. So you can treat the return as a read-only
-/// mapping/dict. If you want to use it as an iterator you can by
-/// wrapping it in an ``iter()`` that will yield the results in
-/// order.
+/// return a mapping of target nodes and paths from all nodes. It implements
+/// the Python mapping protocol. So you can treat the return as a read-only
+/// mapping/dict.
 ///
 /// For example::
 ///
 ///     import retworkx
 ///
 ///     graph = retworkx.generators.directed_path_graph(5)
-///     edges = retworkx.dijkstra_shortest_paths(0)
+///     edges = retworkx.all_pairs_dijkstra_shortest_path_lengths(graph)
 ///     # Target node access
-///     third_element = edges[2]
-///     # Use as iterator
-///     edges_iter = iter(edges)
-///     first_target = next(edges_iter)
-///     first_path = edges[first_target]
-///     second_target = next(edges_iter)
-///     second_path = edges[second_target]
+///     third_node_shortest_paths = edges[2]
 ///
 #[pyclass(module = "retworkx", gc)]
 pub struct AllPairsPathMapping {

@@ -174,3 +174,5 @@ Custom Return Types
    retworkx.PathMapping
    retworkx.PathLengthMapping
    retworkx.Pos2DMapping
+   retworkx.AllPairsPathMapping
+   retworkx.AllPairsPathLengthMapping
