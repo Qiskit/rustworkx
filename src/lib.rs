@@ -2473,15 +2473,15 @@ fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
 ///
 /// :return: A PyGraph object
 /// :rtype: PyGraph
-#[pyfunction]
-#[text_signature = "(num_nodes, radius, dim=2, pos=None, p=2.0, seed=None, /)"]
+#[pyfunction(dim = "2", p = "2.0")]
+#[text_signature = "(num_nodes, radius, /, dim=2, pos=None, p=2.0, seed=None)"]
 pub fn random_geometric_graph(
     py: Python,
     num_nodes: usize,
     radius: f64,
-    dim: Option<usize>,
+    dim: usize,
     pos: Option<Vec<Vec<f64>>>,
-    p: Option<f64>,
+    p: f64,
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
     if num_nodes <= 0 {
@@ -2490,7 +2490,6 @@ pub fn random_geometric_graph(
 
     let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
 
-    let p = p.unwrap_or(2.0);
     let radius_p = pnorm(radius, p);
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
@@ -2499,7 +2498,6 @@ pub fn random_geometric_graph(
 
     let dist = Uniform::new(0.0, 1.0);
     let pos = pos.unwrap_or_else(|| {
-        let dim = dim.unwrap_or(2);
 
         (0..num_nodes)
             .map(|_| (0..dim).map(|_| dist.sample(&mut rng)).collect())
