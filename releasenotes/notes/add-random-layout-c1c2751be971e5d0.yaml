@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    Added a new layout function, :func:`retworkx.random_layout` (and it's
+    equivalent per type variants :func:`retworkx.graph_random_layout` and
+    :func:`retworkx.diraph_random_layout`) to generate a random layout which
+    can be used for visualizations.
+  - |
+    A new custom return class, :class:`retworkx.Pos2DMapping`, has been
+    added. This function will be returned by layout functions and is a drop
+    in replacement for an immutable read-only dictionary of the form::
+
+      {1: [0.1, 0.5]}
+
+    where the keys are node indices and the values are a 2 element sequence
+    that represents the position for the node.
