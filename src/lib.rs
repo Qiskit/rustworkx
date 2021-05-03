@@ -323,7 +323,7 @@ fn digraph_union(
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction]
+#[pyfunction(id_order = "true")]
 #[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"]
 fn digraph_is_isomorphic(
     py: Python,
@@ -331,7 +331,7 @@ fn digraph_is_isomorphic(
     second: &digraph::PyDiGraph,
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
-    id_order: Option<bool>,
+    id_order: bool,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -391,7 +391,7 @@ fn digraph_is_isomorphic(
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction]
+#[pyfunction(id_order = "true")]
 #[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"]
 fn graph_is_isomorphic(
     py: Python,
@@ -399,7 +399,7 @@ fn graph_is_isomorphic(
     second: &graph::PyGraph,
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
-    id_order: Option<bool>,
+    id_order: bool,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {

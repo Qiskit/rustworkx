@@ -358,7 +358,7 @@ pub fn is_isomorphic<Ty, F, G>(
     g1: &StablePyGraph<Ty>,
     mut node_match: Option<F>,
     mut edge_match: Option<G>,
-    id_order: Option<bool>,
+    id_order: bool,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
@@ -379,24 +379,26 @@ where
     } else {
         g1
     };
-    let g0 = match id_order {
-        Some(false) => {
-            inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
-            &inner_temp_g0
-        }
-        _ => g0_out,
-    };
-    let g1 = match id_order {
-        Some(false) => {
-            inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);
-            &inner_temp_g1
-        }
-        _ => g1_out,
-    };
-    if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
+
+    if g0_out.node_count() != g1_out.node_count()
+        || g0_out.edge_count() != g1_out.edge_count()
     {
         return Ok(false);
     }
+
+    let g0 = if !id_order {
+        inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
+        &inner_temp_g0
+    } else {
+        g0_out
+    };
+
+    let g1 = if !id_order {
+        inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);
+        &inner_temp_g1
+    } else {
+        g1_out
+    };
 
     let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
     let res = try_match(&mut st, g0, g1, &mut node_match, &mut edge_match)?;
