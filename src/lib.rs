@@ -316,9 +316,9 @@ fn digraph_union(
 ///     one for each edge data object. If the return of this
 ///     function evaluates to True then the edges passed to it are vieded
 ///     as matching.
-/// :param bool (default=True) id_order:  If set to true, the algorithm matches the
-///     nodes in order specified by their ids. Otherwise, it uses a heuristic
-///     matching order based in [VF2]_ paper.
+/// :param bool id_order: If set to ``False`` this function will use a
+///     heuristic matching order based on [VF2]_ paper. Otherwise it will
+///     default to matching the nodes in order specified by their ids.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
