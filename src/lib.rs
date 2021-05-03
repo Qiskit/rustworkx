@@ -2563,7 +2563,7 @@ pub fn random_geometric_graph(
     p: f64,
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
-    if num_nodes <= 0 {
+    if num_nodes == 0 {
         return Err(PyValueError::new_err("num_nodes must be > 0"));
     }
 
@@ -2577,7 +2577,6 @@ pub fn random_geometric_graph(
 
     let dist = Uniform::new(0.0, 1.0);
     let pos = pos.unwrap_or_else(|| {
-
         (0..num_nodes)
             .map(|_| (0..dim).map(|_| dist.sample(&mut rng)).collect())
             .collect()
@@ -2589,9 +2588,9 @@ pub fn random_geometric_graph(
         ));
     }
 
-    for x in 0..num_nodes {
+    for pval in pos.iter() {
         let pos_dict = PyDict::new(py);
-        pos_dict.set_item("pos", pos[x].to_object(py))?;
+        pos_dict.set_item("pos", pval.to_object(py))?;
 
         inner_graph.add_node(pos_dict.into());
     }
