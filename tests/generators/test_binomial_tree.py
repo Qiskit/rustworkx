@@ -19,9 +19,10 @@ class TestBinomailTreeGraph(unittest.TestCase):
 
     def test_binomial_tree_graph(self):
         for n in range(10):
-            graph = retworkx.generators.binomial_tree_graph(n)
-            self.assertEqual(len(graph), 2**n)
-            self.assertEqual(len(graph.edges()), 2**n - 1)
+            with self.subTest(n=n):
+                graph = retworkx.generators.binomial_tree_graph(n)
+                self.assertEqual(len(graph), 2**n)
+                self.assertEqual(len(graph.edges()), 2**n - 1)
 
     def test_binomial_tree_graph_weights(self):
         graph = retworkx.generators.binomial_tree_graph(
