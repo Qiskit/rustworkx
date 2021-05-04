@@ -30,6 +30,15 @@ class TestBinomailTreeGraph(unittest.TestCase):
         self.assertEqual([x for x in range(4)], graph.nodes())
         self.assertEqual(len(graph.edges()), 3)
 
+    def test_binomial_tree_graph_mismatch_nodes_weights(self):
+        graph = retworkx.generators.binomial_tree_graph(
+            2, weights=list(range(2)))
+        self.assertEqual(len(graph), 4)
+        expected_weights = [x for x in range(2)]
+        expected_weights.extend([None, None])
+        self.assertEqual(expected_weights, graph.nodes())
+        self.assertEqual(len(graph.edges()), 3)
+
     def test_binomial_tree_no_order(self):
         with self.assertRaises(TypeError):
             retworkx.generators.binomial_tree_graph(weights=list(range(4)))
@@ -45,6 +54,15 @@ class TestBinomailTreeGraph(unittest.TestCase):
             2, weights=list(range(4)))
         self.assertEqual(len(graph), 4)
         self.assertEqual([x for x in range(4)], graph.nodes())
+        self.assertEqual(len(graph.edges()), 3)
+
+    def test_directed_binomial_tree_graph_mismatch_nodes_weights(self):
+        graph = retworkx.generators.binomial_tree_graph(
+            2, weights=list(range(2)))
+        self.assertEqual(len(graph), 4)
+        expected_weights = [x for x in range(2)]
+        expected_weights.extend([None, None])
+        self.assertEqual(expected_weights, graph.nodes())
         self.assertEqual(len(graph.edges()), 3)
 
     def test_directed_binomial_tree_no_order(self):

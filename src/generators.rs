@@ -989,7 +989,8 @@ pub fn directed_grid_graph(
 /// Generate an undirected binomial tree of order n recursively.
 ///
 /// :param int order: Order of the binomial tree.
-/// :param list weights: A list of node weights. It must have 2**order values.
+/// :param list weights: A list of node weights. If the number of weights is 
+///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1038,11 +1039,19 @@ pub fn binomial_tree_graph(
         Some(weights) => {
             let mut node_list: Vec<NodeIndex> = Vec::new();
 
+            let mut node_count = num_nodes;
+
             for weight in weights {
                 let index = graph.add_node(weight);
                 node_list.push(index);
+                node_count -= 1;
             }
-
+            
+            for _i in 0..node_count {
+                let index = graph.add_node(py.None());
+                node_list.push(index);
+            }
+            
             node_list
         }
 
@@ -1084,7 +1093,8 @@ pub fn binomial_tree_graph(
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
 ///
 /// :param int order: Order of the binomial tree.
-/// :param list weights: A list of node weights. It must have 2**order values.
+/// :param list weights: A list of node weights. If the number of weights is 
+///     less than 2**order extra nodes with None will be appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 ///
@@ -1131,9 +1141,16 @@ pub fn directed_binomial_tree_graph(
     let nodes: Vec<NodeIndex> = match weights {
         Some(weights) => {
             let mut node_list: Vec<NodeIndex> = Vec::new();
+            let mut node_count = num_nodes;
 
             for weight in weights {
                 let index = graph.add_node(weight);
+                node_list.push(index);
+                node_count -= num_nodes;
+            }
+
+            for _i in 0..node_count {
+                let index = graph.add_node(py.None());
                 node_list.push(index);
             }
 
