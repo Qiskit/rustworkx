@@ -1023,7 +1023,7 @@ pub fn directed_grid_graph(
 ///   image
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, order=None, weights=None, multigraph=True)"]
+#[text_signature = "(order=None, /, weights=None, multigraph=True)"]
 pub fn binomial_tree_graph(
     py: Python,
     order: u32,
