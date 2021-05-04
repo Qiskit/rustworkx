@@ -989,7 +989,7 @@ pub fn directed_grid_graph(
 /// Generate an undirected binomial tree of order n recursively.
 ///
 /// :param int order: Order of the binomial tree.
-/// :param list weights: A list of node weights. If the number of weights is 
+/// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
@@ -998,7 +998,7 @@ pub fn directed_grid_graph(
 ///
 /// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyGraph
-/// :raises IndexError: If neither ``order`` or ``weights`` are specified
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
 ///
 /// .. jupyter-execute::
 ///
@@ -1041,17 +1041,23 @@ pub fn binomial_tree_graph(
 
             let mut node_count = num_nodes;
 
+            if weights.len() > num_nodes {
+                return Err(PyIndexError::new_err(
+                    "weights should be <= 2**order",
+                ));
+            }
+
             for weight in weights {
                 let index = graph.add_node(weight);
                 node_list.push(index);
                 node_count -= 1;
             }
-            
+
             for _i in 0..node_count {
                 let index = graph.add_node(py.None());
                 node_list.push(index);
             }
-            
+
             node_list
         }
 
@@ -1093,15 +1099,14 @@ pub fn binomial_tree_graph(
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
 ///
 /// :param int order: Order of the binomial tree.
-/// :param list weights: A list of node weights. If the number of weights is 
+/// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with None will be appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 ///
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyDiGraph
-/// :raises IndexError: If neither ``rows`` or ``cols`` and ``weights`` are
-///      specified
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
 ///
 /// .. jupyter-execute::
 ///
@@ -1127,7 +1132,7 @@ pub fn binomial_tree_graph(
 ///   image
 ///
 #[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, order=None, weights=None, multigraph=True)"]
+#[text_signature = "(/, order=None, weights=None, bidirectional=False)"]
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
@@ -1143,10 +1148,16 @@ pub fn directed_binomial_tree_graph(
             let mut node_list: Vec<NodeIndex> = Vec::new();
             let mut node_count = num_nodes;
 
+            if weights.len() > num_nodes {
+                return Err(PyIndexError::new_err(
+                    "weights should be <= 2**order",
+                ));
+            }
+
             for weight in weights {
                 let index = graph.add_node(weight);
                 node_list.push(index);
-                node_count -= num_nodes;
+                node_count -= 1;
             }
 
             for _i in 0..node_count {
@@ -1180,14 +1191,18 @@ pub fn directed_binomial_tree_graph(
 
             if bidirectional {
                 graph.add_edge(
-                    nodes[source_index + n],
                     nodes[target_index + n],
+                    nodes[source_index + n],
                     py.None(),
                 );
             }
         }
 
         graph.add_edge(nodes[0], nodes[n], py.None());
+
+        if bidirectional {
+            graph.add_edge(nodes[n], nodes[0], py.None());
+        }
 
         n *= 2;
     }
