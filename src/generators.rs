@@ -1193,17 +1193,16 @@ pub fn directed_binomial_tree_graph(
                 );
             }
 
-            if bidirectional {
-                if graph
+            if bidirectional
+                && graph
                     .find_edge(nodes[target_index + n], nodes[source_index + n])
                     == None
-                {
-                    graph.add_edge(
-                        nodes[target_index + n],
-                        nodes[source_index + n],
-                        py.None(),
-                    );
-                }
+            {
+                graph.add_edge(
+                    nodes[target_index + n],
+                    nodes[source_index + n],
+                    py.None(),
+                );
             }
         }
 
@@ -1211,10 +1210,8 @@ pub fn directed_binomial_tree_graph(
             graph.add_edge(nodes[0], nodes[n], py.None());
         }
 
-        if bidirectional {
-            if graph.find_edge(nodes[n], nodes[0]) == None {
-                graph.add_edge(nodes[n], nodes[0], py.None());
-            }
+        if bidirectional && graph.find_edge(nodes[n], nodes[0]) == None {
+            graph.add_edge(nodes[n], nodes[0], py.None());
         }
 
         n *= 2;
