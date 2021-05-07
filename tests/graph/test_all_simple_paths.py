@@ -31,7 +31,8 @@ class TestGraphAllSimplePaths(unittest.TestCase):
             (4, 2),
             (4, 5),
             (5, 2),
-            (5, 3)]
+            (5, 3),
+        ]
 
     def test_all_simple_paths(self):
         graph = retworkx.PyGraph()
@@ -82,7 +83,8 @@ class TestGraphAllSimplePaths(unittest.TestCase):
             [0, 1, 2, 4, 5],
             [0, 1, 2, 4, 3, 5],
             [0, 1, 2, 3, 4, 5],
-            [0, 1, 2, 3, 5]]
+            [0, 1, 2, 3, 5],
+        ]
         self.assertEqual(len(expected), len(paths))
         for i in expected:
             self.assertIn(i, paths)
@@ -129,7 +131,8 @@ class TestGraphAllSimplePaths(unittest.TestCase):
             [0, 2, 4, 5],
             [0, 2, 3, 5],
             [0, 1, 3, 5],
-            [0, 1, 2, 5]]
+            [0, 1, 2, 5],
+        ]
         self.assertEqual(len(expected), len(paths))
         for i in expected:
             self.assertIn(i, paths)
@@ -139,8 +142,9 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         for i in range(6):
             graph.add_node(i)
         graph.add_edges_from_no_data(self.edges)
-        paths = retworkx.graph_all_simple_paths(graph, 0, 5, min_depth=4,
-                                                cutoff=4)
+        paths = retworkx.graph_all_simple_paths(
+            graph, 0, 5, min_depth=4, cutoff=4
+        )
         expected = [
             [0, 3, 4, 5],
             [0, 3, 2, 5],
@@ -150,7 +154,8 @@ class TestGraphAllSimplePaths(unittest.TestCase):
             [0, 2, 4, 5],
             [0, 2, 3, 5],
             [0, 1, 3, 5],
-            [0, 1, 2, 5]]
+            [0, 1, 2, 5],
+        ]
         self.assertEqual(len(expected), len(paths))
         for i in expected:
             self.assertIn(i, paths)
@@ -172,5 +177,6 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         dag = retworkx.PyDAG()
         dag.add_node(0)
         dag.add_node(1)
-        self.assertRaises(TypeError, retworkx.graph_all_simple_paths,
-                          (dag, 0, 1))
+        self.assertRaises(
+            TypeError, retworkx.graph_all_simple_paths, (dag, 0, 1)
+        )

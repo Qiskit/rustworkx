@@ -49,27 +49,27 @@ class TestCollectRuns(unittest.TestCase):
         dag.add_edge(measure_qr_1_out, cr_1_out, "cr[1]")
 
         def filter_function(node):
-            return node in ['h', 'x']
+            return node in ["h", "x"]
 
         res = retworkx.collect_runs(dag, filter_function)
-        expected = [['h', 'x'], ['x']]
+        expected = [["h", "x"], ["x"]]
         self.assertEqual(expected, res)
 
     def test_multiple_successor_edges(self):
         dag = retworkx.PyDiGraph()
-        q0, q1 = dag.add_nodes_from(['q0', 'q1'])
-        cx_1 = dag.add_child(q0, 'cx', 'q0')
-        dag.add_edge(q1, cx_1, 'q1')
-        cx_2 = dag.add_child(cx_1, 'cx', 'q0')
-        dag.add_edge(q1, cx_2, 'q1')
-        cx_3 = dag.add_child(cx_2, 'cx', 'q0')
-        dag.add_edge(q1, cx_3, 'q1')
+        q0, q1 = dag.add_nodes_from(["q0", "q1"])
+        cx_1 = dag.add_child(q0, "cx", "q0")
+        dag.add_edge(q1, cx_1, "q1")
+        cx_2 = dag.add_child(cx_1, "cx", "q0")
+        dag.add_edge(q1, cx_2, "q1")
+        cx_3 = dag.add_child(cx_2, "cx", "q0")
+        dag.add_edge(q1, cx_3, "q1")
 
         def filter_function(node):
-            return node == 'cx'
+            return node == "cx"
 
         res = retworkx.collect_runs(dag, filter_function)
-        self.assertEqual([['cx', 'cx', 'cx']], res)
+        self.assertEqual([["cx", "cx", "cx"]], res)
 
     def test_cycle(self):
         dag = retworkx.PyDiGraph()
@@ -79,8 +79,8 @@ class TestCollectRuns(unittest.TestCase):
 
     def test_filter_function_inner_exception(self):
         dag = retworkx.PyDiGraph()
-        dag.add_node('a')
-        dag.add_child(0, 'b', None)
+        dag.add_node("a")
+        dag.add_child(0, "b", None)
 
         def filter_function(node):
             raise IndexError("Things fail from time to time")
@@ -94,45 +94,45 @@ class TestCollectRuns(unittest.TestCase):
 
     def test_h_h_cx(self):
         dag = retworkx.PyDiGraph()
-        q0, q1 = dag.add_nodes_from(['q0', 'q1'])
-        h_1 = dag.add_child(q0, 'h', 'q0')
-        h_2 = dag.add_child(q1, 'h', 'q1')
-        cx_2 = dag.add_child(h_1, 'cx', 'q0')
-        dag.add_edge(h_2, cx_2, 'q1')
+        q0, q1 = dag.add_nodes_from(["q0", "q1"])
+        h_1 = dag.add_child(q0, "h", "q0")
+        h_2 = dag.add_child(q1, "h", "q1")
+        cx_2 = dag.add_child(h_1, "cx", "q0")
+        dag.add_edge(h_2, cx_2, "q1")
 
         def filter_function(node):
-            return node in ['cx', 'h']
+            return node in ["cx", "h"]
 
         res = retworkx.collect_runs(dag, filter_function)
-        self.assertEqual([['h', 'cx'], ['h']], res)
+        self.assertEqual([["h", "cx"], ["h"]], res)
 
     def test_cx_h_h_cx(self):
         dag = retworkx.PyDiGraph()
-        q0, q1 = dag.add_nodes_from(['q0', 'q1'])
-        cx_1 = dag.add_child(q0, 'cx', 'q0')
-        dag.add_edge(q1, cx_1, 'q1')
-        h_1 = dag.add_child(cx_1, 'h', 'q0')
-        h_2 = dag.add_child(cx_1, 'h', 'q1')
-        cx_2 = dag.add_child(h_1, 'cx', 'q0')
-        dag.add_edge(h_2, cx_2, 'q1')
+        q0, q1 = dag.add_nodes_from(["q0", "q1"])
+        cx_1 = dag.add_child(q0, "cx", "q0")
+        dag.add_edge(q1, cx_1, "q1")
+        h_1 = dag.add_child(cx_1, "h", "q0")
+        h_2 = dag.add_child(cx_1, "h", "q1")
+        cx_2 = dag.add_child(h_1, "cx", "q0")
+        dag.add_edge(h_2, cx_2, "q1")
 
         def filter_function(node):
-            return node in ['cx', 'h']
+            return node in ["cx", "h"]
 
         res = retworkx.collect_runs(dag, filter_function)
-        self.assertEqual([['cx'], ['h', 'cx'], ['h']], res)
+        self.assertEqual([["cx"], ["h", "cx"], ["h"]], res)
 
     def test_cx_h_cx(self):
         dag = retworkx.PyDiGraph()
-        q0, q1 = dag.add_nodes_from(['q0', 'q1'])
-        cx_1 = dag.add_child(q0, 'cx', 'q0')
-        dag.add_edge(q1, cx_1, 'q1')
-        h_1 = dag.add_child(cx_1, 'h', 'q0')
-        cx_2 = dag.add_child(h_1, 'cx', 'q0')
-        dag.add_edge(cx_1, cx_2, 'q1')
+        q0, q1 = dag.add_nodes_from(["q0", "q1"])
+        cx_1 = dag.add_child(q0, "cx", "q0")
+        dag.add_edge(q1, cx_1, "q1")
+        h_1 = dag.add_child(cx_1, "h", "q0")
+        cx_2 = dag.add_child(h_1, "cx", "q0")
+        dag.add_edge(cx_1, cx_2, "q1")
 
         def filter_function(node):
-            return node in ['cx', 'h']
+            return node in ["cx", "h"]
 
         res = retworkx.collect_runs(dag, filter_function)
-        self.assertEqual([['cx'], ['h', 'cx']], res)
+        self.assertEqual([["cx"], ["h", "cx"]], res)
