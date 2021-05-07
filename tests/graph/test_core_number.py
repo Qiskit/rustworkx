@@ -53,7 +53,7 @@ class TestCoreNumber(unittest.TestCase):
             (8, 19),
             (11, 16),
             (11, 17),
-            (12, 18)
+            (12, 18),
         ]
 
         example_core = {}
@@ -82,9 +82,7 @@ class TestCoreNumber(unittest.TestCase):
     def test_undirected_all_3(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
-        graph.add_edges_from_no_data([
-            (0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)
-        ])
+        graph.add_edges_from_no_data([(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)])
         res = retworkx.core_number(graph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, {0: 3, 1: 3, 2: 3, 3: 3})

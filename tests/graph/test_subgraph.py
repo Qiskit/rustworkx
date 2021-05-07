@@ -16,24 +16,23 @@ import retworkx
 
 
 class TestSubgraph(unittest.TestCase):
-
     def test_subgraph(self):
         graph = retworkx.PyGraph()
-        graph.add_node('a')
-        graph.add_node('b')
-        graph.add_node('c')
-        graph.add_node('d')
+        graph.add_node("a")
+        graph.add_node("b")
+        graph.add_node("c")
+        graph.add_node("d")
         graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
         subgraph = graph.subgraph([1, 3])
         self.assertEqual([(0, 1, 4)], subgraph.weighted_edge_list())
-        self.assertEqual(['b', 'd'], subgraph.nodes())
+        self.assertEqual(["b", "d"], subgraph.nodes())
 
     def test_subgraph_empty_list(self):
         graph = retworkx.PyGraph()
-        graph.add_node('a')
-        graph.add_node('b')
-        graph.add_node('c')
-        graph.add_node('d')
+        graph.add_node("a")
+        graph.add_node("b")
+        graph.add_node("c")
+        graph.add_node("d")
         graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
         subgraph = graph.subgraph([])
         self.assertEqual([], subgraph.weighted_edge_list())
@@ -41,10 +40,10 @@ class TestSubgraph(unittest.TestCase):
 
     def test_subgraph_invalid_entry(self):
         graph = retworkx.PyGraph()
-        graph.add_node('a')
-        graph.add_node('b')
-        graph.add_node('c')
-        graph.add_node('d')
+        graph.add_node("a")
+        graph.add_node("b")
+        graph.add_node("c")
+        graph.add_node("d")
         graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
         subgraph = graph.subgraph([42])
         self.assertEqual([], subgraph.weighted_edge_list())
@@ -52,28 +51,26 @@ class TestSubgraph(unittest.TestCase):
 
     def test_subgraph_pass_by_reference(self):
         graph = retworkx.PyGraph()
-        graph.add_node({'a': 0})
-        graph.add_node('b')
-        graph.add_node('c')
-        graph.add_node('d')
+        graph.add_node({"a": 0})
+        graph.add_node("b")
+        graph.add_node("c")
+        graph.add_node("d")
         graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
         subgraph = graph.subgraph([0, 1, 3])
-        self.assertEqual([(0, 1, 1), (0, 2, 3), (1, 2, 4)],
-                         subgraph.weighted_edge_list())
-        self.assertEqual([{'a': 0}, 'b', 'd'], subgraph.nodes())
-        graph[0]['a'] = 4
-        self.assertEqual(subgraph[0]['a'], 4)
+        self.assertEqual([(0, 1, 1), (0, 2, 3), (1, 2, 4)], subgraph.weighted_edge_list())
+        self.assertEqual([{"a": 0}, "b", "d"], subgraph.nodes())
+        graph[0]["a"] = 4
+        self.assertEqual(subgraph[0]["a"], 4)
 
     def test_subgraph_replace_weight_no_reference(self):
         graph = retworkx.PyGraph()
-        graph.add_node({'a': 0})
-        graph.add_node('b')
-        graph.add_node('c')
-        graph.add_node('d')
+        graph.add_node({"a": 0})
+        graph.add_node("b")
+        graph.add_node("c")
+        graph.add_node("d")
         graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
         subgraph = graph.subgraph([0, 1, 3])
-        self.assertEqual([(0, 1, 1), (0, 2, 3), (1, 2, 4)],
-                         subgraph.weighted_edge_list())
-        self.assertEqual([{'a': 0}, 'b', 'd'], subgraph.nodes())
+        self.assertEqual([(0, 1, 1), (0, 2, 3), (1, 2, 4)], subgraph.weighted_edge_list())
+        self.assertEqual([{"a": 0}, "b", "d"], subgraph.nodes())
         graph[0] = 4
-        self.assertEqual(subgraph[0]['a'], 0)
+        self.assertEqual(subgraph[0]["a"], 0)

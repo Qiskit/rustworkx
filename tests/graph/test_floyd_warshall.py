@@ -35,16 +35,18 @@ class TestFloydWarshall(unittest.TestCase):
     def test_weighted_numpy_two_edges(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(8)))
-        graph.add_edges_from([
-            (0, 1, 2),
-            (1, 2, 2),
-            (2, 3, 1),
-            (3, 4, 1),
-            (4, 5, 1),
-            (5, 6, 1),
-            (6, 7, 1),
-            (7, 0, 1),
-        ])
+        graph.add_edges_from(
+            [
+                (0, 1, 2),
+                (1, 2, 2),
+                (2, 3, 1),
+                (3, 4, 1),
+                (4, 5, 1),
+                (5, 6, 1),
+                (6, 7, 1),
+                (7, 0, 1),
+            ]
+        )
         dist = retworkx.graph_floyd_warshall_numpy(
             graph, lambda x: x, parallel_threshold=self.parallel_threshold
         )
@@ -54,12 +56,14 @@ class TestFloydWarshall(unittest.TestCase):
     def test_weighted_numpy_negative_cycle(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
-        graph.add_edges_from([
-            (0, 1, 1),
-            (1, 2, -1),
-            (2, 3, -1),
-            (3, 0, -1),
-        ])
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, -1),
+            ]
+        )
         dist = retworkx.graph_floyd_warshall_numpy(
             graph, lambda x: x, parallel_threshold=self.parallel_threshold
         )
@@ -68,8 +72,7 @@ class TestFloydWarshall(unittest.TestCase):
     def test_floyd_warshall_numpy_cycle(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(7)))
-        graph.add_edges_from_no_data(
-            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+        graph.add_edges_from_no_data([(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
         dist = retworkx.graph_floyd_warshall_numpy(
             graph, lambda x: 1, parallel_threshold=self.parallel_threshold
         )
@@ -90,8 +93,7 @@ class TestFloydWarshall(unittest.TestCase):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
-        graph.add_edges_from_no_data(
-            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+        graph.add_edges_from_no_data([(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
         dist = retworkx.graph_floyd_warshall_numpy(
             graph, lambda x: 1, parallel_threshold=self.parallel_threshold
         )
@@ -102,8 +104,7 @@ class TestFloydWarshall(unittest.TestCase):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
-        graph.add_edges_from_no_data(
-            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+        graph.add_edges_from_no_data([(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
         dist = retworkx.graph_floyd_warshall_numpy(graph)
         self.assertEqual(dist[0, 3], 3)
         self.assertEqual(dist[0, 4], 3)
@@ -112,8 +113,7 @@ class TestFloydWarshall(unittest.TestCase):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
-        graph.add_edges_from_no_data(
-            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+        graph.add_edges_from_no_data([(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
         dist = retworkx.graph_floyd_warshall_numpy(
             graph, default_weight=2, parallel_threshold=self.parallel_threshold
         )

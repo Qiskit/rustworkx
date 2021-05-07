@@ -19,26 +19,27 @@ class TestCycleBasis(unittest.TestCase):
     def setUp(self):
         self.graph = retworkx.PyGraph()
         self.graph.add_nodes_from(list(range(10)))
-        self.graph.add_edges_from_no_data([
-            (0, 1),
-            (0, 3),
-            (0, 5),
-            (0, 8),
-            (1, 2),
-            (1, 6),
-            (2, 3),
-            (3, 4),
-            (4, 5),
-            (6, 7),
-            (7, 8),
-            (8, 9)])
+        self.graph.add_edges_from_no_data(
+            [
+                (0, 1),
+                (0, 3),
+                (0, 5),
+                (0, 8),
+                (1, 2),
+                (1, 6),
+                (2, 3),
+                (3, 4),
+                (4, 5),
+                (6, 7),
+                (7, 8),
+                (8, 9),
+            ]
+        )
 
     def test_cycle_basis(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(6)))
-        graph.add_edges_from_no_data([
-            (0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)
-        ])
+        graph.add_edges_from_no_data([(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)])
         res = sorted(sorted(c) for c in retworkx.cycle_basis(graph, 0))
         self.assertEqual([[0, 1, 2, 3], [0, 3, 4, 5]], res)
 
@@ -55,8 +56,7 @@ class TestCycleBasis(unittest.TestCase):
         self.graph.add_edges_from_no_data([(10, 11), (10, 12), (11, 12)])
         cycles = retworkx.cycle_basis(self.graph, 9)
         res = sorted(sorted(x) for x in cycles[:-1]) + [sorted(cycles[-1])]
-        self.assertEqual(res, [[0, 1, 2, 3], [0, 1, 6, 7, 8], [0, 3, 4, 5],
-                               [10, 11, 12]])
+        self.assertEqual(res, [[0, 1, 2, 3], [0, 1, 6, 7, 8], [0, 3, 4, 5], [10, 11, 12]])
 
     def test_invalid_types(self):
         digraph = retworkx.PyDiGraph()
@@ -66,5 +66,4 @@ class TestCycleBasis(unittest.TestCase):
     def test_self_loop(self):
         self.graph.add_edge(1, 1, None)
         res = sorted(sorted(c) for c in retworkx.cycle_basis(self.graph, 0))
-        self.assertEqual([[0, 1, 2, 3], [0, 1, 6, 7, 8], [0, 3, 4, 5], [1]],
-                         res)
+        self.assertEqual([[0, 1, 2, 3], [0, 1, 6, 7, 8], [0, 3, 4, 5], [1]], res)

@@ -11,7 +11,8 @@ import sys
 import functools
 
 from .retworkx import *
-sys.modules['retworkx.generators'] = generators
+
+sys.modules["retworkx.generators"] = generators
 
 
 class PyDAG(PyDiGraph):
@@ -82,6 +83,7 @@ class PyDAG(PyDiGraph):
     the same time, leveraging :meth:`PyDAG.add_child` or
     :meth:`PyDAG.add_parent` will avoid this overhead.
     """
+
     pass
 
 
@@ -114,11 +116,10 @@ def distance_matrix(graph, parallel_threshold=300):
 
 
 @distance_matrix.register(PyDiGraph)
-def _digraph_distance_matrix(graph, parallel_threshold=300,
-                             as_undirected=False):
-    return digraph_distance_matrix(graph,
-                                   parallel_threshold=parallel_threshold,
-                                   as_undirected=as_undirected)
+def _digraph_distance_matrix(graph, parallel_threshold=300, as_undirected=False):
+    return digraph_distance_matrix(
+        graph, parallel_threshold=parallel_threshold, as_undirected=as_undirected
+    )
 
 
 @distance_matrix.register(PyGraph)
@@ -160,14 +161,12 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
 
 @adjacency_matrix.register(PyDiGraph)
 def _digraph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
-    return digraph_adjacency_matrix(graph, weight_fn=weight_fn,
-                                    default_weight=default_weight)
+    return digraph_adjacency_matrix(graph, weight_fn=weight_fn, default_weight=default_weight)
 
 
 @adjacency_matrix.register(PyGraph)
 def _graph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
-    return graph_adjacency_matrix(graph, weight_fn=weight_fn,
-                                  default_weight=default_weight)
+    return graph_adjacency_matrix(graph, weight_fn=weight_fn, default_weight=default_weight)
 
 
 @functools.singledispatch
@@ -195,19 +194,20 @@ def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 @all_simple_paths.register(PyDiGraph)
 def _digraph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return digraph_all_simple_paths(graph, from_, to, min_depth=min_depth,
-                                    cutoff=cutoff)
+    return digraph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
 
 
 @all_simple_paths.register(PyGraph)
 def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return graph_all_simple_paths(graph, from_, to, min_depth=min_depth,
-                                  cutoff=cutoff)
+    return graph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
 
 
 @functools.singledispatch
 def floyd_warshall_numpy(
-    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300,
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+    parallel_threshold=300,
 ):
     """Find all-pairs shortest path lengths using Floyd's algorithm
 
@@ -264,9 +264,7 @@ def _digraph_floyd_warshall_numpy(
 
 
 @floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(
-    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
-):
+def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300):
     return graph_floyd_warshall_numpy(
         graph,
         weight_fn=weight_fn,
@@ -303,22 +301,19 @@ def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
 
 
 @astar_shortest_path.register(PyDiGraph)
-def _digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn,
-                                 estimate_cost_fn):
-    return digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn,
-                                       estimate_cost_fn)
+def _digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+    return digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
 
 
 @astar_shortest_path.register(PyGraph)
-def _graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn,
-                               estimate_cost_fn):
-    return graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn,
-                                     estimate_cost_fn)
+def _graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+    return graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
 
 
 @functools.singledispatch
-def dijkstra_shortest_paths(graph, source, target=None, weight_fn=None,
-                            default_weight=1.0, as_undirected=False):
+def dijkstra_shortest_paths(
+    graph, source, target=None, weight_fn=None, default_weight=1.0, as_undirected=False
+):
     """Find the shortest path from a node
 
     This function will generate the shortest path from a source node using
@@ -345,20 +340,24 @@ def dijkstra_shortest_paths(graph, source, target=None, weight_fn=None,
 
 
 @dijkstra_shortest_paths.register(PyDiGraph)
-def _digraph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None,
-                                    default_weight=1.0, as_undirected=False):
-    return digraph_dijkstra_shortest_paths(graph, source, target=target,
-                                           weight_fn=weight_fn,
-                                           default_weight=default_weight,
-                                           as_undirected=as_undirected)
+def _digraph_dijkstra_shortest_path(
+    graph, source, target=None, weight_fn=None, default_weight=1.0, as_undirected=False
+):
+    return digraph_dijkstra_shortest_paths(
+        graph,
+        source,
+        target=target,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        as_undirected=as_undirected,
+    )
 
 
 @dijkstra_shortest_paths.register(PyGraph)
-def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None,
-                                  default_weight=1.0):
-    return graph_dijkstra_shortest_paths(graph, source, target=target,
-                                         weight_fn=weight_fn,
-                                         default_weight=default_weight)
+def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None, default_weight=1.0):
+    return graph_dijkstra_shortest_paths(
+        graph, source, target=target, weight_fn=weight_fn, default_weight=default_weight
+    )
 
 
 @functools.singledispatch
@@ -387,17 +386,13 @@ def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
 
 
 @dijkstra_shortest_path_lengths.register(PyDiGraph)
-def _digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn,
-                                            goal=None):
-    return digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn,
-                                                  goal=goal)
+def _digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    return digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
 
 
 @dijkstra_shortest_path_lengths.register(PyGraph)
-def _graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn,
-                                          goal=None):
-    return graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn,
-                                                goal=goal)
+def _graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    return graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
 
 
 @functools.singledispatch
@@ -427,14 +422,12 @@ def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 
 @k_shortest_path_lengths.register(PyDiGraph)
 def _digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
-    return digraph_k_shortest_path_lengths(graph, start, k, edge_cost,
-                                           goal=goal)
+    return digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=goal)
 
 
 @k_shortest_path_lengths.register(PyGraph)
 def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
-    return graph_k_shortest_path_lengths(graph, start, k, edge_cost,
-                                         goal=goal)
+    return graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=goal)
 
 
 @functools.singledispatch
@@ -467,8 +460,7 @@ def _graph_dfs_edges(graph, source):
 
 
 @functools.singledispatch
-def is_isomorphic(first, second, node_matcher=None, edge_matcher=None,
-                  id_order=True):
+def is_isomorphic(first, second, node_matcher=None, edge_matcher=None, id_order=True):
     """Determine if 2 graphs are isomorphic
 
     This checks if 2 graphs are isomorphic both structurally and also
@@ -514,17 +506,13 @@ def is_isomorphic(first, second, node_matcher=None, edge_matcher=None,
 
 
 @is_isomorphic.register(PyDiGraph)
-def _digraph_is_isomorphic(first, second, node_matcher=None,
-                           edge_matcher=None, id_order=True):
-    return digraph_is_isomorphic(first, second, node_matcher,
-                                 edge_matcher, id_order)
+def _digraph_is_isomorphic(first, second, node_matcher=None, edge_matcher=None, id_order=True):
+    return digraph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order)
 
 
 @is_isomorphic.register(PyGraph)
-def _graph_is_isomorphic(first, second, node_matcher=None,
-                         edge_matcher=None, id_order=True):
-    return graph_is_isomorphic(first, second, node_matcher,
-                               edge_matcher, id_order)
+def _graph_is_isomorphic(first, second, node_matcher=None, edge_matcher=None, id_order=True):
+    return graph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order)
 
 
 @functools.singledispatch
@@ -720,7 +708,6 @@ def networkx_converter(graph):
     nodes = list(graph.nodes)
     node_indices = dict(zip(nodes, new_graph.add_nodes_from(nodes)))
     new_graph.add_edges_from(
-        [(node_indices[x[0]],
-          node_indices[x[1]],
-          x[2]) for x in graph.edges(data=True)])
+        [(node_indices[x[0]], node_indices[x[1]], x[2]) for x in graph.edges(data=True)]
+    )
     return new_graph

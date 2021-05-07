@@ -16,40 +16,39 @@ import retworkx
 
 
 class TestStronglyConnected(unittest.TestCase):
-
     def test_number_strongly_connected_all_strong(self):
         G = retworkx.PyDiGraph()
         node_a = G.add_node(1)
         node_b = G.add_child(node_a, 2, {})
         node_c = G.add_child(node_b, 3, {})
-        self.assertEqual(retworkx.strongly_connected_components(G),
-                         [[node_c], [node_b], [node_a]])
+        self.assertEqual(retworkx.strongly_connected_components(G), [[node_c], [node_b], [node_a]])
 
     def test_number_strongly_connected(self):
         G = retworkx.PyDiGraph()
         node_a = G.add_node(1)
         node_b = G.add_child(node_a, 2, {})
         node_c = G.add_node(3)
-        self.assertEqual(retworkx.strongly_connected_components(G),
-                         [[node_c], [node_b], [node_a]])
+        self.assertEqual(retworkx.strongly_connected_components(G), [[node_c], [node_b], [node_a]])
 
     def test_stongly_connected_no_linear(self):
         G = retworkx.PyDiGraph()
         G.add_nodes_from(list(range(8)))
-        G.add_edges_from_no_data([
-            (0, 1),
-            (1, 2),
-            (1, 7),
-            (2, 3),
-            (2, 6),
-            (3, 4),
-            (4, 2),
-            (4, 5),
-            (6, 3),
-            (6, 5),
-            (7, 0),
-            (7, 6),
-        ])
+        G.add_edges_from_no_data(
+            [
+                (0, 1),
+                (1, 2),
+                (1, 7),
+                (2, 3),
+                (2, 6),
+                (3, 4),
+                (4, 2),
+                (4, 5),
+                (6, 3),
+                (6, 5),
+                (7, 0),
+                (7, 6),
+            ]
+        )
         expected = [[5], [2, 3, 4, 6], [0, 1, 7]]
         components = retworkx.strongly_connected_components(G)
         self.assertEqual(components, expected)
@@ -59,5 +58,4 @@ class TestStronglyConnected(unittest.TestCase):
         for i in range(100000):
             node = G.add_node(i)
             G.add_child(node, str(i), {})
-        self.assertEqual(len(retworkx.strongly_connected_components(G)),
-                         200000)
+        self.assertEqual(len(retworkx.strongly_connected_components(G)), 200000)

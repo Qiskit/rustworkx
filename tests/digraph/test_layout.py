@@ -16,7 +16,6 @@ import retworkx
 
 
 class TestRandomLayout(unittest.TestCase):
-
     def setUp(self):
         self.graph = retworkx.generators.directed_path_graph(10)
 
@@ -32,13 +31,12 @@ class TestRandomLayout(unittest.TestCase):
             6: (0.462700947802672, 0.44025745918644743),
             7: (0.3125895420208278, 0.0893209773065271),
             8: (0.5567725240957387, 0.21079648777222115),
-            9: (0.7586719404939911, 0.43090704138697045)
+            9: (0.7586719404939911, 0.43090704138697045),
         }
         self.assertEqual(expected, res)
 
     def test_random_layout_center(self):
-        res = retworkx.digraph_random_layout(self.graph, center=(0.5, 0.5),
-                                             seed=42)
+        res = retworkx.digraph_random_layout(self.graph, center=(0.5, 0.5), seed=42)
         expected = {
             1: [1.260833410686741, 1.0278396573581516],
             5: [0.7363512785218512, 1.4286365888207462],
@@ -49,7 +47,7 @@ class TestRandomLayout(unittest.TestCase):
             0: [0.7265125179283135, 0.7391066903185995],
             2: [1.4704763177409157, 0.8754626814145194],
             6: [0.962700947802672, 0.9402574591864474],
-            3: [0.6879083014236631, 1.0246576629278041]
+            3: [0.6879083014236631, 1.0246576629278041],
         }
         self.assertEqual(expected, res)
 
