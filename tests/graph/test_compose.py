@@ -44,7 +44,10 @@ class TestCompose(unittest.TestCase):
         op_nodes = other_graph.add_nodes_from(["cx"])
         other_output_nodes = other_graph.add_nodes_from(["qr[2]", "qr[3]"])
         other_graph.add_edges_from(
-            [(input_nodes[0], op_nodes[0], "qr[2]"), (input_nodes[1], op_nodes[0], "qr[3]")]
+            [
+                (input_nodes[0], op_nodes[0], "qr[2]"),
+                (input_nodes[1], op_nodes[0], "qr[3]"),
+            ]
         )
         other_graph.add_edges_from(
             [
@@ -67,7 +70,9 @@ class TestCompose(unittest.TestCase):
             original_op_nodes[0]: (op_nodes[0], "qr[0]"),
             original_input_nodes[1]: (op_nodes[0], "qr[1]"),
         }
-        res = graph.compose(other_graph, node_map, node_map_func=map_fn, edge_map_func=map_fn)
+        res = graph.compose(
+            other_graph, node_map, node_map_func=map_fn, edge_map_func=map_fn
+        )
         self.assertEqual({2: 4, 3: 3, 4: 5}, res)
         self.assertEqual(graph[res[other_output_nodes[0]]], "qr[0]")
         self.assertEqual(graph[res[other_output_nodes[1]]], "qr[1]")

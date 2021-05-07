@@ -78,8 +78,12 @@ class TestFloydWarshall(unittest.TestCase):
     def test_directed_floyd_warshall_numpy_cycle_as_undirected(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(7)))
-        graph.add_edges_from_no_data([(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
-        dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: 1, as_undirected=True)
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
+        dist = retworkx.digraph_floyd_warshall_numpy(
+            graph, lambda x: 1, as_undirected=True
+        )
         expected = numpy.array(
             [
                 [0.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0],
@@ -129,7 +133,9 @@ class TestFloydWarshall(unittest.TestCase):
     def test_floyd_warshall_numpy_digraph_cycle(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(7)))
-        graph.add_edges_from_no_data([(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(
             graph, lambda x: 1, parallel_threshold=self.parallel_threshold
         )
@@ -164,7 +170,9 @@ class TestFloydWarshall(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
-        graph.add_edges_from_no_data([(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+        graph.add_edges_from_no_data(
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(
             graph, lambda x: 1, parallel_threshold=self.parallel_threshold
         )
@@ -175,7 +183,9 @@ class TestFloydWarshall(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
-        graph.add_edges_from_no_data([(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+        graph.add_edges_from_no_data(
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(graph)
         self.assertEqual(dist[0, 3], 3)
         self.assertEqual(dist[0, 4], 4)
@@ -184,7 +194,9 @@ class TestFloydWarshall(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
-        graph.add_edges_from_no_data([(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+        graph.add_edges_from_no_data(
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(
             graph, default_weight=2, parallel_threshold=self.parallel_threshold
         )

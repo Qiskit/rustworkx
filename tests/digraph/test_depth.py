@@ -38,7 +38,10 @@ class TestLongestPath(unittest.TestCase):
         node_f = dag.add_child(node_e, "f", {})
         dag.add_child(node_c, "g", {})
         self.assertEqual(4, retworkx.dag_longest_path_length(dag))
-        self.assertEqual([node_a, node_b, node_c, node_e, node_f], retworkx.dag_longest_path(dag))
+        self.assertEqual(
+            [node_a, node_b, node_c, node_e, node_f],
+            retworkx.dag_longest_path(dag),
+        )
 
     def test_less_linear(self):
         dag = retworkx.PyDAG()
@@ -51,7 +54,10 @@ class TestLongestPath(unittest.TestCase):
         dag.add_edge(node_a, node_e, {})
         dag.add_edge(node_c, node_e, {})
         self.assertEqual(4, retworkx.dag_longest_path_length(dag))
-        self.assertEqual([node_a, node_b, node_c, node_d, node_e], retworkx.dag_longest_path(dag))
+        self.assertEqual(
+            [node_a, node_b, node_c, node_d, node_e],
+            retworkx.dag_longest_path(dag),
+        )
 
     def test_degenerate_graph(self):
         dag = retworkx.PyDAG()

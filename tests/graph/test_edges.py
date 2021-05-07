@@ -38,7 +38,9 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         node_a = graph.add_node("a")
         node_b = graph.add_node("b")
-        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.get_edge_data, node_a, node_b)
+        self.assertRaises(
+            retworkx.NoEdgeBetweenNodes, graph.get_edge_data, node_a, node_b
+        )
 
     def test_update_edge(self):
         graph = retworkx.PyGraph()
@@ -52,7 +54,9 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         node_a = graph.add_node("a")
         node_b = graph.add_node("b")
-        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.update_edge, node_a, node_b, None)
+        self.assertRaises(
+            retworkx.NoEdgeBetweenNodes, graph.update_edge, node_a, node_b, None
+        )
 
     def test_update_edge_by_index(self):
         graph = retworkx.PyGraph()
@@ -75,13 +79,18 @@ class TestEdges(unittest.TestCase):
         graph.add_edge(node_a, node_b, "not edgy")
         edge_index = graph.add_edge(node_a, node_b, "not edgy")
         graph.update_edge_by_index(edge_index, "Edgy")
-        self.assertEqual([(0, 1, "not edgy"), (0, 1, "Edgy")], list(graph.weighted_edge_list()))
+        self.assertEqual(
+            [(0, 1, "not edgy"), (0, 1, "Edgy")],
+            list(graph.weighted_edge_list()),
+        )
 
     def test_no_edge_get_all_edge_data(self):
         graph = retworkx.PyGraph()
         node_a = graph.add_node("a")
         node_b = graph.add_node("b")
-        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.get_all_edge_data, node_a, node_b)
+        self.assertRaises(
+            retworkx.NoEdgeBetweenNodes, graph.get_all_edge_data, node_a, node_b
+        )
 
     def test_has_edge(self):
         graph = retworkx.PyGraph()
@@ -123,7 +132,9 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         node_a = graph.add_node("a")
         node_b = graph.add_node("b")
-        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.remove_edge, node_a, node_b)
+        self.assertRaises(
+            retworkx.NoEdgeBetweenNodes, graph.remove_edge, node_a, node_b
+        )
 
     def test_remove_edge_single(self):
         graph = retworkx.PyGraph()
@@ -189,7 +200,13 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         nodes = list(range(4))
         graph.add_nodes_from(nodes)
-        edge_list = [(0, 1, "a"), (1, 2, "b"), (0, 2, "c"), (2, 3, "d"), (0, 3, "e")]
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
         res = graph.add_edges_from(edge_list)
         self.assertEqual(len(res), 5)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
@@ -229,7 +246,13 @@ class TestEdges(unittest.TestCase):
     def test_extend_from_weighted_edge_list_nodes_exist(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
-        edge_list = [(0, 1, "a"), (1, 2, "b"), (0, 2, "c"), (2, 3, "d"), (0, 3, "e")]
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
         graph.extend_from_weighted_edge_list(edge_list)
         self.assertEqual(len(graph), 4)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
@@ -252,7 +275,13 @@ class TestEdges(unittest.TestCase):
     def test_edge_list(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
-        edge_list = [(0, 1, "a"), (1, 2, "b"), (0, 2, "c"), (2, 3, "d"), (0, 3, "e")]
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
         graph.add_edges_from(edge_list)
         self.assertEqual([(x[0], x[1]) for x in edge_list], graph.edge_list())
 
@@ -263,7 +292,13 @@ class TestEdges(unittest.TestCase):
     def test_weighted_edge_list(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
-        edge_list = [(0, 1, "a"), (1, 2, "b"), (0, 2, "c"), (2, 3, "d"), (0, 3, "e")]
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
         graph.add_edges_from(edge_list)
         self.assertEqual(edge_list, graph.weighted_edge_list())
 
@@ -309,7 +344,13 @@ class TestEdges(unittest.TestCase):
 
     def test_extend_from_weighted_edge_list(self):
         graph = retworkx.PyGraph()
-        edge_list = [(0, 1, "a"), (1, 2, "b"), (0, 2, "c"), (2, 3, "d"), (0, 3, "e")]
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
         graph.extend_from_weighted_edge_list(edge_list)
         self.assertEqual(len(graph), 4)
 
@@ -359,13 +400,17 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         graph = retworkx.PyGraph(False)
         node_a = graph.add_node("a")
         node_b = graph.add_node("b")
-        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.get_edge_data, node_a, node_b)
+        self.assertRaises(
+            retworkx.NoEdgeBetweenNodes, graph.get_edge_data, node_a, node_b
+        )
 
     def test_no_edge_get_all_edge_data(self):
         graph = retworkx.PyGraph(False)
         node_a = graph.add_node("a")
         node_b = graph.add_node("b")
-        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.get_all_edge_data, node_a, node_b)
+        self.assertRaises(
+            retworkx.NoEdgeBetweenNodes, graph.get_all_edge_data, node_a, node_b
+        )
 
     def test_has_edge(self):
         graph = retworkx.PyGraph(False)
@@ -407,7 +452,9 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         graph = retworkx.PyGraph(False)
         node_a = graph.add_node("a")
         node_b = graph.add_node("b")
-        self.assertRaises(retworkx.NoEdgeBetweenNodes, graph.remove_edge, node_a, node_b)
+        self.assertRaises(
+            retworkx.NoEdgeBetweenNodes, graph.remove_edge, node_a, node_b
+        )
 
     def test_remove_edge_single(self):
         graph = retworkx.PyGraph(False)
@@ -453,7 +500,13 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         graph = retworkx.PyGraph(False)
         nodes = list(range(4))
         graph.add_nodes_from(nodes)
-        edge_list = [(0, 1, "a"), (1, 2, "b"), (0, 2, "c"), (2, 3, "d"), (0, 3, "e")]
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
         res = graph.add_edges_from(edge_list)
         self.assertEqual(len(res), 5)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
@@ -507,7 +560,13 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
     def test_extend_from_weighted_edge_list_nodes_exist(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
-        edge_list = [(0, 1, "a"), (1, 2, "b"), (0, 2, "c"), (2, 3, "d"), (0, 3, "e")]
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
         graph.extend_from_weighted_edge_list(edge_list)
         self.assertEqual(len(graph), 4)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
@@ -561,7 +620,13 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
 
     def test_extend_from_weighted_edge_list(self):
         graph = retworkx.PyGraph(False)
-        edge_list = [(0, 1, "a"), (1, 2, "b"), (0, 2, "c"), (2, 3, "d"), (0, 3, "e")]
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
         graph.extend_from_weighted_edge_list(edge_list)
         self.assertEqual(len(graph), 4)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())

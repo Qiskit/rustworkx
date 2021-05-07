@@ -30,7 +30,9 @@ class TestIsomorphic(unittest.TestCase):
         dag_b.add_child(node_b, "a_3", "a_2")
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(retworkx.is_isomorphic(dag_a, dag_b, id_order=id_order))
+                self.assertTrue(
+                    retworkx.is_isomorphic(dag_a, dag_b, id_order=id_order)
+                )
 
     def test_isomorphic_mismatch_node_data(self):
         dag_a = retworkx.PyDAG()
@@ -45,7 +47,9 @@ class TestIsomorphic(unittest.TestCase):
         dag_b.add_child(node_b, "b_3", "b_2")
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(retworkx.is_isomorphic(dag_a, dag_b, id_order=id_order))
+                self.assertTrue(
+                    retworkx.is_isomorphic(dag_a, dag_b, id_order=id_order)
+                )
 
     def test_isomorphic_compare_nodes_mismatch_node_data(self):
         dag_a = retworkx.PyDAG()
@@ -61,7 +65,9 @@ class TestIsomorphic(unittest.TestCase):
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertFalse(
-                    retworkx.is_isomorphic(dag_a, dag_b, lambda x, y: x == y, id_order=id_order)
+                    retworkx.is_isomorphic(
+                        dag_a, dag_b, lambda x, y: x == y, id_order=id_order
+                    )
                 )
 
     def test_is_isomorphic_nodes_compare_raises(self):
@@ -79,7 +85,9 @@ class TestIsomorphic(unittest.TestCase):
         def compare_nodes(a, b):
             raise TypeError("Failure")
 
-        self.assertRaises(TypeError, retworkx.is_isomorphic, (dag_a, dag_b, compare_nodes))
+        self.assertRaises(
+            TypeError, retworkx.is_isomorphic, (dag_a, dag_b, compare_nodes)
+        )
 
     def test_isomorphic_compare_nodes_identical(self):
         dag_a = retworkx.PyDAG()
@@ -95,7 +103,9 @@ class TestIsomorphic(unittest.TestCase):
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertTrue(
-                    retworkx.is_isomorphic(dag_a, dag_b, lambda x, y: x == y, id_order=id_order)
+                    retworkx.is_isomorphic(
+                        dag_a, dag_b, lambda x, y: x == y, id_order=id_order
+                    )
                 )
 
     def test_isomorphic_compare_edges_identical(self):
@@ -113,7 +123,10 @@ class TestIsomorphic(unittest.TestCase):
             with self.subTest(id_order=id_order):
                 self.assertTrue(
                     retworkx.is_isomorphic(
-                        dag_a, dag_b, edge_matcher=lambda x, y: x == y, id_order=id_order
+                        dag_a,
+                        dag_b,
+                        edge_matcher=lambda x, y: x == y,
+                        id_order=id_order,
                     )
                 )
 
@@ -157,7 +170,9 @@ class TestIsomorphic(unittest.TestCase):
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertTrue(
-                    retworkx.is_isomorphic(dag_a, dag_b, lambda x, y: x == y, id_order=id_order)
+                    retworkx.is_isomorphic(
+                        dag_a, dag_b, lambda x, y: x == y, id_order=id_order
+                    )
                 )
 
     def test_isomorphic_compare_nodes_with_removals_deepcopy(self):

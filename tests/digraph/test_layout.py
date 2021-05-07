@@ -36,7 +36,9 @@ class TestRandomLayout(unittest.TestCase):
         self.assertEqual(expected, res)
 
     def test_random_layout_center(self):
-        res = retworkx.digraph_random_layout(self.graph, center=(0.5, 0.5), seed=42)
+        res = retworkx.digraph_random_layout(
+            self.graph, center=(0.5, 0.5), seed=42
+        )
         expected = {
             1: [1.260833410686741, 1.0278396573581516],
             5: [0.7363512785218512, 1.4286365888207462],

@@ -57,7 +57,9 @@ class TestSubgraph(unittest.TestCase):
         graph.add_node("d")
         graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
         subgraph = graph.subgraph([0, 1, 3])
-        self.assertEqual([(0, 1, 1), (0, 2, 3), (1, 2, 4)], subgraph.weighted_edge_list())
+        self.assertEqual(
+            [(0, 1, 1), (0, 2, 3), (1, 2, 4)], subgraph.weighted_edge_list()
+        )
         self.assertEqual([{"a": 0}, "b", "d"], subgraph.nodes())
         graph[0]["a"] = 4
         self.assertEqual(subgraph[0]["a"], 4)
@@ -70,7 +72,9 @@ class TestSubgraph(unittest.TestCase):
         graph.add_node("d")
         graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
         subgraph = graph.subgraph([0, 1, 3])
-        self.assertEqual([(0, 1, 1), (0, 2, 3), (1, 2, 4)], subgraph.weighted_edge_list())
+        self.assertEqual(
+            [(0, 1, 1), (0, 2, 3), (1, 2, 4)], subgraph.weighted_edge_list()
+        )
         self.assertEqual([{"a": 0}, "b", "d"], subgraph.nodes())
         graph[0] = 4
         self.assertEqual(subgraph[0]["a"], 0)

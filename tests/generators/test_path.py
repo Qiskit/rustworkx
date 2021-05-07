@@ -38,8 +38,12 @@ class TestPathGraph(unittest.TestCase):
         self.assertEqual(graph.out_edges(0), [(0, 1, None)])
         self.assertEqual(graph.in_edges(0), [(1, 0, None)])
         for i in range(1, 19):
-            self.assertEqual(graph.out_edges(i), [(i, i + 1, None), (i, i - 1, None)])
-            self.assertEqual(graph.in_edges(i), [(i + 1, i, None), (i - 1, i, None)])
+            self.assertEqual(
+                graph.out_edges(i), [(i, i + 1, None), (i, i - 1, None)]
+            )
+            self.assertEqual(
+                graph.in_edges(i), [(i + 1, i, None), (i - 1, i, None)]
+            )
         self.assertEqual(graph.out_edges(19), [(19, 18, None)])
         self.assertEqual(graph.in_edges(19), [(18, 19, None)])
 

@@ -21,40 +21,58 @@ class TestIsomorphic(unittest.TestCase):
         g_b = retworkx.PyGraph()
 
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_a.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_a.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
 
         nodes = g_b.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_b.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_b.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(retworkx.is_isomorphic(g_a, g_b, id_order=id_order))
+                self.assertTrue(
+                    retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
+                )
 
     def test_isomorphic_mismatch_node_data(self):
         g_a = retworkx.PyGraph()
         g_b = retworkx.PyGraph()
 
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_a.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_a.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
 
         nodes = g_b.add_nodes_from(["b_1", "b_2", "b_3"])
-        g_b.add_edges_from([(nodes[0], nodes[1], "b_1"), (nodes[1], nodes[2], "b_2")])
+        g_b.add_edges_from(
+            [(nodes[0], nodes[1], "b_1"), (nodes[1], nodes[2], "b_2")]
+        )
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(retworkx.is_isomorphic(g_a, g_b, id_order=id_order))
+                self.assertTrue(
+                    retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
+                )
 
     def test_isomorphic_compare_nodes_mismatch_node_data(self):
         g_a = retworkx.PyGraph()
         g_b = retworkx.PyGraph()
 
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_a.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_a.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
 
         nodes = g_b.add_nodes_from(["b_1", "b_2", "b_3"])
-        g_b.add_edges_from([(nodes[0], nodes[1], "b_1"), (nodes[1], nodes[2], "b_2")])
+        g_b.add_edges_from(
+            [(nodes[0], nodes[1], "b_1"), (nodes[1], nodes[2], "b_2")]
+        )
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertFalse(
-                    retworkx.is_isomorphic(g_a, g_b, lambda x, y: x == y, id_order=id_order)
+                    retworkx.is_isomorphic(
+                        g_a, g_b, lambda x, y: x == y, id_order=id_order
+                    )
                 )
 
     def test_is_isomorphic_nodes_compare_raises(self):
@@ -62,29 +80,41 @@ class TestIsomorphic(unittest.TestCase):
         g_b = retworkx.PyGraph()
 
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_a.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_a.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
 
         nodes = g_b.add_nodes_from(["b_1", "b_2", "b_3"])
-        g_b.add_edges_from([(nodes[0], nodes[1], "b_1"), (nodes[1], nodes[2], "b_2")])
+        g_b.add_edges_from(
+            [(nodes[0], nodes[1], "b_1"), (nodes[1], nodes[2], "b_2")]
+        )
 
         def compare_nodes(a, b):
             raise TypeError("Failure")
 
-        self.assertRaises(TypeError, retworkx.is_isomorphic, (g_a, g_b, compare_nodes))
+        self.assertRaises(
+            TypeError, retworkx.is_isomorphic, (g_a, g_b, compare_nodes)
+        )
 
     def test_isomorphic_compare_nodes_identical(self):
         g_a = retworkx.PyGraph()
         g_b = retworkx.PyGraph()
 
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_a.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_a.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
 
         nodes = g_b.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_b.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_b.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertTrue(
-                    retworkx.is_isomorphic(g_a, g_b, lambda x, y: x == y, id_order=id_order)
+                    retworkx.is_isomorphic(
+                        g_a, g_b, lambda x, y: x == y, id_order=id_order
+                    )
                 )
 
     def test_isomorphic_compare_edges_identical(self):
@@ -92,15 +122,22 @@ class TestIsomorphic(unittest.TestCase):
         g_b = retworkx.PyGraph()
 
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_a.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_a.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
 
         nodes = g_b.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_b.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_b.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertTrue(
                     retworkx.is_isomorphic(
-                        g_a, g_b, edge_matcher=lambda x, y: x == y, id_order=id_order
+                        g_a,
+                        g_b,
+                        edge_matcher=lambda x, y: x == y,
+                        id_order=id_order,
                     )
                 )
 
@@ -109,7 +146,9 @@ class TestIsomorphic(unittest.TestCase):
         g_b = retworkx.PyGraph()
 
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
-        g_a.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
+        g_a.add_edges_from(
+            [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
+        )
 
         nodes = g_b.add_nodes_from(["a_0", "a_2", "a_1", "a_3"])
         g_b.add_edges_from(
@@ -124,7 +163,9 @@ class TestIsomorphic(unittest.TestCase):
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertTrue(
-                    retworkx.is_isomorphic(g_a, g_b, lambda x, y: x == y, id_order=id_order)
+                    retworkx.is_isomorphic(
+                        g_a, g_b, lambda x, y: x == y, id_order=id_order
+                    )
                 )
 
     def test_isomorphic_node_count_not_equal(self):
@@ -139,13 +180,17 @@ class TestIsomorphic(unittest.TestCase):
         g_b.remove_node(nodes[0])
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertFalse(retworkx.is_isomorphic(g_a, g_b, id_order=id_order))
+                self.assertFalse(
+                    retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
+                )
 
     def test_same_degrees_non_isomorphic(self):
         g_a = retworkx.PyGraph()
         g_b = retworkx.PyGraph()
 
-        nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3", "a_4", "b_1", "b_2", "b_3", "b_4"])
+        nodes = g_a.add_nodes_from(
+            ["a_1", "a_2", "a_3", "a_4", "b_1", "b_2", "b_3", "b_4"]
+        )
         g_a.add_edges_from(
             [
                 (nodes[0], nodes[1], "a_1"),
@@ -161,7 +206,9 @@ class TestIsomorphic(unittest.TestCase):
             ]
         )
 
-        nodes = g_b.add_nodes_from(["a_1", "a_2", "a_3", "a_4", "b_1", "b_2", "b_3", "b_4"])
+        nodes = g_b.add_nodes_from(
+            ["a_1", "a_2", "a_3", "a_4", "b_1", "b_2", "b_3", "b_4"]
+        )
         g_b.add_edges_from(
             [
                 (nodes[0], nodes[1], "a_1"),
@@ -178,4 +225,6 @@ class TestIsomorphic(unittest.TestCase):
         )
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertFalse(retworkx.is_isomorphic(g_a, g_b, id_order=id_order))
+                self.assertFalse(
+                    retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
+                )

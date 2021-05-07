@@ -50,7 +50,9 @@ class TestAdj(unittest.TestCase):
         node_b = dag.add_child(node_a, "b", {"a": 1})
         node_c = dag.add_child(node_a, "c", {"a": 2})
         res = dag.out_edges(node_a)
-        self.assertEqual([(node_a, node_c, {"a": 2}), (node_a, node_b, {"a": 1})], res)
+        self.assertEqual(
+            [(node_a, node_c, {"a": 2}), (node_a, node_b, {"a": 1})], res
+        )
 
     def test_neighbor_dir_surrounded_in_out_edges(self):
         dag = retworkx.PyDAG()

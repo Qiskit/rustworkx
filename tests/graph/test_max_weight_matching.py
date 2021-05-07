@@ -43,7 +43,9 @@ class TestMaxWeightMatching(testtools.TestCase):
                     "output: %s" % ((u, v), (v, u), rx_match, expected_match)
                 )
 
-    def compare_rx_nx_sets(self, rx_graph, rx_matches, nx_matches, seed, nx_graph):
+    def compare_rx_nx_sets(
+        self, rx_graph, rx_matches, nx_matches, seed, nx_graph
+    ):
         def get_rx_weight(edge):
             weight = rx_graph.get_edge_data(*edge)
             if weight is None:
@@ -86,7 +88,8 @@ class TestMaxWeightMatching(testtools.TestCase):
                 "%s is not a maximal matching" % rx_matches,
             )
             self.assertEqual(
-                sum(map(get_rx_weight, rx_matches)), sum(map(get_nx_weight, nx_matches))
+                sum(map(get_rx_weight, rx_matches)),
+                sum(map(get_nx_weight, nx_matches)),
             )
 
     def test_empty_graph(self):
@@ -124,7 +127,9 @@ class TestMaxWeightMatching(testtools.TestCase):
         graph = retworkx.PyGraph()
         graph.extend_from_weighted_edge_list([(1, 2, 10), (2, 3, 11)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {
                 (2, 3),
             },
@@ -134,13 +139,17 @@ class TestMaxWeightMatching(testtools.TestCase):
         graph = retworkx.PyGraph()
         graph.extend_from_weighted_edge_list([(1, 2, 5), (2, 3, 11), (3, 4, 5)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {
                 (2, 3),
             },
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, True, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, True, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 2), (3, 4)},
         )
 
@@ -156,13 +165,17 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {
                 (1, 2),
             },
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, True, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, True, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 3), (2, 4)},
         )
 
@@ -177,12 +190,16 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(0, 1), (2, 3)},
         )
         graph.extend_from_weighted_edge_list([(0, 5, 5), (3, 4, 6)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(0, 5), (1, 2), (3, 4)},
         )
 
@@ -199,20 +216,26 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 6), (2, 3), (4, 5)},
         )
         graph.remove_edge(1, 6)
         graph.remove_edge(4, 5)
         graph.extend_from_weighted_edge_list([(4, 5, 3), (1, 6, 4)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 6), (2, 3), (4, 5)},
         )
         graph.remove_edge(1, 6)
         graph.add_edge(3, 6, 4)
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 2), (3, 6), (4, 5)},
         )
 
@@ -232,20 +255,26 @@ class TestMaxWeightMatching(testtools.TestCase):
         graph.remove_node(5)
         graph.add_edge(4, node_id, 4)
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 6), (2, 3), (4, 7)},
         )
         graph.remove_edge(1, 6)
         graph.remove_edge(4, 7)
         graph.extend_from_weighted_edge_list([(4, node_id, 3), (1, 6, 4)])
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 6), (2, 3), (4, 7)},
         )
         graph.remove_edge(1, 6)
         graph.add_edge(3, 6, 4)
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 2), (3, 6), (4, 7)},
         )
 
@@ -264,7 +293,9 @@ class TestMaxWeightMatching(testtools.TestCase):
         )
         expected = {(1, 3), (2, 4), (5, 6)}
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             expected,
         )
 
@@ -284,7 +315,9 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 2), (3, 4), (5, 6), (7, 8)},
         )
 
@@ -305,7 +338,9 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 2), (3, 5), (4, 6), (7, 8)},
         )
 
@@ -324,7 +359,9 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             {(1, 6), (2, 3), (4, 8), (5, 7)},
         )
 
@@ -344,7 +381,9 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             match_dict_to_set({1: 8, 2: 3, 3: 2, 4: 7, 5: 6, 6: 5, 7: 4, 8: 1}),
         )
 
@@ -365,8 +404,12 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
-            match_dict_to_set({1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9}),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
+            match_dict_to_set(
+                {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9}
+            ),
         )
 
     def test_blossom_relabel_multiple_path_alternate(self):
@@ -386,8 +429,12 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
-            match_dict_to_set({1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9}),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
+            match_dict_to_set(
+                {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9}
+            ),
         )
 
     def test_blossom_relabel_multiple_paths_least_slack(self):
@@ -407,8 +454,12 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
-            match_dict_to_set({1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9}),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
+            match_dict_to_set(
+                {1: 6, 2: 3, 3: 2, 4: 8, 5: 7, 6: 1, 7: 5, 8: 4, 9: 10, 10: 9}
+            ),
         )
 
     def test_nested_blossom_expand_recursively(self):
@@ -429,8 +480,12 @@ class TestMaxWeightMatching(testtools.TestCase):
             ]
         )
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
-            match_dict_to_set({1: 2, 2: 1, 3: 5, 4: 9, 5: 3, 6: 7, 7: 6, 8: 10, 9: 4, 10: 8}),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
+            match_dict_to_set(
+                {1: 2, 2: 1, 3: 5, 4: 9, 5: 3, 6: 7, 7: 6, 8: 10, 9: 4, 10: 8}
+            ),
         )
 
     def test_nested_blossom_augmented(self):
@@ -467,50 +522,72 @@ class TestMaxWeightMatching(testtools.TestCase):
             12: 11,
         }
         self.compare_match_sets(
-            retworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
+            retworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            ),
             match_dict_to_set(expected),
         )
 
     def test_gnp_random_against_networkx(self):
         for i in range(1024):
             # TODO: add back subTest usage on new testtools release
-            rx_graph = retworkx.undirected_gnp_random_graph(10, 0.75, seed=42 + i)
+            rx_graph = retworkx.undirected_gnp_random_graph(
+                10, 0.75, seed=42 + i
+            )
             nx_graph = networkx.Graph(list(rx_graph.edge_list()))
             nx_matches = networkx.max_weight_matching(nx_graph)
-            rx_matches = retworkx.max_weight_matching(rx_graph, verify_optimum=True)
-            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i, nx_graph)
+            rx_matches = retworkx.max_weight_matching(
+                rx_graph, verify_optimum=True
+            )
+            self.compare_rx_nx_sets(
+                rx_graph, rx_matches, nx_matches, 42 + i, nx_graph
+            )
 
     def test_gnp_random_against_networkx_with_weight(self):
         for i in range(1024):
             # TODO: add back subTest usage on new testtools release
             random.seed(i)
-            rx_graph = retworkx.undirected_gnp_random_graph(10, 0.75, seed=42 + i)
+            rx_graph = retworkx.undirected_gnp_random_graph(
+                10, 0.75, seed=42 + i
+            )
             for edge in rx_graph.edge_list():
                 rx_graph.update_edge(*edge, random.randint(0, 5000))
             nx_graph = networkx.Graph(
-                [(x[0], x[1], {"weight": x[2]}) for x in rx_graph.weighted_edge_list()]
+                [
+                    (x[0], x[1], {"weight": x[2]})
+                    for x in rx_graph.weighted_edge_list()
+                ]
             )
             nx_matches = networkx.max_weight_matching(nx_graph)
             rx_matches = retworkx.max_weight_matching(
                 rx_graph, weight_fn=lambda x: x, verify_optimum=True
             )
-            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i, nx_graph)
+            self.compare_rx_nx_sets(
+                rx_graph, rx_matches, nx_matches, 42 + i, nx_graph
+            )
 
     def test_gnp_random_against_networkx_with_negative_weight(self):
         for i in range(1024):
             # TODO: add back subTest usage on new testtools release
             random.seed(i)
-            rx_graph = retworkx.undirected_gnp_random_graph(10, 0.75, seed=42 + i)
+            rx_graph = retworkx.undirected_gnp_random_graph(
+                10, 0.75, seed=42 + i
+            )
             for edge in rx_graph.edge_list():
                 rx_graph.update_edge(*edge, random.randint(-5000, 5000))
             nx_graph = networkx.Graph(
-                [(x[0], x[1], {"weight": x[2]}) for x in rx_graph.weighted_edge_list()]
+                [
+                    (x[0], x[1], {"weight": x[2]})
+                    for x in rx_graph.weighted_edge_list()
+                ]
             )
             nx_matches = networkx.max_weight_matching(nx_graph)
             rx_matches = retworkx.max_weight_matching(
                 rx_graph, weight_fn=lambda x: x, verify_optimum=True
             )
-            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i, nx_graph)
+            self.compare_rx_nx_sets(
+                rx_graph, rx_matches, nx_matches, 42 + i, nx_graph
+            )
 
     def test_gnp_random_against_networkx_max_cardinality(self):
         rx_graph = retworkx.undirected_gnp_random_graph(10, 0.78, seed=428)
@@ -525,33 +602,57 @@ class TestMaxWeightMatching(testtools.TestCase):
         for i in range(1024):
             # TODO: add back subTest usage on new testtools release
             random.seed(i)
-            rx_graph = retworkx.undirected_gnp_random_graph(10, 0.75, seed=42 + i)
+            rx_graph = retworkx.undirected_gnp_random_graph(
+                10, 0.75, seed=42 + i
+            )
             for edge in rx_graph.edge_list():
                 rx_graph.update_edge(*edge, random.randint(0, 5000))
             nx_graph = networkx.Graph(
-                [(x[0], x[1], {"weight": x[2]}) for x in rx_graph.weighted_edge_list()]
+                [
+                    (x[0], x[1], {"weight": x[2]})
+                    for x in rx_graph.weighted_edge_list()
+                ]
             )
-            nx_matches = networkx.max_weight_matching(nx_graph, maxcardinality=True)
+            nx_matches = networkx.max_weight_matching(
+                nx_graph, maxcardinality=True
+            )
             rx_matches = retworkx.max_weight_matching(
-                rx_graph, weight_fn=lambda x: x, max_cardinality=True, verify_optimum=True
+                rx_graph,
+                weight_fn=lambda x: x,
+                max_cardinality=True,
+                verify_optimum=True,
             )
-            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i, nx_graph)
+            self.compare_rx_nx_sets(
+                rx_graph, rx_matches, nx_matches, 42 + i, nx_graph
+            )
 
     def test_gnp_random__networkx_with_negative_weight_max_cardinality(self):
         for i in range(1024):
             # TODO: add back subTest usage on new testtools release
             random.seed(i)
-            rx_graph = retworkx.undirected_gnp_random_graph(10, 0.75, seed=42 + i)
+            rx_graph = retworkx.undirected_gnp_random_graph(
+                10, 0.75, seed=42 + i
+            )
             for edge in rx_graph.edge_list():
                 rx_graph.update_edge(*edge, random.randint(-5000, 5000))
             nx_graph = networkx.Graph(
-                [(x[0], x[1], {"weight": x[2]}) for x in rx_graph.weighted_edge_list()]
+                [
+                    (x[0], x[1], {"weight": x[2]})
+                    for x in rx_graph.weighted_edge_list()
+                ]
             )
-            nx_matches = networkx.max_weight_matching(nx_graph, maxcardinality=True)
+            nx_matches = networkx.max_weight_matching(
+                nx_graph, maxcardinality=True
+            )
             rx_matches = retworkx.max_weight_matching(
-                rx_graph, weight_fn=lambda x: x, max_cardinality=True, verify_optimum=True
+                rx_graph,
+                weight_fn=lambda x: x,
+                max_cardinality=True,
+                verify_optimum=True,
             )
-            self.compare_rx_nx_sets(rx_graph, rx_matches, nx_matches, 42 + i, nx_graph)
+            self.compare_rx_nx_sets(
+                rx_graph, rx_matches, nx_matches, 42 + i, nx_graph
+            )
 
     def test_gnm_random_against_networkx(self):
         rx_graph = retworkx.undirected_gnm_random_graph(10, 13, seed=42)

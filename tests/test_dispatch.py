@@ -59,7 +59,9 @@ class TestDispatchPyGraph(unittest.TestCase):
         self.assertTrue(numpy.array_equal(expected_res, res))
 
     def test_astar_shortest_path(self):
-        res = retworkx.astar_shortest_path(self.graph, 0, lambda _: True, lambda _: 1, lambda _: 1)
+        res = retworkx.astar_shortest_path(
+            self.graph, 0, lambda _: True, lambda _: 1, lambda _: 1
+        )
         self.assertIsInstance(list(res), list)
 
     def test_dijkstra_shortest_paths(self):
@@ -67,7 +69,9 @@ class TestDispatchPyGraph(unittest.TestCase):
         self.assertIsInstance(res, retworkx.PathMapping)
 
     def test_dijkstra_shortest_path_lengths(self):
-        res = retworkx.dijkstra_shortest_path_lengths(self.graph, 0, lambda _: 1)
+        res = retworkx.dijkstra_shortest_path_lengths(
+            self.graph, 0, lambda _: 1
+        )
         self.assertIsInstance(res, retworkx.PathLengthMapping)
 
     def test_k_shortest_path_lengths(self):

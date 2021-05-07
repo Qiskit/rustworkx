@@ -55,7 +55,17 @@ class TestWeaklyConnected(unittest.TestCase):
     def test_is_weakly_connected_true(self):
         graph = retworkx.PyDiGraph()
         graph.extend_from_edge_list(
-            [(0, 1), (1, 2), (2, 3), (3, 0), (2, 4), (4, 5), (5, 6), (6, 7), (7, 4)]
+            [
+                (0, 1),
+                (1, 2),
+                (2, 3),
+                (3, 0),
+                (2, 4),
+                (4, 5),
+                (5, 6),
+                (6, 7),
+                (7, 4),
+            ]
         )
         self.assertTrue(retworkx.is_weakly_connected(graph))
 

@@ -19,7 +19,9 @@ class TestComplement(unittest.TestCase):
     def test_clique(self):
         N = 5
         graph = retworkx.PyGraph()
-        graph.extend_from_edge_list([(i, j) for i in range(N) for j in range(N) if i < j])
+        graph.extend_from_edge_list(
+            [(i, j) for i in range(N) for j in range(N) if i < j]
+        )
 
         complement_graph = retworkx.complement(graph)
         self.assertEqual(graph.nodes(), complement_graph.nodes())
@@ -31,7 +33,9 @@ class TestComplement(unittest.TestCase):
         graph.add_nodes_from([i for i in range(N)])
 
         expected_graph = retworkx.PyGraph()
-        expected_graph.extend_from_edge_list([(i, j) for i in range(N) for j in range(N) if i < j])
+        expected_graph.extend_from_edge_list(
+            [(i, j) for i in range(N) for j in range(N) if i < j]
+        )
 
         complement_graph = retworkx.complement(graph)
         self.assertTrue(
@@ -51,12 +55,22 @@ class TestComplement(unittest.TestCase):
         N = 8
         graph = retworkx.PyGraph()
         graph.extend_from_edge_list(
-            [(j, i) for i in range(N) for j in range(N) if i < j and (i + j) % 3 == 0]
+            [
+                (j, i)
+                for i in range(N)
+                for j in range(N)
+                if i < j and (i + j) % 3 == 0
+            ]
         )
 
         expected_graph = retworkx.PyGraph()
         expected_graph.extend_from_edge_list(
-            [(i, j) for i in range(N) for j in range(N) if i < j and (i + j) % 3 != 0]
+            [
+                (i, j)
+                for i in range(N)
+                for j in range(N)
+                if i < j and (i + j) % 3 != 0
+            ]
         )
 
         complement_graph = retworkx.complement(graph)

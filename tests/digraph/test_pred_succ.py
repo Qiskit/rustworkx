@@ -150,9 +150,21 @@ class TestBfsSuccessors(unittest.TestCase):
         node_j = dag.add_child(node_i, 9, {})
         dag.add_child(node_j, 10, {})
         res = {n: sorted(s) for n, s in retworkx.bfs_successors(dag, node_b)}
-        expected = {1: [2], 2: [3, 7], 3: [4], 4: [5], 5: [6], 7: [8], 8: [9], 9: [10]}
+        expected = {
+            1: [2],
+            2: [3, 7],
+            3: [4],
+            4: [5],
+            5: [6],
+            7: [8],
+            8: [9],
+            9: [10],
+        }
         self.assertEqual(expected, res)
-        self.assertEqual([(7, [8]), (8, [9]), (9, [10])], retworkx.bfs_successors(dag, node_h))
+        self.assertEqual(
+            [(7, [8]), (8, [9]), (9, [10])],
+            retworkx.bfs_successors(dag, node_h),
+        )
 
     def test_bfs_successors_sequence(self):
         dag = retworkx.PyDAG()

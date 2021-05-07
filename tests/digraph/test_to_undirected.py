@@ -24,14 +24,18 @@ class TestToUndirected(unittest.TestCase):
     def test_single_direction_graph(self):
         digraph = retworkx.generators.directed_path_graph(5)
         graph = digraph.to_undirected()
-        self.assertEqual(digraph.weighted_edge_list(), graph.weighted_edge_list())
+        self.assertEqual(
+            digraph.weighted_edge_list(), graph.weighted_edge_list()
+        )
 
     def test_bidirectional_graph(self):
         digraph = retworkx.generators.directed_path_graph(5)
         for i in range(0, 4):
             digraph.add_edge(i + 1, i, None)
         graph = digraph.to_undirected()
-        self.assertEqual(digraph.weighted_edge_list(), graph.weighted_edge_list())
+        self.assertEqual(
+            digraph.weighted_edge_list(), graph.weighted_edge_list()
+        )
 
     def test_shared_ref(self):
         digraph = retworkx.PyDiGraph()

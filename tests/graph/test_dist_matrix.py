@@ -21,7 +21,9 @@ class TestDistanceMatrix(unittest.TestCase):
     def test_graph_distance_matrix(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(7)))
-        graph.add_edges_from_no_data([(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
         dist = retworkx.graph_distance_matrix(graph)
         expected = numpy.array(
             [
@@ -39,7 +41,9 @@ class TestDistanceMatrix(unittest.TestCase):
     def test_graph_distance_matrix_parallel(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(7)))
-        graph.add_edges_from_no_data([(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
         dist = retworkx.graph_distance_matrix(graph, parallel_threshold=5)
         expected = numpy.array(
             [

@@ -74,7 +74,11 @@ class TestAstarDigraph(unittest.TestCase):
 
         for index, end in enumerate([a, b, c, d, e, f]):
             path = retworkx.digraph_astar_shortest_path(
-                g, a, lambda finish: finish_func(end, finish), lambda x: float(x), heuristic_func
+                g,
+                a,
+                lambda finish: finish_func(end, finish),
+                lambda x: float(x),
+                heuristic_func,
             )
             self.assertEqual(expected[index], path)
 
@@ -91,4 +95,6 @@ class TestAstarDigraph(unittest.TestCase):
         g = retworkx.PyGraph()
         g.add_node(0)
         with self.assertRaises(TypeError):
-            retworkx.digraph_astar_shortest_path(g, 0, lambda x: x, lambda y: 1, lambda z: 0)
+            retworkx.digraph_astar_shortest_path(
+                g, 0, lambda x: x, lambda y: 1, lambda z: 0
+            )

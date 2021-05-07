@@ -104,7 +104,9 @@ class TestEdgeList(unittest.TestCase):
             fd.write("1,2,1# test comments\n")
             fd.write("#2,3\n")
             fd.flush()
-            graph = retworkx.PyGraph.read_edge_list(fd.name, comment="#", deliminator=",")
+            graph = retworkx.PyGraph.read_edge_list(
+                fd.name, comment="#", deliminator=","
+            )
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
