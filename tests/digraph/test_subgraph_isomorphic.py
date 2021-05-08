@@ -103,8 +103,6 @@ class TestSubgraphIsomorphic(unittest.TestCase):
 
     def test_is_subgraph_isomorphic_nodes_compare_raises(self):
         g_a = retworkx.PyDiGraph()
-        g_b = retworkx.PyDiGraph()
-
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
         g_a.add_edges_from(
             [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
@@ -149,6 +147,8 @@ class TestSubgraphIsomorphic(unittest.TestCase):
 
     def test_subgraph_isomorphic_node_count_not_ge(self):
         g_a = retworkx.PyDiGraph()
+        g_b = retworkx.PyDiGraph()
+
         nodes = g_a.add_nodes_from(["a_1", "a_2"])
         g_a.add_edges_from([(nodes[0], nodes[1], "a_1")])
 
