@@ -621,6 +621,69 @@ def _graph_is_isomorphic_node_match(first, second, matcher, id_order=True):
 
 
 @functools.singledispatch
+def is_subgraph_isomorphic(
+    first, second, node_matcher=None, edge_matcher=None, id_order=True
+):
+    """Determine if 2 graphs are subgraph isomorphic
+
+    This checks if 2 graphs are subgraph isomorphic both structurally and also
+    comparing the node and edge data using the provided matcher functions.
+    The matcher functions take in 2 data objects and will compare them. A
+    simple example that checks if they're just equal would be::
+
+            graph_a = retworkx.PyGraph()
+            graph_b = retworkx.PyGraph()
+            retworkx.is_subgraph_isomorphic(graph_a, graph_b,
+                                            lambda x, y: x == y)
+
+    .. note::
+
+        For better performance on large graphs, consider setting
+        `id_order=False`.
+
+    :param first: The first graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param second: The second graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        It should be the same type as the first graph.
+    :param callable node_matcher: A python callable object that takes 2
+        positional one for each node data object. If the return of this
+        function evaluates to True then the nodes passed to it are viewed
+        as matching.
+    :param callable edge_matcher: A python callable object that takes 2
+        positional one for each edge data object. If the return of this
+        function evaluates to True then the edges passed to it are viewed
+        as matching.
+    :param bool id_order: If set to ``False`` this function will use a
+        heuristic matching order based on [VF2]_ paper. Otherwise it will
+        default to matching the nodes in order specified by their ids.
+
+    :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
+        , ``False`` if there is not.
+    :rtype: bool
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@is_subgraph_isomorphic.register(PyDiGraph)
+def _digraph_is_subgraph_isomorphic(
+    first, second, node_matcher=None, edge_matcher=None, id_order=True
+):
+    return digraph_is_subgraph_isomorphic(
+        first, second, node_matcher, edge_matcher, id_order
+    )
+
+
+@is_subgraph_isomorphic.register(PyGraph)
+def _graph_is_subgraph_isomorphic(
+    first, second, node_matcher=None, edge_matcher=None, id_order=True
+):
+    return graph_is_subgraph_isomorphic(
+        first, second, node_matcher, edge_matcher, id_order
+    )
+
+
+@functools.singledispatch
 def transitivity(graph):
     """Compute the transitivity of a graph.
 

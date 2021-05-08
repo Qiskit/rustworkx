@@ -346,65 +346,6 @@ where
     new_graph
 }
 
-/// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
-///
-/// Using the VF2 algorithm, examining both syntactic and semantic
-/// graph isomorphism (graph structure and matching node and edge weights).
-///
-/// The graphs should not be multigraphs.
-pub fn is_isomorphic<Ty, F, G>(
-    py: Python,
-    g0: &StablePyGraph<Ty>,
-    g1: &StablePyGraph<Ty>,
-    mut node_match: Option<F>,
-    mut edge_match: Option<G>,
-    id_order: bool,
-) -> PyResult<bool>
-where
-    Ty: EdgeType,
-    F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
-    G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
-{
-    let mut inner_temp_g0: StablePyGraph<Ty>;
-    let mut inner_temp_g1: StablePyGraph<Ty>;
-    let g0_out = if g0.nodes_removed() {
-        inner_temp_g0 = reindex_graph(py, g0);
-        &inner_temp_g0
-    } else {
-        g0
-    };
-    let g1_out = if g1.nodes_removed() {
-        inner_temp_g1 = reindex_graph(py, g1);
-        &inner_temp_g1
-    } else {
-        g1
-    };
-
-    if g0_out.node_count() != g1_out.node_count()
-        || g0_out.edge_count() != g1_out.edge_count()
-    {
-        return Ok(false);
-    }
-
-    let g0 = if !id_order {
-        inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
-        &inner_temp_g0
-    } else {
-        g0_out
-    };
-
-    let g1 = if !id_order {
-        inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);
-        &inner_temp_g1
-    } else {
-        g1_out
-    };
-
-    let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
-    let res = try_match(&mut st, g0, g1, &mut node_match, &mut edge_match)?;
-    Ok(res.unwrap_or(false))
-}
-
 trait SemanticMatcher<T> {
     fn enabled(&self) -> bool;
     fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
@@ -438,8 +379,70 @@ where
     }
 }
 
+macro_rules! impl_isomorphic {
+($is_isomorphic:ident, $try_match:ident, $op:tt) => {
+
+/// [Graph] Return `true` if the graphs `g0` and `g1` are (sub) graph isomorphic.
+///
+/// Using the VF2 algorithm, examining both syntactic and semantic
+/// graph isomorphism (graph structure and matching node and edge weights).
+///
+/// The graphs should not be multigraphs.
+pub fn $is_isomorphic<Ty, F, G>(
+    py: Python,
+    g0: &StablePyGraph<Ty>,
+    g1: &StablePyGraph<Ty>,
+    mut node_match: Option<F>,
+    mut edge_match: Option<G>,
+    id_order: bool,
+) -> PyResult<bool>
+where
+    Ty: EdgeType,
+    F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
+    G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
+{
+    let mut inner_temp_g0: StablePyGraph<Ty>;
+    let mut inner_temp_g1: StablePyGraph<Ty>;
+    let g0_out = if g0.nodes_removed() {
+        inner_temp_g0 = reindex_graph(py, g0);
+        &inner_temp_g0
+    } else {
+        g0
+    };
+    let g1_out = if g1.nodes_removed() {
+        inner_temp_g1 = reindex_graph(py, g1);
+        &inner_temp_g1
+    } else {
+        g1
+    };
+
+    if !(g0_out.node_count() $op g1_out.node_count())
+        || !(g0_out.edge_count() $op g1_out.edge_count())
+    {
+        return Ok(false);
+    }
+
+    let g0 = if !id_order {
+        inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
+        &inner_temp_g0
+    } else {
+        g0_out
+    };
+
+    let g1 = if !id_order {
+        inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);
+        &inner_temp_g1
+    } else {
+        g1_out
+    };
+
+    let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
+    let res = $try_match(&mut st, g0, g1, &mut node_match, &mut edge_match)?;
+    Ok(res.unwrap_or(false))
+}
+
 /// Return Some(bool) if isomorphism is decided, else None.
-fn try_match<Ty, F, G>(
+fn $try_match<Ty, F, G>(
     mut st: &mut [Vf2State<Ty>; 2],
     g0: &StablePyGraph<Ty>,
     g1: &StablePyGraph<Ty>,
@@ -451,7 +454,7 @@ where
     F: SemanticMatcher<PyObject>,
     G: SemanticMatcher<PyObject>,
 {
-    if st[0].is_complete() {
+    if st[1].is_complete() {
         return Ok(Some(true));
     }
 
@@ -593,7 +596,7 @@ where
                 }
             }
         }
-        if succ_count[0] != succ_count[1] {
+        if !(succ_count[0] $op succ_count[1]) {
             return Ok(false);
         }
         // R_pred
@@ -617,7 +620,7 @@ where
                     }
                 }
             }
-            if pred_count[0] != pred_count[1] {
+            if !(pred_count[0] $op pred_count[1]) {
                 return Ok(false);
             }
         }
@@ -634,21 +637,21 @@ where
             }};
         }
         // R_out
-        if rule!(out, 0, Outgoing) != rule!(out, 1, Outgoing) {
+        if !(rule!(out, 0, Outgoing) $op rule!(out, 1, Outgoing)) {
             return Ok(false);
         }
         if g[0].is_directed()
-            && rule!(out, 0, Incoming) != rule!(out, 1, Incoming)
+            && !(rule!(out, 0, Incoming) $op rule!(out, 1, Incoming))
         {
             return Ok(false);
         }
         // R_in
         if g[0].is_directed() {
-            if rule!(ins, 0, Outgoing) != rule!(ins, 1, Outgoing) {
+            if !(rule!(ins, 0, Outgoing) $op rule!(ins, 1, Outgoing)) {
                 return Ok(false);
             }
 
-            if rule!(ins, 0, Incoming) != rule!(ins, 1, Incoming) {
+            if !(rule!(ins, 0, Incoming) $op rule!(ins, 1, Incoming)) {
                 return Ok(false);
             }
         }
@@ -664,7 +667,7 @@ where
                 }
             }
         }
-        if new_count[0] != new_count[1] {
+        if !(new_count[0] $op new_count[1]) {
             return Ok(false);
         }
         if g[0].is_directed() {
@@ -677,7 +680,7 @@ where
                     }
                 }
             }
-            if new_count[0] != new_count[1] {
+            if !(new_count[0] $op new_count[1]) {
                 return Ok(false);
             }
         }
@@ -779,12 +782,12 @@ where
                 let feasible = is_feasible(&mut st, nodes)?;
                 if feasible {
                     push_state(&mut st, nodes);
-                    if st[0].is_complete() {
+                    if st[1].is_complete() {
                         return Ok(Some(true));
                     }
                     // Check cardinalities of Tin, Tout sets
-                    if st[0].out_size == st[1].out_size
-                        && st[0].ins_size == st[1].ins_size
+                    if st[0].out_size $op st[1].out_size
+                        && st[0].ins_size $op st[1].ins_size
                     {
                         let f0 = Frame::Unwind {
                             nodes,
@@ -811,3 +814,8 @@ where
     }
     Ok(None)
 }
+};
+}
+
+impl_isomorphic!(is_isomorphic, try_match, ==);
+impl_isomorphic!(is_subgraph_isomorphic, try_match_subgraph, >=);
