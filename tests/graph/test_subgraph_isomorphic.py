@@ -37,7 +37,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3", "a_4"])
         g_a.add_edges_from(
             [
-                (nodes[0], nodes[1], "a_1"), 
+                (nodes[0], nodes[1], "a_1"),
                 (nodes[1], nodes[2], "a_2"),
                 (nodes[0], nodes[3], "a_3"),
             ]
@@ -60,7 +60,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3", "a_4"])
         g_a.add_edges_from(
             [
-                (nodes[0], nodes[1], "a_1"), 
+                (nodes[0], nodes[1], "a_1"),
                 (nodes[1], nodes[2], "a_2"),
                 (nodes[0], nodes[3], "a_3"),
             ]
@@ -85,7 +85,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3", "a_4"])
         g_a.add_edges_from(
             [
-                (nodes[0], nodes[1], "a_1"), 
+                (nodes[0], nodes[1], "a_1"),
                 (nodes[1], nodes[2], "a_2"),
                 (nodes[0], nodes[3], "a_3"),
             ]
@@ -116,7 +116,9 @@ class TestSubgraphIsomorphic(unittest.TestCase):
             raise TypeError("Failure")
 
         self.assertRaises(
-            TypeError, retworkx.is_subgraph_isomorphic, (g_a, g_a, compare_nodes)
+            TypeError,
+            retworkx.is_subgraph_isomorphic,
+            (g_a, g_a, compare_nodes),
         )
 
     def test_subgraph_isomorphic_compare_edges_identical(self):
@@ -126,7 +128,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3", "a_4"])
         g_a.add_edges_from(
             [
-                (nodes[0], nodes[1], "a_1"), 
+                (nodes[0], nodes[1], "a_1"),
                 (nodes[1], nodes[2], "a_2"),
                 (nodes[0], nodes[3], "a_3"),
             ]
@@ -169,7 +171,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])
         g_a.add_edges_from(
             [
-                (nodes[0], nodes[1], "a_1"), 
+                (nodes[0], nodes[1], "a_1"),
                 (nodes[1], nodes[2], "a_2"),
                 (nodes[2], nodes[0], "a_3"),
             ]
