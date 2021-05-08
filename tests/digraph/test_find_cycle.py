@@ -19,26 +19,29 @@ class TestFindCycle(unittest.TestCase):
     def setUp(self):
         self.graph = retworkx.PyDiGraph()
         self.graph.add_nodes_from(list(range(10)))
-        self.graph.add_edges_from_no_data([
-            (0, 1),
-            (3, 0),
-            (0, 5),
-            (8, 0),
-            (1, 2),
-            (1, 6),
-            (2, 3),
-            (3, 4),
-            (4, 5),
-            (6, 7),
-            (7, 8),
-            (8, 9)])
+        self.graph.add_edges_from_no_data(
+            [
+                (0, 1),
+                (3, 0),
+                (0, 5),
+                (8, 0),
+                (1, 2),
+                (1, 6),
+                (2, 3),
+                (3, 4),
+                (4, 5),
+                (6, 7),
+                (7, 8),
+                (8, 9),
+            ]
+        )
 
     def test_find_cycle(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(6)))
-        graph.add_edges_from_no_data([
-            (0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5), (4, 0)
-        ])
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5), (4, 0)]
+        )
         res = retworkx.digraph_find_cycle(graph, 0)
         self.assertEqual([(0, 1), (1, 2), (2, 3), (3, 4), (4, 0)], res)
 

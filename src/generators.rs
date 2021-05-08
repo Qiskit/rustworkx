@@ -285,11 +285,9 @@ pub fn directed_path_graph(
     for (node_a, node_b) in pairwise(nodes) {
         match node_a {
             Some(node_a) => {
+                graph.add_edge(node_a, node_b, py.None());
                 if bidirectional {
-                    graph.add_edge(node_a, node_b, py.None());
                     graph.add_edge(node_b, node_a, py.None());
-                } else {
-                    graph.add_edge(node_a, node_b, py.None());
                 }
             }
             None => continue,
