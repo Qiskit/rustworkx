@@ -50,7 +50,7 @@ class TestBinomialTreeGraph(unittest.TestCase):
     def test_binomial_tree_graph_weights(self):
         graph = retworkx.generators.binomial_tree_graph(
             2, weights=list(range(4))
-            )
+        )
         expected_edges = [(0, 1), (2, 3), (0, 2)]
         self.assertEqual(len(graph), 4)
         self.assertEqual([x for x in range(4)], graph.nodes())
@@ -60,7 +60,7 @@ class TestBinomialTreeGraph(unittest.TestCase):
     def test_binomial_tree_graph_weight_less_nodes(self):
         graph = retworkx.generators.binomial_tree_graph(
             2, weights=list(range(2))
-            )
+        )
         self.assertEqual(len(graph), 4)
         expected_weights = [x for x in range(2)]
         expected_weights.extend([None, None])
@@ -69,15 +69,11 @@ class TestBinomialTreeGraph(unittest.TestCase):
 
     def test_binomial_tree_graph_weights_greater_nodes(self):
         with self.assertRaises(IndexError):
-            retworkx.generators.binomial_tree_graph(
-                2, weights=list(range(7))
-                )
+            retworkx.generators.binomial_tree_graph(2, weights=list(range(7)))
 
     def test_binomial_tree_no_order(self):
         with self.assertRaises(TypeError):
-            retworkx.generators.binomial_tree_graph(
-                weights=list(range(4))
-                )
+            retworkx.generators.binomial_tree_graph(weights=list(range(4)))
 
     def test_directed_binomial_tree_graph(self):
         expected_edges = {
@@ -133,13 +129,13 @@ class TestBinomialTreeGraph(unittest.TestCase):
         with self.assertRaises(IndexError):
             retworkx.generators.directed_binomial_tree_graph(
                 2, weights=list(range(7))
-                )
+            )
 
     def test_directed_binomial_tree_no_order(self):
         with self.assertRaises(TypeError):
             retworkx.generators.directed_binomial_tree_graph(
                 weights=list(range(4))
-                )
+            )
 
     def test_directed_binomial_tree_graph_bidirectional(self):
         expected_edges = {
