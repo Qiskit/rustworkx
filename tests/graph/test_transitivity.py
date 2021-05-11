@@ -16,32 +16,24 @@ import retworkx
 
 
 class TestTransitivity(unittest.TestCase):
-
     def test_transitivity(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(5)))
-        graph.add_edges_from_no_data([
-            (0, 1), (0, 2), (0, 3), (0, 4),
-            (1, 2)
-        ])
+        graph.add_edges_from_no_data([(0, 1), (0, 2), (0, 3), (0, 4), (1, 2)])
         res = retworkx.transitivity(graph)
         self.assertEqual(res, 3 / 8)
 
     def test_transitivity_triangle(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(3)))
-        graph.add_edges_from_no_data([
-            (0, 1), (0, 2), (1, 2)
-        ])
+        graph.add_edges_from_no_data([(0, 1), (0, 2), (1, 2)])
         res = retworkx.transitivity(graph)
         self.assertEqual(res, 1.0)
 
     def test_transitivity_star(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(5)))
-        graph.add_edges_from_no_data([
-            (0, 1), (0, 2), (0, 3), (0, 4)
-        ])
+        graph.add_edges_from_no_data([(0, 1), (0, 2), (0, 3), (0, 4)])
         res = retworkx.transitivity(graph)
         self.assertEqual(res, 0.0)
 
@@ -53,38 +45,5 @@ class TestTransitivity(unittest.TestCase):
     def test_transitivity_disconnected(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(3)))
-        res = retworkx.transitivity(graph)
-        self.assertEqual(res, 0.0)
-
-    def test_transitivity_directed(self):
-        graph = retworkx.PyDiGraph()
-        graph.add_nodes_from(list(range(5)))
-        graph.add_edges_from_no_data([
-            (0, 1), (0, 2), (0, 3),
-            (1, 2)
-        ])
-        res = retworkx.transitivity(graph)
-        self.assertEqual(res, 3 / 10)
-
-    def test_transitivity_triangle_directed(self):
-        graph = retworkx.PyDiGraph()
-        graph.add_nodes_from(list(range(3)))
-        graph.add_edges_from_no_data([
-            (0, 1), (0, 2), (1, 2)
-        ])
-        res = retworkx.transitivity(graph)
-        self.assertEqual(res, 0.5)
-
-    def test_transitivity_fulltriangle_directed(self):
-        graph = retworkx.PyDiGraph()
-        graph.add_nodes_from(list(range(3)))
-        graph.add_edges_from_no_data([
-            (0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)
-        ])
-        res = retworkx.transitivity(graph)
-        self.assertEqual(res, 1.0)
-
-    def test_transitivity_empty_directed(self):
-        graph = retworkx.PyDiGraph()
         res = retworkx.transitivity(graph)
         self.assertEqual(res, 0.0)

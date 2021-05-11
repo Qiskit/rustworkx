@@ -16,7 +16,6 @@ import retworkx
 
 
 class TestToUndirected(unittest.TestCase):
-
     def test_to_undirected_empty_graph(self):
         digraph = retworkx.PyDiGraph()
         graph = digraph.to_undirected()
@@ -25,31 +24,33 @@ class TestToUndirected(unittest.TestCase):
     def test_single_direction_graph(self):
         digraph = retworkx.generators.directed_path_graph(5)
         graph = digraph.to_undirected()
-        self.assertEqual(digraph.weighted_edge_list(),
-                         graph.weighted_edge_list())
+        self.assertEqual(
+            digraph.weighted_edge_list(), graph.weighted_edge_list()
+        )
 
     def test_bidirectional_graph(self):
         digraph = retworkx.generators.directed_path_graph(5)
         for i in range(0, 4):
             digraph.add_edge(i + 1, i, None)
         graph = digraph.to_undirected()
-        self.assertEqual(digraph.weighted_edge_list(),
-                         graph.weighted_edge_list())
+        self.assertEqual(
+            digraph.weighted_edge_list(), graph.weighted_edge_list()
+        )
 
     def test_shared_ref(self):
         digraph = retworkx.PyDiGraph()
-        node_weight = {'a': 1}
+        node_weight = {"a": 1}
         node_a = digraph.add_node(node_weight)
-        edge_weight = {'a': 1}
-        digraph.add_child(node_a, 'b', edge_weight)
+        edge_weight = {"a": 1}
+        digraph.add_child(node_a, "b", edge_weight)
         graph = digraph.to_undirected()
-        self.assertEqual(digraph[node_a], {'a': 1})
-        self.assertEqual(graph[node_a], {'a': 1})
-        node_weight['b'] = 2
-        self.assertEqual(digraph[node_a], {'a': 1, 'b': 2})
-        self.assertEqual(graph[node_a], {'a': 1, 'b': 2})
-        self.assertEqual(digraph.get_edge_data(0, 1), {'a': 1})
-        self.assertEqual(graph.get_edge_data(0, 1), {'a': 1})
-        edge_weight['b'] = 2
-        self.assertEqual(digraph.get_edge_data(0, 1), {'a': 1, 'b': 2})
-        self.assertEqual(graph.get_edge_data(0, 1), {'a': 1, 'b': 2})
+        self.assertEqual(digraph[node_a], {"a": 1})
+        self.assertEqual(graph[node_a], {"a": 1})
+        node_weight["b"] = 2
+        self.assertEqual(digraph[node_a], {"a": 1, "b": 2})
+        self.assertEqual(graph[node_a], {"a": 1, "b": 2})
+        self.assertEqual(digraph.get_edge_data(0, 1), {"a": 1})
+        self.assertEqual(graph.get_edge_data(0, 1), {"a": 1})
+        edge_weight["b"] = 2
+        self.assertEqual(digraph.get_edge_data(0, 1), {"a": 1, "b": 2})
+        self.assertEqual(graph.get_edge_data(0, 1), {"a": 1, "b": 2})

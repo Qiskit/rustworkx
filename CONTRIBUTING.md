@@ -106,8 +106,8 @@ cargo clippy
 
 Python is used primarily for tests and some small pieces of packaging
 and namespace configuration code in the actual library.
-[flake8](https://flake8.pycqa.org/en/latest/) is used to enforce consistent
-style in the python code in the repository. You can run it via tox using:
+[black](https://github.com/psf/black) and [flake8](https://flake8.pycqa.org/en/latest/) are used to enforce consistent
+style in the python code in the repository. You can run them via tox using:
 
 ```bash
 tox -elint
@@ -115,6 +115,9 @@ tox -elint
 
 This will also run `cargo fmt` in check mode to ensure that you ran `cargo fmt`
 and will fail if the Rust code doesn't conform to the style rules.
+
+If black returns a code formatting error you can run `tox -eblack` to automatically
+update the code formatting to conform to the style.
 
 ### Building documentation
 
