@@ -1,2 +1,6 @@
 [build-system]
 requires = ["setuptools", "wheel", "setuptools-rust"]
+
+[tool.black]
+line-length = 80
+target-version = ['py36', 'py37', 'py38', 'py39']

@@ -16,7 +16,6 @@ import retworkx
 
 
 class TestDfsEdges(unittest.TestCase):
-
     def test_digraph_disconnected_dfs_edges(self):
         graph = retworkx.PyDiGraph()
         graph.extend_from_edge_list([(0, 1), (2, 3)])
