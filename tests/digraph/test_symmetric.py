@@ -18,9 +18,9 @@ import retworkx
 class TestSymmetric(unittest.TestCase):
     def test_single_neighbor(self):
         digraph = retworkx.PyDiGraph()
-        node_a = digraph.add_node('a')
-        digraph.add_child(node_a, 'b', {'a': 1})
-        digraph.add_child(node_a, 'c', {'a': 2})
+        node_a = digraph.add_node("a")
+        digraph.add_child(node_a, "b", {"a": 1})
+        digraph.add_child(node_a, "c", {"a": 2})
         self.assertFalse(digraph.is_symmetric())
 
     def test_bidirectional_ring(self):
@@ -33,7 +33,7 @@ class TestSymmetric(unittest.TestCase):
             (2, 3),
             (3, 2),
             (3, 0),
-            (0, 3)
+            (0, 3),
         ]
         digraph.extend_from_edge_list(edge_list)
         self.assertTrue(digraph.is_symmetric())

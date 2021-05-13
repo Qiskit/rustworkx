@@ -18,21 +18,20 @@ import retworkx
 
 
 class TestEdgeList(unittest.TestCase):
-
     def test_empty_edge_list_digraph(self):
         with tempfile.NamedTemporaryFile() as fd:
             graph = retworkx.PyDiGraph.read_edge_list(fd.name)
         self.assertEqual(graph.nodes(), [])
 
     def test_invalid_path_digraph(self):
-        path = os.path.join(tempfile.gettempdir(), 'fake_file_name.txt')
+        path = os.path.join(tempfile.gettempdir(), "fake_file_name.txt")
         with self.assertRaises(FileNotFoundError):
             retworkx.PyDiGraph.read_edge_list(path)
 
     def test_simple_example_digraph(self):
-        with tempfile.NamedTemporaryFile('wt') as fd:
-            fd.write('0 1\n')
-            fd.write('1 2\n')
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("0 1\n")
+            fd.write("1 2\n")
             fd.flush()
             graph = retworkx.PyDiGraph.read_edge_list(fd.name)
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
@@ -43,10 +42,10 @@ class TestEdgeList(unittest.TestCase):
         self.assertFalse(graph.has_edge(0, 2))
 
     def test_blank_line_digraph(self):
-        with tempfile.NamedTemporaryFile('wt') as fd:
-            fd.write('0 1\n')
-            fd.write('\n')
-            fd.write('1 2\n')
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("0 1\n")
+            fd.write("\n")
+            fd.write("1 2\n")
             fd.flush()
             graph = retworkx.PyDiGraph.read_edge_list(fd.name)
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
@@ -57,12 +56,12 @@ class TestEdgeList(unittest.TestCase):
         self.assertFalse(graph.has_edge(0, 2))
 
     def test_comment_digraph(self):
-        with tempfile.NamedTemporaryFile('wt') as fd:
-            fd.write('0 1 // test a comment\n')
-            fd.write('1 2\n')
-            fd.write('//2 3\n')
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("0 1 // test a comment\n")
+            fd.write("1 2\n")
+            fd.write("//2 3\n")
             fd.flush()
-            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment='//')
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment="//")
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -71,12 +70,12 @@ class TestEdgeList(unittest.TestCase):
         self.assertFalse(graph.has_edge(0, 2))
 
     def test_comment_leading_space_digraph(self):
-        with tempfile.NamedTemporaryFile('wt') as fd:
-            fd.write('0 1 // test a comment\n')
-            fd.write('1 2\n')
-            fd.write('  //2 3\n')
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("0 1 // test a comment\n")
+            fd.write("1 2\n")
+            fd.write("  //2 3\n")
             fd.flush()
-            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment='//')
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment="//")
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
@@ -85,46 +84,47 @@ class TestEdgeList(unittest.TestCase):
         self.assertFalse(graph.has_edge(0, 2))
 
     def test_weight_digraph(self):
-        with tempfile.NamedTemporaryFile('wt') as fd:
-            fd.write('0 1 0// test a comment\n')
-            fd.write('1 2 1\n')
-            fd.write('//2 3\n')
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("0 1 0// test a comment\n")
+            fd.write("1 2 1\n")
+            fd.write("//2 3\n")
             fd.flush()
-            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment='//')
+            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment="//")
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
         self.assertFalse(graph.has_edge(1, 0))
         self.assertFalse(graph.has_edge(2, 1))
         self.assertFalse(graph.has_edge(0, 2))
-        self.assertEqual(graph.edges(), ['0', '1'])
+        self.assertEqual(graph.edges(), ["0", "1"])
 
     def test_delim_digraph(self):
-        with tempfile.NamedTemporaryFile('wt') as fd:
-            fd.write('0|1|0// test a comment\n')
-            fd.write('1|2|1\n')
-            fd.write('//2|3\n')
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("0|1|0// test a comment\n")
+            fd.write("1|2|1\n")
+            fd.write("//2|3\n")
             fd.flush()
-            graph = retworkx.PyDiGraph.read_edge_list(fd.name, comment='//',
-                                                      deliminator='|')
+            graph = retworkx.PyDiGraph.read_edge_list(
+                fd.name, comment="//", deliminator="|"
+            )
         self.assertEqual(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))
         self.assertFalse(graph.has_edge(1, 0))
         self.assertFalse(graph.has_edge(2, 1))
         self.assertFalse(graph.has_edge(0, 2))
-        self.assertEqual(graph.edges(), ['0', '1'])
+        self.assertEqual(graph.edges(), ["0", "1"])
 
     def test_write_edge_list_empty_digraph(self):
-        path = os.path.join(tempfile.gettempdir(), 'empty.txt')
+        path = os.path.join(tempfile.gettempdir(), "empty.txt")
         graph = retworkx.PyDiGraph()
         graph.write_edge_list(path)
         self.addCleanup(os.remove, path)
-        with open(path, 'rt') as edge_file:
+        with open(path, "rt") as edge_file:
             self.assertEqual("", edge_file.read())
 
     def test_write_edge_list_round_trip(self):
-        path = os.path.join(tempfile.gettempdir(), 'round_trip.txt')
+        path = os.path.join(tempfile.gettempdir(), "round_trip.txt")
         graph = retworkx.generators.directed_star_graph(5)
         count = iter(range(5))
 
@@ -143,27 +143,27 @@ class TestEdgeList(unittest.TestCase):
         self.assertEqual(expected, new_graph.weighted_edge_list())
 
     def test_custom_delim(self):
-        path = os.path.join(tempfile.gettempdir(), 'custom_delim.txt')
+        path = os.path.join(tempfile.gettempdir(), "custom_delim.txt")
         graph = retworkx.generators.directed_path_graph(5)
-        graph.write_edge_list(path, deliminator=',')
+        graph.write_edge_list(path, deliminator=",")
         self.addCleanup(os.remove, path)
         expected = """0,1
 1,2
 2,3
 3,4
 """
-        with open(path, 'rt') as edge_file:
+        with open(path, "rt") as edge_file:
             self.assertEqual(edge_file.read(), expected)
 
     def test_invalid_return_type_weight_fn(self):
-        path = os.path.join(tempfile.gettempdir(), 'fail.txt')
+        path = os.path.join(tempfile.gettempdir(), "fail.txt")
         graph = retworkx.directed_gnm_random_graph(5, 4)
         self.addCleanup(os.remove, path)
         with self.assertRaises(TypeError):
             graph.write_edge_list(path, weight_fn=lambda _: 4.5)
 
     def test_weight_fn_raises(self):
-        path = os.path.join(tempfile.gettempdir(), 'fail.txt')
+        path = os.path.join(tempfile.gettempdir(), "fail.txt")
         graph = retworkx.directed_gnm_random_graph(5, 4)
 
         def weight_fn(edge):
