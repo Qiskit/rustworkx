@@ -16,7 +16,6 @@ import retworkx
 
 
 class TestDijkstraGraph(unittest.TestCase):
-
     def setUp(self):
         self.graph = retworkx.PyGraph()
         self.a = self.graph.add_node("A")
@@ -37,27 +36,27 @@ class TestDijkstraGraph(unittest.TestCase):
 
     def test_dijkstra(self):
         path = retworkx.graph_dijkstra_shortest_path_lengths(
-            self.graph, self.a, lambda x: float(x), self.e)
+            self.graph, self.a, lambda x: float(x), self.e
+        )
         expected = {4: 20.0}
         self.assertEqual(expected, path)
 
     def test_dijkstra_path(self):
         path = retworkx.graph_dijkstra_shortest_paths(
-            self.graph, self.a, weight_fn=lambda x: float(x), target=self.e)
-        expected = {
-            4: [0, 3, 4]
-        }
+            self.graph, self.a, weight_fn=lambda x: float(x), target=self.e
+        )
+        expected = {4: [0, 3, 4]}
         self.assertEqual(expected, path)
 
     def test_dijkstra_with_no_goal_set(self):
         path = retworkx.graph_dijkstra_shortest_path_lengths(
-            self.graph, self.a, lambda x: 1)
+            self.graph, self.a, lambda x: 1
+        )
         expected = {1: 1.0, 2: 1.0, 3: 1.0, 4: 2.0, 5: 2.0}
         self.assertEqual(expected, path)
 
     def test_dijkstra_path_with_no_goal_set(self):
-        path = retworkx.graph_dijkstra_shortest_paths(
-            self.graph, self.a)
+        path = retworkx.graph_dijkstra_shortest_paths(self.graph, self.a)
         expected = {
             1: [0, 1],
             2: [0, 2],
@@ -69,32 +68,35 @@ class TestDijkstraGraph(unittest.TestCase):
 
     def test_dijkstra_with_no_path(self):
         g = retworkx.PyGraph()
-        a = g.add_node('A')
-        g.add_node('B')
+        a = g.add_node("A")
+        g.add_node("B")
         path = retworkx.graph_dijkstra_shortest_path_lengths(
-            g, a, lambda x: float(x))
+            g, a, lambda x: float(x)
+        )
         expected = {}
         self.assertEqual(expected, path)
 
     def test_dijkstra_path_with_no_path(self):
         g = retworkx.PyGraph()
-        a = g.add_node('A')
-        g.add_node('B')
+        a = g.add_node("A")
+        g.add_node("B")
         path = retworkx.graph_dijkstra_shortest_paths(
-            g, a, weight_fn=lambda x: float(x))
+            g, a, weight_fn=lambda x: float(x)
+        )
         expected = {}
         self.assertEqual(expected, path)
 
     def test_dijkstra_with_disconnected_nodes(self):
         g = retworkx.PyDiGraph()
-        a = g.add_node('A')
-        b = g.add_node('B')
+        a = g.add_node("A")
+        b = g.add_node("B")
         g.add_edge(a, b, 1.2)
-        g.add_node('C')
-        d = g.add_node('D')
+        g.add_node("C")
+        d = g.add_node("D")
         g.add_edge(b, d, 2.4)
         path = retworkx.digraph_dijkstra_shortest_path_lengths(
-            g, a, lambda x: round(x, 1))
+            g, a, lambda x: round(x, 1)
+        )
         # Computers never work:
         expected = {1: 1.2, 3: 3.5999999999999996}
         self.assertEqual(expected, path)

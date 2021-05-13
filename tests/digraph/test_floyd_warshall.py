@@ -24,36 +24,36 @@ class TestFloydWarshall(unittest.TestCase):
         """Test the algorithm on a 5q x 4 depth circuit."""
         dag = retworkx.PyDAG()
         # inputs
-        qr_0 = dag.add_node('qr[0]')
-        qr_1 = dag.add_node('qr[1]')
-        qr_2 = dag.add_node('qr[2]')
-        cr_0 = dag.add_node('cr[0]')
-        cr_1 = dag.add_node('cr[1]')
+        qr_0 = dag.add_node("qr[0]")
+        qr_1 = dag.add_node("qr[1]")
+        qr_2 = dag.add_node("qr[2]")
+        cr_0 = dag.add_node("cr[0]")
+        cr_1 = dag.add_node("cr[1]")
         # wires
-        cx_1 = dag.add_node('cx_1')
-        dag.add_edge(qr_0, cx_1, 'qr[0]')
-        dag.add_edge(qr_1, cx_1, 'qr[1]')
-        h_1 = dag.add_node('h_1')
-        dag.add_edge(cx_1, h_1, 'qr[0]')
-        cx_2 = dag.add_node('cx_2')
-        dag.add_edge(cx_1, cx_2, 'qr[1]')
-        dag.add_edge(qr_2, cx_2, 'qr[2]')
-        cx_3 = dag.add_node('cx_3')
-        dag.add_edge(h_1, cx_3, 'qr[0]')
-        dag.add_edge(cx_2, cx_3, 'qr[2]')
-        h_2 = dag.add_node('h_2')
-        dag.add_edge(cx_3, h_2, 'qr[2]')
+        cx_1 = dag.add_node("cx_1")
+        dag.add_edge(qr_0, cx_1, "qr[0]")
+        dag.add_edge(qr_1, cx_1, "qr[1]")
+        h_1 = dag.add_node("h_1")
+        dag.add_edge(cx_1, h_1, "qr[0]")
+        cx_2 = dag.add_node("cx_2")
+        dag.add_edge(cx_1, cx_2, "qr[1]")
+        dag.add_edge(qr_2, cx_2, "qr[2]")
+        cx_3 = dag.add_node("cx_3")
+        dag.add_edge(h_1, cx_3, "qr[0]")
+        dag.add_edge(cx_2, cx_3, "qr[2]")
+        h_2 = dag.add_node("h_2")
+        dag.add_edge(cx_3, h_2, "qr[2]")
         # # outputs
-        qr_0_out = dag.add_node('qr[0]_out')
-        dag.add_edge(cx_3, qr_0_out, 'qr[0]')
-        qr_1_out = dag.add_node('qr[1]_out')
-        dag.add_edge(cx_2, qr_1_out, 'qr[1]')
-        qr_2_out = dag.add_node('qr[2]_out')
-        dag.add_edge(h_2, qr_2_out, 'qr[2]')
-        cr_0_out = dag.add_node('cr[0]_out')
-        dag.add_edge(cr_0, cr_0_out, 'qr[2]')
-        cr_1_out = dag.add_node('cr[1]_out')
-        dag.add_edge(cr_1, cr_1_out, 'cr[1]')
+        qr_0_out = dag.add_node("qr[0]_out")
+        dag.add_edge(cx_3, qr_0_out, "qr[0]")
+        qr_1_out = dag.add_node("qr[1]_out")
+        dag.add_edge(cx_2, qr_1_out, "qr[1]")
+        qr_2_out = dag.add_node("qr[2]_out")
+        dag.add_edge(h_2, qr_2_out, "qr[2]")
+        cr_0_out = dag.add_node("cr[0]_out")
+        dag.add_edge(cr_0, cr_0_out, "qr[2]")
+        cr_1_out = dag.add_node("cr[1]_out")
+        dag.add_edge(cr_1, cr_1_out, "cr[1]")
 
         result = retworkx.floyd_warshall(dag)
         expected = {
@@ -79,16 +79,22 @@ class TestFloydWarshall(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(7)))
         graph.add_edges_from_no_data(
-            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
-        dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: 1,
-                                                     as_undirected=True)
-        expected = numpy.array([[0., 1., 2., 3., 3., 2., 1.],
-                                [1., 0., 1., 2., 3., 3., 2.],
-                                [2., 1., 0., 1., 2., 3., 3.],
-                                [3., 2., 1., 0., 1., 2., 3.],
-                                [3., 3., 2., 1., 0., 1., 2.],
-                                [2., 3., 3., 2., 1., 0., 1.],
-                                [1., 2., 3., 3., 2., 1., 0.]])
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
+        dist = retworkx.digraph_floyd_warshall_numpy(
+            graph, lambda x: 1, as_undirected=True
+        )
+        expected = numpy.array(
+            [
+                [0.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0],
+                [1.0, 0.0, 1.0, 2.0, 3.0, 3.0, 2.0],
+                [2.0, 1.0, 0.0, 1.0, 2.0, 3.0, 3.0],
+                [3.0, 2.0, 1.0, 0.0, 1.0, 2.0, 3.0],
+                [3.0, 3.0, 2.0, 1.0, 0.0, 1.0, 2.0],
+                [2.0, 3.0, 3.0, 2.0, 1.0, 0.0, 1.0],
+                [1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 0.0],
+            ]
+        )
         self.assertTrue(numpy.array_equal(dist, expected))
 
     def test_floyd_warshall_numpy_digraph_three_edges(self):
@@ -106,16 +112,18 @@ class TestFloydWarshall(unittest.TestCase):
     def test_weighted_numpy_digraph_two_edges(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(8)))
-        graph.add_edges_from([
-            (0, 1, 2),
-            (1, 2, 2),
-            (2, 3, 1),
-            (3, 4, 1),
-            (4, 5, 1),
-            (5, 6, 1),
-            (6, 7, 1),
-            (7, 0, 1),
-        ])
+        graph.add_edges_from(
+            [
+                (0, 1, 2),
+                (1, 2, 2),
+                (2, 3, 1),
+                (3, 4, 1),
+                (4, 5, 1),
+                (5, 6, 1),
+                (6, 7, 1),
+                (7, 0, 1),
+            ]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(
             graph, lambda x: x, parallel_threshold=self.parallel_threshold
         )
@@ -126,7 +134,8 @@ class TestFloydWarshall(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(7)))
         graph.add_edges_from_no_data(
-            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(
             graph, lambda x: 1, parallel_threshold=self.parallel_threshold
         )
@@ -136,12 +145,14 @@ class TestFloydWarshall(unittest.TestCase):
     def test_weighted_numpy_directed_negative_cycle(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(4)))
-        graph.add_edges_from([
-            (0, 1, 1),
-            (1, 2, -1),
-            (2, 3, -1),
-            (3, 0, -1),
-        ])
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, -1),
+            ]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(graph, lambda x: x)
         self.assertTrue(numpy.all(numpy.diag(dist) < 0))
 
@@ -160,7 +171,8 @@ class TestFloydWarshall(unittest.TestCase):
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
         graph.add_edges_from_no_data(
-            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(
             graph, lambda x: 1, parallel_threshold=self.parallel_threshold
         )
@@ -172,7 +184,8 @@ class TestFloydWarshall(unittest.TestCase):
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
         graph.add_edges_from_no_data(
-            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(graph)
         self.assertEqual(dist[0, 3], 3)
         self.assertEqual(dist[0, 4], 4)
@@ -182,7 +195,8 @@ class TestFloydWarshall(unittest.TestCase):
         graph.add_nodes_from(list(range(8)))
         graph.remove_node(0)
         graph.add_edges_from_no_data(
-            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]
+        )
         dist = retworkx.digraph_floyd_warshall_numpy(
             graph, default_weight=2, parallel_threshold=self.parallel_threshold
         )
