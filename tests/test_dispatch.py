@@ -83,8 +83,9 @@ class TestDispatchPyGraph(unittest.TestCase):
         self.assertIsInstance(list(res), list)
 
     def test_all_pairs_dijkstra_shortest_paths(self):
-        res = retworkx.all_pairs_dijkstra_shortest_paths(self.graph,
-                                                         lambda _: 1)
+        res = retworkx.all_pairs_dijkstra_shortest_paths(
+            self.graph, lambda _: 1
+        )
         self.assertIsInstance(res, retworkx.AllPairsPathMapping)
 
     def test_all_pairs_dijkstra_path_lengthss(self):

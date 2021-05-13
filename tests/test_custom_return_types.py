@@ -670,77 +670,89 @@ class TestPos2DMapping(unittest.TestCase):
 
 
 class TestAllPairsPathMapping(unittest.TestCase):
-
     def setUp(self):
         self.dag = retworkx.PyDAG()
-        node_a = self.dag.add_node('a')
-        self.dag.add_child(node_a, 'b', "Edgy")
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
         self.fn = lambda _: 1.0
 
     def test__eq__match(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) == {0: {1: [0, 1]}, 1: {}})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {0: {1: [0, 1]}, 1: {}}
+        )
 
     def test__eq__not_match_keys(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) == {2: {2: [0, 1]}, 1: {}})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {2: {2: [0, 1]}, 1: {}}
+        )
 
     def test__eq__not_match_values(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) == {0: {1: [0, 2]}, 1: {}})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {0: {1: [0, 2]}, 1: {}}
+        )
 
     def test__eq__different_length(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) == {1: [0, 1], 2: [0, 2]})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {1: [0, 1], 2: [0, 2]}
+        )
 
     def test_eq__same_type(self):
         self.assertEqual(
             retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn),
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn))
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn),
+        )
 
     def test__eq__invalid_type(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) == {'a': []})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {"a": []}
+        )
 
     def test__eq__invalid_inner_type(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) == {0: {1: None}})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {0: {1: None}}
+        )
 
     def test__ne__match(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) != {0: {1: [0, 1]}, 1: {}})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {0: {1: [0, 1]}, 1: {}}
+        )
 
     def test__ne__not_match(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) != {2: [0, 1]})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {2: [0, 1]}
+        )
 
     def test__ne__not_match_values(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) != {1: [0, 2]})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {1: [0, 2]}
+        )
 
     def test__ne__different_length(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) != {1: [0, 1], 2: [0, 2]})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {1: [0, 1], 2: [0, 2]}
+        )
 
     def test__ne__invalid_type(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) != {'a': {}})
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {"a": {}}
+        )
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
-            retworkx.all_pairs_dijkstra_shortest_paths(
-                self.dag, self.fn) > {1: [0, 2]}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) > {
+                1: [0, 2]
+            }
 
     def test_deepcopy(self):
         paths = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
@@ -758,7 +770,8 @@ class TestAllPairsPathMapping(unittest.TestCase):
         # Since run in parallel the order is not deterministic
         expected_valid = [
             "AllPairsPathMapping{1: PathMapping{}, 0: PathMapping{1: [0, 1]}}",
-            "AllPairsPathMapping{0: PathMapping{1: [0, 1]}, 1: PathMapping{}}"]
+            "AllPairsPathMapping{0: PathMapping{1: [0, 1]}, 1: PathMapping{}}",
+        ]
         self.assertIn(str(res), expected_valid)
 
     def test_hash(self):
@@ -775,27 +788,33 @@ class TestAllPairsPathMapping(unittest.TestCase):
 
     def test_keys(self):
         keys = retworkx.all_pairs_dijkstra_shortest_paths(
-            self.dag, self.fn).keys()
+            self.dag, self.fn
+        ).keys()
         self.assertEqual([0, 1], list(sorted(keys)))
 
     def test_values(self):
         values = retworkx.all_pairs_dijkstra_shortest_paths(
-            self.dag, self.fn).values()
+            self.dag, self.fn
+        ).values()
         # Since run in parallel the order is not deterministic
         expected_valid = [[{1: [0, 1]}, {}], [{}, {1: [0, 1]}]]
         self.assertIn(list(values), expected_valid)
 
     def test_items(self):
         items = retworkx.all_pairs_dijkstra_shortest_paths(
-            self.dag, self.fn).items()
+            self.dag, self.fn
+        ).items()
         # Since run in parallel the order is not deterministic
-        expected_valid = [[(0, {1: [0, 1]}), (1, {})],
-                          [(1, {}), (0, {1: [0, 1]})]]
+        expected_valid = [
+            [(0, {1: [0, 1]}), (1, {})],
+            [(1, {}), (0, {1: [0, 1]})],
+        ]
         self.assertIn(list(items), expected_valid)
 
     def test_iter(self):
         mapping_iter = iter(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn))
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        )
         output = list(sorted(mapping_iter))
         self.assertEqual(output, [0, 1])
 
@@ -809,78 +828,89 @@ class TestAllPairsPathMapping(unittest.TestCase):
 
 
 class TestAllPairsPathLengthMapping(unittest.TestCase):
-
     def setUp(self):
         self.dag = retworkx.PyDAG()
-        node_a = self.dag.add_node('a')
-        self.dag.add_child(node_a, 'b', "Edgy")
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
         self.fn = lambda _: 1.0
 
     def test__eq__match(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) == {0: {1: 1.0}, 1: {}})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {0: {1: 1.0}, 1: {}}
+        )
 
     def test__eq__not_match_keys(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) == {1: {2: 1.0}})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {1: {2: 1.0}}
+        )
 
     def test__eq__not_match_values(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) == {0: {2: 2.0}})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {0: {2: 2.0}}
+        )
 
     def test__eq__different_length(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) == {0: {
-                    1: 1.0, 2: 2.0}})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {0: {1: 1.0, 2: 2.0}}
+        )
 
     def test_eq__same_type(self):
         self.assertEqual(
             retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn),
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn))
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn),
+        )
 
     def test__eq__invalid_type(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) == {'a': 2})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {"a": 2}
+        )
 
     def test__eq__invalid_inner_type(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) == {0: 'a'})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {0: "a"}
+        )
 
     def test__ne__match(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) != {0: {1: 1.0}, 1: {}})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {0: {1: 1.0}, 1: {}}
+        )
 
     def test__ne__not_match(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) != {0: {2: 1.0}})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {0: {2: 1.0}}
+        )
 
     def test__ne__not_match_values(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) != {0: {1: 2.0}})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {0: {1: 2.0}}
+        )
 
     def test__ne__different_length(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) != {0: {1: 1.0}, 2: {1: 2.0}})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {0: {1: 1.0}, 2: {1: 2.0}}
+        )
 
     def test__ne__invalid_type(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) != {1: []})
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {1: []}
+        )
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
-            retworkx.all_pairs_dijkstra_path_lengths(
-                self.dag, self.fn) > {1: 1.0}
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) > {
+                1: 1.0
+            }
 
     def test_deepcopy(self):
         paths = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
@@ -894,15 +924,16 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
         self.assertEqual(paths, paths_copy)
 
     def test_str(self):
-        res = retworkx.all_pairs_dijkstra_path_lengths(self.dag,
-                                                       lambda _: 3.14)
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.dag, lambda _: 3.14)
         # Since all_pairs_dijkstra_path_lengths() is parallel the order of the
         # output is non-determinisitic
-        valid_values = ["AllPairsPathLengthMapping{1: PathLengthMapping{}, "
-                        "0: PathLengthMapping{1: 3.14}}",
-                        "AllPairsPathLengthMapping{"
-                        "0: PathLengthMapping{1: 3.14}, "
-                        "1: PathLengthMapping{}}"]
+        valid_values = [
+            "AllPairsPathLengthMapping{1: PathLengthMapping{}, "
+            "0: PathLengthMapping{1: 3.14}}",
+            "AllPairsPathLengthMapping{"
+            "0: PathLengthMapping{1: 3.14}, "
+            "1: PathLengthMapping{}}",
+        ]
         self.assertIn(str(res), valid_values)
 
     def test_hash(self):
@@ -918,27 +949,31 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
             res[42]
 
     def test_keys(self):
-        keys = retworkx.all_pairs_dijkstra_path_lengths(self.dag,
-                                                        self.fn).keys()
+        keys = retworkx.all_pairs_dijkstra_path_lengths(
+            self.dag, self.fn
+        ).keys()
         self.assertEqual([0, 1], list(sorted((keys))))
 
     def test_values(self):
-        values = retworkx.all_pairs_dijkstra_path_lengths(self.dag,
-                                                          self.fn).values()
+        values = retworkx.all_pairs_dijkstra_path_lengths(
+            self.dag, self.fn
+        ).values()
         # Since run in parallel the order is not deterministic
         valid_expected = [[{}, {1: 1.0}], [{1: 1.0}, {}]]
         self.assertIn(list(values), valid_expected)
 
     def test_items(self):
-        items = retworkx.all_pairs_dijkstra_path_lengths(self.dag,
-                                                         self.fn).items()
+        items = retworkx.all_pairs_dijkstra_path_lengths(
+            self.dag, self.fn
+        ).items()
         # Since run in parallel the order is not deterministic
         valid_expected = [[(0, {1: 1.0}), (1, {})], [(1, {}), (0, {1: 1.0})]]
         self.assertIn(list(items), valid_expected)
 
     def test_iter(self):
-        mapping_iter = iter(retworkx.all_pairs_dijkstra_path_lengths(self.dag,
-                                                                     self.fn))
+        mapping_iter = iter(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+        )
         output = list(sorted(mapping_iter))
         self.assertEqual(output, [0, 1])
 
