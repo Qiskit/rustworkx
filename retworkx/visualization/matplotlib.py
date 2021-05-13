@@ -198,9 +198,11 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=False, **kwds):
     try:
         import matplotlib.pyplot as plt
     except ImportError as e:
-        raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.visualization.mpl_draw(). You can install "
-                          "matplotlib with:\n'pip install matplotlib'") from e
+        raise ImportError(
+            "matplotlib needs to be installed prior to running "
+            "retworkx.visualization.mpl_draw(). You can install "
+            "matplotlib with:\n'pip install matplotlib'"
+        ) from e
     if ax is None:
         cf = plt.gcf()
     else:
@@ -212,8 +214,9 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=False, **kwds):
         else:
             ax = cf.gca()
 
-    draw_graph(graph, pos=pos, ax=ax, arrows=arrows,
-               with_labels=with_labels, **kwds)
+    draw_graph(
+        graph, pos=pos, ax=ax, arrows=arrows, with_labels=with_labels, **kwds
+    )
     ax.set_axis_off()
     plt.draw_if_interactive()
     if not plt.isinteractive() or ax is None:
@@ -248,9 +251,11 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
     try:
         import matplotlib.pyplot as plt
     except ImportError as e:
-        raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.visualization.mpl_draw(). You can install "
-                          "matplotlib with:\n'pip install matplotlib'") from e
+        raise ImportError(
+            "matplotlib needs to be installed prior to running "
+            "retworkx.visualization.mpl_draw(). You can install "
+            "matplotlib with:\n'pip install matplotlib'"
+        ) from e
 
     valid_node_kwds = {
         "node_list",
@@ -316,29 +321,35 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
         "verticalalignment",
     }
 
-    valid_kwds = valid_node_kwds | valid_edge_kwds | valid_label_kwds | \
-        valid_edge_label_kwds
+    valid_kwds = (
+        valid_node_kwds
+        | valid_edge_kwds
+        | valid_label_kwds
+        | valid_edge_label_kwds
+    )
 
     if any([k not in valid_kwds for k in kwds]):
         invalid_args = ", ".join([k for k in kwds if k not in valid_kwds])
         raise ValueError(f"Received invalid argument(s): {invalid_args}")
 
-    label_fn = kwds.pop('labels', None)
+    label_fn = kwds.pop("labels", None)
     if label_fn:
-        kwds['labels'] = {x: label_fn(graph[x]) for x in graph.node_indexes()}
-    edge_label_fn = kwds.pop('edge_labels', None)
+        kwds["labels"] = {x: label_fn(graph[x]) for x in graph.node_indexes()}
+    edge_label_fn = kwds.pop("edge_labels", None)
     if edge_label_fn:
-        kwds['edge_labels'] = {
-            (x[0],
-             x[1]): edge_label_fn(x[2]) for x in graph.weighted_edge_list()}
+        kwds["edge_labels"] = {
+            (x[0], x[1]): edge_label_fn(x[2])
+            for x in graph.weighted_edge_list()
+        }
 
     node_kwds = {k: v for k, v in kwds.items() if k in valid_node_kwds}
     edge_kwds = {k: v for k, v in kwds.items() if k in valid_edge_kwds}
-    if isinstance(edge_kwds.get('alpha'), list):
-        del edge_kwds['alpha']
+    if isinstance(edge_kwds.get("alpha"), list):
+        del edge_kwds["alpha"]
     label_kwds = {k: v for k, v in kwds.items() if k in valid_label_kwds}
     edge_label_kwds = {
-        k: v for k, v in kwds.items() if k in valid_edge_label_kwds}
+        k: v for k, v in kwds.items() if k in valid_edge_label_kwds
+    }
 
     # TODO: switch default to use spring layout when #280 is closed
     if pos is None:
@@ -431,9 +442,11 @@ def draw_nodes(
         import matplotlib.collections  # call as mpl.collections
         import matplotlib.pyplot as plt
     except ImportError as e:
-        raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.visualization.mpl_draw(). You can install "
-                          "matplotlib with:\n'pip install matplotlib'") from e
+        raise ImportError(
+            "matplotlib needs to be installed prior to running "
+            "retworkx.visualization.mpl_draw(). You can install "
+            "matplotlib with:\n'pip install matplotlib'"
+        ) from e
 
     if ax is None:
         ax = plt.gca()
@@ -451,8 +464,7 @@ def draw_nodes(
         raise IndexError(f"Node {e} has no position.") from e
 
     if isinstance(alpha, Iterable):
-        node_color = apply_alpha(node_color, alpha, node_list, cmap, vmin,
-                                 vmax)
+        node_color = apply_alpha(node_color, alpha, node_list, cmap, vmin, vmax)
         alpha = None
 
     node_collection = ax.scatter(
@@ -607,9 +619,11 @@ def draw_edges(
         import matplotlib.path  # call as mpl.path
         import matplotlib.pyplot as plt
     except ImportError as e:
-        raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.visualization.mpl_draw(). You can install "
-                          "matplotlib with:\n'pip install matplotlib'") from e
+        raise ImportError(
+            "matplotlib needs to be installed prior to running "
+            "retworkx.visualization.mpl_draw(). You can install "
+            "matplotlib with:\n'pip install matplotlib'"
+        ) from e
 
     if arrowstyle is None:
         if isinstance(graph, retworkx.PyDiGraph) and arrows:
@@ -639,8 +653,10 @@ def draw_edges(
     # Check if edge_color is an array of floats and map to edge_cmap.
     # This is the only case handled differently from matplotlib
     if (
-            np.iterable(edge_color) and (len(edge_color) == len(edge_pos))
-            and np.alltrue([isinstance(c, Number) for c in edge_color])):
+        np.iterable(edge_color)
+        and (len(edge_color) == len(edge_pos))
+        and np.alltrue([isinstance(c, Number) for c in edge_color])
+    ):
         if edge_cmap is not None:
             assert isinstance(edge_cmap, mpl.colors.Colormap)
         else:
@@ -706,8 +722,9 @@ def draw_edges(
                 data_loc + np.asarray([0, v_shift]),
             ]
 
-            ret = mpl.path.Path(ax.transData.transform(path),
-                                [1, 4, 4, 4, 4, 4, 4])
+            ret = mpl.path.Path(
+                ax.transData.transform(path), [1, 4, 4, 4, 4, 4, 4]
+            )
         # if not, fall back to the user specified behavior
         else:
             ret = base_connectionstyle(posA, posB, *args, **kwargs)
@@ -728,8 +745,9 @@ def draw_edges(
             shrink_source = to_marker_edge(source_node_size, node_shape)
             shrink_target = to_marker_edge(target_node_size, node_shape)
         else:
-            shrink_source = shrink_target = to_marker_edge(node_size,
-                                                           node_shape)
+            shrink_source = shrink_target = to_marker_edge(
+                node_size, node_shape
+            )
 
         if shrink_source < min_source_margin:
             shrink_source = min_source_margin
@@ -856,9 +874,11 @@ def draw_labels(
     try:
         import matplotlib.pyplot as plt
     except ImportError as e:
-        raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.visualization.mpl_draw(). You can install "
-                          "matplotlib with:\n'pip install matplotlib'") from e
+        raise ImportError(
+            "matplotlib needs to be installed prior to running "
+            "retworkx.visualization.mpl_draw(). You can install "
+            "matplotlib with:\n'pip install matplotlib'"
+        ) from e
 
     if ax is None:
         ax = plt.gca()
@@ -977,9 +997,11 @@ def draw_edge_labels(
     try:
         import matplotlib.pyplot as plt
     except ImportError as e:
-        raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.visualization.mpl_draw(). You can install "
-                          "matplotlib with:\n'pip install matplotlib'") from e
+        raise ImportError(
+            "matplotlib needs to be installed prior to running "
+            "retworkx.visualization.mpl_draw(). You can install "
+            "matplotlib with:\n'pip install matplotlib'"
+        ) from e
 
     if ax is None:
         ax = plt.gca()
@@ -1013,8 +1035,9 @@ def draw_edge_labels(
             trans_angle = 0.0
         # use default box of white with white border
         if bbox is None:
-            bbox = dict(boxstyle="round", ec=(1.0, 1.0, 1.0),
-                        fc=(1.0, 1.0, 1.0))
+            bbox = dict(
+                boxstyle="round", ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)
+            )
         if not isinstance(label, str):
             label = str(label)  # this makes "1" and 1 labeled the same
 
@@ -1091,9 +1114,11 @@ def apply_alpha(colors, alpha, elem_list, cmap=None, vmin=None, vmax=None):
         import matplotlib.colors  # call as mpl.colors
         import matplotlib.cm  # call as mpl.cm
     except ImportError as e:
-        raise ImportError("matplotlib needs to be installed prior to running "
-                          "retworkx.visualization.mpl_draw(). You can install "
-                          "matplotlib with:\n'pip install matplotlib'") from e
+        raise ImportError(
+            "matplotlib needs to be installed prior to running "
+            "retworkx.visualization.mpl_draw(). You can install "
+            "matplotlib with:\n'pip install matplotlib'"
+        ) from e
 
     # If we have been provided with a list of numbers as long as elem_list,
     # apply the color mapping.
