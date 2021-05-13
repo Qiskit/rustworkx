@@ -49,13 +49,14 @@ class TestLayers(unittest.TestCase):
 
         res = retworkx.layers(dag, input_nodes)
         expected = [
-            ['qr[0]', 'qr[1]', 'cr[0]', 'cr[1]'],
-            ['h'],
-            ['cx'],
-            ['measure'],
-            ['x'],
-            ['measure', 'measure'],
-            ['cr[1]', 'qr[1]', 'cr[0]', 'qr[0]']]
+            ["qr[0]", "qr[1]", "cr[0]", "cr[1]"],
+            ["h"],
+            ["cx"],
+            ["measure"],
+            ["x"],
+            ["measure", "measure"],
+            ["cr[1]", "qr[1]", "cr[0]", "qr[0]"],
+        ]
         self.assertEqual(expected, res)
 
     def test_first_layer_invalid_node(self):

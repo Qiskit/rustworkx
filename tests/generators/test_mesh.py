@@ -16,7 +16,6 @@ import retworkx
 
 
 class TestMeshGraph(unittest.TestCase):
-
     def test_directed_mesh_graph(self):
         graph = retworkx.generators.directed_mesh_graph(20)
         self.assertEqual(len(graph), 20)
@@ -29,8 +28,7 @@ class TestMeshGraph(unittest.TestCase):
             self.assertEqual(graph.out_edges(i), ls)
 
     def test_directed_mesh_graph_weights(self):
-        graph = retworkx.generators.directed_mesh_graph(
-            weights=list(range(20)))
+        graph = retworkx.generators.directed_mesh_graph(weights=list(range(20)))
         self.assertEqual(len(graph), 20)
         self.assertEqual([x for x in range(20)], graph.nodes())
         self.assertEqual(len(graph.edges()), 380)
