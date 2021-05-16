@@ -618,7 +618,7 @@ impl PyDiGraph {
     }
 
     /// Return a filtered list of successors data such that each
-    /// node has at least one edge data which matches the function.
+    /// node has at least one edge data which matches the filter.
     ///
     /// :param int node: The index for the node to get the successors for
     ///
@@ -631,7 +631,7 @@ impl PyDiGraph {
     ///           whose at least one edge matches the filter
     /// :rtype: list
     #[text_signature = "(self, node, filter_fn/)"]
-    pub fn filtered_successors(
+    pub fn find_successors_by_edge(
         &self,
         py: Python,
         node: usize,
@@ -664,7 +664,7 @@ impl PyDiGraph {
     }
 
     /// Return a filtered list of predecessor data such that each
-    /// node has at least one edge data which matches the function.
+    /// node has at least one edge data which matches the filter.
     ///
     /// :param int node: The index for the node to get the predecessor for
     ///
@@ -677,7 +677,7 @@ impl PyDiGraph {
     ///           whose at least one edge matches the filter
     /// :rtype: list
     #[text_signature = "(self, node, filter_fn/)"]
-    pub fn filtered_predecessors(
+    pub fn find_predecessors_by_edge(
         &self,
         py: Python,
         node: usize,
