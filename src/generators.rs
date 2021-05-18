@@ -1338,12 +1338,8 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
-<<<<<<< HEAD
     m.add_wrapped(wrap_pyfunction!(heavy_hex_graph))?;
-||||||| merged common ancestors
-=======
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
->>>>>>> upstream/main
     Ok(())
 }
