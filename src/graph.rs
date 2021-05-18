@@ -32,7 +32,7 @@ use ndarray::prelude::*;
 use numpy::PyReadonlyArray2;
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeList, EdgeIndexMap, NodeIndices, WeightedEdgeList};
+use super::iterators::{EdgeIndexMap, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
