@@ -18,26 +18,26 @@ import retworkx
 class TestAdj(unittest.TestCase):
     def test_single_neighbor(self):
         dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', {'a': 1})
-        node_c = dag.add_child(node_a, 'c', {'a': 2})
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", {"a": 1})
+        node_c = dag.add_child(node_a, "c", {"a": 2})
         res = dag.neighbors(node_a)
         self.assertCountEqual([node_c, node_b], res)
 
     def test_unique_neighbors_on_dags(self):
         dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', ['edge a->b'])
-        node_c = dag.add_child(node_a, 'c', ['edge a->c'])
-        dag.add_edge(node_a, node_b, ['edge a->b bis'])
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", ["edge a->b"])
+        node_c = dag.add_child(node_a, "c", ["edge a->c"])
+        dag.add_edge(node_a, node_b, ["edge a->b bis"])
         res = dag.neighbors(node_a)
         self.assertCountEqual([node_c, node_b], res)
 
     def test_single_neighbor_dir(self):
         dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', {'a': 1})
-        node_c = dag.add_child(node_a, 'c', {'a': 2})
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", {"a": 1})
+        node_c = dag.add_child(node_a, "c", {"a": 2})
         res = dag.successor_indices(node_a)
         self.assertEqual([node_c, node_b], res)
         res = dag.predecessor_indices(node_a)
@@ -45,9 +45,9 @@ class TestAdj(unittest.TestCase):
 
     def test_neighbor_dir_surrounded(self):
         dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
-        node_b = dag.add_child(node_a, 'b', {'a': 1})
-        node_c = dag.add_child(node_b, 'c', {'a': 2})
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", {"a": 1})
+        node_c = dag.add_child(node_b, "c", {"a": 2})
         res = dag.successor_indices(node_b)
         self.assertEqual([node_c], res)
         res = dag.predecessor_indices(node_b)
@@ -55,5 +55,5 @@ class TestAdj(unittest.TestCase):
 
     def test_no_neighbor(self):
         dag = retworkx.PyDAG()
-        node_a = dag.add_node('a')
+        node_a = dag.add_node("a")
         self.assertEqual([], dag.neighbors(node_a))

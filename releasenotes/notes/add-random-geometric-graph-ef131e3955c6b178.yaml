@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A new function :func:`~retworkx.random_geometric_graph` was added 
+    to generate random geometric graphs.

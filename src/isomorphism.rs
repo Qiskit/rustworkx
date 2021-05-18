@@ -14,9 +14,10 @@
 // It has then been modified to function with PyDiGraph inputs instead of Graph.
 
 use fixedbitset::FixedBitSet;
+use std::iter::FromIterator;
 use std::marker;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use super::NodesRemoved;
 
@@ -28,9 +29,157 @@ use petgraph::visit::{
     EdgeRef, GetAdjacencyMatrix, IntoEdgeReferences, NodeIndexable,
 };
 use petgraph::EdgeType;
-use petgraph::{Directed, Incoming};
+use petgraph::{Directed, Incoming, Outgoing};
 
-impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
+use rayon::slice::ParallelSliceMut;
+
+type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+
+// NOTE: assumes contiguous node ids.
+trait NodeSorter<Ty>
+where
+    Ty: EdgeType,
+{
+    fn sort(&self, _: &StablePyGraph<Ty>) -> Vec<usize>;
+
+    fn reorder(
+        &self,
+        py: Python,
+        graph: &StablePyGraph<Ty>,
+    ) -> StablePyGraph<Ty> {
+        let order = self.sort(graph);
+
+        let mut new_graph = StablePyGraph::<Ty>::default();
+        let mut id_map: Vec<usize> = vec![0; graph.node_count()];
+        for node in order {
+            let node_index = graph.from_index(node);
+            let node_data = graph.node_weight(node_index).unwrap();
+            let new_index = new_graph.add_node(node_data.clone_ref(py));
+            id_map[node] = graph.to_index(new_index);
+        }
+        for edge in graph.edge_references() {
+            let edge_w = edge.weight();
+            let p = id_map[graph.to_index(edge.source())];
+            let c = id_map[graph.to_index(edge.target())];
+            let p_index = graph.from_index(p);
+            let c_index = graph.from_index(c);
+            new_graph.add_edge(p_index, c_index, edge_w.clone_ref(py));
+        }
+
+        new_graph
+    }
+}
+
+struct Vf2ppSorter;
+
+impl<Ty> NodeSorter<Ty> for Vf2ppSorter
+where
+    Ty: EdgeType,
+{
+    fn sort(&self, graph: &StablePyGraph<Ty>) -> Vec<usize> {
+        let n = graph.node_count();
+
+        let dout: Vec<usize> = (0..n)
+            .map(|idx| {
+                graph
+                    .neighbors_directed(graph.from_index(idx), Outgoing)
+                    .count()
+            })
+            .collect();
+
+        let mut din: Vec<usize> = vec![0; n];
+        if graph.is_directed() {
+            din = (0..n)
+                .map(|idx| {
+                    graph
+                        .neighbors_directed(graph.from_index(idx), Incoming)
+                        .count()
+                })
+                .collect();
+        }
+
+        let mut conn_in: Vec<usize> = vec![0; n];
+        let mut conn_out: Vec<usize> = vec![0; n];
+
+        let mut order: Vec<usize> = Vec::with_capacity(n);
+
+        // Process BFS level
+        let mut process = |mut vd: Vec<usize>| -> Vec<usize> {
+            // repeatedly bring largest element in front.
+            for i in 0..vd.len() {
+                let (index, &item) = vd[i..]
+                    .iter()
+                    .enumerate()
+                    .max_by_key(|&(_, &node)| {
+                        (conn_in[node], dout[node], conn_out[node], din[node])
+                    })
+                    .unwrap();
+
+                vd.swap(i, i + index);
+                order.push(item);
+
+                for neigh in
+                    graph.neighbors_directed(graph.from_index(item), Outgoing)
+                {
+                    conn_in[graph.to_index(neigh)] += 1;
+                }
+
+                if graph.is_directed() {
+                    for neigh in graph
+                        .neighbors_directed(graph.from_index(item), Incoming)
+                    {
+                        conn_out[graph.to_index(neigh)] += 1;
+                    }
+                }
+            }
+            vd
+        };
+
+        let mut seen: Vec<bool> = vec![false; n];
+
+        // Create BFS Tree from root and process each level.
+        let mut bfs_tree = |root: usize| {
+            if seen[root] {
+                return;
+            }
+
+            let mut next_level: HashSet<usize> = HashSet::new();
+
+            seen[root] = true;
+            next_level.insert(root);
+            while !next_level.is_empty() {
+                let this_level = Vec::from_iter(next_level);
+                let this_level = process(this_level);
+
+                next_level = HashSet::new();
+                for bfs_node in this_level {
+                    for neighbor in graph.neighbors_directed(
+                        graph.from_index(bfs_node),
+                        Outgoing,
+                    ) {
+                        let neigh = graph.to_index(neighbor);
+                        if !seen[neigh] {
+                            seen[neigh] = true;
+                            next_level.insert(neigh);
+                        }
+                    }
+                }
+            }
+        };
+
+        let mut sorted_nodes: Vec<usize> = (0..n).collect();
+        sorted_nodes.par_sort_unstable_by_key(|&node| (dout[node], din[node]));
+        sorted_nodes.reverse();
+
+        for node in sorted_nodes {
+            bfs_tree(node);
+        }
+
+        order
+    }
+}
+
+impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
@@ -44,7 +193,7 @@ struct Vf2State<'a, Ty>
 where
     Ty: EdgeType,
 {
-    graph: &'a StableGraph<PyObject, PyObject, Ty>,
+    graph: &'a StablePyGraph<Ty>,
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
     mapping: Vec<NodeIndex>,
@@ -68,7 +217,7 @@ impl<'a, Ty> Vf2State<'a, Ty>
 where
     Ty: EdgeType,
 {
-    pub fn new(g: &'a StableGraph<PyObject, PyObject, Ty>) -> Self {
+    pub fn new(g: &'a StablePyGraph<Ty>) -> Self {
         let c0 = g.node_count();
         Vf2State {
             graph: g,
@@ -169,10 +318,7 @@ where
     }
 }
 
-fn reindex_graph<Ty>(
-    py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
-) -> StableGraph<PyObject, PyObject, Ty>
+fn reindex_graph<Ty>(py: Python, graph: &StablePyGraph<Ty>) -> StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
@@ -183,7 +329,7 @@ where
     // StableGraph. This compacts the node ids as a workaround until VF2State
     // and try_match can be rewitten to handle this (and likely contributed
     // upstream to petgraph too).
-    let mut new_graph = StableGraph::<PyObject, PyObject, Ty>::default();
+    let mut new_graph = StablePyGraph::<Ty>::default();
     let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
     for node_index in graph.node_indices() {
         let node_data = graph.node_weight(node_index).unwrap();
@@ -208,18 +354,19 @@ where
 /// The graphs should not be multigraphs.
 pub fn is_isomorphic<Ty, F, G>(
     py: Python,
-    g0: &StableGraph<PyObject, PyObject, Ty>,
-    g1: &StableGraph<PyObject, PyObject, Ty>,
+    g0: &StablePyGraph<Ty>,
+    g1: &StablePyGraph<Ty>,
     mut node_match: Option<F>,
     mut edge_match: Option<G>,
+    id_order: bool,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
     F: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
     G: FnMut(&PyObject, &PyObject) -> PyResult<bool>,
 {
-    let inner_temp_g0: StableGraph<PyObject, PyObject, Ty>;
-    let inner_temp_g1: StableGraph<PyObject, PyObject, Ty>;
+    let mut inner_temp_g0: StablePyGraph<Ty>;
+    let mut inner_temp_g1: StablePyGraph<Ty>;
     let g0_out = if g0.nodes_removed() {
         inner_temp_g0 = reindex_graph(py, g0);
         &inner_temp_g0
@@ -232,12 +379,26 @@ where
     } else {
         g1
     };
-    let g0 = &g0_out;
-    let g1 = &g1_out;
-    if g0.node_count() != g1.node_count() || g0.edge_count() != g1.edge_count()
+
+    if g0_out.node_count() != g1_out.node_count()
+        || g0_out.edge_count() != g1_out.edge_count()
     {
         return Ok(false);
     }
+
+    let g0 = if !id_order {
+        inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
+        &inner_temp_g0
+    } else {
+        g0_out
+    };
+
+    let g1 = if !id_order {
+        inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);
+        &inner_temp_g1
+    } else {
+        g1_out
+    };
 
     let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
     let res = try_match(&mut st, g0, g1, &mut node_match, &mut edge_match)?;
@@ -280,8 +441,8 @@ where
 /// Return Some(bool) if isomorphism is decided, else None.
 fn try_match<Ty, F, G>(
     mut st: &mut [Vf2State<Ty>; 2],
-    g0: &StableGraph<PyObject, PyObject, Ty>,
-    g1: &StableGraph<PyObject, PyObject, Ty>,
+    g0: &StablePyGraph<Ty>,
+    g1: &StablePyGraph<Ty>,
     node_match: &mut F,
     edge_match: &mut G,
 ) -> PyResult<Option<bool>>
@@ -457,6 +618,66 @@ where
                 }
             }
             if pred_count[0] != pred_count[1] {
+                return Ok(false);
+            }
+        }
+        macro_rules! rule {
+            ($arr:ident, $j:expr, $dir:expr) => {{
+                let mut count = 0;
+                for n_neigh in g[$j].neighbors_directed(nodes[$j], $dir) {
+                    let index = n_neigh.index();
+                    if st[$j].$arr[index] > 0 && st[$j].mapping[index] == end {
+                        count += 1;
+                    }
+                }
+                count
+            }};
+        }
+        // R_out
+        if rule!(out, 0, Outgoing) != rule!(out, 1, Outgoing) {
+            return Ok(false);
+        }
+        if g[0].is_directed()
+            && rule!(out, 0, Incoming) != rule!(out, 1, Incoming)
+        {
+            return Ok(false);
+        }
+        // R_in
+        if g[0].is_directed() {
+            if rule!(ins, 0, Outgoing) != rule!(ins, 1, Outgoing) {
+                return Ok(false);
+            }
+
+            if rule!(ins, 0, Incoming) != rule!(ins, 1, Incoming) {
+                return Ok(false);
+            }
+        }
+        // R_new
+        let mut new_count = [0, 0];
+        for j in graph_indices.clone() {
+            for n_neigh in g[j].neighbors(nodes[j]) {
+                let index = n_neigh.index();
+                if st[j].out[index] == 0
+                    && (st[j].ins.is_empty() || st[j].ins[index] == 0)
+                {
+                    new_count[j] += 1;
+                }
+            }
+        }
+        if new_count[0] != new_count[1] {
+            return Ok(false);
+        }
+        if g[0].is_directed() {
+            let mut new_count = [0, 0];
+            for j in graph_indices.clone() {
+                for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
+                    let index = n_neigh.index();
+                    if st[j].out[index] == 0 && st[j].ins[index] == 0 {
+                        new_count[j] += 1;
+                    }
+                }
+            }
+            if new_count[0] != new_count[1] {
                 return Ok(false);
             }
         }
