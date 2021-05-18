@@ -1116,6 +1116,216 @@ pub fn heavy_square_graph(
     })
 }
 
+/// Generate an undirected hexagonal lattice graph.
+///
+/// :param int rows: The number of rows to generate the graph with.
+/// :param int cols: The number of columns to generate the graph with.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated hexagonal lattice graph with the following nodes deleted:
+///           ```2*row + 1``` and
+///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
+///
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``rows`` or ``cols`` are
+///      specified
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(multigraph = true)]
+#[text_signature = "(/, rows=None, cols=None, multigraph=True)"]
+pub fn hexagonal_lattice_graph(
+    py: Python,
+    rows: usize,
+    cols: usize,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    let mut rowlen = rows;
+    let mut collen = cols;
+
+    // Needs two times the number of nodes vertically
+    rowlen = 2 * rowlen + 2;
+    collen += 1;
+    let num_nodes = rowlen * collen;
+
+    let nodes: Vec<NodeIndex> =
+        (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
+
+    // Add column edges
+    for i in 0..collen {
+        for j in 0..(rowlen - 1) {
+            graph.add_edge(
+                nodes[i * rowlen + j],
+                nodes[i * rowlen + (j + 1)],
+                py.None(),
+            );
+        }
+    }
+
+    // Add row edges
+    for i in 0..(collen - 1) {
+        for j in 0..rowlen {
+            if i % 2 == j % 2 {
+                graph.add_edge(
+                    nodes[i * rowlen + j],
+                    nodes[(i + 1) * rowlen + j],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    // Remove corner nodes
+    graph.remove_node(nodes[rowlen - 1]);
+    graph.remove_node(
+        nodes[(collen - 1) * rowlen + (rowlen - 1) * ((collen - 1) % 2)],
+    );
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: true,
+        multigraph,
+    })
+}
+
+/// Generate a directed hexagonal lattice graph. The edges propagate towards  
+///     right and bottom direction if ``bidirectional`` is ``false``
+///
+/// :param int rows: The number of rows to generate the graph with.
+/// :param int cols: The number of rows to generate the graph with.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes
+///
+/// :returns: The generated directed hexagonal lattice graph with the following nodes deleted:
+///           ```2*row + 1``` and
+///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
+///
+/// :rtype: PyDiGraph
+/// :raises IndexError: If neither ``rows`` or ``cols`` are
+///      specified
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 3)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(bidirectional = "false")]
+#[text_signature = "(/, rows=None, cols=None, bidirectional=False)"]
+pub fn directed_hexagonal_lattice_graph(
+    py: Python,
+    rows: usize,
+    cols: usize,
+    bidirectional: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+
+    let mut rowlen = rows;
+    let mut collen = cols;
+    // Needs two times the number of nodes vertically
+    rowlen = 2 * rowlen + 2;
+    collen += 1;
+    let num_nodes = rowlen * collen;
+
+    let nodes: Vec<NodeIndex> =
+        (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
+
+    // Add column edges
+    for i in 0..collen {
+        for j in 0..(rowlen - 1) {
+            graph.add_edge(
+                nodes[i * rowlen + j],
+                nodes[i * rowlen + (j + 1)],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(
+                    nodes[i * rowlen + (j + 1)],
+                    nodes[i * rowlen + j],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    // Add row edges
+    for i in 0..(collen - 1) {
+        for j in 0..rowlen {
+            if i % 2 == j % 2 {
+                graph.add_edge(
+                    nodes[i * rowlen + j],
+                    nodes[(i + 1) * rowlen + j],
+                    py.None(),
+                );
+                if bidirectional {
+                    graph.add_edge(
+                        nodes[(i + 1) * rowlen + j],
+                        nodes[i * rowlen + j],
+                        py.None(),
+                    );
+                }
+            }
+        }
+    }
+
+    // Remove corner nodes
+    graph.remove_node(nodes[rowlen - 1]);
+    graph.remove_node(
+        nodes[(collen - 1) * rowlen + (rowlen - 1) * ((collen - 1) % 2)],
+    );
+
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: true,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -1129,5 +1339,7 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(heavy_square_graph))?;
+    m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     Ok(())
 }

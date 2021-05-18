@@ -27,6 +27,7 @@ jobs:
   fast_finish: true
   allow_failures:
     - name: Python 3.7 Tests s390x Linux
+    - name: Python 3.7 Tests ppc64le Linux
   include:
     - name: Python 3.7 Tests ppc64le Linux
       stage: Linux non-x86_64
