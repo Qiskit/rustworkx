@@ -176,6 +176,7 @@ Custom Return Types
    retworkx.NodeIndices
    retworkx.EdgeList
    retworkx.WeightedEdgeList
+   retworkx.EdgeIndexMap
    retworkx.PathMapping
    retworkx.PathLengthMapping
    retworkx.Pos2DMapping
