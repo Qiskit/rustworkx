@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Added a new method, :meth:`~retworkx.PyDiGraph.edge_indices`, to the
+    :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph`
+    (:meth:`~retworkx.PyGraph.edge_indices`) that will return a list of
+    edge indices for every edge in the graph object.
+  - |
+    Added a new custom return type :class:`~retworkx.EdgeIndices` which is
+    returned by :class:`retworkx.PyDiGraph.edge_indices` and
+    :class:`retworkx.PyGraph.edge_indices`. It is equivalent to a read-only
+    list of integers that represent a list of edge indices.
