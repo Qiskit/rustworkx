@@ -984,7 +984,6 @@ pub fn directed_grid_graph(
     })
 }
 
-<<<<<<< HEAD
 /// Generate an undirected binomial tree of order n recursively.
 ///
 /// :param int order: Order of the binomial tree.
