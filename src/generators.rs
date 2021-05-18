@@ -1225,8 +1225,6 @@ pub fn directed_binomial_tree_graph(
     })
 }
 
-||||||| merged common ancestors
-=======
 /// Generate an undirected hexagonal lattice graph.
 ///
 /// :param int rows: The number of rows to generate the graph with.
@@ -1437,7 +1435,6 @@ pub fn directed_hexagonal_lattice_graph(
     })
 }
 
->>>>>>> upstream/main
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
