@@ -351,19 +351,6 @@ trait SemanticMatcher<T> {
     fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
 }
 
-struct NoSemanticMatch;
-
-impl<T> SemanticMatcher<T> for NoSemanticMatch {
-    #[inline]
-    fn enabled(&self) -> bool {
-        false
-    }
-    #[inline]
-    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool> {
-        Ok(true)
-    }
-}
-
 impl<T, F> SemanticMatcher<T> for Option<F>
 where
     F: FnMut(&T, &T) -> PyResult<bool>,

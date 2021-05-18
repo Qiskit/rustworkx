@@ -459,8 +459,8 @@ fn graph_is_isomorphic(
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "true")]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"]
+#[pyfunction(id_order = "false")]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
 fn digraph_is_subgraph_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
@@ -527,8 +527,8 @@ fn digraph_is_subgraph_isomorphic(
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "true")]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"]
+#[pyfunction(id_order = "false")]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
 fn graph_is_subgraph_isomorphic(
     py: Python,
     first: &graph::PyGraph,
