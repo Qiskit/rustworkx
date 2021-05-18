@@ -30,6 +30,8 @@ Generators
     retworkx.generators.directed_mesh_graph
     retworkx.generators.grid_graph
     retworkx.generators.directed_grid_graph
+    retworkx.generators.hexagonal_lattice_graph
+    retworkx.generators.directed_hexagonal_lattice_graph
 
 Random Circuit Functions
 ========================
@@ -41,6 +43,7 @@ Random Circuit Functions
     retworkx.undirected_gnp_random_graph
     retworkx.directed_gnm_random_graph
     retworkx.undirected_gnm_random_graph
+    retworkx.random_geometric_graph
 
 Algorithm Functions
 ===================
@@ -141,6 +144,14 @@ Layout Functions
    retworkx.graph_random_layout
    retworkx.digraph_random_layout
 
+Converters
+----------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.networkx_converter
+
 Exceptions
 ==========
 
@@ -165,4 +176,6 @@ Custom Return Types
    retworkx.NodeIndices
    retworkx.EdgeList
    retworkx.WeightedEdgeList
+   retworkx.PathMapping
+   retworkx.PathLengthMapping
    retworkx.Pos2DMapping
