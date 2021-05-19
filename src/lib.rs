@@ -3515,7 +3515,8 @@ where
     let tol = tol.unwrap_or(1e-6);
     let step = 0.1;
 
-    let mut weights: HashMap<(usize, usize), f64> = HashMap::with_capacity(2 * graph.graph.edge_count());
+    let mut weights: HashMap<(usize, usize), f64> =
+        HashMap::with_capacity(2 * graph.edge_count());
     for e in graph.edge_references() {
         let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)?;
         let source = e.source().index();
@@ -3523,7 +3524,7 @@ where
 
         weights.insert((source, target), w);
         weights.insert((target, source), w);
-    });
+    }
 
     let pos = match adaptive_cooling {
         Some(false) => {
