@@ -33,6 +33,7 @@ extensions = ['sphinx.ext.autodoc',
               'm2r2',
               'jupyter_sphinx.execute',
               'reno.sphinxext',
+              'sphinx.ext.intersphinx',
              ]
 html_static_path = ['_static']
 templates_path = ['_templates']
@@ -43,6 +44,7 @@ autodoc_default_options = {
     'inherited-members': None,
 }
 autoclass_content = 'both'
+intersphinx_mapping = {'matplotlib': ('https://matplotlib.org/stable/', None)}
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'colorful'
