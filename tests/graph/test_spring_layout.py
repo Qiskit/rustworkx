@@ -16,7 +16,6 @@ import retworkx
 
 
 class TestSpringLayout(unittest.TestCase):
-
     def setUp(self):
         self.graph = retworkx.PyGraph()
         node_a = self.graph.add_node(1)

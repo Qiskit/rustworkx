@@ -146,16 +146,16 @@ impl CoolingScheme for AdaptiveCoolingScheme {
 
 pub struct LinearCoolingScheme {
     _step: Nt,
-    _niter: usize,
+    _num_iter: usize,
     _dt: Nt,
 }
 
 impl LinearCoolingScheme {
-    pub fn new(step: Nt, niter: usize) -> Self {
+    pub fn new(step: Nt, num_iter: usize) -> Self {
         LinearCoolingScheme {
             _step: step,
-            _niter: niter,
-            _dt: step / (niter + 1) as Nt,
+            _num_iter: num_iter,
+            _dt: step / (num_iter + 1) as Nt,
         }
     }
 }
@@ -217,7 +217,7 @@ pub fn evolve<Ty, Fa, Fr, C>(
     f_a: Fa,
     f_r: Fr,
     mut cs: C,
-    niter: usize,
+    num_iter: usize,
     tol: f64,
     weights: HashMap<(usize, usize), f64>,
     scale: Option<Nt>,
@@ -231,7 +231,7 @@ where
 {
     let mut step = cs.update_step(std::f64::INFINITY);
 
-    for _ in 0..niter {
+    for _ in 0..num_iter {
         let mut energy = 0.0;
         let mut converged = true;
 

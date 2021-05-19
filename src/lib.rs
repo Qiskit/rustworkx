@@ -3476,7 +3476,7 @@ fn _spring_layout<Ty>(
     k: Option<f64>,
     p: Option<i32>,
     adaptive_cooling: Option<bool>,
-    niter: Option<usize>,
+    num_iter: Option<usize>,
     tol: Option<f64>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
@@ -3511,7 +3511,7 @@ where
     let f_a = layout::AttractiveForce::new(k);
     let f_r = layout::RepulsiveForce::new(k, p.unwrap_or(2));
 
-    let niter = niter.unwrap_or(50);
+    let num_iter = num_iter.unwrap_or(50);
     let tol = tol.unwrap_or(1e-6);
     let step = 0.1;
 
@@ -3528,17 +3528,17 @@ where
 
     let pos = match adaptive_cooling {
         Some(false) => {
-            let cs = layout::LinearCoolingScheme::new(step, niter);
+            let cs = layout::LinearCoolingScheme::new(step, num_iter);
             layout::evolve(
-                graph, vpos, fixed, f_a, f_r, cs, niter, tol, weights, scale,
-                center,
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
+                scale, center,
             )
         }
         _ => {
             let cs = layout::AdaptiveCoolingScheme::new(step);
             layout::evolve(
-                graph, vpos, fixed, f_a, f_r, cs, niter, tol, weights, scale,
-                center,
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
+                scale, center,
             )
         }
     };
@@ -3560,43 +3560,45 @@ where
 /// treating edges as springs holding nodes close, while treating nodes
 /// as repelling objects, sometimes called an anti-gravity force.
 /// Simulation continues until the positions are close to an equilibrium.
-//
+///
 /// :param PyGraph graph: Graph to be used.
-/// :param dict (default=None) pos:
-///     Initial node positions as a dictionary with node ids as keys and
-///     values as a coordinate list. If None, then use random initial positions.
-/// :param set (default=None) fixed: Nodes to keep fixed at initial position.
-///     Error raised if fixed specified and pos not.
-/// :param float (default=None) k:
-///     Optimal distance between nodes. If None the distance is set to
-///     1/sqrt(n) where n is the number of nodes.  Increase this value
-///     to move nodes farther apart.
-/// :param int (default=2) p:
-///     Repulsive force exponent.
-/// :param bool (default=True) adaptive_cooling:
-///     Use an adaptive cooling scheme. If set to False,
-///     a linear cooling scheme is used.
-/// :param int (default=50) niter:
-///     Maximum number of iterations.
-/// :param float (default = 1e-6) tol:
-//      Threshold for relative error in node position changes.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and values
+///     as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and ``pos`` is not. (``default=None``)
+/// :param float  k:
+///     Optimal distance between nodes. If ``None`` the distance is set to
+///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+///     to move nodes farther apart. (``default=None``)
+/// :param int p:
+///     Repulsive force exponent. (``default=2``)
+/// :param bool adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to ``False``,
+///     a linear cooling scheme is used. (``default=True``)
+/// :param int num_iter:
+///     Maximum number of iterations. (``default=50``)
+/// :param float tol:
+///     Threshold for relative error in node position changes.
 ///     The iteration stops if the error is below this threshold.
+///     (``default = 1e-6``)
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float
 ///     which will be used to represent the weight of the edge.
 /// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
 ///     this optional float value will be used for the weight/cost of each edge
-/// :param float or None (default=1) scale: Scale factor for positions.
-///     Not used unless fixed is None. If scale is None, no rescaling is performed.
-/// :param list center (default=None) – Coordinate pair around which to center
-///     the layout. Not used unless fixed is None.
+/// :param float|None scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is ``None``, no re-scaling is
+///     performed. (``default=1.0``)
+/// :param list center: Coordinate pair around which to center
+///     the layout. Not used unless fixed is ``None``. (``default=None``)
 /// :param int seed: An optional seed to use for the random number generator
 ///
 /// :returns: A dictionary of positions keyed by node id.
 /// :rtype: dict
 #[pyfunction]
 #[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
-                     niter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
                      center=None, seed=None, /)"]
 #[allow(clippy::too_many_arguments)]
 pub fn graph_spring_layout(
@@ -3607,7 +3609,7 @@ pub fn graph_spring_layout(
     k: Option<f64>,
     p: Option<i32>,
     adaptive_cooling: Option<bool>,
-    niter: Option<usize>,
+    num_iter: Option<usize>,
     tol: Option<f64>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
@@ -3623,7 +3625,7 @@ pub fn graph_spring_layout(
         k,
         p,
         adaptive_cooling,
-        niter,
+        num_iter,
         tol,
         weight_fn,
         default_weight,
@@ -3639,43 +3641,45 @@ pub fn graph_spring_layout(
 /// treating edges as springs holding nodes close, while treating nodes
 /// as repelling objects, sometimes called an anti-gravity force.
 /// Simulation continues until the positions are close to an equilibrium.
-//
-/// :param PyDiGraph graph: Graph to be used.
-/// :param dict (default=None) pos:
-///     Initial node positions as a dictionary with node ids as keys and
-///     values as a coordinate list. If None, then use random initial positions.
-/// :param set (default=None) fixed: Nodes to keep fixed at initial position.
-///     Error raised if fixed specified and pos not.
-/// :param float (default=None) k:
-///     Optimal distance between nodes. If None the distance is set to
-///     1/sqrt(n) where n is the number of nodes.  Increase this value
-///     to move nodes farther apart.
-/// :param int (default=2) p:
-///     Repulsive force exponent.
-/// :param bool (default=True) adaptive_cooling:
-///     Use an adaptive cooling scheme. If set to False,
-///     a linear cooling scheme is used.
-/// :param int (default=50) niter:
-///     Maximum number of iterations.
-/// :param float (default = 1e-6) tol:
-//      Threshold for relative error in node position changes.
+///
+/// :param PyGraph graph: Graph to be used.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and values
+///     as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and ``pos`` is not. (``default=None``)
+/// :param float  k:
+///     Optimal distance between nodes. If ``None`` the distance is set to
+///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+///     to move nodes farther apart. (``default=None``)
+/// :param int p:
+///     Repulsive force exponent. (``default=2``)
+/// :param bool adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to ``False``,
+///     a linear cooling scheme is used. (``default=True``)
+/// :param int num_iter:
+///     Maximum number of iterations. (``default=50``)
+/// :param float tol:
+///     Threshold for relative error in node position changes.
 ///     The iteration stops if the error is below this threshold.
+///     (``default = 1e-6``)
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float
 ///     which will be used to represent the weight of the edge.
 /// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
 ///     this optional float value will be used for the weight/cost of each edge
-/// :param float or None (default=1) scale: Scale factor for positions.
-///     Not used unless fixed is None. If scale is None, no rescaling is performed.
-/// :param list center (default=None) – Coordinate pair around which to center
-///     the layout. Not used unless fixed is None.
+/// :param float|None scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is ``None``, no re-scaling is
+///     performed. (``default=1.0``)
+/// :param list center: Coordinate pair around which to center
+///     the layout. Not used unless fixed is ``None``. (``default=None``)
 /// :param int seed: An optional seed to use for the random number generator
 ///
 /// :returns: A dictionary of positions keyed by node id.
 /// :rtype: dict
 #[pyfunction]
 #[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
-                     niter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
                      center=None, seed=None, /)"]
 #[allow(clippy::too_many_arguments)]
 pub fn digraph_spring_layout(
@@ -3686,7 +3690,7 @@ pub fn digraph_spring_layout(
     k: Option<f64>,
     p: Option<i32>,
     adaptive_cooling: Option<bool>,
-    niter: Option<usize>,
+    num_iter: Option<usize>,
     tol: Option<f64>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
@@ -3702,7 +3706,7 @@ pub fn digraph_spring_layout(
         k,
         p,
         adaptive_cooling,
-        niter,
+        num_iter,
         tol,
         weight_fn,
         default_weight,

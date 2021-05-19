@@ -741,10 +741,21 @@ def _graph_random_layout(graph, center=None, seed=None):
 
 
 @functools.singledispatch
-def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
-                  adaptive_cooling=True, niter=50, tol=1e-6,
-                  weight_fn=None, default_weight=1, scale=1,
-                  center=None, seed=None):
+def spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    p=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
 
@@ -759,7 +770,7 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
         Initial node positions as a dictionary with node ids as keys and values
         as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
     :param set fixed: Nodes to keep fixed at initial position.
-        Error raised if fixed specified and ``pos`` is not. (``default=None``) 
+        Error raised if fixed specified and ``pos`` is not. (``default=None``)
     :param float  k:
         Optimal distance between nodes. If ``None`` the distance is set to
         :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
@@ -769,12 +780,12 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
     :param bool adaptive_cooling:
         Use an adaptive cooling scheme. If set to ``False``,
         a linear cooling scheme is used. (``default=True``)
-    :param int niter:
+    :param int num_iter:
         Maximum number of iterations. (``default=50``)
     :param float tol:
         Threshold for relative error in node position changes.
         The iteration stops if the error is below this threshold.
-        (``default = 1e-6``) 
+        (``default = 1e-6``)
     :param weight_fn: An optional weight function for an edge. It will accept
         a single argument, the edge's weight object and will return a float
         which will be used to represent the weight of the edge.
@@ -794,23 +805,69 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
 
 
 @spring_layout.register(PyDiGraph)
-def _digraph_spring_layout(graph, pos=None, fixed=None, k=None, p=2,
-                           adaptive_cooling=True, niter=50, tol=1e-6,
-                           weight_fn=None, default_weight=1, scale=1,
-                           center=None, seed=None):
-    return digraph_spring_layout(graph, pos, fixed, k, p, adaptive_cooling,
-                                 niter, tol, weight_fn, default_weight, scale,
-                                 center, seed)
+def _digraph_spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    p=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    return digraph_spring_layout(
+        graph,
+        pos,
+        fixed,
+        k,
+        p,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
 
 
 @spring_layout.register(PyGraph)
-def _graph_spring_layout(graph, pos=None, fixed=None, k=None, p=2,
-                         adaptive_cooling=True, niter=50, tol=1e-6,
-                         weight_fn=None, default_weight=1, scale=1,
-                         center=None, seed=None):
-    return graph_spring_layout(graph, pos, fixed, k, p, adaptive_cooling,
-                               niter, tol, weight_fn, default_weight, scale,
-                               center, seed)
+def _graph_spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    p=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    return graph_spring_layout(
+        graph,
+        pos,
+        fixed,
+        k,
+        p,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
 
 
 def networkx_converter(graph):
