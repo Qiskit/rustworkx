@@ -755,35 +755,36 @@ def spring_layout(graph, pos=None, fixed=None, k=None, p=2,
 
     :param graph: Graph to be used. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
-    :param dict (default=None) pos:
+    :param dict pos:
         Initial node positions as a dictionary with node ids as keys and values
-        as a coordinate list. If None, then use random initial positions.
-    :param set (default=None) fixed: Nodes to keep fixed at initial position.
-        Error raised if fixed specified and pos not.
-    :param float (default=None) k:
-        Optimal distance between nodes. If None the distance is set to
-        1/sqrt(n) where n is the number of nodes.  Increase this value
-        to move nodes farther apart.
-    :param int (default=2) p:
-        Repulsive force exponent.
-    :param bool (default=True) adaptive_cooling:
-        Use an adaptive cooling scheme. If set to False,
-        a linear cooling scheme is used.
-    :param int (default=50) niter:
-        Maximum number of iterations.
-    :param float (default = 1e-6) tol:
+        as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+    :param set fixed: Nodes to keep fixed at initial position.
+        Error raised if fixed specified and ``pos`` is not. (``default=None``) 
+    :param float  k:
+        Optimal distance between nodes. If ``None`` the distance is set to
+        :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+        to move nodes farther apart. (``default=None``)
+    :param int p:
+        Repulsive force exponent. (``default=2``)
+    :param bool adaptive_cooling:
+        Use an adaptive cooling scheme. If set to ``False``,
+        a linear cooling scheme is used. (``default=True``)
+    :param int niter:
+        Maximum number of iterations. (``default=50``)
+    :param float tol:
         Threshold for relative error in node position changes.
         The iteration stops if the error is below this threshold.
+        (``default = 1e-6``) 
     :param weight_fn: An optional weight function for an edge. It will accept
         a single argument, the edge's weight object and will return a float
         which will be used to represent the weight of the edge.
     :param float (default=1) default_weight: If ``weight_fn`` isn't specified
         this optional float value will be used for the weight/cost of each edge
-    :param float or None (default=1) scale: Scale factor for positions.
-        Not used unless fixed is None. If scale is None, no rescaling is
-        performed.
-    :param list (default=None) center: Coordinate pair around which to center
-        the layout. Not used unless fixed is None.
+    :param float|None scale: Scale factor for positions.
+        Not used unless fixed is None. If scale is ``None``, no re-scaling is
+        performed. (``default=1.0``)
+    :param list center: Coordinate pair around which to center
+        the layout. Not used unless fixed is ``None``. (``default=None``)
     :param int seed: An optional seed to use for the random number generator
 
     :returns: A dictionary of positions keyed by node id.
