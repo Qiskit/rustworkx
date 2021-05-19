@@ -61,3 +61,13 @@ class TestSpringLayout(unittest.TestCase):
         self.assertEqual(len(res), 3)
         self.assertEqual(len(res[0]), 2)
         self.assertIsInstance(res[0][0], float)
+
+    def test_graph_with_removed_nodes(self):
+        graph = retworkx.PyDiGraph()
+        nodes = graph.add_nodes_from([0, 1, 2])
+        graph.remove_node(nodes[1])
+        res = retworkx.spring_layout(graph)
+        self.assertEqual(len(res), 2)
+        self.assertTrue(nodes[0] in res)
+        self.assertTrue(nodes[2] in res)
+        self.assertFalse(nodes[1] in res)
