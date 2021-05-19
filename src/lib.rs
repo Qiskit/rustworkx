@@ -3515,10 +3515,9 @@ where
     let tol = tol.unwrap_or(1e-6);
     let step = 0.1;
 
-    let mut weights: HashMap<(usize, usize), f64> = HashMap::default();
-    graph.edge_references().for_each(|e| {
-        let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)
-            .unwrap();
+    let mut weights: HashMap<(usize, usize), f64> = HashMap::with_capacity(2 * graph.graph.edge_count());
+    for e in graph.edge_references() {
+        let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)?;
         let source = e.source().index();
         let target = e.target().index();
 
