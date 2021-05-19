@@ -54,5 +54,6 @@ setup(
     install_requires=['numpy>=1.16.0'],
     extras_require={
         'mpl': ['matplotlib>=3.0'],
+        'pydot': ['pydot>=1.4', 'pillow>=5.4'],
     }
 )
