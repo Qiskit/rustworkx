@@ -340,9 +340,8 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
     edge_label_kwds = {
         k: v for k, v in kwds.items() if k in valid_edge_label_kwds}
 
-    # TODO: switch default to use spring layout when #280 is closed
     if pos is None:
-        pos = retworkx.random_layout(graph)  # default to random layout
+        pos = retworkx.spring_layout(graph)  # default to spring layout
 
     draw_nodes(graph, pos, **node_kwds)
     draw_edges(graph, pos, arrows=arrows, **edge_kwds)
