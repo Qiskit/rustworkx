@@ -114,3 +114,61 @@ class TestEdgeList(unittest.TestCase):
         self.assertFalse(graph.has_edge(2, 1))
         self.assertFalse(graph.has_edge(0, 2))
         self.assertEqual(graph.edges(), ["0", "1"])
+
+    def test_write_edge_list_empty_digraph(self):
+        path = os.path.join(tempfile.gettempdir(), "empty.txt")
+        graph = retworkx.PyDiGraph()
+        graph.write_edge_list(path)
+        self.addCleanup(os.remove, path)
+        with open(path, "rt") as edge_file:
+            self.assertEqual("", edge_file.read())
+
+    def test_write_edge_list_round_trip(self):
+        path = os.path.join(tempfile.gettempdir(), "round_trip.txt")
+        graph = retworkx.generators.directed_star_graph(5)
+        count = iter(range(5))
+
+        def weight_fn(edge):
+            return str(next(count))
+
+        graph.write_edge_list(path, weight_fn=weight_fn)
+        self.addCleanup(os.remove, path)
+        new_graph = retworkx.PyDiGraph.read_edge_list(path)
+        expected = [
+            (0, 1, "0"),
+            (0, 2, "1"),
+            (0, 3, "2"),
+            (0, 4, "3"),
+        ]
+        self.assertEqual(expected, new_graph.weighted_edge_list())
+
+    def test_custom_delim(self):
+        path = os.path.join(tempfile.gettempdir(), "custom_delim.txt")
+        graph = retworkx.generators.directed_path_graph(5)
+        graph.write_edge_list(path, deliminator=",")
+        self.addCleanup(os.remove, path)
+        expected = """0,1
+1,2
+2,3
+3,4
+"""
+        with open(path, "rt") as edge_file:
+            self.assertEqual(edge_file.read(), expected)
+
+    def test_invalid_return_type_weight_fn(self):
+        path = os.path.join(tempfile.gettempdir(), "fail.txt")
+        graph = retworkx.directed_gnm_random_graph(5, 4)
+        self.addCleanup(os.remove, path)
+        with self.assertRaises(TypeError):
+            graph.write_edge_list(path, weight_fn=lambda _: 4.5)
+
+    def test_weight_fn_raises(self):
+        path = os.path.join(tempfile.gettempdir(), "fail.txt")
+        graph = retworkx.directed_gnm_random_graph(5, 4)
+
+        def weight_fn(edge):
+            raise KeyError
+
+        self.addCleanup(os.remove, path)
+        with self.assertRaises(KeyError):
+            graph.write_edge_list(path, weight_fn=weight_fn)
