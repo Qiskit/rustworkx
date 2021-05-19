@@ -16,9 +16,8 @@ import retworkx
 
 
 class TestGNPRandomGraph(unittest.TestCase):
-
     def test_random_gnp_directed(self):
-        graph = retworkx.directed_gnp_random_graph(20, .5, seed=10)
+        graph = retworkx.directed_gnp_random_graph(20, 0.5, seed=10)
         self.assertEqual(len(graph), 20)
         self.assertEqual(len(graph.edges()), 104)
 
@@ -34,14 +33,14 @@ class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_directed_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            retworkx.directed_gnp_random_graph(-23, .5)
+            retworkx.directed_gnp_random_graph(-23, 0.5)
 
     def test_random_gnp_directed_invalid_probability(self):
         with self.assertRaises(ValueError):
             retworkx.directed_gnp_random_graph(23, 123.5)
 
     def test_random_gnp_undirected(self):
-        graph = retworkx.undirected_gnp_random_graph(20, .5, seed=10)
+        graph = retworkx.undirected_gnp_random_graph(20, 0.5, seed=10)
         self.assertEqual(len(graph), 20)
         self.assertEqual(len(graph.edges()), 105)
 
@@ -57,7 +56,7 @@ class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_undirected_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            retworkx.undirected_gnp_random_graph(-23, .5)
+            retworkx.undirected_gnp_random_graph(-23, 0.5)
 
     def test_random_gnp_undirected_invalid_probability(self):
         with self.assertRaises(ValueError):
@@ -65,7 +64,6 @@ class TestGNPRandomGraph(unittest.TestCase):
 
 
 class TestGNMRandomGraph(unittest.TestCase):
-
     def test_random_gnm_directed(self):
         graph = retworkx.directed_gnm_random_graph(20, 100)
         self.assertEqual(len(graph), 20)
@@ -149,3 +147,53 @@ class TestGNMRandomGraph(unittest.TestCase):
     def test_random_gnm_undirected_invalid_probability(self):
         with self.assertRaises(ValueError):
             retworkx.undirected_gnm_random_graph(23, -5)
+
+
+class TestGeometricRandomGraph(unittest.TestCase):
+    def test_random_geometric_empty(self):
+        graph = retworkx.random_geometric_graph(20, 0)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_geometric_complete(self):
+        r = 1.42  # > sqrt(2)
+        graph = retworkx.random_geometric_graph(10, r)
+        self.assertEqual(len(graph), 10)
+        self.assertEqual(len(graph.edges()), 45)
+
+    def test_random_geometric_same_seed(self):
+        # with other arguments equal, same seed results in same graph
+        graph_s1 = retworkx.random_geometric_graph(20, 0.5, seed=10)
+        graph_s2 = retworkx.random_geometric_graph(20, 0.5, seed=10)
+        self.assertEqual(graph_s1.edge_list(), graph_s2.edge_list())
+
+    def test_random_geometric_dim(self):
+        graph = retworkx.random_geometric_graph(10, 0.5, dim=3)
+        self.assertEqual(len(graph[0]["pos"]), 3)
+
+    def test_random_geometric_pos(self):
+        pos = [[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]
+        graph = retworkx.random_geometric_graph(3, 0.15, pos=pos)
+        self.assertEqual(set(graph.edge_list()), {(0, 1), (1, 2)})
+        for i in range(3):
+            self.assertEqual(graph[i]["pos"], pos[i])
+
+    def test_random_geometric_pos_1norm(self):
+        pos = [[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]
+        graph = retworkx.random_geometric_graph(3, 0.21, pos=pos, p=1.0)
+        self.assertEqual(set(graph.edge_list()), {(0, 1), (1, 2)})
+
+    def test_random_geometric_pos_inf_norm(self):
+        pos = [[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]
+        graph = retworkx.random_geometric_graph(
+            3, 0.11, pos=pos, p=float("inf")
+        )
+        self.assertEqual(set(graph.edge_list()), {(0, 1), (1, 2)})
+
+    def test_random_geometric_num_nodes_invalid(self):
+        with self.assertRaises(ValueError):
+            retworkx.random_geometric_graph(0, 1.0)
+
+    def test_random_geometric_pos_num_nodes_incomp(self):
+        with self.assertRaises(ValueError):
+            retworkx.random_geometric_graph(3, 0.15, pos=[[0.5, 0.5]])

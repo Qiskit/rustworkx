@@ -285,6 +285,43 @@ Graph Modifiers
 (note the retworkx version links to the :class:`~retworkx.PyDiGraph` version,
 but there are also equivalent :class:`~retworkx.PyGraph` methods available)
 
+.. _networkx_converter:
+
+Converting from a networkx graph
+================================
+
+If you're using a function or an external library that is already generating a
+networkx graph then you can use :func:`retworkx.networkx_converter` to convert
+that networkx ``Graph`` object into an equivalent retworkx
+:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph` object. Note that
+networkx is **not** a dependency for retworkx and you are responsible for
+installing networkx to use this function. Accordingly, there is not equivalent
+function provided to convert the reverse direction (because doing so would add
+an unwanted dependency on networkx, even an optional one) but writing such a
+function is straightforward, for example::
+
+    import networkx as nx
+    import retworkx as rx
+
+
+    def convert_retworkx_to_networkx(graph):
+        """Convert a retworkx PyGraph or PyDiGraph to a networkx graph."""
+        edge_list = [(
+            graph[x[0]], graph[x[1]],
+            {'weight': x[2]}) for x in graph.weighted_edge_list()]
+
+        if isinstance(graph, rx.PyGraph):
+            if graph.multigraph:
+                return nx.MultiGraph(edge_list)
+            else:
+                return nx.Graph(edge_list)
+        else:
+            if graph.multigraph:
+                return nx.MultiDiGraph(edge_list)
+            else:
+                return nx.DiGraph(edge_list)
+
+
 Functionality Gaps
 ==================
 

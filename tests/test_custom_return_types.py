@@ -18,52 +18,50 @@ import retworkx
 
 
 class TestBFSSuccessorsComparisons(unittest.TestCase):
-
     def setUp(self):
         self.dag = retworkx.PyDAG()
-        node_a = self.dag.add_node('a')
-        self.dag.add_child(node_a, 'b', "Edgy")
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
 
     def test__eq__match(self):
-        self.assertTrue(retworkx.bfs_successors(self.dag, 0) == [('a', ['b'])])
+        self.assertTrue(retworkx.bfs_successors(self.dag, 0) == [("a", ["b"])])
 
     def test__eq__not_match(self):
-        self.assertFalse(retworkx.bfs_successors(
-            self.dag, 0) == [('b', ['c'])])
+        self.assertFalse(retworkx.bfs_successors(self.dag, 0) == [("b", ["c"])])
 
     def test_eq_not_match_inner(self):
-        self.assertFalse(retworkx.bfs_successors(
-            self.dag, 0) == [('a', ['c'])])
+        self.assertFalse(retworkx.bfs_successors(self.dag, 0) == [("a", ["c"])])
 
     def test__eq__different_length(self):
-        self.assertFalse(retworkx.bfs_successors(
-            self.dag, 0) == [('a', ['b']), ('b', ['c'])])
+        self.assertFalse(
+            retworkx.bfs_successors(self.dag, 0) == [("a", ["b"]), ("b", ["c"])]
+        )
 
     def test__eq__invalid_type(self):
         with self.assertRaises(TypeError):
-            retworkx.bfs_successors(self.dag, 0) == ['a']
+            retworkx.bfs_successors(self.dag, 0) == ["a"]
 
     def test__ne__match(self):
-        self.assertFalse(retworkx.bfs_successors(
-            self.dag, 0) != [('a', ['b'])])
+        self.assertFalse(retworkx.bfs_successors(self.dag, 0) != [("a", ["b"])])
 
     def test__ne__not_match(self):
-        self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [('b', ['c'])])
+        self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [("b", ["c"])])
 
     def test_ne_not_match_inner(self):
-        self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [('a', ['c'])])
+        self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [("a", ["c"])])
 
     def test__ne__different_length(self):
-        self.assertTrue(retworkx.bfs_successors(
-            self.dag, 0) != [('a', ['b']), ('b', ['c'])])
+        self.assertTrue(
+            retworkx.bfs_successors(self.dag, 0) != [("a", ["b"]), ("b", ["c"])]
+        )
 
     def test__ne__invalid_type(self):
         with self.assertRaises(TypeError):
-            retworkx.bfs_successors(self.dag, 0) != ['a']
+            retworkx.bfs_successors(self.dag, 0) != ["a"]
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
-            retworkx.bfs_successors(self.dag, 0) > [('b', ['c'])]
+            retworkx.bfs_successors(self.dag, 0) > [("b", ["c"])]
 
     def test_deepcopy(self):
         bfs = retworkx.bfs_successors(self.dag, 0)
@@ -88,18 +86,17 @@ class TestBFSSuccessorsComparisons(unittest.TestCase):
         self.assertEqual(hash_res, hash(res))
 
     def test_hash_invalid_type(self):
-        self.dag.add_child(0, [1, 2, 3], 'edgy')
+        self.dag.add_child(0, [1, 2, 3], "edgy")
         res = retworkx.bfs_successors(self.dag, 0)
         with self.assertRaises(TypeError):
             hash(res)
 
 
 class TestNodeIndicesComparisons(unittest.TestCase):
-
     def setUp(self):
         self.dag = retworkx.PyDAG()
-        node_a = self.dag.add_node('a')
-        self.dag.add_child(node_a, 'b', "Edgy")
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
 
     def test__eq__match(self):
         self.assertTrue(self.dag.node_indexes() == [0, 1])
@@ -112,7 +109,7 @@ class TestNodeIndicesComparisons(unittest.TestCase):
 
     def test__eq__invalid_type(self):
         with self.assertRaises(TypeError):
-            self.dag.node_indexes() == ['a', None]
+            self.dag.node_indexes() == ["a", None]
 
     def test__ne__match(self):
         self.assertFalse(self.dag.node_indexes() != [0, 1])
@@ -125,7 +122,7 @@ class TestNodeIndicesComparisons(unittest.TestCase):
 
     def test__ne__invalid_type(self):
         with self.assertRaises(TypeError):
-            self.dag.node_indexes() != ['a', None]
+            self.dag.node_indexes() != ["a", None]
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
@@ -155,11 +152,10 @@ class TestNodeIndicesComparisons(unittest.TestCase):
 
 
 class TestEdgeListComparisons(unittest.TestCase):
-
     def setUp(self):
         self.dag = retworkx.PyDAG()
-        node_a = self.dag.add_node('a')
-        self.dag.add_child(node_a, 'b', "Edgy")
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
 
     def test__eq__match(self):
         self.assertTrue(self.dag.edge_list() == [(0, 1)])
@@ -171,7 +167,7 @@ class TestEdgeListComparisons(unittest.TestCase):
         self.assertFalse(self.dag.edge_list() == [(0, 1), (2, 3)])
 
     def test__eq__invalid_type(self):
-        self.assertFalse(self.dag.edge_list() == ['a', None])
+        self.assertFalse(self.dag.edge_list() == ["a", None])
 
     def test__ne__match(self):
         self.assertFalse(self.dag.edge_list() != [(0, 1)])
@@ -183,7 +179,7 @@ class TestEdgeListComparisons(unittest.TestCase):
         self.assertTrue(self.dag.edge_list() != [(0, 1), (2, 3)])
 
     def test__ne__invalid_type(self):
-        self.assertTrue(self.dag.edge_list() != ['a', None])
+        self.assertTrue(self.dag.edge_list() != ["a", None])
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
@@ -213,41 +209,41 @@ class TestEdgeListComparisons(unittest.TestCase):
 
 
 class TestWeightedEdgeListComparisons(unittest.TestCase):
-
     def setUp(self):
         self.dag = retworkx.PyDAG()
-        node_a = self.dag.add_node('a')
-        self.dag.add_child(node_a, 'b', "Edgy")
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
 
     def test__eq__match(self):
-        self.assertTrue(self.dag.weighted_edge_list() == [(0, 1, 'Edgy')])
+        self.assertTrue(self.dag.weighted_edge_list() == [(0, 1, "Edgy")])
 
     def test__eq__not_match(self):
         self.assertFalse(self.dag.weighted_edge_list() == [(1, 2, None)])
 
     def test__eq__different_length(self):
         self.assertFalse(
-            self.dag.weighted_edge_list() == [
-                (0, 1, 'Edgy'), (2, 3, 'Not Edgy')])
+            self.dag.weighted_edge_list()
+            == [(0, 1, "Edgy"), (2, 3, "Not Edgy")]
+        )
 
     def test__eq__invalid_type(self):
-        self.assertFalse(self.dag.weighted_edge_list() == ['a', None])
+        self.assertFalse(self.dag.weighted_edge_list() == ["a", None])
 
     def test__ne__match(self):
-        self.assertFalse(self.dag.weighted_edge_list() != [(0, 1, 'Edgy')])
+        self.assertFalse(self.dag.weighted_edge_list() != [(0, 1, "Edgy")])
 
     def test__ne__not_match(self):
-        self.assertTrue(self.dag.weighted_edge_list() != [(1, 2, 'Not Edgy')])
+        self.assertTrue(self.dag.weighted_edge_list() != [(1, 2, "Not Edgy")])
 
     def test__ne__different_length(self):
         self.assertTrue(self.dag.node_indexes() != [0, 1, 2, 3])
 
     def test__ne__invalid_type(self):
-        self.assertTrue(self.dag.weighted_edge_list() != ['a', None])
+        self.assertTrue(self.dag.weighted_edge_list() != ["a", None])
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
-            self.dag.weighted_edge_list() > [(2, 1, 'Not Edgy')]
+            self.dag.weighted_edge_list() > [(2, 1, "Not Edgy")]
 
     def test_deepcopy(self):
         edges = self.dag.weighted_edge_list()
@@ -272,17 +268,290 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
         self.assertEqual(hash_res, hash(res))
 
     def test_hash_invalid_type(self):
-        self.dag.add_child(0, 'c', ['edgy', 'not_edgy'])
+        self.dag.add_child(0, "c", ["edgy", "not_edgy"])
         res = self.dag.weighted_edge_list()
         with self.assertRaises(TypeError):
             hash(res)
 
 
-class TestPos2DMapping(unittest.TestCase):
+class TestPathMapping(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
 
+    def test__eq__match(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 1]}
+        )
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {2: [0, 1]}
+        )
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 2]}
+        )
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0)
+            == {1: [0, 1], 2: [0, 2]}
+        )
+
+    def test_eq__same_type(self):
+        self.assertEqual(
+            retworkx.dijkstra_shortest_paths(self.dag, 0),
+            retworkx.dijkstra_shortest_paths(self.dag, 0),
+        )
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == ["a", None]
+        )
+
+    def test__eq__invalid_inner_type(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) == {0: {"a": None}}
+        )
+
+    def test__ne__match(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 1]}
+        )
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != {2: [0, 1]}
+        )
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 2]}
+        )
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0)
+            != {1: [0, 1], 2: [0, 2]}
+        )
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_paths(self.dag, 0) != ["a", None]
+        )
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.dijkstra_shortest_paths(self.dag, 0) > {1: [0, 2]}
+
+    def test_deepcopy(self):
+        paths = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        paths_copy = copy.deepcopy(paths)
+        self.assertEqual(paths, paths_copy)
+
+    def test_pickle(self):
+        paths = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        paths_pickle = pickle.dumps(paths)
+        paths_copy = pickle.loads(paths_pickle)
+        self.assertEqual(paths, paths_copy)
+
+    def test_str(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        self.assertEqual("PathMapping{1: [0, 1]}", str(res))
+
+    def test_hash(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = retworkx.dijkstra_shortest_paths(self.dag, 0).keys()
+        self.assertEqual([1], list(keys))
+
+    def test_values(self):
+        values = retworkx.dijkstra_shortest_paths(self.dag, 0).values()
+        self.assertEqual([[0, 1]], list(values))
+
+    def test_items(self):
+        items = retworkx.dijkstra_shortest_paths(self.dag, 0).items()
+        self.assertEqual([(1, [0, 1])], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(retworkx.dijkstra_shortest_paths(self.dag, 0))
+        output = list(mapping_iter)
+        self.assertEqual(output, [1])
+
+    def test_contains(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        self.assertIn(1, res)
+
+    def test_not_contains(self):
+        res = retworkx.dijkstra_shortest_paths(self.dag, 0)
+        self.assertNotIn(0, res)
+
+
+class TestPathLengthMapping(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
+        self.fn = lambda _: 1.0
+
+    def test__eq__match(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            == {1: 1.0}
+        )
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            == {2: 1.0}
+        )
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            == {1: 2.0}
+        )
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            == {1: 1.0, 2: 2.0}
+        )
+
+    def test_eq__same_type(self):
+        self.assertEqual(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn),
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn),
+        )
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            == ["a", None]
+        )
+
+    def test__eq__invalid_inner_type(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            == {0: "a"}
+        )
+
+    def test__ne__match(self):
+        self.assertFalse(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            != {1: 1.0}
+        )
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            != {2: 1.0}
+        )
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            != {1: 2.0}
+        )
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            != {1: 1.0, 2: 2.0}
+        )
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+            != ["a", None]
+        )
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) > {
+                1: 1.0
+            }
+
+    def test_deepcopy(self):
+        paths = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        paths_copy = copy.deepcopy(paths)
+        self.assertEqual(paths, paths_copy)
+
+    def test_pickle(self):
+        paths = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        paths_pickle = pickle.dumps(paths)
+        paths_copy = pickle.loads(paths_pickle)
+        self.assertEqual(paths, paths_copy)
+
+    def test_str(self):
+        res = retworkx.dijkstra_shortest_path_lengths(
+            self.dag, 0, lambda _: 3.14
+        )
+        self.assertEqual("PathLengthMapping{1: 3.14}", str(res))
+
+    def test_hash(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = retworkx.dijkstra_shortest_path_lengths(
+            self.dag, 0, self.fn
+        ).keys()
+        self.assertEqual([1], list(keys))
+
+    def test_values(self):
+        values = retworkx.dijkstra_shortest_path_lengths(
+            self.dag, 0, self.fn
+        ).values()
+        self.assertEqual([1.0], list(values))
+
+    def test_items(self):
+        items = retworkx.dijkstra_shortest_path_lengths(
+            self.dag, 0, self.fn
+        ).items()
+        self.assertEqual([(1, 1.0)], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        )
+        output = list(mapping_iter)
+        self.assertEqual(output, [1])
+
+    def test_contains(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        self.assertIn(1, res)
+
+    def test_not_contains(self):
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
+        self.assertNotIn(0, res)
+
+
+class TestPos2DMapping(unittest.TestCase):
     def setUp(self):
         self.dag = retworkx.PyDiGraph()
-        self.dag.add_node('a')
+        self.dag.add_node("a")
 
     def test__eq__match(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
@@ -290,11 +559,13 @@ class TestPos2DMapping(unittest.TestCase):
 
     def test__eq__not_match_keys(self):
         self.assertFalse(
-            retworkx.random_layout(self.dag, seed=10244242) == {2: 1.0})
+            retworkx.random_layout(self.dag, seed=10244242) == {2: 1.0}
+        )
 
     def test__eq__not_match_values(self):
         self.assertFalse(
-            retworkx.random_layout(self.dag, seed=10244242) == {1: 2.0})
+            retworkx.random_layout(self.dag, seed=10244242) == {1: 2.0}
+        )
 
     def test__eq__different_length(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
@@ -303,11 +574,13 @@ class TestPos2DMapping(unittest.TestCase):
     def test_eq__same_type(self):
         self.assertEqual(
             retworkx.random_layout(self.dag, seed=10244242),
-            retworkx.random_layout(self.dag, seed=10244242))
+            retworkx.random_layout(self.dag, seed=10244242),
+        )
 
     def test__eq__invalid_type(self):
         self.assertFalse(
-            retworkx.random_layout(self.dag, seed=10244242) == {'a': None})
+            retworkx.random_layout(self.dag, seed=10244242) == {"a": None}
+        )
 
     def test__ne__match(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
@@ -315,11 +588,13 @@ class TestPos2DMapping(unittest.TestCase):
 
     def test__ne__not_match(self):
         self.assertTrue(
-            retworkx.random_layout(self.dag, seed=10244242) != {2: 1.0})
+            retworkx.random_layout(self.dag, seed=10244242) != {2: 1.0}
+        )
 
     def test__ne__not_match_values(self):
         self.assertTrue(
-            retworkx.random_layout(self.dag, seed=10244242) != {1: 2.0})
+            retworkx.random_layout(self.dag, seed=10244242) != {1: 2.0}
+        )
 
     def test__ne__different_length(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
@@ -328,7 +603,8 @@ class TestPos2DMapping(unittest.TestCase):
 
     def test__ne__invalid_type(self):
         self.assertTrue(
-            retworkx.random_layout(self.dag, seed=10244242) != ['a', None])
+            retworkx.random_layout(self.dag, seed=10244242) != ["a", None]
+        )
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
@@ -349,7 +625,8 @@ class TestPos2DMapping(unittest.TestCase):
         res = retworkx.random_layout(self.dag, seed=10244242)
         self.assertEqual(
             "Pos2DMapping{0: (0.4883489113112722, 0.6545867364101975)}",
-            str(res))
+            str(res),
+        )
 
     def test_hash(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
@@ -374,8 +651,9 @@ class TestPos2DMapping(unittest.TestCase):
 
     def test_items(self):
         items = retworkx.random_layout(self.dag, seed=10244242).items()
-        self.assertEqual([(0, [0.4883489113112722, 0.6545867364101975])],
-                         list(items))
+        self.assertEqual(
+            [(0, [0.4883489113112722, 0.6545867364101975])], list(items)
+        )
 
     def test_iter(self):
         mapping_iter = iter(retworkx.random_layout(self.dag, seed=10244242))
