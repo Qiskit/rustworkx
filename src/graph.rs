@@ -1237,6 +1237,7 @@ impl PyGraph {
                 None => buf_writer.write_all(b"\n"),
             }?;
         }
+        buf_writer.flush()?;
         Ok(())
     }
 
