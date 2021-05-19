@@ -3474,7 +3474,7 @@ fn _spring_layout<Ty>(
     pos: Option<HashMap<usize, layout::Point>>,
     fixed: Option<HashSet<usize>>,
     k: Option<f64>,
-    p: Option<i32>,
+    repulsive_exponent: Option<i32>,
     adaptive_cooling: Option<bool>,
     num_iter: Option<usize>,
     tol: Option<f64>,
@@ -3509,7 +3509,7 @@ where
     let fixed = fixed.unwrap_or_default();
     let k = k.unwrap_or(1.0 / (graph.node_count() as f64).sqrt());
     let f_a = layout::AttractiveForce::new(k);
-    let f_r = layout::RepulsiveForce::new(k, p.unwrap_or(2));
+    let f_r = layout::RepulsiveForce::new(k, repulsive_exponent.unwrap_or(2));
 
     let num_iter = num_iter.unwrap_or(50);
     let tol = tol.unwrap_or(1e-6);
@@ -3571,7 +3571,7 @@ where
 ///     Optimal distance between nodes. If ``None`` the distance is set to
 ///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
 ///     to move nodes farther apart. (``default=None``)
-/// :param int p:
+/// :param int repulsive_exponent:
 ///     Repulsive force exponent. (``default=2``)
 /// :param bool adaptive_cooling:
 ///     Use an adaptive cooling scheme. If set to ``False``,
@@ -3597,7 +3597,7 @@ where
 /// :returns: A dictionary of positions keyed by node id.
 /// :rtype: dict
 #[pyfunction]
-#[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
+#[text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
                      num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
                      center=None, seed=None, /)"]
 #[allow(clippy::too_many_arguments)]
@@ -3607,7 +3607,7 @@ pub fn graph_spring_layout(
     pos: Option<HashMap<usize, layout::Point>>,
     fixed: Option<HashSet<usize>>,
     k: Option<f64>,
-    p: Option<i32>,
+    repulsive_exponent: Option<i32>,
     adaptive_cooling: Option<bool>,
     num_iter: Option<usize>,
     tol: Option<f64>,
@@ -3623,7 +3623,7 @@ pub fn graph_spring_layout(
         pos,
         fixed,
         k,
-        p,
+        repulsive_exponent,
         adaptive_cooling,
         num_iter,
         tol,
@@ -3652,7 +3652,7 @@ pub fn graph_spring_layout(
 ///     Optimal distance between nodes. If ``None`` the distance is set to
 ///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
 ///     to move nodes farther apart. (``default=None``)
-/// :param int p:
+/// :param int repulsive_exponent:
 ///     Repulsive force exponent. (``default=2``)
 /// :param bool adaptive_cooling:
 ///     Use an adaptive cooling scheme. If set to ``False``,
@@ -3678,7 +3678,7 @@ pub fn graph_spring_layout(
 /// :returns: A dictionary of positions keyed by node id.
 /// :rtype: dict
 #[pyfunction]
-#[text_signature = "(graph, pos=None, fixed=None, k=None, p=2, adaptive_cooling=True,
+#[text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
                      num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
                      center=None, seed=None, /)"]
 #[allow(clippy::too_many_arguments)]
@@ -3688,7 +3688,7 @@ pub fn digraph_spring_layout(
     pos: Option<HashMap<usize, layout::Point>>,
     fixed: Option<HashSet<usize>>,
     k: Option<f64>,
-    p: Option<i32>,
+    repulsive_exponent: Option<i32>,
     adaptive_cooling: Option<bool>,
     num_iter: Option<usize>,
     tol: Option<f64>,
@@ -3704,7 +3704,7 @@ pub fn digraph_spring_layout(
         pos,
         fixed,
         k,
-        p,
+        repulsive_exponent,
         adaptive_cooling,
         num_iter,
         tol,

@@ -746,7 +746,7 @@ def spring_layout(
     pos=None,
     fixed=None,
     k=None,
-    p=2,
+    repulsive_exponent=2,
     adaptive_cooling=True,
     num_iter=50,
     tol=1e-6,
@@ -768,14 +768,15 @@ def spring_layout(
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
     :param dict pos:
         Initial node positions as a dictionary with node ids as keys and values
-        as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+        as a coordinate list. If ``None``, then use random initial positions.
+        (``default=None``)
     :param set fixed: Nodes to keep fixed at initial position.
         Error raised if fixed specified and ``pos`` is not. (``default=None``)
     :param float  k:
         Optimal distance between nodes. If ``None`` the distance is set to
-        :math:`\\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
-        to move nodes farther apart. (``default=None``)
-    :param int p:
+        :math:`\\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.
+        Increase this value to move nodes farther apart. (``default=None``)
+    :param int repulsive_exponent:
         Repulsive force exponent. (``default=2``)
     :param bool adaptive_cooling:
         Use an adaptive cooling scheme. If set to ``False``,
@@ -810,7 +811,7 @@ def _digraph_spring_layout(
     pos=None,
     fixed=None,
     k=None,
-    p=2,
+    repulsive_exponent=2,
     adaptive_cooling=True,
     num_iter=50,
     tol=1e-6,
@@ -825,7 +826,7 @@ def _digraph_spring_layout(
         pos,
         fixed,
         k,
-        p,
+        repulsive_exponent,
         adaptive_cooling,
         num_iter,
         tol,
@@ -843,7 +844,7 @@ def _graph_spring_layout(
     pos=None,
     fixed=None,
     k=None,
-    p=2,
+    repulsive_exponent=2,
     adaptive_cooling=True,
     num_iter=50,
     tol=1e-6,
@@ -858,7 +859,7 @@ def _graph_spring_layout(
         pos,
         fixed,
         k,
-        p,
+        repulsive_exponent,
         adaptive_cooling,
         num_iter,
         tol,
