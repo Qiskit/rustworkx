@@ -31,15 +31,6 @@ fn l2norm(x: Point) -> Nt {
     (x[0] * x[0] + x[1] * x[1]).sqrt()
 }
 
-#[inline]
-fn max(x: Nt, y: Nt) -> Nt {
-    if x > y {
-        x
-    } else {
-        y
-    }
-}
-
 pub trait Force {
     // evaluate force between points x, y
     // given the difference x - y and the l2 - norm ||x - y||.
@@ -55,7 +46,7 @@ pub trait Force {
 
         for (y, w) in ys {
             let d = [y[0] - x[0], y[1] - x[1]];
-            let dnorm = max(l2norm(d), LBOUND);
+            let dnorm = l2norm(d).max(LBOUND);
             let f = w * self.eval(&d, dnorm);
 
             ftot[0] += f * d[0] / dnorm;
@@ -189,7 +180,7 @@ fn rescale(pos: &mut Vec<Point>, scale: Nt, indices: Vec<usize>) {
         *px -= mu[0];
         *py -= mu[1];
 
-        let pm = max(px.abs(), py.abs());
+        let pm = px.abs().max(py.abs());
         if lim < pm {
             lim = pm;
         }
@@ -260,7 +251,7 @@ where
             let f2 = f[0] * f[0] + f[1] * f[1];
             energy += f2;
 
-            let fnorm = max(f2.sqrt(), LBOUND);
+            let fnorm = f2.sqrt().max(LBOUND);
             let dx = step * f[0] / fnorm;
             let dy = step * f[1] / fnorm;
             pos[v][0] += dx;
