@@ -773,7 +773,7 @@ def spring_layout(
         Error raised if fixed specified and ``pos`` is not. (``default=None``)
     :param float  k:
         Optimal distance between nodes. If ``None`` the distance is set to
-        :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+        :math:`\\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
         to move nodes farther apart. (``default=None``)
     :param int p:
         Repulsive force exponent. (``default=2``)
