@@ -27,6 +27,7 @@ def pydot_draw(
     graph_attr=None,
     filename=None,
     image_type=None,
+    method=None,
 ):
     """Draw a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph` object
     using graphviz via PyDot
@@ -36,7 +37,8 @@ def pydot_draw(
         This requires that pydot, pillow, and graphviz be installed. Pydot can
         be installed via pip with ``pip install pydot pillow`` however graphviz
         will need to be installed separately. You can refer to the
-        `Graphviz documentation <https://graphviz.org/download/#executable-packages>`__
+        Graphviz
+        `documentation <https://graphviz.org/download/#executable-packages>`__
         for instructions on how to install it
 
     :param :class:`~retworkx.PyGraph`|:class:`~retworkx.PyDiGraph` graph: The
@@ -66,6 +68,12 @@ def pydot_draw(
         ``'plain'``, ``'plain-ext'``, ``'png'``, ``'ps'``, ``'ps2'``,
         ``'svg'``, ``'svgz'``, ``'vml'``, ``'vmlz'``, ``'vrml'``, ``'vtx'``,
         ``'wbmp'``, ``'xdot'``, ``'xlib'``]
+    :param str method: The layout method/Graphviz command method to use for
+        generating the visualization. Available options are ``'dot'``,
+        ``'twopi'``, ``'neato'``, ``'circo'``, ``'fdp'``, and ``'sfdp'``.
+        You can refer to the
+        `Graphviz documentation <https://graphviz.org/documentation/>` for more
+        details on the different layout methods. By default ``'dot'`` is used.
 
     :returns: A ``PIL.Image`` object of the generated visualization, if
         ``filename`` is not specified. If ``filename`` is specified then
@@ -86,14 +94,19 @@ def pydot_draw(
     else:
         output_format = image_type
 
+    if method is None:
+        prog = "dot"
+    else:
+        prog = method
+
     if not filename:
         with tempfile.TemporaryDirectory() as tmpdirname:
             tmp_path = os.path.join(tmpdirname, "dag.png")
-            dot.write(tmp_path, format=output_format)
+            dot.write(tmp_path, format=output_format, prog=prog)
             with Image.open(tmp_path) as temp_image:
                 image = temp_image.copy()
             os.remove(tmp_path)
             return image
     else:
-        dot.write(filename, format=output_format)
+        dot.write(filename, format=output_format, prog=prog)
         return None
