@@ -72,8 +72,9 @@ def pydot_draw(
         generating the visualization. Available options are ``'dot'``,
         ``'twopi'``, ``'neato'``, ``'circo'``, ``'fdp'``, and ``'sfdp'``.
         You can refer to the
-        `Graphviz documentation <https://graphviz.org/documentation/>` for more
-        details on the different layout methods. By default ``'dot'`` is used.
+        `Graphviz documentation <https://graphviz.org/documentation/>`__ for
+        more details on the different layout methods. By default ``'dot'`` is
+        used.
 
     :returns: A ``PIL.Image`` object of the generated visualization, if
         ``filename`` is not specified. If ``filename`` is specified then
