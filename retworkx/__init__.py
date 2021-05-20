@@ -740,6 +740,137 @@ def _graph_random_layout(graph, center=None, seed=None):
     return graph_random_layout(graph, center=center, seed=seed)
 
 
+@functools.singledispatch
+def spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    """
+    Position nodes using Fruchterman-Reingold force-directed algorithm.
+
+    The algorithm simulates a force-directed representation of the network
+    treating edges as springs holding nodes close, while treating nodes
+    as repelling objects, sometimes called an anti-gravity force.
+    Simulation continues until the positions are close to an equilibrium.
+
+    :param graph: Graph to be used. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param dict pos:
+        Initial node positions as a dictionary with node ids as keys and values
+        as a coordinate list. If ``None``, then use random initial positions.
+        (``default=None``)
+    :param set fixed: Nodes to keep fixed at initial position.
+        Error raised if fixed specified and ``pos`` is not. (``default=None``)
+    :param float  k:
+        Optimal distance between nodes. If ``None`` the distance is set to
+        :math:`\\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.
+        Increase this value to move nodes farther apart. (``default=None``)
+    :param int repulsive_exponent:
+        Repulsive force exponent. (``default=2``)
+    :param bool adaptive_cooling:
+        Use an adaptive cooling scheme. If set to ``False``,
+        a linear cooling scheme is used. (``default=True``)
+    :param int num_iter:
+        Maximum number of iterations. (``default=50``)
+    :param float tol:
+        Threshold for relative error in node position changes.
+        The iteration stops if the error is below this threshold.
+        (``default = 1e-6``)
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float
+        which will be used to represent the weight of the edge.
+    :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+        this optional float value will be used for the weight/cost of each edge
+    :param float|None scale: Scale factor for positions.
+        Not used unless fixed is None. If scale is ``None``, no re-scaling is
+        performed. (``default=1.0``)
+    :param list center: Coordinate pair around which to center
+        the layout. Not used unless fixed is ``None``. (``default=None``)
+    :param int seed: An optional seed to use for the random number generator
+
+    :returns: A dictionary of positions keyed by node id.
+    :rtype: dict
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@spring_layout.register(PyDiGraph)
+def _digraph_spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    return digraph_spring_layout(
+        graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+
+
+@spring_layout.register(PyGraph)
+def _graph_spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    return graph_spring_layout(
+        graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+
+
 def networkx_converter(graph):
     """Convert a networkx graph object into a retworkx graph object.
 
