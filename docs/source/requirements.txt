@@ -6,3 +6,4 @@ pydot
 pillow>=4.2.1
 reno>=3.2.0
 qiskit-sphinx-theme>=1.7
+matplotlib>=3.4

@@ -134,6 +134,7 @@ type functions in the algorithms API but can be run with a
    retworkx.transitivity
    retworkx.core_number
    retworkx.random_layout
+   retworkx.spring_layout
 
 Layout Functions
 ================
@@ -142,6 +143,7 @@ Layout Functions
    :toctree: stubs
 
    retworkx.random_layout
+   retworkx.spring_layout
    retworkx.graph_random_layout
    retworkx.digraph_random_layout
 
