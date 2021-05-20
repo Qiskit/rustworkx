@@ -667,3 +667,114 @@ class TestPos2DMapping(unittest.TestCase):
     def test_not_contains(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
         self.assertNotIn(1, res)
+
+
+class TestEdgeIndices(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDiGraph()
+        self.dag.add_node("a")
+        self.dag.add_child(0, "b", "edge")
+
+    def test__eq__match(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res == {0: (0, 1, "edge")})
+
+    def test__eq__not_match_keys(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res == {2: (0, 1, "edge")})
+
+    def test__eq__not_match_values(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res == {0: (1, 2, "edge")})
+        self.assertFalse(res == {0: (0, 1, "not edge")})
+
+    def test__eq__different_length(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res == {1: (0, 1, "edge"), 0: (0, 1, "double edge")})
+
+    def test_eq__same_type(self):
+        self.assertEqual(self.dag.edge_index_map(), self.dag.edge_index_map())
+
+    def test__eq__invalid_type(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res == {"a": ("a", "b", "c")})
+
+    def test__ne__match(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res != {0: (0, 1, "edge")})
+
+    def test__ne__not_match(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res, {2: (0, 1, "edge")})
+
+    def test__ne__not_match_values(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res, {0: (0, 2, "edge")})
+
+    def test__ne__different_length(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res != {1: (0, 1, "double edge"), 0: (0, 1, "edge")})
+
+    def test__ne__invalid_type(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res != {"a": ("a", "b", "c")})
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.dag.edge_index_map() > {0: (0, 1, "edge")}
+
+    def test_deepcopy(self):
+        edge_map = self.dag.edge_index_map()
+        edge_map_copy = copy.deepcopy(edge_map)
+        self.assertEqual(edge_map_copy, edge_map)
+
+    def test_pickle(self):
+        edge_map = self.dag.edge_index_map()
+        edge_map_pickle = pickle.dumps(edge_map)
+        edge_map_copy = pickle.loads(edge_map_pickle)
+        self.assertEqual(edge_map, edge_map_copy)
+
+    def test_str(self):
+        res = self.dag.edge_index_map()
+        self.assertEqual(
+            "EdgeIndexMap{0: (0, 1, edge)}",
+            str(res),
+        )
+
+    def test_hash(self):
+        res = self.dag.edge_index_map()
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = self.dag.edge_index_map()
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = self.dag.edge_index_map().keys()
+        self.assertEqual([0], list(keys))
+
+    def test_values(self):
+        values = self.dag.edge_index_map().values()
+        expected = [(0, 1, "edge")]
+        self.assertEqual(expected, list(values))
+
+    def test_items(self):
+        items = self.dag.edge_index_map().items()
+        self.assertEqual([(0, (0, 1, "edge"))], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(self.dag.edge_index_map())
+        output = list(mapping_iter)
+        self.assertEqual(output, [0])
+
+    def test_contains(self):
+        res = self.dag.edge_index_map()
+        self.assertIn(0, res)
+
+    def test_not_contains(self):
+        res = self.dag.edge_index_map()
+        self.assertNotIn(1, res)
