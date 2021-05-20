@@ -372,6 +372,28 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyGraph()
         self.assertTrue(graph.multigraph)
 
+    def test_edge_index_map(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_c, node_d, "edge c")
+        self.assertEqual(
+            {
+                0: (node_a, node_c, "edge a"),
+                1: (node_b, node_d, "edge_b"),
+                2: (node_c, node_d, "edge c"),
+            },
+            graph.edge_index_map(),
+        )
+
+    def test_edge_index_map_empty(self):
+        graph = retworkx.PyDiGraph()
+        self.assertEqual({}, graph.edge_index_map())
+
 
 class TestEdgesMultigraphFalse(unittest.TestCase):
     def test_multigraph_attr(self):
