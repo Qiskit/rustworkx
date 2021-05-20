@@ -1341,7 +1341,7 @@ impl PyIterProtocol for PathLengthMappingItems {
 ///     import retworkx
 ///
 ///     graph = retworkx.generators.directed_path_graph(5)
-///     edges = retworkx.edge_indexes(0)
+///     edges = retworkx.edge_indices()
 ///     # Index based access
 ///     third_element = edges[2]
 ///     # Use as iterator
