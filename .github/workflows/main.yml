@@ -66,6 +66,9 @@ jobs:
           default: true
       - name: 'Install dependencies'
         run: python -m pip install --upgrade tox
+      - name: 'Install binary dependencies'
+        run: sudo apt-get install -y graphviz
+        if: runner.os == 'Linux'
       - name: 'Run tests'
         run: tox -epy
   coverage:
