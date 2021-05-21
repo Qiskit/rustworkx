@@ -1130,7 +1130,7 @@ pub fn binomial_tree_graph(
 ///   image
 ///
 #[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, order=None, weights=None, bidirectional=False)"]
+#[text_signature = "(order, /,  weights=None, bidirectional=False)"]
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
