@@ -120,6 +120,20 @@ class TestEdges(unittest.TestCase):
         graph.add_node("a")
         self.assertEqual([], graph.edges())
 
+    def test_edge_indices(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, "Edgy")
+        node_c = graph.add_node("c")
+        graph.add_edge(node_b, node_c, "Super edgy")
+        self.assertEqual([0, 1], graph.edge_indices())
+
+    def test_get_edge_indices_empty(self):
+        graph = retworkx.PyGraph()
+        graph.add_node("a")
+        self.assertEqual([], graph.edge_indices())
+
     def test_add_duplicates(self):
         graph = retworkx.PyGraph()
         node_a = graph.add_node("a")
