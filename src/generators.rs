@@ -1181,7 +1181,8 @@ pub fn directed_binomial_tree_graph(
             let source_index = source.index();
             let target_index = target.index();
 
-            if graph.find_edge(nodes[source_index + n], nodes[target_index + n])
+            if graph
+                .find_edge(nodes[source_index + n], nodes[target_index + n])
                 .is_none()
             {
                 graph.add_edge(
