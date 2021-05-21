@@ -30,7 +30,7 @@ def pydot_draw(
     method=None,
 ):
     """Draw a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph` object
-    using graphviz via PyDot
+    using graphviz via pydot
 
     .. note::
 
@@ -39,23 +39,23 @@ def pydot_draw(
         will need to be installed separately. You can refer to the
         Graphviz
         `documentation <https://graphviz.org/download/#executable-packages>`__
-        for instructions on how to install it
+        for instructions on how to install it.
 
-    :param :class:`~retworkx.PyGraph`|:class:`~retworkx.PyDiGraph` graph: The
-            retworkx graph object to draw.
+    :param graph: The retworkx graph object to draw, can be a
+        :class:`~retworkx.PyGraph` or a :class:`~retworkx.PyDiGraph`
     :param node_attr_fn: An optional callable object that will be passed the
         weight/data payload for every node in the graph and expected to return
         a dictionary of Graphviz node attributes to be associated with the node
         in the visualization. The key and value of this dictionary **must** be
         a string.
-    :param edge_attr: An optional callable that will be passed the weight/data
-        payload for each edge in the graph and expected to return a dictionary
-        of Graphviz edge attributes to be associated with the edge in the
-        visualization file. The key and value of this dictionary **must** be a
-        string.
+    :param edge_attr_fn: An optional callable that will be passed the
+        weight/data payload for each edge in the graph and expected to return a
+        dictionary of Graphviz edge attributes to be associated with the edge
+        in the visualization file. The key and value of this dictionary
+        must be a string.
     :param dict graph_attr: An optional dictionary that specifies any Graphviz
         graph attributes for the visualization. The key and value of this
-        dictionary **must** be a string.
+        dictionary must be a string.
     :param str filename: An optional path to write the visualization to. If
         specified the return type from this function will be ``None`` as the
         output image is saved to disk.
@@ -67,7 +67,10 @@ def pydot_draw(
         ``'jpg'``, ``'mif'``, ``'mp'``, ``'pcl'``, ``'pdf'``, ``'pic'``,
         ``'plain'``, ``'plain-ext'``, ``'png'``, ``'ps'``, ``'ps2'``,
         ``'svg'``, ``'svgz'``, ``'vml'``, ``'vmlz'``, ``'vrml'``, ``'vtx'``,
-        ``'wbmp'``, ``'xdot'``, ``'xlib'``]
+        ``'wbmp'``, ``'xdot'``, ``'xlib'``. It's worth noting that while these
+        formats can all be used for generating image files when the ``filename``
+        kwarg is specified, the Pillow library used for the returned object can
+        not work with all these formats.
     :param str method: The layout method/Graphviz command method to use for
         generating the visualization. Available options are ``'dot'``,
         ``'twopi'``, ``'neato'``, ``'circo'``, ``'fdp'``, and ``'sfdp'``.
