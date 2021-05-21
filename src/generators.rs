@@ -1182,7 +1182,7 @@ pub fn directed_binomial_tree_graph(
             let target_index = target.index();
 
             if graph.find_edge(nodes[source_index + n], nodes[target_index + n])
-                == None
+                .is_none()
             {
                 graph.add_edge(
                     nodes[source_index + n],
@@ -1194,7 +1194,7 @@ pub fn directed_binomial_tree_graph(
             if bidirectional
                 && graph
                     .find_edge(nodes[target_index + n], nodes[source_index + n])
-                    == None
+                    .is_none()
             {
                 graph.add_edge(
                     nodes[target_index + n],
@@ -1208,7 +1208,7 @@ pub fn directed_binomial_tree_graph(
             graph.add_edge(nodes[0], nodes[n], py.None());
         }
 
-        if bidirectional && graph.find_edge(nodes[n], nodes[0]) == None {
+        if bidirectional && graph.find_edge(nodes[n], nodes[0]).is_none() {
             graph.add_edge(nodes[n], nodes[0], py.None());
         }
 
