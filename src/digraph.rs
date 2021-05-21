@@ -15,7 +15,7 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -46,7 +46,7 @@ use petgraph::visit::{
 };
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
     NoSuitableNeighbors, NodesRemoved,
@@ -532,6 +532,17 @@ impl PyDiGraph {
             .edge_indices()
             .map(|edge| self.graph.edge_weight(edge).unwrap())
             .collect()
+    }
+
+    /// Return a list of all edge indices.
+    ///
+    /// :returns: A list of all the edge indices in the graph
+    /// :rtype: EdgeIndices
+    #[text_signature = "(self)"]
+    pub fn edge_indices(&self) -> EdgeIndices {
+        EdgeIndices {
+            edges: self.graph.edge_indices().map(|edge| edge.index()).collect(),
+        }
     }
 
     /// Return a list of all node data.
@@ -1907,6 +1918,79 @@ impl PyDiGraph {
             node_removed: false,
             multigraph: true,
         })
+    }
+
+    /// Write an edge list file from the PyDiGraph object
+    ///
+    /// :param str path: The path to write the output file to
+    /// :param str deliminator: The optional character to use as a deliminator
+    ///     if not specified ``" "`` is used.
+    /// :param callable weight_fn: An optional callback function that will be
+    ///     passed an edge's data payload/weight object and is expected to
+    ///     return a string (a ``TypeError`` will be raised if it doesn't
+    ///     return a string). If specified the weight in the output file
+    ///     for each edge will be set to the returned string.
+    ///
+    ///  For example:
+    ///
+    ///  .. jupyter-execute::
+    ///
+    ///     import os
+    ///     import tempfile
+    ///
+    ///     import retworkx
+    ///
+    ///     graph = retworkx.generators.directed_path_graph(5)
+    ///     path = os.path.join(tempfile.gettempdir(), "edge_list")
+    ///     graph.write_edge_list(path, deliminator=',')
+    ///     # Print file contents
+    ///     with open(path, 'rt') as edge_file:
+    ///         print(edge_file.read())
+    ///
+    #[text_signature = "(self, path, /, deliminator=None, weight_fn=None)"]
+    pub fn write_edge_list(
+        &self,
+        py: Python,
+        path: &str,
+        deliminator: Option<char>,
+        weight_fn: Option<PyObject>,
+    ) -> PyResult<()> {
+        let file = File::create(path)?;
+        let mut buf_writer = BufWriter::new(file);
+        let delim = match deliminator {
+            Some(delim) => delim.to_string(),
+            None => " ".to_string(),
+        };
+
+        let weight_callable = |value: &PyObject,
+                               weight_fn: &Option<PyObject>|
+         -> PyResult<Option<String>> {
+            match weight_fn {
+                Some(weight_fn) => {
+                    let res = weight_fn.call1(py, (value,))?;
+                    Ok(Some(res.extract(py)?))
+                }
+                None => Ok(None),
+            }
+        };
+        for edge in self.graph.edge_references() {
+            buf_writer.write_all(
+                format!(
+                    "{}{}{}",
+                    edge.source().index(),
+                    delim,
+                    edge.target().index()
+                )
+                .as_bytes(),
+            )?;
+            match weight_callable(edge.weight(), &weight_fn)? {
+                Some(weight) => buf_writer
+                    .write_all(format!("{}{}\n", delim, weight).as_bytes()),
+                None => buf_writer.write_all(b"\n"),
+            }?;
+        }
+        buf_writer.flush()?;
+        Ok(())
     }
 
     /// Create a new :class:`~retworkx.PyDiGraph` object from an adjacency matrix

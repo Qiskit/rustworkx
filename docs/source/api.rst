@@ -30,6 +30,9 @@ Generators
     retworkx.generators.directed_mesh_graph
     retworkx.generators.grid_graph
     retworkx.generators.directed_grid_graph
+    retworkx.generators.binomial_tree_graph
+    retworkx.generators.hexagonal_lattice_graph
+    retworkx.generators.directed_hexagonal_lattice_graph
 
 Random Circuit Functions
 ========================
@@ -131,6 +134,7 @@ type functions in the algorithms API but can be run with a
    retworkx.transitivity
    retworkx.core_number
    retworkx.random_layout
+   retworkx.spring_layout
 
 Layout Functions
 ================
@@ -139,6 +143,7 @@ Layout Functions
    :toctree: stubs
 
    retworkx.random_layout
+   retworkx.spring_layout
    retworkx.graph_random_layout
    retworkx.digraph_random_layout
 
@@ -172,6 +177,7 @@ Custom Return Types
 
    retworkx.BFSSuccessors
    retworkx.NodeIndices
+   retworkx.EdgeIndices
    retworkx.EdgeList
    retworkx.WeightedEdgeList
    retworkx.PathMapping

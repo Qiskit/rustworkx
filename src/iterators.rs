@@ -1326,3 +1326,118 @@ impl PyIterProtocol for PathLengthMappingItems {
         }
     }
 }
+
+/// A custom class for the return of edge indices
+///
+/// This class is a container class for the results of functions that
+/// return a list of edge indices. It implements the Python sequence
+/// protocol. So you can treat the return as a read-only sequence/list
+/// that is integer indexed. If you want to use it as an iterator you
+/// can by wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.edge_indices()
+///     # Index based access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_element = next(edges_iter)
+///     second_element = next(edges_iter)
+///
+#[pyclass(module = "retworkx", gc)]
+#[derive(Clone)]
+pub struct EdgeIndices {
+    pub edges: Vec<usize>,
+}
+
+#[pymethods]
+impl EdgeIndices {
+    #[new]
+    fn new() -> EdgeIndices {
+        EdgeIndices { edges: Vec::new() }
+    }
+
+    fn __getstate__(&self) -> Vec<usize> {
+        self.edges.clone()
+    }
+
+    fn __setstate__(&mut self, state: Vec<usize>) {
+        self.edges = state;
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for EdgeIndices {
+    fn __richcmp__(
+        &self,
+        other: &'p PySequence,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: &PySequence| -> PyResult<bool> {
+            if other.len()? as usize != self.edges.len() {
+                return Ok(false);
+            }
+            for i in 0..self.edges.len() {
+                let other_raw = other.get_item(i.try_into().unwrap())?;
+                let other_value: usize = other_raw.extract()?;
+                if other_value != self.edges[i] {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let str_vec: Vec<String> =
+            self.edges.iter().map(|n| format!("{}", n)).collect();
+        Ok(format!("EdgeIndices[{}]", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.edges {
+            hasher.write_usize(*index);
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for EdgeIndices {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.edges.len())
+    }
+
+    fn __getitem__(&'p self, idx: isize) -> PyResult<usize> {
+        if idx >= self.edges.len().try_into().unwrap() {
+            Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
+        } else {
+            Ok(self.edges[idx as usize])
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for EdgeIndices {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}

@@ -48,8 +48,11 @@ setup(
     rust_extensions=[RustExtension("retworkx.retworkx", "Cargo.toml",
                                    binding=Binding.PyO3)],
     include_package_data=True,
-    packages=["retworkx"],
+    packages=["retworkx", "retworkx.visualization"],
     zip_safe=False,
     python_requires=">=3.6",
     install_requires=['numpy>=1.16.0'],
+    extras_require={
+        'mpl': ['matplotlib>=3.0'],
+    }
 )
