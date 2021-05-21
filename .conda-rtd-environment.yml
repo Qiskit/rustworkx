@@ -13,3 +13,4 @@ dependencies:
     - pillow
     - qiskit-sphinx-theme>=1.7
     - reno>=3.2.0
+    - matplotlib>=3.0
