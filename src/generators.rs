@@ -1204,7 +1204,7 @@ pub fn directed_binomial_tree_graph(
             }
         }
 
-        if graph.find_edge(nodes[0], nodes[n]) == None {
+        if graph.find_edge(nodes[0], nodes[n]).is_none() {
             graph.add_edge(nodes[0], nodes[n], py.None());
         }
 
