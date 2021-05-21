@@ -15,6 +15,7 @@ use std::iter;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
@@ -983,6 +984,247 @@ pub fn directed_grid_graph(
     })
 }
 
+/// Generate an undirected binomial tree of order n recursively.
+///
+/// :param int order: Order of the binomial tree.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than 2**order extra nodes with with None will be appended.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.binomial_tree_graph(4)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(multigraph = true)]
+#[text_signature = "(order, /, weights=None, multigraph=True)"]
+pub fn binomial_tree_graph(
+    py: Python,
+    order: u32,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    let num_nodes = usize::pow(2, order);
+
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+
+            let mut node_count = num_nodes;
+
+            if weights.len() > num_nodes {
+                return Err(PyIndexError::new_err(
+                    "weights should be <= 2**order",
+                ));
+            }
+
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+                node_count -= 1;
+            }
+
+            for _i in 0..node_count {
+                let index = graph.add_node(py.None());
+                node_list.push(index);
+            }
+
+            node_list
+        }
+
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    let mut n = 1;
+
+    for _ in 0..order {
+        let edges: Vec<(NodeIndex, NodeIndex)> = graph
+            .edge_references()
+            .map(|e| (e.source(), e.target()))
+            .collect();
+
+        for (source, target) in edges {
+            let source_index = source.index();
+            let target_index = target.index();
+
+            graph.add_edge(
+                nodes[source_index + n],
+                nodes[target_index + n],
+                py.None(),
+            );
+        }
+
+        graph.add_edge(nodes[0], nodes[n], py.None());
+
+        n *= 2;
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
+/// Generate an undirected binomial tree of order n recursively.
+/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
+///
+/// :param int order: Order of the binomial tree.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than 2**order extra nodes with None will be appended.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes
+///
+/// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyDiGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.directed_binomial_tree_graph(4)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(bidirectional = "false")]
+#[text_signature = "(order, /,  weights=None, bidirectional=False)"]
+pub fn directed_binomial_tree_graph(
+    py: Python,
+    order: u32,
+    weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+
+    let num_nodes = usize::pow(2, order);
+
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            let mut node_count = num_nodes;
+
+            if weights.len() > num_nodes {
+                return Err(PyIndexError::new_err(
+                    "weights should be <= 2**order",
+                ));
+            }
+
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+                node_count -= 1;
+            }
+
+            for _i in 0..node_count {
+                let index = graph.add_node(py.None());
+                node_list.push(index);
+            }
+
+            node_list
+        }
+
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    let mut n = 1;
+
+    for _ in 0..order {
+        let edges: Vec<(NodeIndex, NodeIndex)> = graph
+            .edge_references()
+            .map(|e| (e.source(), e.target()))
+            .collect();
+
+        for (source, target) in edges {
+            let source_index = source.index();
+            let target_index = target.index();
+
+            if graph
+                .find_edge(nodes[source_index + n], nodes[target_index + n])
+                .is_none()
+            {
+                graph.add_edge(
+                    nodes[source_index + n],
+                    nodes[target_index + n],
+                    py.None(),
+                );
+            }
+
+            if bidirectional
+                && graph
+                    .find_edge(nodes[target_index + n], nodes[source_index + n])
+                    .is_none()
+            {
+                graph.add_edge(
+                    nodes[target_index + n],
+                    nodes[source_index + n],
+                    py.None(),
+                );
+            }
+        }
+
+        if graph.find_edge(nodes[0], nodes[n]).is_none() {
+            graph.add_edge(nodes[0], nodes[n], py.None());
+        }
+
+        if bidirectional && graph.find_edge(nodes[n], nodes[0]).is_none() {
+            graph.add_edge(nodes[n], nodes[0], py.None());
+        }
+
+        n *= 2;
+    }
+
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: true,
+    })
+}
+
 /// Generate an undirected hexagonal lattice graph.
 ///
 /// :param int rows: The number of rows to generate the graph with.
@@ -1205,6 +1447,8 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(binomial_tree_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     Ok(())
