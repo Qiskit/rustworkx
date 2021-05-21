@@ -46,7 +46,7 @@ use petgraph::visit::{
 };
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
     NoSuitableNeighbors, NodesRemoved,
@@ -534,6 +534,17 @@ impl PyDiGraph {
             .collect()
     }
 
+    /// Return a list of all edge indices.
+    ///
+    /// :returns: A list of all the edge indices in the graph
+    /// :rtype: EdgeIndices
+    #[text_signature = "(self)"]
+    pub fn edge_indices(&self) -> EdgeIndices {
+        EdgeIndices {
+            edges: self.graph.edge_indices().map(|edge| edge.index()).collect(),
+        }
+    }
+
     /// Return a list of all node data.
     ///
     /// :returns: A list of all the node data objects in the graph
@@ -615,6 +626,98 @@ impl PyDiGraph {
             }
         }
         predec
+    }
+
+    /// Return a filtered list of successors data such that each
+    /// node has at least one edge data which matches the filter.
+    ///
+    /// :param int node: The index for the node to get the successors for
+    ///
+    /// :param filter_fn: The filter function to use for matching nodes. It takes
+    ///     in one argument, the edge data payload/weight object, and will return a
+    ///     boolean whether the edge matches the conditions or not. If any edge returns
+    ///     ``True``, the node will be included.
+    ///
+    /// :returns: A list of the node data for all the child neighbor nodes
+    ///           whose at least one edge matches the filter
+    /// :rtype: list
+    #[text_signature = "(self, node, filter_fn/)"]
+    pub fn find_successors_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        filter_fn: PyObject,
+    ) -> PyResult<Vec<&PyObject>> {
+        let index = NodeIndex::new(node);
+        let mut succesors: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+
+        let filter_edge = |edge: &PyObject| -> PyResult<bool> {
+            let res = filter_fn.call1(py, (edge,))?;
+            res.extract(py)
+        };
+
+        let raw_edges = self
+            .graph
+            .edges_directed(index, petgraph::Direction::Outgoing);
+
+        for edge in raw_edges {
+            let succ = edge.target();
+            if !used_indexes.contains(&succ) {
+                let edge_weight = edge.weight();
+                if filter_edge(edge_weight)? {
+                    used_indexes.insert(succ);
+                    succesors.push(self.graph.node_weight(succ).unwrap());
+                }
+            }
+        }
+        Ok(succesors)
+    }
+
+    /// Return a filtered list of predecessor data such that each
+    /// node has at least one edge data which matches the filter.
+    ///
+    /// :param int node: The index for the node to get the predecessor for
+    ///
+    /// :param filter_fn: The filter function to use for matching nodes. It takes
+    ///     in one argument, the edge data payload/weight object, and will return a
+    ///     boolean whether the edge matches the conditions or not. If any edge returns
+    ///     ``True``, the node will be included.
+    ///
+    /// :returns: A list of the node data for all the parent neighbor nodes
+    ///           whose at least one edge matches the filter
+    /// :rtype: list
+    #[text_signature = "(self, node, filter_fn/)"]
+    pub fn find_predecessors_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        filter_fn: PyObject,
+    ) -> PyResult<Vec<&PyObject>> {
+        let index = NodeIndex::new(node);
+        let mut predec: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+
+        let filter_edge = |edge: &PyObject| -> PyResult<bool> {
+            let res = filter_fn.call1(py, (edge,))?;
+            res.extract(py)
+        };
+
+        let raw_edges = self
+            .graph
+            .edges_directed(index, petgraph::Direction::Incoming);
+
+        for edge in raw_edges {
+            let pred = edge.source();
+            if !used_indexes.contains(&pred) {
+                let edge_weight = edge.weight();
+                if filter_edge(edge_weight)? {
+                    used_indexes.insert(pred);
+                    predec.push(self.graph.node_weight(pred).unwrap());
+                }
+            }
+        }
+        Ok(predec)
     }
 
     /// Return the edge data for an edge between 2 nodes.
