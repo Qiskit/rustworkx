@@ -177,6 +177,7 @@ Custom Return Types
 
    retworkx.BFSSuccessors
    retworkx.NodeIndices
+   retworkx.EdgeIndices
    retworkx.EdgeList
    retworkx.WeightedEdgeList
    retworkx.PathMapping

@@ -151,6 +151,66 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         self.assertEqual(hash_res, hash(res))
 
 
+class TestEdgeIndicesComparisons(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDiGraph()
+        node_a = self.dag.add_node("a")
+        node_b = self.dag.add_child(node_a, "b", "Edgy")
+        self.dag.add_child(node_b, "c", "Super Edgy")
+
+    def test__eq__match(self):
+        self.assertTrue(self.dag.edge_indices() == [0, 1])
+
+    def test__eq__not_match(self):
+        self.assertFalse(self.dag.edge_indices() == [1, 2])
+
+    def test__eq__different_length(self):
+        self.assertFalse(self.dag.edge_indices() == [0, 1, 2, 3])
+
+    def test__eq__invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.dag.edge_indices() == ["a", None]
+
+    def test__ne__match(self):
+        self.assertFalse(self.dag.edge_indices() != [0, 1])
+
+    def test__ne__not_match(self):
+        self.assertTrue(self.dag.edge_indices() != [1, 2])
+
+    def test__ne__different_length(self):
+        self.assertTrue(self.dag.edge_indices() != [0, 1, 2, 3])
+
+    def test__ne__invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.dag.edge_indices() != ["a", None]
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.dag.edge_indices() > [2, 1]
+
+    def test_deepcopy(self):
+        edges = self.dag.edge_indices()
+        edges_copy = copy.deepcopy(edges)
+        self.assertEqual(edges, edges_copy)
+
+    def test_pickle(self):
+        edges = self.dag.edge_indices()
+        edges_pickle = pickle.dumps(edges)
+        edges_copy = pickle.loads(edges_pickle)
+        self.assertEqual(edges, edges_copy)
+
+    def test_str(self):
+        res = self.dag.edge_indices()
+        self.assertEqual("EdgeIndices[0, 1]", str(res))
+
+    def test_hash(self):
+        res = self.dag.edge_indices()
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+
 class TestEdgeListComparisons(unittest.TestCase):
     def setUp(self):
         self.dag = retworkx.PyDAG()

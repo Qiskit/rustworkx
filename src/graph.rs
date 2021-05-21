@@ -32,7 +32,7 @@ use ndarray::prelude::*;
 use numpy::PyReadonlyArray2;
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -380,6 +380,17 @@ impl PyGraph {
             .edge_indices()
             .map(|edge| self.graph.edge_weight(edge).unwrap())
             .collect()
+    }
+
+    /// Return a list of all edge indices.
+    ///
+    /// :returns: A list of all the edge indices in the graph
+    /// :rtype: EdgeIndices
+    #[text_signature = "(self)"]
+    pub fn edge_indices(&self) -> EdgeIndices {
+        EdgeIndices {
+            edges: self.graph.edge_indices().map(|edge| edge.index()).collect(),
+        }
     }
 
     /// Return a list of all node data.
