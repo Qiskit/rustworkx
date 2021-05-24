@@ -9,6 +9,7 @@ Contents:
 
    README
    Retworkx API <api>
+   Visualization <visualization>
    Release Notes <release_notes>
    Contributing Guide <CONTRIBUTING>
    retworkx for networkx users <networkx>

@@ -21,6 +21,7 @@ mod graph;
 mod isomorphism;
 mod iterators;
 mod k_shortest_path;
+mod layout;
 mod max_weight_matching;
 mod union;
 
@@ -3466,6 +3467,255 @@ fn digraph_complement(
     Ok(complement_graph)
 }
 
+#[allow(clippy::too_many_arguments)]
+fn _spring_layout<Ty>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping>
+where
+    Ty: EdgeType,
+{
+    if fixed.is_some() && pos.is_none() {
+        return Err(PyValueError::new_err("`fixed` specified but `pos` not."));
+    }
+
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+
+    let dist = Uniform::new(0.0, 1.0);
+
+    let pos = pos.unwrap_or_default();
+    let mut vpos: Vec<layout::Point> = (0..graph.node_bound())
+        .map(|_| [dist.sample(&mut rng), dist.sample(&mut rng)])
+        .collect();
+    for (n, p) in pos.into_iter() {
+        vpos[n] = p;
+    }
+
+    let fixed = fixed.unwrap_or_default();
+    let k = k.unwrap_or(1.0 / (graph.node_count() as f64).sqrt());
+    let f_a = layout::AttractiveForce::new(k);
+    let f_r = layout::RepulsiveForce::new(k, repulsive_exponent.unwrap_or(2));
+
+    let num_iter = num_iter.unwrap_or(50);
+    let tol = tol.unwrap_or(1e-6);
+    let step = 0.1;
+
+    let mut weights: HashMap<(usize, usize), f64> =
+        HashMap::with_capacity(2 * graph.edge_count());
+    for e in graph.edge_references() {
+        let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)?;
+        let source = e.source().index();
+        let target = e.target().index();
+
+        weights.insert((source, target), w);
+        weights.insert((target, source), w);
+    }
+
+    let pos = match adaptive_cooling {
+        Some(false) => {
+            let cs = layout::LinearCoolingScheme::new(step, num_iter);
+            layout::evolve(
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
+                scale, center,
+            )
+        }
+        _ => {
+            let cs = layout::AdaptiveCoolingScheme::new(step);
+            layout::evolve(
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
+                scale, center,
+            )
+        }
+    };
+
+    Ok(Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let n = n.index();
+                (n, pos[n])
+            })
+            .collect(),
+    })
+}
+
+/// Position nodes using Fruchterman-Reingold force-directed algorithm.
+///
+/// The algorithm simulates a force-directed representation of the network
+/// treating edges as springs holding nodes close, while treating nodes
+/// as repelling objects, sometimes called an anti-gravity force.
+/// Simulation continues until the positions are close to an equilibrium.
+///
+/// :param PyGraph graph: Graph to be used.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and values
+///     as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and ``pos`` is not. (``default=None``)
+/// :param float  k:
+///     Optimal distance between nodes. If ``None`` the distance is set to
+///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+///     to move nodes farther apart. (``default=None``)
+/// :param int repulsive_exponent:
+///     Repulsive force exponent. (``default=2``)
+/// :param bool adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to ``False``,
+///     a linear cooling scheme is used. (``default=True``)
+/// :param int num_iter:
+///     Maximum number of iterations. (``default=50``)
+/// :param float tol:
+///     Threshold for relative error in node position changes.
+///     The iteration stops if the error is below this threshold.
+///     (``default = 1e-6``)
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float
+///     which will be used to represent the weight of the edge.
+/// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+///     this optional float value will be used for the weight/cost of each edge
+/// :param float|None scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is ``None``, no re-scaling is
+///     performed. (``default=1.0``)
+/// :param list center: Coordinate pair around which to center
+///     the layout. Not used unless fixed is ``None``. (``default=None``)
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
+                     num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     center=None, seed=None, /)"]
+#[allow(clippy::too_many_arguments)]
+pub fn graph_spring_layout(
+    py: Python,
+    graph: &graph::PyGraph,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping> {
+    _spring_layout(
+        py,
+        &graph.graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+}
+
+/// Position nodes using Fruchterman-Reingold force-directed algorithm.
+///
+/// The algorithm simulates a force-directed representation of the network
+/// treating edges as springs holding nodes close, while treating nodes
+/// as repelling objects, sometimes called an anti-gravity force.
+/// Simulation continues until the positions are close to an equilibrium.
+///
+/// :param PyGraph graph: Graph to be used.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and values
+///     as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and ``pos`` is not. (``default=None``)
+/// :param float  k:
+///     Optimal distance between nodes. If ``None`` the distance is set to
+///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+///     to move nodes farther apart. (``default=None``)
+/// :param int repulsive_exponent:
+///     Repulsive force exponent. (``default=2``)
+/// :param bool adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to ``False``,
+///     a linear cooling scheme is used. (``default=True``)
+/// :param int num_iter:
+///     Maximum number of iterations. (``default=50``)
+/// :param float tol:
+///     Threshold for relative error in node position changes.
+///     The iteration stops if the error is below this threshold.
+///     (``default = 1e-6``)
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float
+///     which will be used to represent the weight of the edge.
+/// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+///     this optional float value will be used for the weight/cost of each edge
+/// :param float|None scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is ``None``, no re-scaling is
+///     performed. (``default=1.0``)
+/// :param list center: Coordinate pair around which to center
+///     the layout. Not used unless fixed is ``None``. (``default=None``)
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
+                     num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     center=None, seed=None, /)"]
+#[allow(clippy::too_many_arguments)]
+pub fn digraph_spring_layout(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping> {
+    _spring_layout(
+        py,
+        &graph.graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+}
+
 fn _random_layout<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     center: Option<[f64; 2]>,
@@ -3475,6 +3725,7 @@ fn _random_layout<Ty: EdgeType>(
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
+
     Pos2DMapping {
         pos_map: graph
             .node_indices()
@@ -3615,10 +3866,13 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
     m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
+    m.add_wrapped(wrap_pyfunction!(graph_spring_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::NodeIndices>()?;
+    m.add_class::<iterators::EdgeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
     m.add_class::<iterators::PathMapping>()?;
