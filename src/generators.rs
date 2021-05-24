@@ -44,7 +44,7 @@ where
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -233,8 +233,8 @@ pub fn cycle_graph(
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.DiPyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated path graph
@@ -407,7 +407,7 @@ pub fn path_graph(
 ///     ``True``.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated star graph
@@ -675,7 +675,7 @@ pub fn mesh_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated mesh graph
@@ -887,7 +887,7 @@ pub fn grid_graph(
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated grid graph
@@ -1128,7 +1128,7 @@ pub fn binomial_tree_graph(
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
@@ -1362,7 +1362,7 @@ pub fn hexagonal_lattice_graph(
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated directed hexagonal lattice graph with the following nodes deleted:
