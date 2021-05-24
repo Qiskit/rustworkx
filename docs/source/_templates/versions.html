@@ -8,6 +8,10 @@
       <dt>Versions</dt>
           <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
           <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        {% for version in version_list %}
+            <dd><a class="version" href"/documentation/retworkx/stable/{{ version }}">{{ version }}</a></dd>
+        {% endfor %}
     </dl>
   </div>
   <script>
