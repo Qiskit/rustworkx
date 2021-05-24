@@ -92,15 +92,12 @@ if not os.getenv('RETWORKX_DEV_DOCS', None):
 
     <br><br><br>
 
-.. |version| replace:: {0}
 """.format(release)
 else:
     rst_prolog = """
 .. raw:: html
 
     <br><br><br>
-
-.. |version| replace:: {0}
 
 .. note::
 
