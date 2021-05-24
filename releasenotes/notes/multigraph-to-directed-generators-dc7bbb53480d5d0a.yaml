@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Add a `multigraph` argument for the directed digraph generators:
+    :func:`retworkx.generators.directed_cycle_graph`, :func:`retworkx.generators.directed_path_graph`,
+    :func:`retworkx.generators.directed_star_graph`, :func:`retworkx.generators.directed_mesh_graph`,
+    :func:`retworkx.generators.directed_grid_graph`, :func:`retworkx.generators.directed_binomial_tree_graph`,
+    :func:`retworkx.generators.directed_hexagonal_lattice_graph`
