@@ -36,4 +36,4 @@ openssl aes-256-cbc -K $encrypted_rclone_key -iv $encrypted_rclone_iv -in tools/
 echo "Pushing built docs to website"
 rclone sync --progress --exclude-from ./tools/other-builds.txt ./docs/build/html IBMCOS:qiskit-org-web-resources/documentation/retworkx
 echo "Pushing built docs to stable site"
-rclone sync --progress ./docs/build/html "IBMCOS:qiskit-org-web-resources/documentation/retworkx/stable/$STABLE_VERSION"
+rclone sync --progress ./docs/build/html IBMCOS:qiskit-org-web-resources/documentation/retworkx/stable/$STABLE_VERSION
