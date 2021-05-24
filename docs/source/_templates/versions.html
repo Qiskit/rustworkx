@@ -4,14 +4,15 @@
     <span class="rst-versions-dropdown-icon"></span>
   </span>
   <div class="rst-other-versions">
-    {% if translations %}
     <dl>
-      <dt>{{ _('Languages') }}</dt>
-      {% for code, language in translations_list %}
-        <dd><a class="version" href="{{ translation_url(code, pagename) }}">{{ language }}</a></dd>
-      {% endfor %}
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        {% for version in version_list %}
+            <dd><a class="version" href="/documentation/retworkx/stable/{{ version }}">{{ version }}</a></dd>
+        {% endfor %}
     </dl>
-    {% endif %}
   </div>
   <script>
     jQuery('.version').click((evt) => {

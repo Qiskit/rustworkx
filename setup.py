@@ -43,7 +43,7 @@ setup(
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/retworkx/issues",
         "Source Code": "https://github.com/Qiskit/retworkx",
-        "Documentation": "https://retworkx.readthedocs.io",
+        "Documentation": "https://qiskit.org/documentation/retworkx",
     },
     rust_extensions=[RustExtension("retworkx.retworkx", "Cargo.toml",
                                    binding=Binding.PyO3)],
