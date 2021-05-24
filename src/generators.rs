@@ -45,7 +45,7 @@ where
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated cycle graph
