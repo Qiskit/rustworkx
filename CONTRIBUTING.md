@@ -25,12 +25,75 @@ The easiest way to run the test suite is to use
 [**tox**](https://tox.readthedocs.io/en/latest/#). You can install tox
 with pip: `pip install -U tox`. Tox provides several advantages, but the
 biggest one is that it builds an isolated virtualenv for running tests. This
-means it does not pollute your system python when running.
+means it does not pollute your system python when running. However, by default
+tox will recompile retworkx from source every time it is run even if there
+are no changes made to the rust code. To avoid this you can use the
+`--skip-pkg-install` package if you'd like to rerun tests without recompiling.
+Note, you only want to use this flag if you recently ran tox and there are no
+rust code (or packaged python code) changes to the repo since then. Otherwise
+the retworkx package tox installs in it's virtualenv will be out of date (or
+missing).
 
 Note, if you run tests outside of tox that you can **not** run the tests from
 the root of the repo, this is because retworkx packaging shim will conflict
 with imports from retworkx the installed version of retworkx (which contains
 the compiled extension).
+
+#### Running subsets of tests
+
+If you just want to run a subset of tests you can pass a selection regex to the
+test runner. For example, if you want to run all tests that have "dag" in the
+test id you can run: `tox -epy -- dag`. You can pass arguments directly to the
+test runner after the bare `--`. To see all the options on test selection you
+can refer to the stestr manual:
+
+https://stestr.readthedocs.io/en/stable/MANUAL.html#test-selection
+
+If you want to run a single test module, test class, or individual test method
+you can do this faster with the `-n`/`--no-discover` option. For example:
+
+to run a module:
+```
+tox -epy -- -n test_max_weight_matching
+```
+or to run the same module by path:
+```
+tox -epy -- -n graph/test_nodes.py
+```
+to run a class:
+```
+tox -epy -- -n graph.test_nodes.TestNodes
+```
+to run a method:
+```
+tox -epy -- -n graph.test_nodes.TestNodes.test_no_nodes
+```
+
+It's important to note that tox will be running from the `tests/` directory in
+the repo, so any paths you pass to the test runner via path need to be relative
+to that directory.
+
+#### Visualization Tests
+
+When running the visualization tests, each test will generate a visualization
+and only fail if an exception is raised by the call. Each test saves the output
+image to the current working directory (which if running tests with `tox` is
+`tests/`) to ensure the generated image is usable. However to not clutter the
+system each test cleans up this generated image and by default a test run does
+not include any way to view the images from the visualization tests.
+
+If you want to inspect the output from the visualization tests (which is common
+if you're working on visualizations) you can set the
+`RETWORKX_TEST_PRESERVE_IMAGES` environment variable to any value and this will
+skip the cleanup. This will enable you to look at the output image and ensure the
+visualization is correct. For example, running:
+
+```
+RETWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
+```
+
+will run the visualization tests and preserve the generated image files after
+the run finishes so you can inspect the output.
 
 ### Style
 
@@ -38,7 +101,7 @@ the compiled extension).
 
 Rust is the primary language of retworkx and all the functional code in the
 libraries is written in Rust. The Rust code in retworkx uses
-[rustfmt](https://github.com/rust-lang/rustfmt) to enfore consistent style.
+[rustfmt](https://github.com/rust-lang/rustfmt) to enforce consistent style.
 CI jobs are configured to ensure to check this. Luckily adapting your code is
 as simple as running:
 
@@ -64,8 +127,8 @@ cargo clippy
 
 Python is used primarily for tests and some small pieces of packaging
 and namespace configuration code in the actual library.
-[flake8](https://flake8.pycqa.org/en/latest/) is used to enforce consistent
-style in the python code in the repository. You can run it via tox using:
+[black](https://github.com/psf/black) and [flake8](https://flake8.pycqa.org/en/latest/) are used to enforce consistent
+style in the python code in the repository. You can run them via tox using:
 
 ```bash
 tox -elint
@@ -73,6 +136,9 @@ tox -elint
 
 This will also run `cargo fmt` in check mode to ensure that you ran `cargo fmt`
 and will fail if the Rust code doesn't conform to the style rules.
+
+If black returns a code formatting error you can run `tox -eblack` to automatically
+update the code formatting to conform to the style.
 
 ### Building documentation
 
@@ -87,16 +153,16 @@ you can view locally in a web browser.
 
 ### Release Notes
 
-It is important to document any end user facing changes when we release a new 
-version of retworkx.  The expectation is that if your code contribution has 
-user facing changes that you will write the release documentation for these 
-changes. This documentation must explain what was changed, why it was changed, 
-and how users can either use or adapt to the change. The idea behind release 
-documentation is that when a naive user with limited internal knowledge of the 
-project is upgrading from the previous release to the new one, they should be  
-able to read the release notes, understand if they need to update their 
-program which uses retworkx, and how they would go about doing that. It 
-ideally should explain why they need to make this change too, to provide the 
+It is important to document any end user facing changes when we release a new
+version of retworkx.  The expectation is that if your code contribution has
+user facing changes that you will write the release documentation for these
+changes. This documentation must explain what was changed, why it was changed,
+and how users can either use or adapt to the change. The idea behind release
+documentation is that when a naive user with limited internal knowledge of the
+project is upgrading from the previous release to the new one, they should be
+able to read the release notes, understand if they need to update their
+program which uses retworkx, and how they would go about doing that. It
+ideally should explain why they need to make this change too, to provide the
 necessary context.
 
 To make sure we don't forget a release note or if the details of user facing
@@ -136,7 +202,7 @@ look something like::
 features:
   - |
     Added a new function, :func:`~retworkx.foo` that adds support for doing
-    something to :class:`~retworkx.PyDiGraph` objects. 
+    something to :class:`~retworkx.PyDiGraph` objects.
   - |
     The :class:`~retworkx.PyDiGraph` class has a new method
     :meth:`~retworkx.PyDiGraph.foo``. This is the equivalent of calling the

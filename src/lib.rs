@@ -10,16 +10,20 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::float_cmp)]
+
 mod astar;
 mod centrality;
-mod dag_isomorphism;
 mod digraph;
 mod dijkstra;
 mod dot_utils;
 mod generators;
 mod graph;
+mod isomorphism;
 mod iterators;
 mod k_shortest_path;
+mod layout;
+mod max_weight_matching;
 mod union;
 
 use std::cmp::{Ordering, Reverse};
@@ -38,11 +42,14 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::stable_graph::EdgeReference;
+use petgraph::unionfind::UnionFind;
 use petgraph::visit::{
     Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighbors,
     IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
     Visitable,
 };
+use petgraph::EdgeType;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -52,7 +59,10 @@ use rand_pcg::Pcg64;
 use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
-use crate::iterators::{EdgeList, NodeIndices};
+use crate::iterators::{
+    EdgeList, NodeIndices, PathLengthMapping, PathMapping, Pos2DMapping,
+    WeightedEdgeList,
+};
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -174,7 +184,8 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 pub fn weakly_connected_components(
     graph: &digraph::PyDiGraph,
 ) -> Vec<BTreeSet<usize>> {
-    let mut seen: HashSet<NodeIndex> = HashSet::new();
+    let mut seen: HashSet<NodeIndex> =
+        HashSet::with_capacity(graph.node_count());
     let mut out_vec: Vec<BTreeSet<usize>> = Vec::new();
     for node in graph.graph.node_indices() {
         if !seen.contains(&node) {
@@ -238,27 +249,6 @@ fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
     }
 }
 
-/// Determine if 2 graphs are structurally isomorphic
-///
-/// This checks if 2 graphs are structurally isomorphic (it doesn't match
-/// the contents of the nodes or edges on the graphs).
-///
-/// :param PyDiGraph first: The first graph to compare
-/// :param PyDiGraph second: The second graph to compare
-///
-/// :returns: ``True`` if the 2 graphs are structurally isomorphic, ``False``
-///     if they are not
-/// :rtype: bool
-#[pyfunction]
-#[text_signature = "(first, second, /)"]
-fn is_isomorphic(
-    first: &digraph::PyDiGraph,
-    second: &digraph::PyDiGraph,
-) -> PyResult<bool> {
-    let res = dag_isomorphism::is_isomorphic(first, second)?;
-    Ok(res)
-}
-
 /// Return a new PyDiGraph by forming a union from two input PyDiGraph objects
 ///
 /// The algorithm in this function operates in three phases:
@@ -302,50 +292,138 @@ fn digraph_union(
     Ok(res)
 }
 
-/// Determine if 2 DAGs are isomorphic
+/// Determine if 2 directed graphs are isomorphic
 ///
 /// This checks if 2 graphs are isomorphic both structurally and also
-/// comparing the node data using the provided matcher function. The matcher
-/// function takes in 2 node data objects and will compare them. A simple
+/// comparing the node data and edge data using the provided matcher functions.
+/// The matcher function takes in 2 data objects and will compare them. A simple
 /// example that checks if they're just equal would be::
 ///
-///     graph_a = retworkx.PyDAG()
-///     graph_b = retworkx.PyDAG()
-///     retworkx.is_isomorphic_node_match(graph_a, graph_b,
-///                                       lambda x, y: x == y)
+///     graph_a = retworkx.PyDiGraph()
+///     graph_b = retworkx.PyDiGraph()
+///     retworkx.is_isomorphic(graph_a, graph_b,
+///                            lambda x, y: x == y)
+///
+/// .. note::
+///
+///     For better performance on large graphs, consider setting `id_order=False`.
 ///
 /// :param PyDiGraph first: The first graph to compare
 /// :param PyDiGraph second: The second graph to compare
-/// :param callable matcher: A python callable object that takes 2 positional
+/// :param callable node_matcher: A python callable object that takes 2 positional
 ///     one for each node data object. If the return of this
-///     function evaluates to True then the nodes passed to it are vieded as
-///     matching.
+///     function evaluates to True then the nodes passed to it are vieded
+///     as matching.
+/// :param callable edge_matcher: A python callable object that takes 2 positional
+///     one for each edge data object. If the return of this
+///     function evaluates to True then the edges passed to it are vieded
+///     as matching.
+/// :param bool id_order: If set to ``False`` this function will use a
+///     heuristic matching order based on [VF2]_ paper. Otherwise it will
+///     default to matching the nodes in order specified by their ids.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction]
-#[text_signature = "(first, second, matcher, /)"]
-fn is_isomorphic_node_match(
+#[pyfunction(id_order = "true")]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"]
+fn digraph_is_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-    matcher: PyObject,
+    node_matcher: Option<PyObject>,
+    edge_matcher: Option<PyObject>,
+    id_order: bool,
 ) -> PyResult<bool> {
-    let compare_nodes = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
-        let res = matcher.call1(py, (a, b))?;
-        Ok(res.is_true(py).unwrap())
-    };
+    let compare_nodes = node_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
 
-    fn compare_edges(_a: &PyObject, _b: &PyObject) -> PyResult<bool> {
-        Ok(true)
-    }
-    let res = dag_isomorphism::is_isomorphic_matching(
+    let compare_edges = edge_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let res = isomorphism::is_isomorphic(
         py,
-        first,
-        second,
+        &first.graph,
+        &second.graph,
         compare_nodes,
         compare_edges,
+        id_order,
+    )?;
+    Ok(res)
+}
+
+/// Determine if 2 undirected graphs are isomorphic
+///
+/// This checks if 2 graphs are isomorphic both structurally and also
+/// comparing the node data and edge data using the provided matcher functions.
+/// The matcher function takes in 2 data objects and will compare them. A simple
+/// example that checks if they're just equal would be::
+///
+///     graph_a = retworkx.PyGraph()
+///     graph_b = retworkx.PyGraph()
+///     retworkx.is_isomorphic(graph_a, graph_b,
+///                            lambda x, y: x == y)
+///
+/// .. note::
+///
+///     For better performance on large graphs, consider setting `id_order=False`.
+///
+/// :param PyGraph first: The first graph to compare
+/// :param PyGraph second: The second graph to compare
+/// :param callable node_matcher: A python callable object that takes 2 positional
+///     one for each node data object. If the return of this
+///     function evaluates to True then the nodes passed to it are vieded
+///     as matching.
+/// :param callable edge_matcher: A python callable object that takes 2 positional
+///     one for each edge data object. If the return of this
+///     function evaluates to True then the edges passed to it are vieded
+///     as matching.
+/// :param bool (default=True) id_order:  If set to true, the algorithm matches the
+///     nodes in order specified by their ids. Otherwise, it uses a heuristic
+///     matching order based in [VF2]_ paper.
+///
+/// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
+///     not.
+/// :rtype: bool
+#[pyfunction(id_order = "true")]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"]
+fn graph_is_isomorphic(
+    py: Python,
+    first: &graph::PyGraph,
+    second: &graph::PyGraph,
+    node_matcher: Option<PyObject>,
+    edge_matcher: Option<PyObject>,
+    id_order: bool,
+) -> PyResult<bool> {
+    let compare_nodes = node_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let compare_edges = edge_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let res = isomorphism::is_isomorphic(
+        py,
+        &first.graph,
+        &second.graph,
+        compare_nodes,
+        compare_edges,
+        id_order,
     )?;
     Ok(res)
 }
@@ -372,7 +450,11 @@ fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
     })
 }
 
-fn dfs_edges<G>(graph: G, source: Option<usize>) -> Vec<(usize, usize)>
+fn dfs_edges<G>(
+    graph: G,
+    source: Option<usize>,
+    edge_count: usize,
+) -> Vec<(usize, usize)>
 where
     G: GraphBase<NodeId = NodeIndex>
         + IntoNodeIdentifiers
@@ -389,8 +471,9 @@ where
             .map(|ind| NodeIndex::new(graph.to_index(ind)))
             .collect(),
     };
-    let mut visited: HashSet<NodeIndex> = HashSet::new();
-    let mut out_vec: Vec<(usize, usize)> = Vec::new();
+    let node_count = graph.node_count();
+    let mut visited: HashSet<NodeIndex> = HashSet::with_capacity(node_count);
+    let mut out_vec: Vec<(usize, usize)> = Vec::with_capacity(edge_count);
     for start in nodes {
         if visited.contains(&start) {
             continue;
@@ -401,7 +484,8 @@ where
         let mut stack: Vec<(NodeIndex, Vec<NodeIndex>)> =
             vec![(start, children)];
         // Used to track the last position in children vec across iterations
-        let mut index_map: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut index_map: HashMap<NodeIndex, usize> =
+            HashMap::with_capacity(node_count);
         index_map.insert(start, 0);
         while !stack.is_empty() {
             let temp_parent = stack.last().unwrap();
@@ -452,7 +536,7 @@ fn digraph_dfs_edges(
     source: Option<usize>,
 ) -> EdgeList {
     EdgeList {
-        edges: dfs_edges(graph, source),
+        edges: dfs_edges(graph, source, graph.graph.edge_count()),
     }
 }
 
@@ -472,7 +556,7 @@ fn digraph_dfs_edges(
 #[text_signature = "(graph, /, source=None)"]
 fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
-        edges: dfs_edges(graph, source),
+        edges: dfs_edges(graph, source, graph.graph.edge_count()),
     }
 }
 
@@ -495,10 +579,11 @@ fn bfs_successors(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
-) -> PyResult<iterators::BFSSuccessors> {
+) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(graph, index);
-    let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::new();
+    let mut out_list: Vec<(PyObject, Vec<PyObject>)> =
+        Vec::with_capacity(graph.node_count());
     while let Some(nx) = bfs.next(graph) {
         let children = graph
             .graph
@@ -515,9 +600,9 @@ fn bfs_successors(
             ));
         }
     }
-    Ok(iterators::BFSSuccessors {
+    iterators::BFSSuccessors {
         bfs_successors: out_list,
-    })
+    }
 }
 
 /// Return the ancestors of a node in a graph.
@@ -597,7 +682,9 @@ fn lexicographical_topological_sort(
         Ok(res.to_object(py))
     };
     // HashMap of node_index indegree
-    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::new();
+    let node_count = dag.node_count();
+    let mut in_degree_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(node_count);
     for node in dag.graph.node_indices() {
         in_degree_map.insert(node, dag.in_degree(node.index()));
     }
@@ -626,7 +713,7 @@ fn lexicographical_topological_sort(
             Some(self.cmp(other))
         }
     }
-    let mut zero_indegree = BinaryHeap::new();
+    let mut zero_indegree = BinaryHeap::with_capacity(node_count);
     for (node, degree) in in_degree_map.iter() {
         if *degree == 0 {
             let map_key_raw = key_callable(&dag.graph[*node])?;
@@ -637,7 +724,7 @@ fn lexicographical_topological_sort(
             });
         }
     }
-    let mut out_list: Vec<&PyObject> = Vec::new();
+    let mut out_list: Vec<&PyObject> = Vec::with_capacity(node_count);
     let dir = petgraph::Direction::Outgoing;
     while let Some(State { node, .. }) = zero_indegree.pop() {
         let neighbors = dag.graph.neighbors_directed(node, dir);
@@ -674,7 +761,8 @@ fn graph_greedy_color(
 ) -> PyResult<PyObject> {
     let mut colors: HashMap<usize, usize> = HashMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let mut sort_map: HashMap<NodeIndex, usize> = HashMap::new();
+    let mut sort_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
     for k in node_vec.iter() {
         sort_map.insert(*k, graph.graph.edges(*k).count());
     }
@@ -722,7 +810,7 @@ fn graph_greedy_color(
 ///
 /// :returns: A dict of lengths where the key is the destination node index and
 ///     the value is the length of the path.
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
 fn digraph_k_shortest_path_lengths(
@@ -732,14 +820,11 @@ fn digraph_k_shortest_path_lengths(
     k: usize,
     edge_cost: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
-    let out_goal = match goal {
-        Some(g) => Some(NodeIndex::new(g)),
-        None => None,
-    };
+) -> PyResult<PathLengthMapping> {
+    let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let out_map = k_shortest_path::k_shortest_path(
@@ -749,15 +834,19 @@ fn digraph_k_shortest_path_lengths(
         k,
         edge_cost_callable,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, length) in out_map {
-        if (out_goal.is_some() && out_goal.unwrap() == index)
-            || out_goal.is_none()
-        {
-            out_dict.set_item(index.index(), length)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: out_map
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the length of the kth shortest path
@@ -777,7 +866,7 @@ fn digraph_k_shortest_path_lengths(
 ///
 /// :returns: A dict of lengths where the key is the destination node index and
 ///     the value is the length of the path.
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, start, k, edge_cost, /, goal=None)"]
 fn graph_k_shortest_path_lengths(
@@ -787,14 +876,11 @@ fn graph_k_shortest_path_lengths(
     k: usize,
     edge_cost: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
-    let out_goal = match goal {
-        Some(g) => Some(NodeIndex::new(g)),
-        None => None,
-    };
+) -> PyResult<PathLengthMapping> {
+    let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
         let res = edge_cost.call1(py, (edge,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let out_map = k_shortest_path::k_shortest_path(
@@ -804,15 +890,19 @@ fn graph_k_shortest_path_lengths(
         k,
         edge_cost_callable,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, length) in out_map {
-        if (out_goal.is_some() && out_goal.unwrap() == index)
-            || out_goal.is_none()
-        {
-            out_dict.set_item(index.index(), length)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: out_map
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 /// Return the shortest path lengths between ever pair of nodes that has a
 /// path connecting them
@@ -848,7 +938,8 @@ fn graph_k_shortest_path_lengths(
 #[pyfunction]
 #[text_signature = "(dag, /)"]
 fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
-    let mut dist: HashMap<(usize, usize), usize> = HashMap::new();
+    let mut dist: HashMap<(usize, usize), usize> =
+        HashMap::with_capacity(dag.node_count());
     for node in dag.graph.node_indices() {
         // Distance from a node to itself is zero
         dist.insert((node.index(), node.index()), 0);
@@ -918,21 +1009,22 @@ where
         + IntoEdgeReferences
         + IntoNodeIdentifiers
         + NodeIndexable
+        + NodeCount
         + GraphProp
         + NodesRemoved,
     G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
 {
-    let node_map: Option<HashMap<NodeIndex, usize>>;
-    if graph.nodes_removed() {
-        let mut node_hash_map: HashMap<NodeIndex, usize> = HashMap::new();
+    let node_map: Option<HashMap<NodeIndex, usize>> = if graph.nodes_removed() {
+        let mut node_hash_map: HashMap<NodeIndex, usize> =
+            HashMap::with_capacity(graph.node_count());
         for (count, node) in graph.node_identifiers().enumerate() {
             let index = NodeIndex::new(graph.to_index(node));
             node_hash_map.insert(index, count);
         }
-        node_map = Some(node_hash_map);
+        Some(node_hash_map)
     } else {
-        node_map = None;
-    }
+        None
+    };
 
     graph.edge_references().map(move |edge| {
         let i: usize;
@@ -960,6 +1052,13 @@ where
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
 /// or graphs with negative weights (where Dijkstra's algorithm fails).
 ///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
 /// :param PyGraph graph: The graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
@@ -973,18 +1072,22 @@ where
 ///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 ///
 ///     to cast the edge object as a float as the weight.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0")]
-#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
+#[pyfunction(parallel_threshold = "300", default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
 fn graph_floyd_warshall_numpy(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     // Allocate empty matrix
@@ -1005,14 +1108,33 @@ fn graph_floyd_warshall_numpy(
     // Perform the Floyd-Warshall algorithm.
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
-    for k in 0..n {
-        for i in 0..n {
-            for j in 0..n {
-                let d_ijk = mat[[i, k]] + mat[[k, j]];
-                if d_ijk < mat[[i, j]] {
-                    mat[[i, j]] = d_ijk;
+    if n < parallel_threshold {
+        for k in 0..n {
+            for i in 0..n {
+                for j in 0..n {
+                    let d_ijk = mat[[i, k]] + mat[[k, j]];
+                    if d_ijk < mat[[i, j]] {
+                        mat[[i, j]] = d_ijk;
+                    }
                 }
             }
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.slice(s![k, ..]).to_owned();
+            mat.axis_iter_mut(Axis(0))
+                .into_par_iter()
+                .for_each(|mut row_i| {
+                    let m_ik = row_i[k];
+                    row_i.iter_mut().zip(row_k.iter()).for_each(
+                        |(m_ij, m_kj)| {
+                            let d_ijk = m_ik + *m_kj;
+                            if d_ijk < *m_ij {
+                                *m_ij = d_ijk;
+                            }
+                        },
+                    )
+                })
         }
     }
     Ok(mat.into_pyarray(py).into())
@@ -1022,6 +1144,13 @@ fn graph_floyd_warshall_numpy(
 ///
 /// Floyd's algorithm is used for finding shortest paths in dense graphs
 /// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
 ///
 /// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
@@ -1038,19 +1167,27 @@ fn graph_floyd_warshall_numpy(
 ///     to cast the edge object as a float as the weight.
 /// :param as_undirected: If set to true each directed edge will be treated as
 ///     bidirectional/undirected.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
 ///
 /// :returns: A matrix of shortest path distances between nodes. If there is no
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(as_undirected = "false", default_weight = "1.0")]
-#[text_signature = "(graph, /, weight_fn=None as_undirected=False, default_weight=1.0)"]
+#[pyfunction(
+    parallel_threshold = "300",
+    as_undirected = "false",
+    default_weight = "1.0"
+)]
+#[text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"]
 fn digraph_floyd_warshall_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
 
@@ -1073,14 +1210,33 @@ fn digraph_floyd_warshall_numpy(
     // Perform the Floyd-Warshall algorithm.
     // In each loop, this finds the shortest path from point i
     // to point j using intermediate nodes 0..k
-    for k in 0..n {
-        for i in 0..n {
-            for j in 0..n {
-                let d_ijk = mat[[i, k]] + mat[[k, j]];
-                if d_ijk < mat[[i, j]] {
-                    mat[[i, j]] = d_ijk;
+    if n < parallel_threshold {
+        for k in 0..n {
+            for i in 0..n {
+                for j in 0..n {
+                    let d_ijk = mat[[i, k]] + mat[[k, j]];
+                    if d_ijk < mat[[i, j]] {
+                        mat[[i, j]] = d_ijk;
+                    }
                 }
             }
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.slice(s![k, ..]).to_owned();
+            mat.axis_iter_mut(Axis(0))
+                .into_par_iter()
+                .for_each(|mut row_i| {
+                    let m_ik = row_i[k];
+                    row_i.iter_mut().zip(row_k.iter()).for_each(
+                        |(m_ij, m_kj)| {
+                            let d_ijk = m_ik + *m_kj;
+                            if d_ijk < *m_ij {
+                                *m_ij = d_ijk;
+                            }
+                        },
+                    )
+                })
         }
     }
     Ok(mat.into_pyarray(py).into())
@@ -1109,11 +1265,12 @@ fn collect_runs(
     filter_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
     let mut out_list: Vec<Vec<PyObject>> = Vec::new();
-    let mut seen: HashSet<NodeIndex> = HashSet::new();
+    let mut seen: HashSet<NodeIndex> =
+        HashSet::with_capacity(graph.node_count());
 
     let filter_node = |node: &PyObject| -> PyResult<bool> {
         let res = filter_fn.call1(py, (node,))?;
-        Ok(res.extract(py)?)
+        res.extract(py)
     };
 
     let nodes = match algo::toposort(graph, None) {
@@ -1279,7 +1436,7 @@ pub fn digraph_distance_matrix(
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
-        let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
         let start_index = NodeIndex::new(index);
         let mut level = 0;
         let mut next_level: HashSet<NodeIndex> = HashSet::new();
@@ -1361,7 +1518,7 @@ pub fn graph_distance_matrix(
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
-        let mut seen: HashMap<NodeIndex, usize> = HashMap::new();
+        let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
         let start_index = NodeIndex::new(index);
         let mut level = 0;
         let mut next_level: HashSet<NodeIndex> = HashSet::new();
@@ -1533,10 +1690,7 @@ fn graph_all_simple_paths(
         Some(depth) => depth - 2,
         None => 0,
     };
-    let cutoff_petgraph: Option<usize> = match cutoff {
-        Some(depth) => Some(depth - 2),
-        None => None,
-    };
+    let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
         graph,
         from_index,
@@ -1590,10 +1744,7 @@ fn digraph_all_simple_paths(
         Some(depth) => depth - 2,
         None => 0,
     };
-    let cutoff_petgraph: Option<usize> = match cutoff {
-        Some(depth) => Some(depth - 2),
-        None => None,
-    };
+    let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
         graph,
         from_index,
@@ -1675,13 +1826,11 @@ pub fn graph_dijkstra_shortest_paths(
     target: Option<usize>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
-) -> PyResult<PyObject> {
+) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
-    let goal_index: Option<NodeIndex> = match target {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
-    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
+    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
+        HashMap::with_capacity(graph.node_count());
     dijkstra::dijkstra(
         graph,
         start,
@@ -1690,25 +1839,24 @@ pub fn graph_dijkstra_shortest_paths(
         Some(&mut paths),
     )?;
 
-    let out_dict = PyDict::new(py);
-    for (index, value) in paths {
-        let int_index = index.index();
-        if int_index == source {
-            continue;
-        }
-        if (target.is_some() && target.unwrap() == int_index)
-            || target.is_none()
-        {
-            out_dict.set_item(
-                int_index,
-                value
-                    .iter()
-                    .map(|index| index.index())
-                    .collect::<Vec<usize>>(),
-            )?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathMapping {
+        paths: paths
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == source
+                    || target.is_some() && target.unwrap() != k_int
+                {
+                    None
+                } else {
+                    Some((
+                        k.index(),
+                        v.iter().map(|x| x.index()).collect::<Vec<usize>>(),
+                    ))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Find the shortest path from a node
@@ -1740,13 +1888,11 @@ pub fn digraph_dijkstra_shortest_paths(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     as_undirected: bool,
-) -> PyResult<PyObject> {
+) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
-    let goal_index: Option<NodeIndex> = match target {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
-    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
+    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
+        HashMap::with_capacity(graph.node_count());
     if as_undirected {
         dijkstra::dijkstra(
             // TODO: Use petgraph undirected adapter after
@@ -1767,26 +1913,24 @@ pub fn digraph_dijkstra_shortest_paths(
             Some(&mut paths),
         )?;
     }
-
-    let out_dict = PyDict::new(py);
-    for (index, value) in paths {
-        let int_index = index.index();
-        if int_index == source {
-            continue;
-        }
-        if (target.is_some() && target.unwrap() == int_index)
-            || target.is_none()
-        {
-            out_dict.set_item(
-                int_index,
-                value
-                    .iter()
-                    .map(|index| index.index())
-                    .collect::<Vec<usize>>(),
-            )?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathMapping {
+        paths: paths
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == source
+                    || target.is_some() && target.unwrap() != k_int
+                {
+                    None
+                } else {
+                    Some((
+                        k_int,
+                        v.iter().map(|x| x.index()).collect::<Vec<usize>>(),
+                    ))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the lengths of the shortest paths for a PyGraph object using
@@ -1806,7 +1950,7 @@ pub fn digraph_dijkstra_shortest_paths(
 /// :returns: A dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, node, edge_cost_fn, /, goal=None)"]
 fn graph_dijkstra_shortest_path_lengths(
@@ -1815,18 +1959,15 @@ fn graph_dijkstra_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
-        Ok(raw.extract(py)?)
+        raw.extract(py)
     };
 
     let start = NodeIndex::new(node);
-    let goal_index: Option<NodeIndex> = match goal {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
         graph,
@@ -1835,17 +1976,19 @@ fn graph_dijkstra_shortest_path_lengths(
         |e| edge_cost_callable(e.weight()),
         None,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, value) in res {
-        let int_index = index.index();
-        if int_index == node {
-            continue;
-        }
-        if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
-            out_dict.set_item(int_index, value)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: res
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == node || goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the lengths of the shortest paths for a PyDiGraph object using
@@ -1865,7 +2008,7 @@ fn graph_dijkstra_shortest_path_lengths(
 /// :returns: A dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
-/// :rtype: dict
+/// :rtype: PathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, node, edge_cost_fn, /, goal=None)"]
 fn digraph_dijkstra_shortest_path_lengths(
@@ -1874,18 +2017,15 @@ fn digraph_dijkstra_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
     goal: Option<usize>,
-) -> PyResult<PyObject> {
+) -> PyResult<PathLengthMapping> {
     let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
         let res = edge_cost_fn.call1(py, (a,))?;
         let raw = res.to_object(py);
-        Ok(raw.extract(py)?)
+        raw.extract(py)
     };
 
     let start = NodeIndex::new(node);
-    let goal_index: Option<NodeIndex> = match goal {
-        Some(node) => Some(NodeIndex::new(node)),
-        None => None,
-    };
+    let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
         graph,
@@ -1894,17 +2034,19 @@ fn digraph_dijkstra_shortest_path_lengths(
         |e| edge_cost_callable(e.weight()),
         None,
     )?;
-    let out_dict = PyDict::new(py);
-    for (index, value) in res {
-        let int_index = index.index();
-        if int_index == node {
-            continue;
-        }
-        if (goal.is_some() && goal.unwrap() == int_index) || goal.is_none() {
-            out_dict.set_item(int_index, value)?;
-        }
-    }
-    Ok(out_dict.into())
+    Ok(PathLengthMapping {
+        path_lengths: res
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == node || goal.is_some() && goal.unwrap() != k_int {
+                    None
+                } else {
+                    Some((k_int, *v))
+                }
+            })
+            .collect(),
+    })
 }
 
 /// Compute the A* shortest path for a PyGraph
@@ -2158,6 +2300,7 @@ pub fn directed_gnp_random_graph(
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2251,6 +2394,7 @@ pub fn undirected_gnp_random_graph(
     let graph = graph::PyGraph {
         graph: inner_graph,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2330,6 +2474,7 @@ pub fn directed_gnm_random_graph(
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2404,6 +2549,114 @@ pub fn undirected_gnm_random_graph(
     let graph = graph::PyGraph {
         graph: inner_graph,
         node_removed: false,
+        multigraph: true,
+    };
+    Ok(graph)
+}
+
+#[inline]
+fn pnorm(x: f64, p: f64) -> f64 {
+    if p == 1.0 || p == std::f64::INFINITY {
+        x.abs()
+    } else if p == 2.0 {
+        x * x
+    } else {
+        x.abs().powf(p)
+    }
+}
+
+fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
+    let it = x.iter().zip(y.iter()).map(|(xi, yi)| pnorm(xi - yi, p));
+
+    if p == std::f64::INFINITY {
+        it.fold(-1.0, |max, x| if x > max { x } else { max })
+    } else {
+        it.sum()
+    }
+}
+
+/// Returns a random geometric graph in the unit cube of dimensions `dim`.
+///
+/// The random geometric graph model places `num_nodes` nodes uniformly at
+/// random in the unit cube. Two nodes are joined by an edge if the
+/// distance between the nodes is at most `radius`.
+///
+/// Each node has a node attribute ``'pos'`` that stores the
+/// position of that node in Euclidean space as provided by the
+/// ``pos`` keyword argument or, if ``pos`` was not provided, as
+/// generated by this function.
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param float radius: Distance threshold value
+/// :param int dim: Dimension of node positions. Default: 2
+/// :param list pos: Optional list with node positions as values
+/// :param float p: Which Minkowski distance metric to use.  `p` has to meet the condition
+///     ``1 <= p <= infinity``.
+///     If this argument is not specified, the :math:`L^2` metric
+///     (the Euclidean distance metric), p = 2 is used.
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction(dim = "2", p = "2.0")]
+#[text_signature = "(num_nodes, radius, /, dim=2, pos=None, p=2.0, seed=None)"]
+pub fn random_geometric_graph(
+    py: Python,
+    num_nodes: usize,
+    radius: f64,
+    dim: usize,
+    pos: Option<Vec<Vec<f64>>>,
+    p: f64,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    if num_nodes == 0 {
+        return Err(PyValueError::new_err("num_nodes must be > 0"));
+    }
+
+    let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    let radius_p = pnorm(radius, p);
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+
+    let dist = Uniform::new(0.0, 1.0);
+    let pos = pos.unwrap_or_else(|| {
+        (0..num_nodes)
+            .map(|_| (0..dim).map(|_| dist.sample(&mut rng)).collect())
+            .collect()
+    });
+
+    if num_nodes != pos.len() {
+        return Err(PyValueError::new_err(
+            "number of elements in pos and num_nodes must be equal",
+        ));
+    }
+
+    for pval in pos.iter() {
+        let pos_dict = PyDict::new(py);
+        pos_dict.set_item("pos", pval.to_object(py))?;
+
+        inner_graph.add_node(pos_dict.into());
+    }
+
+    for u in 0..(num_nodes - 1) {
+        for v in (u + 1)..num_nodes {
+            if distance(&pos[u], &pos[v], p) < radius_p {
+                inner_graph.add_edge(
+                    NodeIndex::new(u),
+                    NodeIndex::new(v),
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    let graph = graph::PyGraph {
+        graph: inner_graph,
+        node_removed: false,
+        multigraph: true,
     };
     Ok(graph)
 }
@@ -2449,8 +2702,7 @@ pub fn cycle_basis(
             }
         };
         // Stack (ie "pushdown list") of vertices already in the spanning tree
-        let mut stack: Vec<NodeIndex> = Vec::new();
-        stack.push(root_index);
+        let mut stack: Vec<NodeIndex> = vec![root_index];
         // Map of node index to predecessor node index
         let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
         pred.insert(root_index, root_index);
@@ -2471,15 +2723,12 @@ pub fn cycle_basis(
                     used.insert(neighbor, temp_set);
                 // A self loop:
                 } else if z == neighbor {
-                    let mut cycle: Vec<usize> = Vec::new();
-                    cycle.push(z.index());
+                    let cycle: Vec<usize> = vec![z.index()];
                     cycles.push(cycle);
                 // A cycle was found:
                 } else if !used.get(&z).unwrap().contains(&neighbor) {
                     let pn = used.get(&neighbor).unwrap();
-                    let mut cycle: Vec<NodeIndex> = Vec::new();
-                    cycle.push(neighbor);
-                    cycle.push(z);
+                    let mut cycle: Vec<NodeIndex> = vec![neighbor, z];
                     let mut p = pred.get(&z).unwrap();
                     while !pn.contains(p) {
                         cycle.push(*p);
@@ -2500,6 +2749,70 @@ pub fn cycle_basis(
         root_node = None;
     }
     cycles
+}
+
+/// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
+///
+/// A matching is a subset of edges in which no node occurs more than once.
+/// The weight of a matching is the sum of the weights of its edges.
+/// A maximal matching cannot add more edges and still be a matching.
+/// The cardinality of a matching is the number of matched edges.
+///
+/// This function takes time :math:`O(n^3)` where ``n`` is the number of nodes
+/// in the graph.
+///
+/// This method is based on the "blossom" method for finding augmenting
+/// paths and the "primal-dual" method for finding a matching of maximum
+/// weight, both methods invented by Jack Edmonds [1]_.
+///
+/// :param PyGraph graph: The undirected graph to compute the max weight
+///     matching for. Expects to have no parallel edges (multigraphs are
+///     untested currently).
+/// :param bool max_cardinality: If True, compute the maximum-cardinality
+///     matching with maximum weight among all maximum-cardinality matchings.
+///     Defaults False.
+/// :param callable weight_fn: An optional callable that will be passed a
+///     single argument the edge object for each edge in the graph. It is
+///     expected to return an ``int`` weight for that edge. For example,
+///     if the weights are all integers you can use: ``lambda x: x``. If not
+///     specified the value for ``default_weight`` will be used for all
+///     edge weights.
+/// :param int default_weight: The ``int`` value to use for all edge weights
+///     in the graph if ``weight_fn`` is not specified. Defaults to ``1``.
+/// :param bool verify_optimum: A boolean flag to run a check that the found
+///     solution is optimum. If set to true an exception will be raised if
+///     the found solution is not optimum. This is mostly useful for testing.
+///
+/// :returns: A set of tuples ofthe matching, Note that only a single
+///     direction will be listed in the output, for example:
+///     ``{(0, 1),}``.
+/// :rtype: set
+///
+/// .. [1] "Efficient Algorithms for Finding Maximum Matching in Graphs",
+///     Zvi Galil, ACM Computing Surveys, 1986.
+///
+#[pyfunction(
+    max_cardinality = "false",
+    default_weight = 1,
+    verify_optimum = "false"
+)]
+#[text_signature = "(graph, /, max_cardinality=False, weight_fn=None, default_weight=1, verify_optimum=False)"]
+pub fn max_weight_matching(
+    py: Python,
+    graph: &graph::PyGraph,
+    max_cardinality: bool,
+    weight_fn: Option<PyObject>,
+    default_weight: i128,
+    verify_optimum: bool,
+) -> PyResult<HashSet<(usize, usize)>> {
+    max_weight_matching::max_weight_matching(
+        py,
+        graph,
+        max_cardinality,
+        weight_fn,
+        default_weight,
+        verify_optimum,
+    )
 }
 
 /// Compute the strongly connected components for a directed graph
@@ -2540,7 +2853,8 @@ pub fn digraph_find_cycle(
 ) -> EdgeList {
     let mut graph_nodes: HashSet<NodeIndex> =
         graph.graph.node_indices().collect();
-    let mut cycle: Vec<(usize, usize)> = Vec::new();
+    let mut cycle: Vec<(usize, usize)> =
+        Vec::with_capacity(graph.graph.edge_count());
     let temp_value: NodeIndex;
     // If source is not set get an arbitrary node from the set of graph
     // nodes we've not "examined"
@@ -2554,8 +2868,7 @@ pub fn digraph_find_cycle(
     };
 
     // Stack (ie "pushdown list") of vertices already in the spanning tree
-    let mut stack: Vec<NodeIndex> = Vec::new();
-    stack.push(source_index);
+    let mut stack: Vec<NodeIndex> = vec![source_index];
     // map to store parent of a node
     let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
     // a node is in the visiting set if at least one of its child is unexamined
@@ -2603,6 +2916,901 @@ pub fn digraph_find_cycle(
     EdgeList { edges: cycle }
 }
 
+fn _inner_is_matching(
+    graph: &graph::PyGraph,
+    matching: &HashSet<(usize, usize)>,
+) -> bool {
+    let has_edge = |e: &(usize, usize)| -> bool {
+        graph
+            .graph
+            .contains_edge(NodeIndex::new(e.0), NodeIndex::new(e.1))
+    };
+
+    if !matching.iter().all(|e| has_edge(e)) {
+        return false;
+    }
+    let mut found: HashSet<usize> = HashSet::with_capacity(2 * matching.len());
+    for (v1, v2) in matching {
+        if found.contains(v1) || found.contains(v2) {
+            return false;
+        }
+        found.insert(*v1);
+        found.insert(*v2);
+    }
+    true
+}
+
+/// Check if matching is valid for graph
+///
+/// A *matching* in a graph is a set of edges in which no two distinct
+/// edges share a common endpoint.
+///
+/// :param PyDiGraph graph: The graph to check if the matching is valid for
+/// :param set matching: A set of node index tuples for each edge in the
+///     matching.
+///
+/// :returns: Whether the provided matching is a valid matching for the graph
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(graph, matching, /)"]
+pub fn is_matching(
+    graph: &graph::PyGraph,
+    matching: HashSet<(usize, usize)>,
+) -> bool {
+    _inner_is_matching(graph, &matching)
+}
+
+/// Check if a matching is a maximal (**not** maximum) matching for a graph
+///
+/// A *maximal matching* in a graph is a matching in which adding any
+/// edge would cause the set to no longer be a valid matching.
+///
+/// .. note::
+///
+///   This is not checking for a *maximum* (globally optimal) matching, but
+///   a *maximal* (locally optimal) matching.
+///
+/// :param PyDiGraph graph: The graph to check if the matching is maximal for.
+/// :param set matching: A set of node index tuples for each edge in the
+///     matching.
+///
+/// :returns: Whether the provided matching is a valid matching and whether it
+///     is maximal or not.
+/// :rtype: bool
+#[pyfunction]
+#[text_signature = "(graph, matching, /)"]
+pub fn is_maximal_matching(
+    graph: &graph::PyGraph,
+    matching: HashSet<(usize, usize)>,
+) -> bool {
+    if !_inner_is_matching(graph, &matching) {
+        return false;
+    }
+    let edge_list: HashSet<[usize; 2]> = graph
+        .edge_references()
+        .map(|edge| {
+            let mut tmp_array = [edge.source().index(), edge.target().index()];
+            tmp_array.sort_unstable();
+            tmp_array
+        })
+        .collect();
+    let matched_edges: HashSet<[usize; 2]> = matching
+        .iter()
+        .map(|edge| {
+            let mut tmp_array = [edge.0, edge.1];
+            tmp_array.sort_unstable();
+            tmp_array
+        })
+        .collect();
+    let mut unmatched_edges = edge_list.difference(&matched_edges);
+    unmatched_edges.all(|e| {
+        let mut tmp_set = matching.clone();
+        tmp_set.insert((e[0], e[1]));
+        !_inner_is_matching(graph, &tmp_set)
+    })
+}
+
+fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
+    let mut triangles: usize = 0;
+
+    let index = NodeIndex::new(node);
+    let mut neighbors: HashSet<NodeIndex> =
+        graph.graph.neighbors(index).collect();
+    neighbors.remove(&index);
+
+    for nodev in &neighbors {
+        triangles += graph
+            .graph
+            .neighbors(*nodev)
+            .filter(|&x| (x != *nodev) && neighbors.contains(&x))
+            .count();
+    }
+
+    let d: usize = neighbors.len();
+    let triples: usize = match d {
+        0 => 0,
+        _ => (d * (d - 1)) / 2,
+    };
+
+    (triangles / 2, triples)
+}
+
+/// Compute the transitivity of an undirected graph.
+///
+/// The transitivity of a graph is defined as:
+///
+/// .. math::
+///     `c=3 \times \frac{\text{number of triangles}}{\text{number of connected triples}}`
+///
+/// A “connected triple” means a single vertex with
+/// edges running to an unordered pair of others.
+///
+/// This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph graph: Graph to be used.
+///
+/// :returns: Transitivity.
+/// :rtype: float
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let (triangles, triples) = node_indices
+        .par_iter()
+        .map(|node| _graph_triangles(graph, node.index()))
+        .reduce(
+            || (0, 0),
+            |(sumx, sumy), (resx, resy)| (sumx + resx, sumy + resy),
+        );
+
+    match triangles {
+        0 => 0.0,
+        _ => triangles as f64 / triples as f64,
+    }
+}
+
+fn _digraph_triangles(
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> (usize, usize) {
+    let mut triangles: usize = 0;
+
+    let index = NodeIndex::new(node);
+    let mut out_neighbors: HashSet<NodeIndex> = graph
+        .graph
+        .neighbors_directed(index, petgraph::Direction::Outgoing)
+        .collect();
+    out_neighbors.remove(&index);
+
+    let mut in_neighbors: HashSet<NodeIndex> = graph
+        .graph
+        .neighbors_directed(index, petgraph::Direction::Incoming)
+        .collect();
+    in_neighbors.remove(&index);
+
+    let neighbors = out_neighbors.iter().chain(in_neighbors.iter());
+
+    for nodev in neighbors {
+        triangles += graph
+            .graph
+            .neighbors_directed(*nodev, petgraph::Direction::Outgoing)
+            .chain(
+                graph
+                    .graph
+                    .neighbors_directed(*nodev, petgraph::Direction::Incoming),
+            )
+            .map(|x| {
+                let mut res: usize = 0;
+
+                if (x != *nodev) && out_neighbors.contains(&x) {
+                    res += 1;
+                }
+                if (x != *nodev) && in_neighbors.contains(&x) {
+                    res += 1;
+                }
+                res
+            })
+            .sum::<usize>();
+    }
+
+    let din: usize = in_neighbors.len();
+    let dout: usize = out_neighbors.len();
+
+    let dtot = dout + din;
+    let dbil: usize = out_neighbors.intersection(&in_neighbors).count();
+    let triples: usize = match dtot {
+        0 => 0,
+        _ => dtot * (dtot - 1) - 2 * dbil,
+    };
+
+    (triangles / 2, triples)
+}
+
+/// Compute the transitivity of a directed graph.
+///
+/// The transitivity of a directed graph is defined in [Fag]_, Eq.8:
+///
+/// .. math::
+///     `c=3 \times \frac{\text{number of triangles}}{\text{number of all possible triangles}}`
+///
+/// A triangle is a connected triple of nodes.
+/// Different edge orientations counts as different triangles.
+///
+/// This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyDiGraph graph: Directed graph to be used.
+///
+/// :returns: Transitivity.
+/// :rtype: float
+///
+/// .. [Fag] Clustering in complex directed networks by G. Fagiolo,
+///    Physical Review E, 76(2), 026107 (2007)
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let (triangles, triples) = node_indices
+        .par_iter()
+        .map(|node| _digraph_triangles(graph, node.index()))
+        .reduce(
+            || (0, 0),
+            |(sumx, sumy), (resx, resy)| (sumx + resx, sumy + resy),
+        );
+
+    match triangles {
+        0 => 0.0,
+        _ => triangles as f64 / triples as f64,
+    }
+}
+
+pub fn _core_number<Ty>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+) -> PyResult<PyObject>
+where
+    Ty: EdgeType,
+{
+    let node_num = graph.node_count();
+    if node_num == 0 {
+        return Ok(PyDict::new(py).into());
+    }
+
+    let mut cores: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_num);
+    let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
+    let mut degree_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(node_num);
+    let mut nbrs: HashMap<NodeIndex, HashSet<NodeIndex>> =
+        HashMap::with_capacity(node_num);
+    let mut node_pos: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(node_num);
+
+    for k in node_vec.iter() {
+        let k_nbrs: HashSet<NodeIndex> =
+            graph.neighbors_undirected(*k).collect();
+        let k_deg = k_nbrs.len();
+
+        nbrs.insert(*k, k_nbrs);
+        cores.insert(*k, k_deg);
+        degree_map.insert(*k, k_deg);
+    }
+    node_vec.par_sort_by_key(|k| degree_map.get(k));
+
+    let mut bin_boundaries: Vec<usize> =
+        Vec::with_capacity(degree_map[&node_vec[node_num - 1]] + 1);
+    bin_boundaries.push(0);
+    let mut curr_degree = 0;
+    for (i, v) in node_vec.iter().enumerate() {
+        node_pos.insert(*v, i);
+        let v_degree = degree_map[v];
+        if v_degree > curr_degree {
+            for _ in 0..v_degree - curr_degree {
+                bin_boundaries.push(i);
+            }
+            curr_degree = v_degree;
+        }
+    }
+
+    for v_ind in 0..node_vec.len() {
+        let v = node_vec[v_ind];
+        let v_nbrs = nbrs[&v].clone();
+        for u in v_nbrs {
+            if cores[&u] > cores[&v] {
+                nbrs.get_mut(&u).unwrap().remove(&v);
+                let pos = node_pos[&u];
+                let bin_start = bin_boundaries[cores[&u]];
+                *node_pos.get_mut(&u).unwrap() = bin_start;
+                *node_pos.get_mut(&node_vec[bin_start]).unwrap() = pos;
+                node_vec.swap(bin_start, pos);
+                bin_boundaries[cores[&u]] += 1;
+                *cores.get_mut(&u).unwrap() -= 1;
+            }
+        }
+    }
+
+    let out_dict = PyDict::new(py);
+    for (v_index, core) in cores {
+        out_dict.set_item(v_index.index(), core)?;
+    }
+    Ok(out_dict.into())
+}
+
+/// Return the core number for each node in the graph.
+///
+/// A k-core is a maximal subgraph that contains nodes of degree k or more.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph: The graph to get core numbers
+///
+/// :returns: A dictionary keyed by node index to the core number
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn graph_core_number(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<PyObject> {
+    _core_number(py, &graph.graph)
+}
+
+/// Return the core number for each node in the directed graph.
+///
+/// A k-core is a maximal subgraph that contains nodes of degree k or more.
+/// For directed graphs, the degree is calculated as in_degree + out_degree.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyDiGraph: The directed graph to get core numbers
+///
+/// :returns: A dictionary keyed by node index to the core number
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+pub fn digraph_core_number(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+) -> PyResult<PyObject> {
+    _core_number(py, &graph.graph)
+}
+
+/// Find the edges in the minimum spanning tree or forest of a graph
+/// using Kruskal's algorithm.
+///
+/// :param PyGraph graph: Undirected graph
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         minimum_spanning_edges(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         minimum_spanning_edges(graph, weight_fn: float)
+///
+///     to cast the edge object as a float as the weight.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :returns: The :math:`N - |c|` edges of the Minimum Spanning Tree (or Forest, if :math:`|c| > 1`)
+///     where :math:`N` is the number of nodes and :math:`|c|` is the number of connected components of the graph
+/// :rtype: WeightedEdgeList
+#[pyfunction(weight_fn = "None", default_weight = "1.0")]
+#[text_signature = "(graph, weight_fn=None, default_weight=1.0)"]
+pub fn minimum_spanning_edges(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<WeightedEdgeList> {
+    let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
+
+    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> =
+        Vec::with_capacity(graph.graph.edge_count());
+    for edge in graph.edge_references() {
+        let weight =
+            weight_callable(py, &weight_fn, &edge.weight(), default_weight)?;
+        if weight.is_nan() {
+            return Err(PyValueError::new_err("NaN found as an edge weight"));
+        }
+        edge_list.push((weight, edge));
+    }
+
+    edge_list.par_sort_unstable_by(|a, b| {
+        let weight_a = a.0;
+        let weight_b = b.0;
+        weight_a.partial_cmp(&weight_b).unwrap_or(Ordering::Less)
+    });
+
+    let mut answer: Vec<(usize, usize, PyObject)> = Vec::new();
+    for float_edge_pair in edge_list.iter() {
+        let edge = float_edge_pair.1;
+        let u = edge.source().index();
+        let v = edge.target().index();
+        if subgraphs.union(u, v) {
+            let w = edge.weight().clone_ref(py);
+            answer.push((u, v, w));
+        }
+    }
+
+    Ok(WeightedEdgeList { edges: answer })
+}
+
+/// Find the minimum spanning tree or forest of a graph
+/// using Kruskal's algorithm.
+///
+/// :param PyGraph graph: Undirected graph
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         minimum_spanning_tree(graph, weight_fn: float)
+///
+///     to cast the edge object as a float as the weight.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :returns: A Minimum Spanning Tree (or Forest, if the graph is not connected).
+///
+/// :rtype: PyGraph
+///
+/// .. note::
+///
+///     The new graph will keep the same node indexes, but edge indexes might differ.
+#[pyfunction(weight_fn = "None", default_weight = "1.0")]
+#[text_signature = "(graph, weight_fn=None, default_weight=1.0)"]
+pub fn minimum_spanning_tree(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<graph::PyGraph> {
+    let mut spanning_tree = (*graph).clone();
+    spanning_tree.graph.clear_edges();
+
+    for edge in minimum_spanning_edges(py, graph, weight_fn, default_weight)?
+        .edges
+        .iter()
+    {
+        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py))?;
+    }
+
+    Ok(spanning_tree)
+}
+
+/// Compute the complement of a graph.
+///
+/// :param PyGraph graph: The graph to be used.
+///
+/// :returns: The complement of the graph.
+/// :rtype: PyGraph
+///
+/// .. note::
+///
+///     Parallel edges and self-loops are never created,
+///     even if the :attr:`~retworkx.PyGraph.multigraph`
+///     attribute is set to ``True``
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn graph_complement(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<graph::PyGraph> {
+    let mut complement_graph = graph.clone(); // keep same node indexes
+    complement_graph.graph.clear_edges();
+
+    for node_a in graph.graph.node_indices() {
+        let old_neighbors: HashSet<NodeIndex> =
+            graph.graph.neighbors(node_a).collect();
+        for node_b in graph.graph.node_indices() {
+            if node_a != node_b
+                && !old_neighbors.contains(&node_b)
+                && (!complement_graph.multigraph
+                    || !complement_graph
+                        .has_edge(node_a.index(), node_b.index()))
+            {
+                // avoid creating parallel edges in multigraph
+                complement_graph.add_edge(
+                    node_a.index(),
+                    node_b.index(),
+                    py.None(),
+                )?;
+            }
+        }
+    }
+    Ok(complement_graph)
+}
+
+/// Compute the complement of a graph.
+///
+/// :param PyDiGraph graph: The graph to be used.
+///
+/// :returns: The complement of the graph.
+/// :rtype: :class:`~retworkx.PyDiGraph`
+///
+/// .. note::
+///
+///     Parallel edges and self-loops are never created,
+///     even if the :attr:`~retworkx.PyDiGraph.multigraph`
+///     attribute is set to ``True``
+#[pyfunction]
+#[text_signature = "(graph, /)"]
+fn digraph_complement(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut complement_graph = graph.clone(); // keep same node indexes
+    complement_graph.graph.clear_edges();
+
+    for node_a in graph.graph.node_indices() {
+        let old_neighbors: HashSet<NodeIndex> = graph
+            .graph
+            .neighbors_directed(node_a, petgraph::Direction::Outgoing)
+            .collect();
+        for node_b in graph.graph.node_indices() {
+            if node_a != node_b && !old_neighbors.contains(&node_b) {
+                complement_graph.add_edge(
+                    node_a.index(),
+                    node_b.index(),
+                    py.None(),
+                )?;
+            }
+        }
+    }
+
+    Ok(complement_graph)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn _spring_layout<Ty>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping>
+where
+    Ty: EdgeType,
+{
+    if fixed.is_some() && pos.is_none() {
+        return Err(PyValueError::new_err("`fixed` specified but `pos` not."));
+    }
+
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+
+    let dist = Uniform::new(0.0, 1.0);
+
+    let pos = pos.unwrap_or_default();
+    let mut vpos: Vec<layout::Point> = (0..graph.node_bound())
+        .map(|_| [dist.sample(&mut rng), dist.sample(&mut rng)])
+        .collect();
+    for (n, p) in pos.into_iter() {
+        vpos[n] = p;
+    }
+
+    let fixed = fixed.unwrap_or_default();
+    let k = k.unwrap_or(1.0 / (graph.node_count() as f64).sqrt());
+    let f_a = layout::AttractiveForce::new(k);
+    let f_r = layout::RepulsiveForce::new(k, repulsive_exponent.unwrap_or(2));
+
+    let num_iter = num_iter.unwrap_or(50);
+    let tol = tol.unwrap_or(1e-6);
+    let step = 0.1;
+
+    let mut weights: HashMap<(usize, usize), f64> =
+        HashMap::with_capacity(2 * graph.edge_count());
+    for e in graph.edge_references() {
+        let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)?;
+        let source = e.source().index();
+        let target = e.target().index();
+
+        weights.insert((source, target), w);
+        weights.insert((target, source), w);
+    }
+
+    let pos = match adaptive_cooling {
+        Some(false) => {
+            let cs = layout::LinearCoolingScheme::new(step, num_iter);
+            layout::evolve(
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
+                scale, center,
+            )
+        }
+        _ => {
+            let cs = layout::AdaptiveCoolingScheme::new(step);
+            layout::evolve(
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
+                scale, center,
+            )
+        }
+    };
+
+    Ok(Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let n = n.index();
+                (n, pos[n])
+            })
+            .collect(),
+    })
+}
+
+/// Position nodes using Fruchterman-Reingold force-directed algorithm.
+///
+/// The algorithm simulates a force-directed representation of the network
+/// treating edges as springs holding nodes close, while treating nodes
+/// as repelling objects, sometimes called an anti-gravity force.
+/// Simulation continues until the positions are close to an equilibrium.
+///
+/// :param PyGraph graph: Graph to be used.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and values
+///     as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and ``pos`` is not. (``default=None``)
+/// :param float  k:
+///     Optimal distance between nodes. If ``None`` the distance is set to
+///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+///     to move nodes farther apart. (``default=None``)
+/// :param int repulsive_exponent:
+///     Repulsive force exponent. (``default=2``)
+/// :param bool adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to ``False``,
+///     a linear cooling scheme is used. (``default=True``)
+/// :param int num_iter:
+///     Maximum number of iterations. (``default=50``)
+/// :param float tol:
+///     Threshold for relative error in node position changes.
+///     The iteration stops if the error is below this threshold.
+///     (``default = 1e-6``)
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float
+///     which will be used to represent the weight of the edge.
+/// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+///     this optional float value will be used for the weight/cost of each edge
+/// :param float|None scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is ``None``, no re-scaling is
+///     performed. (``default=1.0``)
+/// :param list center: Coordinate pair around which to center
+///     the layout. Not used unless fixed is ``None``. (``default=None``)
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
+                     num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     center=None, seed=None, /)"]
+#[allow(clippy::too_many_arguments)]
+pub fn graph_spring_layout(
+    py: Python,
+    graph: &graph::PyGraph,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping> {
+    _spring_layout(
+        py,
+        &graph.graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+}
+
+/// Position nodes using Fruchterman-Reingold force-directed algorithm.
+///
+/// The algorithm simulates a force-directed representation of the network
+/// treating edges as springs holding nodes close, while treating nodes
+/// as repelling objects, sometimes called an anti-gravity force.
+/// Simulation continues until the positions are close to an equilibrium.
+///
+/// :param PyGraph graph: Graph to be used.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and values
+///     as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and ``pos`` is not. (``default=None``)
+/// :param float  k:
+///     Optimal distance between nodes. If ``None`` the distance is set to
+///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+///     to move nodes farther apart. (``default=None``)
+/// :param int repulsive_exponent:
+///     Repulsive force exponent. (``default=2``)
+/// :param bool adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to ``False``,
+///     a linear cooling scheme is used. (``default=True``)
+/// :param int num_iter:
+///     Maximum number of iterations. (``default=50``)
+/// :param float tol:
+///     Threshold for relative error in node position changes.
+///     The iteration stops if the error is below this threshold.
+///     (``default = 1e-6``)
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float
+///     which will be used to represent the weight of the edge.
+/// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+///     this optional float value will be used for the weight/cost of each edge
+/// :param float|None scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is ``None``, no re-scaling is
+///     performed. (``default=1.0``)
+/// :param list center: Coordinate pair around which to center
+///     the layout. Not used unless fixed is ``None``. (``default=None``)
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
+                     num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     center=None, seed=None, /)"]
+#[allow(clippy::too_many_arguments)]
+pub fn digraph_spring_layout(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping> {
+    _spring_layout(
+        py,
+        &graph.graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+}
+
+fn _random_layout<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+
+    Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let random_tuple: [f64; 2] = rng.gen();
+                match center {
+                    Some(center) => (
+                        n.index(),
+                        [
+                            random_tuple[0] + center[0],
+                            random_tuple[1] + center[1],
+                        ],
+                    ),
+                    None => (n.index(), random_tuple),
+                }
+            })
+            .collect(),
+    }
+}
+
+/// Generate a random layout
+///
+/// :param PyGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
+pub fn graph_random_layout(
+    graph: &graph::PyGraph,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
+/// Generate a random layout
+///
+/// :param PyDiGraph graph: The graph to generate the layout for
+/// :param tuple center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+/// :param int seed: An optional seed to set for the random number generator.
+///
+/// :returns: The random layout of the graph.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[text_signature = "(graph, / center=None, seed=None)"]
+pub fn digraph_random_layout(
+    graph: &digraph::PyDiGraph,
+    center: Option<[f64; 2]>,
+    seed: Option<u64>,
+) -> Pos2DMapping {
+    _random_layout(&graph.graph, center, seed)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -2635,9 +3843,9 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
-    m.add_wrapped(wrap_pyfunction!(is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
-    m.add_wrapped(wrap_pyfunction!(is_isomorphic_node_match))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
@@ -2666,6 +3874,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
@@ -2673,12 +3882,31 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(is_matching))?;
+    m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
+    m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
+    m.add_wrapped(wrap_pyfunction!(minimum_spanning_edges))?;
+    m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree))?;
+    m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
+    m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
+    m.add_wrapped(wrap_pyfunction!(graph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
+    m.add_wrapped(wrap_pyfunction!(graph_spring_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::NodeIndices>()?;
+    m.add_class::<iterators::EdgeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
+    m.add_class::<iterators::PathMapping>()?;
+    m.add_class::<iterators::PathLengthMapping>()?;
+    m.add_class::<iterators::Pos2DMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }

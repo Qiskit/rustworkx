@@ -2,9 +2,9 @@
 name: CI Jobs
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 jobs:
   build_lint:
     name: Build, rustfmt, and python lint
@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - run: pip install -U flake8
+      - run: pip install -U flake8 black==21.5b0
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -24,6 +24,10 @@ jobs:
         run: cargo build
       - name: Rust Format
         run: cargo fmt -- --check
+      - name: Clippy
+        run: cargo clippy -- -D warnings
+      - name: Black Codestyle Format
+        run: black --check --diff retworkx tests
       - name: Python Lint
         run: flake8 setup.py tests
   tests:
@@ -42,7 +46,7 @@ jobs:
         ]
         include:
           # Test minimal supported Rust version
-          - rust: 1.39.0
+          - rust: 1.41.1
             python-version: 3.8
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
@@ -79,24 +83,31 @@ jobs:
         with:
           toolchain: nightly
           override: true
-          profile: minimal
+          profile: default
+          components: llvm-tools-preview
       - name: Download grcov
-        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.5.9/grcov-linux-x86_64.tar.bz2 | tar jxf -
+        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -
       - name: Install deps
-        run: pip install -U setuptools-rust
+        run: pip install -U setuptools-rust networkx testtools fixtures
       - name: Build retworkx
         run: python setup.py develop
         env:
           CARGO_INCREMENTAL: 0
-          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
-          RUSTDOCFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+          RUSTFLAGS: "-Zinstrument-coverage"
+          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
       - name: Run tests
         run: cd tests && python -m unittest discover . && cd ..
+        env:
+          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
       - name: Run grcov
         run: |
           set -e
-          zip -0 ccov.zip `find . \( -name "retworkx*.gc*" \) -print`
-          ./grcov ccov.zip -s . -t lcov --llvm --ignore-not-existing --ignore "/*" -o coveralls.info
+          mv tests/retworkx*profraw .
+          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.info
+      - uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: coveralls.info
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:

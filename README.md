@@ -1,14 +1,15 @@
 # retworkx
 
 [![License](https://img.shields.io/github/license/Qiskit/retworkx.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://img.shields.io/travis/com/Qiskit/retworkx/master.svg?style=popout-square)](https://travis-ci.com/Qiskit/retworkx)
+![Build Status](https://github.com/Qiskit/retworkx/actions/workflows/main.yml/badge.svg?branch=main)
+[![Build Status](https://img.shields.io/travis/com/Qiskit/retworkx/main.svg?style=popout-square)](https://travis-ci.com/Qiskit/retworkx)
 [![](https://img.shields.io/github/release/Qiskit/retworkx.svg?style=popout-square)](https://github.com/Qiskit/retworkx/releases)
 [![](https://img.shields.io/pypi/dm/retworkx.svg?style=popout-square)](https://pypi.org/project/retworkx/)
-[![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=master)](https://coveralls.io/github/Qiskit/retworkx?branch=master)
-[![Minimum rustc 1.39](https://img.shields.io/badge/rustc-1.39+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/retworkx?branch=main)
+[![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 
   - You can see the full rendered docs at:
-    <https://retworkx.readthedocs.io/en/latest/index.html>
+    <https://qiskit.org/documentation/retworkx>
 
 retworkx is a general purpose graph library for python3 written in Rust to
 take advantage of the performance and safety that Rust provides. It was built
@@ -37,7 +38,7 @@ environment.
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able able to build the package
-from the published source package you need to have rust >=1.39 installed (and
+from the published source package you need to have rust >=1.41.1 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
 rust) to make this simpler, or rely on

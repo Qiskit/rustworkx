@@ -15,7 +15,7 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -23,9 +23,14 @@ use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
+use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::PyTraverseError;
 use pyo3::Python;
+
+use ndarray::prelude::*;
+use numpy::PyReadonlyArray2;
 
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -41,7 +46,7 @@ use petgraph::visit::{
 };
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
     NoSuitableNeighbors, NodesRemoved,
@@ -105,8 +110,9 @@ use super::{
 /// penalty that grows as the graph does. If you're adding a node and edge at
 /// the same time leveraging :meth:`PyDiGraph.add_child` or
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
-#[pyclass(module = "retworkx", subclass)]
-#[text_signature = "(/, check_cycle=False)"]
+#[pyclass(module = "retworkx", subclass, gc)]
+#[text_signature = "(/, check_cycle=False, multigraph=True)"]
+#[derive(Clone)]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
     pub cycle_state: algo::DfsSpace<
@@ -115,6 +121,7 @@ pub struct PyDiGraph {
     >,
     pub check_cycle: bool,
     pub node_removed: bool,
+    pub multigraph: bool,
 }
 
 pub type Edges<'a, E> =
@@ -326,6 +333,14 @@ impl PyDiGraph {
                 ));
             }
         }
+        if !self.multigraph {
+            let exists = self.graph.find_edge(p_index, c_index);
+            if let Some(index) = exists {
+                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
+                *edge_weight = edge;
+                return Ok(index.index());
+            }
+        }
         let edge = self.graph.add_edge(p_index, c_index, edge);
         Ok(edge.index())
     }
@@ -380,22 +395,25 @@ impl PyDiGraph {
 #[pymethods]
 impl PyDiGraph {
     #[new]
-    #[args(check_cycle = "false")]
-    fn new(check_cycle: bool) -> Self {
+    #[args(check_cycle = "false", multigraph = "true")]
+    fn new(check_cycle: bool, multigraph: bool) -> Self {
         PyDiGraph {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
+            multigraph,
         }
     }
 
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
         let out_dict = PyDict::new(py);
         let node_dict = PyDict::new(py);
-        let mut out_list: Vec<PyObject> = Vec::new();
+        let mut out_list: Vec<PyObject> =
+            Vec::with_capacity(self.graph.edge_count());
         out_dict.set_item("nodes", node_dict)?;
-
+        out_dict.set_item("nodes_removed", self.node_removed)?;
+        out_dict.set_item("multigraph", self.multigraph)?;
         let dir = petgraph::Direction::Incoming;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
@@ -421,6 +439,16 @@ impl PyDiGraph {
             dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
         let edges_list =
             dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
+        let nodes_removed_raw = dict_state
+            .get_item("nodes_removed")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.node_removed = nodes_removed_raw.extract()?;
+        let multigraph_raw = dict_state
+            .get_item("multigraph")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.multigraph = multigraph_raw.extract()?;
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -471,8 +499,8 @@ impl PyDiGraph {
     /// If set to ``True`` adding new edges that would introduce a cycle
     /// will raise a :class:`DAGWouldCycle` exception.
     #[getter]
-    fn get_check_cycle(&self) -> PyResult<bool> {
-        Ok(self.check_cycle)
+    fn get_check_cycle(&self) -> bool {
+        self.check_cycle
     }
 
     #[setter]
@@ -484,6 +512,16 @@ impl PyDiGraph {
         Ok(())
     }
 
+    /// Whether the graph is a multigraph (allows multiple edges between
+    /// nodes) or not
+    ///
+    /// If set to ``False`` multiple edges between nodes are not allowed and
+    /// calls that would add a parallel edge will instead update the existing
+    /// edge
+    #[getter]
+    fn multigraph(&self) -> bool {
+        self.multigraph
+    }
     /// Return a list of all edge data.
     ///
     /// :returns: A list of all the edge data objects in the graph
@@ -494,6 +532,17 @@ impl PyDiGraph {
             .edge_indices()
             .map(|edge| self.graph.edge_weight(edge).unwrap())
             .collect()
+    }
+
+    /// Return a list of all edge indices.
+    ///
+    /// :returns: A list of all the edge indices in the graph
+    /// :rtype: EdgeIndices
+    #[text_signature = "(self)"]
+    pub fn edge_indices(&self) -> EdgeIndices {
+        EdgeIndices {
+            edges: self.graph.edge_indices().map(|edge| edge.index()).collect(),
+        }
     }
 
     /// Return a list of all node data.
@@ -579,6 +628,98 @@ impl PyDiGraph {
         predec
     }
 
+    /// Return a filtered list of successors data such that each
+    /// node has at least one edge data which matches the filter.
+    ///
+    /// :param int node: The index for the node to get the successors for
+    ///
+    /// :param filter_fn: The filter function to use for matching nodes. It takes
+    ///     in one argument, the edge data payload/weight object, and will return a
+    ///     boolean whether the edge matches the conditions or not. If any edge returns
+    ///     ``True``, the node will be included.
+    ///
+    /// :returns: A list of the node data for all the child neighbor nodes
+    ///           whose at least one edge matches the filter
+    /// :rtype: list
+    #[text_signature = "(self, node, filter_fn/)"]
+    pub fn find_successors_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        filter_fn: PyObject,
+    ) -> PyResult<Vec<&PyObject>> {
+        let index = NodeIndex::new(node);
+        let mut succesors: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+
+        let filter_edge = |edge: &PyObject| -> PyResult<bool> {
+            let res = filter_fn.call1(py, (edge,))?;
+            res.extract(py)
+        };
+
+        let raw_edges = self
+            .graph
+            .edges_directed(index, petgraph::Direction::Outgoing);
+
+        for edge in raw_edges {
+            let succ = edge.target();
+            if !used_indexes.contains(&succ) {
+                let edge_weight = edge.weight();
+                if filter_edge(edge_weight)? {
+                    used_indexes.insert(succ);
+                    succesors.push(self.graph.node_weight(succ).unwrap());
+                }
+            }
+        }
+        Ok(succesors)
+    }
+
+    /// Return a filtered list of predecessor data such that each
+    /// node has at least one edge data which matches the filter.
+    ///
+    /// :param int node: The index for the node to get the predecessor for
+    ///
+    /// :param filter_fn: The filter function to use for matching nodes. It takes
+    ///     in one argument, the edge data payload/weight object, and will return a
+    ///     boolean whether the edge matches the conditions or not. If any edge returns
+    ///     ``True``, the node will be included.
+    ///
+    /// :returns: A list of the node data for all the parent neighbor nodes
+    ///           whose at least one edge matches the filter
+    /// :rtype: list
+    #[text_signature = "(self, node, filter_fn/)"]
+    pub fn find_predecessors_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        filter_fn: PyObject,
+    ) -> PyResult<Vec<&PyObject>> {
+        let index = NodeIndex::new(node);
+        let mut predec: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+
+        let filter_edge = |edge: &PyObject| -> PyResult<bool> {
+            let res = filter_fn.call1(py, (edge,))?;
+            res.extract(py)
+        };
+
+        let raw_edges = self
+            .graph
+            .edges_directed(index, petgraph::Direction::Incoming);
+
+        for edge in raw_edges {
+            let pred = edge.source();
+            if !used_indexes.contains(&pred) {
+                let edge_weight = edge.weight();
+                if filter_edge(edge_weight)? {
+                    used_indexes.insert(pred);
+                    predec.push(self.graph.node_weight(pred).unwrap());
+                }
+            }
+        }
+        Ok(predec)
+    }
+
     /// Return the edge data for an edge between 2 nodes.
     ///
     /// :param int node_a: The index for the first node
@@ -605,6 +746,60 @@ impl PyDiGraph {
 
         let data = self.graph.edge_weight(edge_index).unwrap();
         Ok(data)
+    }
+
+    /// Update an edge's weight/payload inplace
+    ///
+    /// If there are parallel edges in the graph only one edge will be updated.
+    /// if you need to update a specific edge or need to ensure all parallel
+    /// edges get updated you should use
+    /// :meth:`~retworkx.PyDiGraph.update_edge_by_index` instead.
+    ///
+    /// :param int source: The index for the first node
+    /// :param int target: The index for the second node
+    ///
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[text_signature = "(self, source, target, edge /)"]
+    pub fn update_edge(
+        &mut self,
+        source: usize,
+        target: usize,
+        edge: PyObject,
+    ) -> PyResult<()> {
+        let index_a = NodeIndex::new(source);
+        let index_b = NodeIndex::new(target);
+        let edge_index = match self.graph.find_edge(index_a, index_b) {
+            Some(edge_index) => edge_index,
+            None => {
+                return Err(NoEdgeBetweenNodes::new_err(
+                    "No edge found between nodes",
+                ))
+            }
+        };
+        let data = self.graph.edge_weight_mut(edge_index).unwrap();
+        *data = edge;
+        Ok(())
+    }
+
+    /// Update an edge's weight/payload by the edge index
+    ///
+    /// :param int edge_index: The index for the edge
+    /// :param object edge: The data payload/weight to update the edge with
+    ///
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[text_signature = "(self, source, target, edge /)"]
+    pub fn update_edge_by_index(
+        &mut self,
+        edge_index: usize,
+        edge: PyObject,
+    ) -> PyResult<()> {
+        match self.graph.edge_weight_mut(EdgeIndex::new(edge_index)) {
+            Some(data) => *data = edge,
+            None => {
+                return Err(PyIndexError::new_err("No edge found for index"))
+            }
+        };
+        Ok(())
     }
 
     /// Return the node data for a given node index
@@ -822,7 +1017,7 @@ impl PyDiGraph {
         &mut self,
         obj_list: Vec<(usize, usize, PyObject)>,
     ) -> PyResult<Vec<usize>> {
-        let mut out_list: Vec<usize> = Vec::new();
+        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
@@ -848,7 +1043,7 @@ impl PyDiGraph {
         py: Python,
         obj_list: Vec<(usize, usize)>,
     ) -> PyResult<Vec<usize>> {
-        let mut out_list: Vec<usize> = Vec::new();
+        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
@@ -1333,7 +1528,7 @@ impl PyDiGraph {
     ///
     /// :param int node: The index of the node to get the neighbors of
     ///
-    /// :returns: A list of the neighbor node indicies
+    /// :returns: A list of the neighbor node indices
     /// :rtype: NodeIndices
     #[text_signature = "(self, node, /)"]
     pub fn neighbors(&self, node: usize) -> NodeIndices {
@@ -1342,6 +1537,8 @@ impl PyDiGraph {
                 .graph
                 .neighbors(NodeIndex::new(node))
                 .map(|node| node.index())
+                .collect::<HashSet<usize>>()
+                .drain()
                 .collect(),
         }
     }
@@ -1356,7 +1553,7 @@ impl PyDiGraph {
     /// :returns: A list of the neighbor node indicies
     /// :rtype: NodeIndices
     #[text_signature = "(self, node, /)"]
-    pub fn successor_indices(&mut self, node: usize) -> NodeIndices {
+    pub fn successor_indices(&self, node: usize) -> NodeIndices {
         NodeIndices {
             nodes: self
                 .graph
@@ -1379,7 +1576,7 @@ impl PyDiGraph {
     /// :returns: A list of the neighbor node indicies
     /// :rtype: NodeIndices
     #[text_signature = "(self, node, /)"]
-    pub fn predecessor_indices(&mut self, node: usize) -> NodeIndices {
+    pub fn predecessor_indices(&self, node: usize) -> NodeIndices {
         NodeIndices {
             nodes: self
                 .graph
@@ -1443,11 +1640,10 @@ impl PyDiGraph {
     /// :rtype: NodeIndices
     #[text_signature = "(self, obj_list, /)"]
     pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
-        let mut out_list: Vec<usize> = Vec::new();
-        for obj in obj_list {
-            let node_index = self.graph.add_node(obj);
-            out_list.push(node_index.index());
-        }
+        let out_list: Vec<usize> = obj_list
+            .into_iter()
+            .map(|obj| self.graph.add_node(obj).index())
+            .collect();
         NodeIndices { nodes: out_list }
     }
 
@@ -1593,16 +1789,23 @@ impl PyDiGraph {
         graph_attr: Option<BTreeMap<String, String>>,
         filename: Option<String>,
     ) -> PyResult<Option<PyObject>> {
-        if filename.is_some() {
-            let mut file = File::create(filename.unwrap())?;
-            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(None)
-        } else {
-            let mut file = Vec::<u8>::new();
-            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(Some(
-                PyString::new(py, str::from_utf8(&file)?).to_object(py),
-            ))
+        match filename {
+            Some(filename) => {
+                let mut file = File::create(filename)?;
+                build_dot(
+                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                )?;
+                Ok(None)
+            }
+            None => {
+                let mut file = Vec::<u8>::new();
+                build_dot(
+                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                )?;
+                Ok(Some(
+                    PyString::new(py, str::from_utf8(&file)?).to_object(py),
+                ))
+            }
         }
     }
 
@@ -1653,7 +1856,7 @@ impl PyDiGraph {
     ///   image
     ///
     #[staticmethod]
-    #[text_signature = "(self, path, /, comment=None, deliminator=None)"]
+    #[text_signature = "(path, /, comment=None, deliminator=None)"]
     pub fn read_edge_list(
         py: Python,
         path: &str,
@@ -1713,7 +1916,132 @@ impl PyDiGraph {
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
             node_removed: false,
+            multigraph: true,
         })
+    }
+
+    /// Write an edge list file from the PyDiGraph object
+    ///
+    /// :param str path: The path to write the output file to
+    /// :param str deliminator: The optional character to use as a deliminator
+    ///     if not specified ``" "`` is used.
+    /// :param callable weight_fn: An optional callback function that will be
+    ///     passed an edge's data payload/weight object and is expected to
+    ///     return a string (a ``TypeError`` will be raised if it doesn't
+    ///     return a string). If specified the weight in the output file
+    ///     for each edge will be set to the returned string.
+    ///
+    ///  For example:
+    ///
+    ///  .. jupyter-execute::
+    ///
+    ///     import os
+    ///     import tempfile
+    ///
+    ///     import retworkx
+    ///
+    ///     graph = retworkx.generators.directed_path_graph(5)
+    ///     path = os.path.join(tempfile.gettempdir(), "edge_list")
+    ///     graph.write_edge_list(path, deliminator=',')
+    ///     # Print file contents
+    ///     with open(path, 'rt') as edge_file:
+    ///         print(edge_file.read())
+    ///
+    #[text_signature = "(self, path, /, deliminator=None, weight_fn=None)"]
+    pub fn write_edge_list(
+        &self,
+        py: Python,
+        path: &str,
+        deliminator: Option<char>,
+        weight_fn: Option<PyObject>,
+    ) -> PyResult<()> {
+        let file = File::create(path)?;
+        let mut buf_writer = BufWriter::new(file);
+        let delim = match deliminator {
+            Some(delim) => delim.to_string(),
+            None => " ".to_string(),
+        };
+
+        let weight_callable = |value: &PyObject,
+                               weight_fn: &Option<PyObject>|
+         -> PyResult<Option<String>> {
+            match weight_fn {
+                Some(weight_fn) => {
+                    let res = weight_fn.call1(py, (value,))?;
+                    Ok(Some(res.extract(py)?))
+                }
+                None => Ok(None),
+            }
+        };
+        for edge in self.graph.edge_references() {
+            buf_writer.write_all(
+                format!(
+                    "{}{}{}",
+                    edge.source().index(),
+                    delim,
+                    edge.target().index()
+                )
+                .as_bytes(),
+            )?;
+            match weight_callable(edge.weight(), &weight_fn)? {
+                Some(weight) => buf_writer
+                    .write_all(format!("{}{}\n", delim, weight).as_bytes()),
+                None => buf_writer.write_all(b"\n"),
+            }?;
+        }
+        buf_writer.flush()?;
+        Ok(())
+    }
+
+    /// Create a new :class:`~retworkx.PyDiGraph` object from an adjacency matrix
+    ///
+    /// This method can be used to construct a new :class:`~retworkx.PyDiGraph`
+    /// object from an input adjacency matrix. The node weights will be the
+    /// index from the matrix. The edge weights will be a float value of the
+    /// value from the matrix.
+    ///
+    /// :param ndarray matrix: The input numpy array adjacency matrix to create
+    ///     a new :class:`~retworkx.PyDiGraph` object from. It must be a 2
+    ///     dimensional array and be a ``float``/``np.float64`` data type.
+    ///
+    ///
+    /// :returns: A new graph object generated from the adjacency matrix
+    /// :rtype: PyDiGraph
+    #[staticmethod]
+    #[text_signature = "(matrix, /)"]
+    pub fn from_adjacency_matrix<'p>(
+        py: Python<'p>,
+        matrix: PyReadonlyArray2<'p, f64>,
+    ) -> PyDiGraph {
+        let array = matrix.as_array();
+        let shape = array.shape();
+        let mut out_graph = StableDiGraph::<PyObject, PyObject>::new();
+        let _node_indices: Vec<NodeIndex> = (0..shape[0])
+            .map(|node| out_graph.add_node(node.to_object(py)))
+            .collect();
+        array
+            .axis_iter(Axis(0))
+            .enumerate()
+            .for_each(|(index, row)| {
+                let source_index = NodeIndex::new(index);
+                for target_index in 0..row.len() {
+                    if row[[target_index]] > 0.0 {
+                        out_graph.add_edge(
+                            source_index,
+                            NodeIndex::new(target_index),
+                            row[[target_index]].to_object(py),
+                        );
+                    }
+                }
+            });
+
+        PyDiGraph {
+            graph: out_graph,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
+            node_removed: false,
+            multigraph: true,
+        }
     }
 
     /// Add another PyDiGraph object into this PyDiGraph
@@ -1821,7 +2149,8 @@ impl PyDiGraph {
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
-        let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut new_node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(other.node_count());
 
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph
@@ -1840,16 +2169,16 @@ impl PyDiGraph {
             let new_c_index = new_node_map.get(&edge.target()).unwrap();
             let weight =
                 weight_transform_callable(py, &edge_map_func, edge.weight())?;
-            self.graph.add_edge(*new_p_index, *new_c_index, weight);
+            self._add_edge(*new_p_index, *new_c_index, weight)?;
         }
         // Add edges from map
         for (this_index, (index, weight)) in node_map.iter() {
             let new_index = new_node_map.get(&NodeIndex::new(*index)).unwrap();
-            self.graph.add_edge(
+            self._add_edge(
                 NodeIndex::new(*this_index),
                 *new_index,
                 weight.clone_ref(py),
-            );
+            )?;
         }
         let out_dict = PyDict::new(py);
         for (orig_node, new_node) in new_node_map.iter() {
@@ -1874,7 +2203,8 @@ impl PyDiGraph {
     #[text_signature = "(self, nodes, /)"]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyDiGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
-        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(nodes.len());
         let node_filter =
             |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
         let mut out_graph = StableDiGraph::<PyObject, PyObject>::new();
@@ -1897,6 +2227,7 @@ impl PyDiGraph {
             node_removed: false,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: self.check_cycle,
+            multigraph: self.multigraph,
         }
     }
 
@@ -1937,7 +2268,8 @@ impl PyDiGraph {
     #[text_signature = "(self)"]
     pub fn to_undirected(&self, py: Python) -> crate::graph::PyGraph {
         let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
-        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(self.node_count());
         for node_index in self.graph.node_indices() {
             let node = self.graph[node_index].clone_ref(py);
             let new_index = new_graph.add_node(node);
@@ -1952,6 +2284,7 @@ impl PyDiGraph {
         crate::graph::PyGraph {
             graph: new_graph,
             node_removed: false,
+            multigraph: true,
         }
     }
 }
@@ -2018,5 +2351,43 @@ fn weight_transform_callable(
             Ok(res.to_object(py))
         }
         None => Ok(value.clone_ref(py)),
+    }
+}
+
+// Functions to enable Python Garbage Collection
+#[pyproto]
+impl PyGCProtocol for PyDiGraph {
+    // Function for PyTypeObject.tp_traverse [1][2] used to tell Python what
+    // objects the PyDiGraph has strong references to.
+    //
+    // [1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_traverse
+    // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for node in self
+            .graph
+            .node_indices()
+            .map(|node| self.graph.node_weight(node).unwrap())
+        {
+            visit.call(node)?;
+        }
+        for edge in self
+            .graph
+            .edge_indices()
+            .map(|edge| self.graph.edge_weight(edge).unwrap())
+        {
+            visit.call(edge)?;
+        }
+        Ok(())
+    }
+
+    // Function for PyTypeObject.tp_clear [1][2] used to tell Python's GC how
+    // to drop all references held by a PyDiGraph object when the GC needs to
+    // break reference cycles.
+    //
+    // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
+    // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
+    fn __clear__(&mut self) {
+        self.graph = StableDiGraph::<PyObject, PyObject>::new();
+        self.node_removed = false;
     }
 }

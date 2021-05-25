@@ -48,9 +48,10 @@ pub fn digraph_union(
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
+        multigraph: true,
     };
-    let mut node_map = HashMap::new();
-    let mut edge_map = HashSet::new();
+    let mut node_map = HashMap::with_capacity(second.node_count());
+    let mut edge_map = HashSet::with_capacity(second.edge_count());
 
     let compare_weights = |a: &PyAny, b: &PyAny| -> PyResult<bool> {
         let res = a.compare(b)?;

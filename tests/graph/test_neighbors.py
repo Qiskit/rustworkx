@@ -18,15 +18,26 @@ import retworkx
 class TestNeighbors(unittest.TestCase):
     def test_single_neighbor(self):
         graph = retworkx.PyGraph()
-        node_a = graph.add_node('a')
-        node_b = graph.add_node('b')
-        graph.add_edge(node_a, node_b, {'a': 1})
-        node_c = graph.add_node('c')
-        graph.add_edge(node_a, node_c, {'a': 2})
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, {"a": 1})
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_c, {"a": 2})
         res = graph.neighbors(node_a)
-        self.assertEqual([node_c, node_b], res)
+        self.assertCountEqual([node_c, node_b], res)
+
+    def test_unique_neighbors_on_graphs(self):
+        dag = retworkx.PyGraph()
+        node_a = dag.add_node("a")
+        node_b = dag.add_node("b")
+        node_c = dag.add_node("c")
+        dag.add_edge(node_a, node_b, ["edge a->b"])
+        dag.add_edge(node_a, node_b, ["edge a->b bis"])
+        dag.add_edge(node_a, node_c, ["edge a->c"])
+        res = dag.neighbors(node_a)
+        self.assertCountEqual([node_c, node_b], res)
 
     def test_no_neighbor(self):
         graph = retworkx.PyGraph()
-        node_a = graph.add_node('a')
+        node_a = graph.add_node("a")
         self.assertEqual([], graph.neighbors(node_a))

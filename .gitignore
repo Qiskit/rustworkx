@@ -11,3 +11,6 @@ docs/source/stubs/
 .tox/
 retworkx/*.so
 retworkx/*pyd
+*.stestr/
+*.ps
+*.png

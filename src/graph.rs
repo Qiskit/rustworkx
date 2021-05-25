@@ -14,7 +14,7 @@ use std::cmp;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -22,12 +22,17 @@ use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
+use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::PyTraverseError;
 use pyo3::Python;
 
+use ndarray::prelude::*;
+use numpy::PyReadonlyArray2;
+
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -73,11 +78,19 @@ use petgraph::visit::{
 ///     print("Node Index: %s" % node_index)
 ///     print(graph[node_index])
 ///
-#[pyclass(module = "retworkx")]
-#[text_signature = "()"]
+///
+/// :param bool multigraph: When this is set to ``False`` the created PyGraph
+///     object will not be a multigraph (which is the default behavior). When
+///     ``False`` if parallel edges are added the weight/weight from that
+///     method call will be used to update the existing edge in place.
+///
+#[pyclass(module = "retworkx", subclass, gc)]
+#[text_signature = "(/, multigraph=True)"]
+#[derive(Clone)]
 pub struct PyGraph {
     pub graph: StableUnGraph<PyObject, PyObject>,
     pub node_removed: bool,
+    pub multigraph: bool,
 }
 
 pub type Edges<'a, E> =
@@ -253,18 +266,23 @@ impl GetAdjacencyMatrix for PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    fn new() -> Self {
+    #[args(multigraph = "true")]
+    fn new(multigraph: bool) -> Self {
         PyGraph {
             graph: StableUnGraph::<PyObject, PyObject>::default(),
             node_removed: false,
+            multigraph,
         }
     }
 
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
         let out_dict = PyDict::new(py);
         let node_dict = PyDict::new(py);
-        let mut out_list: Vec<PyObject> = Vec::new();
+        let mut out_list: Vec<PyObject> =
+            Vec::with_capacity(self.graph.edge_count());
         out_dict.set_item("nodes", node_dict)?;
+        out_dict.set_item("nodes_removed", self.node_removed)?;
+        out_dict.set_item("multigraph", self.multigraph)?;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
             node_dict.set_item(node_index.index(), node_data)?;
@@ -289,6 +307,17 @@ impl PyGraph {
             dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
         let edges_list =
             dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
+        let nodes_removed_raw = dict_state
+            .get_item("nodes_removed")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.node_removed = nodes_removed_raw.extract()?;
+        let multigraph_raw = dict_state
+            .get_item("multigraph")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.multigraph = multigraph_raw.extract()?;
+
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -330,6 +359,17 @@ impl PyGraph {
         Ok(())
     }
 
+    /// Whether the graph is a multigraph (allows multiple edges between
+    /// nodes) or not
+    ///
+    /// If set to ``False`` multiple edges between nodes are not allowed and
+    /// calls that would add a parallel edge will instead update the existing
+    /// edge
+    #[getter]
+    fn multigraph(&self) -> bool {
+        self.multigraph
+    }
+
     /// Return a list of all edge data.
     ///
     /// :returns: A list of all the edge data objects in the graph
@@ -340,6 +380,17 @@ impl PyGraph {
             .edge_indices()
             .map(|edge| self.graph.edge_weight(edge).unwrap())
             .collect()
+    }
+
+    /// Return a list of all edge indices.
+    ///
+    /// :returns: A list of all the edge indices in the graph
+    /// :rtype: EdgeIndices
+    #[text_signature = "(self)"]
+    pub fn edge_indices(&self) -> EdgeIndices {
+        EdgeIndices {
+            edges: self.graph.edge_indices().map(|edge| edge.index()).collect(),
+        }
     }
 
     /// Return a list of all node data.
@@ -410,6 +461,60 @@ impl PyGraph {
 
         let data = self.graph.edge_weight(edge_index).unwrap();
         Ok(data)
+    }
+
+    /// Update an edge's weight/payload in place
+    ///
+    /// If there are parallel edges in the graph only one edge will be updated.
+    /// if you need to update a specific edge or need to ensure all parallel
+    /// edges get updated you should use
+    /// :meth:`~retworkx.PyGraph.update_edge_by_index` instead.
+    ///
+    /// :param int source: The index for the first node
+    /// :param int target: The index for the second node
+    ///
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[text_signature = "(self, source, target, edge /)"]
+    pub fn update_edge(
+        &mut self,
+        source: usize,
+        target: usize,
+        edge: PyObject,
+    ) -> PyResult<()> {
+        let index_a = NodeIndex::new(source);
+        let index_b = NodeIndex::new(target);
+        let edge_index = match self.graph.find_edge(index_a, index_b) {
+            Some(edge_index) => edge_index,
+            None => {
+                return Err(NoEdgeBetweenNodes::new_err(
+                    "No edge found between nodes",
+                ))
+            }
+        };
+        let data = self.graph.edge_weight_mut(edge_index).unwrap();
+        *data = edge;
+        Ok(())
+    }
+
+    /// Update an edge's weight/data payload in place by the edge index
+    ///
+    /// :param int edge_index: The index for the edge
+    /// :param object edge: The data payload/weight to update the edge with
+    ///
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[text_signature = "(self, source, target, edge /)"]
+    pub fn update_edge_by_index(
+        &mut self,
+        edge_index: usize,
+        edge: PyObject,
+    ) -> PyResult<()> {
+        match self.graph.edge_weight_mut(EdgeIndex::new(edge_index)) {
+            Some(data) => *data = edge,
+            None => {
+                return Err(PyIndexError::new_err("No edge found for index"))
+            }
+        };
+        Ok(())
     }
 
     /// Return the node data for a given node index
@@ -515,14 +620,18 @@ impl PyGraph {
 
     /// Add an edge between 2 nodes.
     ///
-    /// :param int parent: Index of the parent node
-    /// :param int child: Index of the child node
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``edge``.
+    ///
+    /// :param int node_a: Index of the parent node
+    /// :param int node_b: Index of the child node
     /// :param edge: The object to set as the data for the edge. It can be any
     ///     python object.
-    /// :param int parent: Index of the parent node
-    /// :param int child: Index of the child node
-    /// :param edge: The object to set as the data for the edge. It can be any
-    ///     python object.
+    ///
+    /// :returns: The edge index for the newly created (or updated in the case
+    ///     of an existing edge with ``multigraph=False``) edge.
+    /// :rtype: int
     #[text_signature = "(self, node_a, node_b, edge, /)"]
     pub fn add_edge(
         &mut self,
@@ -532,6 +641,14 @@ impl PyGraph {
     ) -> PyResult<usize> {
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
+        if !self.multigraph {
+            let exists = self.graph.find_edge(p_index, c_index);
+            if let Some(index) = exists {
+                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
+                *edge_weight = edge;
+                return Ok(index.index());
+            }
+        }
         let edge = self.graph.add_edge(p_index, c_index, edge);
         Ok(edge.index())
     }
@@ -543,6 +660,12 @@ impl PyGraph {
     ///     ``node_b`` are integer indexes describing where an edge should be
     ///     added, and ``obj`` is the python object for the edge data.
     ///
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``edge``. This will occur in order
+    /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
+    /// the last entry will be used.
+    ///
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[text_signature = "(self, obj_list, /)"]
@@ -550,10 +673,20 @@ impl PyGraph {
         &mut self,
         obj_list: Vec<(usize, usize, PyObject)>,
     ) -> PyResult<Vec<usize>> {
-        let mut out_list: Vec<usize> = Vec::new();
+        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
+            if !self.multigraph {
+                let exists = self.graph.find_edge(p_index, c_index);
+                if let Some(index) = exists {
+                    let edge_weight =
+                        self.graph.edge_weight_mut(index).unwrap();
+                    *edge_weight = obj.2;
+                    out_list.push(index.index());
+                    continue;
+                }
+            }
             let edge = self.graph.add_edge(p_index, c_index, obj.2);
             out_list.push(edge.index());
         }
@@ -568,6 +701,10 @@ impl PyGraph {
     ///     added. Unlike :meth:`add_edges_from` there is no data payload and
     ///     when the edge is created None will be used.
     ///
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``None``.
+    ///
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[text_signature = "(self, obj_list, /)"]
@@ -576,10 +713,20 @@ impl PyGraph {
         py: Python,
         obj_list: Vec<(usize, usize)>,
     ) -> PyResult<Vec<usize>> {
-        let mut out_list: Vec<usize> = Vec::new();
+        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
+            if !self.multigraph {
+                let exists = self.graph.find_edge(p_index, c_index);
+                if let Some(index) = exists {
+                    let edge_weight =
+                        self.graph.edge_weight_mut(index).unwrap();
+                    *edge_weight = py.None();
+                    out_list.push(index.index());
+                    continue;
+                }
+            }
             let edge = self.graph.add_edge(p_index, c_index, py.None());
             out_list.push(edge.index());
         }
@@ -590,6 +737,10 @@ impl PyGraph {
     ///
     /// This method differs from :meth:`add_edges_from_no_data` in that it will
     /// add nodes if a node index is not present in the edge list.
+    ///
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``None``.
     ///
     /// :param list edge_list: A list of tuples of the form ``(source, target)``
     ///     where source and target are integer node indices. If the node index
@@ -606,11 +757,18 @@ impl PyGraph {
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
             }
-            self.graph.add_edge(
-                NodeIndex::new(source),
-                NodeIndex::new(target),
-                py.None(),
-            );
+            let source_index = NodeIndex::new(source);
+            let target_index = NodeIndex::new(target);
+            if !self.multigraph {
+                let exists = self.graph.find_edge(source_index, target_index);
+                if let Some(index) = exists {
+                    let edge_weight =
+                        self.graph.edge_weight_mut(index).unwrap();
+                    *edge_weight = py.None();
+                    continue;
+                }
+            }
+            self.graph.add_edge(source_index, target_index, py.None());
         }
     }
 
@@ -618,6 +776,12 @@ impl PyGraph {
     ///
     /// This method differs from :meth:`add_edges_from` in that it will
     /// add nodes if a node index is not present in the edge list.
+    ///
+    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// exists between ``node_a`` and ``node_b`` the weight/payload of that
+    /// existing edge will be updated to be ``edge``. This will occur in order
+    /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
+    /// the last entry will be used.
     ///
     /// :param list edge_list: A list of tuples of the form
     ///     ``(source, target, weight)`` where source and target are integer
@@ -634,11 +798,18 @@ impl PyGraph {
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
             }
-            self.graph.add_edge(
-                NodeIndex::new(source),
-                NodeIndex::new(target),
-                weight,
-            );
+            let source_index = NodeIndex::new(source);
+            let target_index = NodeIndex::new(target);
+            if !self.multigraph {
+                let exists = self.graph.find_edge(source_index, target_index);
+                if let Some(index) = exists {
+                    let edge_weight =
+                        self.graph.edge_weight_mut(index).unwrap();
+                    *edge_weight = weight;
+                    continue;
+                }
+            }
+            self.graph.add_edge(source_index, target_index, weight);
         }
     }
 
@@ -731,11 +902,10 @@ impl PyGraph {
     /// :rtype: NodeIndices
     #[text_signature = "(self, obj_list, /)"]
     pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
-        let mut out_list: Vec<usize> = Vec::new();
-        for obj in obj_list {
-            let node_index = self.graph.add_node(obj);
-            out_list.push(node_index.index());
-        }
+        let out_list: Vec<usize> = obj_list
+            .into_iter()
+            .map(|obj| self.graph.add_node(obj).index())
+            .collect();
         NodeIndices { nodes: out_list }
     }
 
@@ -800,6 +970,8 @@ impl PyGraph {
                 .graph
                 .neighbors(NodeIndex::new(node))
                 .map(|node| node.index())
+                .collect::<HashSet<usize>>()
+                .drain()
                 .collect(),
         }
     }
@@ -878,16 +1050,23 @@ impl PyGraph {
         graph_attr: Option<BTreeMap<String, String>>,
         filename: Option<String>,
     ) -> PyResult<Option<PyObject>> {
-        if filename.is_some() {
-            let mut file = File::create(filename.unwrap())?;
-            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(None)
-        } else {
-            let mut file = Vec::<u8>::new();
-            build_dot(py, self, &mut file, graph_attr, node_attr, edge_attr)?;
-            Ok(Some(
-                PyString::new(py, str::from_utf8(&file)?).to_object(py),
-            ))
+        match filename {
+            Some(filename) => {
+                let mut file = File::create(filename)?;
+                build_dot(
+                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                )?;
+                Ok(None)
+            }
+            None => {
+                let mut file = Vec::<u8>::new();
+                build_dot(
+                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                )?;
+                Ok(Some(
+                    PyString::new(py, str::from_utf8(&file)?).to_object(py),
+                ))
+            }
         }
     }
 
@@ -938,7 +1117,7 @@ impl PyGraph {
     ///   image
     ///
     #[staticmethod]
-    #[text_signature = "(self, path, /, comment=None, deliminator=None)"]
+    #[text_signature = "(path, /, comment=None, deliminator=None)"]
     pub fn read_edge_list(
         py: Python,
         path: &str,
@@ -996,7 +1175,131 @@ impl PyGraph {
         Ok(PyGraph {
             graph: out_graph,
             node_removed: false,
+            multigraph: true,
         })
+    }
+
+    /// Write an edge list file from the PyGraph object
+    ///
+    /// :param str path: The path to write the output file to
+    /// :param str deliminator: The optional character to use as a deliminator
+    ///     if not specified ``" "`` is used.
+    /// :param callable weight_fn: An optional callback function that will be
+    ///     passed an edge's data payload/weight object and is expected to
+    ///     return a string (a ``TypeError`` will be raised if it doesn't
+    ///     return a string). If specified the weight in the output file
+    ///     for each edge will be set to the returned string.
+    ///
+    ///  For example:
+    ///
+    ///  .. jupyter-execute::
+    ///
+    ///     import os
+    ///     import tempfile
+    ///
+    ///     import retworkx
+    ///
+    ///     graph = retworkx.generators.path_graph(5)
+    ///     path = os.path.join(tempfile.gettempdir(), "edge_list")
+    ///     graph.write_edge_list(path, deliminator=',')
+    ///     # Print file contents
+    ///     with open(path, 'rt') as edge_file:
+    ///         print(edge_file.read())
+    ///
+    #[text_signature = "(self, path, /, deliminator=None, weight_fn=None)"]
+    pub fn write_edge_list(
+        &self,
+        py: Python,
+        path: &str,
+        deliminator: Option<char>,
+        weight_fn: Option<PyObject>,
+    ) -> PyResult<()> {
+        let file = File::create(path)?;
+        let mut buf_writer = BufWriter::new(file);
+        let delim = match deliminator {
+            Some(delim) => delim.to_string(),
+            None => " ".to_string(),
+        };
+
+        let weight_callable = |value: &PyObject,
+                               weight_fn: &Option<PyObject>|
+         -> PyResult<Option<String>> {
+            match weight_fn {
+                Some(weight_fn) => {
+                    let res = weight_fn.call1(py, (value,))?;
+                    Ok(Some(res.extract(py)?))
+                }
+                None => Ok(None),
+            }
+        };
+        for edge in self.graph.edge_references() {
+            buf_writer.write_all(
+                format!(
+                    "{}{}{}",
+                    edge.source().index(),
+                    delim,
+                    edge.target().index()
+                )
+                .as_bytes(),
+            )?;
+            match weight_callable(edge.weight(), &weight_fn)? {
+                Some(weight) => buf_writer
+                    .write_all(format!("{}{}\n", delim, weight).as_bytes()),
+                None => buf_writer.write_all(b"\n"),
+            }?;
+        }
+        buf_writer.flush()?;
+        Ok(())
+    }
+
+    /// Create a new :class:`~retworkx.PyGraph` object from an adjacency matrix
+    ///
+    /// This method can be used to construct a new :class:`~retworkx.PyGraph`
+    /// object from an input adjacency matrix. The node weights will be the
+    /// index from the matrix. The edge weights will be a float value of the
+    /// value from the matrix.
+    ///
+    /// :param ndarray matrix: The input numpy array adjacency matrix to create
+    ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
+    ///     dimensional array and be a ``float``/``np.float64`` data type.
+    ///
+    /// :returns: A new graph object generated from the adjacency matrix
+    /// :rtype: PyGraph
+    #[staticmethod]
+    #[text_signature = "(matrix, /)"]
+    pub fn from_adjacency_matrix<'p>(
+        py: Python<'p>,
+        matrix: PyReadonlyArray2<'p, f64>,
+    ) -> PyGraph {
+        let array = matrix.as_array();
+        let shape = array.shape();
+        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let _node_indices: Vec<NodeIndex> = (0..shape[0])
+            .map(|node| out_graph.add_node(node.to_object(py)))
+            .collect();
+        array
+            .axis_iter(Axis(0))
+            .enumerate()
+            .for_each(|(index, row)| {
+                let source_index = NodeIndex::new(index);
+                for target_index in 0..row.len() {
+                    if target_index < index {
+                        continue;
+                    }
+                    if row[[target_index]] > 0.0 {
+                        out_graph.add_edge(
+                            source_index,
+                            NodeIndex::new(target_index),
+                            row[[target_index]].to_object(py),
+                        );
+                    }
+                }
+            });
+        PyGraph {
+            graph: out_graph,
+            node_removed: false,
+            multigraph: true,
+        }
     }
 
     /// Add another PyGraph object into this PyGraph
@@ -1103,7 +1406,8 @@ impl PyGraph {
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
-        let mut new_node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut new_node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(other.node_count());
 
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph
@@ -1156,7 +1460,8 @@ impl PyGraph {
     #[text_signature = "(self, nodes, /)"]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
-        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(nodes.len());
         let node_filter =
             |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
         let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
@@ -1177,6 +1482,7 @@ impl PyGraph {
         PyGraph {
             graph: out_graph,
             node_removed: false,
+            multigraph: self.multigraph,
         }
     }
 }
@@ -1210,6 +1516,44 @@ impl PyMappingProtocol for PyGraph {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
+    }
+}
+
+// Functions to enable Python Garbage Collection
+#[pyproto]
+impl PyGCProtocol for PyGraph {
+    // Function for PyTypeObject.tp_traverse [1][2] used to tell Python what
+    // objects the PyGraph has strong references to.
+    //
+    // [1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_traverse
+    // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for node in self
+            .graph
+            .node_indices()
+            .map(|node| self.graph.node_weight(node).unwrap())
+        {
+            visit.call(node)?;
+        }
+        for edge in self
+            .graph
+            .edge_indices()
+            .map(|edge| self.graph.edge_weight(edge).unwrap())
+        {
+            visit.call(edge)?;
+        }
+        Ok(())
+    }
+
+    // Function for PyTypeObject.tp_clear [1][2] used to tell Python's GC how
+    // to drop all references held by a PyGraph object when the GC needs to
+    // break reference cycles.
+    //
+    // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
+    // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
+    fn __clear__(&mut self) {
+        self.graph = StableUnGraph::<PyObject, PyObject>::default();
+        self.node_removed = false;
     }
 }
 
