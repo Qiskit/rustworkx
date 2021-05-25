@@ -10,9 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Based on the equivalent tests for the networkx matplotlib drawer:
-# https://github.com/networkx/networkx/blob/ead0e65bda59862e329f2e6f1da47919c6b07ca9/networkx/drawing/tests/test_pylab.py
-
 import os
 import tempfile
 import unittest
