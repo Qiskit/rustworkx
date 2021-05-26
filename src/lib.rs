@@ -2200,13 +2200,14 @@ fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
 /// limit the thread pool to 4 threads.
 ///
 /// :param graph: The input :class:`~retworkx.PyDiGraph` to use
-/// :param edge_cost_fn: A weight function for an edge. It will accept
-///     a single argument, the edge's weight payload object and will return a
-///     float which will be used to represent the weight/cost of the edge
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
 ///
-/// :return: Dictionary of paths. The keys are destination node indices and
-///     the dict values are dicts of the target node and the length of the
-///     shortest path to that node. For example::
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
 ///
 ///         {
 ///             0: {1: 2.0, 2: 2.0},
@@ -2236,12 +2237,13 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
 /// limit the thread pool to 4 threads.
 ///
 /// :param graph: The input :class:`~retworkx.PyDiGraph` object to use
-/// :param edge_cost_fn: A weight function for an edge. It will accept
-///     a single argument, the edge's weight payload object and will return a
-///     float which will be used to represent the weight/cost of the edge
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
 ///
-/// :return: Dictionary of paths. The keys are destination node indices and
-///     the dict values are dicts of the target node and the list of the
+/// :return: A read-only dictionary of paths. The keys are source node indices
+///     and the values are dicts of the target node and the list of the
 ///     node indices making up the shortest path to that node. For example::
 ///
 ///         {
@@ -2268,13 +2270,14 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
 /// Dijkstra's algorithm.
 ///
 /// :param graph: The input :class:`~retworkx.PyGraph` to use
-/// :param edge_cost_fn: A weight function for an edge. It will accept
-///     a single argument, the edge's weight payload object and will return a
-///     float which will be used to represent the weight/cost of the edge
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
 ///
-/// :return: Dictionary of paths. The keys are destination node indices and
-///     the dict values are dicts of the target node and the length of the
-///     shortest path to that node. For example::
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
 ///
 ///         {
 ///             0: {1: 2.0, 2: 2.0},
@@ -2300,12 +2303,13 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
 /// Dijkstra's algorithm.
 ///
 /// :param graph: The input :class:`~retworkx.PyGraph` object to use
-/// :param edge_cost_fn: A weight function for an edge. It will accept
-///     a single argument, the edge's weight payload object and will return a
-///     float which will be used to represent the weight/cost of the edge
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
 ///
-/// :return: Dictionary of paths. The keys are destination node indices and
-///     the dict values are dicts of the target node and the list of the
+/// :return: A read-only dictionary of paths. The keys are destination node
+///     indices and the values are dicts of the target node and the list of the
 ///     node indices making up the shortest path to that node. For example::
 ///
 ///         {

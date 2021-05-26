@@ -411,13 +411,22 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
 
     :param graph: The input graph to use. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :param edge_cost_fn: An optional weight function for an edge. It will
-        accept a single argument, the edge's weight object and will return a
-        float which will be used to represent the weight/cost of the edge
+    :param edge_cost_fn: A callable object that acts as a weight function for
+        an edge. It will accept a single positional argument, the edge's weight
+        object and will return a float which will be used to represent the
+        weight/cost of the edge
 
-    :return: Dictionary of paths. The keys are destination node indices and
-        the dict values are lists of node indices making the path.
-    :rtype: dict
+    :return: A read-only dictionary of paths. The keys are destination node
+        indices and the values are a dict of target node indices and a list
+        of node indices making the path. For example::
+
+            {
+                0: {1: [0, 1],  2: [0, 1, 2]},
+                1: {2: [1, 2]},
+                2: {0: [2, 0]},
+            }
+
+    :rtype: AllPairsPathMapping
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
@@ -449,9 +458,17 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
         accept a single argument, the edge's weight object and will return a
         float which will be used to represent the weight/cost of the edge
 
-    :return: Dictionary of paths. The keys are destination node indices and
-        the dict values are lists of node indices making the path.
-    :rtype: dict
+    :return: A read-only dictionary of path lengths. The keys are the source
+        node indices and the values are a dict of the target node and the
+        length of the shortest path to that node. For example::
+
+            {
+                0: {1: 2.0, 2: 2.0},
+                1: {2: 1.0},
+                2: {0: 1.0},
+            }
+
+    :rtype: AllPairsPathLengthMapping
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
