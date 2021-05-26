@@ -399,6 +399,92 @@ def _graph_dijkstra_shortest_path(
 
 
 @functools.singledispatch
+def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
+    """Find the shortest path from all nodes
+
+    This function will generate the shortest path from all nodes int the graph
+    using Dijkstra's algorithm. This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param edge_cost_fn: A callable object that acts as a weight function for
+        an edge. It will accept a single positional argument, the edge's weight
+        object and will return a float which will be used to represent the
+        weight/cost of the edge
+
+    :return: A read-only dictionary of paths. The keys are destination node
+        indices and the values are a dict of target node indices and a list
+        of node indices making the path. For example::
+
+            {
+                0: {1: [0, 1],  2: [0, 1, 2]},
+                1: {2: [1, 2]},
+                2: {0: [2, 0]},
+            }
+
+    :rtype: AllPairsPathMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@all_pairs_dijkstra_shortest_paths.register(PyDiGraph)
+def _digraph_all_pairsdijkstra_shortest_path(graph, edge_cost_fn):
+    return digraph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
+
+
+@all_pairs_dijkstra_shortest_paths.register(PyGraph)
+def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
+    return graph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
+def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    """Find the shortest path from a node
+
+    This function will generate the shortest path from a source node using
+    Dijkstra's algorithm. This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param edge_cost_fn: A callable object that acts as a weight function for
+        an edge. It will accept a single positional argument, the edge's weight
+        object and will return a float which will be used to represent the
+        weight/cost of the edge
+
+    :return: A read-only dictionary of path lengths. The keys are the source
+        node indices and the values are a dict of the target node and the
+        length of the shortest path to that node. For example::
+
+            {
+                0: {1: 2.0, 2: 2.0},
+                1: {2: 1.0},
+                2: {0: 1.0},
+            }
+
+    :rtype: AllPairsPathLengthMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@all_pairs_dijkstra_path_lengths.register(PyDiGraph)
+def _digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    return digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
+
+
+@all_pairs_dijkstra_path_lengths.register(PyGraph)
+def _graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    return graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
 def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     """Compute the lengths of the shortest paths for a graph object using
     Dijkstra's algorithm.
