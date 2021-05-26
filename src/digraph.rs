@@ -48,8 +48,8 @@ use petgraph::visit::{
 use super::dot_utils::build_dot;
 use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
-    is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
-    NoSuitableNeighbors, NodesRemoved,
+    is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, FrozenError,
+    NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved,
 };
 
 /// A class for creating directed graphs
@@ -111,7 +111,7 @@ use super::{
 /// the same time leveraging :meth:`PyDiGraph.add_child` or
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
 #[pyclass(module = "retworkx", subclass, gc)]
-#[text_signature = "(/, check_cycle=False, multigraph=True)"]
+#[text_signature = "(/, check_cycle=False, multigraph=True, frozen=True)"]
 #[derive(Clone)]
 pub struct PyDiGraph {
     pub graph: StableDiGraph<PyObject, PyObject>,
@@ -122,6 +122,7 @@ pub struct PyDiGraph {
     pub check_cycle: bool,
     pub node_removed: bool,
     pub multigraph: bool,
+    pub frozen: bool,
 }
 
 pub type Edges<'a, E> =
@@ -395,14 +396,15 @@ impl PyDiGraph {
 #[pymethods]
 impl PyDiGraph {
     #[new]
-    #[args(check_cycle = "false", multigraph = "true")]
-    fn new(check_cycle: bool, multigraph: bool) -> Self {
+    #[args(check_cycle = "false", multigraph = "true", frozen = "false")]
+    fn new(check_cycle: bool, multigraph: bool, frozen: bool) -> Self {
         PyDiGraph {
             graph: StableDiGraph::<PyObject, PyObject>::new(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
             multigraph,
+            frozen,
         }
     }
 
@@ -414,6 +416,7 @@ impl PyDiGraph {
         out_dict.set_item("nodes", node_dict)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
         out_dict.set_item("multigraph", self.multigraph)?;
+        out_dict.set_item("frozen", self.frozen)?;
         let dir = petgraph::Direction::Incoming;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
@@ -449,6 +452,12 @@ impl PyDiGraph {
             .unwrap()
             .downcast::<PyBool>()?;
         self.multigraph = multigraph_raw.extract()?;
+        let frozen_raw = dict_state
+            .get_item("frozen")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.frozen = frozen_raw.extract()?;
+
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -505,11 +514,38 @@ impl PyDiGraph {
 
     #[setter]
     fn set_check_cycle(&mut self, value: bool) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         if !self.check_cycle && value && !is_directed_acyclic_graph(self) {
             return Err(DAGHasCycle::new_err("PyDiGraph object has a cycle"));
         }
         self.check_cycle = value;
         Ok(())
+    }
+
+    /// Whether the graph is frozen (ie immutable) or not
+    ///
+    /// If set to ``True`` any methods that attempt to modify the state of the
+    /// graph will raise a :class:`~retworkx.FrozenError`.
+    ///
+    /// .. note::
+    ///
+    ///     The weight/data payloads for nodes and edges are passed by reference
+    ///     everywhere so if they're returned (including via the mapping
+    ///     protocol) they can still be modified inplace despite setting
+    ///     ``frozen`` to ``True``.
+    ///
+    #[getter]
+    fn get_frozen(&self) -> bool {
+        self.frozen
+    }
+
+    #[setter]
+    fn set_frozen(&mut self, value: bool) {
+        self.frozen = value
     }
 
     /// Whether the graph is a multigraph (allows multiple edges between
@@ -766,6 +802,11 @@ impl PyDiGraph {
         target: usize,
         edge: PyObject,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index_a = NodeIndex::new(source);
         let index_b = NodeIndex::new(target);
         let edge_index = match self.graph.find_edge(index_a, index_b) {
@@ -793,6 +834,11 @@ impl PyDiGraph {
         edge_index: usize,
         edge: PyObject,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         match self.graph.edge_weight_mut(EdgeIndex::new(edge_index)) {
             Some(data) => *data = edge,
             None => {
@@ -896,6 +942,11 @@ impl PyDiGraph {
     ///     no effect.
     #[text_signature = "(self, node, /)"]
     pub fn remove_node(&mut self, node: usize) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index = NodeIndex::new(node);
         self.graph.remove_node(index);
         self.node_removed = true;
@@ -932,6 +983,11 @@ impl PyDiGraph {
         use_outgoing: bool,
         condition: Option<PyObject>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index = NodeIndex::new(node);
         let mut edge_list: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
 
@@ -997,6 +1053,11 @@ impl PyDiGraph {
         child: usize,
         edge: PyObject,
     ) -> PyResult<usize> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
         let out_index = self._add_edge(p_index, c_index, edge)?;
@@ -1017,6 +1078,11 @@ impl PyDiGraph {
         &mut self,
         obj_list: Vec<(usize, usize, PyObject)>,
     ) -> PyResult<Vec<usize>> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
@@ -1043,6 +1109,11 @@ impl PyDiGraph {
         py: Python,
         obj_list: Vec<(usize, usize)>,
     ) -> PyResult<Vec<usize>> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
@@ -1068,6 +1139,11 @@ impl PyDiGraph {
         py: Python,
         edge_list: Vec<(usize, usize)>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for (source, target) in edge_list {
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
@@ -1097,6 +1173,11 @@ impl PyDiGraph {
         py: Python,
         edge_list: Vec<(usize, usize, PyObject)>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for (source, target, weight) in edge_list {
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
@@ -1130,6 +1211,11 @@ impl PyDiGraph {
         node: usize,
         ref_nodes: Vec<usize>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for ref_node in ref_nodes {
             self.insert_between(py, node, ref_node, false)?;
         }
@@ -1155,6 +1241,11 @@ impl PyDiGraph {
         node: usize,
         ref_nodes: Vec<usize>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for ref_node in ref_nodes {
             self.insert_between(py, node, ref_node, true)?;
         }
@@ -1180,6 +1271,11 @@ impl PyDiGraph {
         node: usize,
         ref_node: usize,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         self.insert_between(py, node, ref_node, false)?;
         Ok(())
     }
@@ -1203,6 +1299,11 @@ impl PyDiGraph {
         node: usize,
         ref_node: usize,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         self.insert_between(py, node, ref_node, true)?;
         Ok(())
     }
@@ -1219,6 +1320,11 @@ impl PyDiGraph {
     ///     specified
     #[text_signature = "(self, parent, child, /)"]
     pub fn remove_edge(&mut self, parent: usize, child: usize) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
         let edge_index = match self.graph.find_edge(p_index, c_index) {
@@ -1238,6 +1344,11 @@ impl PyDiGraph {
     /// :param int edge: The index of the edge to remove
     #[text_signature = "(self, edge, /)"]
     pub fn remove_edge_from_index(&mut self, edge: usize) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let edge_index = EdgeIndex::new(edge);
         self.graph.remove_edge(edge_index);
         Ok(())
@@ -1255,6 +1366,11 @@ impl PyDiGraph {
         &mut self,
         index_list: Vec<(usize, usize)>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for (p_index, c_index) in index_list
             .iter()
             .map(|(x, y)| (NodeIndex::new(*x), NodeIndex::new(*y)))
@@ -1280,6 +1396,11 @@ impl PyDiGraph {
     /// :rtype: int
     #[text_signature = "(self, obj, /)"]
     pub fn add_node(&mut self, obj: PyObject) -> PyResult<usize> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index = self.graph.add_node(obj);
         Ok(index.index())
     }
@@ -1331,6 +1452,11 @@ impl PyDiGraph {
         u: usize,
         v: usize,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let source_node = NodeIndex::new(u);
         let target_node = NodeIndex::new(v);
 
@@ -1404,6 +1530,11 @@ impl PyDiGraph {
         obj: PyObject,
         edge: PyObject,
     ) -> PyResult<usize> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index = NodeIndex::new(parent);
         let child_node = self.graph.add_node(obj);
         self.graph.add_edge(index, child_node, edge);
@@ -1428,6 +1559,11 @@ impl PyDiGraph {
         obj: PyObject,
         edge: PyObject,
     ) -> PyResult<usize> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index = NodeIndex::new(child);
         let parent_node = self.graph.add_node(obj);
         self.graph.add_edge(parent_node, index, edge);
@@ -1449,7 +1585,7 @@ impl PyDiGraph {
     ///     specified node.
     /// :rtype: dict
     #[text_signature = "(self, node, /)"]
-    pub fn adj(&mut self, node: usize) -> HashMap<usize, &PyObject> {
+    pub fn adj(&self, node: usize) -> HashMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.neighbors(index);
         let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
@@ -1483,7 +1619,7 @@ impl PyDiGraph {
     /// :rtype: dict
     #[text_signature = "(self, node, direction, /)"]
     pub fn adj_direction(
-        &mut self,
+        &self,
         node: usize,
         direction: bool,
     ) -> PyResult<HashMap<usize, &PyObject>> {
@@ -1639,12 +1775,20 @@ impl PyDiGraph {
     /// :returns: A list of int indices of the newly created nodes
     /// :rtype: NodeIndices
     #[text_signature = "(self, obj_list, /)"]
-    pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
+    pub fn add_nodes_from(
+        &mut self,
+        obj_list: Vec<PyObject>,
+    ) -> PyResult<NodeIndices> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let out_list: Vec<usize> = obj_list
             .into_iter()
             .map(|obj| self.graph.add_node(obj).index())
             .collect();
-        NodeIndices { nodes: out_list }
+        Ok(NodeIndices { nodes: out_list })
     }
 
     /// Remove nodes from the graph.
@@ -1659,6 +1803,11 @@ impl PyDiGraph {
         &mut self,
         index_list: Vec<usize>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for node in index_list.iter().map(|x| NodeIndex::new(*x)) {
             self.graph.remove_node(node);
         }
@@ -1917,6 +2066,7 @@ impl PyDiGraph {
             check_cycle: false,
             node_removed: false,
             multigraph: true,
+            frozen: false,
         })
     }
 
@@ -2041,6 +2191,7 @@ impl PyDiGraph {
             check_cycle: false,
             node_removed: false,
             multigraph: true,
+            frozen: false,
         }
     }
 
@@ -2149,6 +2300,11 @@ impl PyDiGraph {
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> =
             HashMap::with_capacity(other.node_count());
 
@@ -2228,6 +2384,7 @@ impl PyDiGraph {
             cycle_state: algo::DfsSpace::default(),
             check_cycle: self.check_cycle,
             multigraph: self.multigraph,
+            frozen: false,
         }
     }
 
@@ -2262,11 +2419,20 @@ impl PyDiGraph {
     /// Do note that the node and edge weights/data payloads will be passed
     /// by reference to the new :class:`~retworkx.PyGraph` object.
     ///
+    /// :param bool frozen: If set to to true the returned graph will be
+    ///     immutable/frozen.
+    ///
+    ///
     /// :returns: A new PyGraph object with an undirected edge for every
     ///     directed edge in this graph
     /// :rtype: PyGraph
-    #[text_signature = "(self)"]
-    pub fn to_undirected(&self, py: Python) -> crate::graph::PyGraph {
+    #[args(frozen = "false")]
+    #[text_signature = "(self, /, frozen=False)"]
+    pub fn to_undirected(
+        &self,
+        py: Python,
+        frozen: bool,
+    ) -> crate::graph::PyGraph {
         let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
         let mut node_map: HashMap<NodeIndex, NodeIndex> =
             HashMap::with_capacity(self.node_count());
@@ -2285,6 +2451,7 @@ impl PyDiGraph {
             graph: new_graph,
             node_removed: false,
             multigraph: true,
+            frozen,
         }
     }
 }
@@ -2303,6 +2470,11 @@ impl PyMappingProtocol for PyDiGraph {
     }
 
     fn __setitem__(&'p mut self, idx: usize, value: PyObject) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let data = match self
             .graph
             .node_weight_mut(NodeIndex::new(idx as usize))

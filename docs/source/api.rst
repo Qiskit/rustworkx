@@ -168,6 +168,7 @@ Exceptions
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph
+   retworkx.FrozenError
 
 Custom Return Types
 ===================

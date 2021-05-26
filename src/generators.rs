@@ -47,6 +47,7 @@ where
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated cycle graph
 /// :rtype: PyDiGraph
@@ -75,14 +76,15 @@ where
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyfunction(bidirectional = "false", multigraph = "true", frozen = "false")]
+#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True, frozen=False)"]
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -131,6 +133,7 @@ pub fn directed_cycle_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        frozen,
     })
 }
 
@@ -146,6 +149,7 @@ pub fn directed_cycle_graph(
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated cycle graph
 /// :rtype: PyGraph
@@ -174,13 +178,14 @@ pub fn directed_cycle_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyfunction(multigraph = true, frozen = false)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True, frozen=False)"]
 pub fn cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -219,6 +224,7 @@ pub fn cycle_graph(
         graph,
         node_removed: false,
         multigraph,
+        frozen,
     })
 }
 
@@ -236,6 +242,7 @@ pub fn cycle_graph(
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated path graph
 /// :rtype: PyDiGraph
@@ -264,14 +271,15 @@ pub fn cycle_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyfunction(bidirectional = "false", multigraph = "true", frozen = "false")]
+#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True, frozen=False)"]
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -309,6 +317,7 @@ pub fn directed_path_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        frozen,
     })
 }
 
@@ -324,6 +333,7 @@ pub fn directed_path_graph(
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated path graph
 /// :rtype: PyGraph
@@ -352,13 +362,14 @@ pub fn directed_path_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyfunction(multigraph = true, frozen = false)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True, frozen=False)"]
 pub fn path_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -389,6 +400,7 @@ pub fn path_graph(
         graph,
         node_removed: false,
         multigraph,
+        frozen,
     })
 }
 
@@ -409,6 +421,7 @@ pub fn path_graph(
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated star graph
 /// :rtype: PyDiGraph
@@ -460,8 +473,13 @@ pub fn path_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"]
+#[pyfunction(
+    inward = "false",
+    bidirectional = "false",
+    multigraph = "true",
+    frozen = "false"
+)]
+#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True, frozen=False)"]
 pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -469,6 +487,7 @@ pub fn directed_star_graph(
     inward: bool,
     bidirectional: bool,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -506,6 +525,7 @@ pub fn directed_star_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        frozen,
     })
 }
 
@@ -521,6 +541,7 @@ pub fn directed_star_graph(
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated star graph
 /// :rtype: PyGraph
@@ -549,13 +570,14 @@ pub fn directed_star_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyfunction(multigraph = true, frozen = false)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True, frozen=False)"]
 pub fn star_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -583,6 +605,7 @@ pub fn star_graph(
         graph,
         node_removed: false,
         multigraph,
+        frozen,
     })
 }
 
@@ -597,6 +620,7 @@ pub fn star_graph(
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated mesh graph
 /// :rtype: PyGraph
@@ -625,13 +649,14 @@ pub fn star_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyfunction(multigraph = true, frozen = false)]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True, frozen=False)"]
 pub fn mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -663,6 +688,7 @@ pub fn mesh_graph(
         graph,
         node_removed: false,
         multigraph,
+        frozen,
     })
 }
 
@@ -677,6 +703,8 @@ pub fn mesh_graph(
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
+///
 ///
 /// :returns: The generated mesh graph
 /// :rtype: PyDiGraph
@@ -705,13 +733,14 @@ pub fn mesh_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyfunction(multigraph = "true", frozen = "false")]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True, frozen=False)"]
 pub fn directed_mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -745,6 +774,7 @@ pub fn directed_mesh_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        frozen,
     })
 }
 
@@ -766,6 +796,7 @@ pub fn directed_mesh_graph(
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated grid graph
 /// :rtype: PyGraph
@@ -795,14 +826,15 @@ pub fn directed_mesh_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"]
+#[pyfunction(multigraph = true, frozen = false)]
+#[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True, frozen=False)"]
 pub fn grid_graph(
     py: Python,
     rows: Option<usize>,
     cols: Option<usize>,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
@@ -865,6 +897,7 @@ pub fn grid_graph(
         graph,
         node_removed: false,
         multigraph,
+        frozen,
     })
 }
 
@@ -889,6 +922,7 @@ pub fn grid_graph(
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated grid graph
 /// :rtype: PyDiGraph
@@ -918,8 +952,8 @@ pub fn grid_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyfunction(bidirectional = "false", multigraph = "true", frozen = "false")]
+#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True, frozen=False)"]
 pub fn directed_grid_graph(
     py: Python,
     rows: Option<usize>,
@@ -927,6 +961,7 @@ pub fn directed_grid_graph(
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
@@ -1006,6 +1041,7 @@ pub fn directed_grid_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        frozen,
     })
 }
 
@@ -1018,6 +1054,7 @@ pub fn directed_grid_graph(
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyGraph
@@ -1046,13 +1083,14 @@ pub fn directed_grid_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(multigraph = true)]
-#[text_signature = "(order, /, weights=None, multigraph=True)"]
+#[pyfunction(multigraph = true, frozen = false)]
+#[text_signature = "(order, /, weights=None, multigraph=True, frozen=False)"]
 pub fn binomial_tree_graph(
     py: Python,
     order: u32,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
 
@@ -1115,10 +1153,11 @@ pub fn binomial_tree_graph(
         graph,
         node_removed: false,
         multigraph,
+        frozen,
     })
 }
 
-/// Generate an undirected binomial tree of order n recursively.
+/// Generate an directed binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
 ///
 /// :param int order: Order of the binomial tree.
@@ -1130,6 +1169,7 @@ pub fn binomial_tree_graph(
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyDiGraph
@@ -1158,14 +1198,15 @@ pub fn binomial_tree_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"]
+#[pyfunction(bidirectional = "false", multigraph = "true", frozen = "false")]
+#[text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True, frozen=False)"]
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
 
@@ -1252,6 +1293,7 @@ pub fn directed_binomial_tree_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        frozen,
     })
 }
 
@@ -1263,6 +1305,7 @@ pub fn directed_binomial_tree_graph(
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated hexagonal lattice graph with the following nodes deleted:
 ///           ```2*row + 1``` and
@@ -1295,13 +1338,14 @@ pub fn directed_binomial_tree_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, multigraph=True)"]
+#[pyfunction(multigraph = true, frozen = false)]
+#[text_signature = "(/, rows=None, cols=None, multigraph=True, frozen=False)"]
 pub fn hexagonal_lattice_graph(
     py: Python,
     rows: usize,
     cols: usize,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
 
@@ -1350,6 +1394,7 @@ pub fn hexagonal_lattice_graph(
         graph,
         node_removed: true,
         multigraph,
+        frozen,
     })
 }
 
@@ -1364,6 +1409,7 @@ pub fn hexagonal_lattice_graph(
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool frozen: Whether the generated graph is immutable or not
 ///
 /// :returns: The generated directed hexagonal lattice graph with the following nodes deleted:
 ///           ```2*row + 1``` and
@@ -1396,14 +1442,15 @@ pub fn hexagonal_lattice_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True)"]
+#[pyfunction(bidirectional = "false", multigraph = "true", frozen = "false")]
+#[text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True, frozen=False)"]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
     rows: usize,
     cols: usize,
     bidirectional: bool,
     multigraph: bool,
+    frozen: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
 
@@ -1467,6 +1514,7 @@ pub fn directed_hexagonal_lattice_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        frozen,
     })
 }
 

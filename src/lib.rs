@@ -1871,7 +1871,7 @@ pub fn digraph_dijkstra_shortest_paths(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
-            &graph.to_undirected(py),
+            &graph.to_undirected(py, true),
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -2274,6 +2274,7 @@ pub fn directed_gnp_random_graph(
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        frozen: false,
     };
     Ok(graph)
 }
@@ -2368,6 +2369,7 @@ pub fn undirected_gnp_random_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        frozen: false,
     };
     Ok(graph)
 }
@@ -2448,6 +2450,7 @@ pub fn directed_gnm_random_graph(
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        frozen: false,
     };
     Ok(graph)
 }
@@ -2523,6 +2526,7 @@ pub fn undirected_gnm_random_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        frozen: false,
     };
     Ok(graph)
 }
@@ -2630,6 +2634,7 @@ pub fn random_geometric_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        frozen: false,
     };
     Ok(graph)
 }
@@ -3798,6 +3803,8 @@ create_exception!(retworkx, NoSuitableNeighbors, PyException);
 create_exception!(retworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, PyException);
+// Attempting to mutate a frozen graph
+create_exception!(retworkx, FrozenError, PyException);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -3809,6 +3816,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
+    m.add("FrozenError", py.get_type::<FrozenError>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;

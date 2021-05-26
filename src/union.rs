@@ -49,6 +49,7 @@ pub fn digraph_union(
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        frozen: false,
     };
     let mut node_map = HashMap::with_capacity(second.node_count());
     let mut edge_map = HashSet::with_capacity(second.edge_count());

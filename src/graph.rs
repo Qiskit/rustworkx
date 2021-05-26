@@ -33,7 +33,7 @@ use numpy::PyReadonlyArray2;
 
 use super::dot_utils::build_dot;
 use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
-use super::{NoEdgeBetweenNodes, NodesRemoved};
+use super::{FrozenError, NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
@@ -91,6 +91,7 @@ pub struct PyGraph {
     pub graph: StableUnGraph<PyObject, PyObject>,
     pub node_removed: bool,
     pub multigraph: bool,
+    pub frozen: bool,
 }
 
 pub type Edges<'a, E> =
@@ -266,12 +267,13 @@ impl GetAdjacencyMatrix for PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    #[args(multigraph = "true")]
-    fn new(multigraph: bool) -> Self {
+    #[args(multigraph = "true", frozen = "false")]
+    fn new(multigraph: bool, frozen: bool) -> Self {
         PyGraph {
             graph: StableUnGraph::<PyObject, PyObject>::default(),
             node_removed: false,
             multigraph,
+            frozen,
         }
     }
 
@@ -368,6 +370,28 @@ impl PyGraph {
     #[getter]
     fn multigraph(&self) -> bool {
         self.multigraph
+    }
+
+    /// Whether the graph is frozen (ie immutable) or not
+    ///
+    /// If set to ``True`` any methods that attempt to modify the state of the
+    /// graph will raise a :class:`~retworkx.FrozenError`.
+    ///
+    /// .. note::
+    ///
+    ///     The weight/data payloads for nodes and edges are passed by reference
+    ///     everywhere so if they're returned (including via the mapping
+    ///     protocol) they can still be modified inplace despite setting
+    ///     ``frozen`` to ``True``.
+    ///
+    #[getter]
+    fn get_frozen(&self) -> bool {
+        self.frozen
+    }
+
+    #[setter]
+    fn set_frozen(&mut self, value: bool) {
+        self.frozen = value
     }
 
     /// Return a list of all edge data.
@@ -481,6 +505,11 @@ impl PyGraph {
         target: usize,
         edge: PyObject,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index_a = NodeIndex::new(source);
         let index_b = NodeIndex::new(target);
         let edge_index = match self.graph.find_edge(index_a, index_b) {
@@ -508,6 +537,11 @@ impl PyGraph {
         edge_index: usize,
         edge: PyObject,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         match self.graph.edge_weight_mut(EdgeIndex::new(edge_index)) {
             Some(data) => *data = edge,
             None => {
@@ -612,6 +646,11 @@ impl PyGraph {
     ///     have no effect.
     #[text_signature = "(self, node, /)"]
     pub fn remove_node(&mut self, node: usize) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index = NodeIndex::new(node);
         self.graph.remove_node(index);
         self.node_removed = true;
@@ -639,6 +678,11 @@ impl PyGraph {
         node_b: usize,
         edge: PyObject,
     ) -> PyResult<usize> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
         if !self.multigraph {
@@ -673,6 +717,11 @@ impl PyGraph {
         &mut self,
         obj_list: Vec<(usize, usize, PyObject)>,
     ) -> PyResult<Vec<usize>> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
@@ -713,6 +762,11 @@ impl PyGraph {
         py: Python,
         obj_list: Vec<(usize, usize)>,
     ) -> PyResult<Vec<usize>> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
@@ -751,7 +805,12 @@ impl PyGraph {
         &mut self,
         py: Python,
         edge_list: Vec<(usize, usize)>,
-    ) {
+    ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for (source, target) in edge_list {
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
@@ -770,6 +829,7 @@ impl PyGraph {
             }
             self.graph.add_edge(source_index, target_index, py.None());
         }
+        Ok(())
     }
 
     /// Extend graph from a weighted edge list
@@ -792,7 +852,12 @@ impl PyGraph {
         &mut self,
         py: Python,
         edge_list: Vec<(usize, usize, PyObject)>,
-    ) {
+    ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for (source, target, weight) in edge_list {
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
@@ -811,6 +876,7 @@ impl PyGraph {
             }
             self.graph.add_edge(source_index, target_index, weight);
         }
+        Ok(())
     }
 
     /// Remove an edge between 2 nodes.
@@ -829,6 +895,11 @@ impl PyGraph {
         node_a: usize,
         node_b: usize,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
         let edge_index = match self.graph.find_edge(p_index, c_index) {
@@ -848,6 +919,11 @@ impl PyGraph {
     /// :param int edge: The index of the edge to remove
     #[text_signature = "(self, edge, /)"]
     pub fn remove_edge_from_index(&mut self, edge: usize) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let edge_index = EdgeIndex::new(edge);
         self.graph.remove_edge(edge_index);
         Ok(())
@@ -865,6 +941,11 @@ impl PyGraph {
         &mut self,
         index_list: Vec<(usize, usize)>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for (p_index, c_index) in index_list
             .iter()
             .map(|(x, y)| (NodeIndex::new(*x), NodeIndex::new(*y)))
@@ -890,6 +971,11 @@ impl PyGraph {
     /// :rtype: int
     #[text_signature = "(self, obj, /)"]
     pub fn add_node(&mut self, obj: PyObject) -> PyResult<usize> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let index = self.graph.add_node(obj);
         Ok(index.index())
     }
@@ -901,12 +987,20 @@ impl PyGraph {
     /// :returns indices: A list of int indices of the newly created nodes
     /// :rtype: NodeIndices
     #[text_signature = "(self, obj_list, /)"]
-    pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
+    pub fn add_nodes_from(
+        &mut self,
+        obj_list: Vec<PyObject>,
+    ) -> PyResult<NodeIndices> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let out_list: Vec<usize> = obj_list
             .into_iter()
             .map(|obj| self.graph.add_node(obj).index())
             .collect();
-        NodeIndices { nodes: out_list }
+        Ok(NodeIndices { nodes: out_list })
     }
 
     /// Remove nodes from the graph.
@@ -921,6 +1015,11 @@ impl PyGraph {
         &mut self,
         index_list: Vec<usize>,
     ) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         for node in index_list.iter().map(|x| NodeIndex::new(*x)) {
             self.graph.remove_node(node);
         }
@@ -942,7 +1041,7 @@ impl PyGraph {
     ///     edge with the specified node.
     /// :rtype: dict
     #[text_signature = "(self, node, /)"]
-    pub fn adj(&mut self, node: usize) -> PyResult<HashMap<usize, &PyObject>> {
+    pub fn adj(&self, node: usize) -> PyResult<HashMap<usize, &PyObject>> {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.neighbors(index);
         let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
@@ -1176,6 +1275,7 @@ impl PyGraph {
             graph: out_graph,
             node_removed: false,
             multigraph: true,
+            frozen: false,
         })
     }
 
@@ -1299,6 +1399,7 @@ impl PyGraph {
             graph: out_graph,
             node_removed: false,
             multigraph: true,
+            frozen: false,
         }
     }
 
@@ -1406,6 +1507,11 @@ impl PyGraph {
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let mut new_node_map: HashMap<NodeIndex, NodeIndex> =
             HashMap::with_capacity(other.node_count());
 
@@ -1483,6 +1589,7 @@ impl PyGraph {
             graph: out_graph,
             node_removed: false,
             multigraph: self.multigraph,
+            frozen: false,
         }
     }
 }
@@ -1501,6 +1608,11 @@ impl PyMappingProtocol for PyGraph {
     }
 
     fn __setitem__(&'p mut self, idx: usize, value: PyObject) -> PyResult<()> {
+        if self.frozen {
+            return Err(FrozenError::new_err(
+                "Attempting to modify a frozen graph",
+            ));
+        }
         let data = match self.graph.node_weight_mut(NodeIndex::new(idx)) {
             Some(node_data) => node_data,
             None => {
