@@ -42,6 +42,20 @@ class TestEdges(unittest.TestCase):
             retworkx.NoEdgeBetweenNodes, graph.get_edge_data, node_a, node_b
         )
 
+    def test_num_edges(self):
+        graph = retworkx.PyGraph()
+        graph.add_node(1)
+        graph.add_node(42)
+        graph.add_node(146)
+        graph.add_edges_from_no_data([(0, 1), (1, 2)])
+        self.assertEqual(2, graph.num_edges())
+
+    def test_num_edges_no_edges(self):
+        graph = retworkx.PyGraph()
+        graph.add_node(1)
+        graph.add_node(42)
+        self.assertEqual(0, graph.num_edges())
+
     def test_update_edge(self):
         graph = retworkx.PyGraph()
         node_a = graph.add_node("a")
