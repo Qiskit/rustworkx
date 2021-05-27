@@ -522,6 +522,19 @@ impl PyDiGraph {
     fn multigraph(&self) -> bool {
         self.multigraph
     }
+
+    /// Return the number of nodes in the graph
+    #[text_signature = "(self)"]
+    pub fn num_nodes(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    /// Return the number of edges in the graph
+    #[text_signature = "(self)"]
+    pub fn num_edges(&self) -> usize {
+        self.graph.edge_count()
+    }
+
     /// Return a list of all edge data.
     ///
     /// :returns: A list of all the edge data objects in the graph
