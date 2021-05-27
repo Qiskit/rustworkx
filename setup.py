@@ -14,8 +14,10 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+
 mpl_extras = ['matplotlib>=3.0']
 graphviz_extras = ['pydot>=1.4', 'pillow>=5.4']
+
 
 setup(
     name="retworkx",
