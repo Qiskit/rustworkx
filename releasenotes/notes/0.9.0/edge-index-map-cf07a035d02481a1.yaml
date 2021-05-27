@@ -11,4 +11,4 @@ features:
     Added a new custom return type :class:`~retworkx.EdgeIndexMap` which is
     returned by :meth:`retworkx.PyDiGraph.edge_index_map` and
     :meth:`retworkx.PyGraph.edge_index_map`. It is equivalent to a read-only
-    dict/mapping that represent a mapping of edge indices to the edge.
+    dict/mapping that represent a mapping of edge indices to the edge tuple.
