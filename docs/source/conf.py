@@ -32,7 +32,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
               'm2r2',
-              'jupyter_sphinx.execute',
+              'jupyter_sphinx',
               'reno.sphinxext',
               'sphinx.ext.intersphinx',
              ]
