@@ -1,6 +1,6 @@
 ---
 features:
   - |
-    A new function, :func:`~retworkx.transitivity` was added to
+    Added new function, :func:`~retworkx.transitivity` was added to
     calculate the transitivity coefficient of a :class:`~retworkx.PyGraph`
     and a :class:`~retworkx.PyDiGraph`.

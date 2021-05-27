@@ -1,4 +1,0 @@
----
-features:
-  - |
-    Added a new generator for constructing a binomial tree graph (:func:`retworkx.generators.binomial_tree_graph`).

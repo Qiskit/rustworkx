@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.spring_layout` to generate layouts
+    for :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
+    using the `Fruchterman-Reingold force-directed algorithm 
+    <https://onlinelibrary.wiley.com/doi/abs/10.1002/spe.4380211102>`__.

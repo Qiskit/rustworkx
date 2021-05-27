@@ -56,12 +56,14 @@ use super::{
 
 /// A class for creating directed graphs
 ///
-/// The PyDiGraph class is used to create a directed graph. It can be a
+/// The ``PyDiGraph`` class is used to create a directed graph. It can be a
 /// multigraph (have multiple edges between nodes). Each node and edge
-/// (although rarely used for edges) is indexed by an integer id. Additionally
-/// each node and edge contains an arbitrary Python object as a weight/data
-/// payload. You can use the index for access to the data payload as in the
-/// following example:
+/// (although rarely used for edges) is indexed by an integer id. These ids
+/// are stable for the lifetime of the graph object and on node or edge
+/// deletions you can have holes in the list of indices for the graph.
+/// Additionally, each node and edge contains an arbitrary Python object as a
+/// weight/data payload. You can use the index for access to the data payload
+/// as in the following example:
 ///
 /// .. jupyter-execute::
 ///
@@ -112,6 +114,26 @@ use super::{
 /// penalty that grows as the graph does. If you're adding a node and edge at
 /// the same time leveraging :meth:`PyDiGraph.add_child` or
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
+///
+/// By default a ``PyDiGraph`` is a multigraph (meaning there can be parallel
+/// edges between nodes) however this can be disabled by setting the
+/// ``multigraph`` kwarg to ``False`` when calling the ``PyDiGraph``
+/// constructor. For example::
+///
+///     import retworkx
+///     graph = retworkx.PyDiGraph(multigraph=False)
+///
+/// This can only be set at ``PyDiGraph`` initialization and not adjusted after
+/// creation. When :attr:`~retworkx.PyDiGraph.multigraph` is set to ``False``
+/// if a method call is made that would add a parallel edge it will instead
+/// update the existing edge's weight/data payload.
+///
+/// :param bool check_cycle: When this is set to ``True`` the created
+///     ``PyDiGraph`` has runtime cycle detection enabled.
+/// :param bool multgraph: When this is set to ``False`` the created
+///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
+///     method call is made that would add parallel edges the the weight/weight
+///     from that method call will be used to update the existing edge in place.
 #[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, check_cycle=False, multigraph=True)"]
 #[derive(Clone)]

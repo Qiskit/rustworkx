@@ -51,10 +51,12 @@ use petgraph::visit::{
 ///
 /// The PyGraph class is used to create an undirected graph. It can be a
 /// multigraph (have multiple edges between nodes). Each node and edge
-/// (although rarely used for edges) is indexed by an integer id. Additionally,
-/// each node and edge contains an arbitrary Python object as a weight/data
-/// payload. You can use the index for access to the data payload as in the
-/// following example:
+/// (although rarely used for edges) is indexed by an integer id. These ids
+/// are stable for the lifetime of the graph object and on node or edge
+/// deletions you can have holes in the list of indices for the graph.
+/// Additionally, each node and edge contains an arbitrary Python object as a
+/// weight/data payload. You can use the index for access to the data payload
+/// as in the following example:
 ///
 /// .. jupyter-execute::
 ///
@@ -80,12 +82,23 @@ use petgraph::visit::{
 ///     print("Node Index: %s" % node_index)
 ///     print(graph[node_index])
 ///
+/// By default a ``PyGraph`` is a multigraph (meaning there can be parallel
+/// edges between nodes) however this can be disabled by setting the
+/// ``multigraph`` kwarg to ``False`` when calling the ``PyGraph``
+/// constructor. For example::
+///
+///     import retworkx
+///     graph = retworkx.PyGraph(multigraph=False)
+///
+/// This can only be set at ``PyGraph`` initialization and not adjusted after
+/// creation. When :attr:`~retworkx.PyGraph.multigraph` is set to ``False``
+/// if a method call is made that would add a parallel edge it will instead
+/// update the existing edge's weight/data payload.
 ///
 /// :param bool multigraph: When this is set to ``False`` the created PyGraph
-///     object will not be a multigraph (which is the default behavior). When
-///     ``False`` if parallel edges are added the weight/weight from that
+///     object will not be a multigraph. When ``False`` if a method call is
+///     made that would add parallel edges the the weight/weight from that
 ///     method call will be used to update the existing edge in place.
-///
 #[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, multigraph=True)"]
 #[derive(Clone)]
