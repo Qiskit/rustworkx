@@ -53,6 +53,23 @@ pip install retworkx
 will build retworkx for your local system from the source package and install
 it just as it would if there was a prebuilt binary available.
 
+### Optional dependencies
+
+If you're planning to use the `retworkx.visualization` module you will need to
+install optional dependencies to use the functions. The matplotlib drawer
+required that the [matplotlib](https://matplotlib.org/) library is installed.
+This can be installed with `pip install matplotlib` or when you're installing
+retworkx with `pip install 'retworkx[mpl]'`. If you're going to use the graphviz
+based drawer first you will need to install graphviz, instructions for this can
+be found here: https://graphviz.org/download/#executable-packages. Then you
+will need to install the [pydot](https://pypi.org/project/pydot/) and
+[pillow](https://python-pillow.org/) Python libraries. This can be done either
+with `pip install pydot pillow` or when installing retworkx with
+`pip install 'retworkx[pydot]'`.
+
+If you would like to install all the optional Python dependencies when you
+install retworkx you can use `pip install 'retworkx[all]'` to do this.
+
 ## Building from source
 
 The first step for building retworkx from source is to clone it locally
