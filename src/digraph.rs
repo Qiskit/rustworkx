@@ -525,6 +525,18 @@ impl PyDiGraph {
         self.multigraph
     }
 
+    /// Return the number of nodes in the graph
+    #[text_signature = "(self)"]
+    pub fn num_nodes(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    /// Return the number of edges in the graph
+    #[text_signature = "(self)"]
+    pub fn num_edges(&self) -> usize {
+        self.graph.edge_count()
+    }
+
     /// Return a list of all edge data.
     ///
     /// :returns: A list of all the edge data objects in the graph
@@ -2316,6 +2328,15 @@ impl PyDiGraph {
             node_removed: false,
             multigraph: true,
         }
+    }
+
+    /// Return a shallow copy of the graph
+    ///
+    /// All node and edge weight/data payloads in the copy will have a
+    /// shared reference to the original graph.
+    #[text_signature = "(self)"]
+    pub fn copy(&self) -> PyDiGraph {
+        self.clone()
     }
 }
 

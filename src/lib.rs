@@ -31,7 +31,7 @@ use std::collections::{BTreeSet, BinaryHeap};
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::create_exception;
-use pyo3::exceptions::{PyException, PyValueError};
+use pyo3::exceptions::{PyException, PyIndexError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
@@ -59,8 +59,8 @@ use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
-    EdgeList, NodeIndices, PathLengthMapping, PathMapping, Pos2DMapping,
-    WeightedEdgeList,
+    AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices,
+    PathLengthMapping, PathMapping, Pos2DMapping, WeightedEdgeList,
 };
 
 trait NodesRemoved {
@@ -2022,6 +2022,313 @@ fn digraph_dijkstra_shortest_path_lengths(
     })
 }
 
+fn _all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathLengthMapping> {
+    if graph.node_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: HashMap::new(),
+        });
+    } else if graph.edge_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathLengthMapping {
+                            path_lengths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
+    }
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        raw.extract(py)
+    };
+    let edge_bound: usize =
+        graph.edge_indices().map(|x| x.index()).max().unwrap();
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(edge_bound);
+    for index in 0..=edge_bound {
+        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => {
+                edge_weights.push(Some(edge_cost_callable(weight)?))
+            }
+            None => edge_weights.push(None),
+        };
+    }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
+    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+    let out_map: HashMap<usize, PathLengthMapping> = node_indices
+        .into_par_iter()
+        .map(|x| {
+            let out_map = PathLengthMapping {
+                path_lengths: dijkstra::dijkstra(
+                    graph,
+                    x,
+                    None,
+                    |e| edge_cost(e.id()),
+                    None,
+                )
+                .unwrap()
+                .iter()
+                .filter_map(|(index, cost)| {
+                    if *index == x {
+                        None
+                    } else {
+                        Some((index.index(), *cost))
+                    }
+                })
+                .collect(),
+            };
+            (x.index(), out_map)
+        })
+        .collect();
+    Ok(AllPairsPathLengthMapping {
+        path_lengths: out_map,
+    })
+}
+
+fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathMapping> {
+    if graph.node_count() == 0 {
+        return Ok(AllPairsPathMapping {
+            paths: HashMap::new(),
+        });
+    } else if graph.edge_count() == 0 {
+        return Ok(AllPairsPathMapping {
+            paths: graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathMapping {
+                            paths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
+    }
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        raw.extract(py)
+    };
+    let edge_bound: usize =
+        graph.edge_indices().map(|x| x.index()).max().unwrap();
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(edge_bound);
+    for index in 0..=edge_bound {
+        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => {
+                edge_weights.push(Some(edge_cost_callable(weight)?))
+            }
+            None => edge_weights.push(None),
+        };
+    }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
+    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+    Ok(AllPairsPathMapping {
+        paths: node_indices
+            .into_par_iter()
+            .map(|x| {
+                let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
+                    HashMap::with_capacity(graph.node_count());
+                dijkstra::dijkstra(
+                    graph,
+                    x,
+                    None,
+                    |e| edge_cost(e.id()),
+                    Some(&mut paths),
+                )
+                .unwrap();
+                let index = x.index();
+                let out_paths = PathMapping {
+                    paths: paths
+                        .iter()
+                        .filter_map(|path_mapping| {
+                            let path_index = path_mapping.0.index();
+                            if index != path_index {
+                                Some((
+                                    path_index,
+                                    path_mapping
+                                        .1
+                                        .iter()
+                                        .map(|x| x.index())
+                                        .collect(),
+                                ))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                };
+                (index, out_paths)
+            })
+            .collect(),
+    })
+}
+
+/// Calculate the the shortest length from all nodes in a
+/// :class:`~retworkx.PyDiGraph` object
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm. This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// :param graph: The input :class:`~retworkx.PyDiGraph` to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {1: 2.0, 2: 2.0},
+///             1: {2: 1.0},
+///             2: {0: 1.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
+#[pyfunction]
+#[text_signature = "(graph, edge_cost_fn, /)"]
+pub fn digraph_all_pairs_dijkstra_path_lengths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathLengthMapping> {
+    _all_pairs_dijkstra_path_lengths(py, &graph.graph, edge_cost_fn)
+}
+
+/// Find the shortest path from all nodes in a :class:`~retworkx.PyDiGraph`
+/// object
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm. This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// :param graph: The input :class:`~retworkx.PyDiGraph` object to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of paths. The keys are source node indices
+///     and the values are dicts of the target node and the list of the
+///     node indices making up the shortest path to that node. For example::
+///
+///         {
+///             0: {1: [0, 1],  2: [0, 1, 2]},
+///             1: {2: [1, 2]},
+///             2: {0: [2, 0]},
+///         }
+///
+/// :rtype: AllPairsPathMapping
+#[pyfunction]
+#[text_signature = "(graph, edge_cost_fn, /)"]
+pub fn digraph_all_pairs_dijkstra_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathMapping> {
+    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn)
+}
+
+/// Calculate the the shortest length from all nodes in a
+/// :class:`~retworkx.PyGraph` object
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm.
+///
+/// :param graph: The input :class:`~retworkx.PyGraph` to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {1: 2.0, 2: 2.0},
+///             1: {2: 1.0},
+///             2: {0: 1.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
+#[pyfunction]
+#[text_signature = "(graph, edge_cost_fn, /)"]
+pub fn graph_all_pairs_dijkstra_path_lengths(
+    py: Python,
+    graph: &graph::PyGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathLengthMapping> {
+    _all_pairs_dijkstra_path_lengths(py, &graph.graph, edge_cost_fn)
+}
+
+/// Find the shortest path from all nodes in a :class:`~retworkx.PyGraph`
+/// object
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm.
+///
+/// :param graph: The input :class:`~retworkx.PyGraph` object to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of paths. The keys are destination node
+///     indices and the values are dicts of the target node and the list of the
+///     node indices making up the shortest path to that node. For example::
+///
+///         {
+///             0: {1: [0, 1],  2: [0, 1, 2]},
+///             1: {2: [1, 2]},
+///             2: {0: [2, 0]},
+///         }
+///
+/// :rtype: AllPairsPathMapping
+#[pyfunction]
+#[text_signature = "(graph, edge_cost_fn, /)"]
+pub fn graph_all_pairs_dijkstra_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathMapping> {
+    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn)
+}
+
 /// Compute the A* shortest path for a PyGraph
 ///
 /// :param PyGraph graph: The input graph to use
@@ -3838,6 +4145,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
@@ -3879,6 +4190,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathMapping>()?;
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
+    m.add_class::<iterators::AllPairsPathLengthMapping>()?;
+    m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
