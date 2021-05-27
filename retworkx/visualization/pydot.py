@@ -90,6 +90,15 @@ def pydot_draw(
             "Pydot and Pillow are necessary to use pydot_draw() "
             "it can be installed with 'pip install pydot pillow'"
         )
+    try:
+        pydot.call_graphviz("dot", ["--version"], tempfile.gettempdir())
+    except Exception:
+        raise RuntimeError(
+            "Graphviz could not be found or run. This function requires that "
+            "Graphviz is installed. If you need to install Graphviz you can "
+            "refer to: https://graphviz.org/download/#executable-packages for "
+            "instructions."
+        )
 
     dot_str = graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr)
     dot = pydot.graph_from_dot_data(dot_str)[0]
