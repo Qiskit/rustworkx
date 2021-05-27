@@ -15,7 +15,7 @@ import unittest
 import retworkx
 
 
-class TestDeepcopy(unittest.TestCase):
+class TestCopy(unittest.TestCase):
     def test_copy_returns_graph(self):
         graph_a = retworkx.PyDiGraph()
         node_a = graph_a.add_node("a_1")
