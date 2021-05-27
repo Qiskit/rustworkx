@@ -1497,6 +1497,15 @@ impl PyGraph {
             multigraph: self.multigraph,
         }
     }
+
+    /// Return a shallow copy of the graph
+    ///
+    /// All node and edge weight/data payloads in the copy will have a
+    /// shared reference to the original graph.
+    #[text_signature = "(self)"]
+    pub fn copy(&self) -> PyGraph {
+        self.clone()
+    }
 }
 
 #[pyproto]
