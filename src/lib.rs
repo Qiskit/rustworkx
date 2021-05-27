@@ -4185,6 +4185,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
+    m.add_class::<iterators::EdgeIndexMap>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
     m.add_class::<iterators::PathMapping>()?;
     m.add_class::<iterators::PathLengthMapping>()?;

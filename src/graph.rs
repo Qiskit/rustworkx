@@ -32,7 +32,9 @@ use ndarray::prelude::*;
 use numpy::PyReadonlyArray2;
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{
+    EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList,
+};
 use super::{NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -611,6 +613,33 @@ impl PyGraph {
                         edge.source().index(),
                         edge.target().index(),
                         edge.weight().clone_ref(py),
+                    )
+                })
+                .collect(),
+        }
+    }
+
+    /// Get an edge index map
+    ///
+    /// Returns a read only mapping from edge indices to the weighted edge
+    /// tuple. The return is a mapping of the form:
+    /// ``{0: (0, 1, "weight"), 1: (2, 3, 2.3)}``
+    ///
+    /// :returns: An edge index map
+    /// :rtype: EdgeIndexMap
+    #[text_signature = "(self)"]
+    pub fn edge_index_map(&self, py: Python) -> EdgeIndexMap {
+        EdgeIndexMap {
+            edge_map: self
+                .edge_references()
+                .map(|edge| {
+                    (
+                        edge.id().index(),
+                        (
+                            edge.source().index(),
+                            edge.target().index(),
+                            edge.weight().clone_ref(py),
+                        ),
                     )
                 })
                 .collect(),
