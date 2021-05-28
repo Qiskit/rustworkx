@@ -79,7 +79,7 @@ jobs:
       services:
         - docker
       before_install:
-        - echo ""
+        - sudo chown travis -R $TRAVIS_HOME/.cargo
       install:
         - echo ""
       env:
