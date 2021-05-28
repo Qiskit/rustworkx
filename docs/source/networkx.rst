@@ -285,6 +285,27 @@ Graph Modifiers
 (note the retworkx version links to the :class:`~retworkx.PyDiGraph` version,
 but there are also equivalent :class:`~retworkx.PyGraph` methods available)
 
+Matrix Converter Functions
+--------------------------
+
+NetworkX has several functions for going back and forth between a NetworkX
+graph and matrices in other libraries. This includes ``to_numpy_matrix()``,
+``to_numpy_array()``, ``to_numpy_recarray()``, ``to_scipy_sparse_matrix()``,
+``to_pandas_adjacency()``, and ``adjacency_matrix()`` (which is equivalent to
+``to_scipy_sparse_matrix()`` and returns a scipy csr sparse matrix of the
+adjacency matrix).
+
+However, in retworkx there is **only** a :meth:`~retworkx.adjacency_matrix`
+function (and it's per type variants :meth:`~retworkx.digraph_adjacency_matrix`
+and :meth:`~retworkx.graph_adjacency_matrix`) which will return a numpy array
+of the adjacency matrix (**not** a scipy csr sparse matrix like networkx's
+function). This function is equivalent to networkx's ``to_numpy_array()``
+function.
+
+This difference with retworkx is primarily because numpy exposes a public C
+interface which retworkx can interface with directly, while the other
+libraries and types only expose Python APIs.
+
 .. _networkx_converter:
 
 Converting from a networkx graph
