@@ -990,12 +990,14 @@ def networkx_converter(graph):
 
 
 @functools.singledispatch
-def bipartite_layout(graph,
-                     first_nodes,
-                     horizontal=False,
-                     scale=1,
-                     center=None,
-                     aspect_ratio=4 / 3):
+def bipartite_layout(
+    graph,
+    first_nodes,
+    horizontal=False,
+    scale=1,
+    center=None,
+    aspect_ratio=4 / 3,
+):
     """Generate a bipartite layout of the graph
 
     :param graph: The graph to generate the layout for. Can either be a
@@ -1017,33 +1019,41 @@ def bipartite_layout(graph,
 
 
 @bipartite_layout.register(PyDiGraph)
-def _digraph_bipartite_layout(graph,
-                              first_nodes,
-                              horizontal=False,
-                              scale=1,
-                              center=None,
-                              aspect_ratio=4 / 3):
-    return digraph_bipartite_layout(graph,
-                                    first_nodes,
-                                    horizontal=horizontal,
-                                    scale=scale,
-                                    center=center,
-                                    aspect_ratio=aspect_ratio)
+def _digraph_bipartite_layout(
+    graph,
+    first_nodes,
+    horizontal=False,
+    scale=1,
+    center=None,
+    aspect_ratio=4 / 3,
+):
+    return digraph_bipartite_layout(
+        graph,
+        first_nodes,
+        horizontal=horizontal,
+        scale=scale,
+        center=center,
+        aspect_ratio=aspect_ratio,
+    )
 
 
 @bipartite_layout.register(PyGraph)
-def _graph_bipartite_layout(graph,
-                            first_nodes,
-                            horizontal=False,
-                            scale=1,
-                            center=None,
-                            aspect_ratio=4 / 3):
-    return graph_bipartite_layout(graph,
-                                  first_nodes,
-                                  horizontal=horizontal,
-                                  scale=scale,
-                                  center=center,
-                                  aspect_ratio=aspect_ratio)
+def _graph_bipartite_layout(
+    graph,
+    first_nodes,
+    horizontal=False,
+    scale=1,
+    center=None,
+    aspect_ratio=4 / 3,
+):
+    return graph_bipartite_layout(
+        graph,
+        first_nodes,
+        horizontal=horizontal,
+        scale=scale,
+        center=center,
+        aspect_ratio=aspect_ratio,
+    )
 
 
 @functools.singledispatch
@@ -1094,22 +1104,23 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
 
 
 @shell_layout.register(PyDiGraph)
-def _digraph_shell_layout(graph, nlist=None, rotate=None, scale=1,
-                          center=None):
-    return digraph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale,
-                                center=center)
+def _digraph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
+    return digraph_shell_layout(
+        graph, nlist=nlist, rotate=rotate, scale=scale, center=center
+    )
 
 
 @shell_layout.register(PyGraph)
-def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1,
-                        center=None):
-    return graph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale,
-                              center=center)
+def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
+    return graph_shell_layout(
+        graph, nlist=nlist, rotate=rotate, scale=scale, center=center
+    )
 
 
 @functools.singledispatch
-def spiral_layout(graph, scale=1, center=None, resolution=0.35,
-                  equidistant=False):
+def spiral_layout(
+    graph, scale=1, center=None, resolution=0.35, equidistant=False
+):
     """
     Generate a spiral layout of the graph
 
@@ -1130,16 +1141,26 @@ def spiral_layout(graph, scale=1, center=None, resolution=0.35,
 
 
 @spiral_layout.register(PyDiGraph)
-def _digraph_spiral_layout(graph, scale=1, center=None, resolution=0.35,
-                           equidistant=False):
-    return digraph_spiral_layout(graph, scale=scale, center=center,
-                                 resolution=resolution,
-                                 equidistant=equidistant)
+def _digraph_spiral_layout(
+    graph, scale=1, center=None, resolution=0.35, equidistant=False
+):
+    return digraph_spiral_layout(
+        graph,
+        scale=scale,
+        center=center,
+        resolution=resolution,
+        equidistant=equidistant,
+    )
 
 
 @spiral_layout.register(PyGraph)
-def _graph_spiral_layout(graph, scale=1, center=None, resolution=0.35,
-                         equidistant=False):
-    return graph_spiral_layout(graph, scale=scale, center=center,
-                               resolution=resolution,
-                               equidistant=equidistant)
+def _graph_spiral_layout(
+    graph, scale=1, center=None, resolution=0.35, equidistant=False
+):
+    return graph_spiral_layout(
+        graph,
+        scale=scale,
+        center=center,
+        resolution=resolution,
+        equidistant=equidistant,
+    )
