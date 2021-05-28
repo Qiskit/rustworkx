@@ -90,11 +90,7 @@ pub fn bipartite_layout<Ty: EdgeType>(
     recenter(&mut pos, center);
 
     Pos2DMapping {
-        pos_map: graph
-            .node_indices()
-            .map(|n| n.index())
-            .zip(pos)
-            .collect(),
+        pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
     }
 }
 
@@ -120,11 +116,7 @@ pub fn circular_layout<Ty: EdgeType>(
     recenter(&mut pos, center);
 
     Pos2DMapping {
-        pos_map: graph
-            .node_indices()
-            .map(|n| n.index())
-            .zip(pos)
-            .collect(),
+        pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
     }
 }
 
@@ -174,11 +166,7 @@ pub fn shell_layout<Ty: EdgeType>(
     recenter(&mut pos, center);
 
     Pos2DMapping {
-        pos_map: graph
-            .node_indices()
-            .map(|n| n.index())
-            .zip(pos)
-            .collect(),
+        pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
     }
 }
 
@@ -220,11 +208,7 @@ pub fn spiral_layout<Ty: EdgeType>(
     recenter(&mut pos, center);
 
     Pos2DMapping {
-        pos_map: graph
-            .node_indices()
-            .map(|n| n.index())
-            .zip(pos)
-            .collect(),
+        pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
     }
 }
 
