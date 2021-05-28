@@ -64,6 +64,8 @@ Specific Graph Type Methods
    retworkx.is_directed_acyclic_graph
    retworkx.digraph_is_isomorphic
    retworkx.graph_is_isomorphic
+   retworkx.digraph_is_subgraph_isomorphic
+   retworkx.graph_is_subgraph_isomorphic
    retworkx.topological_sort
    retworkx.descendants
    retworkx.ancestors
@@ -136,6 +138,7 @@ type functions in the algorithms API but can be run with a
    retworkx.k_shortest_path_lengths
    retworkx.dfs_edges
    retworkx.is_isomorphic
+   retworkx.is_subgraph_isomorphic
    retworkx.is_isomorphic_node_match
    retworkx.transitivity
    retworkx.core_number
