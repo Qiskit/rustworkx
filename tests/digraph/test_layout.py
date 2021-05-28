@@ -290,6 +290,19 @@ class TestShellLayout(unittest.TestCase):
         md = max_diff(expected, res)
         self.assertTrue(md < self.thres)
 
+    def test_shell_layout_hole_two_shells(self):
+        g = retworkx.generators.directed_path_graph(5)
+        g.remove_nodes_from([2])
+        res = retworkx.shell_layout(g, [[0, 1], [3, 4]])
+        expected = {
+            0: (-2.1855694143368964e-08, 0.5),
+            1: (5.962440319251527e-09, -0.5),
+            3: (-1.0, -8.742277657347586e-08),
+            4: (1.0, 1.7484555314695172e-07),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
+
     def test_shell_layout(self):
         res = retworkx.shell_layout(self.graph)
         expected = {
