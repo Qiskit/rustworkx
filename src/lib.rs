@@ -21,7 +21,7 @@ mod graph;
 mod isomorphism;
 mod iterators;
 mod k_shortest_path;
-mod layouts;
+mod layout;
 mod max_weight_matching;
 mod union;
 
@@ -3356,10 +3356,10 @@ pub fn graph_bipartite_layout(
     first_nodes: HashSet<usize>,
     horizontal: Option<bool>,
     scale: Option<f64>,
-    center: Option<layouts::Point>,
+    center: Option<layout::Point>,
     aspect_ratio: Option<f64>,
 ) -> Pos2DMapping {
-    layouts::bipartite_layout(
+    layout::bipartite_layout(
         &graph.graph,
         first_nodes,
         horizontal,
@@ -3392,10 +3392,10 @@ pub fn digraph_bipartite_layout(
     first_nodes: HashSet<usize>,
     horizontal: Option<bool>,
     scale: Option<f64>,
-    center: Option<layouts::Point>,
+    center: Option<layout::Point>,
     aspect_ratio: Option<f64>,
 ) -> Pos2DMapping {
-    layouts::bipartite_layout(
+    layout::bipartite_layout(
         &graph.graph,
         first_nodes,
         horizontal,
@@ -3419,9 +3419,9 @@ pub fn digraph_bipartite_layout(
 pub fn graph_circular_layout(
     graph: &graph::PyGraph,
     scale: Option<f64>,
-    center: Option<layouts::Point>,
+    center: Option<layout::Point>,
 ) -> Pos2DMapping {
-    layouts::circular_layout(&graph.graph, scale, center)
+    layout::circular_layout(&graph.graph, scale, center)
 }
 
 /// Generate a circular layout of the graph
@@ -3438,9 +3438,9 @@ pub fn graph_circular_layout(
 pub fn digraph_circular_layout(
     graph: &digraph::PyDiGraph,
     scale: Option<f64>,
-    center: Option<layouts::Point>,
+    center: Option<layout::Point>,
 ) -> Pos2DMapping {
-    layouts::circular_layout(&graph.graph, scale, center)
+    layout::circular_layout(&graph.graph, scale, center)
 }
 
 /// Generate a shell layout of the graph
@@ -3463,9 +3463,9 @@ pub fn graph_shell_layout(
     nlist: Option<Vec<Vec<usize>>>,
     rotate: Option<f64>,
     scale: Option<f64>,
-    center: Option<layouts::Point>,
+    center: Option<layout::Point>,
 ) -> Pos2DMapping {
-    layouts::shell_layout(&graph.graph, nlist, rotate, scale, center)
+    layout::shell_layout(&graph.graph, nlist, rotate, scale, center)
 }
 
 /// Generate a shell layout of the graph
@@ -3487,9 +3487,9 @@ pub fn digraph_shell_layout(
     nlist: Option<Vec<Vec<usize>>>,
     rotate: Option<f64>,
     scale: Option<f64>,
-    center: Option<layouts::Point>,
+    center: Option<layout::Point>,
 ) -> Pos2DMapping {
-    layouts::shell_layout(&graph.graph, nlist, rotate, scale, center)
+    layout::shell_layout(&graph.graph, nlist, rotate, scale, center)
 }
 
 /// Generate a spiral layout of the graph
@@ -3511,11 +3511,11 @@ pub fn digraph_shell_layout(
 pub fn graph_spiral_layout(
     graph: &graph::PyGraph,
     scale: Option<f64>,
-    center: Option<layouts::Point>,
+    center: Option<layout::Point>,
     resolution: Option<f64>,
     equidistant: Option<bool>,
 ) -> Pos2DMapping {
-    layouts::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
+    layout::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
 }
 
 /// Generate a spiral layout of the graph
@@ -3537,11 +3537,11 @@ pub fn graph_spiral_layout(
 pub fn digraph_spiral_layout(
     graph: &digraph::PyDiGraph,
     scale: Option<f64>,
-    center: Option<layouts::Point>,
+    center: Option<layout::Point>,
     resolution: Option<f64>,
     equidistant: Option<bool>,
 ) -> Pos2DMapping {
-    layouts::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
+    layout::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
 }
 
 // The provided node is invalid.
