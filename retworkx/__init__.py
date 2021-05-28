@@ -664,7 +664,7 @@ def bipartite_layout(graph,
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :param set first_nodes: The set of node indexes on the left (or top if
         horitontal is true)
-    :param bool is_horizontal: An optional bool specifying the oritation of the
+    :param bool horizontal: An optional bool specifying the orientation of the
         layout
     :param float scale: An optional scaling factor to scale positions
     :param tuple center: An optional center position. This is a 2 tuple of two
