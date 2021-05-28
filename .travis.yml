@@ -66,12 +66,12 @@ jobs:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
-        - CIBW_TEST_REQUIRES=networkx testtools fixtures
+        - CIBW_TEST_REQUIRES="networkx testtools fixtures"
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U twine importlib-metadata keyring cibuildwheel==1.9.0
+        - pip install -U twine importlib-metadata keyring cibuildwheel==1.11.1
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -80,11 +80,7 @@ jobs:
       services:
         - docker
       before_install:
-        - which python
-        - sh tools/install_rust.sh
-        - export PATH=~/.cargo/bin:$PATH
-        - which python
-        - pip install -U pip virtualenv tox
+        - sudo chown travis -R $TRAVIS_HOME/.cargo
       install:
         - echo ""
       env:
@@ -92,12 +88,12 @@ jobs:
         - CIBW_BEFORE_BUILD="bash {project}/tools/install_rust.sh"
         - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
-        - CIBW_TEST_REQUIRES=networkx testtools fixtures
+        - CIBW_TEST_REQUIRES="networkx testtools fixtures"
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - pip install -U twine importlib-metadata keyring cibuildwheel==1.9.0
+        - pip install -U twine importlib-metadata keyring cibuildwheel==1.11.1
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
     - stage: deploy
@@ -114,11 +110,11 @@ jobs:
         - CIBW_BEFORE_BUILD="pip install -U setuptools-rust"
         - CIBW_SKIP="cp27-* cp34-* cp35-* pp*"
         - CIBW_ENVIRONMENT='PATH="$PATH:$HOME/.cargo/bin"'
-        - CIBW_TEST_REQUIRES=networkx testtools fixtures
+        - CIBW_TEST_REQUIRES="networkx testtools fixtures"
         - TWINE_USERNAME=retworkx-ci
         - CIBW_TEST_COMMAND="python -m unittest discover {project}/tests"
       if: tag IS present
       script:
-        - sudo pip install -U twine importlib-metadata keyring cibuildwheel==1.9.0
+        - sudo pip install -U twine importlib-metadata keyring cibuildwheel==1.11.1
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*
