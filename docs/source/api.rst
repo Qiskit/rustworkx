@@ -30,6 +30,9 @@ Generators
     retworkx.generators.directed_mesh_graph
     retworkx.generators.grid_graph
     retworkx.generators.directed_grid_graph
+    retworkx.generators.binomial_tree_graph
+    retworkx.generators.hexagonal_lattice_graph
+    retworkx.generators.directed_hexagonal_lattice_graph
 
 Random Circuit Functions
 ========================
@@ -41,6 +44,7 @@ Random Circuit Functions
     retworkx.undirected_gnp_random_graph
     retworkx.directed_gnm_random_graph
     retworkx.undirected_gnm_random_graph
+    retworkx.random_geometric_graph
 
 Algorithm Functions
 ===================
@@ -79,9 +83,13 @@ Specific Graph Type Methods
    retworkx.digraph_astar_shortest_path
    retworkx.graph_dijkstra_shortest_paths
    retworkx.digraph_dijkstra_shortest_paths
+   retworkx.digraph_all_pairs_dijkstra_shortest_paths
    retworkx.graph_dijkstra_shortest_path_lengths
+   retworkx.graph_all_pairs_dijkstra_shortest_paths
    retworkx.digraph_dijkstra_shortest_path_lengths
+   retworkx.digraph_all_pairs_dijkstra_path_lengths
    retworkx.graph_k_shortest_path_lengths
+   retworkx.graph_all_pairs_dijkstra_path_lengths
    retworkx.digraph_k_shortest_path_lengths
    retworkx.graph_greedy_color
    retworkx.cycle_basis
@@ -123,6 +131,8 @@ type functions in the algorithms API but can be run with a
    retworkx.astar_shortest_path
    retworkx.dijkstra_shortest_paths
    retworkx.dijkstra_shortest_path_lengths
+   retworkx.all_pairs_dijkstra_shortest_paths
+   retworkx.all_pairs_dijkstra_path_lengths
    retworkx.k_shortest_path_lengths
    retworkx.dfs_edges
    retworkx.is_isomorphic
@@ -134,6 +144,7 @@ type functions in the algorithms API but can be run with a
    retworkx.circular_layout
    retworkx.shell_layout
    retworkx.spiral_layout
+   retworkx.spring_layout
 
 Layout Functions
 ================
@@ -142,6 +153,7 @@ Layout Functions
    :toctree: stubs
 
    retworkx.random_layout
+   retworkx.spring_layout
    retworkx.graph_random_layout
    retworkx.digraph_random_layout
    retworkx.bipartite_layout
@@ -156,6 +168,14 @@ Layout Functions
    retworkx.spiral_layout
    retworkx.graph_spiral_layout
    retworkx.digraph_spiral_layout
+
+Converters
+----------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.networkx_converter
 
 Exceptions
 ==========
@@ -179,6 +199,12 @@ Custom Return Types
 
    retworkx.BFSSuccessors
    retworkx.NodeIndices
+   retworkx.EdgeIndices
    retworkx.EdgeList
    retworkx.WeightedEdgeList
+   retworkx.EdgeIndexMap
+   retworkx.PathMapping
+   retworkx.PathLengthMapping
    retworkx.Pos2DMapping
+   retworkx.AllPairsPathMapping
+   retworkx.AllPairsPathLengthMapping

@@ -18,15 +18,15 @@ import retworkx
 class TestAdj(unittest.TestCase):
     def test_single_neighbor(self):
         graph = retworkx.PyGraph()
-        node_a = graph.add_node('a')
-        node_b = graph.add_node('b')
-        graph.add_edge(node_a, node_b, {'a': 1})
-        node_c = graph.add_node('c')
-        graph.add_edge(node_a, node_c, {'a': 2})
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, {"a": 1})
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_c, {"a": 2})
         res = graph.adj(node_a)
-        self.assertEqual({node_b: {'a': 1}, node_c: {'a': 2}}, res)
+        self.assertEqual({node_b: {"a": 1}, node_c: {"a": 2}}, res)
 
     def test_no_neighbor(self):
         graph = retworkx.PyGraph()
-        node_a = graph.add_node('a')
+        node_a = graph.add_node("a")
         self.assertEqual({}, graph.adj(node_a))

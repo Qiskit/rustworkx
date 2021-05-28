@@ -1,0 +1,35 @@
+---
+features:
+  - |
+    A new module, :mod:`retworkx.visualization` has been added. This module
+    will contain various functions used for visualizing retworkx graphs.
+  - |
+    A new visualization function, :func:`retworkx.visualization.mpl_drawer`,
+    for visualizing graphs with `Matplotlib <https://matplotlib.org/>`__ has
+    been added. This function requires that matplotlib, which is not a
+    dependency of retworkx, to be installed. To install matplotlib you can
+    either use ``pip install matplotlib`` or when you install retworkx
+    ``pip install 'retworkx[mpl]'``. This function can take any retworkx
+    graph object, a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    and visualize them with various options to tweak the output. For example,
+    a basic graph without any labels is:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.generators.grid_graph(4, 6)
+      mpl_draw(graph)
+
+    or to change the colors:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.generators.grid_graph(4, 6)
+      mpl_draw(graph, node_color='r', edge_color='#00FFFF')
+
+    Refer to the function documentation for a full list of options.

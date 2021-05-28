@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    A new method, :meth:`~retworkx.PyDiGraph.copy`, has been added to the
+    :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph`
+    (:meth:`~retworkx.PyGraph.copy`) classes. This method will return a shallow
+    copy of a graph object.

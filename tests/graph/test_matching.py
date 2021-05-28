@@ -15,7 +15,6 @@ import retworkx
 
 
 class TestMatching(unittest.TestCase):
-
     def test_valid(self):
         graph = retworkx.generators.path_graph(4)
         matching = {(0, 1), (2, 3)}

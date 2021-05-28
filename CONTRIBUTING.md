@@ -41,7 +41,7 @@ the compiled extension).
 
 #### Running subsets of tests
 
-f you just want to run a subset of tests you can pass a selection regex to the
+If you just want to run a subset of tests you can pass a selection regex to the
 test runner. For example, if you want to run all tests that have "dag" in the
 test id you can run: `tox -epy -- dag`. You can pass arguments directly to the
 test runner after the bare `--`. To see all the options on test selection you
@@ -73,6 +73,27 @@ It's important to note that tox will be running from the `tests/` directory in
 the repo, so any paths you pass to the test runner via path need to be relative
 to that directory.
 
+#### Visualization Tests
+
+When running the visualization tests, each test will generate a visualization
+and only fail if an exception is raised by the call. Each test saves the output
+image to the current working directory (which if running tests with `tox` is
+`tests/`) to ensure the generated image is usable. However to not clutter the
+system each test cleans up this generated image and by default a test run does
+not include any way to view the images from the visualization tests.
+
+If you want to inspect the output from the visualization tests (which is common
+if you're working on visualizations) you can set the
+`RETWORKX_TEST_PRESERVE_IMAGES` environment variable to any value and this will
+skip the cleanup. This will enable you to look at the output image and ensure the
+visualization is correct. For example, running:
+
+```
+RETWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
+```
+
+will run the visualization tests and preserve the generated image files after
+the run finishes so you can inspect the output.
 
 ### Style
 
@@ -106,8 +127,8 @@ cargo clippy
 
 Python is used primarily for tests and some small pieces of packaging
 and namespace configuration code in the actual library.
-[flake8](https://flake8.pycqa.org/en/latest/) is used to enforce consistent
-style in the python code in the repository. You can run it via tox using:
+[black](https://github.com/psf/black) and [flake8](https://flake8.pycqa.org/en/latest/) are used to enforce consistent
+style in the python code in the repository. You can run them via tox using:
 
 ```bash
 tox -elint
@@ -115,6 +136,9 @@ tox -elint
 
 This will also run `cargo fmt` in check mode to ensure that you ran `cargo fmt`
 and will fail if the Rust code doesn't conform to the style rules.
+
+If black returns a code formatting error you can run `tox -eblack` to automatically
+update the code formatting to conform to the style.
 
 ### Building documentation
 
