@@ -16,8 +16,6 @@ use hashbrown::{HashMap, HashSet};
 
 use pyo3::prelude::*;
 
-//use super::{InvalidNode};
-
 use petgraph::prelude::*;
 use petgraph::EdgeType;
 
@@ -94,10 +92,8 @@ pub fn bipartite_layout<Ty: EdgeType>(
     Pos2DMapping {
         pos_map: graph
             .node_indices()
-            .map(|n| {
-                let n = n.index();
-                (n, pos[n])
-            })
+            .map(|n| n.index())
+            .zip(pos)
             .collect(),
     }
 }
@@ -126,10 +122,8 @@ pub fn circular_layout<Ty: EdgeType>(
     Pos2DMapping {
         pos_map: graph
             .node_indices()
-            .map(|n| {
-                let n = n.index();
-                (n, pos[n])
-            })
+            .map(|n| n.index())
+            .zip(pos)
             .collect(),
     }
 }
@@ -182,10 +176,8 @@ pub fn shell_layout<Ty: EdgeType>(
     Pos2DMapping {
         pos_map: graph
             .node_indices()
-            .map(|n| {
-                let n = n.index();
-                (n, pos[n])
-            })
+            .map(|n| n.index())
+            .zip(pos)
             .collect(),
     }
 }
@@ -217,8 +209,7 @@ pub fn spiral_layout<Ty: EdgeType>(
         let mut angle: f64 = 0.0;
         let mut dist = 0.0;
         let step = 1.0;
-        let radius = node_num as f64;
-        while dist < radius {
+        for _ in 0..node_num {
             pos.push([dist * angle.cos(), dist * angle.sin()]);
             dist += step;
             angle += ros;
@@ -231,10 +222,8 @@ pub fn spiral_layout<Ty: EdgeType>(
     Pos2DMapping {
         pos_map: graph
             .node_indices()
-            .map(|n| {
-                let n = n.index();
-                (n, pos[n])
-            })
+            .map(|n| n.index())
+            .zip(pos)
             .collect(),
     }
 }
@@ -246,8 +235,8 @@ fn recenter(pos: &mut Vec<Point>, center: Option<Point>) {
     }
     let dim = pos[0].len();
     if let Some(center) = center {
-        for p in pos.iter_mut().take(num_pos) {
-            for (d, c) in center.iter().enumerate().take(dim) {
+        for p in pos.iter_mut() {
+            for (d, c) in center.iter().enumerate() {
                 p[d] += c;
             }
         }
@@ -276,7 +265,7 @@ fn rescale(pos: &mut Vec<Point>, scale: Option<f64>) {
     if lim > 0.0 {
         let mult = sc / lim;
         pos.iter_mut().for_each(|t| {
-            for td in t.iter_mut().take(dim) {
+            for td in t.iter_mut() {
                 *td *= mult;
             }
         });
