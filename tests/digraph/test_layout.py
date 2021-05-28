@@ -81,6 +81,19 @@ class TestBipartiteLayout(unittest.TestCase):
         res = retworkx.bipartite_layout(retworkx.PyDiGraph(), set())
         self.assertEqual({}, res)
 
+    def test_bipartite_layout_hole(self):
+        g = retworkx.generators.directed_path_graph(5)
+        g.remove_nodes_from([1])
+        res = retworkx.bipartite_layout(g, set())
+        expected = {
+            0: (0.0, -1.0),
+            2: (0.0, -0.3333333333333333),
+            3: (0.0, 0.3333333333333333),
+            4: (0.0, 1.0),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
+
     def test_bipartite_layout(self):
         res = retworkx.bipartite_layout(self.graph, {0, 1, 2, 3, 4})
         expected = {
@@ -183,6 +196,19 @@ class TestCircularLayout(unittest.TestCase):
             retworkx.generators.directed_path_graph(1))
         self.assertEqual({0: (0.0, 0.0)}, res)
 
+    def test_circular_layout_hole(self):
+        g = retworkx.generators.directed_path_graph(5)
+        g.remove_nodes_from([1])
+        res = retworkx.circular_layout(g)
+        expected = {
+            0: (0.999999986090933, 2.1855693665697608e-08),
+            2: (-3.576476059301554e-08, 1.0),
+            3: (-0.9999999701976796, -6.556708099709282e-08),
+            4: (1.987150711625619e-08, -0.9999999562886126),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
+
     def test_circular_layout(self):
         res = retworkx.circular_layout(self.graph)
         expected = {
@@ -247,6 +273,19 @@ class TestShellLayout(unittest.TestCase):
     def test_shell_layout_one_node(self):
         res = retworkx.shell_layout(retworkx.generators.directed_path_graph(1))
         self.assertEqual({0: (0.0, 0.0)}, res)
+
+    def test_shell_layout_hole(self):
+        g = retworkx.generators.directed_path_graph(5)
+        g.remove_nodes_from([1])
+        res = retworkx.shell_layout(g)
+        expected = {
+            0: (-1.0, -8.742277657347586e-08),
+            2: (1.1924880638503055e-08, -1.0),
+            3: (1.0, 1.7484555314695172e-07),
+            4: (-3.3776623808989825e-07, 1.0),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
 
     def test_shell_layout(self):
         res = retworkx.shell_layout(self.graph)
@@ -361,6 +400,19 @@ class TestSpiralLayout(unittest.TestCase):
         res = retworkx.spiral_layout(
             retworkx.generators.directed_path_graph(1))
         self.assertEqual({0: (0.0, 0.0)}, res)
+
+    def test_spiral_layout_hole(self):
+        g = retworkx.generators.directed_path_graph(5)
+        g.remove_nodes_from([1])
+        res = retworkx.spiral_layout(g)
+        expected = {
+            0: (-0.6415327868391166, -0.6855508729419231),
+            2: (-0.03307913182988828, -0.463447951079834),
+            3: (0.34927952438480797, 0.1489988240217569),
+            4: (0.32533239428419697, 1.0),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
 
     def test_spiral_layout(self):
         res = retworkx.spiral_layout(self.graph)

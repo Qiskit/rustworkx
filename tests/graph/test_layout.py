@@ -46,6 +46,22 @@ class TestRandomLayout(unittest.TestCase):
         }
         self.assertEqual(expected, res)
 
+    def test_random_layout(self):
+        res = retworkx.graph_random_layout(self.graph, seed=42)
+        expected = {
+            0: (0.2265125179283135, 0.23910669031859955),
+            4: (0.8025885957751138, 0.37085692752109345),
+            5: (0.23635127852185123, 0.9286365888207462),
+            1: (0.760833410686741, 0.5278396573581516),
+            3: (0.1879083014236631, 0.524657662927804),
+            2: (0.9704763177409157, 0.37546268141451944),
+            6: (0.462700947802672, 0.44025745918644743),
+            7: (0.3125895420208278, 0.0893209773065271),
+            8: (0.5567725240957387, 0.21079648777222115),
+            9: (0.7586719404939911, 0.43090704138697045)
+        }
+        self.assertEqual(expected, res)
+
     def test_random_layout_center(self):
         res = retworkx.graph_random_layout(self.graph, center=(0.5, 0.5),
                                            seed=42)
@@ -80,6 +96,19 @@ class TestBipartiteLayout(unittest.TestCase):
     def test_bipartite_layout_empty(self):
         res = retworkx.bipartite_layout(retworkx.PyGraph(), set())
         self.assertEqual({}, res)
+
+    def test_bipartite_layout_hole(self):
+        g = retworkx.generators.path_graph(5)
+        g.remove_nodes_from([1])
+        res = retworkx.bipartite_layout(g, set())
+        expected = {
+            0: (0.0, -1.0),
+            2: (0.0, -0.3333333333333333),
+            3: (0.0, 0.3333333333333333),
+            4: (0.0, 1.0),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
 
     def test_bipartite_layout(self):
         res = retworkx.bipartite_layout(self.graph, {0, 1, 2, 3, 4})
@@ -182,6 +211,19 @@ class TestCircularLayout(unittest.TestCase):
         res = retworkx.circular_layout(retworkx.generators.path_graph(1))
         self.assertEqual({0: (0.0, 0.0)}, res)
 
+    def test_circular_layout_hole(self):
+        g = retworkx.generators.path_graph(5)
+        g.remove_nodes_from([1])
+        res = retworkx.circular_layout(g)
+        expected = {
+            0: (0.999999986090933, 2.1855693665697608e-08),
+            2: (-3.576476059301554e-08, 1.0),
+            3: (-0.9999999701976796, -6.556708099709282e-08),
+            4: (1.987150711625619e-08, -0.9999999562886126),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
+
     def test_circular_layout(self):
         res = retworkx.circular_layout(self.graph)
         expected = {
@@ -246,6 +288,19 @@ class TestShellLayout(unittest.TestCase):
     def test_shell_layout_one_node(self):
         res = retworkx.shell_layout(retworkx.generators.path_graph(1))
         self.assertEqual({0: (0.0, 0.0)}, res)
+
+    def test_shell_layout_hole(self):
+        g = retworkx.generators.path_graph(5)
+        g.remove_nodes_from([1])
+        res = retworkx.shell_layout(g)
+        expected = {
+            0: (-1.0, -8.742277657347586e-08),
+            2: (1.1924880638503055e-08, -1.0),
+            3: (1.0, 1.7484555314695172e-07),
+            4: (-3.3776623808989825e-07, 1.0),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
 
     def test_shell_layout(self):
         res = retworkx.shell_layout(self.graph)
@@ -359,6 +414,19 @@ class TestSpiralLayout(unittest.TestCase):
     def test_spiral_layout_one_node(self):
         res = retworkx.spiral_layout(retworkx.generators.path_graph(1))
         self.assertEqual({0: (0.0, 0.0)}, res)
+
+    def test_spiral_layout_hole(self):
+        g = retworkx.generators.path_graph(5)
+        g.remove_nodes_from([1])
+        res = retworkx.spiral_layout(g)
+        expected = {
+            0: (-0.6415327868391166, -0.6855508729419231),
+            2: (-0.03307913182988828, -0.463447951079834),
+            3: (0.34927952438480797, 0.1489988240217569),
+            4: (0.32533239428419697, 1.0),
+        }
+        md = max_diff(expected, res)
+        self.assertTrue(md < self.thres)
 
     def test_spiral_layout(self):
         res = retworkx.spiral_layout(self.graph)
