@@ -25,18 +25,17 @@ including significantly improved performance it does mean that the library
 needs to be compiled when being installed from source (as opposed to a pure
 Python library which can just be installed). retworkx supports and publishes
 pre-compiled binaries for Linux on x86, x86_64, aarch64, s390x, and ppc64le,
-MacOS on x86_64, and arm64, and Windows 32bit and 64bit systems. However if
-you're running outside of these platforms to install retworkx you will need a
-rust compiler installed.
+MacOS on x86_64, and arm64, and Windows 32bit and 64bit systems. However, if
+you are not running on one of these platforms, you will need a rust compiler
+to install retworkx.
 
 retworkx was originally created to be a high performance replacement for the
 Qiskit project's internal usage of the `NetworkX <https://networkx.org/>`__
-library (which is where the name comes from Rust + NetworkX = retworkx) but is
-not a drop-in replacement for NetworkX (see :ref:`networkx` for more details).
-However, since it was originally created it has grown to be an independent
-high performance general purpose graph library that can be used for any
-application that needs to interact with graphs or complex networks.
-
+library (which is where the name comes from Rust + NetworkX = retworkx) but it
+is not a drop-in replacement for NetworkX (see :ref:`networkx` for more
+details). However, since it was originally created it has grown to be an
+independent high performance general purpose graph library that can be used for
+any application that needs to interact with graphs or complex networks.
 
 Contents:
 
