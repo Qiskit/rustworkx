@@ -16,12 +16,276 @@ use hashbrown::{HashMap, HashSet};
 
 use pyo3::prelude::*;
 
+use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use crate::iterators::Pos2DMapping;
 
-pub type Point = [f64; 2];
+type Nt = f64;
+pub type Point = [Nt; 2];
+type Graph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+
+const LBOUND: Nt = 1e-8;
+
+#[inline]
+fn l2norm(x: Point) -> Nt {
+    (x[0] * x[0] + x[1] * x[1]).sqrt()
+}
+
+pub trait Force {
+    // evaluate force between points x, y
+    // given the difference x - y and the l2 - norm ||x - y||.
+    fn eval(&self, dif: &Point, dnorm: Nt) -> Nt;
+
+    // total force in Point x
+    // from (points, weights) in ys.
+    fn total<'a, I>(&self, x: &Point, ys: I) -> [Nt; 2]
+    where
+        I: Iterator<Item = (&'a Point, Nt)>,
+    {
+        let mut ftot = [0.0, 0.0];
+
+        for (y, w) in ys {
+            let d = [y[0] - x[0], y[1] - x[1]];
+            let dnorm = l2norm(d).max(LBOUND);
+            let f = w * self.eval(&d, dnorm);
+
+            ftot[0] += f * d[0] / dnorm;
+            ftot[1] += f * d[1] / dnorm;
+        }
+
+        ftot
+    }
+}
+
+pub struct RepulsiveForce {
+    _c: Nt,
+    _k: Nt,
+    _p: i32,
+}
+
+impl RepulsiveForce {
+    pub fn new(k: Nt, p: i32) -> Self {
+        RepulsiveForce {
+            _c: 0.2,
+            _k: k,
+            _p: p,
+        }
+    }
+}
+
+impl Force for RepulsiveForce {
+    fn eval(&self, _: &Point, dnorm: Nt) -> Nt {
+        -self._c * self._k.powi(1_i32 + self._p) / dnorm.powi(self._p)
+    }
+}
+
+pub struct AttractiveForce {
+    _k: Nt,
+}
+
+impl AttractiveForce {
+    pub fn new(k: Nt) -> Self {
+        AttractiveForce { _k: k }
+    }
+}
+
+impl Force for AttractiveForce {
+    fn eval(&self, dif: &Point, _: Nt) -> Nt {
+        (dif[0] * dif[0] + dif[1] * dif[1]) / self._k
+    }
+}
+
+pub trait CoolingScheme {
+    fn update_step(&mut self, cost: Nt) -> Nt;
+}
+
+pub struct AdaptiveCoolingScheme {
+    _step: Nt,
+    _tau: Nt,
+    _cost: Nt,
+    _progress: usize,
+}
+
+impl AdaptiveCoolingScheme {
+    pub fn new(step: Nt) -> Self {
+        AdaptiveCoolingScheme {
+            _step: step,
+            _tau: 0.9,
+            _cost: std::f64::INFINITY,
+            _progress: 0,
+        }
+    }
+}
+
+impl CoolingScheme for AdaptiveCoolingScheme {
+    fn update_step(&mut self, cost: Nt) -> Nt {
+        if cost < self._cost {
+            self._progress += 1;
+            if self._progress >= 5 {
+                self._progress = 0;
+                self._step /= self._tau;
+            }
+        } else {
+            self._progress = 0;
+            self._step *= self._tau;
+        }
+
+        self._cost = cost;
+        self._step
+    }
+}
+
+pub struct LinearCoolingScheme {
+    _step: Nt,
+    _num_iter: usize,
+    _dt: Nt,
+}
+
+impl LinearCoolingScheme {
+    pub fn new(step: Nt, num_iter: usize) -> Self {
+        LinearCoolingScheme {
+            _step: step,
+            _num_iter: num_iter,
+            _dt: step / (num_iter + 1) as Nt,
+        }
+    }
+}
+
+impl CoolingScheme for LinearCoolingScheme {
+    fn update_step(&mut self, _: Nt) -> Nt {
+        self._step -= self._dt;
+        self._step
+    }
+}
+
+// Rescale so that pos in [-scale, scale].
+fn rescale(pos: &mut Vec<Point>, scale: Nt, indices: Vec<usize>) {
+    let n = indices.len();
+    if n == 0 {
+        return;
+    }
+    // find mean in each dimension
+    let mut mu: Point = [0.0, 0.0];
+    for &n in &indices {
+        mu[0] += pos[n][0];
+        mu[1] += pos[n][1];
+    }
+    mu[0] /= n as Nt;
+    mu[1] /= n as Nt;
+
+    // substract mean and find max coordinate for all axes
+    let mut lim = std::f64::NEG_INFINITY;
+    for n in indices {
+        let [px, py] = pos.get_mut(n).unwrap();
+        *px -= mu[0];
+        *py -= mu[1];
+
+        let pm = px.abs().max(py.abs());
+        if lim < pm {
+            lim = pm;
+        }
+    }
+
+    // rescale
+    for [px, py] in pos.iter_mut() {
+        *px *= scale / lim;
+        *py *= scale / lim;
+    }
+}
+
+fn recenter(pos: &mut Vec<Point>, center: Point) {
+    for [px, py] in pos.iter_mut() {
+        *px += center[0];
+        *py += center[1];
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn evolve<Ty, Fa, Fr, C>(
+    graph: &Graph<Ty>,
+    mut pos: Vec<Point>,
+    fixed: HashSet<usize>,
+    f_a: Fa,
+    f_r: Fr,
+    mut cs: C,
+    num_iter: usize,
+    tol: f64,
+    weights: HashMap<(usize, usize), f64>,
+    scale: Option<Nt>,
+    center: Option<Point>,
+) -> Vec<Point>
+where
+    Ty: EdgeType,
+    Fa: Force,
+    Fr: Force,
+    C: CoolingScheme,
+{
+    let mut step = cs.update_step(std::f64::INFINITY);
+
+    for _ in 0..num_iter {
+        let mut energy = 0.0;
+        let mut converged = true;
+
+        for v in graph.node_indices() {
+            let v = v.index();
+            if fixed.contains(&v) {
+                continue;
+            }
+            // attractive forces
+            let ys = graph.neighbors_undirected(NodeIndex::new(v)).map(|n| {
+                let n = n.index();
+                (&pos[n], weights[&(v, n)])
+            });
+            let fa = f_a.total(&pos[v], ys);
+
+            // repulsive forces
+            let ys =
+                graph.node_indices().filter(|&n| n.index() != v).map(|n| {
+                    let n = n.index();
+                    (&pos[n], 1.0)
+                });
+            let fr = f_r.total(&pos[v], ys);
+
+            // update current position
+            let f = [fa[0] + fr[0], fa[1] + fr[1]];
+            let f2 = f[0] * f[0] + f[1] * f[1];
+            energy += f2;
+
+            let fnorm = f2.sqrt().max(LBOUND);
+            let dx = step * f[0] / fnorm;
+            let dy = step * f[1] / fnorm;
+            pos[v][0] += dx;
+            pos[v][1] += dy;
+
+            if dx * dx + dy * dy > tol {
+                converged = false;
+            }
+        }
+
+        step = cs.update_step(energy);
+        if converged {
+            break;
+        }
+    }
+
+    if fixed.is_empty() {
+        if let Some(scale) = scale {
+            rescale(
+                &mut pos,
+                scale,
+                graph.node_indices().map(|n| n.index()).collect(),
+            );
+        }
+
+        if let Some(center) = center {
+            recenter(&mut pos, center);
+        }
+    }
+
+    pos
+}
 
 pub fn bipartite_layout<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
@@ -86,8 +350,13 @@ pub fn bipartite_layout<Ty: EdgeType>(
         }
     }
 
-    rescale(&mut pos, scale);
-    recenter(&mut pos, center);
+    if let Some(scale) = scale {
+        rescale(&mut pos, scale, (0..node_num).collect());
+    }
+
+    if let Some(center) = center {
+        recenter(&mut pos, center);
+    }
 
     Pos2DMapping {
         pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
@@ -110,10 +379,15 @@ pub fn circular_layout<Ty: EdgeType>(
             let angle = 2.0 * pi * i as f64 / node_num as f64;
             pos.push([angle.cos(), angle.sin()]);
         }
+
+        if let Some(scale) = scale {
+            rescale(&mut pos, scale, (0..node_num).collect());
+        }
     }
 
-    rescale(&mut pos, scale);
-    recenter(&mut pos, center);
+    if let Some(center) = center {
+        recenter(&mut pos, center);
+    }
 
     Pos2DMapping {
         pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
@@ -163,7 +437,9 @@ pub fn shell_layout<Ty: EdgeType>(
         first_theta += rot_angle;
     }
 
-    recenter(&mut pos, center);
+    if let Some(center) = center {
+        recenter(&mut pos, center);
+    }
 
     Pos2DMapping {
         pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
@@ -202,56 +478,17 @@ pub fn spiral_layout<Ty: EdgeType>(
             dist += step;
             angle += ros;
         }
+
+        if let Some(scale) = scale {
+            rescale(&mut pos, scale, (0..node_num).collect());
+        }
     }
 
-    rescale(&mut pos, scale);
-    recenter(&mut pos, center);
+    if let Some(center) = center {
+        recenter(&mut pos, center);
+    }
 
     Pos2DMapping {
         pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
-    }
-}
-
-fn recenter(pos: &mut Vec<Point>, center: Option<Point>) {
-    let num_pos = pos.len();
-    if num_pos == 0 {
-        return;
-    }
-    let dim = pos[0].len();
-    if let Some(center) = center {
-        for p in pos.iter_mut() {
-            for (d, c) in center.iter().enumerate() {
-                p[d] += c;
-            }
-        }
-    }
-}
-
-fn rescale(pos: &mut Vec<Point>, scale: Option<f64>) {
-    let num_pos = pos.len();
-    if num_pos == 0 {
-        return;
-    }
-    let dim = pos[0].len();
-    let sc = scale.unwrap_or(1.0);
-
-    let mut lim = 0.0;
-    for d in 0..dim {
-        let mean = pos.iter().map(|t| t[d]).sum::<f64>() / num_pos as f64;
-        for p in pos.iter_mut() {
-            p[d] -= mean;
-            let pd = p[d].abs();
-            if lim < pd {
-                lim = pd;
-            }
-        }
-    }
-    if lim > 0.0 {
-        let mult = sc / lim;
-        pos.iter_mut().for_each(|t| {
-            for td in t.iter_mut() {
-                *td *= mult;
-            }
-        });
     }
 }
