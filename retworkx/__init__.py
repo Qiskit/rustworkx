@@ -736,9 +736,9 @@ def is_subgraph_isomorphic(
         positional one for each edge data object. If the return of this
         function evaluates to True then the edges passed to it are viewed
         as matching.
-    :param bool id_order: If set to ``False`` this function will use a
-        heuristic matching order based on [VF2]_ paper. Otherwise it will
-        default to matching the nodes in order specified by their ids.
+    :param bool id_order: If set to ``True`` this function will match the nodes
+        in order specified by their ids. Otherwise it will default to a heuristic
+        matching order based on [VF2]_ paper.
 
     :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
         , ``False`` if there is not.
