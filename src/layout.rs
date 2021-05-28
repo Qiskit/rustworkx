@@ -323,8 +323,14 @@ pub fn bipartite_layout<Ty: EdgeType>(
 
     let x_offset: f64 = width / 2.0;
     let y_offset: f64 = height / 2.0;
-    let left_dy: f64 = height / (left_num - 1) as f64;
-    let right_dy: f64 = height / (right_num - 1) as f64;
+    let left_dy: f64 = match left_num {
+        0 | 1 => 0.0,
+        _ => height / (left_num - 1) as f64,
+    };
+    let right_dy: f64 = match right_num {
+        0 | 1 => 0.0,
+        _ => height / (right_num - 1) as f64,
+    };
 
     let mut lc: f64 = 0.0;
     let mut rc: f64 = 0.0;
