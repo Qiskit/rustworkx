@@ -355,6 +355,7 @@ fn digraph_is_isomorphic(
         compare_nodes,
         compare_edges,
         id_order,
+        Ordering::Equal,
     )?;
     Ok(res)
 }
@@ -423,6 +424,7 @@ fn graph_is_isomorphic(
         compare_nodes,
         compare_edges,
         id_order,
+        Ordering::Equal,
     )?;
     Ok(res)
 }
@@ -484,13 +486,14 @@ fn digraph_is_subgraph_isomorphic(
         }
     });
 
-    let res = isomorphism::is_subgraph_isomorphic(
+    let res = isomorphism::is_isomorphic(
         py,
         &first.graph,
         &second.graph,
         compare_nodes,
         compare_edges,
         id_order,
+        Ordering::Greater,
     )?;
     Ok(res)
 }
@@ -552,13 +555,14 @@ fn graph_is_subgraph_isomorphic(
         }
     });
 
-    let res = isomorphism::is_subgraph_isomorphic(
+    let res = isomorphism::is_isomorphic(
         py,
         &first.graph,
         &second.graph,
         compare_nodes,
         compare_edges,
         id_order,
+        Ordering::Greater,
     )?;
     Ok(res)
 }

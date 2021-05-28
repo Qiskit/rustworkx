@@ -14,6 +14,7 @@
 // It has then been modified to function with PyDiGraph inputs instead of Graph.
 
 use fixedbitset::FixedBitSet;
+use std::cmp::Ordering;
 use std::iter::FromIterator;
 use std::marker;
 
@@ -366,22 +367,20 @@ where
     }
 }
 
-macro_rules! impl_isomorphic {
-($is_isomorphic:ident, $try_match:ident, $op:tt) => {
-
 /// [Graph] Return `true` if the graphs `g0` and `g1` are (sub) graph isomorphic.
 ///
 /// Using the VF2 algorithm, examining both syntactic and semantic
 /// graph isomorphism (graph structure and matching node and edge weights).
 ///
 /// The graphs should not be multigraphs.
-pub fn $is_isomorphic<Ty, F, G>(
+pub fn is_isomorphic<Ty, F, G>(
     py: Python,
     g0: &StablePyGraph<Ty>,
     g1: &StablePyGraph<Ty>,
     mut node_match: Option<F>,
     mut edge_match: Option<G>,
     id_order: bool,
+    ordering: Ordering,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
@@ -403,8 +402,10 @@ where
         g1
     };
 
-    if !(g0_out.node_count() $op g1_out.node_count())
-        || !(g0_out.edge_count() $op g1_out.edge_count())
+    if (g0_out.node_count().cmp(&g1_out.node_count()).then(ordering)
+        != ordering)
+        || (g0_out.edge_count().cmp(&g1_out.edge_count()).then(ordering)
+            != ordering)
     {
         return Ok(false);
     }
@@ -424,17 +425,19 @@ where
     };
 
     let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
-    let res = $try_match(&mut st, g0, g1, &mut node_match, &mut edge_match)?;
+    let res =
+        try_match(&mut st, g0, g1, &mut node_match, &mut edge_match, ordering)?;
     Ok(res.unwrap_or(false))
 }
 
 /// Return Some(bool) if isomorphism is decided, else None.
-fn $try_match<Ty, F, G>(
+fn try_match<Ty, F, G>(
     mut st: &mut [Vf2State<Ty>; 2],
     g0: &StablePyGraph<Ty>,
     g1: &StablePyGraph<Ty>,
     node_match: &mut F,
     edge_match: &mut G,
+    ordering: Ordering,
 ) -> PyResult<Option<bool>>
 where
     Ty: EdgeType,
@@ -583,7 +586,7 @@ where
                 }
             }
         }
-        if !(succ_count[0] $op succ_count[1]) {
+        if succ_count[0].cmp(&succ_count[1]).then(ordering) != ordering {
             return Ok(false);
         }
         // R_pred
@@ -607,7 +610,7 @@ where
                     }
                 }
             }
-            if !(pred_count[0] $op pred_count[1]) {
+            if pred_count[0].cmp(&pred_count[1]).then(ordering) != ordering {
                 return Ok(false);
             }
         }
@@ -624,21 +627,36 @@ where
             }};
         }
         // R_out
-        if !(rule!(out, 0, Outgoing) $op rule!(out, 1, Outgoing)) {
+        if rule!(out, 0, Outgoing)
+            .cmp(&rule!(out, 1, Outgoing))
+            .then(ordering)
+            != ordering
+        {
             return Ok(false);
         }
         if g[0].is_directed()
-            && !(rule!(out, 0, Incoming) $op rule!(out, 1, Incoming))
+            && rule!(out, 0, Incoming)
+                .cmp(&rule!(out, 1, Incoming))
+                .then(ordering)
+                != ordering
         {
             return Ok(false);
         }
         // R_in
         if g[0].is_directed() {
-            if !(rule!(ins, 0, Outgoing) $op rule!(ins, 1, Outgoing)) {
+            if rule!(ins, 0, Outgoing)
+                .cmp(&rule!(ins, 1, Outgoing))
+                .then(ordering)
+                != ordering
+            {
                 return Ok(false);
             }
 
-            if !(rule!(ins, 0, Incoming) $op rule!(ins, 1, Incoming)) {
+            if rule!(ins, 0, Incoming)
+                .cmp(&rule!(ins, 1, Incoming))
+                .then(ordering)
+                != ordering
+            {
                 return Ok(false);
             }
         }
@@ -654,7 +672,7 @@ where
                 }
             }
         }
-        if !(new_count[0] $op new_count[1]) {
+        if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
             return Ok(false);
         }
         if g[0].is_directed() {
@@ -667,7 +685,7 @@ where
                     }
                 }
             }
-            if !(new_count[0] $op new_count[1]) {
+            if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
                 return Ok(false);
             }
         }
@@ -773,8 +791,10 @@ where
                         return Ok(Some(true));
                     }
                     // Check cardinalities of Tin, Tout sets
-                    if st[0].out_size $op st[1].out_size
-                        && st[0].ins_size $op st[1].ins_size
+                    if st[0].out_size.cmp(&st[1].out_size).then(ordering)
+                        == ordering
+                        && st[0].ins_size.cmp(&st[1].ins_size).then(ordering)
+                            == ordering
                     {
                         let f0 = Frame::Unwind {
                             nodes,
@@ -801,8 +821,3 @@ where
     }
     Ok(None)
 }
-};
-}
-
-impl_isomorphic!(is_isomorphic, try_match, ==);
-impl_isomorphic!(is_subgraph_isomorphic, try_match_subgraph, >=);
