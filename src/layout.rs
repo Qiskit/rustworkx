@@ -18,8 +18,8 @@ use pyo3::prelude::*;
 
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::EdgeType;
 use petgraph::visit::NodeIndexable;
+use petgraph::EdgeType;
 
 use crate::iterators::Pos2DMapping;
 
