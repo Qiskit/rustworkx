@@ -19,6 +19,7 @@ use pyo3::prelude::*;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
+use petgraph::visit::NodeIndexable;
 
 use crate::iterators::Pos2DMapping;
 
@@ -407,13 +408,13 @@ pub fn shell_layout<Ty: EdgeType>(
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
-    let node_num = graph.node_count();
+    let node_num = graph.node_bound();
     let mut pos: Vec<Point> = vec![[0.0, 0.0]; node_num];
     let pi = std::f64::consts::PI;
 
     let shell_list: Vec<Vec<usize>> = match nlist {
         Some(nlist) => nlist,
-        None => vec![(0..node_num).collect()],
+        None => vec![graph.node_indices().map(|n| n.index()).collect()],
     };
     let shell_num = shell_list.len();
 
@@ -448,7 +449,13 @@ pub fn shell_layout<Ty: EdgeType>(
     }
 
     Pos2DMapping {
-        pos_map: graph.node_indices().map(|n| n.index()).zip(pos).collect(),
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let n = n.index();
+                (n, pos[n])
+            })
+            .collect(),
     }
 }
 
