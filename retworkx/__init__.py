@@ -708,7 +708,7 @@ def _graph_is_isomorphic_node_match(first, second, matcher, id_order=True):
 
 @functools.singledispatch
 def is_subgraph_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=True
+    first, second, node_matcher=None, edge_matcher=None, id_order=False
 ):
     """Determine if 2 graphs are subgraph isomorphic
 
@@ -722,10 +722,6 @@ def is_subgraph_isomorphic(
             retworkx.is_subgraph_isomorphic(graph_a, graph_b,
                                             lambda x, y: x == y)
 
-    .. note::
-
-        For better performance on large graphs, consider setting
-        `id_order=False`.
 
     :param first: The first graph to compare. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
@@ -753,7 +749,7 @@ def is_subgraph_isomorphic(
 
 @is_subgraph_isomorphic.register(PyDiGraph)
 def _digraph_is_subgraph_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=True
+    first, second, node_matcher=None, edge_matcher=None, id_order=False
 ):
     return digraph_is_subgraph_isomorphic(
         first, second, node_matcher, edge_matcher, id_order
@@ -762,7 +758,7 @@ def _digraph_is_subgraph_isomorphic(
 
 @is_subgraph_isomorphic.register(PyGraph)
 def _graph_is_subgraph_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=True
+    first, second, node_matcher=None, edge_matcher=None, id_order=False
 ):
     return graph_is_subgraph_isomorphic(
         first, second, node_matcher, edge_matcher, id_order
