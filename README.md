@@ -9,7 +9,7 @@
 [![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 
   - You can see the full rendered docs at:
-    <https://retworkx.readthedocs.io/en/latest/index.html>
+    <https://qiskit.org/documentation/retworkx>
 
 retworkx is a general purpose graph library for python3 written in Rust to
 take advantage of the performance and safety that Rust provides. It was built

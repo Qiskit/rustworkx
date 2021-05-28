@@ -40,6 +40,20 @@ class TestEdges(unittest.TestCase):
             retworkx.NoEdgeBetweenNodes, dag.get_edge_data, node_a, node_b
         )
 
+    def test_num_edges(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_node(1)
+        graph.add_node(42)
+        graph.add_node(146)
+        graph.add_edges_from_no_data([(0, 1), (1, 2)])
+        self.assertEqual(2, graph.num_edges())
+
+    def test_num_edges_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_node(1)
+        graph.add_node(42)
+        self.assertEqual(0, graph.num_edges())
+
     def test_update_edge(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node("a")
@@ -103,6 +117,18 @@ class TestEdges(unittest.TestCase):
         dag = retworkx.PyDAG()
         dag.add_node("a")
         self.assertEqual([], dag.edges())
+
+    def test_edge_indices(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", "Edgy")
+        dag.add_child(node_b, "c", "Super edgy")
+        self.assertEqual([0, 1], dag.edge_indices())
+
+    def test_edge_indices_empty(self):
+        dag = retworkx.PyDAG()
+        dag.add_node("a")
+        self.assertEqual([], dag.edge_indices())
 
     def test_add_duplicates(self):
         dag = retworkx.PyDAG()
@@ -585,6 +611,26 @@ class TestEdges(unittest.TestCase):
         node_b = graph.add_node(None)
         graph.insert_node_on_out_edges_multiple(node_b, [node_a])
         self.assertEqual([], graph.edge_list())
+
+    def test_edge_index_map(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_child(node_a, "c", "edge a")
+        node_d = graph.add_parent(node_b, "d", "edge_b")
+        graph.add_edge(node_c, node_d, "edge c")
+        self.assertEqual(
+            {
+                0: (node_a, node_c, "edge a"),
+                1: (node_d, node_b, "edge_b"),
+                2: (node_c, node_d, "edge c"),
+            },
+            graph.edge_index_map(),
+        )
+
+    def test_edge_index_map_empty(self):
+        graph = retworkx.PyDiGraph()
+        self.assertEqual({}, graph.edge_index_map())
 
 
 class TestEdgesMultigraphFalse(unittest.TestCase):

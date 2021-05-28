@@ -399,6 +399,92 @@ def _graph_dijkstra_shortest_path(
 
 
 @functools.singledispatch
+def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
+    """Find the shortest path from all nodes
+
+    This function will generate the shortest path from all nodes int the graph
+    using Dijkstra's algorithm. This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param edge_cost_fn: A callable object that acts as a weight function for
+        an edge. It will accept a single positional argument, the edge's weight
+        object and will return a float which will be used to represent the
+        weight/cost of the edge
+
+    :return: A read-only dictionary of paths. The keys are destination node
+        indices and the values are a dict of target node indices and a list
+        of node indices making the path. For example::
+
+            {
+                0: {1: [0, 1],  2: [0, 1, 2]},
+                1: {2: [1, 2]},
+                2: {0: [2, 0]},
+            }
+
+    :rtype: AllPairsPathMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@all_pairs_dijkstra_shortest_paths.register(PyDiGraph)
+def _digraph_all_pairsdijkstra_shortest_path(graph, edge_cost_fn):
+    return digraph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
+
+
+@all_pairs_dijkstra_shortest_paths.register(PyGraph)
+def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
+    return graph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
+def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    """Find the shortest path from a node
+
+    This function will generate the shortest path from a source node using
+    Dijkstra's algorithm. This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param edge_cost_fn: A callable object that acts as a weight function for
+        an edge. It will accept a single positional argument, the edge's weight
+        object and will return a float which will be used to represent the
+        weight/cost of the edge
+
+    :return: A read-only dictionary of path lengths. The keys are the source
+        node indices and the values are a dict of the target node and the
+        length of the shortest path to that node. For example::
+
+            {
+                0: {1: 2.0, 2: 2.0},
+                1: {2: 1.0},
+                2: {0: 1.0},
+            }
+
+    :rtype: AllPairsPathLengthMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@all_pairs_dijkstra_path_lengths.register(PyDiGraph)
+def _digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    return digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
+
+
+@all_pairs_dijkstra_path_lengths.register(PyGraph)
+def _graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    return graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
 def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     """Compute the lengths of the shortest paths for a graph object using
     Dijkstra's algorithm.
@@ -801,6 +887,137 @@ def _digraph_random_layout(graph, center=None, seed=None):
 @random_layout.register(PyGraph)
 def _graph_random_layout(graph, center=None, seed=None):
     return graph_random_layout(graph, center=center, seed=seed)
+
+
+@functools.singledispatch
+def spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    """
+    Position nodes using Fruchterman-Reingold force-directed algorithm.
+
+    The algorithm simulates a force-directed representation of the network
+    treating edges as springs holding nodes close, while treating nodes
+    as repelling objects, sometimes called an anti-gravity force.
+    Simulation continues until the positions are close to an equilibrium.
+
+    :param graph: Graph to be used. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param dict pos:
+        Initial node positions as a dictionary with node ids as keys and values
+        as a coordinate list. If ``None``, then use random initial positions.
+        (``default=None``)
+    :param set fixed: Nodes to keep fixed at initial position.
+        Error raised if fixed specified and ``pos`` is not. (``default=None``)
+    :param float  k:
+        Optimal distance between nodes. If ``None`` the distance is set to
+        :math:`\\frac{1}{\\sqrt{n}}` where :math:`n` is the number of nodes.
+        Increase this value to move nodes farther apart. (``default=None``)
+    :param int repulsive_exponent:
+        Repulsive force exponent. (``default=2``)
+    :param bool adaptive_cooling:
+        Use an adaptive cooling scheme. If set to ``False``,
+        a linear cooling scheme is used. (``default=True``)
+    :param int num_iter:
+        Maximum number of iterations. (``default=50``)
+    :param float tol:
+        Threshold for relative error in node position changes.
+        The iteration stops if the error is below this threshold.
+        (``default = 1e-6``)
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float
+        which will be used to represent the weight of the edge.
+    :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+        this optional float value will be used for the weight/cost of each edge
+    :param float|None scale: Scale factor for positions.
+        Not used unless fixed is None. If scale is ``None``, no re-scaling is
+        performed. (``default=1.0``)
+    :param list center: Coordinate pair around which to center
+        the layout. Not used unless fixed is ``None``. (``default=None``)
+    :param int seed: An optional seed to use for the random number generator
+
+    :returns: A dictionary of positions keyed by node id.
+    :rtype: dict
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@spring_layout.register(PyDiGraph)
+def _digraph_spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    return digraph_spring_layout(
+        graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+
+
+@spring_layout.register(PyGraph)
+def _graph_spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    return graph_spring_layout(
+        graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
 
 
 def networkx_converter(graph):

@@ -15,6 +15,7 @@ use std::iter;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
@@ -42,6 +43,10 @@ where
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated cycle graph
 /// :rtype: PyDiGraph
@@ -70,13 +75,14 @@ where
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -124,7 +130,7 @@ pub fn directed_cycle_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -226,6 +232,10 @@ pub fn cycle_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated path graph
 /// :rtype: PyDiGraph
@@ -254,13 +264,14 @@ pub fn cycle_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -297,7 +308,7 @@ pub fn directed_path_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -394,6 +405,10 @@ pub fn path_graph(
 /// :param bool inward: If set ``True`` the nodes will be directed towards the
 ///     center node. This parameter is ignored if ``bidirectional`` is set to
 ///     ``True``.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated star graph
 /// :rtype: PyDiGraph
@@ -445,14 +460,15 @@ pub fn path_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(inward = "false", bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False)"]
+#[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"]
 pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     inward: bool,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -489,7 +505,7 @@ pub fn directed_star_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -657,6 +673,10 @@ pub fn mesh_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param list weights: A list of node weights. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated mesh graph
 /// :rtype: PyDiGraph
@@ -685,12 +705,13 @@ pub fn mesh_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[pyfunction(multigraph = "true")]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
 pub fn directed_mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -723,7 +744,7 @@ pub fn directed_mesh_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -864,6 +885,10 @@ pub fn grid_graph(
 ///     weights list, extra nodes with None weight are appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated grid graph
 /// :rtype: PyDiGraph
@@ -893,14 +918,15 @@ pub fn grid_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"]
 pub fn directed_grid_graph(
     py: Python,
     rows: Option<usize>,
     cols: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
@@ -979,7 +1005,253 @@ pub fn directed_grid_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
+    })
+}
+
+/// Generate an undirected binomial tree of order n recursively.
+///
+/// :param int order: Order of the binomial tree.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than 2**order extra nodes with with None will be appended.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.binomial_tree_graph(4)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(multigraph = true)]
+#[text_signature = "(order, /, weights=None, multigraph=True)"]
+pub fn binomial_tree_graph(
+    py: Python,
+    order: u32,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    let num_nodes = usize::pow(2, order);
+
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+
+            let mut node_count = num_nodes;
+
+            if weights.len() > num_nodes {
+                return Err(PyIndexError::new_err(
+                    "weights should be <= 2**order",
+                ));
+            }
+
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+                node_count -= 1;
+            }
+
+            for _i in 0..node_count {
+                let index = graph.add_node(py.None());
+                node_list.push(index);
+            }
+
+            node_list
+        }
+
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    let mut n = 1;
+
+    for _ in 0..order {
+        let edges: Vec<(NodeIndex, NodeIndex)> = graph
+            .edge_references()
+            .map(|e| (e.source(), e.target()))
+            .collect();
+
+        for (source, target) in edges {
+            let source_index = source.index();
+            let target_index = target.index();
+
+            graph.add_edge(
+                nodes[source_index + n],
+                nodes[target_index + n],
+                py.None(),
+            );
+        }
+
+        graph.add_edge(nodes[0], nodes[n], py.None());
+
+        n *= 2;
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
+/// Generate an undirected binomial tree of order n recursively.
+/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
+///
+/// :param int order: Order of the binomial tree.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than 2**order extra nodes with None will be appended.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyDiGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.directed_binomial_tree_graph(4)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"]
+pub fn directed_binomial_tree_graph(
+    py: Python,
+    order: u32,
+    weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+
+    let num_nodes = usize::pow(2, order);
+
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            let mut node_count = num_nodes;
+
+            if weights.len() > num_nodes {
+                return Err(PyIndexError::new_err(
+                    "weights should be <= 2**order",
+                ));
+            }
+
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+                node_count -= 1;
+            }
+
+            for _i in 0..node_count {
+                let index = graph.add_node(py.None());
+                node_list.push(index);
+            }
+
+            node_list
+        }
+
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    let mut n = 1;
+
+    for _ in 0..order {
+        let edges: Vec<(NodeIndex, NodeIndex)> = graph
+            .edge_references()
+            .map(|e| (e.source(), e.target()))
+            .collect();
+
+        for (source, target) in edges {
+            let source_index = source.index();
+            let target_index = target.index();
+
+            if graph
+                .find_edge(nodes[source_index + n], nodes[target_index + n])
+                .is_none()
+            {
+                graph.add_edge(
+                    nodes[source_index + n],
+                    nodes[target_index + n],
+                    py.None(),
+                );
+            }
+
+            if bidirectional
+                && graph
+                    .find_edge(nodes[target_index + n], nodes[source_index + n])
+                    .is_none()
+            {
+                graph.add_edge(
+                    nodes[target_index + n],
+                    nodes[source_index + n],
+                    py.None(),
+                );
+            }
+        }
+
+        if graph.find_edge(nodes[0], nodes[n]).is_none() {
+            graph.add_edge(nodes[0], nodes[n], py.None());
+        }
+
+        if bidirectional && graph.find_edge(nodes[n], nodes[0]).is_none() {
+            graph.add_edge(nodes[n], nodes[0], py.None());
+        }
+
+        n *= 2;
+    }
+
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph,
     })
 }
 
@@ -1088,6 +1360,10 @@ pub fn hexagonal_lattice_graph(
 /// :param int cols: The number of rows to generate the graph with.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated directed hexagonal lattice graph with the following nodes deleted:
 ///           ```2*row + 1``` and
@@ -1120,13 +1396,14 @@ pub fn hexagonal_lattice_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, rows=None, cols=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True)"]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
     rows: usize,
     cols: usize,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
 
@@ -1189,7 +1466,7 @@ pub fn directed_hexagonal_lattice_graph(
         node_removed: true,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -1205,6 +1482,8 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(binomial_tree_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     Ok(())

@@ -21,6 +21,7 @@ mod graph;
 mod isomorphism;
 mod iterators;
 mod k_shortest_path;
+mod layout;
 mod max_weight_matching;
 mod union;
 
@@ -30,7 +31,7 @@ use std::collections::{BTreeSet, BinaryHeap};
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::create_exception;
-use pyo3::exceptions::{PyException, PyValueError};
+use pyo3::exceptions::{PyException, PyIndexError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3::wrap_pyfunction;
@@ -58,8 +59,8 @@ use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
-    EdgeList, NodeIndices, PathLengthMapping, PathMapping, Pos2DMapping,
-    WeightedEdgeList,
+    AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices,
+    PathLengthMapping, PathMapping, Pos2DMapping, WeightedEdgeList,
 };
 
 trait NodesRemoved {
@@ -2157,6 +2158,313 @@ fn digraph_dijkstra_shortest_path_lengths(
     })
 }
 
+fn _all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathLengthMapping> {
+    if graph.node_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: HashMap::new(),
+        });
+    } else if graph.edge_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathLengthMapping {
+                            path_lengths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
+    }
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        raw.extract(py)
+    };
+    let edge_bound: usize =
+        graph.edge_indices().map(|x| x.index()).max().unwrap();
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(edge_bound);
+    for index in 0..=edge_bound {
+        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => {
+                edge_weights.push(Some(edge_cost_callable(weight)?))
+            }
+            None => edge_weights.push(None),
+        };
+    }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
+    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+    let out_map: HashMap<usize, PathLengthMapping> = node_indices
+        .into_par_iter()
+        .map(|x| {
+            let out_map = PathLengthMapping {
+                path_lengths: dijkstra::dijkstra(
+                    graph,
+                    x,
+                    None,
+                    |e| edge_cost(e.id()),
+                    None,
+                )
+                .unwrap()
+                .iter()
+                .filter_map(|(index, cost)| {
+                    if *index == x {
+                        None
+                    } else {
+                        Some((index.index(), *cost))
+                    }
+                })
+                .collect(),
+            };
+            (x.index(), out_map)
+        })
+        .collect();
+    Ok(AllPairsPathLengthMapping {
+        path_lengths: out_map,
+    })
+}
+
+fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathMapping> {
+    if graph.node_count() == 0 {
+        return Ok(AllPairsPathMapping {
+            paths: HashMap::new(),
+        });
+    } else if graph.edge_count() == 0 {
+        return Ok(AllPairsPathMapping {
+            paths: graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathMapping {
+                            paths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
+    }
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        raw.extract(py)
+    };
+    let edge_bound: usize =
+        graph.edge_indices().map(|x| x.index()).max().unwrap();
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(edge_bound);
+    for index in 0..=edge_bound {
+        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => {
+                edge_weights.push(Some(edge_cost_callable(weight)?))
+            }
+            None => edge_weights.push(None),
+        };
+    }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
+    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+    Ok(AllPairsPathMapping {
+        paths: node_indices
+            .into_par_iter()
+            .map(|x| {
+                let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
+                    HashMap::with_capacity(graph.node_count());
+                dijkstra::dijkstra(
+                    graph,
+                    x,
+                    None,
+                    |e| edge_cost(e.id()),
+                    Some(&mut paths),
+                )
+                .unwrap();
+                let index = x.index();
+                let out_paths = PathMapping {
+                    paths: paths
+                        .iter()
+                        .filter_map(|path_mapping| {
+                            let path_index = path_mapping.0.index();
+                            if index != path_index {
+                                Some((
+                                    path_index,
+                                    path_mapping
+                                        .1
+                                        .iter()
+                                        .map(|x| x.index())
+                                        .collect(),
+                                ))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                };
+                (index, out_paths)
+            })
+            .collect(),
+    })
+}
+
+/// Calculate the the shortest length from all nodes in a
+/// :class:`~retworkx.PyDiGraph` object
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm. This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// :param graph: The input :class:`~retworkx.PyDiGraph` to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {1: 2.0, 2: 2.0},
+///             1: {2: 1.0},
+///             2: {0: 1.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
+#[pyfunction]
+#[text_signature = "(graph, edge_cost_fn, /)"]
+pub fn digraph_all_pairs_dijkstra_path_lengths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathLengthMapping> {
+    _all_pairs_dijkstra_path_lengths(py, &graph.graph, edge_cost_fn)
+}
+
+/// Find the shortest path from all nodes in a :class:`~retworkx.PyDiGraph`
+/// object
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm. This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// :param graph: The input :class:`~retworkx.PyDiGraph` object to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of paths. The keys are source node indices
+///     and the values are dicts of the target node and the list of the
+///     node indices making up the shortest path to that node. For example::
+///
+///         {
+///             0: {1: [0, 1],  2: [0, 1, 2]},
+///             1: {2: [1, 2]},
+///             2: {0: [2, 0]},
+///         }
+///
+/// :rtype: AllPairsPathMapping
+#[pyfunction]
+#[text_signature = "(graph, edge_cost_fn, /)"]
+pub fn digraph_all_pairs_dijkstra_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathMapping> {
+    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn)
+}
+
+/// Calculate the the shortest length from all nodes in a
+/// :class:`~retworkx.PyGraph` object
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm.
+///
+/// :param graph: The input :class:`~retworkx.PyGraph` to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {1: 2.0, 2: 2.0},
+///             1: {2: 1.0},
+///             2: {0: 1.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
+#[pyfunction]
+#[text_signature = "(graph, edge_cost_fn, /)"]
+pub fn graph_all_pairs_dijkstra_path_lengths(
+    py: Python,
+    graph: &graph::PyGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathLengthMapping> {
+    _all_pairs_dijkstra_path_lengths(py, &graph.graph, edge_cost_fn)
+}
+
+/// Find the shortest path from all nodes in a :class:`~retworkx.PyGraph`
+/// object
+///
+/// This function will generate the shortest path from a source node using
+/// Dijkstra's algorithm.
+///
+/// :param graph: The input :class:`~retworkx.PyGraph` object to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of paths. The keys are destination node
+///     indices and the values are dicts of the target node and the list of the
+///     node indices making up the shortest path to that node. For example::
+///
+///         {
+///             0: {1: [0, 1],  2: [0, 1, 2]},
+///             1: {2: [1, 2]},
+///             2: {0: [2, 0]},
+///         }
+///
+/// :rtype: AllPairsPathMapping
+#[pyfunction]
+#[text_signature = "(graph, edge_cost_fn, /)"]
+pub fn graph_all_pairs_dijkstra_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathMapping> {
+    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn)
+}
+
 /// Compute the A* shortest path for a PyGraph
 ///
 /// :param PyGraph graph: The input graph to use
@@ -3602,6 +3910,255 @@ fn digraph_complement(
     Ok(complement_graph)
 }
 
+#[allow(clippy::too_many_arguments)]
+fn _spring_layout<Ty>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping>
+where
+    Ty: EdgeType,
+{
+    if fixed.is_some() && pos.is_none() {
+        return Err(PyValueError::new_err("`fixed` specified but `pos` not."));
+    }
+
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+
+    let dist = Uniform::new(0.0, 1.0);
+
+    let pos = pos.unwrap_or_default();
+    let mut vpos: Vec<layout::Point> = (0..graph.node_bound())
+        .map(|_| [dist.sample(&mut rng), dist.sample(&mut rng)])
+        .collect();
+    for (n, p) in pos.into_iter() {
+        vpos[n] = p;
+    }
+
+    let fixed = fixed.unwrap_or_default();
+    let k = k.unwrap_or(1.0 / (graph.node_count() as f64).sqrt());
+    let f_a = layout::AttractiveForce::new(k);
+    let f_r = layout::RepulsiveForce::new(k, repulsive_exponent.unwrap_or(2));
+
+    let num_iter = num_iter.unwrap_or(50);
+    let tol = tol.unwrap_or(1e-6);
+    let step = 0.1;
+
+    let mut weights: HashMap<(usize, usize), f64> =
+        HashMap::with_capacity(2 * graph.edge_count());
+    for e in graph.edge_references() {
+        let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)?;
+        let source = e.source().index();
+        let target = e.target().index();
+
+        weights.insert((source, target), w);
+        weights.insert((target, source), w);
+    }
+
+    let pos = match adaptive_cooling {
+        Some(false) => {
+            let cs = layout::LinearCoolingScheme::new(step, num_iter);
+            layout::evolve(
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
+                scale, center,
+            )
+        }
+        _ => {
+            let cs = layout::AdaptiveCoolingScheme::new(step);
+            layout::evolve(
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
+                scale, center,
+            )
+        }
+    };
+
+    Ok(Pos2DMapping {
+        pos_map: graph
+            .node_indices()
+            .map(|n| {
+                let n = n.index();
+                (n, pos[n])
+            })
+            .collect(),
+    })
+}
+
+/// Position nodes using Fruchterman-Reingold force-directed algorithm.
+///
+/// The algorithm simulates a force-directed representation of the network
+/// treating edges as springs holding nodes close, while treating nodes
+/// as repelling objects, sometimes called an anti-gravity force.
+/// Simulation continues until the positions are close to an equilibrium.
+///
+/// :param PyGraph graph: Graph to be used.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and values
+///     as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and ``pos`` is not. (``default=None``)
+/// :param float  k:
+///     Optimal distance between nodes. If ``None`` the distance is set to
+///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+///     to move nodes farther apart. (``default=None``)
+/// :param int repulsive_exponent:
+///     Repulsive force exponent. (``default=2``)
+/// :param bool adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to ``False``,
+///     a linear cooling scheme is used. (``default=True``)
+/// :param int num_iter:
+///     Maximum number of iterations. (``default=50``)
+/// :param float tol:
+///     Threshold for relative error in node position changes.
+///     The iteration stops if the error is below this threshold.
+///     (``default = 1e-6``)
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float
+///     which will be used to represent the weight of the edge.
+/// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+///     this optional float value will be used for the weight/cost of each edge
+/// :param float|None scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is ``None``, no re-scaling is
+///     performed. (``default=1.0``)
+/// :param list center: Coordinate pair around which to center
+///     the layout. Not used unless fixed is ``None``. (``default=None``)
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
+                     num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     center=None, seed=None, /)"]
+#[allow(clippy::too_many_arguments)]
+pub fn graph_spring_layout(
+    py: Python,
+    graph: &graph::PyGraph,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping> {
+    _spring_layout(
+        py,
+        &graph.graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+}
+
+/// Position nodes using Fruchterman-Reingold force-directed algorithm.
+///
+/// The algorithm simulates a force-directed representation of the network
+/// treating edges as springs holding nodes close, while treating nodes
+/// as repelling objects, sometimes called an anti-gravity force.
+/// Simulation continues until the positions are close to an equilibrium.
+///
+/// :param PyGraph graph: Graph to be used.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and values
+///     as a coordinate list. If ``None``, then use random initial positions. (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.
+///     Error raised if fixed specified and ``pos`` is not. (``default=None``)
+/// :param float  k:
+///     Optimal distance between nodes. If ``None`` the distance is set to
+///     :math:`\frac{1}{\sqrt{n}}` where :math:`n` is the number of nodes.  Increase this value
+///     to move nodes farther apart. (``default=None``)
+/// :param int repulsive_exponent:
+///     Repulsive force exponent. (``default=2``)
+/// :param bool adaptive_cooling:
+///     Use an adaptive cooling scheme. If set to ``False``,
+///     a linear cooling scheme is used. (``default=True``)
+/// :param int num_iter:
+///     Maximum number of iterations. (``default=50``)
+/// :param float tol:
+///     Threshold for relative error in node position changes.
+///     The iteration stops if the error is below this threshold.
+///     (``default = 1e-6``)
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float
+///     which will be used to represent the weight of the edge.
+/// :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+///     this optional float value will be used for the weight/cost of each edge
+/// :param float|None scale: Scale factor for positions.
+///     Not used unless fixed is None. If scale is ``None``, no re-scaling is
+///     performed. (``default=1.0``)
+/// :param list center: Coordinate pair around which to center
+///     the layout. Not used unless fixed is ``None``. (``default=None``)
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
+                     num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
+                     center=None, seed=None, /)"]
+#[allow(clippy::too_many_arguments)]
+pub fn digraph_spring_layout(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    pos: Option<HashMap<usize, layout::Point>>,
+    fixed: Option<HashSet<usize>>,
+    k: Option<f64>,
+    repulsive_exponent: Option<i32>,
+    adaptive_cooling: Option<bool>,
+    num_iter: Option<usize>,
+    tol: Option<f64>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    scale: Option<f64>,
+    center: Option<layout::Point>,
+    seed: Option<u64>,
+) -> PyResult<Pos2DMapping> {
+    _spring_layout(
+        py,
+        &graph.graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+}
+
 fn _random_layout<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     center: Option<[f64; 2]>,
@@ -3611,6 +4168,7 @@ fn _random_layout<Ty: EdgeType>(
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
+
     Pos2DMapping {
         pos_map: graph
             .node_indices()
@@ -3725,6 +4283,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
@@ -3753,15 +4315,21 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
     m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
+    m.add_wrapped(wrap_pyfunction!(graph_spring_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::NodeIndices>()?;
+    m.add_class::<iterators::EdgeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;
+    m.add_class::<iterators::EdgeIndexMap>()?;
     m.add_class::<iterators::WeightedEdgeList>()?;
     m.add_class::<iterators::PathMapping>()?;
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
+    m.add_class::<iterators::AllPairsPathLengthMapping>()?;
+    m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
