@@ -3338,7 +3338,7 @@ pub fn digraph_random_layout(
 /// :param PyGraph graph: The graph to generate the layout for
 /// :param set first_nodes: The set of node indexes on the left (or top if
 ///     horitontal is true)
-/// :param bool is_horizontal: An optional bool specifying the oritation of the
+/// :param bool horizontal: An optional bool specifying the orientation of the
 ///     layout
 /// :param float scale: An optional scaling factor to scale positions
 /// :param tuple center: An optional center position. This is a 2 tuple of two
@@ -3374,7 +3374,7 @@ pub fn graph_bipartite_layout(
 /// :param PyDiGraph graph: The graph to generate the layout for
 /// :param set first_nodes: The set of node indexes on the left (or top if
 ///     horizontal is true)
-/// :param bool is_horizontal: An optional bool specifying the oritation of the
+/// :param bool horizontal: An optional bool specifying the orientation of the
 ///     layout
 /// :param float scale: An optional scaling factor to scale positions
 /// :param tuple center: An optional center position. This is a 2 tuple of two
