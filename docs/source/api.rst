@@ -142,6 +142,8 @@ type functions in the algorithms API but can be run with a
    retworkx.random_layout
    retworkx.spring_layout
 
+.. _layout-functions:
+
 Layout Functions
 ================
 

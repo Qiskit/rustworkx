@@ -306,6 +306,70 @@ This difference with retworkx is primarily because numpy exposes a public C
 interface which retworkx can interface with directly, while the other
 libraries and types only expose Python APIs.
 
+Visualization Functions
+-----------------------
+
+NetworkX provides a native drawer with a matplotlib drawer (the
+``networkx_drawer*`` functions) and then functions to interface with
+``pygraphviz`` and ``pydot`` to enable visualization with graphviz via those
+libraries (in addition to functions to serialize graphs in formats other
+graph visualization tools can use). NetworkX also provides several functions
+`layout functions <https://networkx.org/documentation/stable/reference/drawing.html#module-networkx.drawing.layout>`__
+for generating different layouts that can be used for visualizing the graph.
+
+
+retworkx has drawer functions with 2 visualization backends, matplotlib
+(:func:`~retworkx.visualization.mpl_draw`) and graphviz
+(:func:`~retworkx.visualization.graphviz_draw`). Unlike networkx the
+:func:`~retworkx.visualization.graphviz_draw` will handle calling graphviz and
+generate an image file. For layout functions retworkx has a similar variety of
+:ref:`layout-functions`, however it should be noted that retworkx's functions
+are strictly 2 dimensional. The also return a :class:`~retworkx.Pos2DMapping`
+custom return type which acts as read-only dictionary (which is different from
+networkx which returns a normal dictionary that can be modified).
+
+Matplotlib Drawers
+^^^^^^^^^^^^^^^^^^
+
+The retwork function :func:`~retworkx.visualization.mpl_draw` function is
+basically equivalent to the networkx function ``draw_networkx`` (it was
+actually originally forked from the networkx drawer). However, there are some
+key differences to keep in mind between the networkx and retworkx matplotlib
+drawer.
+
+``networkx.draw_networkx`` and ``retworkx.mpl_draw`` differences:
+
+.. list-table::
+   :header-rows: 1
+
+   * - networkx
+     - retworkx
+     - Notes
+   * - ``nodelist``
+     - ``node_list``
+     -
+   * - ``edgelist``
+     - ``edge_list``
+     -
+   * - ``arrowsize``
+     - ``arrow_size``
+     -
+   * - ``labels``
+     - ``labels``
+     - For ``networkx_drawer`` ``labels`` is a dict of nodes to their label,
+       while retworkx's ``mpl_drawer`` ``labels`` is a callback function
+       that will be passed a node's data payload and expected to return the
+       node's label
+   * - ``networkx.draw_networkx_edge_labels()``
+     - ``edge_labels``
+     - NetworkX's ``networkx_drawer`` doesn't have an option for edge labels
+       and instead adding labels is only exposed via a separate function
+       ``draw_networkx_edge_labels()`` which requires the ``pos`` dictionary
+       from the original visualization to be used. retworkx's ``edge_labels``
+       kwarg takes a callback function that will be passed an edge's data
+       payload and expected to return the label.
+
+
 .. _networkx_converter:
 
 Converting from a networkx graph

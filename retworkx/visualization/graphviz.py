@@ -17,10 +17,10 @@ try:
 except ImportError:
     HAS_PYDOT = False
 
-__all__ = ["pydot_draw"]
+__all__ = ["graphviz_draw"]
 
 
-def pydot_draw(
+def graphviz_draw(
     graph,
     node_attr_fn=None,
     edge_attr_fn=None,
@@ -30,7 +30,7 @@ def pydot_draw(
     method=None,
 ):
     """Draw a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph` object
-    using graphviz via pydot
+    using graphviz
 
     .. note::
 
@@ -87,7 +87,7 @@ def pydot_draw(
     """
     if not HAS_PYDOT:
         raise ImportError(
-            "Pydot and Pillow are necessary to use pydot_draw() "
+            "Pydot and Pillow are necessary to use graphviz_draw() "
             "it can be installed with 'pip install pydot pillow'"
         )
     try:
