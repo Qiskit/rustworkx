@@ -321,26 +321,26 @@ pub fn bipartite_layout<Ty: EdgeType>(
         };
     }
 
-    let x_offset = width / 2.0;
-    let y_offset = height / 2.0;
-    let left_dy = height / (left_num - 1) as f64;
-    let right_dy = height / (right_num - 1) as f64;
+    let x_offset: f64 = width / 2.0;
+    let y_offset: f64 = height / 2.0;
+    let left_dy: f64 = height / (left_num - 1) as f64;
+    let right_dy: f64 = height / (right_num - 1) as f64;
 
-    let mut lc = 0;
-    let mut rc = 0;
+    let mut lc: f64 = 0.0;
+    let mut rc: f64 = 0.0;
 
     for node in graph.node_indices() {
         let n = node.index();
 
-        let (x, y);
+        let (x, y): (f64, f64);
         if first_nodes.contains(&n) {
             x = -x_offset;
-            y = lc as f64 * left_dy - y_offset;
-            lc += 1;
+            y = lc * left_dy - y_offset;
+            lc += 1.0;
         } else {
             x = width - x_offset;
-            y = rc as f64 * right_dy - y_offset;
-            rc += 1;
+            y = rc * right_dy - y_offset;
+            rc += 1.0;
         }
 
         if horizontal == Some(true) {
