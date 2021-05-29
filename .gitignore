@@ -14,3 +14,5 @@ retworkx/*pyd
 *.stestr/
 *.ps
 *.png
+*.svg
+*.jpg
