@@ -1890,14 +1890,10 @@ impl PyDiGraph {
     ///
     /// .. jupyter-execute::
     ///
-    ///   import os
     ///   import tempfile
     ///
-    ///   from PIL import Image
-    ///   import pydot
-    ///
     ///   import retworkx
-    ///
+    ///   from retworkx.visualization import mpl_draw
     ///
     ///   with tempfile.NamedTemporaryFile('wt') as fd:
     ///       path = fd.name
@@ -1908,16 +1904,7 @@ impl PyDiGraph {
     ///       fd.write('2 3\n')
     ///       fd.flush()
     ///       graph = retworkx.PyDiGraph.read_edge_list(path)
-    ///
-    ///   # Draw graph
-    ///   dot = pydot.graph_from_dot_data(graph.to_dot())[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph)
     ///
     #[staticmethod]
     #[text_signature = "(path, /, comment=None, deliminator=None)"]
@@ -2141,30 +2128,15 @@ impl PyDiGraph {
     ///
     /// .. jupyter-execute::
     ///
-    ///   import os
-    ///   import tempfile
-    ///
-    ///   import pydot
-    ///   from PIL import Image
-    ///
     ///   import retworkx
+    ///   from retworkx.visualization import mpl_draw
     ///
     ///   # Build first graph and visualize:
     ///   graph = retworkx.PyDiGraph()
     ///   node_a = graph.add_node('A')
     ///   node_b = graph.add_child(node_a, 'B', 'A to B')
     ///   node_c = graph.add_child(node_b, 'C', 'B to C')
-    ///   dot_str = graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
     /// Then build a second one:
     ///
@@ -2174,17 +2146,7 @@ impl PyDiGraph {
     ///   other_graph = retworkx.PyDiGraph()
     ///   node_d = other_graph.add_node('D')
     ///   other_graph.add_child(node_d, 'E', 'D to E')
-    ///   dot_str = other_graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'other_graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(other_graph, with_labels=True, labels=str, edge_labels=str)
     ///
     /// Finally compose the ``other_graph`` onto ``graph``
     ///
@@ -2192,17 +2154,7 @@ impl PyDiGraph {
     ///
     ///   node_map = {node_b: (node_d, 'B to D')}
     ///   graph.compose(other_graph, node_map)
-    ///   dot_str = graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'combined_graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
     #[text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)"]
     pub fn compose(

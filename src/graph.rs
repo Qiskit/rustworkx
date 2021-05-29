@@ -1141,14 +1141,10 @@ impl PyGraph {
     ///
     /// .. jupyter-execute::
     ///
-    ///   import os
     ///   import tempfile
     ///
-    ///   from PIL import Image
-    ///   import pydot
-    ///
     ///   import retworkx
-    ///
+    ///   from retworkx.visualization import mpl_draw
     ///
     ///   with tempfile.NamedTemporaryFile('wt') as fd:
     ///       path = fd.name
@@ -1159,16 +1155,7 @@ impl PyGraph {
     ///       fd.write('2 3\n')
     ///       fd.flush()
     ///       graph = retworkx.PyGraph.read_edge_list(path)
-    ///
-    ///   # Draw graph
-    ///   dot = pydot.graph_from_dot_data(graph.to_dot())[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph)
     ///
     #[staticmethod]
     #[text_signature = "(path, /, comment=None, deliminator=None)"]
@@ -1396,22 +1383,14 @@ impl PyGraph {
     ///   from PIL import Image
     ///
     ///   import retworkx
+    ///   from retworkx.visualization import mpl_draw
     ///
     ///   # Build first graph and visualize:
     ///   graph = retworkx.PyGraph()
     ///   node_a, node_b, node_c = graph.add_nodes_from(['A', 'B', 'C'])
-    ///   graph.add_edges_from_no_data([(node_a, node_b), (node_b, node_c)])
-    ///   dot_str = graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   graph.add_edges_from([(node_a, node_b, 'A to B'),
+    ///                         (node_b, node_c, 'B to C')])
+    ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
     /// Then build a second one:
     ///
@@ -1420,18 +1399,8 @@ impl PyGraph {
     ///   # Build second graph and visualize:
     ///   other_graph = retworkx.PyGraph()
     ///   node_d, node_e = other_graph.add_nodes_from(['D', 'E'])
-    ///   other_graph.add_edge(node_d, node_e, None)
-    ///   dot_str = other_graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'other_graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   other_graph.add_edge(node_d, node_e, 'D to E')
+    ///   mpl_draw(other_graph, with_labels=True, labels=str, edge_labels=str)
     ///
     /// Finally compose the ``other_graph`` onto ``graph``
     ///
@@ -1439,17 +1408,7 @@ impl PyGraph {
     ///
     ///   node_map = {node_b: (node_d, 'B to D')}
     ///   graph.compose(other_graph, node_map)
-    ///   dot_str = graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'combined_graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
     #[text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)"]
     pub fn compose(
