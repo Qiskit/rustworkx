@@ -84,6 +84,23 @@ def graphviz_draw(
         ``None`` will be returned as the visualization was written to the
         path specified in ``filename``
     :rtype: PIL.Image
+
+    .. jupyter-execute::
+
+        import retworkx
+        from retworkx.visualization import graphviz_draw
+
+        def node_attr(node):
+          if node == 0:
+            return {'color': 'yellow', 'fillcolor': 'yellow', 'style': 'filled'}
+          if node % 2:
+            return {'color': 'blue', 'fillcolor': 'blue', 'style': 'filled'}
+          else:
+            return {'color': 'red', 'fillcolor': 'red', 'style': 'filled'}
+
+        graph = retworkx.generators.directed_star_graph(weights=list(range(32)))
+        graphviz_draw(graph, node_attr_fn=node_attr, method='sfdp')
+
     """
     if not HAS_PYDOT:
         raise ImportError(
