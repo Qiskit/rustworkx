@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    Added a new generator functions,
+    Added new generator functions,
     :func:`retworkx.generators.binomial_tree_graph` and
     :func:`retworkx.generators.directed_binomial_tree_graph`, for constructing
     a binomial tree graph. For example:
