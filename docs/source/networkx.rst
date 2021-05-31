@@ -89,11 +89,11 @@ or more concisely::
     dist_matrix = rx.digraph_floyd_warshall_numpy(graph,
                                                   weight_fn=lambda edge: edge)
 
-The other large difference to keep in mind is that most functions in retworkx
+The other large difference to keep in mind is that many functions in retworkx
 are explicitly typed. This means that they either always return or accept
 either a :class:`~retworkx.PyDiGraph` or a :class:`~retworkx.PyGraph` but not
-both. The exception to this are the :ref:`universal-functions` which will
-dispatch to the statically typed equivalent based on the object they receive.
+both. Generally, functions prefixed with `graph_*` and `digraph_*` explicitly typed.
+Explicitly typed functions also indicate their type on the docstrings.
 This is different from networkx where everything is pretty much dynamically
 typed and you can pass a graph object to any function and it will work as
 expected (unless it isn't supported and then it will raise an exception).
