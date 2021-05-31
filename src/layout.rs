@@ -190,9 +190,11 @@ fn rescale(pos: &mut Vec<Point>, scale: Nt, indices: Vec<usize>) {
     }
 
     // rescale
-    for [px, py] in pos.iter_mut() {
-        *px *= scale / lim;
-        *py *= scale / lim;
+    if lim > 0.0 {
+        for [px, py] in pos.iter_mut() {
+            *px *= scale / lim;
+            *py *= scale / lim;
+        }
     }
 }
 
@@ -386,10 +388,10 @@ pub fn circular_layout<Ty: EdgeType>(
             let angle = 2.0 * pi * i as f64 / node_num as f64;
             pos.push([angle.cos(), angle.sin()]);
         }
+    }
 
-        if let Some(scale) = scale {
-            rescale(&mut pos, scale, (0..node_num).collect());
-        }
+    if let Some(scale) = scale {
+        rescale(&mut pos, scale, (0..node_num).collect());
     }
 
     if let Some(center) = center {
@@ -491,10 +493,10 @@ pub fn spiral_layout<Ty: EdgeType>(
             dist += step;
             angle += ros;
         }
+    }
 
-        if let Some(scale) = scale {
-            rescale(&mut pos, scale, (0..node_num).collect());
-        }
+    if let Some(scale) = scale {
+        rescale(&mut pos, scale, (0..node_num).collect());
     }
 
     if let Some(center) = center {
