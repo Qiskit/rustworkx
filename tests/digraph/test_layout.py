@@ -15,17 +15,25 @@ import unittest
 import retworkx
 
 
-def max_diff(exp, res):
-    diff_list = []
-    for k in exp:
-        ev = exp[k]
-        rv = res[k]
-        diff_list.append(ev[0] - rv[0])
-        diff_list.append(ev[1] - rv[1])
-    return max(diff_list, key=lambda v: abs(v))
+class LayoutTest(unittest.TestCase):
+    thres = 1e-6
+
+    def assertLayoutEquiv(self, exp, res):
+        for k in exp:
+            ev = exp[k]
+            rv = res[k]
+            if (
+                abs(ev[0] - rv[0]) > self.thres
+                or abs(ev[1] - rv[1]) > self.thres
+            ):
+                self.fail(
+                    "The position for node %s, %s, differs from the expected "
+                    "position, %s by more than the allowed threshold of %s"
+                    % (k, rv, ev, self.thres)
+                )
 
 
-class TestRandomLayout(unittest.TestCase):
+class TestRandomLayout(LayoutTest):
     def setUp(self):
         self.graph = retworkx.generators.directed_path_graph(10)
 
@@ -72,10 +80,9 @@ class TestRandomLayout(unittest.TestCase):
         self.assertIsInstance(res[0][0], float)
 
 
-class TestBipartiteLayout(unittest.TestCase):
+class TestBipartiteLayout(LayoutTest):
     def setUp(self):
         self.graph = retworkx.generators.directed_path_graph(10)
-        self.thres = 1e-6
 
     def test_bipartite_layout_empty(self):
         res = retworkx.bipartite_layout(retworkx.PyDiGraph(), set())
@@ -91,8 +98,7 @@ class TestBipartiteLayout(unittest.TestCase):
             3: (0.0, 0.3333333333333333),
             4: (0.0, 1.0),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_bipartite_layout(self):
         res = retworkx.bipartite_layout(self.graph, {0, 1, 2, 3, 4})
@@ -108,27 +114,25 @@ class TestBipartiteLayout(unittest.TestCase):
             8: (1.0, 0.375),
             9: (1.0, 0.75),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_bipartite_layout_horizontal(self):
         res = retworkx.bipartite_layout(
             self.graph, {0, 1, 2, 3}, horizontal=True
         )
         expected = {
-            0: (-1.0, 0.8999999999999999),
-            1: (-0.33333333333333337, 0.8999999999999999),
-            2: (0.33333333333333326, 0.8999999999999999),
-            3: (1.0, 0.8999999999999999),
-            4: (-1.0, -0.6000000000000001),
-            5: (-0.6, -0.6000000000000001),
-            6: (-0.2, -0.6000000000000001),
-            7: (0.20000000000000007, -0.6000000000000001),
-            8: (0.6000000000000001, -0.6000000000000001),
-            9: (1.0, -0.6000000000000001),
+            0: (1.0, -0.9),
+            1: (0.3333333333333333, -0.9),
+            2: (-0.333333333333333, -0.9),
+            3: (-1.0, -0.9),
+            4: (1.0, 0.6),
+            5: (0.6, 0.6),
+            6: (0.2, 0.6),
+            7: (-0.2, 0.6),
+            8: (-0.6, 0.6),
+            9: (-1.0, 0.6),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_bipartite_layout_scale(self):
         res = retworkx.bipartite_layout(self.graph, {0, 1, 2}, scale=2)
@@ -144,8 +148,7 @@ class TestBipartiteLayout(unittest.TestCase):
             8: (0.8571428571428571, 0.7142857142857141),
             9: (0.8571428571428571, 1.0714285714285714),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_bipartite_layout_center(self):
         res = retworkx.bipartite_layout(
@@ -163,31 +166,28 @@ class TestBipartiteLayout(unittest.TestCase):
             8: (0.9285714285714286, 0.857142857142857),
             9: (0.9285714285714286, 1.0357142857142856),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_bipartite_layout_ratio(self):
         res = retworkx.bipartite_layout(self.graph, {2, 4, 8}, aspect_ratio=4)
         expected = {
-            8: (-1.0, -0.17857142857142858),
-            2: (-1.0, 3.965082230804131e-18),
-            4: (-1.0, 0.17857142857142858),
-            0: (0.42857142857142855, -0.17857142857142858),
-            1: (0.42857142857142855, -0.11904761904761907),
-            3: (0.42857142857142855, -0.059523809523809534),
-            5: (0.42857142857142855, 3.965082230804131e-18),
-            6: (0.42857142857142855, 0.059523809523809514),
-            7: (0.42857142857142855, 0.11904761904761903),
-            9: (0.42857142857142855, 0.17857142857142858),
+            8: [-1.0, 0.17857142857142858],
+            2: [-1.0, -0.17857142857142858],
+            4: [-1.0, 0],
+            0: [0.42857142857142855, -0.17857142857142858],
+            1: [0.42857142857142855, -0.11904761904761907],
+            3: [0.42857142857142855, -0.05952380952380952],
+            5: [0.42857142857142855, 0],
+            6: [0.42857142857142855, 0.05952380952380952],
+            7: [0.42857142857142855, 0.11904761904761903],
+            9: [0.42857142857142855, 0.17857142857142858],
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
 
-class TestCircularLayout(unittest.TestCase):
+class TestCircularLayout(LayoutTest):
     def setUp(self):
         self.graph = retworkx.generators.directed_path_graph(10)
-        self.thres = 1e-6
 
     def test_circular_layout_empty(self):
         res = retworkx.circular_layout(retworkx.PyDiGraph())
@@ -209,8 +209,7 @@ class TestCircularLayout(unittest.TestCase):
             3: (-0.9999999701976796, -6.556708099709282e-08),
             4: (1.987150711625619e-08, -0.9999999562886126),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_circular_layout(self):
         res = retworkx.circular_layout(self.graph)
@@ -226,8 +225,7 @@ class TestCircularLayout(unittest.TestCase):
             8: (0.3090171279697079, -0.9510564452809367),
             9: (0.809016944685427, -0.587785271713801),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_circular_layout_scale(self):
         res = retworkx.circular_layout(self.graph, scale=2)
@@ -243,8 +241,7 @@ class TestCircularLayout(unittest.TestCase):
             8: (0.6180342559394159, -1.9021128905618734),
             9: (1.618033889370854, -1.175570543427602),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_circular_layout_center(self):
         res = retworkx.circular_layout(self.graph, center=(0.5, 0.5))
@@ -260,14 +257,12 @@ class TestCircularLayout(unittest.TestCase):
             8: (0.8090171279697079, -0.4510564452809367),
             9: (1.309016944685427, -0.08778527171380102),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
 
-class TestShellLayout(unittest.TestCase):
+class TestShellLayout(LayoutTest):
     def setUp(self):
         self.graph = retworkx.generators.directed_path_graph(10)
-        self.thres = 1e-6
 
     def test_shell_layout_empty(self):
         res = retworkx.circular_layout(retworkx.PyDiGraph())
@@ -287,8 +282,7 @@ class TestShellLayout(unittest.TestCase):
             3: (1.0, 1.7484555314695172e-07),
             4: (-3.3776623808989825e-07, 1.0),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_shell_layout_hole_two_shells(self):
         g = retworkx.generators.directed_path_graph(5)
@@ -300,8 +294,7 @@ class TestShellLayout(unittest.TestCase):
             3: (-1.0, -8.742277657347586e-08),
             4: (1.0, 1.7484555314695172e-07),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_shell_layout(self):
         res = retworkx.shell_layout(self.graph)
@@ -317,8 +310,7 @@ class TestShellLayout(unittest.TestCase):
             8: (-0.30901744961738586, 0.9510563611984253),
             9: (-0.8090168833732605, 0.5877854228019714),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_shell_layout_nlist(self):
         res = retworkx.shell_layout(
@@ -336,8 +328,7 @@ class TestShellLayout(unittest.TestCase):
             6: (-1.0, -8.742277657347586e-08),
             5: (1.0, 1.7484555314695172e-07),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_shell_layout_rotate(self):
         res = retworkx.shell_layout(
@@ -355,8 +346,7 @@ class TestShellLayout(unittest.TestCase):
             8: (0.6213656067848206, -0.420005738735199),
             9: (-0.416146844625473, 0.9092974066734314),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_shell_layout_scale(self):
         res = retworkx.shell_layout(
@@ -374,8 +364,7 @@ class TestShellLayout(unittest.TestCase):
             6: (1.6180340051651, 1.1755704879760742),
             5: (-0.6180348992347717, 1.9021127223968506),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_shell_layout_center(self):
         res = retworkx.shell_layout(
@@ -395,14 +384,12 @@ class TestShellLayout(unittest.TestCase):
             6: (1.30901700258255, 1.087785243988037),
             5: (0.19098255038261414, 1.4510563611984253),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
 
-class TestSpiralLayout(unittest.TestCase):
+class TestSpiralLayout(LayoutTest):
     def setUp(self):
         self.graph = retworkx.generators.directed_path_graph(10)
-        self.thres = 1e-6
 
     def test_spiral_layout_empty(self):
         res = retworkx.spiral_layout(retworkx.PyDiGraph())
@@ -422,8 +409,7 @@ class TestSpiralLayout(unittest.TestCase):
             3: (0.34927952438480797, 0.1489988240217569),
             4: (0.32533239428419697, 1.0),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_spiral_layout(self):
         res = retworkx.spiral_layout(self.graph)
@@ -439,8 +425,7 @@ class TestSpiralLayout(unittest.TestCase):
             8: (-0.7874803127675889, 0.021164283410983312),
             9: (-0.9999999999999999, -0.3794183030779839),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_spiral_layout_scale(self):
         res = retworkx.spiral_layout(self.graph, scale=2)
@@ -456,8 +441,7 @@ class TestSpiralLayout(unittest.TestCase):
             8: (-1.5749606255351778, 0.042328566821966625),
             9: (-1.9999999999999998, -0.7588366061559678),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_spiral_layout_center(self):
         res = retworkx.spiral_layout(self.graph, center=(1, 1))
@@ -473,8 +457,7 @@ class TestSpiralLayout(unittest.TestCase):
             8: (0.2125196872324111, 1.0211642834109833),
             9: (1.1102230246251565e-16, 0.6205816969220161),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_spiral_layout_resolution(self):
         res = retworkx.spiral_layout(self.graph, resolution=0.6)
@@ -490,8 +473,7 @@ class TestSpiralLayout(unittest.TestCase):
             8: (0.2468861146093996, -0.9732085843739783),
             9: (1.0, -0.8207846005213728),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
 
     def test_spiral_layout_equidistant(self):
         res = retworkx.spiral_layout(self.graph, equidistant=True)
@@ -507,5 +489,4 @@ class TestSpiralLayout(unittest.TestCase):
             8: (-0.7371993206438128, 0.33662707199446507),
             9: (-1.0, 0.2018583081028111),
         }
-        md = max_diff(expected, res)
-        self.assertTrue(md < self.thres)
+        self.assertLayoutEquiv(expected, res)
