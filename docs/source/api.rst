@@ -191,11 +191,12 @@ Converters
 .. _api-functions-pydigraph:
 
 API functions for PyDigraph
-====================================
+===========================
 
-These functions are algorithm functions that are type specific for :class:`~retworkx.PyDiGraph` or
-:class:`~retworkx.PyDAG` objects. Universal functions from Retworkx API that work for both graph types 
-internally call the functions from the explicitly typed based on the data type.
+These functions are algorithm functions that are type specific for
+:class:`~retworkx.PyDiGraph` or :class:`~retworkx.PyDAG` objects. Universal
+functions from Retworkx API that work for both graph types internally call
+the functions from the explicitly typed based on the data type.
 
 .. autosummary::
    :toctree: stubs
@@ -228,11 +229,12 @@ internally call the functions from the explicitly typed based on the data type.
 .. _api-functions-pygraph:
 
 API functions for PyGraph
-=================================
+=========================
 
-These functions are algorithm functions that are type specific for :class:`~retworkx.PyGraph` objects. 
-Universal functions from Retworkx API that work for both graph types 
-internally call the functions from the explicitly typed API based on the data type.
+These functions are algorithm functions that are type specific for
+:class:`~retworkx.PyGraph` objects. Universal functions from Retworkx API that
+work for both graph types internally call the functions from the explicitly
+typed API based on the data type.
 
 .. autosummary::
    :toctree: stubs
