@@ -143,6 +143,10 @@ type functions in the algorithms API but can be run with a
    retworkx.transitivity
    retworkx.core_number
    retworkx.random_layout
+   retworkx.bipartite_layout
+   retworkx.circular_layout
+   retworkx.shell_layout
+   retworkx.spiral_layout
    retworkx.spring_layout
 
 .. _layout-functions:
@@ -157,6 +161,18 @@ Layout Functions
    retworkx.spring_layout
    retworkx.graph_random_layout
    retworkx.digraph_random_layout
+   retworkx.bipartite_layout
+   retworkx.graph_bipartite_layout
+   retworkx.digraph_bipartite_layout
+   retworkx.circular_layout
+   retworkx.graph_circular_layout
+   retworkx.digraph_circular_layout
+   retworkx.shell_layout
+   retworkx.graph_shell_layout
+   retworkx.digraph_shell_layout
+   retworkx.spiral_layout
+   retworkx.graph_spiral_layout
+   retworkx.digraph_spiral_layout
 
 Converters
 ----------
