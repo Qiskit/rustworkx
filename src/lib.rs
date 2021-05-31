@@ -355,6 +355,7 @@ fn digraph_is_isomorphic(
         compare_nodes,
         compare_edges,
         id_order,
+        Ordering::Equal,
     )?;
     Ok(res)
 }
@@ -423,6 +424,145 @@ fn graph_is_isomorphic(
         compare_nodes,
         compare_edges,
         id_order,
+        Ordering::Equal,
+    )?;
+    Ok(res)
+}
+
+/// Determine if 2 directed graphs are subgraph - isomorphic
+///
+/// This checks if 2 graphs are subgraph isomorphic both structurally and also
+/// comparing the node data and edge data using the provided matcher functions.
+/// The matcher function takes in 2 data objects and will compare them. A simple
+/// example that checks if they're just equal would be::
+///
+///     graph_a = retworkx.PyDiGraph()
+///     graph_b = retworkx.PyDiGraph()
+///     retworkx.is_subgraph_isomorphic(graph_a, graph_b,
+///                                     lambda x, y: x == y)
+///
+/// .. note::
+///
+///     For better performance on large graphs, consider setting `id_order=False`.
+///
+/// :param PyDiGraph first: The first graph to compare
+/// :param PyDiGraph second: The second graph to compare
+/// :param callable node_matcher: A python callable object that takes 2 positional
+///     one for each node data object. If the return of this
+///     function evaluates to True then the nodes passed to it are vieded
+///     as matching.
+/// :param callable edge_matcher: A python callable object that takes 2 positional
+///     one for each edge data object. If the return of this
+///     function evaluates to True then the edges passed to it are vieded
+///     as matching.
+/// :param bool id_order: If set to ``True`` this function will match the nodes
+///     in order specified by their ids. Otherwise it will default to a heuristic
+///     matching order based on [VF2]_ paper.
+///
+/// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
+///     ``False`` if there is not.
+/// :rtype: bool
+#[pyfunction(id_order = "false")]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
+fn digraph_is_subgraph_isomorphic(
+    py: Python,
+    first: &digraph::PyDiGraph,
+    second: &digraph::PyDiGraph,
+    node_matcher: Option<PyObject>,
+    edge_matcher: Option<PyObject>,
+    id_order: bool,
+) -> PyResult<bool> {
+    let compare_nodes = node_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let compare_edges = edge_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let res = isomorphism::is_isomorphic(
+        py,
+        &first.graph,
+        &second.graph,
+        compare_nodes,
+        compare_edges,
+        id_order,
+        Ordering::Greater,
+    )?;
+    Ok(res)
+}
+
+/// Determine if 2 undirected graphs are subgraph - isomorphic
+///
+/// This checks if 2 graphs are subgraph isomorphic both structurally and also
+/// comparing the node data and edge data using the provided matcher functions.
+/// The matcher function takes in 2 data objects and will compare them. A simple
+/// example that checks if they're just equal would be::
+///
+///     graph_a = retworkx.PyGraph()
+///     graph_b = retworkx.PyGraph()
+///     retworkx.is_subgraph_isomorphic(graph_a, graph_b,
+///                                     lambda x, y: x == y)
+///
+/// .. note::
+///
+///     For better performance on large graphs, consider setting `id_order=False`.
+///
+/// :param PyGraph first: The first graph to compare
+/// :param PyGraph second: The second graph to compare
+/// :param callable node_matcher: A python callable object that takes 2 positional
+///     one for each node data object. If the return of this
+///     function evaluates to True then the nodes passed to it are vieded
+///     as matching.
+/// :param callable edge_matcher: A python callable object that takes 2 positional
+///     one for each edge data object. If the return of this
+///     function evaluates to True then the edges passed to it are vieded
+///     as matching.
+/// :param bool id_order: If set to ``True`` this function will match the nodes
+///     in order specified by their ids. Otherwise it will default to a heuristic
+///     matching order based on [VF2]_ paper.
+///
+/// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
+///     ``False`` if there is not.
+/// :rtype: bool
+#[pyfunction(id_order = "false")]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
+fn graph_is_subgraph_isomorphic(
+    py: Python,
+    first: &graph::PyGraph,
+    second: &graph::PyGraph,
+    node_matcher: Option<PyObject>,
+    edge_matcher: Option<PyObject>,
+    id_order: bool,
+) -> PyResult<bool> {
+    let compare_nodes = node_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let compare_edges = edge_matcher.map(|f| {
+        move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+            let res = f.call1(py, (a, b))?;
+            Ok(res.is_true(py).unwrap())
+        }
+    });
+
+    let res = isomorphism::is_isomorphic(
+        py,
+        &first.graph,
+        &second.graph,
+        compare_nodes,
+        compare_edges,
+        id_order,
+        Ordering::Greater,
     )?;
     Ok(res)
 }
@@ -4336,6 +4476,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_is_subgraph_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(graph_is_subgraph_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;

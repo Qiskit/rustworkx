@@ -14,6 +14,7 @@
 // It has then been modified to function with PyDiGraph inputs instead of Graph.
 
 use fixedbitset::FixedBitSet;
+use std::cmp::Ordering;
 use std::iter::FromIterator;
 use std::marker;
 
@@ -346,7 +347,27 @@ where
     new_graph
 }
 
-/// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
+trait SemanticMatcher<T> {
+    fn enabled(&self) -> bool;
+    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
+}
+
+impl<T, F> SemanticMatcher<T> for Option<F>
+where
+    F: FnMut(&T, &T) -> PyResult<bool>,
+{
+    #[inline]
+    fn enabled(&self) -> bool {
+        self.is_some()
+    }
+    #[inline]
+    fn eq(&mut self, a: &T, b: &T) -> PyResult<bool> {
+        let res = (self.as_mut().unwrap())(a, b)?;
+        Ok(res)
+    }
+}
+
+/// [Graph] Return `true` if the graphs `g0` and `g1` are (sub) graph isomorphic.
 ///
 /// Using the VF2 algorithm, examining both syntactic and semantic
 /// graph isomorphism (graph structure and matching node and edge weights).
@@ -359,6 +380,7 @@ pub fn is_isomorphic<Ty, F, G>(
     mut node_match: Option<F>,
     mut edge_match: Option<G>,
     id_order: bool,
+    ordering: Ordering,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
@@ -380,8 +402,10 @@ where
         g1
     };
 
-    if g0_out.node_count() != g1_out.node_count()
-        || g0_out.edge_count() != g1_out.edge_count()
+    if (g0_out.node_count().cmp(&g1_out.node_count()).then(ordering)
+        != ordering)
+        || (g0_out.edge_count().cmp(&g1_out.edge_count()).then(ordering)
+            != ordering)
     {
         return Ok(false);
     }
@@ -401,41 +425,9 @@ where
     };
 
     let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
-    let res = try_match(&mut st, g0, g1, &mut node_match, &mut edge_match)?;
+    let res =
+        try_match(&mut st, g0, g1, &mut node_match, &mut edge_match, ordering)?;
     Ok(res.unwrap_or(false))
-}
-
-trait SemanticMatcher<T> {
-    fn enabled(&self) -> bool;
-    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
-}
-
-struct NoSemanticMatch;
-
-impl<T> SemanticMatcher<T> for NoSemanticMatch {
-    #[inline]
-    fn enabled(&self) -> bool {
-        false
-    }
-    #[inline]
-    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool> {
-        Ok(true)
-    }
-}
-
-impl<T, F> SemanticMatcher<T> for Option<F>
-where
-    F: FnMut(&T, &T) -> PyResult<bool>,
-{
-    #[inline]
-    fn enabled(&self) -> bool {
-        self.is_some()
-    }
-    #[inline]
-    fn eq(&mut self, a: &T, b: &T) -> PyResult<bool> {
-        let res = (self.as_mut().unwrap())(a, b)?;
-        Ok(res)
-    }
 }
 
 /// Return Some(bool) if isomorphism is decided, else None.
@@ -445,13 +437,14 @@ fn try_match<Ty, F, G>(
     g1: &StablePyGraph<Ty>,
     node_match: &mut F,
     edge_match: &mut G,
+    ordering: Ordering,
 ) -> PyResult<Option<bool>>
 where
     Ty: EdgeType,
     F: SemanticMatcher<PyObject>,
     G: SemanticMatcher<PyObject>,
 {
-    if st[0].is_complete() {
+    if st[1].is_complete() {
         return Ok(Some(true));
     }
 
@@ -593,7 +586,7 @@ where
                 }
             }
         }
-        if succ_count[0] != succ_count[1] {
+        if succ_count[0].cmp(&succ_count[1]).then(ordering) != ordering {
             return Ok(false);
         }
         // R_pred
@@ -617,7 +610,7 @@ where
                     }
                 }
             }
-            if pred_count[0] != pred_count[1] {
+            if pred_count[0].cmp(&pred_count[1]).then(ordering) != ordering {
                 return Ok(false);
             }
         }
@@ -634,21 +627,36 @@ where
             }};
         }
         // R_out
-        if rule!(out, 0, Outgoing) != rule!(out, 1, Outgoing) {
+        if rule!(out, 0, Outgoing)
+            .cmp(&rule!(out, 1, Outgoing))
+            .then(ordering)
+            != ordering
+        {
             return Ok(false);
         }
         if g[0].is_directed()
-            && rule!(out, 0, Incoming) != rule!(out, 1, Incoming)
+            && rule!(out, 0, Incoming)
+                .cmp(&rule!(out, 1, Incoming))
+                .then(ordering)
+                != ordering
         {
             return Ok(false);
         }
         // R_in
         if g[0].is_directed() {
-            if rule!(ins, 0, Outgoing) != rule!(ins, 1, Outgoing) {
+            if rule!(ins, 0, Outgoing)
+                .cmp(&rule!(ins, 1, Outgoing))
+                .then(ordering)
+                != ordering
+            {
                 return Ok(false);
             }
 
-            if rule!(ins, 0, Incoming) != rule!(ins, 1, Incoming) {
+            if rule!(ins, 0, Incoming)
+                .cmp(&rule!(ins, 1, Incoming))
+                .then(ordering)
+                != ordering
+            {
                 return Ok(false);
             }
         }
@@ -664,7 +672,7 @@ where
                 }
             }
         }
-        if new_count[0] != new_count[1] {
+        if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
             return Ok(false);
         }
         if g[0].is_directed() {
@@ -677,7 +685,7 @@ where
                     }
                 }
             }
-            if new_count[0] != new_count[1] {
+            if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
                 return Ok(false);
             }
         }
@@ -779,12 +787,14 @@ where
                 let feasible = is_feasible(&mut st, nodes)?;
                 if feasible {
                     push_state(&mut st, nodes);
-                    if st[0].is_complete() {
+                    if st[1].is_complete() {
                         return Ok(Some(true));
                     }
                     // Check cardinalities of Tin, Tout sets
-                    if st[0].out_size == st[1].out_size
-                        && st[0].ins_size == st[1].ins_size
+                    if st[0].out_size.cmp(&st[1].out_size).then(ordering)
+                        == ordering
+                        && st[0].ins_size.cmp(&st[1].ins_size).then(ordering)
+                            == ordering
                     {
                         let f0 = Frame::Unwind {
                             nodes,

@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    A new function, :func:`~retworkx.is_subgraph_isomorphic` was added to
+    determine if two graphs of type :class:`~retworkx.PyGraph` or
+    :class:`~retworkx.PyDiGraph` are induced subgraph isomorphic.

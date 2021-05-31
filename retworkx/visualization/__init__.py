@@ -10,8 +10,8 @@
 
 __all__ = [
     "mpl_draw",
-    "pydot_draw",
+    "graphviz_draw",
 ]
 
 from .matplotlib import mpl_draw
-from .pydot import pydot_draw
+from .graphviz import graphviz_draw

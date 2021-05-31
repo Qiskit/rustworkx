@@ -15,7 +15,7 @@ import tempfile
 import unittest
 
 import retworkx
-from retworkx.visualization import pydot_draw
+from retworkx.visualization import graphviz_draw
 
 try:
     import pydot
@@ -37,12 +37,12 @@ def _save_image(image, path):
 @unittest.skipUnless(
     HAS_PYDOT, "pydot and graphviz are required for running these tests"
 )
-class TestPyDotDraw(unittest.TestCase):
+class TestGraphvizDraw(unittest.TestCase):
     def test_draw_no_args(self):
         graph = retworkx.generators.star_graph(24)
-        image = pydot_draw(graph)
+        image = graphviz_draw(graph)
         self.assertIsInstance(image, PIL.Image.Image)
-        _save_image(image, "test_pydot_draw.png")
+        _save_image(image, "test_graphviz_draw.png")
 
     def test_draw_node_attr_fn(self):
         graph = retworkx.PyGraph()
@@ -63,9 +63,9 @@ class TestPyDotDraw(unittest.TestCase):
             }
         )
         graph.add_edge(0, 1, dict(label="1", name="1"))
-        image = pydot_draw(graph, lambda node: node)
+        image = graphviz_draw(graph, lambda node: node)
         self.assertIsInstance(image, PIL.Image.Image)
-        _save_image(image, "test_pydot_draw_node_attr.png")
+        _save_image(image, "test_graphviz_draw_node_attr.png")
 
     def test_draw_edge_attr_fn(self):
         graph = retworkx.PyGraph()
@@ -86,9 +86,9 @@ class TestPyDotDraw(unittest.TestCase):
             }
         )
         graph.add_edge(0, 1, dict(label="1", name="1"))
-        image = pydot_draw(graph, lambda node: node, lambda edge: edge)
+        image = graphviz_draw(graph, lambda node: node, lambda edge: edge)
         self.assertIsInstance(image, PIL.Image.Image)
-        _save_image(image, "test_pydot_draw_edge_attr.png")
+        _save_image(image, "test_graphviz_draw_edge_attr.png")
 
     def test_draw_graph_attr(self):
         graph = retworkx.PyGraph()
@@ -110,32 +110,32 @@ class TestPyDotDraw(unittest.TestCase):
         )
         graph.add_edge(0, 1, dict(label="1", name="1"))
         graph_attr = {"bgcolor": "red"}
-        image = pydot_draw(
+        image = graphviz_draw(
             graph, lambda node: node, lambda edge: edge, graph_attr
         )
         self.assertIsInstance(image, PIL.Image.Image)
-        _save_image(image, "test_pydot_draw_graph_attr.png")
+        _save_image(image, "test_graphviz_draw_graph_attr.png")
 
     def test_image_type(self):
         graph = retworkx.directed_gnp_random_graph(50, 0.8)
-        image = pydot_draw(graph, image_type="jpg")
+        image = graphviz_draw(graph, image_type="jpg")
         self.assertIsInstance(image, PIL.Image.Image)
-        _save_image(image, "test_pydot_draw_image_type.jpg")
+        _save_image(image, "test_graphviz_draw_image_type.jpg")
 
     def test_method(self):
         graph = retworkx.directed_gnp_random_graph(50, 0.8)
-        image = pydot_draw(graph, method="sfdp")
+        image = graphviz_draw(graph, method="sfdp")
         self.assertIsInstance(image, PIL.Image.Image)
-        _save_image(image, "test_pydot_method.png")
+        _save_image(image, "test_graphviz_method.png")
 
     def test_filename(self):
         graph = retworkx.generators.grid_graph(20, 20)
-        pydot_draw(
+        graphviz_draw(
             graph,
-            filename="test_pydot_filename.svg",
+            filename="test_graphviz_filename.svg",
             image_type="svg",
             method="neato",
         )
-        self.assertTrue(os.path.isfile("test_pydot_filename.svg"))
+        self.assertTrue(os.path.isfile("test_graphviz_filename.svg"))
         if not SAVE_IMAGES:
-            self.addCleanup(os.remove, "test_pydot_filename.svg")
+            self.addCleanup(os.remove, "test_graphviz_filename.svg")
