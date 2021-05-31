@@ -260,14 +260,6 @@ internally call the functions from the explicitly typed API based on the data ty
    retworkx.graph_spiral_layout
    retworkx.graph_spring_layout
 
-Converters
-----------
-
-.. autosummary::
-   :toctree: stubs
-
-   retworkx.networkx_converter
-
 Exceptions
 ==========
 
