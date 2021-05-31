@@ -114,15 +114,10 @@ Connectivity and Cycles
    retworkx.cycle_basis
    retworkx.digraph_find_cycle
 
-.. _miscellaneous:
+.. _other-algorithms:
 
-Miscellaneous
--------------
-
-These functions are algorithm functions that wrap per graph object
-type functions in the algorithms API but can be run with a
-:class:`~retworkx.PyGraph`, :class:`~retworkx.PyDiGraph`, or
-:class:`~retworkx.PyDAG` object.
+Other Algorithm Functions
+-------------------------
 
 .. autosummary::
    :toctree: stubs
@@ -177,8 +172,7 @@ Layout Functions
 
    retworkx.random_layout
    retworkx.spring_layout
-   retworkx.graph_random_layout
-   retworkx.digraph_random_layout
+
 
 .. _converters:
 
@@ -190,14 +184,14 @@ Converters
 
    retworkx.networkx_converter
 
-.. _advanced-api-pydigraph:
+.. _api-functions-pydigraph:
 
-Advanced Retworkx API for PyDiGraph
+API functions for PyDigraph
 ====================================
 
 These functions are algorithm functions that are type specific for :class:`~retworkx.PyDiGraph` or
 :class:`~retworkx.PyDAG` objects. Universal functions from Retworkx API that work for both graph types 
-internally call the functions form the advanced API based on the data type.
+internally call the functions from the explicitly typed based on the data type.
 
 .. autosummary::
    :toctree: stubs
@@ -219,15 +213,16 @@ internally call the functions form the advanced API based on the data type.
    retworkx.digraph_transitivity
    retworkx.digraph_core_number
    retworkx.digraph_complement
+   retworkx.digraph_random_layout
 
-.. _advanced-api-pygraph:
+.. _api-functions-pygraph:
 
-Advanced Retworkx API for PyGraph
+API functions for PyGraph
 =================================
 
 These functions are algorithm functions that are type specific for :class:`~retworkx.PyGraph` objects. 
 Universal functions from Retworkx API that work for both graph types 
-internally call the functions form the advanced API based on the data type.
+internally call the functions from the explicitly typed API based on the data type.
 
 .. autosummary::
    :toctree: stubs
@@ -248,6 +243,7 @@ internally call the functions form the advanced API based on the data type.
    retworkx.graph_transitivity
    retworkx.graph_core_number
    retworkx.graph_complement
+   retworkx.graph_random_layout
 
 Exceptions
 ==========
