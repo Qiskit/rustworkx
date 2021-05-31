@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Four simple layouts were added: :func:`~retworkx.bipartite_layout`, 
+    :func:`~retworkx.circular_layout`, :func:`~retworkx.shell_layout`, 
+    and :func:`~retworkx.spiral_layout`.

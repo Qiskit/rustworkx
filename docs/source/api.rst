@@ -172,6 +172,10 @@ Layout Functions
 
    retworkx.random_layout
    retworkx.spring_layout
+   retworkx.bipartite_layout
+   retworkx.circular_layout
+   retworkx.shell_layout
+   retworkx.spiral_layout
 
 
 .. _converters:
@@ -214,6 +218,12 @@ internally call the functions from the explicitly typed based on the data type.
    retworkx.digraph_core_number
    retworkx.digraph_complement
    retworkx.digraph_random_layout
+   retworkx.digraph_bipartite_layout
+   retworkx.digraph_circular_layout
+   retworkx.digraph_shell_layout
+   retworkx.digraph_spiral_layout
+   retworkx.digraph_spring_layout
+
 
 .. _api-functions-pygraph:
 
@@ -244,6 +254,19 @@ internally call the functions from the explicitly typed API based on the data ty
    retworkx.graph_core_number
    retworkx.graph_complement
    retworkx.graph_random_layout
+   retworkx.graph_bipartite_layout
+   retworkx.graph_circular_layout
+   retworkx.graph_shell_layout
+   retworkx.graph_spiral_layout
+   retworkx.graph_spring_layout
+
+Converters
+----------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.networkx_converter
 
 Exceptions
 ==========
