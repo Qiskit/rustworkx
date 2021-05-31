@@ -19,7 +19,6 @@ class LayoutTest(unittest.TestCase):
     thres = 1e-6
 
     def assertLayoutEquiv(self, exp, res):
-        diff_list = []
         for k in exp:
             ev = exp[k]
             rv = res[k]
