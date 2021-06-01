@@ -15,6 +15,10 @@ def readme():
         return f.read()
 
 
+mpl_extras = ['matplotlib>=3.0']
+graphviz_extras = ['pydot>=1.4', 'pillow>=5.4']
+
+
 setup(
     name="retworkx",
     version="0.9.0",
@@ -53,7 +57,8 @@ setup(
     python_requires=">=3.6",
     install_requires=['numpy>=1.16.0'],
     extras_require={
-        'mpl': ['matplotlib>=3.0'],
-        'graphviz': ['pydot>=1.4', 'pillow>=5.4'],
+        'mpl': mpl_extras,
+        'graphviz': graphviz_extras,
+        'all': mpl_extras + graphviz_extras,
     }
 )

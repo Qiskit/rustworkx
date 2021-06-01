@@ -1,3 +1,5 @@
+.. _networkx:
+
 ###########################
 retworkx for networkx users
 ###########################

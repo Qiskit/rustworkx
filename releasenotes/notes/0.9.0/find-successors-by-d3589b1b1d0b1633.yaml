@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added two new methods, :meth:`~retworkx.PyDiGraph.find_successors_by_edge`
+    and :meth:`~retworkx.PyDiGraph.find_predecessors_by_edge`, to
+    :class:`~retworkx.PyDiGraph`. These methods efficiently retrieve the
+    neighbors in the graph which are connected to a node with edges matching a
+    filter function.

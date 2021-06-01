@@ -1,8 +1,0 @@
----
-fixes:
-  - |
-    Add a ``multigraph`` argument for the directed digraph generators:
-    :func:`retworkx.generators.directed_cycle_graph`, :func:`retworkx.generators.directed_path_graph`,
-    :func:`retworkx.generators.directed_star_graph`, :func:`retworkx.generators.directed_mesh_graph`,
-    and :func:`retworkx.generators.directed_grid_graph`. This can be used to set whether the generated
-    :class:`~retworkx.PyDiGraph` objects are multi graphs or not. By default this is set to ``True``.

@@ -7,10 +7,13 @@ features:
     Graphviz is installed locally and adds two new optional dependencies,
     `pydot <https://pypi.org/project/pydot/>`__ which is used to call Graphviz
     and `Pillow <https://python-pillow.org/>`__ to interact with the generated
-    image files. This function wraps the :meth:`~retworkx.PyDiGraph.to_dot`
-    method to generate a `dot <https://graphviz.org/doc/info/lang.html>`__
-    representation of the graph and will call Graphviz to generate a
-    visualization of the graph. For example:
+    image files. The optional dependencies can be installed either with
+    ``pip install pydot pillow` or when installing retworkx with
+    ``pip install 'retworkx[graphviz]'``. This function wraps the
+    :meth:`~retworkx.PyDiGraph.to_dot` method to generate a
+    `dot <https://graphviz.org/doc/info/lang.html>`__ representation of the
+    graph and will call Graphviz to generate a visualization of the graph. For
+    example:
 
     .. jupyter-execute::
 
