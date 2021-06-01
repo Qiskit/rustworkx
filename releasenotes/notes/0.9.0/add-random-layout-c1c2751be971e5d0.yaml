@@ -41,7 +41,7 @@ features:
 
   - |
     A new custom return class, :class:`retworkx.Pos2DMapping`, has been
-    added. This function will be returned by layout functions and is a drop
+    added. This class will be returned by layout functions and is a drop
     in replacement for an immutable read-only dictionary of the form::
 
       {1: [0.1, 0.5]}
