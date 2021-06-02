@@ -15,7 +15,7 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 use std::ops::{Index, IndexMut};
 use std::str;
 
@@ -46,7 +46,9 @@ use petgraph::visit::{
 };
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeList, NodeIndices, NodeMap, WeightedEdgeList};
+use super::iterators::{
+    EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
+};
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
     NoSuitableNeighbors, NodesRemoved,
@@ -54,12 +56,14 @@ use super::{
 
 /// A class for creating directed graphs
 ///
-/// The PyDiGraph class is used to create a directed graph. It can be a
+/// The ``PyDiGraph`` class is used to create a directed graph. It can be a
 /// multigraph (have multiple edges between nodes). Each node and edge
-/// (although rarely used for edges) is indexed by an integer id. Additionally
-/// each node and edge contains an arbitrary Python object as a weight/data
-/// payload. You can use the index for access to the data payload as in the
-/// following example:
+/// (although rarely used for edges) is indexed by an integer id. These ids
+/// are stable for the lifetime of the graph object and on node or edge
+/// deletions you can have holes in the list of indices for the graph.
+/// Additionally, each node and edge contains an arbitrary Python object as a
+/// weight/data payload. You can use the index for access to the data payload
+/// as in the following example:
 ///
 /// .. jupyter-execute::
 ///
@@ -110,6 +114,26 @@ use super::{
 /// penalty that grows as the graph does. If you're adding a node and edge at
 /// the same time leveraging :meth:`PyDiGraph.add_child` or
 /// :meth:`PyDiGraph.add_parent` will avoid this overhead.
+///
+/// By default a ``PyDiGraph`` is a multigraph (meaning there can be parallel
+/// edges between nodes) however this can be disabled by setting the
+/// ``multigraph`` kwarg to ``False`` when calling the ``PyDiGraph``
+/// constructor. For example::
+///
+///     import retworkx
+///     graph = retworkx.PyDiGraph(multigraph=False)
+///
+/// This can only be set at ``PyDiGraph`` initialization and not adjusted after
+/// creation. When :attr:`~retworkx.PyDiGraph.multigraph` is set to ``False``
+/// if a method call is made that would add a parallel edge it will instead
+/// update the existing edge's weight/data payload.
+///
+/// :param bool check_cycle: When this is set to ``True`` the created
+///     ``PyDiGraph`` has runtime cycle detection enabled.
+/// :param bool multgraph: When this is set to ``False`` the created
+///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
+///     method call is made that would add parallel edges the the weight/weight
+///     from that method call will be used to update the existing edge in place.
 #[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, check_cycle=False, multigraph=True)"]
 #[derive(Clone)]
@@ -522,6 +546,19 @@ impl PyDiGraph {
     fn multigraph(&self) -> bool {
         self.multigraph
     }
+
+    /// Return the number of nodes in the graph
+    #[text_signature = "(self)"]
+    pub fn num_nodes(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    /// Return the number of edges in the graph
+    #[text_signature = "(self)"]
+    pub fn num_edges(&self) -> usize {
+        self.graph.edge_count()
+    }
+
     /// Return a list of all edge data.
     ///
     /// :returns: A list of all the edge data objects in the graph
@@ -532,6 +569,17 @@ impl PyDiGraph {
             .edge_indices()
             .map(|edge| self.graph.edge_weight(edge).unwrap())
             .collect()
+    }
+
+    /// Return a list of all edge indices.
+    ///
+    /// :returns: A list of all the edge indices in the graph
+    /// :rtype: EdgeIndices
+    #[text_signature = "(self)"]
+    pub fn edge_indices(&self) -> EdgeIndices {
+        EdgeIndices {
+            edges: self.graph.edge_indices().map(|edge| edge.index()).collect(),
+        }
     }
 
     /// Return a list of all node data.
@@ -615,6 +663,98 @@ impl PyDiGraph {
             }
         }
         predec
+    }
+
+    /// Return a filtered list of successors data such that each
+    /// node has at least one edge data which matches the filter.
+    ///
+    /// :param int node: The index for the node to get the successors for
+    ///
+    /// :param filter_fn: The filter function to use for matching nodes. It takes
+    ///     in one argument, the edge data payload/weight object, and will return a
+    ///     boolean whether the edge matches the conditions or not. If any edge returns
+    ///     ``True``, the node will be included.
+    ///
+    /// :returns: A list of the node data for all the child neighbor nodes
+    ///           whose at least one edge matches the filter
+    /// :rtype: list
+    #[text_signature = "(self, node, filter_fn/)"]
+    pub fn find_successors_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        filter_fn: PyObject,
+    ) -> PyResult<Vec<&PyObject>> {
+        let index = NodeIndex::new(node);
+        let mut succesors: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+
+        let filter_edge = |edge: &PyObject| -> PyResult<bool> {
+            let res = filter_fn.call1(py, (edge,))?;
+            res.extract(py)
+        };
+
+        let raw_edges = self
+            .graph
+            .edges_directed(index, petgraph::Direction::Outgoing);
+
+        for edge in raw_edges {
+            let succ = edge.target();
+            if !used_indexes.contains(&succ) {
+                let edge_weight = edge.weight();
+                if filter_edge(edge_weight)? {
+                    used_indexes.insert(succ);
+                    succesors.push(self.graph.node_weight(succ).unwrap());
+                }
+            }
+        }
+        Ok(succesors)
+    }
+
+    /// Return a filtered list of predecessor data such that each
+    /// node has at least one edge data which matches the filter.
+    ///
+    /// :param int node: The index for the node to get the predecessor for
+    ///
+    /// :param filter_fn: The filter function to use for matching nodes. It takes
+    ///     in one argument, the edge data payload/weight object, and will return a
+    ///     boolean whether the edge matches the conditions or not. If any edge returns
+    ///     ``True``, the node will be included.
+    ///
+    /// :returns: A list of the node data for all the parent neighbor nodes
+    ///           whose at least one edge matches the filter
+    /// :rtype: list
+    #[text_signature = "(self, node, filter_fn/)"]
+    pub fn find_predecessors_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        filter_fn: PyObject,
+    ) -> PyResult<Vec<&PyObject>> {
+        let index = NodeIndex::new(node);
+        let mut predec: Vec<&PyObject> = Vec::new();
+        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+
+        let filter_edge = |edge: &PyObject| -> PyResult<bool> {
+            let res = filter_fn.call1(py, (edge,))?;
+            res.extract(py)
+        };
+
+        let raw_edges = self
+            .graph
+            .edges_directed(index, petgraph::Direction::Incoming);
+
+        for edge in raw_edges {
+            let pred = edge.source();
+            if !used_indexes.contains(&pred) {
+                let edge_weight = edge.weight();
+                if filter_edge(edge_weight)? {
+                    used_indexes.insert(pred);
+                    predec.push(self.graph.node_weight(pred).unwrap());
+                }
+            }
+        }
+        Ok(predec)
     }
 
     /// Return the edge data for an edge between 2 nodes.
@@ -780,6 +920,33 @@ impl PyDiGraph {
                         edge.source().index(),
                         edge.target().index(),
                         edge.weight().clone_ref(py),
+                    )
+                })
+                .collect(),
+        }
+    }
+
+    /// Get an edge index map
+    ///
+    /// Returns a read only mapping from edge indices to the weighted edge
+    /// tuple. The return is a mapping of the form:
+    /// ``{0: (0, 1, "weight"), 1: (2, 3, 2.3)}``
+    ///
+    /// :returns: An edge index map
+    /// :rtype: EdgeIndexMap
+    #[text_signature = "(self)"]
+    pub fn edge_index_map(&self, py: Python) -> EdgeIndexMap {
+        EdgeIndexMap {
+            edge_map: self
+                .edge_references()
+                .map(|edge| {
+                    (
+                        edge.id().index(),
+                        (
+                            edge.source().index(),
+                            edge.target().index(),
+                            edge.weight().clone_ref(py),
+                        ),
                     )
                 })
                 .collect(),
@@ -1723,14 +1890,10 @@ impl PyDiGraph {
     ///
     /// .. jupyter-execute::
     ///
-    ///   import os
     ///   import tempfile
     ///
-    ///   from PIL import Image
-    ///   import pydot
-    ///
     ///   import retworkx
-    ///
+    ///   from retworkx.visualization import mpl_draw
     ///
     ///   with tempfile.NamedTemporaryFile('wt') as fd:
     ///       path = fd.name
@@ -1741,16 +1904,7 @@ impl PyDiGraph {
     ///       fd.write('2 3\n')
     ///       fd.flush()
     ///       graph = retworkx.PyDiGraph.read_edge_list(path)
-    ///
-    ///   # Draw graph
-    ///   dot = pydot.graph_from_dot_data(graph.to_dot())[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph)
     ///
     #[staticmethod]
     #[text_signature = "(path, /, comment=None, deliminator=None)"]
@@ -1815,6 +1969,79 @@ impl PyDiGraph {
             node_removed: false,
             multigraph: true,
         })
+    }
+
+    /// Write an edge list file from the PyDiGraph object
+    ///
+    /// :param str path: The path to write the output file to
+    /// :param str deliminator: The optional character to use as a deliminator
+    ///     if not specified ``" "`` is used.
+    /// :param callable weight_fn: An optional callback function that will be
+    ///     passed an edge's data payload/weight object and is expected to
+    ///     return a string (a ``TypeError`` will be raised if it doesn't
+    ///     return a string). If specified the weight in the output file
+    ///     for each edge will be set to the returned string.
+    ///
+    ///  For example:
+    ///
+    ///  .. jupyter-execute::
+    ///
+    ///     import os
+    ///     import tempfile
+    ///
+    ///     import retworkx
+    ///
+    ///     graph = retworkx.generators.directed_path_graph(5)
+    ///     path = os.path.join(tempfile.gettempdir(), "edge_list")
+    ///     graph.write_edge_list(path, deliminator=',')
+    ///     # Print file contents
+    ///     with open(path, 'rt') as edge_file:
+    ///         print(edge_file.read())
+    ///
+    #[text_signature = "(self, path, /, deliminator=None, weight_fn=None)"]
+    pub fn write_edge_list(
+        &self,
+        py: Python,
+        path: &str,
+        deliminator: Option<char>,
+        weight_fn: Option<PyObject>,
+    ) -> PyResult<()> {
+        let file = File::create(path)?;
+        let mut buf_writer = BufWriter::new(file);
+        let delim = match deliminator {
+            Some(delim) => delim.to_string(),
+            None => " ".to_string(),
+        };
+
+        let weight_callable = |value: &PyObject,
+                               weight_fn: &Option<PyObject>|
+         -> PyResult<Option<String>> {
+            match weight_fn {
+                Some(weight_fn) => {
+                    let res = weight_fn.call1(py, (value,))?;
+                    Ok(Some(res.extract(py)?))
+                }
+                None => Ok(None),
+            }
+        };
+        for edge in self.graph.edge_references() {
+            buf_writer.write_all(
+                format!(
+                    "{}{}{}",
+                    edge.source().index(),
+                    delim,
+                    edge.target().index()
+                )
+                .as_bytes(),
+            )?;
+            match weight_callable(edge.weight(), &weight_fn)? {
+                Some(weight) => buf_writer
+                    .write_all(format!("{}{}\n", delim, weight).as_bytes()),
+                None => buf_writer.write_all(b"\n"),
+            }?;
+        }
+        buf_writer.flush()?;
+        Ok(())
     }
 
     /// Create a new :class:`~retworkx.PyDiGraph` object from an adjacency matrix
@@ -1901,30 +2128,15 @@ impl PyDiGraph {
     ///
     /// .. jupyter-execute::
     ///
-    ///   import os
-    ///   import tempfile
-    ///
-    ///   import pydot
-    ///   from PIL import Image
-    ///
     ///   import retworkx
+    ///   from retworkx.visualization import mpl_draw
     ///
     ///   # Build first graph and visualize:
     ///   graph = retworkx.PyDiGraph()
     ///   node_a = graph.add_node('A')
     ///   node_b = graph.add_child(node_a, 'B', 'A to B')
     ///   node_c = graph.add_child(node_b, 'C', 'B to C')
-    ///   dot_str = graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
     /// Then build a second one:
     ///
@@ -1934,17 +2146,7 @@ impl PyDiGraph {
     ///   other_graph = retworkx.PyDiGraph()
     ///   node_d = other_graph.add_node('D')
     ///   other_graph.add_child(node_d, 'E', 'D to E')
-    ///   dot_str = other_graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'other_graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(other_graph, with_labels=True, labels=str, edge_labels=str)
     ///
     /// Finally compose the ``other_graph`` onto ``graph``
     ///
@@ -1952,17 +2154,7 @@ impl PyDiGraph {
     ///
     ///   node_map = {node_b: (node_d, 'B to D')}
     ///   graph.compose(other_graph, node_map)
-    ///   dot_str = graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'combined_graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
     #[text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)"]
     pub fn compose(
@@ -2239,6 +2431,15 @@ impl PyDiGraph {
             node_removed: false,
             multigraph: true,
         }
+    }
+
+    /// Return a shallow copy of the graph
+    ///
+    /// All node and edge weight/data payloads in the copy will have a
+    /// shared reference to the original graph.
+    #[text_signature = "(self)"]
+    pub fn copy(&self) -> PyDiGraph {
+        self.clone()
     }
 }
 

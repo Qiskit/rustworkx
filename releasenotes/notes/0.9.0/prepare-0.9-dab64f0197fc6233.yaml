@@ -1,0 +1,13 @@
+---
+prelude: |
+    This release is a new feature release that includes a plethora of new
+    features and bug fixes. The highlights of this release are the introduction
+    of the :mod:`retwork.visualization` module, which includes a
+    `matplotlib <https://matplotlib.org/>`__ based drawer
+    (:func:`~retworkx.visualization.mpl_draw`) and a
+    `graphviz <https://graphviz.org/>`__ based drawer
+    (:func:`~retworkx.visualization.graphviz_draw`), and layout functions such
+    as :func:`~retworkx.spring_layout` for generating a layout in
+    visualization. Additionally, the generator functions in
+    :mod:`retworkx.generators` have been expanded to include new graph
+    generators, and many new algorithm functions have been added.

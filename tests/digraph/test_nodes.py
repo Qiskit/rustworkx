@@ -280,6 +280,17 @@ class TestNodes(unittest.TestCase):
         dag = retworkx.PyDAG()
         self.assertEqual(0, len(dag))
 
+    def test_pydigraph_num_nodes(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, "An_edge")
+        self.assertEqual(2, graph.num_nodes())
+
+    def test_pydigraph_num_nodes_empty(self):
+        graph = retworkx.PyDiGraph()
+        self.assertEqual(0, graph.num_nodes())
+
     def test_add_nodes_from(self):
         dag = retworkx.PyDAG()
         nodes = list(range(100))

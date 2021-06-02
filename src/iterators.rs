@@ -1049,6 +1049,7 @@ impl PyIterProtocol for Pos2DMappingItems {
 ///     second_path = edges[second_target]
 ///
 #[pyclass(module = "retworkx", gc)]
+#[derive(Clone)]
 pub struct PathMapping {
     pub paths: HashMap<usize, Vec<usize>>,
 }
@@ -1333,6 +1334,7 @@ impl PyIterProtocol for PathMappingItems {
 ///     second_path = edges[second_target]
 ///
 #[pyclass(module = "retworkx", gc)]
+#[derive(Clone)]
 pub struct PathLengthMapping {
     pub path_lengths: HashMap<usize, f64>,
 }
@@ -1551,6 +1553,939 @@ impl PyIterProtocol for PathLengthMappingItems {
         if slf.iter_pos < slf.path_length_items.len() {
             let res =
                 IterNextOutput::Yield(slf.path_length_items[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+/// A class representing a mapping of edge indices to a tuple of node indices
+/// and weight/data payload
+///
+/// This class is equivalent to having a read only dict of the form::
+///
+///     {1: (0, 1, "weight'), 3: (2, 3, 1.2)}
+///
+/// It is used to efficiently represent an edge index map for a retworkx
+/// graph. It behaves as a drop in replacement for a readonly ``dict``.
+#[pyclass(module = "retworkx", gc)]
+pub struct EdgeIndexMap {
+    pub edge_map: HashMap<usize, (usize, usize, PyObject)>,
+}
+
+#[pymethods]
+impl EdgeIndexMap {
+    #[new]
+    fn new() -> EdgeIndexMap {
+        EdgeIndexMap {
+            edge_map: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, (usize, usize, PyObject)> {
+        self.edge_map.clone()
+    }
+
+    fn __setstate__(
+        &mut self,
+        state: HashMap<usize, (usize, usize, PyObject)>,
+    ) {
+        self.edge_map = state;
+    }
+
+    fn keys(&self) -> EdgeIndexMapKeys {
+        EdgeIndexMapKeys {
+            edge_map_keys: self.edge_map.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> EdgeIndexMapValues {
+        EdgeIndexMapValues {
+            edge_map_values: self.edge_map.values().cloned().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> EdgeIndexMapItems {
+        let items: Vec<(usize, (usize, usize, PyObject))> =
+            self.edge_map.iter().map(|(k, v)| (*k, v.clone())).collect();
+        EdgeIndexMapItems {
+            edge_map_items: items,
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for EdgeIndexMap {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.edge_map.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.edge_map {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: (usize, usize, PyObject) =
+                            other_raw.extract()?;
+                        if other_value.0 != value.0
+                            || other_value.1 != value.1
+                            || value.2.as_ref(py).compare(other_value.2)?
+                                != std::cmp::Ordering::Equal
+                        {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> = Vec::with_capacity(self.edge_map.len());
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        for path in &self.edge_map {
+            str_vec.push(format!(
+                "{}: ({}, {}, {})",
+                path.0,
+                path.1 .0,
+                path.1 .1,
+                path.1 .2.as_ref(py).str()?
+            ));
+        }
+        Ok(format!("EdgeIndexMap{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        for index in &self.edge_map {
+            hasher.write_usize(*index.0);
+            hasher.write(&index.1 .0.to_be_bytes());
+            hasher.write(&index.1 .1.to_be_bytes());
+            hasher.write_isize(index.1 .2.as_ref(py).hash()?);
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for EdgeIndexMap {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.edge_map.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.edge_map.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for EdgeIndexMap {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.edge_map.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<(usize, usize, PyObject)> {
+        match self.edge_map.get(&idx) {
+            Some(data) => Ok(data.clone()),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for EdgeIndexMap {
+    fn __iter__(slf: PyRef<Self>) -> EdgeIndexMapKeys {
+        EdgeIndexMapKeys {
+            edge_map_keys: slf.edge_map.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for EdgeIndexMap {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for edge in &self.edge_map {
+            visit.call(&edge.1 .2)?;
+        }
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        self.edge_map = HashMap::new();
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct EdgeIndexMapKeys {
+    pub edge_map_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for EdgeIndexMapKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<EdgeIndexMapKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.edge_map_keys.len() {
+            let res = IterNextOutput::Yield(slf.edge_map_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct EdgeIndexMapValues {
+    pub edge_map_values: Vec<(usize, usize, PyObject)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for EdgeIndexMapValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<EdgeIndexMapValues> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, usize, PyObject), &'static str> {
+        if slf.iter_pos < slf.edge_map_values.len() {
+            let res = IterNextOutput::Yield(
+                slf.edge_map_values[slf.iter_pos].clone(),
+            );
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct EdgeIndexMapItems {
+    pub edge_map_items: Vec<(usize, (usize, usize, PyObject))>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for EdgeIndexMapItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<EdgeIndexMapItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, (usize, usize, PyObject)), &'static str> {
+        if slf.iter_pos < slf.edge_map_items.len() {
+            let res =
+                IterNextOutput::Yield(slf.edge_map_items[slf.iter_pos].clone());
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+/// A custom class for the return of edge indices
+///
+/// This class is a container class for the results of functions that
+/// return a list of edge indices. It implements the Python sequence
+/// protocol. So you can treat the return as a read-only sequence/list
+/// that is integer indexed. If you want to use it as an iterator you
+/// can by wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.edge_indices()
+///     # Index based access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_element = next(edges_iter)
+///     second_element = next(edges_iter)
+///
+#[pyclass(module = "retworkx", gc)]
+#[derive(Clone)]
+pub struct EdgeIndices {
+    pub edges: Vec<usize>,
+}
+
+#[pymethods]
+impl EdgeIndices {
+    #[new]
+    fn new() -> EdgeIndices {
+        EdgeIndices { edges: Vec::new() }
+    }
+
+    fn __getstate__(&self) -> Vec<usize> {
+        self.edges.clone()
+    }
+
+    fn __setstate__(&mut self, state: Vec<usize>) {
+        self.edges = state;
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for EdgeIndices {
+    fn __richcmp__(
+        &self,
+        other: &'p PySequence,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: &PySequence| -> PyResult<bool> {
+            if other.len()? as usize != self.edges.len() {
+                return Ok(false);
+            }
+            for i in 0..self.edges.len() {
+                let other_raw = other.get_item(i.try_into().unwrap())?;
+                let other_value: usize = other_raw.extract()?;
+                if other_value != self.edges[i] {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let str_vec: Vec<String> =
+            self.edges.iter().map(|n| format!("{}", n)).collect();
+        Ok(format!("EdgeIndices[{}]", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.edges {
+            hasher.write_usize(*index);
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for EdgeIndices {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.edges.len())
+    }
+
+    fn __getitem__(&'p self, idx: isize) -> PyResult<usize> {
+        if idx >= self.edges.len().try_into().unwrap() {
+            Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
+        } else {
+            Ok(self.edges[idx as usize])
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for EdgeIndices {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+/// A custom class for the return of path lengths to target nodes from all nodes
+///
+/// This class is a container class for the results of functions that
+/// return a mapping of target nodes and paths from all nodes. It implements
+/// the Python mapping protocol. So you can treat the return as a read-only
+/// mapping/dict.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.all_pairs_dijkstra_shortest_path_lengths(graph)
+///     # Target node access
+///     third_node_shortest_path_lengths = edges[2]
+///
+#[pyclass(module = "retworkx", gc)]
+pub struct AllPairsPathLengthMapping {
+    pub path_lengths: HashMap<usize, PathLengthMapping>,
+}
+
+#[pymethods]
+impl AllPairsPathLengthMapping {
+    #[new]
+    fn new() -> AllPairsPathLengthMapping {
+        AllPairsPathLengthMapping {
+            path_lengths: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, PathLengthMapping> {
+        self.path_lengths.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, PathLengthMapping>) {
+        self.path_lengths = state;
+    }
+
+    fn keys(&self) -> AllPairsPathLengthMappingKeys {
+        AllPairsPathLengthMappingKeys {
+            path_length_keys: self.path_lengths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> AllPairsPathLengthMappingValues {
+        AllPairsPathLengthMappingValues {
+            path_length_values: self.path_lengths.values().cloned().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> AllPairsPathLengthMappingItems {
+        let items: Vec<(usize, PathLengthMapping)> = self
+            .path_lengths
+            .iter()
+            .map(|(k, v)| (*k, v.clone()))
+            .collect();
+        AllPairsPathLengthMappingItems {
+            path_length_items: items,
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for AllPairsPathLengthMapping {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let inner_compare = |index: &usize, other: &PyAny| -> PyResult<bool> {
+            if other.len()? != self.path_lengths[index].path_lengths.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.path_lengths[index].path_lengths {
+                match other.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: f64 = other_raw.extract()?;
+                        if other_value != *value {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.path_lengths.len() {
+                return Ok(false);
+            }
+            for key in self.path_lengths.keys() {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        if !inner_compare(key, other_raw)? {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> =
+            Vec::with_capacity(self.path_lengths.len());
+        for path in &self.path_lengths {
+            str_vec.push(format!("{}: {}", path.0, path.1.__str__()?,));
+        }
+        Ok(format!(
+            "AllPairsPathLengthMapping{{{}}}",
+            str_vec.join(", ")
+        ))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.path_lengths {
+            hasher.write_usize(*index.0);
+            hasher.write_u64(index.1.__hash__()?);
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for AllPairsPathLengthMapping {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.path_lengths.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.path_lengths.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for AllPairsPathLengthMapping {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.path_lengths.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<PathLengthMapping> {
+        match self.path_lengths.get(&idx) {
+            Some(data) => Ok(data.clone()),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for AllPairsPathLengthMapping {
+    fn __iter__(slf: PyRef<Self>) -> AllPairsPathLengthMappingKeys {
+        AllPairsPathLengthMappingKeys {
+            path_length_keys: slf.path_lengths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for AllPairsPathLengthMapping {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct AllPairsPathLengthMappingKeys {
+    pub path_length_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for AllPairsPathLengthMappingKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<AllPairsPathLengthMappingKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.path_length_keys.len() {
+            let res = IterNextOutput::Yield(slf.path_length_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct AllPairsPathLengthMappingValues {
+    pub path_length_values: Vec<PathLengthMapping>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for AllPairsPathLengthMappingValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<AllPairsPathLengthMappingValues> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<PathLengthMapping, &'static str> {
+        if slf.iter_pos < slf.path_length_values.len() {
+            let res = IterNextOutput::Yield(
+                slf.path_length_values[slf.iter_pos].clone(),
+            );
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct AllPairsPathLengthMappingItems {
+    pub path_length_items: Vec<(usize, PathLengthMapping)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for AllPairsPathLengthMappingItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<AllPairsPathLengthMappingItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, PathLengthMapping), &'static str> {
+        if slf.iter_pos < slf.path_length_items.len() {
+            let res = IterNextOutput::Yield(
+                slf.path_length_items[slf.iter_pos].clone(),
+            );
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+/// A custom class for the return of paths to target nodes from all nodes
+///
+/// This class is a container class for the results of functions that
+/// return a mapping of target nodes and paths from all nodes. It implements
+/// the Python mapping protocol. So you can treat the return as a read-only
+/// mapping/dict.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.all_pairs_dijkstra_shortest_path_lengths(graph)
+///     # Target node access
+///     third_node_shortest_paths = edges[2]
+///
+#[pyclass(module = "retworkx", gc)]
+pub struct AllPairsPathMapping {
+    pub paths: HashMap<usize, PathMapping>,
+}
+
+#[pymethods]
+impl AllPairsPathMapping {
+    #[new]
+    fn new() -> AllPairsPathMapping {
+        AllPairsPathMapping {
+            paths: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, PathMapping> {
+        self.paths.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, PathMapping>) {
+        self.paths = state;
+    }
+
+    fn keys(&self) -> AllPairsPathMappingKeys {
+        AllPairsPathMappingKeys {
+            path_keys: self.paths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> AllPairsPathMappingValues {
+        AllPairsPathMappingValues {
+            path_values: self.paths.values().cloned().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> AllPairsPathMappingItems {
+        let items: Vec<(usize, PathMapping)> =
+            self.paths.iter().map(|(k, v)| (*k, v.clone())).collect();
+        AllPairsPathMappingItems {
+            path_items: items,
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for AllPairsPathMapping {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let inner_compare = |index: &usize, other: &PyAny| -> PyResult<bool> {
+            if other.len()? != self.paths[index].paths.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.paths[index].paths {
+                match other.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: &PySequence =
+                            other_raw.downcast::<PySequence>()?;
+                        if value.len() as isize != other_value.len()? {
+                            return Ok(false);
+                        }
+                        for (i, item) in value.iter().enumerate() {
+                            let other_item_raw =
+                                other_value.get_item(i as isize)?;
+                            let other_item_value: usize =
+                                other_item_raw.extract()?;
+                            if other_item_value != *item {
+                                return Ok(false);
+                            }
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.paths.len() {
+                return Ok(false);
+            }
+            for key in self.paths.keys() {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        if !inner_compare(key, other_raw)? {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> = Vec::with_capacity(self.paths.len());
+        for path in &self.paths {
+            str_vec.push(format!("{}: {}", path.0, path.1.__str__()?,));
+        }
+        Ok(format!("AllPairsPathMapping{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.paths {
+            hasher.write_usize(*index.0);
+            hasher.write_u64(index.1.__hash__()?);
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for AllPairsPathMapping {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.paths.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<PathMapping> {
+        match self.paths.get(&idx) {
+            Some(data) => Ok(data.clone()),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for AllPairsPathMapping {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.paths.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.paths.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for AllPairsPathMapping {
+    fn __iter__(slf: PyRef<Self>) -> AllPairsPathMappingKeys {
+        AllPairsPathMappingKeys {
+            path_keys: slf.paths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for AllPairsPathMapping {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct AllPairsPathMappingKeys {
+    pub path_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for AllPairsPathMappingKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<AllPairsPathMappingKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.path_keys.len() {
+            let res = IterNextOutput::Yield(slf.path_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct AllPairsPathMappingValues {
+    pub path_values: Vec<PathMapping>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for AllPairsPathMappingValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<AllPairsPathMappingValues> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<PathMapping, &'static str> {
+        if slf.iter_pos < slf.path_values.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_values[slf.iter_pos].clone());
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct AllPairsPathMappingItems {
+    pub path_items: Vec<(usize, PathMapping)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for AllPairsPathMappingItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<AllPairsPathMappingItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, PathMapping), &'static str> {
+        if slf.iter_pos < slf.path_items.len() {
+            let res =
+                IterNextOutput::Yield(slf.path_items[slf.iter_pos].clone());
             slf.iter_pos += 1;
             res
         } else {

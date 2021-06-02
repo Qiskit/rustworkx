@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Added new function, :func:`~retworkx.minimum_spanning_tree`, to calculate the
+    minimum spanning tree of a :class:`~retworkx.PyGraph` object and return the
+    MST as a new :class:`~retworkx.PyGraph` object.
+  - |
+    Added a new function, :func:`~retworkx.minimum_spanning_edges`, to calculate
+    the minimum spanning tree of a :class:`~retworkx.PyGraph` object and return
+    the :class:`~retworkx.WeightedEdgeList` for the weighted edge list of the
+    MST of a graph.

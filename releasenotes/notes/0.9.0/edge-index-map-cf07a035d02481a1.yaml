@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Added a new method, :meth:`~retworkx.PyDiGraph.edge_index_map`, to the
+    :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph`
+    (:meth:`~retworkx.PyGraph.edge_index_map`) that will return a read-only
+    mapping of edge indices to a tuple of the form
+    ``(source_node_index, target_node_index, weight/data payload)`` for every edge in the
+    graph object.
+  - |
+    Added a new custom return type :class:`~retworkx.EdgeIndexMap` which is
+    returned by :meth:`retworkx.PyDiGraph.edge_index_map` and
+    :meth:`retworkx.PyGraph.edge_index_map`. It is equivalent to a read-only
+    dict/mapping that represent a mapping of edge indices to the edge tuple.

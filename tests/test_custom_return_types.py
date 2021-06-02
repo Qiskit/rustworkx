@@ -151,6 +151,66 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         self.assertEqual(hash_res, hash(res))
 
 
+class TestEdgeIndicesComparisons(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDiGraph()
+        node_a = self.dag.add_node("a")
+        node_b = self.dag.add_child(node_a, "b", "Edgy")
+        self.dag.add_child(node_b, "c", "Super Edgy")
+
+    def test__eq__match(self):
+        self.assertTrue(self.dag.edge_indices() == [0, 1])
+
+    def test__eq__not_match(self):
+        self.assertFalse(self.dag.edge_indices() == [1, 2])
+
+    def test__eq__different_length(self):
+        self.assertFalse(self.dag.edge_indices() == [0, 1, 2, 3])
+
+    def test__eq__invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.dag.edge_indices() == ["a", None]
+
+    def test__ne__match(self):
+        self.assertFalse(self.dag.edge_indices() != [0, 1])
+
+    def test__ne__not_match(self):
+        self.assertTrue(self.dag.edge_indices() != [1, 2])
+
+    def test__ne__different_length(self):
+        self.assertTrue(self.dag.edge_indices() != [0, 1, 2, 3])
+
+    def test__ne__invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.dag.edge_indices() != ["a", None]
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.dag.edge_indices() > [2, 1]
+
+    def test_deepcopy(self):
+        edges = self.dag.edge_indices()
+        edges_copy = copy.deepcopy(edges)
+        self.assertEqual(edges, edges_copy)
+
+    def test_pickle(self):
+        edges = self.dag.edge_indices()
+        edges_pickle = pickle.dumps(edges)
+        edges_copy = pickle.loads(edges_pickle)
+        self.assertEqual(edges, edges_copy)
+
+    def test_str(self):
+        res = self.dag.edge_indices()
+        self.assertEqual("EdgeIndices[0, 1]", str(res))
+
+    def test_hash(self):
+        res = self.dag.edge_indices()
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+
 class TestEdgeListComparisons(unittest.TestCase):
     def setUp(self):
         self.dag = retworkx.PyDAG()
@@ -667,3 +727,431 @@ class TestPos2DMapping(unittest.TestCase):
     def test_not_contains(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
         self.assertNotIn(1, res)
+
+
+class TestEdgeIndices(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDiGraph()
+        self.dag.add_node("a")
+        self.dag.add_child(0, "b", "edge")
+
+    def test__eq__match(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res == {0: (0, 1, "edge")})
+
+    def test__eq__not_match_keys(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res == {2: (0, 1, "edge")})
+
+    def test__eq__not_match_values(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res == {0: (1, 2, "edge")})
+        self.assertFalse(res == {0: (0, 1, "not edge")})
+
+    def test__eq__different_length(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res == {1: (0, 1, "edge"), 0: (0, 1, "double edge")})
+
+    def test_eq__same_type(self):
+        self.assertEqual(self.dag.edge_index_map(), self.dag.edge_index_map())
+
+    def test__eq__invalid_type(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res == {"a": ("a", "b", "c")})
+
+    def test__ne__match(self):
+        res = self.dag.edge_index_map()
+        self.assertFalse(res != {0: (0, 1, "edge")})
+
+    def test__ne__not_match(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res, {2: (0, 1, "edge")})
+
+    def test__ne__not_match_values(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res, {0: (0, 2, "edge")})
+
+    def test__ne__different_length(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res != {1: (0, 1, "double edge"), 0: (0, 1, "edge")})
+
+    def test__ne__invalid_type(self):
+        res = self.dag.edge_index_map()
+        self.assertTrue(res != {"a": ("a", "b", "c")})
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.dag.edge_index_map() > {0: (0, 1, "edge")}
+
+    def test_deepcopy(self):
+        edge_map = self.dag.edge_index_map()
+        edge_map_copy = copy.deepcopy(edge_map)
+        self.assertEqual(edge_map_copy, edge_map)
+
+    def test_pickle(self):
+        edge_map = self.dag.edge_index_map()
+        edge_map_pickle = pickle.dumps(edge_map)
+        edge_map_copy = pickle.loads(edge_map_pickle)
+        self.assertEqual(edge_map, edge_map_copy)
+
+    def test_str(self):
+        res = self.dag.edge_index_map()
+        self.assertEqual(
+            "EdgeIndexMap{0: (0, 1, edge)}",
+            str(res),
+        )
+
+    def test_hash(self):
+        res = self.dag.edge_index_map()
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = self.dag.edge_index_map()
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = self.dag.edge_index_map().keys()
+        self.assertEqual([0], list(keys))
+
+    def test_values(self):
+        values = self.dag.edge_index_map().values()
+        expected = [(0, 1, "edge")]
+        self.assertEqual(expected, list(values))
+
+    def test_items(self):
+        items = self.dag.edge_index_map().items()
+        self.assertEqual([(0, (0, 1, "edge"))], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(self.dag.edge_index_map())
+        output = list(mapping_iter)
+        self.assertEqual(output, [0])
+
+    def test_contains(self):
+        res = self.dag.edge_index_map()
+        self.assertIn(0, res)
+
+    def test_not_contains(self):
+        res = self.dag.edge_index_map()
+        self.assertNotIn(1, res)
+
+
+class TestAllPairsPathMapping(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
+        self.fn = lambda _: 1.0
+
+    def test__eq__match(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {0: {1: [0, 1]}, 1: {}}
+        )
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {2: {2: [0, 1]}, 1: {}}
+        )
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {0: {1: [0, 2]}, 1: {}}
+        )
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {1: [0, 1], 2: [0, 2]}
+        )
+
+    def test_eq__same_type(self):
+        self.assertEqual(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn),
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn),
+        )
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {"a": []}
+        )
+
+    def test__eq__invalid_inner_type(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {0: {1: None}}
+        )
+
+    def test__ne__match(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {0: {1: [0, 1]}, 1: {}}
+        )
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {2: [0, 1]}
+        )
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {1: [0, 2]}
+        )
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {1: [0, 1], 2: [0, 2]}
+        )
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {"a": {}}
+        )
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) > {
+                1: [0, 2]
+            }
+
+    def test_deepcopy(self):
+        paths = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        paths_copy = copy.deepcopy(paths)
+        self.assertEqual(paths, paths_copy)
+
+    def test_pickle(self):
+        paths = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        paths_pickle = pickle.dumps(paths)
+        paths_copy = pickle.loads(paths_pickle)
+        self.assertEqual(paths, paths_copy)
+
+    def test_str(self):
+        res = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        # Since run in parallel the order is not deterministic
+        expected_valid = [
+            "AllPairsPathMapping{1: PathMapping{}, 0: PathMapping{1: [0, 1]}}",
+            "AllPairsPathMapping{0: PathMapping{1: [0, 1]}, 1: PathMapping{}}",
+        ]
+        self.assertIn(str(res), expected_valid)
+
+    def test_hash(self):
+        res = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = retworkx.all_pairs_dijkstra_shortest_paths(
+            self.dag, self.fn
+        ).keys()
+        self.assertEqual([0, 1], list(sorted(keys)))
+
+    def test_values(self):
+        values = retworkx.all_pairs_dijkstra_shortest_paths(
+            self.dag, self.fn
+        ).values()
+        # Since run in parallel the order is not deterministic
+        expected_valid = [[{1: [0, 1]}, {}], [{}, {1: [0, 1]}]]
+        self.assertIn(list(values), expected_valid)
+
+    def test_items(self):
+        items = retworkx.all_pairs_dijkstra_shortest_paths(
+            self.dag, self.fn
+        ).items()
+        # Since run in parallel the order is not deterministic
+        expected_valid = [
+            [(0, {1: [0, 1]}), (1, {})],
+            [(1, {}), (0, {1: [0, 1]})],
+        ]
+        self.assertIn(list(items), expected_valid)
+
+    def test_iter(self):
+        mapping_iter = iter(
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        )
+        output = list(sorted(mapping_iter))
+        self.assertEqual(output, [0, 1])
+
+    def test_contains(self):
+        res = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        self.assertIn(1, res)
+
+    def test_not_contains(self):
+        res = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+        self.assertNotIn(2, res)
+
+
+class TestAllPairsPathLengthMapping(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
+        self.fn = lambda _: 1.0
+
+    def test__eq__match(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {0: {1: 1.0}, 1: {}}
+        )
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {1: {2: 1.0}}
+        )
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {0: {2: 2.0}}
+        )
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {0: {1: 1.0, 2: 2.0}}
+        )
+
+    def test_eq__same_type(self):
+        self.assertEqual(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn),
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn),
+        )
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {"a": 2}
+        )
+
+    def test__eq__invalid_inner_type(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            == {0: "a"}
+        )
+
+    def test__ne__match(self):
+        self.assertFalse(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {0: {1: 1.0}, 1: {}}
+        )
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {0: {2: 1.0}}
+        )
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {0: {1: 2.0}}
+        )
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {0: {1: 1.0}, 2: {1: 2.0}}
+        )
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+            != {1: []}
+        )
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) > {
+                1: 1.0
+            }
+
+    def test_deepcopy(self):
+        paths = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+        paths_copy = copy.deepcopy(paths)
+        self.assertEqual(paths, paths_copy)
+
+    def test_pickle(self):
+        paths = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+        paths_pickle = pickle.dumps(paths)
+        paths_copy = pickle.loads(paths_pickle)
+        self.assertEqual(paths, paths_copy)
+
+    def test_str(self):
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.dag, lambda _: 3.14)
+        # Since all_pairs_dijkstra_path_lengths() is parallel the order of the
+        # output is non-determinisitic
+        valid_values = [
+            "AllPairsPathLengthMapping{1: PathLengthMapping{}, "
+            "0: PathLengthMapping{1: 3.14}}",
+            "AllPairsPathLengthMapping{"
+            "0: PathLengthMapping{1: 3.14}, "
+            "1: PathLengthMapping{}}",
+        ]
+        self.assertIn(str(res), valid_values)
+
+    def test_hash(self):
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = retworkx.all_pairs_dijkstra_path_lengths(
+            self.dag, self.fn
+        ).keys()
+        self.assertEqual([0, 1], list(sorted((keys))))
+
+    def test_values(self):
+        values = retworkx.all_pairs_dijkstra_path_lengths(
+            self.dag, self.fn
+        ).values()
+        # Since run in parallel the order is not deterministic
+        valid_expected = [[{}, {1: 1.0}], [{1: 1.0}, {}]]
+        self.assertIn(list(values), valid_expected)
+
+    def test_items(self):
+        items = retworkx.all_pairs_dijkstra_path_lengths(
+            self.dag, self.fn
+        ).items()
+        # Since run in parallel the order is not deterministic
+        valid_expected = [[(0, {1: 1.0}), (1, {})], [(1, {}), (0, {1: 1.0})]]
+        self.assertIn(list(items), valid_expected)
+
+    def test_iter(self):
+        mapping_iter = iter(
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+        )
+        output = list(sorted(mapping_iter))
+        self.assertEqual(output, [0, 1])
+
+    def test_contains(self):
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+        self.assertIn(0, res)
+
+    def test_not_contains(self):
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
+        self.assertNotIn(2, res)
