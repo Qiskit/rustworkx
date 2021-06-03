@@ -2268,7 +2268,8 @@ impl PyDiGraph {
         // to do.
         if out_map.is_empty() {
             self.graph.remove_node(node_index);
-            return Ok(NodeMap { node_map: out_map });
+            // Return a new empty map to clear allocation from out_map
+            return Ok(NodeMap { node_map: HashMap::new() });
         }
         // Copy edges from other to self
         for edge in other.graph.edge_references().filter(|edge| {
