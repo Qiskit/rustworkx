@@ -2252,6 +2252,7 @@ impl PyDiGraph {
                     None => Ok(true),
                 }
             };
+        let node_index: NodeIndex = NodeIndex::new(node);
         // Copy nodes from other to self
         let mut out_map: HashMap<usize, usize> =
             HashMap::with_capacity(other.node_count());
@@ -2266,6 +2267,7 @@ impl PyDiGraph {
         // If no nodes are copied bail here since there is nothing left
         // to do.
         if out_map.is_empty() {
+            self.graph.remove_node(node_index);
             return Ok(NodeMap { node_map: out_map });
         }
         // Copy edges from other to self
@@ -2280,7 +2282,6 @@ impl PyDiGraph {
             )?;
         }
         // Add edges to/from node to nodes in other
-        let node_index: NodeIndex = NodeIndex::new(node);
         let in_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
             .graph
             .edges_directed(node_index, petgraph::Direction::Incoming)
