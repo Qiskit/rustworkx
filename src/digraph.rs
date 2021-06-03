@@ -2213,10 +2213,18 @@ impl PyDiGraph {
     ///     callable is the node index of the node in ``other`` that an edge should
     ///     be to/from. If None is returned, that edge will be skipped and not
     ///     be copied.
-    /// :param callable node_filter: An callable object that will receive a node's
-    ///     payload object from ``other`` and return ``True`` whether to include it
-    ///     in the graph
-    /// :param callable edge_weight_map
+    /// :param callable node_filter: An optional callable object that when used
+    ///     will receive a node's payload object from ``other`` and return
+    ///     ``True`` if that node is to be included in the graph or not.
+    /// :param callable edge_weight_map: An optional callable object that when
+    ///     used will receive an edge's weight/data payload from ``other`` and
+    ///     will return an object to use as the weight for a newly created edge
+    ///     after the edge is mapped from ``other``. If not specified the weight
+    ///     from the edge in ``other`` will be copied by reference and used.
+    ///
+    /// :returns: A mapping of node indices in ``other`` to the equivalent node
+    ///     in this graph.
+    /// :rtype: NodeMap
     #[text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None)"]
     fn substitute_node_with_subgraph(
         &mut self,
