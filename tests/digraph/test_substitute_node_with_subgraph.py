@@ -133,6 +133,19 @@ class TestSubstitute(unittest.TestCase):
                 0, in_graph, lambda *args: 42
             )
 
+    def test_invalid_target_both_directions(self):
+        graph = retworkx.generators.directed_star_graph(4, inward=True)
+        in_graph = retworkx.generators.directed_grid_graph(5, 5)
+        with self.assertRaises(IndexError):
+            self.graph.substitute_node_with_subgraph(
+                0, in_graph, lambda *args: 42
+            )
+        graph = retworkx.generators.directed_star_graph(4, inward=False)
+        with self.assertRaises(IndexError):
+            self.graph.substitute_node_with_subgraph(
+                0, in_graph, lambda *args: 42
+            )
+
     def test_invalid_node_id(self):
         in_graph = retworkx.generators.directed_grid_graph(5, 5)
         with self.assertRaises(IndexError):
