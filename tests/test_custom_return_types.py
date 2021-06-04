@@ -1155,3 +1155,162 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
     def test_not_contains(self):
         res = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
         self.assertNotIn(2, res)
+
+
+class TestNodeMap(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        self.dag.add_node("a")
+        self.in_dag = retworkx.generators.directed_path_graph(1)
+
+    def test__eq__match(self):
+        self.assertTrue(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            == {0: 1}
+        )
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            == {2: 1}
+        )
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            == {0: 2}
+        )
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            == {0: 1, 1: 2}
+        )
+
+    def test_eq__same_type(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        self.assertEqual(res, res)
+
+    def test__ne__match(self):
+        self.assertFalse(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            != {0: 1}
+        )
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            != {2: 2}
+        )
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            != {0: 2}
+        )
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            != {0: 1, 1: 2}
+        )
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            ) > {1: 2}
+
+    def test_deepcopy(self):
+        node_map = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        node_map_copy = copy.deepcopy(node_map)
+        self.assertEqual(node_map, node_map_copy)
+
+    def test_pickle(self):
+        node_map = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        node_map_pickle = pickle.dumps(node_map)
+        node_map_copy = pickle.loads(node_map_pickle)
+        self.assertEqual(node_map, node_map_copy)
+
+    def test_str(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        self.assertEqual("NodeMap{0: 1}", str(res))
+
+    def test_hash(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        ).keys()
+        self.assertEqual([0], list(keys))
+
+    def test_values(self):
+        values = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        ).values()
+        self.assertEqual([1], list(values))
+
+    def test_items(self):
+        items = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        ).items()
+        self.assertEqual([(0, 1)], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+        )
+        output = list(mapping_iter)
+        self.assertEqual(output, [0])
+
+    def test_contains(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        self.assertIn(0, res)
+
+    def test_not_contains(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        self.assertNotIn(2, res)
