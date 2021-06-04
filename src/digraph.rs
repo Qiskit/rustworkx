@@ -2261,6 +2261,12 @@ impl PyDiGraph {
                 }
             };
         let node_index: NodeIndex = NodeIndex::new(node);
+        if self.graph.node_weight(node_index).is_none() {
+            return Err(PyIndexError::new_err(format!(
+                "Specified node {} is not in this graph",
+                node
+            )));
+        }
         // Copy nodes from other to self
         let mut out_map: HashMap<usize, usize> =
             HashMap::with_capacity(other.node_count());
