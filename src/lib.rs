@@ -50,6 +50,7 @@ use petgraph::visit::{
 };
 use petgraph::EdgeType;
 
+use fnv::FnvHashMap;
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 use rand::distributions::{Distribution, Uniform};
@@ -898,7 +899,7 @@ fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
 ) -> PyResult<PyObject> {
-    let mut colors: HashMap<usize, usize> = HashMap::new();
+    let mut colors: FnvHashMap<usize, usize> = FnvHashMap::default();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let mut sort_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(graph.node_count());
