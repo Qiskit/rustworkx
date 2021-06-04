@@ -1239,6 +1239,13 @@ class TestNodeMap(unittest.TestCase):
                 0, self.in_dag, lambda *args: None
             ) > {1: 2}
 
+    def test__len__(self):
+        in_dag = retworkx.generators.directed_grid_graph(5, 5)
+        node_map = self.dag.substitute_node_with_subgraph(
+            0, in_dag, lambda *args: None
+        )
+        self.assertEqual(25, len(node_map))
+
     def test_deepcopy(self):
         node_map = self.dag.substitute_node_with_subgraph(
             0, self.in_dag, lambda *args: None
