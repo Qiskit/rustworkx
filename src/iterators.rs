@@ -31,22 +31,9 @@ macro_rules! last_type {
      ($a:ident, $($rest_a:ident,)+) => { last_type!($($rest_a,)+) };
  }
 
+// similar to `std::hash::Hash` trait.
 trait PyHash {
     fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()>;
-
-    fn hash_slice<H: Hasher>(
-        data: &[Self],
-        py: Python,
-        state: &mut H,
-    ) -> PyResult<()>
-    where
-        Self: Sized,
-    {
-        for piece in data {
-            piece.hash(py, state)?;
-        }
-        Ok(())
-    }
 }
 
 impl PyHash for PyObject {
@@ -57,12 +44,32 @@ impl PyHash for PyObject {
     }
 }
 
-impl PyHash for usize {
-    #[inline]
-    fn hash<H: Hasher>(&self, _: Python, state: &mut H) -> PyResult<()> {
-        state.write_usize(*self);
-        Ok(())
-    }
+// see https://doc.rust-lang.org/src/core/hash/mod.rs.html#553
+macro_rules! pyhash_impl {
+    ($(($ty:ident, $meth:ident),)*) => ($(
+        impl PyHash for $ty {
+            #[inline]
+            fn hash<H: Hasher>(&self, _: Python, state: &mut H) -> PyResult<()>{
+                state.$meth(*self);
+                Ok(())
+            }
+        }
+    )*)
+}
+
+pyhash_impl! {
+    (u8, write_u8),
+    (u16, write_u16),
+    (u32, write_u32),
+    (u64, write_u64),
+    (usize, write_usize),
+    (i8, write_i8),
+    (i16, write_i16),
+    (i32, write_i32),
+    (i64, write_i64),
+    (isize, write_isize),
+    (u128, write_u128),
+    (i128, write_i128),
 }
 
 impl PyHash for f64 {
@@ -73,6 +80,7 @@ impl PyHash for f64 {
     }
 }
 
+// see https://doc.rust-lang.org/src/core/hash/mod.rs.html#624
 macro_rules! pyhash_tuple_impls {
      ( $($name:ident)+) => (
          impl<$($name: PyHash),+> PyHash for ($($name,)+) where last_type!($($name,)+): ?Sized {
@@ -94,8 +102,10 @@ pyhash_tuple_impls! { A B C }
 impl<T: PyHash> PyHash for [T] {
     #[inline]
     fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
-        // self.len().hash(py, state);
-        PyHash::hash_slice(self, py, state)?;
+        // self.len().hash(py, state)?;
+        for elem in self {
+            elem.hash(py, state)?;
+        }
         Ok(())
     }
 }
@@ -126,6 +136,7 @@ impl<K: PyHash, V: PyHash> PyHash for HashMap<K, V> {
     }
 }
 
+// similar to `std::cmp::PartialEq` trait.
 trait PyEq<Rhs: ?Sized = Self> {
     fn eq(&self, other: &Rhs, py: Python) -> PyResult<bool>;
 }
@@ -150,6 +161,7 @@ macro_rules! pyeq_impl {
 
 pyeq_impl! {bool char usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f32 f64}
 
+// see https://doc.rust-lang.org/src/core/tuple.rs.html#7
 macro_rules! pyeq_tuple_impls {
     ($(
         $Tuple:ident {
@@ -691,7 +703,8 @@ macro_rules! py_iter_protocol_impl {
                 mut slf: PyRefMut<Self>,
             ) -> IterNextOutput<$T, &'static str> {
                 if slf.iter_pos < slf.$data.len() {
-                    let res = IterNextOutput::Yield(slf.$data[slf.iter_pos].clone());
+                    let res =
+                        IterNextOutput::Yield(slf.$data[slf.iter_pos].clone());
                     slf.iter_pos += 1;
                     res
                 } else {
@@ -812,8 +825,7 @@ custom_hash_map_iter_impl!(
     pos_items,
     usize,
     [f64; 2],
-    "
-    A class representing a mapping of node indices to 2D positions
+    "A class representing a mapping of node indices to 2D positions
 
     This class is equivalent to having a dict of the form::
 
@@ -836,8 +848,7 @@ custom_hash_map_iter_impl!(
     edge_map_items,
     usize,
     (usize, usize, PyObject),
-    "
-    A class representing a mapping of edge indices to a tuple of node indices
+    "A class representing a mapping of edge indices to a tuple of node indices
     and weight/data payload
 
     This class is equivalent to having a read only dict of the form::
@@ -1017,8 +1028,7 @@ custom_hash_map_iter_impl!(
     path_lengths_items,
     usize,
     f64,
-    "
-    A custom class for the return of path lengths to target nodes
+    "A custom class for the return of path lengths to target nodes
 
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths. It implements the Python
@@ -1077,8 +1087,7 @@ custom_hash_map_iter_impl!(
     path_lengths_items,
     usize,
     PathLengthMapping,
-    "
-    A custom class for the return of path lengths to target nodes from all nodes
+    "A custom class for the return of path lengths to target nodes from all nodes
 
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths from all nodes. It implements
@@ -1109,8 +1118,7 @@ custom_hash_map_iter_impl!(
     path_items,
     usize,
     PathMapping,
-    "
-    A custom class for the return of paths to target nodes from all nodes
+    "A custom class for the return of paths to target nodes from all nodes
 
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths from all nodes. It implements
