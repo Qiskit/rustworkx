@@ -110,12 +110,18 @@ impl<T: PyHash> PyHash for [T] {
     }
 }
 
-impl<T: PyHash, const N: usize> PyHash for [T; N] {
-    fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
-        PyHash::hash(&self[..], py, state)?;
-        Ok(())
-    }
+macro_rules! pyhash_array_impls {
+    ($($N:expr)+) =>  {$(
+        impl<T: PyHash> PyHash for [T; $N] {
+            fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
+                PyHash::hash(&self[..], py, state)?;
+                Ok(())
+            }
+        }
+    )+}
 }
+
+pyhash_array_impls! {2 3}
 
 impl<T: PyHash> PyHash for Vec<T> {
     #[inline]
@@ -215,15 +221,21 @@ where
     }
 }
 
-impl<A, B, const N: usize> PyEq<[B; N]> for [A; N]
-where
-    A: PyEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &[B; N], py: Python) -> PyResult<bool> {
-        PyEq::eq(&self[..], &other[..], py)
-    }
+macro_rules! pyeq_array_impls {
+    ($($N:expr)+) =>  {$(
+        impl<A, B> PyEq<[B; $N]> for [A; $N]
+        where
+            A: PyEq<B>,
+        {
+            #[inline]
+            fn eq(&self, other: &[B; $N], py: Python) -> PyResult<bool> {
+                PyEq::eq(&self[..], &other[..], py)
+            }
+        }
+    )+}
 }
+
+pyeq_array_impls! {2 3}
 
 impl<A, B> PyEq<Vec<B>> for Vec<A>
 where
@@ -346,11 +358,17 @@ impl<A: PyDisplay> PyDisplay for [A] {
     }
 }
 
-impl<A: PyDisplay, const N: usize> PyDisplay for [A; N] {
-    fn str(&self, py: Python) -> PyResult<String> {
-        self[..].str(py)
-    }
+macro_rules! py_display_array_impls {
+    ($($N:expr)+) =>  {$(
+        impl<A: PyDisplay> PyDisplay for [A; $N] {
+            fn str(&self, py: Python) -> PyResult<String> {
+                self[..].str(py)
+            }
+        }
+    )+}
 }
+
+py_display_array_impls! {2 3}
 
 impl<A: PyDisplay> PyDisplay for Vec<A> {
     fn str(&self, py: Python) -> PyResult<String> {
