@@ -19,7 +19,7 @@ class TestNumShortestpath(unittest.TestCase):
     def test_num_shortest_path_unweighted(self):
         graph = retworkx.PyDiGraph()
         node_a = graph.add_node(0)
-        node_b = graph.add_node('end')
+        node_b = graph.add_node("end")
         for i in range(3):
             node = graph.add_child(node_a, i, None)
             graph.add_edge(node, node_b, None)
