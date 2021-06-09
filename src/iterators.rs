@@ -2261,3 +2261,254 @@ impl PyIterProtocol for AllPairsPathMappingItems {
         }
     }
 }
+
+/// A custom class for the return of number path lengths to target nodes
+///
+/// This class is a container class for the results of functions that
+/// return a mapping of target nodes and counts. It implements the Python
+/// mapping protocol. So you can treat the return as a read-only
+/// mapping/dict. If you want to use it as an iterator you can by
+/// wrapping it in an ``iter()`` that will yield the results in
+/// order.
+///
+/// For example::
+///
+///     import retworkx
+///
+///     graph = retworkx.generators.directed_path_graph(5)
+///     edges = retworkx.num_shortest_paths_unweighted(0)
+///     # Target node access
+///     third_element = edges[2]
+///     # Use as iterator
+///     edges_iter = iter(edges)
+///     first_target = next(edges_iter)
+///     first_path = edges[first_target]
+///     second_target = next(edges_iter)
+///     second_path = edges[second_target]
+///
+#[pyclass(module = "retworkx", gc)]
+#[derive(Clone)]
+pub struct NodesCountMapping {
+    pub map: HashMap<usize, usize>,
+}
+
+#[pymethods]
+impl NodesCountMapping {
+    #[new]
+    fn new() -> NodesCountMapping {
+        NodesCountMapping {
+            map: HashMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> HashMap<usize, usize> {
+        self.map.clone()
+    }
+
+    fn __setstate__(&mut self, state: HashMap<usize, usize>) {
+        self.map = state;
+    }
+
+    fn keys(&self) -> NodesCountMappingKeys {
+        NodesCountMappingKeys {
+            map_keys: self.map.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> NodesCountMappingValues {
+        NodesCountMappingValues {
+            map_values: self.map.values().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> NodesCountMappingItems {
+        let items: Vec<(usize, usize)> =
+            self.map.iter().map(|(k, v)| (*k, *v)).collect();
+        NodesCountMappingItems {
+            map_items: items,
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for NodesCountMapping {
+    fn __richcmp__(
+        &self,
+        other: PyObject,
+        op: pyo3::basic::CompareOp,
+    ) -> PyResult<bool> {
+        let compare = |other: PyObject| -> PyResult<bool> {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let other_ref = other.as_ref(py);
+            if other_ref.len()? != self.map.len() {
+                return Ok(false);
+            }
+            for (key, value) in &self.map {
+                match other_ref.get_item(key) {
+                    Ok(other_raw) => {
+                        let other_value: usize = other_raw.extract()?;
+                        if other_value != *value {
+                            return Ok(false);
+                        }
+                    }
+                    Err(ref err)
+                        if Python::with_gil(|py| {
+                            err.is_instance::<PyKeyError>(py)
+                        }) =>
+                    {
+                        return Ok(false);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            Ok(true)
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err(
+                "Comparison not implemented",
+            )),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        let mut str_vec: Vec<String> = Vec::with_capacity(self.map.len());
+        for path in &self.map {
+            str_vec.push(format!("{}: {}", path.0, path.1,));
+        }
+        Ok(format!("NodesCountMapping{{{}}}", str_vec.join(", ")))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        for index in &self.map {
+            hasher.write_usize(*index.0);
+            hasher.write_usize(*index.1);
+        }
+        Ok(hasher.finish())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for NodesCountMapping {
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.map.len())
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.map.contains_key(&index))
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for NodesCountMapping {
+    /// Return the number of nodes in the graph
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.map.len())
+    }
+    fn __getitem__(&'p self, idx: usize) -> PyResult<usize> {
+        match self.map.get(&idx) {
+            Some(data) => Ok(*data),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+}
+
+#[pyproto]
+impl PyIterProtocol for NodesCountMapping {
+    fn __iter__(slf: PyRef<Self>) -> NodesCountMappingKeys {
+        NodesCountMappingKeys {
+            map_keys: slf.map.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+}
+
+#[pyproto]
+impl PyGCProtocol for NodesCountMapping {
+    fn __traverse__(&self, _visit: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+#[pyclass(module = "retworkx")]
+pub struct NodesCountMappingKeys {
+    pub map_keys: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for NodesCountMappingKeys {
+    fn __iter__(slf: PyRef<Self>) -> Py<NodesCountMappingKeys> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.map_keys.len() {
+            let res = IterNextOutput::Yield(slf.map_keys[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct NodesCountMappingValues {
+    pub map_values: Vec<usize>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for NodesCountMappingValues {
+    fn __iter__(slf: PyRef<Self>) -> Py<NodesCountMappingValues> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<usize, &'static str> {
+        if slf.iter_pos < slf.map_values.len() {
+            let res = IterNextOutput::Yield(slf.map_values[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}
+
+#[pyclass(module = "retworkx")]
+pub struct NodesCountMappingItems {
+    pub map_items: Vec<(usize, usize)>,
+    iter_pos: usize,
+}
+
+#[pyproto]
+impl PyIterProtocol for NodesCountMappingItems {
+    fn __iter__(slf: PyRef<Self>) -> Py<NodesCountMappingItems> {
+        slf.into()
+    }
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<(usize, usize), &'static str> {
+        if slf.iter_pos < slf.map_items.len() {
+            let res = IterNextOutput::Yield(slf.map_items[slf.iter_pos]);
+            slf.iter_pos += 1;
+            res
+        } else {
+            IterNextOutput::Return("Ended")
+        }
+    }
+}

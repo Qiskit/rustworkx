@@ -60,7 +60,8 @@ use rayon::prelude::*;
 use crate::generators::PyInit_generators;
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices,
-    PathLengthMapping, PathMapping, Pos2DMapping, WeightedEdgeList,
+    NodesCountMapping, PathLengthMapping, PathMapping, Pos2DMapping,
+    WeightedEdgeList,
 };
 
 trait NodesRemoved {
@@ -4442,6 +4443,76 @@ pub fn digraph_spiral_layout(
     layout::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
 }
 
+fn _num_shortest_paths_unweighted<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    source: usize,
+) -> HashMap<usize, usize> {
+    let mut out_map = HashMap::with_capacity(graph.node_count());
+    let node_index = NodeIndex::new(source);
+    let mut bfs = Bfs::new(&graph, node_index);
+    let mut distance: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(graph.node_count());
+    distance.insert(node_index, 0);
+    while let Some(current) = bfs.next(graph) {
+        let new_distance = distance[&current] + 1;
+        for neighbor in
+            graph.neighbors_directed(current, petgraph::Direction::Outgoing)
+        {
+            if !distance.contains_key(&neighbor)
+                || distance[&neighbor] > new_distance
+            {
+                if !distance.contains_key(&neighbor) {
+                    distance.insert(neighbor, new_distance);
+                } else {
+                    *distance.get_mut(&neighbor).unwrap() = new_distance;
+                }
+                out_map.insert(neighbor.index(), 1);
+            } else if distance[&neighbor] == new_distance {
+                *out_map.get_mut(&neighbor.index()).unwrap() += 1;
+            }
+        }
+    }
+    out_map
+}
+
+/// Get the number of unweighted shortest paths from a source node
+///
+/// :param PyDiGraph graph: The graph to find the number of shortest paths on
+/// :param int source: The source node to find the shortest paths from
+///
+/// :returns: A mapping of target node indices to the number of shortest paths
+///     from ``source`` to that node
+/// :rtype: NodesCountMapping
+#[pyfunction]
+#[text_signature = "(graph, source, /)"]
+pub fn digraph_num_shortest_paths_unweighted(
+    graph: &digraph::PyDiGraph,
+    source: usize,
+) -> NodesCountMapping {
+    NodesCountMapping {
+        map: _num_shortest_paths_unweighted(&graph.graph, source),
+    }
+}
+
+/// Get the number of unweighted shortest paths from a source node
+///
+/// :param PyDiGraph graph: The graph to find the number of shortest paths on
+/// :param int source: The source node to find the shortest paths from
+///
+/// :returns: A mapping of target node indices to the number of shortest paths
+///     from ``source`` to that node
+/// :rtype: NumPathsMapping
+#[pyfunction]
+#[text_signature = "(graph, source, /)"]
+pub fn graph_num_shortest_paths_unweighted(
+    graph: &graph::PyGraph,
+    source: usize,
+) -> NodesCountMapping {
+    NodesCountMapping {
+        map: _num_shortest_paths_unweighted(&graph.graph, source),
+    }
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -4540,6 +4611,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_spiral_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_spring_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_num_shortest_paths_unweighted))?;
+    m.add_wrapped(wrap_pyfunction!(graph_num_shortest_paths_unweighted))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
@@ -4553,6 +4626,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::Pos2DMapping>()?;
     m.add_class::<iterators::AllPairsPathLengthMapping>()?;
     m.add_class::<iterators::AllPairsPathMapping>()?;
+    m.add_class::<iterators::NodesCountMapping>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
