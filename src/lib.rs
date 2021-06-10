@@ -4453,6 +4453,7 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
     let mut distance: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(graph.node_count());
     distance.insert(node_index, 0);
+    out_map.insert(source, 1);
     while let Some(current) = bfs.next(graph) {
         let new_distance = distance[&current] + 1;
         for neighbor in
@@ -4466,12 +4467,14 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
                 } else {
                     *distance.get_mut(&neighbor).unwrap() = new_distance;
                 }
-                out_map.insert(neighbor.index(), 1);
+                out_map.insert(neighbor.index(), out_map[&current.index()]);
             } else if distance[&neighbor] == new_distance {
-                *out_map.get_mut(&neighbor.index()).unwrap() += 1;
+                *out_map.get_mut(&neighbor.index()).unwrap() +=
+                    out_map[&current.index()];
             }
         }
     }
+    out_map.remove(&source);
     out_map
 }
 
