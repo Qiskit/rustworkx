@@ -4446,11 +4446,11 @@ pub fn digraph_spiral_layout(
 fn _num_shortest_paths_unweighted<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     source: usize,
-) -> HashMap<usize, usize> {
+) -> HashMap<usize, u128> {
     let mut out_map = HashMap::with_capacity(graph.node_count());
     let node_index = NodeIndex::new(source);
     let mut bfs = Bfs::new(&graph, node_index);
-    let mut distance: HashMap<NodeIndex, usize> =
+    let mut distance: HashMap<NodeIndex, u128> =
         HashMap::with_capacity(graph.node_count());
     distance.insert(node_index, 0);
     out_map.insert(source, 1);
