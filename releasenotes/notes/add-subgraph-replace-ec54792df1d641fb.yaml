@@ -29,5 +29,6 @@ features:
       def edge_map_fn(_source, _target, _weight):
           return 0
 
-      original_graph.substitute_node_with_subgraph(2, other_graph, edge_map_fn)
+      node_mapping = original_graph.substitute_node_with_subgraph(2, other_graph, edge_map_fn)
+      print(node_mapping)
       mpl_draw(original_graph)
