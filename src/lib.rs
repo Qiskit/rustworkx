@@ -4447,35 +4447,38 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     source: usize,
 ) -> HashMap<usize, u128> {
-    let mut out_map = HashMap::with_capacity(graph.node_count());
+    let mut out_map: Vec<Option<u128>> = vec![None; graph.node_bound()];
     let node_index = NodeIndex::new(source);
     let mut bfs = Bfs::new(&graph, node_index);
-    let mut distance: HashMap<NodeIndex, u128> =
-        HashMap::with_capacity(graph.node_count());
-    distance.insert(node_index, 0);
-    out_map.insert(source, 1);
+    let mut distance: Vec<Option<u128>> = vec![None; graph.node_bound()];
+    distance[node_index.index()] = Some(0);
+    out_map[source] = Some(1);
     while let Some(current) = bfs.next(graph) {
-        let new_distance = distance[&current] + 1;
-        for neighbor in
+        let new_distance = distance[current.index()].unwrap() + 1;
+        for neighbor_index in
             graph.neighbors_directed(current, petgraph::Direction::Outgoing)
         {
-            if !distance.contains_key(&neighbor)
-                || distance[&neighbor] > new_distance
+            let neighbor: usize = neighbor_index.index();
+            if distance[neighbor].is_none()
+                || distance[neighbor] > Some(new_distance)
             {
-                if !distance.contains_key(&neighbor) {
-                    distance.insert(neighbor, new_distance);
-                } else {
-                    *distance.get_mut(&neighbor).unwrap() = new_distance;
-                }
-                out_map.insert(neighbor.index(), out_map[&current.index()]);
-            } else if distance[&neighbor] == new_distance {
-                *out_map.get_mut(&neighbor.index()).unwrap() +=
-                    out_map[&current.index()];
+                distance[neighbor] = Some(new_distance);
+                out_map[neighbor] = out_map[current.index()];
+            } else if distance[neighbor] == Some(new_distance) {
+                out_map[neighbor] = Some(
+                    out_map[neighbor].unwrap()
+                        + out_map[current.index()].unwrap(),
+                );
             }
         }
     }
-    out_map.remove(&source);
+    out_map[source] = None;
     out_map
+        .into_iter()
+        .enumerate()
+        .filter(|i| i.1.is_some())
+        .map(|x| (x.0, x.1.unwrap()))
+        .collect()
 }
 
 /// Get the number of unweighted shortest paths from a source node
