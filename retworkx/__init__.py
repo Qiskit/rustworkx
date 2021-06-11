@@ -1263,9 +1263,9 @@ def num_shortest_paths_unweighted(graph, source):
 
 @num_shortest_paths_unweighted.register(PyDiGraph)
 def _digraph_num_shortest_paths_unweighted(graph, source):
-    return digraph_num_shortest_paths(graph, source)
+    return digraph_num_shortest_paths_unweighted(graph, source)
 
 
 @num_shortest_paths_unweighted.register(PyGraph)
 def _graph_num_shortest_paths_unweighted(graph, source):
-    return graph_num_shortest_paths(graph, source)
+    return graph_num_shortest_paths_unweighted(graph, source)
