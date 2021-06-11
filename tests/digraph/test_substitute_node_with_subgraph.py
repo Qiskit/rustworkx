@@ -148,3 +148,38 @@ class TestSubstitute(unittest.TestCase):
             self.graph.substitute_node_with_subgraph(
                 16, in_graph, lambda *args: None
             )
+
+    def test_bidrectional(self):
+        graph = retworkx.generators.directed_path_graph(5, bidirectional=True)
+        in_graph = retworkx.generators.directed_star_graph(
+            5, bidirectional=True
+        )
+
+        def map_function(source, target, _weight):
+            if source != 2:
+                return 0
+            else:
+                return target
+
+        res = graph.substitute_node_with_subgraph(2, in_graph, map_function)
+        expected_node_map = {0: 5, 1: 6, 2: 7, 3: 8, 4: 9}
+        self.assertEqual(expected_node_map, res)
+        expected_edge_list = [
+            (0, 1),  # From graph
+            (1, 0),  # From graph
+            (3, 4),  # From graph
+            (4, 3),  # From graph
+            (6, 5),  # From in_graph
+            (5, 6),  # From in_graph
+            (7, 5),  # From in_graph
+            (5, 7),  # From in_graph
+            (8, 5),  # From in_graph
+            (5, 8),  # From in_graph
+            (9, 5),  # From in_graph
+            (5, 9),  # From in_graph
+            (3, 5),  # output of res[map_function(3, 2, None)] -> 5
+            (1, 5),  # output of res[map_function(1, 2, None)] -> 5
+            (8, 3),  # output of res[map_function(2, 3, None)] -> 8
+            (6, 1),  # output of res[map_function(2, 1, None)] -> 6
+        ]
+        self.assertEqual(expected_edge_list, graph.edge_list())
