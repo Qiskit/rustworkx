@@ -4487,7 +4487,8 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
 /// :param int source: The source node to find the shortest paths from
 ///
 /// :returns: A mapping of target node indices to the number of shortest paths
-///     from ``source`` to that node
+///     from ``source`` to that node. If there is no path from ``source`` to
+///     a node in the graph that node will not be preset in the output mapping.
 /// :rtype: NodesCountMapping
 #[pyfunction]
 #[text_signature = "(graph, source, /)"]
@@ -4506,7 +4507,8 @@ pub fn digraph_num_shortest_paths_unweighted(
 /// :param int source: The source node to find the shortest paths from
 ///
 /// :returns: A mapping of target node indices to the number of shortest paths
-///     from ``source`` to that node
+///     from ``source`` to that node. If there is no path from ``source`` to
+///     a node in the graph that node will not be preset in the output mapping.
 /// :rtype: NumPathsMapping
 #[pyfunction]
 #[text_signature = "(graph, source, /)"]

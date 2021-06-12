@@ -1255,7 +1255,8 @@ def num_shortest_paths_unweighted(graph, source):
     :param int source: The source node to find the shortest paths from
 
     :returns: A mapping of target node indices to the number of shortest paths
-        from ``source`` to that node
+        from ``source`` to that node. If there is no path from ``source`` to
+        a node in the graph that node will not be preset in the output mapping.
     :rtype: NodesCountMapping
     """
     raise TypeError("Invalid input type %s for graph" % type(graph))
