@@ -1076,68 +1076,96 @@ fn graph_k_shortest_path_lengths(
 /// :rtype: dict
 #[pyfunction]
 #[text_signature = "(dag, /)"]
-fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
-    let mut dist: HashMap<(usize, usize), usize> =
-        HashMap::with_capacity(dag.node_count());
-    for node in dag.graph.node_indices() {
-        // Distance from a node to itself is zero
-        dist.insert((node.index(), node.index()), 0);
+fn digraph_floyd_warshall(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<AllPairsPathLengthMapping> {
+    if graph.node_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: HashMap::new(),
+        });
+    } else if graph.graph.edge_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: graph
+                .graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathLengthMapping {
+                            path_lengths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
     }
-    for edge in dag.graph.edge_indices() {
-        // Distance between nodes that share an edge is 1
-        let source_target = dag.graph.edge_endpoints(edge).unwrap();
-        let u = source_target.0.index();
-        let v = source_target.1.index();
-        // Update dist only if the key hasn't been set to 0 already
-        // (i.e. in case edge is a self edge). Assumes edge weight = 1.
-        dist.entry((u, v)).or_insert(1);
-    }
-    // The shortest distance between any pair of nodes u, v is the min of the
-    // distance tracked so far from u->v and the distance from u to v thorough
-    // another node w, for any w.
-    for w in dag.graph.node_indices() {
-        for u in dag.graph.node_indices() {
-            for v in dag.graph.node_indices() {
-                let u_v_dist = match dist.get(&(u.index(), v.index())) {
-                    Some(u_v_dist) => *u_v_dist,
-                    None => std::usize::MAX,
-                };
-                let u_w_dist = match dist.get(&(u.index(), w.index())) {
-                    Some(u_w_dist) => *u_w_dist,
-                    None => std::usize::MAX,
-                };
-                let w_v_dist = match dist.get(&(w.index(), v.index())) {
-                    Some(w_v_dist) => *w_v_dist,
-                    None => std::usize::MAX,
-                };
-                if u_w_dist == std::usize::MAX || w_v_dist == std::usize::MAX {
-                    // Avoid overflow!
-                    continue;
-                }
-                if u_v_dist > u_w_dist + w_v_dist {
-                    dist.insert((u.index(), v.index()), u_w_dist + w_v_dist);
-                }
-            }
+
+    let n = graph.node_bound();
+
+    // Allocate empty matrix
+    let mut mat: Vec<HashMap<usize, f64>> = vec![HashMap::new(); n];
+
+    // Build adjacency matrix
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight =
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
+        if let Some(row_i) = mat.get_mut(i) {
+            row_i
+                .entry(j)
+                .and_modify(|e| {
+                    if edge_weight < *e {
+                        *e = edge_weight;
+                    }
+                })
+                .or_insert(edge_weight);
         }
     }
 
-    // Some re-formatting for Python: Dict[int, Dict[int, int]]
-    let out_dict = PyDict::new(py);
-    for (nodes, distance) in dist {
-        let u_index = nodes.0;
-        let v_index = nodes.1;
-        if out_dict.contains(u_index)? {
-            let u_dict =
-                out_dict.get_item(u_index).unwrap().downcast::<PyDict>()?;
-            u_dict.set_item(v_index, distance)?;
-            out_dict.set_item(u_index, u_dict)?;
-        } else {
-            let u_dict = PyDict::new(py);
-            u_dict.set_item(v_index, distance)?;
-            out_dict.set_item(u_index, u_dict)?;
+    // Floyd-Warshall
+    for k in 0..n {
+        let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+        mat.iter_mut().for_each(|row_i| {
+            if let Some(m_ik) = row_i.get(&k).cloned() {
+                for (j, m_kj) in row_k.iter() {
+                    row_i
+                        .entry(*j)
+                        .and_modify(|m_ij| {
+                            if (m_ik + *m_kj) < *m_ij {
+                                *m_ij = m_ik + *m_kj;
+                            }
+                        })
+                        .or_insert(m_ik + *m_kj);
+                }
+            }
+        })
+    }
+
+    // Remove references of self-loops i -> i
+    for i in 0 .. n {
+        if let Some(row_i) = mat.get_mut(i) {
+            row_i.remove(&i);
         }
     }
-    Ok(out_dict.into())
+
+    // Convert to return format
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+
+    let out_map: HashMap<usize, PathLengthMapping> = node_indices
+        .into_iter()
+        .map(|i| {
+            let out_map = PathLengthMapping {
+                path_lengths: mat[i.index()].iter().map(|(k,v)| (k.clone(), v.clone())).collect()
+            };
+            (i.index(), out_map)
+        })
+        .collect();
+    Ok(AllPairsPathLengthMapping {
+        path_lengths: out_map,
+    })
+
 }
 
 fn get_edge_iter_with_weights<G>(
@@ -4483,7 +4511,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
-    m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(collect_runs))?;
