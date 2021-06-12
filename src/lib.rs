@@ -1079,6 +1079,13 @@ fn digraph_floyd_warshall(
     // Allocate empty matrix
     let mut mat: Vec<HashMap<usize, f64>> = vec![HashMap::new(); n];
 
+    // Set diagonal to 0
+    for i in 0 .. n {
+        if let Some(row_i) = mat.get_mut(i) {
+            row_i.entry(i).or_insert(0.0);
+        }
+    }
+
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
@@ -1112,13 +1119,6 @@ fn digraph_floyd_warshall(
                 }
             }
         })
-    }
-
-    // Remove references of self-loops i -> i
-    for i in 0 .. n {
-        if let Some(row_i) = mat.get_mut(i) {
-            row_i.remove(&i);
-        }
     }
 
     // Convert to return format
@@ -1174,6 +1174,13 @@ fn graph_floyd_warshall(
     // Allocate empty matrix
     let mut mat: Vec<HashMap<usize, f64>> = vec![HashMap::new(); n];
 
+    // Set diagonal to 0
+    for i in 0 .. n {
+        if let Some(row_i) = mat.get_mut(i) {
+            row_i.entry(i).or_insert(0.0);
+        }
+    }
+
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
@@ -1218,13 +1225,6 @@ fn graph_floyd_warshall(
                 }
             }
         })
-    }
-
-    // Remove references of self-loops i -> i
-    for i in 0 .. n {
-        if let Some(row_i) = mat.get_mut(i) {
-            row_i.remove(&i);
-        }
     }
 
     // Convert to return format

@@ -73,7 +73,9 @@ class TestFloydWarshall(unittest.TestCase):
             13: {13: 0},
             14: {14: 0},
         }
-        self.assertDictEqual(result, expected)
+
+        converted_result = {k: dict(v) for k, v in result.items()}
+        self.assertDictEqual(converted_result, expected)
 
     def test_directed_floyd_warshall_numpy_cycle_as_undirected(self):
         graph = retworkx.PyDiGraph()
