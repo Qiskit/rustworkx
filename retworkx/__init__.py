@@ -235,6 +235,38 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
         graph, from_, to, min_depth=min_depth, cutoff=cutoff
     )
 
+@functools.singledispatch
+def floyd_warshall(
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+):
+    """Find all-pairs shortest path lengths using Floyd's algorithm
+    TODO
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@floyd_warshall.register(PyDiGraph)
+def _digraph_floyd_warshall(
+    graph, weight_fn=None, default_weight=1.0,
+):
+    return digraph_floyd_warshall(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+    )
+
+
+@floyd_warshall.register(PyGraph)
+def _graph_floyd_warshall(
+    graph, weight_fn=None, default_weight=1.0,
+):
+    return graph_floyd_warshall(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+    )
 
 @functools.singledispatch
 def floyd_warshall_numpy(

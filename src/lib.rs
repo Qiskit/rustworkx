@@ -1043,37 +1043,8 @@ fn graph_k_shortest_path_lengths(
             .collect(),
     })
 }
-/// Return the shortest path lengths between ever pair of nodes that has a
-/// path connecting them
-///
-/// The runtime is :math:`O(|N|^3 + |E|)` where :math:`|N|` is the number
-/// of nodes and :math:`|E|` is the number of edges.
-///
-/// This is done with the Floyd Warshall algorithm:
-///      
-/// 1. Process all edges by setting the distance from the parent to
-///    the child equal to the edge weight.
-/// 2. Iterate through every pair of nodes (source, target) and an additional
-///    itermediary node (w). If the distance from source :math:`\rightarrow` w
-///    :math:`\rightarrow` target is less than the distance from source
-///    :math:`\rightarrow` target, update the source :math:`\rightarrow` target
-///    distance (to pass through w).
-///
-/// The return format is ``{Source Node: {Target Node: Distance}}``.
-///
-/// .. note::
-///
-///     Paths that do not exist are simply not found in the return dictionary,
-///     rather than setting the distance to infinity, or -1.
-///
-/// .. note::
-///
-///     Edge weights are restricted to 1 in the current implementation.
-///
-/// :param PyDigraph graph: The DiGraph to get all shortest paths from
-///
-/// :returns: A dictionary of shortest paths
-/// :rtype: dict
+
+/// TODO
 #[pyfunction]
 #[text_signature = "(dag, /)"]
 fn digraph_floyd_warshall(
@@ -1168,19 +1139,7 @@ fn digraph_floyd_warshall(
 
 }
 
-/// .. note::
-///
-///     Paths that do not exist are simply not found in the return dictionary,
-///     rather than setting the distance to infinity, or -1.
-///
-/// .. note::
-///
-///     Edge weights are restricted to 1 in the current implementation.
-///
-/// :param PyDigraph graph: The DiGraph to get all shortest paths from
-///
-/// :returns: A dictionary of shortest paths
-/// :rtype: dict
+/// TODO
 #[pyfunction]
 #[text_signature = "(dag, /)"]
 fn graph_floyd_warshall(
