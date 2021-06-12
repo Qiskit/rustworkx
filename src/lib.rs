@@ -4446,9 +4446,15 @@ pub fn digraph_spiral_layout(
 fn _num_shortest_paths_unweighted<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     source: usize,
-) -> HashMap<usize, u128> {
+) -> PyResult<HashMap<usize, u128>> {
     let mut out_map: Vec<Option<u128>> = vec![None; graph.node_bound()];
     let node_index = NodeIndex::new(source);
+    if graph.node_weight(node_index).is_none() {
+        return Err(PyIndexError::new_err(format!(
+            "No node found for index {}",
+            source
+        )));
+    }
     let mut bfs = Bfs::new(&graph, node_index);
     let mut distance: Vec<Option<u128>> = vec![None; graph.node_bound()];
     distance[node_index.index()] = Some(0);
@@ -4473,12 +4479,12 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
         }
     }
     out_map[source] = None;
-    out_map
+    Ok(out_map
         .into_iter()
         .enumerate()
         .filter(|i| i.1.is_some())
         .map(|x| (x.0, x.1.unwrap()))
-        .collect()
+        .collect())
 }
 
 /// Get the number of unweighted shortest paths from a source node
@@ -4495,10 +4501,10 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
 pub fn digraph_num_shortest_paths_unweighted(
     graph: &digraph::PyDiGraph,
     source: usize,
-) -> NodesCountMapping {
-    NodesCountMapping {
-        map: _num_shortest_paths_unweighted(&graph.graph, source),
-    }
+) -> PyResult<NodesCountMapping> {
+    Ok(NodesCountMapping {
+        map: _num_shortest_paths_unweighted(&graph.graph, source)?,
+    })
 }
 
 /// Get the number of unweighted shortest paths from a source node
@@ -4515,10 +4521,10 @@ pub fn digraph_num_shortest_paths_unweighted(
 pub fn graph_num_shortest_paths_unweighted(
     graph: &graph::PyGraph,
     source: usize,
-) -> NodesCountMapping {
-    NodesCountMapping {
-        map: _num_shortest_paths_unweighted(&graph.graph, source),
-    }
+) -> PyResult<NodesCountMapping> {
+    Ok(NodesCountMapping {
+        map: _num_shortest_paths_unweighted(&graph.graph, source)?,
+    })
 }
 
 // The provided node is invalid.
