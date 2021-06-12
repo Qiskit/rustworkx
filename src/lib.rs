@@ -1168,6 +1168,124 @@ fn digraph_floyd_warshall(
 
 }
 
+/// .. note::
+///
+///     Paths that do not exist are simply not found in the return dictionary,
+///     rather than setting the distance to infinity, or -1.
+///
+/// .. note::
+///
+///     Edge weights are restricted to 1 in the current implementation.
+///
+/// :param PyDigraph graph: The DiGraph to get all shortest paths from
+///
+/// :returns: A dictionary of shortest paths
+/// :rtype: dict
+#[pyfunction]
+#[text_signature = "(dag, /)"]
+fn graph_floyd_warshall(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<AllPairsPathLengthMapping> {
+    if graph.node_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: HashMap::new(),
+        });
+    } else if graph.graph.edge_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: graph
+                .graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathLengthMapping {
+                            path_lengths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
+    }
+
+    let n = graph.node_bound();
+
+    // Allocate empty matrix
+    let mut mat: Vec<HashMap<usize, f64>> = vec![HashMap::new(); n];
+
+    // Build adjacency matrix
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight =
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
+        if let Some(row_i) = mat.get_mut(i) {
+            row_i
+                .entry(j)
+                .and_modify(|e| {
+                    if edge_weight < *e {
+                        *e = edge_weight;
+                    }
+                })
+                .or_insert(edge_weight);
+        }
+
+        if let Some(row_j) = mat.get_mut(j) {
+            row_j
+                .entry(i)
+                .and_modify(|e| {
+                    if edge_weight < *e {
+                        *e = edge_weight;
+                    }
+                })
+                .or_insert(edge_weight);
+        }
+    }
+
+    // Floyd-Warshall
+    for k in 0..n {
+        let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+        mat.iter_mut().for_each(|row_i| {
+            if let Some(m_ik) = row_i.get(&k).cloned() {
+                for (j, m_kj) in row_k.iter() {
+                    row_i
+                        .entry(*j)
+                        .and_modify(|m_ij| {
+                            if (m_ik + *m_kj) < *m_ij {
+                                *m_ij = m_ik + *m_kj;
+                            }
+                        })
+                        .or_insert(m_ik + *m_kj);
+                }
+            }
+        })
+    }
+
+    // Remove references of self-loops i -> i
+    for i in 0 .. n {
+        if let Some(row_i) = mat.get_mut(i) {
+            row_i.remove(&i);
+        }
+    }
+
+    // Convert to return format
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+
+    let out_map: HashMap<usize, PathLengthMapping> = node_indices
+        .into_iter()
+        .map(|i| {
+            let out_map = PathLengthMapping {
+                path_lengths: mat[i.index()].iter().map(|(k,v)| (k.clone(), v.clone())).collect()
+            };
+            (i.index(), out_map)
+        })
+        .collect();
+    Ok(AllPairsPathLengthMapping {
+        path_lengths: out_map,
+    })
+
+}
+
 fn get_edge_iter_with_weights<G>(
     graph: G,
 ) -> impl Iterator<Item = (usize, usize, PyObject)>
@@ -4511,6 +4629,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
+    m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
