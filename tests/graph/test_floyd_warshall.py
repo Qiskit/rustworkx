@@ -20,6 +20,52 @@ import retworkx
 class TestFloydWarshall(unittest.TestCase):
     parallel_threshold = 300
 
+    def test_vs_dijkstra_all_pairs(self):
+        graph = retworkx.PyGraph()
+        a = graph.add_node("A")
+        b = graph.add_node("B")
+        c = graph.add_node("C")
+        d = graph.add_node("D")
+        e = graph.add_node("E")
+        f = graph.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        graph.add_edges_from(edge_list)
+
+        dijkstra_lengths = retworkx.graph_all_pairs_dijkstra_path_lengths(
+            graph, float
+        )
+
+        expected = {k: {**v, k: 0.0} for k, v in dijkstra_lengths.items()}
+
+        result = retworkx.graph_floyd_warshall(
+            graph, float, parallel_threshold=self.parallel_threshold
+        )
+
+        self.assertEqual(result, expected)
+
+    def test_floyd_warshall_empty_graph(self):
+        graph = retworkx.PyGraph()
+        self.assertEqual({}, retworkx.graph_floyd_warshall(graph, float))
+
+    def test_floyd_warshall_graph_no_edges(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(1000)))
+        expected = {x: {} for x in range(1000)}
+        self.assertEqual(
+            expected,
+            retworkx.graph_floyd_warshall(graph, float),
+        )
+
     def test_floyd_warshall_numpy_three_edges(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(6)))

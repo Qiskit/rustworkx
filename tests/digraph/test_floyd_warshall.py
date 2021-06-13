@@ -74,8 +74,76 @@ class TestFloydWarshall(unittest.TestCase):
             14: {14: 0},
         }
 
-        converted_result = {k: dict(v) for k, v in result.items()}
-        self.assertDictEqual(converted_result, expected)
+        self.assertEqual(result, expected)
+
+    def test_vs_dijkstra_all_pairs(self):
+        graph = retworkx.PyDiGraph()
+        a = graph.add_node("A")
+        b = graph.add_node("B")
+        c = graph.add_node("C")
+        d = graph.add_node("D")
+        e = graph.add_node("E")
+        f = graph.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        graph.add_edges_from(edge_list)
+
+        dijkstra_lengths = retworkx.digraph_all_pairs_dijkstra_path_lengths(
+            graph, float
+        )
+
+        expected = {k: {**v, k: 0.0} for k, v in dijkstra_lengths.items()}
+
+        result = retworkx.digraph_floyd_warshall(
+            graph, float, parallel_threshold=self.parallel_threshold
+        )
+
+        self.assertEqual(result, expected)
+
+    def test_floyd_warshall_empty_graph(self):
+        graph = retworkx.PyDiGraph()
+        self.assertEqual({}, retworkx.digraph_floyd_warshall(graph, float))
+
+    def test_floyd_warshall_graph_no_edges(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(1000)))
+        expected = {x: {} for x in range(1000)}
+        self.assertEqual(
+            expected,
+            retworkx.digraph_floyd_warshall(graph, float),
+        )
+
+    def test_directed_floyd_warshall_cycle_as_undirected(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(7)))
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
+        dist = retworkx.digraph_floyd_warshall(
+            graph,
+            lambda _: 1,
+            as_undirected=True,
+            parallel_threshold=self.parallel_threshold,
+        )
+        expected = {
+            0: {0: 0.0, 1: 1.0, 2: 2.0, 3: 3.0, 4: 3.0, 5: 2.0, 6: 1.0},
+            1: {0: 1.0, 1: 0.0, 2: 1.0, 3: 2.0, 4: 3.0, 5: 3.0, 6: 2.0},
+            2: {0: 2.0, 1: 1.0, 2: 0.0, 3: 1.0, 4: 2.0, 5: 3.0, 6: 3.0},
+            3: {0: 3.0, 1: 2.0, 2: 1.0, 3: 0.0, 4: 1.0, 5: 2.0, 6: 3.0},
+            4: {0: 3.0, 1: 3.0, 2: 2.0, 3: 1.0, 4: 0.0, 5: 1.0, 6: 2.0},
+            5: {0: 2.0, 1: 3.0, 2: 3.0, 3: 2.0, 4: 1.0, 5: 0.0, 6: 1.0},
+            6: {0: 1.0, 1: 2.0, 2: 3.0, 3: 3.0, 4: 2.0, 5: 1.0, 6: 0.0},
+        }
+        self.assertEqual(dist, expected)
 
     def test_directed_floyd_warshall_numpy_cycle_as_undirected(self):
         graph = retworkx.PyDiGraph()
