@@ -53,6 +53,40 @@ class TestFloydWarshall(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_vs_dijkstra_all_pairs_with_node_removal(self):
+        graph = retworkx.PyGraph()
+        a = graph.add_node("A")
+        b = graph.add_node("B")
+        c = graph.add_node("C")
+        d = graph.add_node("D")
+        e = graph.add_node("E")
+        f = graph.add_node("F")
+        edge_list = [
+            (a, b, 7),
+            (c, a, 9),
+            (a, d, 14),
+            (b, c, 10),
+            (d, c, 2),
+            (d, e, 9),
+            (b, f, 15),
+            (c, f, 11),
+            (e, f, 6),
+        ]
+        graph.add_edges_from(edge_list)
+        graph.remove_node(d)
+
+        dijkstra_lengths = retworkx.graph_all_pairs_dijkstra_path_lengths(
+            graph, float
+        )
+
+        expected = {k: {**v, k: 0.0} for k, v in dijkstra_lengths.items()}
+
+        result = retworkx.graph_floyd_warshall(
+            graph, float, parallel_threshold=self.parallel_threshold
+        )
+
+        result = {k: {**v} for k, v in result.items()}
+
     def test_floyd_warshall_empty_graph(self):
         graph = retworkx.PyGraph()
         self.assertEqual({}, retworkx.graph_floyd_warshall(graph, float))

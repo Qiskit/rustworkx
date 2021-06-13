@@ -1093,7 +1093,11 @@ macro_rules! _floyd_warshall {
         }
 
         // Build adjacency matrix
-        for (i, j, weight) in get_edge_iter_with_weights($graph) {
+        for edge in $graph.edge_references() {
+            let i = $graph.to_index(edge.source());
+            let j = $graph.to_index(edge.target());
+            let weight = edge.weight().clone();
+
             let edge_weight =
                 weight_callable($py, &$weight_fn, &weight, $default_weight)?;
             if let Some(row_i) = mat.get_mut(i) {
