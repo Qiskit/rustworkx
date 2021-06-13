@@ -241,6 +241,7 @@ def floyd_warshall(
     graph,
     weight_fn=None,
     default_weight=1.0,
+    parallel_threshold=300,
 ):
     """Find all-pairs shortest path lengths using Floyd's algorithm
     TODO
@@ -253,11 +254,13 @@ def _digraph_floyd_warshall(
     graph,
     weight_fn=None,
     default_weight=1.0,
+    parallel_threshold=300,
 ):
     return digraph_floyd_warshall(
         graph,
         weight_fn=weight_fn,
         default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 
@@ -266,11 +269,13 @@ def _graph_floyd_warshall(
     graph,
     weight_fn=None,
     default_weight=1.0,
+    parallel_threshold=300,
 ):
     return graph_floyd_warshall(
         graph,
         weight_fn=weight_fn,
         default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 

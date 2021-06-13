@@ -1046,12 +1046,13 @@ fn graph_k_shortest_path_lengths(
 
 /// TODO
 #[pyfunction]
-#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
 fn digraph_floyd_warshall(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
@@ -1102,23 +1103,45 @@ fn digraph_floyd_warshall(
         }
     }
 
-    // Floyd-Warshall
-    for k in 0..n {
-        let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
-        mat.iter_mut().for_each(|row_i| {
-            if let Some(m_ik) = row_i.get(&k).cloned() {
-                for (j, m_kj) in row_k.iter() {
-                    row_i
-                        .entry(*j)
-                        .and_modify(|m_ij| {
-                            if (m_ik + *m_kj) < *m_ij {
-                                *m_ij = m_ik + *m_kj;
-                            }
-                        })
-                        .or_insert(m_ik + *m_kj);
+    // Perform the Floyd-Warshall algorithm.
+    // In each loop, this finds the shortest path from point i
+    // to point j using intermediate nodes 0..k
+    if n < parallel_threshold {
+        for k in 0..n {
+            let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+            mat.iter_mut().for_each(|row_i| {
+                if let Some(m_ik) = row_i.get(&k).cloned() {
+                    for (j, m_kj) in row_k.iter() {
+                        row_i
+                            .entry(*j)
+                            .and_modify(|m_ij| {
+                                if (m_ik + *m_kj) < *m_ij {
+                                    *m_ij = m_ik + *m_kj;
+                                }
+                            })
+                            .or_insert(m_ik + *m_kj);
+                    }
                 }
-            }
-        })
+            })
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+            mat.par_iter_mut().for_each(|row_i| {
+                if let Some(m_ik) = row_i.get(&k).cloned() {
+                    for (j, m_kj) in row_k.iter() {
+                        row_i
+                            .entry(*j)
+                            .and_modify(|m_ij| {
+                                if (m_ik + *m_kj) < *m_ij {
+                                    *m_ij = m_ik + *m_kj;
+                                }
+                            })
+                            .or_insert(m_ik + *m_kj);
+                    }
+                }
+            })
+        }
     }
 
     // Convert to return format
@@ -1143,12 +1166,13 @@ fn digraph_floyd_warshall(
 
 /// TODO
 #[pyfunction]
-#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
 fn graph_floyd_warshall(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
@@ -1210,23 +1234,45 @@ fn graph_floyd_warshall(
         }
     }
 
-    // Floyd-Warshall
-    for k in 0..n {
-        let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
-        mat.iter_mut().for_each(|row_i| {
-            if let Some(m_ik) = row_i.get(&k).cloned() {
-                for (j, m_kj) in row_k.iter() {
-                    row_i
-                        .entry(*j)
-                        .and_modify(|m_ij| {
-                            if (m_ik + *m_kj) < *m_ij {
-                                *m_ij = m_ik + *m_kj;
-                            }
-                        })
-                        .or_insert(m_ik + *m_kj);
+    // Perform the Floyd-Warshall algorithm.
+    // In each loop, this finds the shortest path from point i
+    // to point j using intermediate nodes 0..k
+    if n < parallel_threshold {
+        for k in 0..n {
+            let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+            mat.iter_mut().for_each(|row_i| {
+                if let Some(m_ik) = row_i.get(&k).cloned() {
+                    for (j, m_kj) in row_k.iter() {
+                        row_i
+                            .entry(*j)
+                            .and_modify(|m_ij| {
+                                if (m_ik + *m_kj) < *m_ij {
+                                    *m_ij = m_ik + *m_kj;
+                                }
+                            })
+                            .or_insert(m_ik + *m_kj);
+                    }
                 }
-            }
-        })
+            })
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+            mat.par_iter_mut().for_each(|row_i| {
+                if let Some(m_ik) = row_i.get(&k).cloned() {
+                    for (j, m_kj) in row_k.iter() {
+                        row_i
+                            .entry(*j)
+                            .and_modify(|m_ij| {
+                                if (m_ik + *m_kj) < *m_ij {
+                                    *m_ij = m_ik + *m_kj;
+                                }
+                            })
+                            .or_insert(m_ik + *m_kj);
+                    }
+                }
+            })
+        }
     }
 
     // Convert to return format
