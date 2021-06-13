@@ -262,11 +262,11 @@ def floyd_warshall(
         tells retworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
 
-            floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
+            floyd_warshall(graph, weight_fn: lambda x: 1)
 
         to return a weight of 1 for all edges. Also::
 
-            floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+            floyd_warshall(graph, weight_fn: lambda x: float(x))
 
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
@@ -348,11 +348,11 @@ def floyd_warshall_numpy(
         tells retworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
 
-            floyd_warshall(graph, weight_fn: lambda x: 1)
+            floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
 
         to return a weight of 1 for all edges. Also::
 
-            floyd_warshall(graph, weight_fn: lambda x: float(x))
+            floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
 
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
