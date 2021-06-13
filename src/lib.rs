@@ -1044,7 +1044,48 @@ fn graph_k_shortest_path_lengths(
     })
 }
 
-/// TODO
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
+/// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+/// :param as_undirected: If set to true each directed edge will be treated as
+///     bidirectional/undirected.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {0: 0.0, 1: 2.0, 2: 2.0},
+///             1: {1: 0.0, 2: 1.0},
+///             2: {0: 1.0, 2: 0.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
 fn digraph_floyd_warshall(
@@ -1164,7 +1205,46 @@ fn digraph_floyd_warshall(
     })
 }
 
-/// TODO
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
+/// :param PyGraph graph: The graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_floyd_warshall(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_floyd_warshall(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {0: 0.0, 1: 2.0, 2: 2.0},
+///             1: {1: 0.0, 2: 1.0},
+///             2: {0: 1.0, 2: 0.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
 #[pyfunction]
 #[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
 fn graph_floyd_warshall(
