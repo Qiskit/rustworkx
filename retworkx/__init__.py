@@ -277,10 +277,17 @@ def floyd_warshall(
         the algorithm in parallel at. It defaults to 300, but this can
         be tuned
 
-    :returns: A matrix of shortest path distances between nodes. If there is no
-        path between two nodes then the corresponding matrix entry will be
-        ``np.inf``.
-    :rtype: numpy.ndarray
+    :return: A read-only dictionary of path lengths. The keys are the source
+        node indices and the values are a dict of the target node and the
+        length of the shortest path to that node. For example::
+
+            {
+                0: {0: 0.0, 1: 2.0, 2: 2.0},
+                1: {1: 0.0, 2: 1.0},
+                2: {0: 1.0, 2: 0.0},
+            }
+
+    :rtype: AllPairsPathLengthMapping
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
@@ -356,17 +363,10 @@ def floyd_warshall_numpy(
         the algorithm in parallel at. It defaults to 300, but this can
         be tuned
 
-    :return: A read-only dictionary of path lengths. The keys are the source
-        node indices and the values are a dict of the target node and the
-        length of the shortest path to that node. For example::
-
-            {
-                0: {0: 0.0, 1: 2.0, 2: 2.0},
-                1: {1: 0.0, 2: 1.0},
-                2: {0: 1.0, 2: 0.0},
-            }
-
-    :rtype: AllPairsPathLengthMapping
+    :returns: A matrix of shortest path distances between nodes. If there is no
+        path between two nodes then the corresponding matrix entry will be
+        ``np.inf``.
+    :rtype: numpy.ndarray
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
