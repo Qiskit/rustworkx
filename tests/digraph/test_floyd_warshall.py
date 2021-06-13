@@ -108,7 +108,7 @@ class TestFloydWarshall(unittest.TestCase):
         )
 
         self.assertEqual(result, expected)
-    
+
     def test_vs_dijkstra_all_pairs_with_node_removal(self):
         graph = retworkx.PyDiGraph()
         a = graph.add_node("A")
@@ -140,8 +140,6 @@ class TestFloydWarshall(unittest.TestCase):
         result = retworkx.digraph_floyd_warshall(
             graph, float, parallel_threshold=self.parallel_threshold
         )
-
-        result = {k: {**v} for k, v in result.items()}
 
         self.assertEqual(result, expected)
 

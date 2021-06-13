@@ -85,7 +85,7 @@ class TestFloydWarshall(unittest.TestCase):
             graph, float, parallel_threshold=self.parallel_threshold
         )
 
-        result = {k: {**v} for k, v in result.items()}
+        self.assertEqual(result, expected)
 
     def test_floyd_warshall_empty_graph(self):
         graph = retworkx.PyGraph()
