@@ -1086,12 +1086,17 @@ fn graph_k_shortest_path_lengths(
 ///         }
 ///
 /// :rtype: AllPairsPathLengthMapping
-#[pyfunction]
-#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
+#[pyfunction(
+    parallel_threshold = "300",
+    as_undirected = "false",
+    default_weight = "1.0"
+)]
+#[text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"]
 fn digraph_floyd_warshall(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
+    as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
 ) -> PyResult<AllPairsPathLengthMapping> {
@@ -1141,6 +1146,18 @@ fn digraph_floyd_warshall(
                     }
                 })
                 .or_insert(edge_weight);
+        }
+        if as_undirected {
+            if let Some(row_j) = mat.get_mut(j) {
+                row_j
+                    .entry(i)
+                    .and_modify(|e| {
+                        if edge_weight < *e {
+                            *e = edge_weight;
+                        }
+                    })
+                    .or_insert(edge_weight);
+            }
         }
     }
 
@@ -1245,7 +1262,7 @@ fn digraph_floyd_warshall(
 ///         }
 ///
 /// :rtype: AllPairsPathLengthMapping
-#[pyfunction]
+#[pyfunction(parallel_threshold = "300", default_weight = "1.0")]
 #[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
 fn graph_floyd_warshall(
     py: Python,
