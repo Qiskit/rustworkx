@@ -1046,7 +1046,7 @@ fn graph_k_shortest_path_lengths(
 
 /// TODO
 #[pyfunction]
-#[text_signature = "(dag, /)"]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn digraph_floyd_warshall(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -1143,7 +1143,7 @@ fn digraph_floyd_warshall(
 
 /// TODO
 #[pyfunction]
-#[text_signature = "(dag, /)"]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0)"]
 fn graph_floyd_warshall(
     py: Python,
     graph: &graph::PyGraph,
