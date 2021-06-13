@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    :func:`~retworkx.floyd_warshall` has been completely reworked and now returns
+    a :class:`retworkx.AllPairsPathLengthMapping` instead of a Python dictionary.
+    The function now supports custom edge weights via a `weight_fn` function and
+    accepts the :class:`~retworkx.PyGraph` type as well.
+  - |
+    Added two new function, :func:`~retworkx.graph_floyd_warshall` and :func:`~retworkx.digraph_floyd_warshall`,
+    which are typed versions of the new improved :func:`~retworkx.floyd_warshall`.
