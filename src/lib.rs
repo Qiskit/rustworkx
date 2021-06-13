@@ -1080,7 +1080,7 @@ fn digraph_floyd_warshall(
     let mut mat: Vec<HashMap<usize, f64>> = vec![HashMap::new(); n];
 
     // Set diagonal to 0
-    for i in 0 .. n {
+    for i in 0..n {
         if let Some(row_i) = mat.get_mut(i) {
             row_i.entry(i).or_insert(0.0);
         }
@@ -1128,7 +1128,10 @@ fn digraph_floyd_warshall(
         .into_iter()
         .map(|i| {
             let out_map = PathLengthMapping {
-                path_lengths: mat[i.index()].iter().map(|(k,v)| (k.clone(), v.clone())).collect()
+                path_lengths: mat[i.index()]
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.clone()))
+                    .collect(),
             };
             (i.index(), out_map)
         })
@@ -1136,7 +1139,6 @@ fn digraph_floyd_warshall(
     Ok(AllPairsPathLengthMapping {
         path_lengths: out_map,
     })
-
 }
 
 /// TODO
@@ -1175,7 +1177,7 @@ fn graph_floyd_warshall(
     let mut mat: Vec<HashMap<usize, f64>> = vec![HashMap::new(); n];
 
     // Set diagonal to 0
-    for i in 0 .. n {
+    for i in 0..n {
         if let Some(row_i) = mat.get_mut(i) {
             row_i.entry(i).or_insert(0.0);
         }
@@ -1234,7 +1236,10 @@ fn graph_floyd_warshall(
         .into_iter()
         .map(|i| {
             let out_map = PathLengthMapping {
-                path_lengths: mat[i.index()].iter().map(|(k,v)| (k.clone(), v.clone())).collect()
+                path_lengths: mat[i.index()]
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.clone()))
+                    .collect(),
             };
             (i.index(), out_map)
         })
@@ -1242,7 +1247,6 @@ fn graph_floyd_warshall(
     Ok(AllPairsPathLengthMapping {
         path_lengths: out_map,
     })
-
 }
 
 fn get_edge_iter_with_weights<G>(

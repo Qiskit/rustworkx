@@ -46,7 +46,7 @@ class TestDispatchPyGraph(unittest.TestCase):
     def test_all_simple_paths(self):
         res = retworkx.all_simple_paths(self.graph, 0, 1)
         self.assertIsInstance(res, list)
-    
+
     def test_floyd_warshall(self):
         res = retworkx.floyd_warshall(self.graph)
         self.assertIsInstance(res, retworkx.AllPairsPathLengthMapping)

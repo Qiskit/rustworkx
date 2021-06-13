@@ -235,6 +235,7 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
         graph, from_, to, min_depth=min_depth, cutoff=cutoff
     )
 
+
 @functools.singledispatch
 def floyd_warshall(
     graph,
@@ -249,7 +250,9 @@ def floyd_warshall(
 
 @floyd_warshall.register(PyDiGraph)
 def _digraph_floyd_warshall(
-    graph, weight_fn=None, default_weight=1.0,
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
 ):
     return digraph_floyd_warshall(
         graph,
@@ -260,13 +263,16 @@ def _digraph_floyd_warshall(
 
 @floyd_warshall.register(PyGraph)
 def _graph_floyd_warshall(
-    graph, weight_fn=None, default_weight=1.0,
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
 ):
     return graph_floyd_warshall(
         graph,
         weight_fn=weight_fn,
         default_weight=default_weight,
     )
+
 
 @functools.singledispatch
 def floyd_warshall_numpy(
