@@ -1166,7 +1166,7 @@ fn digraph_floyd_warshall(
     // to point j using intermediate nodes 0..k
     if n < parallel_threshold {
         for k in 0..n {
-            let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+            let row_k = mat.get(k).cloned().unwrap_or_default();
             mat.iter_mut().for_each(|row_i| {
                 if let Some(m_ik) = row_i.get(&k).cloned() {
                     for (j, m_kj) in row_k.iter() {
@@ -1184,7 +1184,7 @@ fn digraph_floyd_warshall(
         }
     } else {
         for k in 0..n {
-            let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+            let row_k = mat.get(k).cloned().unwrap_or_default();
             mat.par_iter_mut().for_each(|row_i| {
                 if let Some(m_ik) = row_i.get(&k).cloned() {
                     for (j, m_kj) in row_k.iter() {
@@ -1211,7 +1211,7 @@ fn digraph_floyd_warshall(
             let out_map = PathLengthMapping {
                 path_lengths: mat[i.index()]
                     .iter()
-                    .map(|(k, v)| (k.clone(), v.clone()))
+                    .map(|(k, v)| (*k, *v))
                     .collect(),
             };
             (i.index(), out_map)
@@ -1336,7 +1336,7 @@ fn graph_floyd_warshall(
     // to point j using intermediate nodes 0..k
     if n < parallel_threshold {
         for k in 0..n {
-            let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+            let row_k = mat.get(k).cloned().unwrap_or_default();
             mat.iter_mut().for_each(|row_i| {
                 if let Some(m_ik) = row_i.get(&k).cloned() {
                     for (j, m_kj) in row_k.iter() {
@@ -1354,7 +1354,7 @@ fn graph_floyd_warshall(
         }
     } else {
         for k in 0..n {
-            let row_k = mat.get(k).cloned().unwrap_or(HashMap::new());
+            let row_k = mat.get(k).cloned().unwrap_or_default();
             mat.par_iter_mut().for_each(|row_i| {
                 if let Some(m_ik) = row_i.get(&k).cloned() {
                     for (j, m_kj) in row_k.iter() {
@@ -1381,7 +1381,7 @@ fn graph_floyd_warshall(
             let out_map = PathLengthMapping {
                 path_lengths: mat[i.index()]
                     .iter()
-                    .map(|(k, v)| (k.clone(), v.clone()))
+                    .map(|(k, v)| (*k, *v))
                     .collect(),
             };
             (i.index(), out_map)
