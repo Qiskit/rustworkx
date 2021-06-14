@@ -60,12 +60,13 @@ use petgraph::visit::{
 ///
 ///        import retworkx
 ///
-///        graph = retworkx.PyDiGraph()
+///        graph = retworkx.PyGraph()
 ///        graph.add_nodes_from(list(range(5)))
 ///        graph.add_nodes_from(list(range(2)))
 ///        graph.remove_node(2)
-///        res_manual = graph.add_parent(6, None, None)
-///        print(graph.node_indexes())
+///        print("After deletion:", graph.node_indexes())
+///        res_manual = graph.add_node(None)
+///        print("After adding a new node:", graph.node_indexes())
 ///
 /// Additionally, each node and edge contains an arbitrary Python object as a
 /// weight/data payload. You can use the index for access to the data payload
