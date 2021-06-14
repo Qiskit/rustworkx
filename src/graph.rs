@@ -55,6 +55,18 @@ use petgraph::visit::{
 /// are stable for the lifetime of the graph object and on node or edge
 /// deletions you can have holes in the list of indices for the graph.
 /// Node indices will be reused on additions after removal.
+///
+/// .. jupyter-execute::
+///   
+///        import retworkx
+///
+///        graph = retworkx.PyDiGraph()
+///        graph.add_nodes_from(list(range(5)))
+///        graph.add_nodes_from(list(range(2)))
+///        graph.remove_node(2)
+///        res_manual = graph.add_parent(6, None, None)
+///        print(graph.node_indexes())
+///
 /// Additionally, each node and edge contains an arbitrary Python object as a
 /// weight/data payload. You can use the index for access to the data payload
 /// as in the following example:
