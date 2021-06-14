@@ -61,6 +61,7 @@ use super::{
 /// (although rarely used for edges) is indexed by an integer id. These ids
 /// are stable for the lifetime of the graph object and on node or edge
 /// deletions you can have holes in the list of indices for the graph.
+/// Node indices will be reused on additions after removal.
 /// Additionally, each node and edge contains an arbitrary Python object as a
 /// weight/data payload. You can use the index for access to the data payload
 /// as in the following example:
