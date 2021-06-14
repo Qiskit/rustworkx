@@ -64,7 +64,7 @@ use super::{
 /// Node indices will be reused on additions after removal.
 ///
 /// .. jupyter-execute::
-///   
+///
 ///        import retworkx
 ///
 ///        graph = retworkx.PyDiGraph()
