@@ -295,9 +295,9 @@ dependencies = [
 
 [[package]]
 name = "numpy"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7073fae1e0b82409533a29c6f804b79783d7b2d3c07728fdc4d884eda8cd4f0"
+checksum = "a996bcd58fb29bef9debf717330cd8876c3b4adbeea4939020a5326a3afad4d9"
 dependencies = [
  "cfg-if 0.1.10",
  "libc",
