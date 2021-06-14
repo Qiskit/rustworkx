@@ -1,3 +1,5 @@
+.. _networkx:
+
 ###########################
 retworkx for networkx users
 ###########################
@@ -89,11 +91,11 @@ or more concisely::
     dist_matrix = rx.digraph_floyd_warshall_numpy(graph,
                                                   weight_fn=lambda edge: edge)
 
-The other large difference to keep in mind is that most functions in retworkx
+The other large difference to keep in mind is that many functions in retworkx
 are explicitly typed. This means that they either always return or accept
 either a :class:`~retworkx.PyDiGraph` or a :class:`~retworkx.PyGraph` but not
-both. The exception to this are the :ref:`universal-functions` which will
-dispatch to the statically typed equivalent based on the object they receive.
+both. Generally, functions prefixed with `graph_*` and `digraph_*` explicitly typed.
+Explicitly typed functions also indicate their type on the docstrings.
 This is different from networkx where everything is pretty much dynamically
 typed and you can pass a graph object to any function and it will work as
 expected (unless it isn't supported and then it will raise an exception).
@@ -284,6 +286,91 @@ Graph Modifiers
 
 (note the retworkx version links to the :class:`~retworkx.PyDiGraph` version,
 but there are also equivalent :class:`~retworkx.PyGraph` methods available)
+
+Matrix Converter Functions
+--------------------------
+
+NetworkX has several functions for going back and forth between a NetworkX
+graph and matrices in other libraries. This includes ``to_numpy_matrix()``,
+``to_numpy_array()``, ``to_numpy_recarray()``, ``to_scipy_sparse_matrix()``,
+``to_pandas_adjacency()``, and ``adjacency_matrix()`` (which is equivalent to
+``to_scipy_sparse_matrix()`` and returns a scipy csr sparse matrix of the
+adjacency matrix).
+
+However, in retworkx there is **only** a :meth:`~retworkx.adjacency_matrix`
+function (and it's per type variants :meth:`~retworkx.digraph_adjacency_matrix`
+and :meth:`~retworkx.graph_adjacency_matrix`) which will return a numpy array
+of the adjacency matrix (**not** a scipy csr sparse matrix like networkx's
+function). This function is equivalent to networkx's ``to_numpy_array()``
+function.
+
+This difference with retworkx is primarily because numpy exposes a public C
+interface which retworkx can interface with directly, while the other
+libraries and types only expose Python APIs.
+
+Visualization Functions
+-----------------------
+
+NetworkX provides a native drawer with a matplotlib drawer (the
+``networkx_drawer*`` functions) and then functions to interface with
+``pygraphviz`` and ``pydot`` to enable visualization with graphviz via those
+libraries (in addition to functions to serialize graphs in formats other
+graph visualization tools can use). NetworkX also provides several functions
+`layout functions <https://networkx.org/documentation/stable/reference/drawing.html#module-networkx.drawing.layout>`__
+for generating different layouts that can be used for visualizing the graph.
+
+
+retworkx has drawer functions with 2 visualization backends, matplotlib
+(:func:`~retworkx.visualization.mpl_draw`) and graphviz
+(:func:`~retworkx.visualization.graphviz_draw`). Unlike networkx the
+:func:`~retworkx.visualization.graphviz_draw` will handle calling graphviz and
+generate an image file. For layout functions retworkx has a similar variety of
+:ref:`layout-functions`, however it should be noted that retworkx's functions
+are strictly 2 dimensional. The also return a :class:`~retworkx.Pos2DMapping`
+custom return type which acts as read-only dictionary (which is different from
+networkx which returns a normal dictionary that can be modified).
+
+Matplotlib Drawers
+^^^^^^^^^^^^^^^^^^
+
+The retwork function :func:`~retworkx.visualization.mpl_draw` function is
+basically equivalent to the networkx function ``draw_networkx`` (it was
+actually originally forked from the networkx drawer). However, there are some
+key differences to keep in mind between the networkx and retworkx matplotlib
+drawer.
+
+``networkx.draw_networkx`` and ``retworkx.mpl_draw`` differences:
+
+.. list-table::
+   :header-rows: 1
+
+   * - networkx
+     - retworkx
+     - Notes
+   * - ``nodelist``
+     - ``node_list``
+     -
+   * - ``edgelist``
+     - ``edge_list``
+     -
+   * - ``arrowsize``
+     - ``arrow_size``
+     -
+   * - ``labels``
+     - ``labels``
+     - For ``networkx_drawer`` ``labels`` is a dict of nodes to their label,
+       while retworkx's ``mpl_drawer`` ``labels`` is a callback function
+       that will be passed a node's data payload and expected to return the
+       node's label
+   * - ``networkx.draw_networkx_edge_labels()``
+     - ``edge_labels``
+     - NetworkX's ``networkx_drawer`` doesn't have an option for edge labels
+       and instead adding labels is only exposed via a separate function
+       ``draw_networkx_edge_labels()`` which requires the ``pos`` dictionary
+       from the original visualization to be used. retworkx's ``edge_labels``
+       kwarg takes a callback function that will be passed an edge's data
+       payload and expected to return the label.
+
 
 .. _networkx_converter:
 

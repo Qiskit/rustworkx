@@ -9,7 +9,7 @@
 [![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 
   - You can see the full rendered docs at:
-    <https://retworkx.readthedocs.io/en/latest/index.html>
+    <https://qiskit.org/documentation/retworkx>
 
 retworkx is a general purpose graph library for python3 written in Rust to
 take advantage of the performance and safety that Rust provides. It was built
@@ -52,6 +52,25 @@ pip install retworkx
 
 will build retworkx for your local system from the source package and install
 it just as it would if there was a prebuilt binary available.
+
+### Optional dependencies
+
+If you're planning to use the `retworkx.visualization` module you will need to
+install optional dependencies to use the functions. The matplotlib based drawer
+function `retworkx.visualization.mpl_draw` requires that the
+[matplotlib](https://matplotlib.org/) library is installed. This can be
+installed with `pip install matplotlib` or when you're installing retworkx with
+`pip install 'retworkx[mpl]'`. If you're going to use the graphviz based drawer
+function `retworkx.visualization.graphviz_drawer` first you will need to install
+graphviz, instructions for this can be found here:
+https://graphviz.org/download/#executable-packages. Then you
+will need to install the [pydot](https://pypi.org/project/pydot/) and
+[pillow](https://python-pillow.org/) Python libraries. This can be done either
+with `pip install pydot pillow` or when installing retworkx with
+`pip install 'retworkx[graphviz]'`.
+
+If you would like to install all the optional Python dependencies when you
+install retworkx you can use `pip install 'retworkx[all]'` to do this.
 
 ## Building from source
 

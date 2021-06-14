@@ -32,7 +32,9 @@ use ndarray::prelude::*;
 use numpy::PyReadonlyArray2;
 
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{
+    EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList,
+};
 use super::{NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -49,10 +51,12 @@ use petgraph::visit::{
 ///
 /// The PyGraph class is used to create an undirected graph. It can be a
 /// multigraph (have multiple edges between nodes). Each node and edge
-/// (although rarely used for edges) is indexed by an integer id. Additionally,
-/// each node and edge contains an arbitrary Python object as a weight/data
-/// payload. You can use the index for access to the data payload as in the
-/// following example:
+/// (although rarely used for edges) is indexed by an integer id. These ids
+/// are stable for the lifetime of the graph object and on node or edge
+/// deletions you can have holes in the list of indices for the graph.
+/// Additionally, each node and edge contains an arbitrary Python object as a
+/// weight/data payload. You can use the index for access to the data payload
+/// as in the following example:
 ///
 /// .. jupyter-execute::
 ///
@@ -78,12 +82,23 @@ use petgraph::visit::{
 ///     print("Node Index: %s" % node_index)
 ///     print(graph[node_index])
 ///
+/// By default a ``PyGraph`` is a multigraph (meaning there can be parallel
+/// edges between nodes) however this can be disabled by setting the
+/// ``multigraph`` kwarg to ``False`` when calling the ``PyGraph``
+/// constructor. For example::
+///
+///     import retworkx
+///     graph = retworkx.PyGraph(multigraph=False)
+///
+/// This can only be set at ``PyGraph`` initialization and not adjusted after
+/// creation. When :attr:`~retworkx.PyGraph.multigraph` is set to ``False``
+/// if a method call is made that would add a parallel edge it will instead
+/// update the existing edge's weight/data payload.
 ///
 /// :param bool multigraph: When this is set to ``False`` the created PyGraph
-///     object will not be a multigraph (which is the default behavior). When
-///     ``False`` if parallel edges are added the weight/weight from that
+///     object will not be a multigraph. When ``False`` if a method call is
+///     made that would add parallel edges the the weight/weight from that
 ///     method call will be used to update the existing edge in place.
-///
 #[pyclass(module = "retworkx", subclass, gc)]
 #[text_signature = "(/, multigraph=True)"]
 #[derive(Clone)]
@@ -370,6 +385,18 @@ impl PyGraph {
         self.multigraph
     }
 
+    /// Return the number of nodes in the graph
+    #[text_signature = "(self)"]
+    pub fn num_nodes(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    /// Return the number of edges in the graph
+    #[text_signature = "(self)"]
+    pub fn num_edges(&self) -> usize {
+        self.graph.edge_count()
+    }
+
     /// Return a list of all edge data.
     ///
     /// :returns: A list of all the edge data objects in the graph
@@ -599,6 +626,33 @@ impl PyGraph {
                         edge.source().index(),
                         edge.target().index(),
                         edge.weight().clone_ref(py),
+                    )
+                })
+                .collect(),
+        }
+    }
+
+    /// Get an edge index map
+    ///
+    /// Returns a read only mapping from edge indices to the weighted edge
+    /// tuple. The return is a mapping of the form:
+    /// ``{0: (0, 1, "weight"), 1: (2, 3, 2.3)}``
+    ///
+    /// :returns: An edge index map
+    /// :rtype: EdgeIndexMap
+    #[text_signature = "(self)"]
+    pub fn edge_index_map(&self, py: Python) -> EdgeIndexMap {
+        EdgeIndexMap {
+            edge_map: self
+                .edge_references()
+                .map(|edge| {
+                    (
+                        edge.id().index(),
+                        (
+                            edge.source().index(),
+                            edge.target().index(),
+                            edge.weight().clone_ref(py),
+                        ),
                     )
                 })
                 .collect(),
@@ -1087,14 +1141,10 @@ impl PyGraph {
     ///
     /// .. jupyter-execute::
     ///
-    ///   import os
     ///   import tempfile
     ///
-    ///   from PIL import Image
-    ///   import pydot
-    ///
     ///   import retworkx
-    ///
+    ///   from retworkx.visualization import mpl_draw
     ///
     ///   with tempfile.NamedTemporaryFile('wt') as fd:
     ///       path = fd.name
@@ -1105,16 +1155,7 @@ impl PyGraph {
     ///       fd.write('2 3\n')
     ///       fd.flush()
     ///       graph = retworkx.PyGraph.read_edge_list(path)
-    ///
-    ///   # Draw graph
-    ///   dot = pydot.graph_from_dot_data(graph.to_dot())[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph)
     ///
     #[staticmethod]
     #[text_signature = "(path, /, comment=None, deliminator=None)"]
@@ -1342,22 +1383,14 @@ impl PyGraph {
     ///   from PIL import Image
     ///
     ///   import retworkx
+    ///   from retworkx.visualization import mpl_draw
     ///
     ///   # Build first graph and visualize:
     ///   graph = retworkx.PyGraph()
     ///   node_a, node_b, node_c = graph.add_nodes_from(['A', 'B', 'C'])
-    ///   graph.add_edges_from_no_data([(node_a, node_b), (node_b, node_c)])
-    ///   dot_str = graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   graph.add_edges_from([(node_a, node_b, 'A to B'),
+    ///                         (node_b, node_c, 'B to C')])
+    ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
     /// Then build a second one:
     ///
@@ -1366,18 +1399,8 @@ impl PyGraph {
     ///   # Build second graph and visualize:
     ///   other_graph = retworkx.PyGraph()
     ///   node_d, node_e = other_graph.add_nodes_from(['D', 'E'])
-    ///   other_graph.add_edge(node_d, node_e, None)
-    ///   dot_str = other_graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'other_graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   other_graph.add_edge(node_d, node_e, 'D to E')
+    ///   mpl_draw(other_graph, with_labels=True, labels=str, edge_labels=str)
     ///
     /// Finally compose the ``other_graph`` onto ``graph``
     ///
@@ -1385,17 +1408,7 @@ impl PyGraph {
     ///
     ///   node_map = {node_b: (node_d, 'B to D')}
     ///   graph.compose(other_graph, node_map)
-    ///   dot_str = graph.to_dot(
-    ///       lambda node: dict(
-    ///           color='black', fillcolor='lightblue', style='filled'))
-    ///   dot = pydot.graph_from_dot_data(dot_str)[0]
-    ///
-    ///   with tempfile.TemporaryDirectory() as tmpdirname:
-    ///       tmp_path = os.path.join(tmpdirname, 'combined_graph.png')
-    ///       dot.write_png(tmp_path)
-    ///       image = Image.open(tmp_path)
-    ///       os.remove(tmp_path)
-    ///   image
+    ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
     #[text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)"]
     pub fn compose(
@@ -1484,6 +1497,15 @@ impl PyGraph {
             node_removed: false,
             multigraph: self.multigraph,
         }
+    }
+
+    /// Return a shallow copy of the graph
+    ///
+    /// All node and edge weight/data payloads in the copy will have a
+    /// shared reference to the original graph.
+    #[text_signature = "(self)"]
+    pub fn copy(&self) -> PyGraph {
+        self.clone()
     }
 }
 

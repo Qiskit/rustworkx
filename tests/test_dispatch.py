@@ -82,6 +82,16 @@ class TestDispatchPyGraph(unittest.TestCase):
         res = retworkx.dfs_edges(self.graph, 0)
         self.assertIsInstance(list(res), list)
 
+    def test_all_pairs_dijkstra_shortest_paths(self):
+        res = retworkx.all_pairs_dijkstra_shortest_paths(
+            self.graph, lambda _: 1
+        )
+        self.assertIsInstance(res, retworkx.AllPairsPathMapping)
+
+    def test_all_pairs_dijkstra_path_lengthss(self):
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.graph, lambda _: 1)
+        self.assertIsInstance(res, retworkx.AllPairsPathLengthMapping)
+
     def test_is_isomorphic_nodes_incompatible_raises(self):
         with self.assertRaises(TypeError):
             if self.class_type == "PyGraph":

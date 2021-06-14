@@ -43,6 +43,10 @@ where
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated cycle graph
 /// :rtype: PyDiGraph
@@ -50,34 +54,20 @@ where
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_cycle_graph(5)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -125,7 +115,7 @@ pub fn directed_cycle_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -148,26 +138,11 @@ pub fn directed_cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.cycle_graph(5)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
@@ -227,6 +202,10 @@ pub fn cycle_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated path graph
 /// :rtype: PyDiGraph
@@ -234,34 +213,20 @@ pub fn cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_path_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -298,7 +263,7 @@ pub fn directed_path_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -321,26 +286,11 @@ pub fn directed_path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.path_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
@@ -395,6 +345,10 @@ pub fn path_graph(
 /// :param bool inward: If set ``True`` the nodes will be directed towards the
 ///     center node. This parameter is ignored if ``bidirectional`` is set to
 ///     ``True``.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated star graph
 /// :rtype: PyDiGraph
@@ -402,58 +356,29 @@ pub fn path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_star_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_star_graph(10, inward=True)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(inward = "false", bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False)"]
+#[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"]
 pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     inward: bool,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -490,7 +415,7 @@ pub fn directed_star_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -513,26 +438,11 @@ pub fn directed_star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.star_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
@@ -589,26 +499,11 @@ pub fn star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.mesh_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
@@ -658,6 +553,10 @@ pub fn mesh_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param list weights: A list of node weights. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated mesh graph
 /// :rtype: PyDiGraph
@@ -665,33 +564,19 @@ pub fn mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_mesh_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[pyfunction(multigraph = "true")]
+#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
 pub fn directed_mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -724,7 +609,7 @@ pub fn directed_mesh_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -754,26 +639,11 @@ pub fn directed_mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.grid_graph(2, 3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"]
@@ -865,6 +735,10 @@ pub fn grid_graph(
 ///     weights list, extra nodes with None weight are appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated grid graph
 /// :rtype: PyDiGraph
@@ -873,35 +747,21 @@ pub fn grid_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_grid_graph(2, 3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"]
 pub fn directed_grid_graph(
     py: Python,
     rows: Option<usize>,
     cols: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
@@ -980,7 +840,7 @@ pub fn directed_grid_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -1000,26 +860,11 @@ pub fn directed_grid_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.binomial_tree_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[text_signature = "(order, /, weights=None, multigraph=True)"]
@@ -1101,6 +946,10 @@ pub fn binomial_tree_graph(
 ///     less than 2**order extra nodes with None will be appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyDiGraph
@@ -1108,34 +957,20 @@ pub fn binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_binomial_tree_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(order, /,  weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"]
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
 
@@ -1221,7 +1056,7 @@ pub fn directed_binomial_tree_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -1244,26 +1079,11 @@ pub fn directed_binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[text_signature = "(/, rows=None, cols=None, multigraph=True)"]
@@ -1330,6 +1150,10 @@ pub fn hexagonal_lattice_graph(
 /// :param int cols: The number of rows to generate the graph with.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated directed hexagonal lattice graph with the following nodes deleted:
 ///           ```2*row + 1``` and
@@ -1341,34 +1165,20 @@ pub fn hexagonal_lattice_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, rows=None, cols=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True)"]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
     rows: usize,
     cols: usize,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
 
@@ -1431,7 +1241,7 @@ pub fn directed_hexagonal_lattice_graph(
         node_removed: true,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
