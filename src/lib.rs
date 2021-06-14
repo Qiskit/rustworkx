@@ -1452,6 +1452,141 @@ fn collect_runs(
     Ok(out_list)
 }
 
+#[pyfunction]
+#[text_signature = "(graph, special_filter_fn, filter_fn, color_fn)"]
+fn collect_bicolor_runs(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    special_filter_fn: PyObject,
+    filter_fn: PyObject,
+    color_fn: PyObject,
+) -> PyResult<Vec<Vec<PyObject>>> {
+    let mut pending_list: Vec<Vec<PyObject>> = Vec::new();
+    let mut block_id: Vec<Option<usize>> = Vec::new();
+    let mut block_list: Vec<Vec<PyObject>> = Vec::new();
+
+    let special_filter_node = |node: &PyObject| -> PyResult<bool> {
+        let res = special_filter_fn.call1(py, (node,))?;
+        res.extract(py)
+    };
+
+    let filter_node = |node: &PyObject| -> PyResult<bool> {
+        let res = filter_fn.call1(py, (node,))?;
+        res.extract(py)
+    };
+
+    let color_edge = |edge: &PyObject| -> PyResult<i32> {
+        let res = color_fn.call1(py, (edge,))?;
+        res.extract(py)
+    };
+
+    let nodes = match algo::toposort(graph, None) {
+        Ok(nodes) => nodes,
+        Err(_err) => {
+            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
+        }
+    };
+
+    // Utility for ensuring pending_list has the color index
+    macro_rules! ensure_vector_has_index {
+        ($pending_list: expr, $block_id: expr, $color: expr) => {
+            if $color >= $pending_list.len() {
+                $pending_list.resize($color + 1, Vec::new());
+                $block_id.resize($color + 1, None);
+            }
+        };
+    }
+
+    for node in nodes {
+        if special_filter_node(&graph.graph[node])? {
+            let raw_edges = graph
+                .graph
+                .edges_directed(node, petgraph::Direction::Outgoing);
+
+            // Filter all edges that yield non-negative colors from color_fn
+            let colors = raw_edges
+                .filter_map(|edge| {
+                    let edge_weight = edge.weight();
+                    let color_result = color_edge(edge_weight);
+                    if color_result.is_ok() {
+                        let color = color_result.unwrap_or_default();
+                        if color >= 0 {
+                            Some(Ok(color))
+                        } else {
+                            None
+                        }
+                    } else {
+                        Some(color_result)
+                    }
+                })
+                .collect::<PyResult<Vec<i32>>>()?;
+
+            if colors.len() <= 2 && filter_node(&graph.graph[node])? {
+                if colors.len() == 1 {
+                    let c0 = colors[0] as usize;
+                    ensure_vector_has_index!(pending_list, block_id, c0);
+                    if let Some(c0_block_id) = block_id[c0] {
+                        block_list[c0_block_id]
+                            .push(graph.graph[node].clone_ref(py));
+                    } else {
+                        pending_list[c0].push(graph.graph[node].clone_ref(py));
+                    }
+                } else {
+                    let c0 = colors[0] as usize;
+                    let c1 = colors[1] as usize;
+                    ensure_vector_has_index!(pending_list, block_id, c0);
+                    ensure_vector_has_index!(pending_list, block_id, c1);
+
+                    if block_id[c0].is_some()
+                        && block_id[c1].is_some()
+                        && block_id[c0].unwrap_or_default()
+                            == block_id[c1].unwrap_or_default()
+                    {
+                        block_list[block_id[c0].unwrap_or_default()]
+                            .push(graph.graph[node].clone_ref(py));
+                    } else {
+                        let mut new_block: Vec<PyObject> = Vec::new();
+                        if !pending_list[c0].is_empty() {
+                            new_block.extend(pending_list[c0].iter().cloned());
+                            pending_list[c0].clear();
+                        }
+                        if !pending_list[c1].is_empty() {
+                            new_block.extend(pending_list[c1].iter().cloned());
+                            pending_list[c1].clear();
+                        }
+
+                        new_block.push(graph.graph[node].clone_ref(py));
+
+                        // Create new block, assign its id to color pair
+                        block_id[c0] = Some(block_list.len());
+                        block_id[c1] = Some(block_list.len());
+                        block_list.push(new_block);
+                    }
+                }
+            } else {
+                for color in colors {
+                    let color = color as usize;
+                    ensure_vector_has_index!(pending_list, block_id, color);
+                    if let Some(color_block_id) = block_id[color] {
+                        block_list[color_block_id]
+                            .extend(pending_list[color].iter().cloned());
+                    }
+                    block_id[color] = None;
+                    pending_list[color].clear();
+                }
+            }
+        }
+    }
+
+    for pending_item in pending_list {
+        if !pending_item.is_empty() {
+            block_list.push(pending_item);
+        }
+    }
+
+    Ok(block_list)
+}
+
 /// Return a list of layers
 ///  
 /// A layer is a subgraph whose nodes are disjoint, i.e.,
@@ -4487,6 +4622,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(collect_runs))?;
+    m.add_wrapped(wrap_pyfunction!(collect_bicolor_runs))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
     m.add_wrapped(wrap_pyfunction!(graph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
