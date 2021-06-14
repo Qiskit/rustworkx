@@ -56,6 +56,7 @@ use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
+use num_bigint::{BigUint, ToBigUint};
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
@@ -4446,8 +4447,8 @@ pub fn digraph_spiral_layout(
 fn _num_shortest_paths_unweighted<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     source: usize,
-) -> PyResult<HashMap<usize, u128>> {
-    let mut out_map: Vec<Option<u128>> = vec![None; graph.node_bound()];
+) -> PyResult<HashMap<usize, BigUint>> {
+    let mut out_map: Vec<Option<BigUint>> = vec![None; graph.node_bound()];
     let node_index = NodeIndex::new(source);
     if graph.node_weight(node_index).is_none() {
         return Err(PyIndexError::new_err(format!(
@@ -4456,24 +4457,22 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
         )));
     }
     let mut bfs = Bfs::new(&graph, node_index);
-    let mut distance: Vec<Option<u128>> = vec![None; graph.node_bound()];
-    distance[node_index.index()] = Some(0);
-    out_map[source] = Some(1);
+    let mut distance: Vec<Option<BigUint>> = vec![None; graph.node_bound()];
+    distance[node_index.index()] = 0.to_biguint();
+    out_map[source] = 1.to_biguint();
     while let Some(current) = bfs.next(graph) {
-        let new_distance = distance[current.index()].unwrap() + 1;
         for neighbor_index in
             graph.neighbors_directed(current, petgraph::Direction::Outgoing)
         {
             let neighbor: usize = neighbor_index.index();
             if distance[neighbor].is_none()
-                || distance[neighbor] > Some(new_distance)
+                || distance[neighbor] > distance[current.index()]
             {
-                distance[neighbor] = Some(new_distance);
-                out_map[neighbor] = out_map[current.index()];
-            } else if distance[neighbor] == Some(new_distance) {
+                distance[neighbor] = Some(distance[current.index()].clone().unwrap().clone() + 1_u32);
+                out_map[neighbor] = out_map[current.index()].clone();
+            } else if distance[neighbor] == distance[current.index()] {
                 out_map[neighbor] = Some(
-                    out_map[neighbor].unwrap()
-                        + out_map[current.index()].unwrap(),
+                    out_map[neighbor].clone().unwrap() + out_map[current.index()].clone().unwrap()
                 );
             }
         }

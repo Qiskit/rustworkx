@@ -17,6 +17,7 @@ use std::convert::TryInto;
 use std::hash::Hasher;
 
 use hashbrown::HashMap;
+use num_bigint::BigUint;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
 use pyo3::class::{PyMappingProtocol, PyObjectProtocol, PySequenceProtocol};
@@ -2289,7 +2290,7 @@ impl PyIterProtocol for AllPairsPathMappingItems {
 #[pyclass(module = "retworkx", gc)]
 #[derive(Clone)]
 pub struct NodesCountMapping {
-    pub map: HashMap<usize, u128>,
+    pub map: HashMap<usize, BigUint>,
 }
 
 #[pymethods]
@@ -2301,11 +2302,11 @@ impl NodesCountMapping {
         }
     }
 
-    fn __getstate__(&self) -> HashMap<usize, u128> {
+    fn __getstate__(&self) -> HashMap<usize, BigUint> {
         self.map.clone()
     }
 
-    fn __setstate__(&mut self, state: HashMap<usize, u128>) {
+    fn __setstate__(&mut self, state: HashMap<usize, BigUint>) {
         self.map = state;
     }
 
@@ -2318,14 +2319,14 @@ impl NodesCountMapping {
 
     fn values(&self) -> NodesCountMappingValues {
         NodesCountMappingValues {
-            map_values: self.map.values().copied().collect(),
+            map_values: self.map.values().cloned().collect(),
             iter_pos: 0,
         }
     }
 
     fn items(&self) -> NodesCountMappingItems {
-        let items: Vec<(usize, u128)> =
-            self.map.iter().map(|(k, v)| (*k, *v)).collect();
+        let items: Vec<(usize, BigUint)> =
+            self.map.iter().map(|(k, v)| (*k, v.clone())).collect();
         NodesCountMappingItems {
             map_items: items,
             iter_pos: 0,
@@ -2350,7 +2351,7 @@ impl<'p> PyObjectProtocol<'p> for NodesCountMapping {
             for (key, value) in &self.map {
                 match other_ref.get_item(key) {
                     Ok(other_raw) => {
-                        let other_value: u128 = other_raw.extract()?;
+                        let other_value: BigUint = other_raw.extract()?;
                         if other_value != *value {
                             return Ok(false);
                         }
@@ -2391,7 +2392,7 @@ impl<'p> PyObjectProtocol<'p> for NodesCountMapping {
         let mut hasher = DefaultHasher::new();
         for index in &self.map {
             hasher.write_usize(*index.0);
-            hasher.write_u128(*index.1);
+            index.1.iter_u64_digits().for_each(|i| hasher.write_u64(i));
         }
         Ok(hasher.finish())
     }
@@ -2414,9 +2415,9 @@ impl PyMappingProtocol for NodesCountMapping {
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.map.len())
     }
-    fn __getitem__(&'p self, idx: usize) -> PyResult<u128> {
+    fn __getitem__(&'p self, idx: usize) -> PyResult<BigUint> {
         match self.map.get(&idx) {
-            Some(data) => Ok(*data),
+            Some(data) => Ok(data.clone()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
@@ -2467,7 +2468,7 @@ impl PyIterProtocol for NodesCountMappingKeys {
 
 #[pyclass(module = "retworkx")]
 pub struct NodesCountMappingValues {
-    pub map_values: Vec<u128>,
+    pub map_values: Vec<BigUint>,
     iter_pos: usize,
 }
 
@@ -2476,9 +2477,9 @@ impl PyIterProtocol for NodesCountMappingValues {
     fn __iter__(slf: PyRef<Self>) -> Py<NodesCountMappingValues> {
         slf.into()
     }
-    fn __next__(mut slf: PyRefMut<Self>) -> IterNextOutput<u128, &'static str> {
+    fn __next__(mut slf: PyRefMut<Self>) -> IterNextOutput<BigUint, &'static str> {
         if slf.iter_pos < slf.map_values.len() {
-            let res = IterNextOutput::Yield(slf.map_values[slf.iter_pos]);
+            let res = IterNextOutput::Yield(slf.map_values[slf.iter_pos].clone());
             slf.iter_pos += 1;
             res
         } else {
@@ -2489,7 +2490,7 @@ impl PyIterProtocol for NodesCountMappingValues {
 
 #[pyclass(module = "retworkx")]
 pub struct NodesCountMappingItems {
-    pub map_items: Vec<(usize, u128)>,
+    pub map_items: Vec<(usize, BigUint)>,
     iter_pos: usize,
 }
 
@@ -2500,9 +2501,9 @@ impl PyIterProtocol for NodesCountMappingItems {
     }
     fn __next__(
         mut slf: PyRefMut<Self>,
-    ) -> IterNextOutput<(usize, u128), &'static str> {
+    ) -> IterNextOutput<(usize, BigUint), &'static str> {
         if slf.iter_pos < slf.map_items.len() {
-            let res = IterNextOutput::Yield(slf.map_items[slf.iter_pos]);
+            let res = IterNextOutput::Yield(slf.map_items[slf.iter_pos].clone());
             slf.iter_pos += 1;
             res
         } else {
