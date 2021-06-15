@@ -1,0 +1,17 @@
+---
+fixes:
+  - |
+    Improve the documentation of stable graph which node indices
+    will be reused on additions after a removal.
+    
+    .. jupyter-execute::
+      
+      
+      import retworkx
+      graph = retworkx.PyDiGraph()
+      graph.add_nodes_from(list(range(5)))
+      graph.add_nodes_from(list(range(2)))
+      graph.remove_node(2)
+      res_manual = graph.add_parent(6, None, None)
+      print(res_manual)
+
