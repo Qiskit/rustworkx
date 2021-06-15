@@ -51,12 +51,12 @@ use petgraph::visit::{
 use petgraph::EdgeType;
 
 use ndarray::prelude::*;
+use num_bigint::{BigUint, ToBigUint};
 use numpy::IntoPyArray;
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rayon::prelude::*;
-use num_bigint::{BigUint, ToBigUint};
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
@@ -4448,7 +4448,8 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     source: usize,
 ) -> PyResult<HashMap<usize, BigUint>> {
-    let mut out_map: Vec<Option<BigUint>> = vec![None; graph.node_bound()];
+    let mut out_map: Vec<BigUint> =
+        vec![0.to_biguint().unwrap(); graph.node_bound()];
     let node_index = NodeIndex::new(source);
     if graph.node_weight(node_index).is_none() {
         return Err(PyIndexError::new_err(format!(
@@ -4457,32 +4458,41 @@ fn _num_shortest_paths_unweighted<Ty: EdgeType>(
         )));
     }
     let mut bfs = Bfs::new(&graph, node_index);
-    let mut distance: Vec<Option<BigUint>> = vec![None; graph.node_bound()];
-    distance[node_index.index()] = 0.to_biguint();
-    out_map[source] = 1.to_biguint();
+    let mut distance: Vec<Option<usize>> = vec![None; graph.node_bound()];
+    distance[node_index.index()] = Some(0);
+    out_map[source] = 1.to_biguint().unwrap();
     while let Some(current) = bfs.next(graph) {
+        let dist_plus_one = distance[current.index()].unwrap_or_default() + 1;
+        let count_current = out_map[current.index()].clone();
         for neighbor_index in
             graph.neighbors_directed(current, petgraph::Direction::Outgoing)
         {
             let neighbor: usize = neighbor_index.index();
-            if distance[neighbor].is_none()
-                || distance[neighbor] > distance[current.index()]
-            {
-                distance[neighbor] = Some(distance[current.index()].clone().unwrap().clone() + 1_u32);
-                out_map[neighbor] = out_map[current.index()].clone();
-            } else if distance[neighbor] == distance[current.index()] {
-                out_map[neighbor] = Some(
-                    out_map[neighbor].clone().unwrap() + out_map[current.index()].clone().unwrap()
-                );
+            if distance[neighbor].is_none() {
+                distance[neighbor] = Some(dist_plus_one);
+                out_map[neighbor] = count_current.clone();
+            } else if distance[neighbor] == Some(dist_plus_one) {
+                out_map[neighbor] += &count_current;
             }
         }
     }
-    out_map[source] = None;
+
+    // Do not count paths to source in output
+    distance[source] = None;
+    out_map[source] = 0.to_biguint().unwrap();
+
+    // Return only nodes that are reachable in the graph
     Ok(out_map
         .into_iter()
+        .zip(distance.iter())
         .enumerate()
-        .filter(|i| i.1.is_some())
-        .map(|x| (x.0, x.1.unwrap()))
+        .filter_map(|(index, (count, dist))| {
+            if dist.is_some() {
+                Some((index, count))
+            } else {
+                None
+            }
+        })
         .collect())
 }
 
