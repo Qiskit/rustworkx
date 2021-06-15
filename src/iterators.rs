@@ -2477,9 +2477,12 @@ impl PyIterProtocol for NodesCountMappingValues {
     fn __iter__(slf: PyRef<Self>) -> Py<NodesCountMappingValues> {
         slf.into()
     }
-    fn __next__(mut slf: PyRefMut<Self>) -> IterNextOutput<BigUint, &'static str> {
+    fn __next__(
+        mut slf: PyRefMut<Self>,
+    ) -> IterNextOutput<BigUint, &'static str> {
         if slf.iter_pos < slf.map_values.len() {
-            let res = IterNextOutput::Yield(slf.map_values[slf.iter_pos].clone());
+            let res =
+                IterNextOutput::Yield(slf.map_values[slf.iter_pos].clone());
             slf.iter_pos += 1;
             res
         } else {
@@ -2503,7 +2506,8 @@ impl PyIterProtocol for NodesCountMappingItems {
         mut slf: PyRefMut<Self>,
     ) -> IterNextOutput<(usize, BigUint), &'static str> {
         if slf.iter_pos < slf.map_items.len() {
-            let res = IterNextOutput::Yield(slf.map_items[slf.iter_pos].clone());
+            let res =
+                IterNextOutput::Yield(slf.map_items[slf.iter_pos].clone());
             slf.iter_pos += 1;
             res
         } else {
