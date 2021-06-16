@@ -21,4 +21,4 @@ features:
         fd.flush()
         graph = retworkx.PyDiGraph.read_edge_list(fd.name, labels=True)
 
-      mpl_draw(graph, with_labels=True, edge_labels=str)
+      mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
