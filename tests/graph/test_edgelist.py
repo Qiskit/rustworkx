@@ -115,6 +115,21 @@ class TestEdgeList(unittest.TestCase):
         self.assertFalse(graph.has_edge(0, 2))
         self.assertEqual(graph.edges(), ["0", "1"])
 
+    def test_labels_graph(self):
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("a|b|0// test a comment\n")
+            fd.write("b|c|1\n")
+            fd.write("//c|d\n")
+            fd.flush()
+            graph = retworkx.PyGraph.read_edge_list(
+                fd.name, comment="//", deliminator="|", labels=True
+            )
+        self.assertEqual(graph.node_indexes(), [0, 1, 2])
+        self.assertTrue(graph.has_edge(0, 1))
+        self.assertTrue(graph.has_edge(1, 2))
+        self.assertFalse(graph.has_edge(0, 2))
+        self.assertEqual(graph.edges(), ["0", "1"])
+
     def test_write_edge_list_empty_digraph(self):
         path = os.path.join(tempfile.gettempdir(), "empty.txt")
         graph = retworkx.PyGraph()

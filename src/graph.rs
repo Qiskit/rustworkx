@@ -1150,6 +1150,9 @@ impl PyGraph {
     ///     there are no comment characters
     /// :param str deliminator: Optional character to use as a deliminator by
     ///     default any whitespace will be used
+    /// :param bool labels: If set to ``True`` the first two separated fields
+    ///     will be treated as string labels uniquely identifying a node
+    ///     instead of node indices.
     ///
     /// For example:
     ///
@@ -1172,16 +1175,19 @@ impl PyGraph {
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
-    #[text_signature = "(path, /, comment=None, deliminator=None)"]
+    #[args(labels = "false")]
+    #[text_signature = "(path, /, comment=None, deliminator=None, labels=False)"]
     pub fn read_edge_list(
         py: Python,
         path: &str,
         comment: Option<String>,
         deliminator: Option<String>,
+        labels: bool,
     ) -> PyResult<PyGraph> {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
         let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let mut label_map: HashMap<String, usize> = HashMap::new();
         for line_raw in buf_reader.lines() {
             let line = line_raw?;
             let skip = match &comment {
@@ -1204,12 +1210,38 @@ impl PyGraph {
                 Some(del) => line_no_comments.split(del).collect(),
                 None => line_no_comments.split_whitespace().collect(),
             };
-            let src = pieces[0].parse::<usize>()?;
-            let target = pieces[1].parse::<usize>()?;
-            let max_index = cmp::max(src, target);
-            // Add nodes to graph
-            while max_index >= out_graph.node_count() {
-                out_graph.add_node(py.None());
+            let src: usize;
+            let target: usize;
+            if labels {
+                let src_str = pieces[0];
+                let target_str = pieces[1];
+                src = match label_map.get(src_str) {
+                    Some(index) => *index,
+                    None => {
+                        let index =
+                            out_graph.add_node(src_str.to_object(py)).index();
+                        label_map.insert(src_str.to_string(), index);
+                        index
+                    }
+                };
+                target = match label_map.get(target_str) {
+                    Some(index) => *index,
+                    None => {
+                        let index = out_graph
+                            .add_node(target_str.to_object(py))
+                            .index();
+                        label_map.insert(target_str.to_string(), index);
+                        index
+                    }
+                };
+            } else {
+                src = pieces[0].parse::<usize>()?;
+                target = pieces[1].parse::<usize>()?;
+                let max_index = cmp::max(src, target);
+                // Add nodes to graph
+                while max_index >= out_graph.node_count() {
+                    out_graph.add_node(py.None());
+                }
             }
             // Add edges tp graph
             let weight = if pieces.len() > 2 {
