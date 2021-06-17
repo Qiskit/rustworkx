@@ -1259,3 +1259,82 @@ def _graph_spiral_layout(
         resolution=resolution,
         equidistant=equidistant,
     )
+
+
+@functools.singledispatch
+def vf2_mapping(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    subgraph=False,
+):
+    """
+    Return the vf2 mapping between two :class:`~retworkx.PyDiGraph` objects
+
+    This funcion will run the vf2 algorithm used from
+    :func:`~retworkx.is_isomorphic` and :func:`~retworkx.is_subgraph_isomorphic`
+    but instead of returning a boolean it will return the mapping of node ids
+    found from ``first`` to ``second``. If the graphs are not isomorphic than
+    ``None`` will be returned.
+
+    :param PyDiGraph first: The first graph to find the mapping for
+    :param PyDiGraph second: The second graph to find the mapping for
+    :param node_matcher: An optional python callable object that takes 2
+        positional arguments, one for each node data object in either graph.
+        If the return of this function evaluates to True then the nodes
+        passed to it are vieded as matching.
+    :param edge_matcher: A python callable object that takes 2 positional
+        one for each edge data object. If the return of this
+        function evaluates to True then the edges passed to it are vieded
+        as matching.
+    :param bool id_order: If set to ``False`` this function will use a
+        heuristic matching order based on [VF2]_ paper. Otherwise it will
+        default to matching the nodes in order specified by their ids.
+    :param bool subgraph: If set to ``True`` the function will return the
+        subgraph isomorphic found between the graphs.
+
+    :returns: A dicitonary of node indices from ``first`` to node indices in
+        ``second`` representing the mapping found.
+    :rtype: dict
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@vf2_mapping.register(PyDiGraph)
+def _digraph_vf2_mapping(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    subgraph=False,
+):
+    return digraph_vf2_mapping(
+        first,
+        second,
+        node_matcher=node_matcher,
+        edge_matcher=edge_matcher,
+        id_order=id_order,
+        subgraph=subgraph,
+    )
+
+
+@vf2_mapping.register(PyGraph)
+def _graph_vf2_mapping(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    subgraph=False,
+):
+    return graph_vf2_mapping(
+        first,
+        second,
+        node_matcher=node_matcher,
+        edge_matcher=edge_matcher,
+        id_order=id_order,
+        subgraph=subgraph,
+    )

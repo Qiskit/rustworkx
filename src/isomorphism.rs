@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::too_many_arguments)]
 // This module is a forked version of petgraph's isomorphism module @ 0.5.0.
 // It has then been modified to function with PyDiGraph inputs instead of Graph.
 
@@ -47,6 +48,7 @@ where
         &self,
         py: Python,
         graph: &StablePyGraph<Ty>,
+        mut mapping: Option<&mut HashMap<usize, usize>>,
     ) -> StablePyGraph<Ty> {
         let order = self.sort(graph);
 
@@ -66,7 +68,11 @@ where
             let c_index = graph.from_index(c);
             new_graph.add_edge(p_index, c_index, edge_w.clone_ref(py));
         }
-
+        if mapping.is_some() {
+            for (new_index, old_value) in id_map.iter().enumerate() {
+                mapping.as_mut().unwrap().insert(*old_value, new_index);
+            }
+        }
         new_graph
     }
 }
@@ -319,7 +325,10 @@ where
     }
 }
 
-fn reindex_graph<Ty>(py: Python, graph: &StablePyGraph<Ty>) -> StablePyGraph<Ty>
+fn reindex_graph<Ty>(
+    py: Python,
+    graph: &StablePyGraph<Ty>,
+) -> (StablePyGraph<Ty>, HashMap<usize, usize>)
 where
     Ty: EdgeType,
 {
@@ -344,7 +353,10 @@ where
         new_graph.add_edge(p_index, c_index, edge_w.clone_ref(py));
     }
 
-    new_graph
+    (
+        new_graph,
+        id_map.iter().map(|(k, v)| (v.index(), k.index())).collect(),
+    )
 }
 
 trait SemanticMatcher<T> {
@@ -381,6 +393,7 @@ pub fn is_isomorphic<Ty, F, G>(
     mut edge_match: Option<G>,
     id_order: bool,
     ordering: Ordering,
+    mut mapping: Option<&mut HashMap<usize, usize>>,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
@@ -389,16 +402,24 @@ where
 {
     let mut inner_temp_g0: StablePyGraph<Ty>;
     let mut inner_temp_g1: StablePyGraph<Ty>;
+    let mut node_map_g0: Option<HashMap<usize, usize>>;
+    let mut node_map_g1: Option<HashMap<usize, usize>>;
     let g0_out = if g0.nodes_removed() {
-        inner_temp_g0 = reindex_graph(py, g0);
+        let res = reindex_graph(py, g0);
+        inner_temp_g0 = res.0;
+        node_map_g0 = Some(res.1);
         &inner_temp_g0
     } else {
+        node_map_g0 = None;
         g0
     };
     let g1_out = if g1.nodes_removed() {
-        inner_temp_g1 = reindex_graph(py, g1);
+        let res = reindex_graph(py, g1);
+        inner_temp_g1 = res.0;
+        node_map_g1 = Some(res.1);
         &inner_temp_g1
     } else {
+        node_map_g1 = None;
         g1
     };
 
@@ -411,14 +432,48 @@ where
     }
 
     let g0 = if !id_order {
-        inner_temp_g0 = Vf2ppSorter.reorder(py, g0_out);
+        inner_temp_g0 = if mapping.is_some() {
+            let mut vf2pp_map: HashMap<usize, usize> =
+                HashMap::with_capacity(g0_out.node_count());
+            let temp = Vf2ppSorter.reorder(py, g0_out, Some(&mut vf2pp_map));
+            match node_map_g0 {
+                Some(ref mut g0_map) => {
+                    let mut temp_map = HashMap::with_capacity(g0_map.len());
+                    for (new_index, old_index) in g0_map.iter_mut() {
+                        temp_map.insert(vf2pp_map[&new_index], *old_index);
+                    }
+                    *g0_map = temp_map;
+                }
+                None => node_map_g0 = Some(vf2pp_map),
+            };
+            temp
+        } else {
+            Vf2ppSorter.reorder(py, g0_out, None)
+        };
         &inner_temp_g0
     } else {
         g0_out
     };
 
     let g1 = if !id_order {
-        inner_temp_g1 = Vf2ppSorter.reorder(py, g1_out);
+        inner_temp_g1 = if mapping.is_some() {
+            let mut vf2pp_map: HashMap<usize, usize> =
+                HashMap::with_capacity(g1_out.node_count());
+            let temp = Vf2ppSorter.reorder(py, g1_out, Some(&mut vf2pp_map));
+            match node_map_g1 {
+                Some(ref mut g1_map) => {
+                    let mut temp_map = HashMap::with_capacity(g1_map.len());
+                    for (new_index, old_index) in g1_map.iter_mut() {
+                        temp_map.insert(vf2pp_map[&new_index], *old_index);
+                    }
+                    *g1_map = temp_map;
+                }
+                None => node_map_g1 = Some(vf2pp_map),
+            };
+            temp
+        } else {
+            Vf2ppSorter.reorder(py, g1_out, None)
+        };
         &inner_temp_g1
     } else {
         g1_out
@@ -427,6 +482,37 @@ where
     let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
     let res =
         try_match(&mut st, g0, g1, &mut node_match, &mut edge_match, ordering)?;
+
+    if mapping.is_some() {
+        for (index, val) in st[1].mapping.iter().enumerate() {
+            match node_map_g1 {
+                Some(ref g1_map) => {
+                    let node_index = g1_map[&index];
+                    match node_map_g0 {
+                        Some(ref g0_map) => mapping
+                            .as_mut()
+                            .unwrap()
+                            .insert(g0_map[&val.index()], node_index),
+                        None => mapping
+                            .as_mut()
+                            .unwrap()
+                            .insert(val.index(), node_index),
+                    };
+                }
+                None => {
+                    match node_map_g0 {
+                        Some(ref g0_map) => mapping
+                            .as_mut()
+                            .unwrap()
+                            .insert(g0_map[&val.index()], index),
+                        None => {
+                            mapping.as_mut().unwrap().insert(val.index(), index)
+                        }
+                    };
+                }
+            };
+        }
+    }
     Ok(res.unwrap_or(false))
 }
 
