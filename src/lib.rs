@@ -1522,8 +1522,8 @@ fn collect_bicolor_runs(
                 .collect::<PyResult<Vec<i32>>>()?;
 
             if colors.len() <= 2 && filter_node(&graph.graph[node])? {
+                let c0 = colors[0] as usize;
                 if colors.len() == 1 {
-                    let c0 = colors[0] as usize;
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     if let Some(c0_block_id) = block_id[c0] {
                         block_list[c0_block_id]
@@ -1532,7 +1532,6 @@ fn collect_bicolor_runs(
                         pending_list[c0].push(graph.graph[node].clone_ref(py));
                     }
                 } else {
-                    let c0 = colors[0] as usize;
                     let c1 = colors[1] as usize;
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     ensure_vector_has_index!(pending_list, block_id, c1);
@@ -1550,8 +1549,7 @@ fn collect_bicolor_runs(
                             new_block.append(&mut pending_list[c0]);
                         }
                         if !pending_list[c1].is_empty() {
-                            new_block.extend(pending_list[c1].iter().cloned());
-                            pending_list[c1].clear();
+                            new_block.append(&mut pending_list[c1]);
                         }
 
                         new_block.push(graph.graph[node].clone_ref(py));
@@ -1568,7 +1566,7 @@ fn collect_bicolor_runs(
                     ensure_vector_has_index!(pending_list, block_id, color);
                     if let Some(color_block_id) = block_id[color] {
                         block_list[color_block_id]
-                            .extend(pending_list[color].iter().cloned());
+                            .append(&mut pending_list[color]);
                     }
                     block_id[color] = None;
                     pending_list[color].clear();
