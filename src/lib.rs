@@ -1547,8 +1547,7 @@ fn collect_bicolor_runs(
                     } else {
                         let mut new_block: Vec<PyObject> = Vec::new();
                         if !pending_list[c0].is_empty() {
-                            new_block.extend(pending_list[c0].iter().cloned());
-                            pending_list[c0].clear();
+                            new_block.append(&mut pending_list[c0]);
                         }
                         if !pending_list[c1].is_empty() {
                             new_block.extend(pending_list[c1].iter().cloned());
