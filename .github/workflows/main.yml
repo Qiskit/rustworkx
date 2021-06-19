@@ -29,7 +29,7 @@ jobs:
       - name: Black Codestyle Format
         run: black --check --diff retworkx tests
       - name: Python Lint
-        run: flake8 setup.py tests
+        run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests
   tests:
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
