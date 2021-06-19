@@ -10,6 +10,33 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+// There are two useful macros to quickly define a new custom return type:
+//
+// :`custom_vec_iter_impl` holds a `Vec<T>` and can be used as a
+//  read-only sequence/list. To use it, you should specify the name of the new type,
+//  the name of the vector that holds the data, the type `T` and a docstring.
+//
+//  e.g `custom_vec_iter_impl!(MyReadOnlyType, data, (usize, f64), "Docs");`
+//      defines a new type named `MyReadOnlyType` that holds a vector called `data`
+//      of values `(usize, f64)`.
+//
+// :`custom_hash_map_iter_impl` holds a `HashMap<K, V>` and can be used as
+//  a read-only mapping/dict. To use it, you should specify the name of the new type,
+//  the name of the hash map that holds the data, the type of the keys `K`,
+//  the type of the values `V` and a docstring.
+//
+//  e.g `custom_hash_map_iter_impl!(MyReadOnlyType, data, usize, f64, "Docs");`
+//      defines a new type named `MyReadOnlyType` that holds a mapping called `data`
+//      from `usize` to `f64`.
+//
+// You should always implement `PyGCProtocol` for the new custom return type. If you
+// don't store any python object, just use the macro `default_pygc_protocol_impl`.
+//
+// e.g `default_pygc_protocol_impl!(MyReadOnlyType);`
+//
+// Types `T, K, V` above should implement `PyHash`, `PyEq`, `PyDisplay` traits.
+// These are arleady implemented for many primitive rust types and `PyObject`.
+
 #![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
 use std::collections::hash_map::DefaultHasher;
