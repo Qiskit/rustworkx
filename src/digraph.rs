@@ -2305,7 +2305,7 @@ impl PyDiGraph {
     ///     directed edge in this graph
     /// :rtype: PyGraph
     #[text_signature = "(self)"]
-    #[args(multigraph = "true", weight_comb_fn = "None")]
+    #[args(multigraph = "true", weight_combo_fn = "None")]
     pub fn to_undirected(
         &self,
         py: Python,
