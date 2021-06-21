@@ -296,3 +296,22 @@ class TestIsomorphic(unittest.TestCase):
             {7: 2, 5: 1, 4: 0, 8: 3},
         ]
         self.assertIn(mapping, valid_mappings)
+
+    def test_vf2pp_remapping(self):
+        temp = retworkx.generators.directed_grid_graph(3, 3)
+
+        graph = retworkx.PyDiGraph()
+        dummy = graph.add_node(0)
+
+        graph.compose(temp, dict())
+        graph.remove_node(dummy)
+
+        second_graph = retworkx.generators.directed_grid_graph(2, 2)
+        mapping = retworkx.digraph_vf2_mapping(
+            graph, second_graph, subgraph=True, id_order=False
+        )
+        expected_mappings = [
+            {6: 1, 5: 0, 8: 2, 9: 3},
+            {6: 2, 5: 0, 9: 3, 8: 1},
+        ]
+        self.assertIn(mapping, expected_mappings)
