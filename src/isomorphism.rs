@@ -69,8 +69,8 @@ where
             new_graph.add_edge(p_index, c_index, edge_w.clone_ref(py));
         }
         if mapping.is_some() {
-            for (new_index, old_value) in id_map.iter().enumerate() {
-                mapping.as_mut().unwrap().insert(*old_value, new_index);
+            for (old_value, new_index) in id_map.iter().enumerate() {
+                mapping.as_mut().unwrap().insert(*new_index, old_value);
             }
         }
         new_graph
@@ -438,11 +438,10 @@ where
             let temp = Vf2ppSorter.reorder(py, g0_out, Some(&mut vf2pp_map));
             match node_map_g0 {
                 Some(ref mut g0_map) => {
-                    let mut temp_map = HashMap::with_capacity(g0_map.len());
-                    for (new_index, old_index) in g0_map.iter_mut() {
-                        temp_map.insert(vf2pp_map[&new_index], *old_index);
+                    for (_, old_index) in vf2pp_map.iter_mut() {
+                        *old_index = g0_map[old_index];
                     }
-                    *g0_map = temp_map;
+                    *g0_map = vf2pp_map;
                 }
                 None => node_map_g0 = Some(vf2pp_map),
             };
@@ -462,11 +461,10 @@ where
             let temp = Vf2ppSorter.reorder(py, g1_out, Some(&mut vf2pp_map));
             match node_map_g1 {
                 Some(ref mut g1_map) => {
-                    let mut temp_map = HashMap::with_capacity(g1_map.len());
-                    for (new_index, old_index) in g1_map.iter_mut() {
-                        temp_map.insert(vf2pp_map[&new_index], *old_index);
+                    for (_, old_index) in vf2pp_map.iter_mut() {
+                        *old_index = g1_map[old_index];
                     }
-                    *g1_map = temp_map;
+                    *g1_map = vf2pp_map;
                 }
                 None => node_map_g1 = Some(vf2pp_map),
             };
