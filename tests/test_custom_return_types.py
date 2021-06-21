@@ -808,7 +808,7 @@ class TestPos2DMapping(unittest.TestCase):
     def test_str(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
         self.assertEqual(
-            "Pos2DMapping{0: (0.4883489113112722, 0.6545867364101975)}",
+            "Pos2DMapping{0: [0.4883489113112722, 0.6545867364101975]}",
             str(res),
         )
 
