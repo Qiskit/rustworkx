@@ -2338,21 +2338,24 @@ impl PyDiGraph {
             let &source = node_map.get(&edge.source()).unwrap();
             let &target = node_map.get(&edge.target()).unwrap();
             let weight = edge.weight().clone_ref(py);
-            let mut processed = false;
-            if !multigraph {
+            if multigraph {
+                new_graph.add_edge(source, target, weight);
+            } else {
                 let exists = new_graph.find_edge(source, target);
                 if let Some(index) = exists {
                     let old_weight = new_graph.edge_weight_mut(index).unwrap();
-                    if let Some(value) =
-                        combine(old_weight, edge.weight(), &weight_combo_fn)?
+                    match combine(old_weight, edge.weight(), &weight_combo_fn)?
                     {
-                        *old_weight = value;
-                        processed = true;
+                        Some(value) => {
+                            *old_weight = value;
+                        }
+                        None => {
+                            *old_weight = weight;
+                        }
                     }
+                } else {
+                    new_graph.add_edge(source, target, weight);
                 }
-            }
-            if !processed {
-                new_graph.add_edge(source, target, weight);
             }
         }
         Ok(crate::graph::PyGraph {
