@@ -1199,6 +1199,11 @@ custom_hash_map_iter_impl!(
      This class is equivalent to having a dict of the form::
 
          {1: 0, 3: 1}
+
+    Unlike a dict though this class is unordered and multiple NodeMap
+    objects with the same contents might yield a different order when
+    iterated over. If a consistent order is required you should sort
+    the object.
     "
 );
 default_pygc_protocol_impl!(NodeMap);

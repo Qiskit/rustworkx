@@ -2239,6 +2239,14 @@ impl PyDiGraph {
     /// :returns: A mapping of node indices in ``other`` to the equivalent node
     ///     in this graph.
     /// :rtype: NodeMap
+    ///
+    /// .. note::
+    ///
+    ///    The return type is a :class:`retworkx.NodeMap` which is an unordered
+    ///    type. So it does not provide a deterministic ordering between objects
+    ///    when iterated over (although the same object will have a consistent
+    ///    order when iterated over multiple times).
+    ///
     #[text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None)"]
     fn substitute_node_with_subgraph(
         &mut self,

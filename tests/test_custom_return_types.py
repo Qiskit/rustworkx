@@ -1321,3 +1321,16 @@ class TestNodeMap(unittest.TestCase):
             0, self.in_dag, lambda *args: None
         )
         self.assertNotIn(2, res)
+
+    def test_iter_stable_for_same_obj(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_node(0)
+        in_graph = retworkx.generators.directed_path_graph(5)
+        res = self.dag.substitute_node_with_subgraph(
+            0, in_graph, lambda *args: None
+        )
+        first_iter = list(iter(res))
+        second_iter = list(iter(res))
+        third_iter = list(iter(res))
+        self.assertEqual(first_iter, second_iter)
+        self.assertEqual(first_iter, third_iter)
