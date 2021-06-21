@@ -2304,7 +2304,7 @@ impl PyDiGraph {
     /// :returns: A new PyGraph object with an undirected edge for every
     ///     directed edge in this graph
     /// :rtype: PyGraph
-    #[text_signature = "(self)"]
+    #[text_signature = "(self, multigraph, weight_combo_fn, /)"]
     #[args(multigraph = "true", weight_combo_fn = "None")]
     pub fn to_undirected(
         &self,
