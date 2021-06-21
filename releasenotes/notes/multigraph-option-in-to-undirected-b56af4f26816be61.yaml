@@ -1,0 +1,9 @@
+---
+upgrade:
+  - |
+    Two new kwargs, ``multigraph`` and ``weight_combo_fn``, was added to
+    :meth:`~retworkx.PyDiGraph.to_undirected`. This can be used to set
+    whether the generated :class:`~retworkx.PyGraph` object is a multi graph or not
+    (whether parallel edges can be added or not). By default this is set to ``True``.
+    If set to ``False`` an extra python callable object should be specified to combine
+    the weights/data of parallel edges.
