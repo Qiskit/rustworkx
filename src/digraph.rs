@@ -2362,7 +2362,9 @@ impl PyDiGraph {
                             }
                         }
                     }
-                    None => new_graph.add_edge(source, target, weight),
+                    None => {
+                        new_graph.add_edge(source, target, weight);
+                    }
                 }
             }
         }
