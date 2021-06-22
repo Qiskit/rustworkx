@@ -2347,9 +2347,13 @@ impl PyDiGraph {
                 let exists = new_graph.find_edge(source, target);
                 match exists {
                     Some(index) => {
-                        let old_weight = new_graph.edge_weight_mut(index).unwrap();
-                        match combine(old_weight, edge.weight(), &weight_combo_fn)?
-                        {
+                        let old_weight =
+                            new_graph.edge_weight_mut(index).unwrap();
+                        match combine(
+                            old_weight,
+                            edge.weight(),
+                            &weight_combo_fn,
+                        )? {
                             Some(value) => {
                                 *old_weight = value;
                             }
@@ -2357,7 +2361,7 @@ impl PyDiGraph {
                                 *old_weight = weight;
                             }
                         }
-                    },
+                    }
                     None => new_graph.add_edge(source, target, weight),
                 }
             }
