@@ -1,5 +1,5 @@
 ---
-upgrade:
+features:
   - |
     Two new kwargs, ``multigraph`` and ``weight_combo_fn``, was added to
     :meth:`~retworkx.PyDiGraph.to_undirected`. This can be used to set

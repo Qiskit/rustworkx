@@ -2295,7 +2295,10 @@ impl PyDiGraph {
     /// by reference to the new :class:`~retworkx.PyGraph` object.
     ///
     /// :param bool multigraph: If set to `False` the output graph will not
-    ///     allow parallel edges. Default: `True`.
+    ///     allow parallel edges. Instead parallel edges will be condensed
+    ///     into a single edge and their data will be combined using
+    ///     `weight_combo_fn`. If `weight_combo_fn` is not provided, the data
+    ///     of the edge with the largest index will be kept. Default: `True`.
     /// :param weight_combo_fn: An optional python callable that will take in a
     ///     two edge weight/data object and return a new edge weight/data
     ///     object that will be used when adding an edge between two nodes
@@ -2304,7 +2307,7 @@ impl PyDiGraph {
     /// :returns: A new PyGraph object with an undirected edge for every
     ///     directed edge in this graph
     /// :rtype: PyGraph
-    #[text_signature = "(self, multigraph, weight_combo_fn, /)"]
+    #[text_signature = "(self, /, multigraph=True, weight_combo_fn=None)"]
     #[args(multigraph = "true", weight_combo_fn = "None")]
     pub fn to_undirected(
         &self,
@@ -2342,19 +2345,20 @@ impl PyDiGraph {
                 new_graph.add_edge(source, target, weight);
             } else {
                 let exists = new_graph.find_edge(source, target);
-                if let Some(index) = exists {
-                    let old_weight = new_graph.edge_weight_mut(index).unwrap();
-                    match combine(old_weight, edge.weight(), &weight_combo_fn)?
-                    {
-                        Some(value) => {
-                            *old_weight = value;
+                match exists {
+                    Some(index) => {
+                        let old_weight = new_graph.edge_weight_mut(index).unwrap();
+                        match combine(old_weight, edge.weight(), &weight_combo_fn)?
+                        {
+                            Some(value) => {
+                                *old_weight = value;
+                            }
+                            None => {
+                                *old_weight = weight;
+                            }
                         }
-                        None => {
-                            *old_weight = weight;
-                        }
-                    }
-                } else {
-                    new_graph.add_edge(source, target, weight);
+                    },
+                    None => new_graph.add_edge(source, target, weight),
                 }
             }
         }
