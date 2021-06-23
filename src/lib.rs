@@ -2013,7 +2013,7 @@ pub fn digraph_dijkstra_shortest_paths(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
-            &graph.to_undirected(py),
+            &graph.to_undirected(py, true, None)?,
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
