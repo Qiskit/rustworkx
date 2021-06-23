@@ -481,7 +481,7 @@ where
     let res =
         try_match(&mut st, g0, g1, &mut node_match, &mut edge_match, ordering)?;
 
-    if mapping.is_some() {
+    if mapping.is_some() && res == Some(true) {
         for (index, val) in st[1].mapping.iter().enumerate() {
             match node_map_g1 {
                 Some(ref g1_map) => {
