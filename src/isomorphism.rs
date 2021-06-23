@@ -706,12 +706,12 @@ where
                     return Ok(false);
                 }
             }
-            // semantic feasibility: compare associated data for nodes
-            if node_match.enabled()
-                && !node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?
-            {
-                return Ok(false);
-            }
+        }
+        // semantic feasibility: compare associated data for nodes
+        if node_match.enabled()
+            && !node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?
+        {
+            return Ok(false);
         }
         // semantic feasibility: compare associated data for edges
         if edge_match.enabled() {
