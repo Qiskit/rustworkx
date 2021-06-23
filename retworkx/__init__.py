@@ -785,7 +785,8 @@ def is_subgraph_isomorphic(
         in order specified by their ids. Otherwise it will default to a heuristic
         matching order based on [VF2]_ paper.
     :param bool induced: If set to ``True`` this function will check the existence
-        of a node-induced subgraph of first isomorphic to second graph. Default: ``True``.
+        of a node-induced subgraph of first isomorphic to second graph.
+        Default: ``True``.
 
     :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
         , ``False`` if there is not.
