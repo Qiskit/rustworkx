@@ -11,6 +11,7 @@
 # under the License.
 
 import unittest
+import random
 
 import retworkx
 
@@ -197,3 +198,31 @@ class TestGeometricRandomGraph(unittest.TestCase):
     def test_random_geometric_pos_num_nodes_incomp(self):
         with self.assertRaises(ValueError):
             retworkx.random_geometric_graph(3, 0.15, pos=[[0.5, 0.5]])
+
+
+class TestRandomSubGraphIsomorphism(unittest.TestCase):
+    def test_random_gnm_induced_subgraph_isomorphism(self):
+        graph = retworkx.undirected_gnm_random_graph(50, 150)
+        nodes = random.sample(range(50), 25)
+        subgraph = graph.subgraph(nodes)
+
+        self.assertTrue(
+            retworkx.is_subgraph_isomorphic(
+                graph, subgraph, id_order=True, induced=True
+            )
+        )
+
+    def test_random_gnm_non_induced_subgraph_isomorphism(self):
+        graph = retworkx.undirected_gnm_random_graph(50, 150)
+        nodes = random.sample(range(50), 25)
+        subgraph = graph.subgraph(nodes)
+
+        indexes = list(subgraph.edge_indices())
+        for idx in random.sample(indexes, len(indexes) // 2):
+            subgraph.remove_edge_from_index(idx)
+
+        self.assertTrue(
+            retworkx.is_subgraph_isomorphic(
+                graph, subgraph, id_order=True, induced=False
+            )
+        )

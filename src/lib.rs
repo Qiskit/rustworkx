@@ -356,6 +356,7 @@ fn digraph_is_isomorphic(
         compare_edges,
         id_order,
         Ordering::Equal,
+        true,
     )?;
     Ok(res)
 }
@@ -425,6 +426,7 @@ fn graph_is_isomorphic(
         compare_edges,
         id_order,
         Ordering::Equal,
+        true,
     )?;
     Ok(res)
 }
@@ -462,8 +464,8 @@ fn graph_is_isomorphic(
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false")]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
+#[pyfunction(id_order = "false", induced = "true")]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, induced=True, /)"]
 fn digraph_is_subgraph_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
@@ -471,6 +473,7 @@ fn digraph_is_subgraph_isomorphic(
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
     id_order: bool,
+    induced: bool,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -494,6 +497,7 @@ fn digraph_is_subgraph_isomorphic(
         compare_edges,
         id_order,
         Ordering::Greater,
+        induced,
     )?;
     Ok(res)
 }
@@ -531,8 +535,8 @@ fn digraph_is_subgraph_isomorphic(
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false")]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
+#[pyfunction(id_order = "false", induced = "true")]
+#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, induced=True, /)"]
 fn graph_is_subgraph_isomorphic(
     py: Python,
     first: &graph::PyGraph,
@@ -540,6 +544,7 @@ fn graph_is_subgraph_isomorphic(
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
     id_order: bool,
+    induced: bool,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -563,6 +568,7 @@ fn graph_is_subgraph_isomorphic(
         compare_edges,
         id_order,
         Ordering::Greater,
+        induced,
     )?;
     Ok(res)
 }

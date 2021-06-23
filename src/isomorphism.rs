@@ -373,6 +373,7 @@ where
 /// graph isomorphism (graph structure and matching node and edge weights).
 ///
 /// The graphs should not be multigraphs.
+#[allow(clippy::too_many_arguments)]
 pub fn is_isomorphic<Ty, F, G>(
     py: Python,
     g0: &StablePyGraph<Ty>,
@@ -381,6 +382,7 @@ pub fn is_isomorphic<Ty, F, G>(
     mut edge_match: Option<G>,
     id_order: bool,
     ordering: Ordering,
+    induced: bool,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
@@ -425,8 +427,15 @@ where
     };
 
     let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
-    let res =
-        try_match(&mut st, g0, g1, &mut node_match, &mut edge_match, ordering)?;
+    let res = try_match(
+        &mut st,
+        g0,
+        g1,
+        &mut node_match,
+        &mut edge_match,
+        ordering,
+        induced,
+    )?;
     Ok(res.unwrap_or(false))
 }
 
@@ -438,6 +447,7 @@ fn try_match<Ty, F, G>(
     node_match: &mut F,
     edge_match: &mut G,
     ordering: Ordering,
+    induced: bool,
 ) -> PyResult<Option<bool>>
 where
     Ty: EdgeType,
@@ -567,6 +577,9 @@ where
         for j in graph_indices.clone() {
             for n_neigh in g[j].neighbors(nodes[j]) {
                 succ_count[j] += 1;
+                if !induced && j == 0 {
+                    continue;
+                }
                 // handle the self loop case; it's not in the mapping (yet)
                 let m_neigh = if nodes[j] != n_neigh {
                     st[j].mapping[n_neigh.index()]
@@ -595,6 +608,9 @@ where
             for j in graph_indices.clone() {
                 for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
                     pred_count[j] += 1;
+                    if !induced && j == 0 {
+                        continue;
+                    }
                     // the self loop case is handled in outgoing
                     let m_neigh = st[j].mapping[n_neigh.index()];
                     if m_neigh == end {
@@ -661,26 +677,14 @@ where
             }
         }
         // R_new
-        let mut new_count = [0, 0];
-        for j in graph_indices.clone() {
-            for n_neigh in g[j].neighbors(nodes[j]) {
-                let index = n_neigh.index();
-                if st[j].out[index] == 0
-                    && (st[j].ins.is_empty() || st[j].ins[index] == 0)
-                {
-                    new_count[j] += 1;
-                }
-            }
-        }
-        if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
-            return Ok(false);
-        }
-        if g[0].is_directed() {
+        if induced {
             let mut new_count = [0, 0];
             for j in graph_indices.clone() {
-                for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
+                for n_neigh in g[j].neighbors(nodes[j]) {
                     let index = n_neigh.index();
-                    if st[j].out[index] == 0 && st[j].ins[index] == 0 {
+                    if st[j].out[index] == 0
+                        && (st[j].ins.is_empty() || st[j].ins[index] == 0)
+                    {
                         new_count[j] += 1;
                     }
                 }
@@ -688,12 +692,26 @@ where
             if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
                 return Ok(false);
             }
-        }
-        // semantic feasibility: compare associated data for nodes
-        if node_match.enabled()
-            && !node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?
-        {
-            return Ok(false);
+            if g[0].is_directed() {
+                let mut new_count = [0, 0];
+                for j in graph_indices.clone() {
+                    for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
+                        let index = n_neigh.index();
+                        if st[j].out[index] == 0 && st[j].ins[index] == 0 {
+                            new_count[j] += 1;
+                        }
+                    }
+                }
+                if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
+                    return Ok(false);
+                }
+            }
+            // semantic feasibility: compare associated data for nodes
+            if node_match.enabled()
+                && !node_match.eq(&g[0][nodes[0]], &g[1][nodes[1]])?
+            {
+                return Ok(false);
+            }
         }
         // semantic feasibility: compare associated data for edges
         if edge_match.enabled() {
