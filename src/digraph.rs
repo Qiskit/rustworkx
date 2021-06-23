@@ -1797,7 +1797,7 @@ impl PyDiGraph {
         let dir = petgraph::Direction::Outgoing;
         let edges = self.graph.edges_directed(index, dir);
         for edge in edges {
-            let edge_predicate_raw = predicate_callable(&edge.weight())?;
+            let edge_predicate_raw = predicate_callable(edge.weight())?;
             let edge_predicate: bool = edge_predicate_raw.extract(py)?;
             if edge_predicate {
                 return Ok(self.graph.node_weight(edge.target()).unwrap());
