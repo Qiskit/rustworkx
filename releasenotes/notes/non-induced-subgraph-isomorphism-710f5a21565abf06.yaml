@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    A new kwarg, ``induced``, was added to :func:`~retworkx.is_subgraph_isomorphic`.
+    If set to ``True`` the function will check if the second graph is isomorphic to a
+    node-induced subgraph of the first. If set to ``False`` it will check if the second
+    graph is isomorphic to a subgraph of the first. By default this is set to ``True``.
