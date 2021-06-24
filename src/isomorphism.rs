@@ -385,7 +385,6 @@ where
 /// graph isomorphism (graph structure and matching node and edge weights).
 ///
 /// The graphs should not be multigraphs.
-#[allow(clippy::too_many_arguments)]
 pub fn is_isomorphic<Ty, F, G>(
     py: Python,
     g0: &StablePyGraph<Ty>,
