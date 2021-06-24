@@ -820,7 +820,7 @@ where
             let mut index = count;
             for child in &children[index..] {
                 index += 1;
-                if !visited.contains(&child) {
+                if !visited.contains(child) {
                     out_vec.push((parent.index(), child.index()));
                     visited.insert(*child);
                     let mut grandchildren: Vec<NodeIndex> =
@@ -3942,7 +3942,7 @@ pub fn minimum_spanning_edges(
         Vec::with_capacity(graph.graph.edge_count());
     for edge in graph.edge_references() {
         let weight =
-            weight_callable(py, &weight_fn, &edge.weight(), default_weight)?;
+            weight_callable(py, &weight_fn, edge.weight(), default_weight)?;
         if weight.is_nan() {
             return Err(PyValueError::new_err("NaN found as an edge weight"));
         }
@@ -4150,7 +4150,7 @@ where
     let mut weights: HashMap<(usize, usize), f64> =
         HashMap::with_capacity(2 * graph.edge_count());
     for e in graph.edge_references() {
-        let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)?;
+        let w = weight_callable(py, &weight_fn, e.weight(), default_weight)?;
         let source = e.source().index();
         let target = e.target().index();
 
@@ -4740,6 +4740,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::Pos2DMapping>()?;
     m.add_class::<iterators::AllPairsPathLengthMapping>()?;
     m.add_class::<iterators::AllPairsPathMapping>()?;
+    m.add_class::<iterators::NodeMap>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
