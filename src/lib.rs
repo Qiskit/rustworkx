@@ -356,6 +356,7 @@ fn digraph_is_isomorphic(
         compare_edges,
         id_order,
         Ordering::Equal,
+        true,
         None,
     )?;
     Ok(res)
@@ -426,6 +427,7 @@ fn graph_is_isomorphic(
         compare_edges,
         id_order,
         Ordering::Equal,
+        true,
         None,
     )?;
     Ok(res)
@@ -435,8 +437,12 @@ fn graph_is_isomorphic(
 ///
 /// This checks if 2 graphs are subgraph isomorphic both structurally and also
 /// comparing the node data and edge data using the provided matcher functions.
-/// The matcher function takes in 2 data objects and will compare them. A simple
-/// example that checks if they're just equal would be::
+/// The matcher function takes in 2 data objects and will compare them.
+/// Since there is an ambiguity in the term 'subgraph', do note that we check
+/// for an node-induced subgraph if argument `induced` is set to `True`. If it is
+/// set to `False`, we check for a non induced subgraph, meaning the second graph
+/// can have fewer edges than the subgraph of the first. By default it's `True`. A
+/// simple example that checks if they're just equal would be::
 ///
 ///     graph_a = retworkx.PyDiGraph()
 ///     graph_b = retworkx.PyDiGraph()
@@ -460,12 +466,15 @@ fn graph_is_isomorphic(
 /// :param bool id_order: If set to ``True`` this function will match the nodes
 ///     in order specified by their ids. Otherwise it will default to a heuristic
 ///     matching order based on [VF2]_ paper.
+/// :param bool induced: If set to ``True`` this function will check the existence
+///     of a node-induced subgraph of first isomorphic to second graph.
+///     Default: ``True``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false")]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
+#[pyfunction(id_order = "false", induced = "true")]
+#[text_signature = "(first, second, /, node_matcher=None, edge_matcher=None, id_order=False, induced=True)"]
 fn digraph_is_subgraph_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
@@ -473,6 +482,7 @@ fn digraph_is_subgraph_isomorphic(
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
     id_order: bool,
+    induced: bool,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -496,6 +506,7 @@ fn digraph_is_subgraph_isomorphic(
         compare_edges,
         id_order,
         Ordering::Greater,
+        induced,
         None,
     )?;
     Ok(res)
@@ -505,8 +516,12 @@ fn digraph_is_subgraph_isomorphic(
 ///
 /// This checks if 2 graphs are subgraph isomorphic both structurally and also
 /// comparing the node data and edge data using the provided matcher functions.
-/// The matcher function takes in 2 data objects and will compare them. A simple
-/// example that checks if they're just equal would be::
+/// The matcher function takes in 2 data objects and will compare them.
+/// Since there is an ambiguity in the term 'subgraph', do note that we check
+/// for an node-induced subgraph if argument `induced` is set to `True`. If it is
+/// set to `False`, we check for a non induced subgraph, meaning the second graph
+/// can have fewer edges than the subgraph of the first. By default it's `True`. A
+/// simple example that checks if they're just equal would be::
 ///
 ///     graph_a = retworkx.PyGraph()
 ///     graph_b = retworkx.PyGraph()
@@ -530,12 +545,15 @@ fn digraph_is_subgraph_isomorphic(
 /// :param bool id_order: If set to ``True`` this function will match the nodes
 ///     in order specified by their ids. Otherwise it will default to a heuristic
 ///     matching order based on [VF2]_ paper.
+/// :param bool induced: If set to ``True`` this function will check the existence
+///     of a node-induced subgraph of first isomorphic to second graph.
+///     Default: ``True``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false")]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
+#[pyfunction(id_order = "false", induced = "true")]
+#[text_signature = "(first, second, /, node_matcher=None, edge_matcher=None, id_order=False, induced=True)"]
 fn graph_is_subgraph_isomorphic(
     py: Python,
     first: &graph::PyGraph,
@@ -543,6 +561,7 @@ fn graph_is_subgraph_isomorphic(
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
     id_order: bool,
+    induced: bool,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -566,6 +585,7 @@ fn graph_is_subgraph_isomorphic(
         compare_edges,
         id_order,
         Ordering::Greater,
+        induced,
         None,
     )?;
     Ok(res)
@@ -591,14 +611,17 @@ fn graph_is_subgraph_isomorphic(
 ///     as matching.
 /// :param bool id_order: If set to ``False`` this function will use a
 ///     heuristic matching order based on [VF2]_ paper. Otherwise it will
-///     default to matching the nodes in order specified by their ids.//
+///     default to matching the nodes in order specified by their ids.
 /// :param bool subgraph: If set to ``True`` the function will return the
-///     subgraph isomorphic found between the graphs.//
+///     subgraph isomorphic found between the graphs.
+/// :param bool induced: If set to ``True`` this function will check the existence
+///     of a node-induced subgraph of first isomorphic to second graph.
+///     Default: ``True``.
 ///
 /// :returns: A dicitonary of node indices from ``first`` to node indices in
 ///     ``second`` representing the mapping found.
 /// :rtype: dict
-#[pyfunction(id_order = "true", subgraph = "false")]
+#[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
 fn digraph_vf2_mapping(
     py: Python,
     first: &digraph::PyDiGraph,
@@ -607,6 +630,7 @@ fn digraph_vf2_mapping(
     edge_matcher: Option<PyObject>,
     id_order: bool,
     subgraph: bool,
+    induced: bool,
 ) -> PyResult<Option<HashMap<usize, usize>>> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -637,6 +661,7 @@ fn digraph_vf2_mapping(
         compare_edges,
         id_order,
         ordering,
+        induced,
         Some(&mut mapping),
     )?;
     if res {
@@ -669,11 +694,14 @@ fn digraph_vf2_mapping(
 ///     default to matching the nodes in order specified by their ids.
 /// :param bool subgraph: If set to ``True`` the function will return the
 ///     subgraph isomorphic found between the graphs.
+/// :param bool induced: If set to ``True`` this function will check the existence
+///     of a node-induced subgraph of first isomorphic to second graph.
+///     Default: ``True``.
 ///
 /// :returns: A dicitonary of node indices from ``first`` to node indices in
 ///     ``second`` representing the mapping found.
 /// :rtype: dict
-#[pyfunction(id_order = "true", subgraph = "false")]
+#[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
 fn graph_vf2_mapping(
     py: Python,
     first: &graph::PyGraph,
@@ -682,6 +710,7 @@ fn graph_vf2_mapping(
     edge_matcher: Option<PyObject>,
     id_order: bool,
     subgraph: bool,
+    induced: bool,
 ) -> PyResult<Option<HashMap<usize, usize>>> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -712,6 +741,7 @@ fn graph_vf2_mapping(
         compare_edges,
         id_order,
         ordering,
+        induced,
         Some(&mut mapping),
     )?;
     if res {
@@ -2165,7 +2195,7 @@ pub fn digraph_dijkstra_shortest_paths(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
-            &graph.to_undirected(py),
+            &graph.to_undirected(py, true, None)?,
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),

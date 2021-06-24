@@ -744,13 +744,22 @@ def _graph_is_isomorphic_node_match(first, second, matcher, id_order=True):
 
 @functools.singledispatch
 def is_subgraph_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=False
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=False,
+    induced=True,
 ):
     """Determine if 2 graphs are subgraph isomorphic
 
     This checks if 2 graphs are subgraph isomorphic both structurally and also
     comparing the node and edge data using the provided matcher functions.
-    The matcher functions take in 2 data objects and will compare them. A
+    The matcher functions take in 2 data objects and will compare them.
+    Since there is an ambiguity in the term 'subgraph', do note that we check
+    for an node-induced subgraph if argument `induced` is set to `True`. If it is
+    set to `False`, we check for a non induced subgraph, meaning the second graph
+    can have fewer edges than the subgraph of the first. By default it's `True`. A
     simple example that checks if they're just equal would be::
 
             graph_a = retworkx.PyGraph()
@@ -775,6 +784,9 @@ def is_subgraph_isomorphic(
     :param bool id_order: If set to ``True`` this function will match the nodes
         in order specified by their ids. Otherwise it will default to a heuristic
         matching order based on [VF2]_ paper.
+    :param bool induced: If set to ``True`` this function will check the existence
+        of a node-induced subgraph of first isomorphic to second graph.
+        Default: ``True``.
 
     :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
         , ``False`` if there is not.
@@ -785,19 +797,29 @@ def is_subgraph_isomorphic(
 
 @is_subgraph_isomorphic.register(PyDiGraph)
 def _digraph_is_subgraph_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=False
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=False,
+    induced=True,
 ):
     return digraph_is_subgraph_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order
+        first, second, node_matcher, edge_matcher, id_order, induced
     )
 
 
 @is_subgraph_isomorphic.register(PyGraph)
 def _graph_is_subgraph_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=False
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=False,
+    induced=True,
 ):
     return graph_is_subgraph_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order
+        first, second, node_matcher, edge_matcher, id_order, induced
     )
 
 
@@ -1269,6 +1291,7 @@ def vf2_mapping(
     edge_matcher=None,
     id_order=True,
     subgraph=False,
+    induced=True,
 ):
     """
     Return the vf2 mapping between two :class:`~retworkx.PyDiGraph` objects
@@ -1294,6 +1317,9 @@ def vf2_mapping(
         default to matching the nodes in order specified by their ids.
     :param bool subgraph: If set to ``True`` the function will return the
         subgraph isomorphic found between the graphs.
+    :param bool induced: If set to ``True`` this function will check the existence
+        of a node-induced subgraph of first isomorphic to second graph.
+        Default: ``True``.
 
     :returns: A dicitonary of node indices from ``first`` to node indices in
         ``second`` representing the mapping found.
@@ -1310,6 +1336,7 @@ def _digraph_vf2_mapping(
     edge_matcher=None,
     id_order=True,
     subgraph=False,
+    induced=True,
 ):
     return digraph_vf2_mapping(
         first,
@@ -1318,6 +1345,7 @@ def _digraph_vf2_mapping(
         edge_matcher=edge_matcher,
         id_order=id_order,
         subgraph=subgraph,
+        induced=induced,
     )
 
 
@@ -1329,6 +1357,7 @@ def _graph_vf2_mapping(
     edge_matcher=None,
     id_order=True,
     subgraph=False,
+    induced=True,
 ):
     return graph_vf2_mapping(
         first,
@@ -1337,4 +1366,5 @@ def _graph_vf2_mapping(
         edge_matcher=edge_matcher,
         id_order=id_order,
         subgraph=subgraph,
+        induced=induced,
     )

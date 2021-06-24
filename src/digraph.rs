@@ -2288,34 +2288,91 @@ impl PyDiGraph {
     ///
     /// This will create a new :class:`~retworkx.PyGraph` object from this
     /// graph. All edges in this graph will be created as undirected edges in
-    /// the new graph object.
+    /// the new graph object. For directed graphs with bidirectional edges, you
+    /// can set `multigraph=False` to condense them into a single edge and specify
+    /// a function to combine the weights/data of the edges.
     /// Do note that the node and edge weights/data payloads will be passed
     /// by reference to the new :class:`~retworkx.PyGraph` object.
     ///
+    /// :param bool multigraph: If set to `False` the output graph will not
+    ///     allow parallel edges. Instead parallel edges will be condensed
+    ///     into a single edge and their data will be combined using
+    ///     `weight_combo_fn`. If `weight_combo_fn` is not provided, the data
+    ///     of the edge with the largest index will be kept. Default: `True`.
+    /// :param weight_combo_fn: An optional python callable that will take in a
+    ///     two edge weight/data object and return a new edge weight/data
+    ///     object that will be used when adding an edge between two nodes
+    ///     connected by multiple edges (of either direction) in the original
+    ///     directed graph.
     /// :returns: A new PyGraph object with an undirected edge for every
     ///     directed edge in this graph
     /// :rtype: PyGraph
-    #[text_signature = "(self)"]
-    pub fn to_undirected(&self, py: Python) -> crate::graph::PyGraph {
+    #[text_signature = "(self, /, multigraph=True, weight_combo_fn=None)"]
+    #[args(multigraph = "true", weight_combo_fn = "None")]
+    pub fn to_undirected(
+        &self,
+        py: Python,
+        multigraph: bool,
+        weight_combo_fn: Option<PyObject>,
+    ) -> PyResult<crate::graph::PyGraph> {
         let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
         let mut node_map: HashMap<NodeIndex, NodeIndex> =
             HashMap::with_capacity(self.node_count());
+
+        let combine = |a: &PyObject,
+                       b: &PyObject,
+                       combo_fn: &Option<PyObject>|
+         -> PyResult<Option<PyObject>> {
+            match combo_fn {
+                Some(combo_fn) => {
+                    let res = combo_fn.call1(py, (a, b))?;
+                    Ok(Some(res))
+                }
+                None => Ok(None),
+            }
+        };
+
         for node_index in self.graph.node_indices() {
             let node = self.graph[node_index].clone_ref(py);
             let new_index = new_graph.add_node(node);
             node_map.insert(node_index, new_index);
         }
         for edge in self.edge_references() {
-            let source = node_map.get(&edge.source()).unwrap();
-            let target = node_map.get(&edge.target()).unwrap();
+            let &source = node_map.get(&edge.source()).unwrap();
+            let &target = node_map.get(&edge.target()).unwrap();
             let weight = edge.weight().clone_ref(py);
-            new_graph.add_edge(*source, *target, weight);
+            if multigraph {
+                new_graph.add_edge(source, target, weight);
+            } else {
+                let exists = new_graph.find_edge(source, target);
+                match exists {
+                    Some(index) => {
+                        let old_weight =
+                            new_graph.edge_weight_mut(index).unwrap();
+                        match combine(
+                            old_weight,
+                            edge.weight(),
+                            &weight_combo_fn,
+                        )? {
+                            Some(value) => {
+                                *old_weight = value;
+                            }
+                            None => {
+                                *old_weight = weight;
+                            }
+                        }
+                    }
+                    None => {
+                        new_graph.add_edge(source, target, weight);
+                    }
+                }
+            }
         }
-        crate::graph::PyGraph {
+        Ok(crate::graph::PyGraph {
             graph: new_graph,
             node_removed: false,
-            multigraph: true,
-        }
+            multigraph,
+        })
     }
 
     /// Return a shallow copy of the graph
