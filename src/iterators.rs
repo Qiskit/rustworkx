@@ -1229,3 +1229,28 @@ custom_hash_map_iter_impl!(
     "
 );
 default_pygc_protocol_impl!(AllPairsPathMapping);
+
+custom_hash_map_iter_impl!(
+    NodeMap,
+    NodeMapKeys,
+    NodeMapValues,
+    NodeMapItems,
+    node_map,
+    node_map_keys,
+    node_map_values,
+    node_map_items,
+    usize,
+    usize,
+    "A class representing a mapping of node indices to node indices
+
+     This class is equivalent to having a dict of the form::
+
+         {1: 0, 3: 1}
+
+    Unlike a dict though this class is unordered and multiple NodeMap
+    objects with the same contents might yield a different order when
+    iterated over. If a consistent order is required you should sort
+    the object.
+    "
+);
+default_pygc_protocol_impl!(NodeMap);
