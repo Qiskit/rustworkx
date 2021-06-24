@@ -464,6 +464,9 @@ fn graph_is_isomorphic(
 /// :param bool id_order: If set to ``True`` this function will match the nodes
 ///     in order specified by their ids. Otherwise it will default to a heuristic
 ///     matching order based on [VF2]_ paper.
+/// :param bool induced: If set to ``True`` this function will check the existence
+///     of a node-induced subgraph of first isomorphic to second graph.
+///     Default: ``True``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
@@ -539,6 +542,9 @@ fn digraph_is_subgraph_isomorphic(
 /// :param bool id_order: If set to ``True`` this function will match the nodes
 ///     in order specified by their ids. Otherwise it will default to a heuristic
 ///     matching order based on [VF2]_ paper.
+/// :param bool induced: If set to ``True`` this function will check the existence
+///     of a node-induced subgraph of first isomorphic to second graph.
+///     Default: ``True``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
