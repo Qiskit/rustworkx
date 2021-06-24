@@ -435,8 +435,12 @@ fn graph_is_isomorphic(
 ///
 /// This checks if 2 graphs are subgraph isomorphic both structurally and also
 /// comparing the node data and edge data using the provided matcher functions.
-/// The matcher function takes in 2 data objects and will compare them. A simple
-/// example that checks if they're just equal would be::
+/// The matcher function takes in 2 data objects and will compare them.
+/// Since there is an ambiguity in the term 'subgraph', do note that we check
+/// for an node-induced subgraph if argument `induced` is set to `True`. If it is
+/// set to `False`, we check for a non induced subgraph, meaning the second graph
+/// can have fewer edges than the subgraph of the first. By default it's `True`. A
+/// simple example that checks if they're just equal would be::
 ///
 ///     graph_a = retworkx.PyDiGraph()
 ///     graph_b = retworkx.PyDiGraph()
@@ -506,8 +510,12 @@ fn digraph_is_subgraph_isomorphic(
 ///
 /// This checks if 2 graphs are subgraph isomorphic both structurally and also
 /// comparing the node data and edge data using the provided matcher functions.
-/// The matcher function takes in 2 data objects and will compare them. A simple
-/// example that checks if they're just equal would be::
+/// The matcher function takes in 2 data objects and will compare them.
+/// Since there is an ambiguity in the term 'subgraph', do note that we check
+/// for an node-induced subgraph if argument `induced` is set to `True`. If it is
+/// set to `False`, we check for a non induced subgraph, meaning the second graph
+/// can have fewer edges than the subgraph of the first. By default it's `True`. A
+/// simple example that checks if they're just equal would be::
 ///
 ///     graph_a = retworkx.PyGraph()
 ///     graph_b = retworkx.PyGraph()

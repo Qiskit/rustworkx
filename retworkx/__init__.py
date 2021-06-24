@@ -759,8 +759,8 @@ def is_subgraph_isomorphic(
     Since there is an ambiguity in the term 'subgraph', do note that we check
     for an node-induced subgraph if argument `induced` is set to `True`. If it is
     set to `False`, we check for a non induced subgraph, meaning the second graph
-    can have fewer edges than the subgraph of the first. A simple example that checks
-    if they're just equal would be::
+    can have fewer edges than the subgraph of the first. By default it's `True`. A
+    simple example that checks if they're just equal would be::
 
             graph_a = retworkx.PyGraph()
             graph_b = retworkx.PyGraph()
