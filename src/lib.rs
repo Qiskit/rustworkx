@@ -60,8 +60,8 @@ use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
-    AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices, NodeMap,
-    PathLengthMapping, PathMapping, Pos2DMapping, WeightedEdgeList,
+    AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices,
+    NodeMap, PathLengthMapping, PathMapping, Pos2DMapping, WeightedEdgeList,
 };
 
 trait NodesRemoved {
@@ -666,7 +666,7 @@ fn digraph_vf2_mapping(
         Some(&mut mapping),
     )?;
     if res {
-        Ok(Some(NodeMap {node_map: mapping}))
+        Ok(Some(NodeMap { node_map: mapping }))
     } else {
         Ok(None)
     }
@@ -746,7 +746,7 @@ fn graph_vf2_mapping(
         Some(&mut mapping),
     )?;
     if res {
-        Ok(Some(NodeMap{ node_map: mapping}))
+        Ok(Some(NodeMap { node_map: mapping }))
     } else {
         Ok(None)
     }
