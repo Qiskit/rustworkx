@@ -1323,7 +1323,7 @@ def vf2_mapping(
 
     :returns: A dicitonary of node indices from ``first`` to node indices in
         ``second`` representing the mapping found.
-    :rtype: dict
+    :rtype: NodeMap
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 

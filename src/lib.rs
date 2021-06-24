@@ -60,7 +60,7 @@ use rayon::prelude::*;
 
 use crate::generators::PyInit_generators;
 use crate::iterators::{
-    AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices,
+    AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices, NodeMap,
     PathLengthMapping, PathMapping, Pos2DMapping, WeightedEdgeList,
 };
 
@@ -621,7 +621,7 @@ fn graph_is_subgraph_isomorphic(
 ///
 /// :returns: A dicitonary of node indices from ``first`` to node indices in
 ///     ``second`` representing the mapping found.
-/// :rtype: dict
+/// :rtype: NodeMap
 #[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
 fn digraph_vf2_mapping(
     py: Python,
@@ -632,7 +632,7 @@ fn digraph_vf2_mapping(
     id_order: bool,
     subgraph: bool,
     induced: bool,
-) -> PyResult<Option<HashMap<usize, usize>>> {
+) -> PyResult<Option<NodeMap>> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
             let res = f.call1(py, (a, b))?;
@@ -666,7 +666,7 @@ fn digraph_vf2_mapping(
         Some(&mut mapping),
     )?;
     if res {
-        Ok(Some(mapping))
+        Ok(Some(NodeMap {node_map: mapping}))
     } else {
         Ok(None)
     }
@@ -701,7 +701,7 @@ fn digraph_vf2_mapping(
 ///
 /// :returns: A dicitonary of node indices from ``first`` to node indices in
 ///     ``second`` representing the mapping found.
-/// :rtype: dict
+/// :rtype: NodeMap
 #[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
 fn graph_vf2_mapping(
     py: Python,
@@ -712,7 +712,7 @@ fn graph_vf2_mapping(
     id_order: bool,
     subgraph: bool,
     induced: bool,
-) -> PyResult<Option<HashMap<usize, usize>>> {
+) -> PyResult<Option<NodeMap>> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
             let res = f.call1(py, (a, b))?;
@@ -746,7 +746,7 @@ fn graph_vf2_mapping(
         Some(&mut mapping),
     )?;
     if res {
-        Ok(Some(mapping))
+        Ok(Some(NodeMap{ node_map: mapping}))
     } else {
         Ok(None)
     }
