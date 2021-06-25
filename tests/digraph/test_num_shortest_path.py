@@ -93,10 +93,6 @@ class TestNumShortestpath(unittest.TestCase):
             23: 35,
             24: 70,
         }
-        for i in res:
-            print("(%s, %s)" % (i, res[i]))
-        print(res)
-        print(len(res))
         self.assertEqual(expected, res)
 
     def test_node_with_no_path(self):

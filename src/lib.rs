@@ -4538,7 +4538,7 @@ pub fn digraph_num_shortest_paths_unweighted(
 
 /// Get the number of unweighted shortest paths from a source node
 ///
-/// :param PyDiGraph graph: The graph to find the number of shortest paths on
+/// :param PyGraph graph: The graph to find the number of shortest paths on
 /// :param int source: The source node to find the shortest paths from
 ///
 /// :returns: A mapping of target node indices to the number of shortest paths
