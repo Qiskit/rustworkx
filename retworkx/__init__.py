@@ -1284,6 +1284,31 @@ def _graph_spiral_layout(
 
 
 @functools.singledispatch
+def num_shortest_paths_unweighted(graph, source):
+    """Get the number of unweighted shortest paths from a source node
+
+    :param PyDiGraph graph: The graph to find the number of shortest paths on
+    :param int source: The source node to find the shortest paths from
+
+    :returns: A mapping of target node indices to the number of shortest paths
+        from ``source`` to that node. If there is no path from ``source`` to
+        a node in the graph that node will not be preset in the output mapping.
+    :rtype: NodesCountMapping
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@num_shortest_paths_unweighted.register(PyDiGraph)
+def _digraph_num_shortest_paths_unweighted(graph, source):
+    return digraph_num_shortest_paths_unweighted(graph, source)
+
+
+@num_shortest_paths_unweighted.register(PyGraph)
+def _graph_num_shortest_paths_unweighted(graph, source):
+    return graph_num_shortest_paths_unweighted(graph, source)
+
+
+@functools.singledispatch
 def vf2_mapping(
     first,
     second,

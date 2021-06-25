@@ -34,6 +34,7 @@ Shortest Paths
    retworkx.floyd_warshall
    retworkx.astar_shortest_path
    retworkx.k_shortest_path_lengths
+   retworkx.num_shortest_paths_unweighted
 
 .. _traversal:
 
@@ -226,6 +227,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_shell_layout
    retworkx.digraph_spiral_layout
    retworkx.digraph_spring_layout
+   retworkx.digraph_num_shortest_paths_unweighted
 
 
 .. _api-functions-pygraph:
@@ -264,6 +266,7 @@ typed API based on the data type.
    retworkx.graph_shell_layout
    retworkx.graph_spiral_layout
    retworkx.graph_spring_layout
+   retworkx.graph_num_shortest_paths_unweighted
 
 Exceptions
 ==========

@@ -44,6 +44,7 @@ use std::convert::TryInto;
 use std::hash::Hasher;
 
 use hashbrown::HashMap;
+use num_bigint::BigUint;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
 use pyo3::class::{PyMappingProtocol, PyObjectProtocol, PySequenceProtocol};
@@ -103,6 +104,14 @@ impl PyHash for f64 {
     #[inline]
     fn hash<H: Hasher>(&self, _: Python, state: &mut H) -> PyResult<()> {
         state.write(&self.to_be_bytes());
+        Ok(())
+    }
+}
+
+impl PyHash for BigUint {
+    #[inline]
+    fn hash<H: Hasher>(&self, _: Python, state: &mut H) -> PyResult<()> {
+        self.iter_u64_digits().for_each(|i| state.write_u64(i));
         Ok(())
     }
 }
@@ -192,7 +201,7 @@ macro_rules! pyeq_impl {
     )*)
 }
 
-pyeq_impl! {bool char usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f32 f64}
+pyeq_impl! {bool char usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f32 f64 BigUint}
 
 // see https://doc.rust-lang.org/src/core/tuple.rs.html#7
 macro_rules! pyeq_tuple_impls {
@@ -353,7 +362,7 @@ macro_rules! py_display_impl {
     )*)
 }
 
-py_display_impl! {bool char usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f32 f64}
+py_display_impl! {bool char usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f32 f64 BigUint}
 
 macro_rules! py_display_tuple_impls {
      ( $($name:ident)+) => (
@@ -1120,6 +1129,44 @@ impl PyDisplay for PathLengthMapping {
         Ok(format!("PathLengthMapping{}", self.path_lengths.str(py)?))
     }
 }
+
+custom_hash_map_iter_impl!(
+    NodesCountMapping,
+    NodesCountMappingKeys,
+    NodesCountMappingValues,
+    NodesCountMappingItems,
+    map,
+    map_keys,
+    map_values,
+    map_items,
+    usize,
+    BigUint,
+    "A custom class for the return of number path lengths to target nodes
+
+    This class is a container class for the results of functions that
+    return a mapping of target nodes and counts. It implements the Python
+    mapping protocol. So you can treat the return as a read-only
+    mapping/dict. If you want to use it as an iterator you can by
+    wrapping it in an ``iter()`` that will yield the results in
+    order.
+
+    For example::
+    
+        import retworkx
+    
+        graph = retworkx.generators.directed_path_graph(5)
+        edges = retworkx.num_shortest_paths_unweighted(0)
+        # Target node access
+        third_element = edges[2]
+        # Use as iterator
+        edges_iter = iter(edges)
+        first_target = next(edges_iter)
+        first_path = edges[first_target]
+        second_target = next(edges_iter)
+        second_path = edges[second_target]
+    "
+);
+default_pygc_protocol_impl!(NodesCountMapping);
 
 custom_hash_map_iter_impl!(
     AllPairsPathLengthMapping,
