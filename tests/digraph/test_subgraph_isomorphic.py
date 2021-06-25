@@ -178,7 +178,29 @@ class TestSubgraphIsomorphic(unittest.TestCase):
             [(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")]
         )
         for id_order in [False, True]:
-            with self.subTest(id_order=id_order):
+            with self.subTest(id_order=id_order, induced=True):
                 self.assertFalse(
-                    retworkx.is_subgraph_isomorphic(g_a, g_b, id_order=id_order)
+                    retworkx.is_subgraph_isomorphic(
+                        g_a, g_b, id_order=id_order, induced=True
+                    )
                 )
+            with self.subTest(id_order=id_order, induced=False):
+                self.assertTrue(
+                    retworkx.is_subgraph_isomorphic(
+                        g_a, g_b, id_order=id_order, induced=False
+                    )
+                )
+
+    def test_non_induced_grid_subgraph_isomorphic(self):
+        g_a = retworkx.generators.directed_grid_graph(2, 2)
+        g_b = retworkx.PyDiGraph()
+        g_b.add_nodes_from([0, 1, 2, 3])
+        g_b.add_edges_from_no_data([(0, 1), (2, 3)])
+
+        self.assertFalse(
+            retworkx.is_subgraph_isomorphic(g_a, g_b, induced=True)
+        )
+
+        self.assertTrue(
+            retworkx.is_subgraph_isomorphic(g_a, g_b, induced=False)
+        )
