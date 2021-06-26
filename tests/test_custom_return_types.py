@@ -151,6 +151,130 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         self.assertEqual(hash_res, hash(res))
 
 
+class TestNodesCountMapping(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        node_a = self.dag.add_node("a")
+        self.dag.add_child(node_a, "b", "Edgy")
+
+    def test__eq__match(self):
+        self.assertTrue(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 1}
+        )
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {2: 1}
+        )
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 2}
+        )
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 1, 2: 2}
+        )
+
+    def test_eq__same_type(self):
+        self.assertEqual(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0),
+            retworkx.num_shortest_paths_unweighted(self.dag, 0),
+        )
+
+    def test__eq__invalid_type(self):
+        self.assertFalse(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) == ["a", None]
+        )
+
+    def test__eq__invalid_inner_type(self):
+        self.assertFalse(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {0: "a"}
+        )
+
+    def test__ne__match(self):
+        self.assertFalse(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 1}
+        )
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) != {2: 1}
+        )
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 2}
+        )
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 1, 2: 2}
+        )
+
+    def test__ne__invalid_type(self):
+        self.assertTrue(
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) != ["a", None]
+        )
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            retworkx.num_shortest_paths_unweighted(self.dag, 0) > {1: 1}
+
+    def test_deepcopy(self):
+        paths = retworkx.num_shortest_paths_unweighted(self.dag, 0)
+        paths_copy = copy.deepcopy(paths)
+        self.assertEqual(paths, paths_copy)
+
+    def test_pickle(self):
+        paths = retworkx.num_shortest_paths_unweighted(self.dag, 0)
+        paths_pickle = pickle.dumps(paths)
+        paths_copy = pickle.loads(paths_pickle)
+        self.assertEqual(paths, paths_copy)
+
+    def test_str(self):
+        res = retworkx.num_shortest_paths_unweighted(self.dag, 0)
+        self.assertEqual("NodesCountMapping{1: 1}", str(res))
+
+    def test_hash(self):
+        res = retworkx.num_shortest_paths_unweighted(self.dag, 0)
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = retworkx.num_shortest_paths_unweighted(self.dag, 0)
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = retworkx.num_shortest_paths_unweighted(self.dag, 0).keys()
+        self.assertEqual([1], list(keys))
+
+    def test_values(self):
+        values = retworkx.num_shortest_paths_unweighted(self.dag, 0).values()
+        self.assertEqual([1], list(values))
+
+    def test_items(self):
+        items = retworkx.num_shortest_paths_unweighted(self.dag, 0).items()
+        self.assertEqual([(1, 1)], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(retworkx.num_shortest_paths_unweighted(self.dag, 0))
+        output = list(mapping_iter)
+        self.assertEqual(output, [1])
+
+    def test_contains(self):
+        res = retworkx.num_shortest_paths_unweighted(self.dag, 0)
+        self.assertIn(1, res)
+
+    def test_not_contains(self):
+        res = retworkx.num_shortest_paths_unweighted(self.dag, 0)
+        self.assertNotIn(0, res)
+
+
 class TestEdgeIndicesComparisons(unittest.TestCase):
     def setUp(self):
         self.dag = retworkx.PyDiGraph()
@@ -684,7 +808,7 @@ class TestPos2DMapping(unittest.TestCase):
     def test_str(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
         self.assertEqual(
-            "Pos2DMapping{0: (0.4883489113112722, 0.6545867364101975)}",
+            "Pos2DMapping{0: [0.4883489113112722, 0.6545867364101975]}",
             str(res),
         )
 
@@ -1155,3 +1279,182 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
     def test_not_contains(self):
         res = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
         self.assertNotIn(2, res)
+
+
+class TestNodeMap(unittest.TestCase):
+    def setUp(self):
+        self.dag = retworkx.PyDAG()
+        self.dag.add_node("a")
+        self.in_dag = retworkx.generators.directed_path_graph(1)
+
+    def test__eq__match(self):
+        self.assertTrue(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            == {0: 1}
+        )
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            == {2: 1}
+        )
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            == {0: 2}
+        )
+
+    def test__eq__different_length(self):
+        self.assertFalse(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            == {0: 1, 1: 2}
+        )
+
+    def test_eq__same_type(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        self.assertEqual(res, res)
+
+    def test__ne__match(self):
+        self.assertFalse(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            != {0: 1}
+        )
+
+    def test__ne__not_match(self):
+        self.assertTrue(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            != {2: 2}
+        )
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            != {0: 2}
+        )
+
+    def test__ne__different_length(self):
+        self.assertTrue(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+            != {0: 1, 1: 2}
+        )
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            ) > {1: 2}
+
+    def test__len__(self):
+        in_dag = retworkx.generators.directed_grid_graph(5, 5)
+        node_map = self.dag.substitute_node_with_subgraph(
+            0, in_dag, lambda *args: None
+        )
+        self.assertEqual(25, len(node_map))
+
+    def test_deepcopy(self):
+        node_map = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        node_map_copy = copy.deepcopy(node_map)
+        self.assertEqual(node_map, node_map_copy)
+
+    def test_pickle(self):
+        node_map = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        node_map_pickle = pickle.dumps(node_map)
+        node_map_copy = pickle.loads(node_map_pickle)
+        self.assertEqual(node_map, node_map_copy)
+
+    def test_str(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        self.assertEqual("NodeMap{0: 1}", str(res))
+
+    def test_hash(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        hash_res = hash(res)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(res))
+
+    def test_index_error(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        with self.assertRaises(IndexError):
+            res[42]
+
+    def test_keys(self):
+        keys = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        ).keys()
+        self.assertEqual([0], list(keys))
+
+    def test_values(self):
+        values = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        ).values()
+        self.assertEqual([1], list(values))
+
+    def test_items(self):
+        items = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        ).items()
+        self.assertEqual([(0, 1)], list(items))
+
+    def test_iter(self):
+        mapping_iter = iter(
+            self.dag.substitute_node_with_subgraph(
+                0, self.in_dag, lambda *args: None
+            )
+        )
+        output = list(mapping_iter)
+        self.assertEqual(output, [0])
+
+    def test_contains(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        self.assertIn(0, res)
+
+    def test_not_contains(self):
+        res = self.dag.substitute_node_with_subgraph(
+            0, self.in_dag, lambda *args: None
+        )
+        self.assertNotIn(2, res)
+
+    def test_iter_stable_for_same_obj(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_node(0)
+        in_graph = retworkx.generators.directed_path_graph(5)
+        res = self.dag.substitute_node_with_subgraph(
+            0, in_graph, lambda *args: None
+        )
+        first_iter = list(iter(res))
+        second_iter = list(iter(res))
+        third_iter = list(iter(res))
+        self.assertEqual(first_iter, second_iter)
+        self.assertEqual(first_iter, third_iter)

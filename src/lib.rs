@@ -51,6 +51,7 @@ use petgraph::visit::{
 use petgraph::EdgeType;
 
 use ndarray::prelude::*;
+use num_bigint::{BigUint, ToBigUint};
 use numpy::IntoPyArray;
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
@@ -60,7 +61,8 @@ use rayon::prelude::*;
 use crate::generators::PyInit_generators;
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, EdgeList, NodeIndices,
-    PathLengthMapping, PathMapping, Pos2DMapping, WeightedEdgeList,
+    NodesCountMapping, PathLengthMapping, PathMapping, Pos2DMapping,
+    WeightedEdgeList,
 };
 
 trait NodesRemoved {
@@ -356,6 +358,7 @@ fn digraph_is_isomorphic(
         compare_edges,
         id_order,
         Ordering::Equal,
+        true,
     )?;
     Ok(res)
 }
@@ -425,6 +428,7 @@ fn graph_is_isomorphic(
         compare_edges,
         id_order,
         Ordering::Equal,
+        true,
     )?;
     Ok(res)
 }
@@ -433,8 +437,12 @@ fn graph_is_isomorphic(
 ///
 /// This checks if 2 graphs are subgraph isomorphic both structurally and also
 /// comparing the node data and edge data using the provided matcher functions.
-/// The matcher function takes in 2 data objects and will compare them. A simple
-/// example that checks if they're just equal would be::
+/// The matcher function takes in 2 data objects and will compare them.
+/// Since there is an ambiguity in the term 'subgraph', do note that we check
+/// for an node-induced subgraph if argument `induced` is set to `True`. If it is
+/// set to `False`, we check for a non induced subgraph, meaning the second graph
+/// can have fewer edges than the subgraph of the first. By default it's `True`. A
+/// simple example that checks if they're just equal would be::
 ///
 ///     graph_a = retworkx.PyDiGraph()
 ///     graph_b = retworkx.PyDiGraph()
@@ -458,12 +466,15 @@ fn graph_is_isomorphic(
 /// :param bool id_order: If set to ``True`` this function will match the nodes
 ///     in order specified by their ids. Otherwise it will default to a heuristic
 ///     matching order based on [VF2]_ paper.
+/// :param bool induced: If set to ``True`` this function will check the existence
+///     of a node-induced subgraph of first isomorphic to second graph.
+///     Default: ``True``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false")]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
+#[pyfunction(id_order = "false", induced = "true")]
+#[text_signature = "(first, second, /, node_matcher=None, edge_matcher=None, id_order=False, induced=True)"]
 fn digraph_is_subgraph_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
@@ -471,6 +482,7 @@ fn digraph_is_subgraph_isomorphic(
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
     id_order: bool,
+    induced: bool,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -494,6 +506,7 @@ fn digraph_is_subgraph_isomorphic(
         compare_edges,
         id_order,
         Ordering::Greater,
+        induced,
     )?;
     Ok(res)
 }
@@ -502,8 +515,12 @@ fn digraph_is_subgraph_isomorphic(
 ///
 /// This checks if 2 graphs are subgraph isomorphic both structurally and also
 /// comparing the node data and edge data using the provided matcher functions.
-/// The matcher function takes in 2 data objects and will compare them. A simple
-/// example that checks if they're just equal would be::
+/// The matcher function takes in 2 data objects and will compare them.
+/// Since there is an ambiguity in the term 'subgraph', do note that we check
+/// for an node-induced subgraph if argument `induced` is set to `True`. If it is
+/// set to `False`, we check for a non induced subgraph, meaning the second graph
+/// can have fewer edges than the subgraph of the first. By default it's `True`. A
+/// simple example that checks if they're just equal would be::
 ///
 ///     graph_a = retworkx.PyGraph()
 ///     graph_b = retworkx.PyGraph()
@@ -527,12 +544,15 @@ fn digraph_is_subgraph_isomorphic(
 /// :param bool id_order: If set to ``True`` this function will match the nodes
 ///     in order specified by their ids. Otherwise it will default to a heuristic
 ///     matching order based on [VF2]_ paper.
+/// :param bool induced: If set to ``True`` this function will check the existence
+///     of a node-induced subgraph of first isomorphic to second graph.
+///     Default: ``True``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false")]
-#[text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=False, /)"]
+#[pyfunction(id_order = "false", induced = "true")]
+#[text_signature = "(first, second, /, node_matcher=None, edge_matcher=None, id_order=False, induced=True)"]
 fn graph_is_subgraph_isomorphic(
     py: Python,
     first: &graph::PyGraph,
@@ -540,6 +560,7 @@ fn graph_is_subgraph_isomorphic(
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
     id_order: bool,
+    induced: bool,
 ) -> PyResult<bool> {
     let compare_nodes = node_matcher.map(|f| {
         move |a: &PyObject, b: &PyObject| -> PyResult<bool> {
@@ -563,6 +584,7 @@ fn graph_is_subgraph_isomorphic(
         compare_edges,
         id_order,
         Ordering::Greater,
+        induced,
     )?;
     Ok(res)
 }
@@ -635,7 +657,7 @@ where
             let mut index = count;
             for child in &children[index..] {
                 index += 1;
-                if !visited.contains(&child) {
+                if !visited.contains(child) {
                     out_vec.push((parent.index(), child.index()));
                     visited.insert(*child);
                     let mut grandchildren: Vec<NodeIndex> =
@@ -2161,7 +2183,7 @@ pub fn digraph_dijkstra_shortest_paths(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
-            &graph.to_undirected(py),
+            &graph.to_undirected(py, true, None)?,
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -3907,7 +3929,7 @@ pub fn minimum_spanning_edges(
         Vec::with_capacity(graph.graph.edge_count());
     for edge in graph.edge_references() {
         let weight =
-            weight_callable(py, &weight_fn, &edge.weight(), default_weight)?;
+            weight_callable(py, &weight_fn, edge.weight(), default_weight)?;
         if weight.is_nan() {
             return Err(PyValueError::new_err("NaN found as an edge weight"));
         }
@@ -4115,7 +4137,7 @@ where
     let mut weights: HashMap<(usize, usize), f64> =
         HashMap::with_capacity(2 * graph.edge_count());
     for e in graph.edge_references() {
-        let w = weight_callable(py, &weight_fn, &e.weight(), default_weight)?;
+        let w = weight_callable(py, &weight_fn, e.weight(), default_weight)?;
         let source = e.source().index();
         let target = e.target().index();
 
@@ -4592,6 +4614,98 @@ pub fn digraph_spiral_layout(
     layout::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
 }
 
+fn _num_shortest_paths_unweighted<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    source: usize,
+) -> PyResult<HashMap<usize, BigUint>> {
+    let mut out_map: Vec<BigUint> =
+        vec![0.to_biguint().unwrap(); graph.node_bound()];
+    let node_index = NodeIndex::new(source);
+    if graph.node_weight(node_index).is_none() {
+        return Err(PyIndexError::new_err(format!(
+            "No node found for index {}",
+            source
+        )));
+    }
+    let mut bfs = Bfs::new(&graph, node_index);
+    let mut distance: Vec<Option<usize>> = vec![None; graph.node_bound()];
+    distance[node_index.index()] = Some(0);
+    out_map[source] = 1.to_biguint().unwrap();
+    while let Some(current) = bfs.next(graph) {
+        let dist_plus_one = distance[current.index()].unwrap_or_default() + 1;
+        let count_current = out_map[current.index()].clone();
+        for neighbor_index in
+            graph.neighbors_directed(current, petgraph::Direction::Outgoing)
+        {
+            let neighbor: usize = neighbor_index.index();
+            if distance[neighbor].is_none() {
+                distance[neighbor] = Some(dist_plus_one);
+                out_map[neighbor] = count_current.clone();
+            } else if distance[neighbor] == Some(dist_plus_one) {
+                out_map[neighbor] += &count_current;
+            }
+        }
+    }
+
+    // Do not count paths to source in output
+    distance[source] = None;
+    out_map[source] = 0.to_biguint().unwrap();
+
+    // Return only nodes that are reachable in the graph
+    Ok(out_map
+        .into_iter()
+        .zip(distance.iter())
+        .enumerate()
+        .filter_map(|(index, (count, dist))| {
+            if dist.is_some() {
+                Some((index, count))
+            } else {
+                None
+            }
+        })
+        .collect())
+}
+
+/// Get the number of unweighted shortest paths from a source node
+///
+/// :param PyDiGraph graph: The graph to find the number of shortest paths on
+/// :param int source: The source node to find the shortest paths from
+///
+/// :returns: A mapping of target node indices to the number of shortest paths
+///     from ``source`` to that node. If there is no path from ``source`` to
+///     a node in the graph that node will not be preset in the output mapping.
+/// :rtype: NodesCountMapping
+#[pyfunction]
+#[text_signature = "(graph, source, /)"]
+pub fn digraph_num_shortest_paths_unweighted(
+    graph: &digraph::PyDiGraph,
+    source: usize,
+) -> PyResult<NodesCountMapping> {
+    Ok(NodesCountMapping {
+        map: _num_shortest_paths_unweighted(&graph.graph, source)?,
+    })
+}
+
+/// Get the number of unweighted shortest paths from a source node
+///
+/// :param PyGraph graph: The graph to find the number of shortest paths on
+/// :param int source: The source node to find the shortest paths from
+///
+/// :returns: A mapping of target node indices to the number of shortest paths
+///     from ``source`` to that node. If there is no path from ``source`` to
+///     a node in the graph that node will not be preset in the output mapping.
+/// :rtype: NumPathsMapping
+#[pyfunction]
+#[text_signature = "(graph, source, /)"]
+pub fn graph_num_shortest_paths_unweighted(
+    graph: &graph::PyGraph,
+    source: usize,
+) -> PyResult<NodesCountMapping> {
+    Ok(NodesCountMapping {
+        map: _num_shortest_paths_unweighted(&graph.graph, source)?,
+    })
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -4691,6 +4805,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_spiral_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_spring_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_num_shortest_paths_unweighted))?;
+    m.add_wrapped(wrap_pyfunction!(graph_num_shortest_paths_unweighted))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
@@ -4704,6 +4820,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::Pos2DMapping>()?;
     m.add_class::<iterators::AllPairsPathLengthMapping>()?;
     m.add_class::<iterators::AllPairsPathMapping>()?;
+    m.add_class::<iterators::NodesCountMapping>()?;
+    m.add_class::<iterators::NodeMap>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }

@@ -47,7 +47,7 @@ use petgraph::visit::{
 
 use super::dot_utils::build_dot;
 use super::iterators::{
-    EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList,
+    EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
     is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
@@ -61,6 +61,20 @@ use super::{
 /// (although rarely used for edges) is indexed by an integer id. These ids
 /// are stable for the lifetime of the graph object and on node or edge
 /// deletions you can have holes in the list of indices for the graph.
+/// Node indices will be reused on additions after removal. For example:
+///
+/// .. jupyter-execute::
+///
+///        import retworkx
+///
+///        graph = retworkx.PyDiGraph()
+///        graph.add_nodes_from(list(range(5)))
+///        graph.add_nodes_from(list(range(2)))
+///        graph.remove_node(2)
+///        print("After deletion:", graph.node_indexes())
+///        res_manual = graph.add_parent(6, None, None)
+///        print("After adding a new node:", graph.node_indexes())
+///
 /// Additionally, each node and edge contains an arbitrary Python object as a
 /// weight/data payload. You can use the index for access to the data payload
 /// as in the following example:
@@ -1783,7 +1797,7 @@ impl PyDiGraph {
         let dir = petgraph::Direction::Outgoing;
         let edges = self.graph.edges_directed(index, dir);
         for edge in edges {
-            let edge_predicate_raw = predicate_callable(&edge.weight())?;
+            let edge_predicate_raw = predicate_callable(edge.weight())?;
             let edge_predicate: bool = edge_predicate_raw.extract(py)?;
             if edge_predicate {
                 return Ok(self.graph.node_weight(edge.target()).unwrap());
@@ -2203,6 +2217,161 @@ impl PyDiGraph {
         Ok(out_dict.into())
     }
 
+    /// Substitute a node with a PyDigraph object
+    ///
+    /// :param int node: The node to replace with the PyDiGraph object
+    /// :param PyDiGraph other: The other graph to replace ``node`` with
+    /// :param callable edge_map_fn: A callable object that will take 3 position
+    ///     parameters, ``(source, target, weight)`` to represent an edge either to
+    ///     or from ``node`` in this graph. The expected return value from this
+    ///     callable is the node index of the node in ``other`` that an edge should
+    ///     be to/from. If None is returned, that edge will be skipped and not
+    ///     be copied.
+    /// :param callable node_filter: An optional callable object that when used
+    ///     will receive a node's payload object from ``other`` and return
+    ///     ``True`` if that node is to be included in the graph or not.
+    /// :param callable edge_weight_map: An optional callable object that when
+    ///     used will receive an edge's weight/data payload from ``other`` and
+    ///     will return an object to use as the weight for a newly created edge
+    ///     after the edge is mapped from ``other``. If not specified the weight
+    ///     from the edge in ``other`` will be copied by reference and used.
+    ///
+    /// :returns: A mapping of node indices in ``other`` to the equivalent node
+    ///     in this graph.
+    /// :rtype: NodeMap
+    ///
+    /// .. note::
+    ///
+    ///    The return type is a :class:`retworkx.NodeMap` which is an unordered
+    ///    type. So it does not provide a deterministic ordering between objects
+    ///    when iterated over (although the same object will have a consistent
+    ///    order when iterated over multiple times).
+    ///
+    #[text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None)"]
+    fn substitute_node_with_subgraph(
+        &mut self,
+        py: Python,
+        node: usize,
+        other: &PyDiGraph,
+        edge_map_fn: PyObject,
+        node_filter: Option<PyObject>,
+        edge_weight_map: Option<PyObject>,
+    ) -> PyResult<NodeMap> {
+        let weight_map_fn = |obj: &PyObject,
+                             weight_fn: &Option<PyObject>|
+         -> PyResult<PyObject> {
+            match weight_fn {
+                Some(weight_fn) => weight_fn.call1(py, (obj,)),
+                None => Ok(obj.clone_ref(py)),
+            }
+        };
+        let map_fn = |source: usize,
+                      target: usize,
+                      weight: &PyObject|
+         -> PyResult<Option<usize>> {
+            let res = edge_map_fn.call1(py, (source, target, weight))?;
+            res.extract(py)
+        };
+        let filter_fn =
+            |obj: &PyObject, filter_fn: &Option<PyObject>| -> PyResult<bool> {
+                match filter_fn {
+                    Some(filter) => {
+                        let res = filter.call1(py, (obj,))?;
+                        res.extract(py)
+                    }
+                    None => Ok(true),
+                }
+            };
+        let node_index: NodeIndex = NodeIndex::new(node);
+        if self.graph.node_weight(node_index).is_none() {
+            return Err(PyIndexError::new_err(format!(
+                "Specified node {} is not in this graph",
+                node
+            )));
+        }
+        // Copy nodes from other to self
+        let mut out_map: HashMap<usize, usize> =
+            HashMap::with_capacity(other.node_count());
+        for node in other.graph.node_indices() {
+            let node_weight = other[node].clone_ref(py);
+            if !filter_fn(&node_weight, &node_filter)? {
+                continue;
+            }
+            let new_index = self.graph.add_node(node_weight);
+            out_map.insert(node.index(), new_index.index());
+        }
+        // If no nodes are copied bail here since there is nothing left
+        // to do.
+        if out_map.is_empty() {
+            self.graph.remove_node(node_index);
+            // Return a new empty map to clear allocation from out_map
+            return Ok(NodeMap {
+                node_map: HashMap::new(),
+            });
+        }
+        // Copy edges from other to self
+        for edge in other.graph.edge_references().filter(|edge| {
+            out_map.contains_key(&edge.target().index())
+                && out_map.contains_key(&edge.source().index())
+        }) {
+            self._add_edge(
+                NodeIndex::new(out_map[&edge.source().index()]),
+                NodeIndex::new(out_map[&edge.target().index()]),
+                weight_map_fn(edge.weight(), &edge_weight_map)?,
+            )?;
+        }
+        // Add edges to/from node to nodes in other
+        let in_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
+            .graph
+            .edges_directed(node_index, petgraph::Direction::Incoming)
+            .map(|edge| {
+                (edge.source(), edge.target(), edge.weight().clone_ref(py))
+            })
+            .collect();
+        let out_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
+            .graph
+            .edges_directed(node_index, petgraph::Direction::Outgoing)
+            .map(|edge| {
+                (edge.source(), edge.target(), edge.weight().clone_ref(py))
+            })
+            .collect();
+        for (source, target, weight) in in_edges {
+            let old_index = map_fn(source.index(), target.index(), &weight)?;
+            let target_out = match old_index {
+                Some(old_index) => match out_map.get(&old_index) {
+                    Some(new_index) => NodeIndex::new(*new_index),
+                    None => {
+                        return Err(PyIndexError::new_err(format!(
+                            "No mapped index {} found",
+                            old_index
+                        )))
+                    }
+                },
+                None => continue,
+            };
+            self._add_edge(source, target_out, weight)?;
+        }
+        for (source, target, weight) in out_edges {
+            let old_index = map_fn(source.index(), target.index(), &weight)?;
+            let source_out = match old_index {
+                Some(old_index) => match out_map.get(&old_index) {
+                    Some(new_index) => NodeIndex::new(*new_index),
+                    None => {
+                        return Err(PyIndexError::new_err(format!(
+                            "No mapped index {} found",
+                            old_index
+                        )))
+                    }
+                },
+                None => continue,
+            };
+            self._add_edge(source_out, target, weight)?;
+        }
+        // Remove node
+        self.graph.remove_node(node_index);
+        Ok(NodeMap { node_map: out_map })
+    }
+
     /// Return a new PyDiGraph object for a subgraph of this graph
     ///
     /// :param list nodes: A list of node indices to generate the subgraph
@@ -2274,34 +2443,91 @@ impl PyDiGraph {
     ///
     /// This will create a new :class:`~retworkx.PyGraph` object from this
     /// graph. All edges in this graph will be created as undirected edges in
-    /// the new graph object.
+    /// the new graph object. For directed graphs with bidirectional edges, you
+    /// can set `multigraph=False` to condense them into a single edge and specify
+    /// a function to combine the weights/data of the edges.
     /// Do note that the node and edge weights/data payloads will be passed
     /// by reference to the new :class:`~retworkx.PyGraph` object.
     ///
+    /// :param bool multigraph: If set to `False` the output graph will not
+    ///     allow parallel edges. Instead parallel edges will be condensed
+    ///     into a single edge and their data will be combined using
+    ///     `weight_combo_fn`. If `weight_combo_fn` is not provided, the data
+    ///     of the edge with the largest index will be kept. Default: `True`.
+    /// :param weight_combo_fn: An optional python callable that will take in a
+    ///     two edge weight/data object and return a new edge weight/data
+    ///     object that will be used when adding an edge between two nodes
+    ///     connected by multiple edges (of either direction) in the original
+    ///     directed graph.
     /// :returns: A new PyGraph object with an undirected edge for every
     ///     directed edge in this graph
     /// :rtype: PyGraph
-    #[text_signature = "(self)"]
-    pub fn to_undirected(&self, py: Python) -> crate::graph::PyGraph {
+    #[text_signature = "(self, /, multigraph=True, weight_combo_fn=None)"]
+    #[args(multigraph = "true", weight_combo_fn = "None")]
+    pub fn to_undirected(
+        &self,
+        py: Python,
+        multigraph: bool,
+        weight_combo_fn: Option<PyObject>,
+    ) -> PyResult<crate::graph::PyGraph> {
         let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
         let mut node_map: HashMap<NodeIndex, NodeIndex> =
             HashMap::with_capacity(self.node_count());
+
+        let combine = |a: &PyObject,
+                       b: &PyObject,
+                       combo_fn: &Option<PyObject>|
+         -> PyResult<Option<PyObject>> {
+            match combo_fn {
+                Some(combo_fn) => {
+                    let res = combo_fn.call1(py, (a, b))?;
+                    Ok(Some(res))
+                }
+                None => Ok(None),
+            }
+        };
+
         for node_index in self.graph.node_indices() {
             let node = self.graph[node_index].clone_ref(py);
             let new_index = new_graph.add_node(node);
             node_map.insert(node_index, new_index);
         }
         for edge in self.edge_references() {
-            let source = node_map.get(&edge.source()).unwrap();
-            let target = node_map.get(&edge.target()).unwrap();
+            let &source = node_map.get(&edge.source()).unwrap();
+            let &target = node_map.get(&edge.target()).unwrap();
             let weight = edge.weight().clone_ref(py);
-            new_graph.add_edge(*source, *target, weight);
+            if multigraph {
+                new_graph.add_edge(source, target, weight);
+            } else {
+                let exists = new_graph.find_edge(source, target);
+                match exists {
+                    Some(index) => {
+                        let old_weight =
+                            new_graph.edge_weight_mut(index).unwrap();
+                        match combine(
+                            old_weight,
+                            edge.weight(),
+                            &weight_combo_fn,
+                        )? {
+                            Some(value) => {
+                                *old_weight = value;
+                            }
+                            None => {
+                                *old_weight = weight;
+                            }
+                        }
+                    }
+                    None => {
+                        new_graph.add_edge(source, target, weight);
+                    }
+                }
+            }
         }
-        crate::graph::PyGraph {
+        Ok(crate::graph::PyGraph {
             graph: new_graph,
             node_removed: false,
-            multigraph: true,
-        }
+            multigraph,
+        })
     }
 
     /// Return a shallow copy of the graph

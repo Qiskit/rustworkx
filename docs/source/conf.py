@@ -83,9 +83,9 @@ copyright = u'2021, retworkx Contributors'
 # built documents.
 #
 # The short X.Y version.
-version = '0.9.0'
+version = '0.10.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.9.0'
+release = '0.10.0'
 
 if not os.getenv('RETWORKX_DEV_DOCS', None):
     rst_prolog = """

@@ -255,6 +255,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-bigint"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d0a3d5e207573f948a9e5376662aa743a2ea13f7c50a554d7af443a73fbfeba"
+dependencies = [
+ "autocfg",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "num-complex"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -295,9 +306,9 @@ dependencies = [
 
 [[package]]
 name = "numpy"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7073fae1e0b82409533a29c6f804b79783d7b2d3c07728fdc4d884eda8cd4f0"
+checksum = "a996bcd58fb29bef9debf717330cd8876c3b4adbeea4939020a5326a3afad4d9"
 dependencies = [
  "cfg-if 0.1.10",
  "libc",
@@ -394,6 +405,7 @@ dependencies = [
  "indoc",
  "inventory",
  "libc",
+ "num-bigint",
  "parking_lot",
  "paste",
  "pyo3-macros",
@@ -433,9 +445,9 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ef9e7e66b4468674bfcb0c81af8b7fa0bb154fa9f28eb840da5c447baeb8d7e"
+checksum = "2e7573632e6454cf6b99d7aac4ccca54be06da05aca2ef7423d22d27d4d4bcd8"
 dependencies = [
  "libc",
  "rand_chacha",
@@ -473,9 +485,9 @@ dependencies = [
 
 [[package]]
 name = "rand_pcg"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7de198537002b913568a3847e53535ace266f93526caf5c360ec41d72c5787f0"
+checksum = "59cad018caf63deb318e5a4586d99a24424a364f40f1e5778c29aca23f4fc73e"
 dependencies = [
  "rand_core",
 ]
@@ -522,11 +534,12 @@ dependencies = [
 
 [[package]]
 name = "retworkx"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "fixedbitset",
  "hashbrown",
  "ndarray",
+ "num-bigint",
  "numpy",
  "petgraph",
  "pyo3",
