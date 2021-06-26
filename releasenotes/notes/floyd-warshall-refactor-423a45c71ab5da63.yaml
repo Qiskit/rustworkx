@@ -1,5 +1,5 @@
 ---
-features:
+upgrade:
   - |
     :func:`~retworkx.floyd_warshall` has been completely reworked and now returns
     a :class:`retworkx.AllPairsPathLengthMapping` instead of a Python dictionary.
