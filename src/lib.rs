@@ -1182,11 +1182,11 @@ fn _floyd_warshall<Ty: EdgeType>(
 ///     tells retworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
-///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
+///         digraph_floyd_warshall(graph, weight_fn= lambda x: 1)
 ///
 ///     to return a weight of 1 for all edges. Also::
 ///
-///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+///         digraph_floyd_warshall(graph, weight_fn=float)
 ///
 ///     to cast the edge object as a float as the weight.
 /// :param as_undirected: If set to true each directed edge will be treated as
@@ -1226,7 +1226,7 @@ fn digraph_floyd_warshall(
         weight_fn,
         as_undirected,
         default_weight,
-        parallel_threshold
+        parallel_threshold,
     )
 }
 
@@ -1248,11 +1248,11 @@ fn digraph_floyd_warshall(
 ///     tells retworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
-///         graph_floyd_warshall(graph, weight_fn: lambda x: 1)
+///         graph_floyd_warshall(graph, weight_fn= lambda x: 1)
 ///
 ///     to return a weight of 1 for all edges. Also::
 ///
-///         graph_floyd_warshall(graph, weight_fn: lambda x: float(x))
+///         graph_floyd_warshall(graph, weight_fn=float)
 ///
 ///     to cast the edge object as a float as the weight.
 /// :param int parallel_threshold: The number of nodes to execute
@@ -1286,7 +1286,7 @@ fn graph_floyd_warshall(
         weight_fn,
         as_undirected,
         default_weight,
-        parallel_threshold
+        parallel_threshold,
     )
 }
 
