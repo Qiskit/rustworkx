@@ -266,6 +266,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-bigint"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e0d047c1062aa51e256408c560894e5251f08925980e53cf1aa5bd00eec6512"
+dependencies = [
+ "autocfg",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "num-complex"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -405,7 +416,7 @@ dependencies = [
  "indoc",
  "inventory",
  "libc",
- "num-bigint",
+ "num-bigint 0.3.2",
  "parking_lot",
  "paste",
  "pyo3-macros",
@@ -539,7 +550,7 @@ dependencies = [
  "fixedbitset",
  "hashbrown",
  "ndarray",
- "num-bigint",
+ "num-bigint 0.4.0",
  "numpy",
  "petgraph",
  "pyo3",

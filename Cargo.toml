@@ -23,7 +23,7 @@ numpy = "0.13.2"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.5"
-num-bigint = "0.3"
+num-bigint = "0.4"
 
 [dependencies.pyo3]
 version = "0.13.0"
