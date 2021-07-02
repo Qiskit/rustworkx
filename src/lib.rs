@@ -567,8 +567,8 @@ fn graph_is_subgraph_isomorphic(
 ///     of a node-induced subgraph of first isomorphic to second graph.
 ///     Default: ``True``.
 ///
-/// :returns: An iterator over dicitonaries of node indices from ``first`` to node indices
-///     in ``second`` representing the mapping found.
+/// :returns: An iterator over dicitonaries of node indices from ``first`` to node
+///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
 #[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
 fn digraph_vf2_mapping(
@@ -635,8 +635,8 @@ fn digraph_vf2_mapping(
 ///     of a node-induced subgraph of first isomorphic to second graph.
 ///     Default: ``True``.
 ///
-/// :returns: An iterator over dicitonaries of node indices from ``first`` to node indices
-///     in ``second`` representing the mapping found.
+/// :returns: An iterator over dicitonaries of node indices from ``first`` to node
+///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
 #[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
 fn graph_vf2_mapping(

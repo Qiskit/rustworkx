@@ -1355,8 +1355,8 @@ def vf2_mapping(
         of a node-induced subgraph of first isomorphic to second graph.
         Default: ``True``.
 
-    :returns: An iterator over dicitonaries of node indices from ``first`` to node indices in
-        ``second`` representing the mapping found.
+    :returns: An iterator over dicitonaries of node indices from ``first`` to node
+        indices in ``second`` representing the mapping found.
     :rtype: Iterable[NodeMap]
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
