@@ -544,7 +544,7 @@ fn graph_is_subgraph_isomorphic(
 ///         vf2 = retworkx.digraph_vf2_mapping(graph_a, graph_b, subgraph=True)
 ///         try:
 ///             mapping = next(vf2)
-///         except:
+///         except StopIteration:
 ///             pass
 ///
 ///
@@ -613,7 +613,7 @@ fn digraph_vf2_mapping(
 ///         vf2 = retworkx.graph_vf2_mapping(graph_a, graph_b, subgraph=True)
 ///         try:
 ///             mapping = next(vf2)
-///         except:
+///         except StopIteration:
 ///             pass
 ///
 /// :param PyGraph first: The first graph to find the mapping for

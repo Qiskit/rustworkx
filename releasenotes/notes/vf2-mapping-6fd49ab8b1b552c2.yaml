@@ -4,7 +4,8 @@ features:
     Added a new function, :func:`retworkx.vf2_mapping`, which will use the
     vf2 isomorphism algorithm (which is also used for
     :func:`retworkx.is_isomorphic` and :func:`retworkx.is_subgraph_isomorphic`)
-    to return an isomorphic mapping between two graphs. For example:
+    to return an iterator over all valid isomorphic mappings between two graphs.
+    For example:
 
     .. jupyter-execute::
 
@@ -12,5 +13,9 @@ features:
 
       graph = retworkx.generators.directed_grid_graph(10, 10)
       other_graph = retworkx.generators.directed_grid_graph(4, 4)
-      mapping = retworkx.vf2_mapping(graph, other_graph, subgraph=True)
-      print(mapping)
+      vf2 = retworkx.vf2_mapping(graph, other_graph, subgraph=True)
+      try:
+        mapping = next(vf2)
+        print(mapping)
+      except StopIteration:
+        pass
