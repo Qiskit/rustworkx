@@ -1319,16 +1319,25 @@ def vf2_mapping(
     induced=True,
 ):
     """
-    Return the vf2 mapping between two :class:`~retworkx.PyDiGraph` objects
+    Return an iterator over all vf2 mappings between two graphs.
 
     This funcion will run the vf2 algorithm used from
     :func:`~retworkx.is_isomorphic` and :func:`~retworkx.is_subgraph_isomorphic`
-    but instead of returning a boolean it will return the mapping of node ids
-    found from ``first`` to ``second``. If the graphs are not isomorphic than
-    ``None`` will be returned.
+    but instead of returning a boolean it will return an iterator over all possible
+    mapping of node ids found from ``first`` to ``second``. If the graphs are not
+    isomorphic then the iterator will be empty. A simple example that retrieves
+    one mapping would be::
 
-    :param PyDiGraph first: The first graph to find the mapping for
-    :param PyDiGraph second: The second graph to find the mapping for
+            graph_a = retworkx.generators.path_graph(3)
+            graph_b = retworkx.generators.path_graph(2)
+            vf2 = retworkx.vf2_mapping(graph_a, graph_b, subgraph=True)
+            try:
+                mapping = next(vf2)
+            except:
+                pass
+
+    :param first: The first graph to find the mapping for
+    :param second: The second graph to find the mapping for
     :param node_matcher: An optional python callable object that takes 2
         positional arguments, one for each node data object in either graph.
         If the return of this function evaluates to True then the nodes
@@ -1346,9 +1355,9 @@ def vf2_mapping(
         of a node-induced subgraph of first isomorphic to second graph.
         Default: ``True``.
 
-    :returns: A dicitonary of node indices from ``first`` to node indices in
+    :returns: An iterator over dicitonaries of node indices from ``first`` to node indices in
         ``second`` representing the mapping found.
-    :rtype: NodeMap
+    :rtype: Iterable[NodeMap]
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 

@@ -227,7 +227,7 @@ class TestIsomorphic(unittest.TestCase):
         graph = retworkx.generators.directed_grid_graph(2, 2)
         second_graph = retworkx.generators.directed_grid_graph(2, 2)
         mapping = retworkx.digraph_vf2_mapping(graph, second_graph)
-        self.assertEqual(mapping, {0: 0, 1: 1, 2: 2, 3: 3})
+        self.assertEqual(next(mapping), {0: 0, 1: 1, 2: 2, 3: 3})
 
     def test_digraph_vf2_mapping_identical_removals(self):
         graph = retworkx.generators.directed_path_graph(2)
@@ -235,7 +235,7 @@ class TestIsomorphic(unittest.TestCase):
         second_graph.remove_nodes_from([1, 2])
         second_graph.add_edge(0, 3, None)
         mapping = retworkx.digraph_vf2_mapping(graph, second_graph)
-        self.assertEqual({0: 0, 1: 3}, mapping)
+        self.assertEqual({0: 0, 1: 3}, next(mapping))
 
     def test_digraph_vf2_mapping_identical_removals_first(self):
         second_graph = retworkx.generators.directed_path_graph(2)
@@ -243,7 +243,7 @@ class TestIsomorphic(unittest.TestCase):
         graph.remove_nodes_from([1, 2])
         graph.add_edge(0, 3, None)
         mapping = retworkx.digraph_vf2_mapping(graph, second_graph)
-        self.assertEqual({0: 0, 3: 1}, mapping)
+        self.assertEqual({0: 0, 3: 1}, next(mapping))
 
     def test_subgraph_vf2_mapping(self):
         graph = retworkx.generators.directed_grid_graph(10, 10)
@@ -251,7 +251,7 @@ class TestIsomorphic(unittest.TestCase):
         mapping = retworkx.digraph_vf2_mapping(
             graph, second_graph, subgraph=True
         )
-        self.assertEqual(mapping, {0: 0, 1: 1, 10: 2, 11: 3})
+        self.assertEqual(next(mapping), {0: 0, 1: 1, 10: 2, 11: 3})
 
     def test_digraph_vf2_mapping_identical_vf2pp(self):
         graph = retworkx.generators.directed_grid_graph(2, 2)
@@ -263,7 +263,7 @@ class TestIsomorphic(unittest.TestCase):
             {0: 0, 1: 1, 2: 2, 3: 3},
             {0: 0, 1: 2, 2: 1, 3: 3},
         ]
-        self.assertIn(mapping, valid_mappings)
+        self.assertIn(next(mapping), valid_mappings)
 
     def test_graph_vf2_mapping_identical_removals_vf2pp(self):
         graph = retworkx.generators.directed_path_graph(2)
@@ -273,7 +273,7 @@ class TestIsomorphic(unittest.TestCase):
         mapping = retworkx.digraph_vf2_mapping(
             graph, second_graph, id_order=False
         )
-        self.assertEqual({0: 0, 1: 3}, mapping)
+        self.assertEqual({0: 0, 1: 3}, next(mapping))
 
     def test_graph_vf2_mapping_identical_removals_first_vf2pp(self):
         second_graph = retworkx.generators.directed_path_graph(2)
@@ -283,7 +283,7 @@ class TestIsomorphic(unittest.TestCase):
         mapping = retworkx.digraph_vf2_mapping(
             graph, second_graph, id_order=False
         )
-        self.assertEqual({0: 0, 3: 1}, mapping)
+        self.assertEqual({0: 0, 3: 1}, next(mapping))
 
     def test_subgraph_vf2_mapping_vf2pp(self):
         graph = retworkx.generators.directed_grid_graph(3, 3)
@@ -295,7 +295,7 @@ class TestIsomorphic(unittest.TestCase):
             {8: 3, 5: 2, 7: 1, 4: 0},
             {7: 2, 5: 1, 4: 0, 8: 3},
         ]
-        self.assertIn(mapping, valid_mappings)
+        self.assertIn(next(mapping), valid_mappings)
 
     def test_vf2pp_remapping(self):
         temp = retworkx.generators.directed_grid_graph(3, 3)
@@ -314,4 +314,4 @@ class TestIsomorphic(unittest.TestCase):
             {6: 1, 5: 0, 8: 2, 9: 3},
             {6: 2, 5: 0, 9: 3, 8: 1},
         ]
-        self.assertIn(mapping, expected_mappings)
+        self.assertIn(next(mapping), expected_mappings)
