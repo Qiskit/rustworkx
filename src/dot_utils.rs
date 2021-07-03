@@ -51,7 +51,7 @@ where
             file,
             "{} {};",
             graph.to_index(node.id()),
-            attr_map_to_string(py, node_attrs.as_ref(), &node.weight())?
+            attr_map_to_string(py, node_attrs.as_ref(), node.weight())?
         )?;
     }
     for edge in graph.edge_references() {
@@ -61,7 +61,7 @@ where
             graph.to_index(edge.source()),
             EDGE[graph.is_directed() as usize],
             graph.to_index(edge.target()),
-            attr_map_to_string(py, edge_attrs.as_ref(), &edge.weight())?
+            attr_map_to_string(py, edge_attrs.as_ref(), edge.weight())?
         )?;
     }
     writeln!(file, "}}")?;
