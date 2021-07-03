@@ -1475,11 +1475,10 @@ fn collect_runs(
 }
 
 #[pyfunction]
-#[text_signature = "(graph, special_filter_fn, filter_fn, color_fn)"]
+#[text_signature = "(graph, filter_fn, color_fn)"]
 fn collect_bicolor_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
-    special_filter_fn: PyObject,
     filter_fn: PyObject,
     color_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
@@ -1487,12 +1486,7 @@ fn collect_bicolor_runs(
     let mut block_id: Vec<Option<usize>> = Vec::new();
     let mut block_list: Vec<Vec<PyObject>> = Vec::new();
 
-    let special_filter_node = |node: &PyObject| -> PyResult<bool> {
-        let res = special_filter_fn.call1(py, (node,))?;
-        res.extract(py)
-    };
-
-    let filter_node = |node: &PyObject| -> PyResult<bool> {
+    let filter_node = |node: &PyObject| -> PyResult<Option<bool>> {
         let res = filter_fn.call1(py, (node,))?;
         res.extract(py)
     };
@@ -1520,7 +1514,7 @@ fn collect_bicolor_runs(
     }
 
     for node in nodes {
-        if special_filter_node(&graph.graph[node])? {
+        if let Some(is_match) = filter_node(&graph.graph[node])? {
             let raw_edges = graph
                 .graph
                 .edges_directed(node, petgraph::Direction::Outgoing);
@@ -1543,9 +1537,9 @@ fn collect_bicolor_runs(
                 })
                 .collect::<PyResult<Vec<i32>>>()?;
 
-            if colors.len() <= 2 && filter_node(&graph.graph[node])? {
-                let c0 = colors[0] as usize;
+            if colors.len() <= 2 && is_match {
                 if colors.len() == 1 {
+                    let c0 = colors[0] as usize;
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     if let Some(c0_block_id) = block_id[c0] {
                         block_list[c0_block_id]
@@ -1553,7 +1547,8 @@ fn collect_bicolor_runs(
                     } else {
                         pending_list[c0].push(graph.graph[node].clone_ref(py));
                     }
-                } else {
+                } else if colors.len() == 2 {
+                    let c0 = colors[0] as usize;
                     let c1 = colors[1] as usize;
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     ensure_vector_has_index!(pending_list, block_id, c1);
