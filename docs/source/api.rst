@@ -51,6 +51,7 @@ Traversal
    retworkx.descendants
    retworkx.ancestors
    retworkx.collect_runs
+   retworkx.collect_bicolor_runs
 
 .. _dag-algorithms:
 
