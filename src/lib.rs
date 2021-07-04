@@ -1612,12 +1612,6 @@ fn collect_bicolor_runs(
         }
     }
 
-    for pending_item in pending_list {
-        if !pending_item.is_empty() {
-            block_list.push(pending_item);
-        }
-    }
-
     Ok(block_list)
 }
 
