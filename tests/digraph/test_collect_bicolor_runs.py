@@ -140,7 +140,6 @@ class TestCollectBicolorRuns(unittest.TestCase):
         dag.add_edge(cz_gate, q0_list[2], "q0")
         dag.add_edge(cz_gate, q1_list[2], "q1")
 
-
         def filter_function(node):
             if node in ["cx", "cz"]:
                 return True
