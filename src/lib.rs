@@ -1476,8 +1476,8 @@ fn collect_runs(
 
 /// Collect runs that match a filter function
 ///
-/// A bicolor run is a path of nodes connected by edges of up two colors, 
-/// in which all nodes in the path match the given condition. 
+/// A bicolor run is a path of nodes connected by edges of up two colors,
+/// in which all nodes in the path match the given condition.
 /// Each node in the graph can appear in only a single run.
 ///
 /// :param PyDiGraph graph: The graph to find runs in
@@ -1491,7 +1491,7 @@ fn collect_runs(
 ///     in one argument, the edge data payload/weight object, and will return
 ///     an integer, the edge color. If the integer is negative, the edge is ignored.
 ///
-/// :returns: a list of runs with up to two colors, where each run is a list of 
+/// :returns: a list of runs with up to two colors, where each run is a list of
 ///     node data payload/weight for the nodes in the run
 /// :rtype: list
 #[pyfunction]
