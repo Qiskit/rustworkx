@@ -1476,9 +1476,9 @@ fn collect_runs(
 
 /// Collect runs that match a filter function given edge colors
 ///
-/// A bicolor run is a list of group of nodes connected by edges of exactly 
-/// two colors. In addition, all nodes in the group must match the given 
-/// condition. Each node in the graph can appear in only a single group 
+/// A bicolor run is a list of group of nodes connected by edges of exactly
+/// two colors. In addition, all nodes in the group must match the given
+/// condition. Each node in the graph can appear in only a single group
 /// in the bicolor run.
 ///
 /// :param PyDiGraph graph: The graph to find runs in
@@ -1489,7 +1489,7 @@ fn collect_runs(
 ///     If it returns ``False``, it will stop the bicolor chain.
 ///     If it returns ``None`` it will skip that node.
 /// :param color_fn: The function that gives the color of the edge. It takes
-///     in one argument, the edge data payload/weight object, and will 
+///     in one argument, the edge data payload/weight object, and will
 ///     return a non-negative integer, the edge color. If the color is None,
 ///     the edge is ignored.
 ///
