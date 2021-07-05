@@ -1575,19 +1575,16 @@ fn collect_bicolor_runs(
 
                     if block_id[c0].is_some()
                         && block_id[c1].is_some()
-                        && block_id[c0].unwrap_or_default()
-                            == block_id[c1].unwrap_or_default()
+                        && block_id[c0] == block_id[c1]
                     {
                         block_list[block_id[c0].unwrap_or_default()]
                             .push(graph.graph[node].clone_ref(py));
                     } else {
                         let mut new_block: Vec<PyObject> = Vec::new();
-                        if !pending_list[c0].is_empty() {
-                            new_block.append(&mut pending_list[c0]);
-                        }
-                        if !pending_list[c1].is_empty() {
-                            new_block.append(&mut pending_list[c1]);
-                        }
+
+                        // Clears pending lits and add to new block
+                        new_block.append(&mut pending_list[c0]);
+                        new_block.append(&mut pending_list[c1]);
 
                         new_block.push(graph.graph[node].clone_ref(py));
 
