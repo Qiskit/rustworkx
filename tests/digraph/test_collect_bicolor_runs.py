@@ -20,7 +20,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
         dag = retworkx.PyDiGraph()
         dag.extend_from_edge_list([(0, 1), (1, 2), (2, 0)])
         with self.assertRaises(retworkx.DAGHasCycle):
-            retworkx.collect_bicolor_runs(dag, lambda _: True, lambda _: -1)
+            retworkx.collect_bicolor_runs(dag, lambda _: True, lambda _: None)
 
     def test_filter_function_inner_exception(self):
         dag = retworkx.PyDiGraph()
@@ -32,7 +32,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
             raise IndexError("Things fail from time to time")
 
         with self.assertRaises(IndexError):
-            retworkx.collect_bicolor_runs(dag, fail_function, lambda _: -1)
+            retworkx.collect_bicolor_runs(dag, fail_function, lambda _: None)
 
         with self.assertRaises(IndexError):
             retworkx.collect_bicolor_runs(dag, lambda _: True, fail_function)
@@ -40,7 +40,8 @@ class TestCollectBicolorRuns(unittest.TestCase):
     def test_empty(self):
         dag = retworkx.PyDAG()
         self.assertEqual(
-            [], retworkx.collect_bicolor_runs(dag, lambda _: True, lambda _: -1)
+            [],
+            retworkx.collect_bicolor_runs(dag, lambda _: True, lambda _: None),
         )
 
     def test_two_colors(self):
@@ -108,7 +109,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
             if "q" in node:
                 return int(node[1:])
             else:
-                return -1
+                return None
 
         self.assertEqual(
             [["cx", "cz"]],
@@ -214,7 +215,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
             if "q" in node:
                 return int(node[1:])
             else:
-                return -1
+                return None
 
         self.assertEqual(
             [["h", "cx", "cz", "y"]],
@@ -305,7 +306,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
             if "q" in node:
                 return int(node[1:])
             else:
-                return -1
+                return None
 
         self.assertEqual(
             [["cx"], ["cz"]],

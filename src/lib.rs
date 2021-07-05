@@ -1511,7 +1511,7 @@ fn collect_bicolor_runs(
         res.extract(py)
     };
 
-    let color_edge = |edge: &PyObject| -> PyResult<i32> {
+    let color_edge = |edge: &PyObject| -> PyResult<Option<usize>> {
         let res = color_fn.call1(py, (edge,))?;
         res.extract(py)
     };
@@ -1539,27 +1539,20 @@ fn collect_bicolor_runs(
                 .graph
                 .edges_directed(node, petgraph::Direction::Outgoing);
 
-            // Filter all edges that yield non-negative colors from color_fn
+            // Remove all edges that do not yield errors from color_fn
             let colors = raw_edges
-                .filter_map(|edge| {
+                .map(|edge| {
                     let edge_weight = edge.weight();
-                    let color_result = color_edge(edge_weight);
-                    if color_result.is_ok() {
-                        let color = color_result.unwrap_or_default();
-                        if color >= 0 {
-                            Some(Ok(color))
-                        } else {
-                            None
-                        }
-                    } else {
-                        Some(color_result)
-                    }
+                    color_edge(edge_weight)
                 })
-                .collect::<PyResult<Vec<i32>>>()?;
+                .collect::<PyResult<Vec<Option<usize>>>>()?;
+
+            // Remove null edges from color_fn
+            let colors = colors.into_iter().flatten().collect::<Vec<usize>>();
 
             if colors.len() <= 2 && is_match {
                 if colors.len() == 1 {
-                    let c0 = colors[0] as usize;
+                    let c0 = colors[0];
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     if let Some(c0_block_id) = block_id[c0] {
                         block_list[c0_block_id]
@@ -1568,8 +1561,8 @@ fn collect_bicolor_runs(
                         pending_list[c0].push(graph.graph[node].clone_ref(py));
                     }
                 } else if colors.len() == 2 {
-                    let c0 = colors[0] as usize;
-                    let c1 = colors[1] as usize;
+                    let c0 = colors[0];
+                    let c1 = colors[1];
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     ensure_vector_has_index!(pending_list, block_id, c1);
 
@@ -1596,7 +1589,7 @@ fn collect_bicolor_runs(
                 }
             } else {
                 for color in colors {
-                    let color = color as usize;
+                    let color = color;
                     ensure_vector_has_index!(pending_list, block_id, color);
                     if let Some(color_block_id) = block_id[color] {
                         block_list[color_block_id]
