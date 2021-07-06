@@ -60,12 +60,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
             │          │             │         │
         q0  │          └─────────────┘         │  q1
             │                                  │
-        ┌───▼─────────┐                 ┌──────▼──────┐
-        │             │                 │             │
-        │    q0       │                 │    q1       │
-        │             │                 │             │
-        └───┬─────────┘                 └──────┬──────┘
-        q0  │          ┌─────────────┐         │  q1
+            │          ┌─────────────┐         │
             │          │             │         │
             └─────────►│      cz     │◄────────┘
              ┌─────────┤             ├─────────┐
@@ -83,7 +78,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
         dag = retworkx.PyDAG()
         q0_list = []
         q1_list = []
-        for _ in range(3):
+        for _ in range(2):
             q0_list.append(dag.add_node("q0"))
             q1_list.append(dag.add_node("q1"))
 
@@ -92,12 +87,10 @@ class TestCollectBicolorRuns(unittest.TestCase):
 
         dag.add_edge(q0_list[0], cx_gate, "q0")
         dag.add_edge(q1_list[0], cx_gate, "q1")
-        dag.add_edge(cx_gate, q0_list[1], "q0")
-        dag.add_edge(cx_gate, q1_list[1], "q1")
-        dag.add_edge(q0_list[1], cz_gate, "q0")
-        dag.add_edge(q1_list[1], cz_gate, "q1")
-        dag.add_edge(cz_gate, q0_list[2], "q0")
-        dag.add_edge(cz_gate, q1_list[2], "q1")
+        dag.add_edge(cx_gate, cz_gate, "q0")
+        dag.add_edge(cx_gate, cz_gate, "q1")
+        dag.add_edge(cz_gate, q0_list[1], "q0")
+        dag.add_edge(cz_gate, q1_list[1], "q1")
 
         def filter_function(node):
             if node in ["cx", "cz"]:
@@ -132,12 +125,11 @@ class TestCollectBicolorRuns(unittest.TestCase):
         │             │
         └───┬─────────┘
             | q0
-            │
-        ┌───▼─────────┐                 ┌─────────────┐
-        │             │                 │             │
-        │    q0       │                 │    q1       │
-        │             │                 │             │
-        └───┬─────────┘                 └──────┬──────┘
+            │                           ┌─────────────┐
+            │                           │             │
+            │                           │    q1       │
+            │                           │             │
+            |                           └──────┬──────┘
             │          ┌─────────────┐         │
         q0  │          │             │         │  q1
             │          │             │         │
@@ -146,12 +138,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
             │          │             │         │
         q0  │          └─────────────┘         │  q1
             │                                  │
-        ┌───▼─────────┐                 ┌──────▼──────┐
-        │             │                 │             │
-        │    q0       │                 │    q1       │
-        │             │                 │             │
-        └───┬─────────┘                 └──────┬──────┘
-        q0  │          ┌─────────────┐         │  q1
+            │          ┌─────────────┐         │
             │          │             │         │
             └─────────►│      cz     │◄────────┘
              ┌─────────┤             ├─────────┐
@@ -160,16 +147,9 @@ class TestCollectBicolorRuns(unittest.TestCase):
              │                                 │
          ┌───▼─────────┐                ┌──────▼──────┐
          │             │                │             │
-         │    q0       │                │    q1       │
+         │    q0       │                │    y        │
          │             │                │             │
          └─────────────┘                └─────────────┘
-                                            | q1
-                                            │
-                                        ┌───▼─────────┐
-                                        │             │
-                                        │    y        │
-                                        │             │
-                                        └─────────────┘
                                             | q1
                                             │
                                         ┌───▼─────────┐
@@ -183,7 +163,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
         dag = retworkx.PyDAG()
         q0_list = []
         q1_list = []
-        for _ in range(4):
+        for _ in range(2):
             q0_list.append(dag.add_node("q0"))
             q1_list.append(dag.add_node("q1"))
 
@@ -193,17 +173,13 @@ class TestCollectBicolorRuns(unittest.TestCase):
         y_gate = dag.add_node("y")
 
         dag.add_edge(q0_list[0], h_gate, "q0")
-        dag.add_edge(h_gate, q0_list[1], "q0")
-        dag.add_edge(q0_list[1], cx_gate, "q0")
+        dag.add_edge(h_gate, cx_gate, "q0")
         dag.add_edge(q1_list[0], cx_gate, "q1")
-        dag.add_edge(cx_gate, q0_list[2], "q0")
-        dag.add_edge(cx_gate, q1_list[1], "q1")
-        dag.add_edge(q0_list[2], cz_gate, "q0")
-        dag.add_edge(q1_list[1], cz_gate, "q1")
-        dag.add_edge(cz_gate, q0_list[3], "q0")
-        dag.add_edge(cz_gate, q1_list[2], "q1")
-        dag.add_edge(q1_list[2], y_gate, "q1")
-        dag.add_edge(y_gate, q1_list[3], "q1")
+        dag.add_edge(cx_gate, cz_gate, "q0")
+        dag.add_edge(cx_gate, cz_gate, "q1")
+        dag.add_edge(cz_gate, q0_list[1], "q0")
+        dag.add_edge(cz_gate, y_gate, "q1")
+        dag.add_edge(y_gate, q1_list[1], "q1")
 
         def filter_function(node):
             if node in ["cx", "cz", "h", "y"]:
@@ -236,26 +212,16 @@ class TestCollectBicolorRuns(unittest.TestCase):
             ┌──────────┤             ├─────────┐
         q0  │          └─────────────┘         │  q1
             │                                  │
-        ┌───▼─────────┐                 ┌──────▼──────┐
-        │             │                 │             │
-        │    q0       │                 │    q1       │
-        │             │                 │             │
-        └───┬─────────┘                 └──────┬──────┘
-        q0  │          ┌─────────────┐         │  q1
+            │          ┌─────────────┐         │
             │          │             │         │
             └─────────►│  barrier    │◄────────┘
              ┌─────────┤             ├─────────┐
              │         └─────────────┘         │
          q0  │                                 │ q1
              │                                 │
-        ┌────▼────────┐                 ┌──────▼──────┐
-        │             │                 │             │
-        │    q0       │                 │    q1       │
-        │             │                 │             │
-        └───┬─────────┘                 └──────┬──────┘
-            │          ┌─────────────┐         │
-        q0  │          │             │         │  q1
-            └─────────►│     cz      │◄────────┘
+             │         ┌─────────────┐         │
+             │         │             │         │
+             └────────►│     cz      │◄────────┘
             ┌──────────┤             ├─────────┐
         q0  │          └─────────────┘         │  q1
             │                                  │
@@ -270,7 +236,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
         dag = retworkx.PyDAG()
         q0_list = []
         q1_list = []
-        for _ in range(4):
+        for _ in range(2):
             q0_list.append(dag.add_node("q0"))
             q1_list.append(dag.add_node("q1"))
 
@@ -281,18 +247,14 @@ class TestCollectBicolorRuns(unittest.TestCase):
         # CX
         dag.add_edge(q0_list[0], cx_gate, "q0")
         dag.add_edge(q1_list[0], cx_gate, "q1")
-        dag.add_edge(cx_gate, q0_list[1], "q0")
-        dag.add_edge(cx_gate, q1_list[1], "q1")
         # Barrier
-        dag.add_edge(q0_list[1], barrier, "q0")
-        dag.add_edge(q1_list[1], barrier, "q1")
-        dag.add_edge(barrier, q0_list[2], "q0")
-        dag.add_edge(barrier, q1_list[2], "q1")
+        dag.add_edge(cx_gate, barrier, "q0")
+        dag.add_edge(cx_gate, barrier, "q1")
         # CZ
-        dag.add_edge(q0_list[2], cz_gate, "q0")
-        dag.add_edge(q1_list[2], cz_gate, "q1")
-        dag.add_edge(cz_gate, q0_list[3], "q0")
-        dag.add_edge(cz_gate, q1_list[3], "q1")
+        dag.add_edge(barrier, cz_gate, "q0")
+        dag.add_edge(barrier, cz_gate, "q1")
+        dag.add_edge(cz_gate, q0_list[1], "q0")
+        dag.add_edge(cz_gate, q1_list[1], "q1")
 
         def filter_function(node):
             if node in ["cx", "cz"]:
