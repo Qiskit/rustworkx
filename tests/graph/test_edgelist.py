@@ -169,6 +169,12 @@ class TestEdgeList(unittest.TestCase):
         def weight_fn(edge):
             raise KeyError
 
-        self.addCleanup(os.remove, path)
+        def cleanup_file(path):
+            try:
+                os.remove(path)
+            except Exception:
+                pass
+
+        self.addCleanup(cleanup_file, path)
         with self.assertRaises(KeyError):
             graph.write_edge_list(path, weight_fn=weight_fn)
