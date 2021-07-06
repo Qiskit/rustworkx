@@ -274,3 +274,77 @@ class TestCollectBicolorRuns(unittest.TestCase):
             [["cx"], ["cz"]],
             retworkx.collect_bicolor_runs(dag, filter_function, color_function),
         )
+
+    def test_color_with_ignored_edge(self):
+        """
+        Input:
+        ┌─────────────┐                 ┌─────────────┐
+        │             │                 │             │
+        │    q0       │                 │    c0       │
+        │             │                 │             │
+        └───┬─────────┘                 └──────┬──────┘
+            │          ┌─────────────┐         │
+        q0  │          │             │         │  c0
+            └─────────►│     rx      │◄────────┘
+            ┌──────────┤             ├─────────┐
+        q0  │          └─────────────┘         │  c0
+            │                                  │
+            │          ┌─────────────┐         │
+            │          │             │         │
+            └─────────►│  barrier    │         │
+             ┌─────────┤             │         │
+             │         └─────────────┘         │
+         q0  │                                 │ c0
+             │                                 │
+             │         ┌─────────────┐         │
+             │         │             │         │
+             └────────►│     rz      │◄────────┘
+            ┌──────────┤             ├─────────┐
+        q0  │          └─────────────┘         │  c0
+            │                                  │
+        ┌───▼─────────┐                 ┌──────▼──────┐
+        │             │                 │             │
+        │    q0       │                 │    c0       │
+        │             │                 │             │
+        └─────────────┘                 └─────────────┘
+
+        Expected: []
+        """
+        dag = retworkx.PyDAG()
+        q0_list = []
+        c0_list = []
+        for _ in range(2):
+            q0_list.append(dag.add_node("q0"))
+            c0_list.append(dag.add_node("c0"))
+
+        rx_gate = dag.add_node("rx")
+        barrier = dag.add_node("barrier")
+        rz_gate = dag.add_node("rz")
+
+        # RX
+        dag.add_edge(q0_list[0], rx_gate, "q0")
+        dag.add_edge(c0_list[0], rx_gate, "c0")
+        # Barrier
+        dag.add_edge(rx_gate, barrier, "q0")
+        # RZ
+        dag.add_edge(barrier, rz_gate, "q0")
+        dag.add_edge(rx_gate, rz_gate, "c0")
+        dag.add_edge(rz_gate, q0_list[1], "q0")
+        dag.add_edge(rz_gate, c0_list[1], "c0")
+
+        def filter_function(node):
+            if node == "barrier":
+                return False
+            else:
+                return None
+
+        def color_function(node):
+            if "q" in node:
+                return int(node[1:])
+            else:
+                return None
+
+        self.assertEqual(
+            [],
+            retworkx.collect_bicolor_runs(dag, filter_function, color_function),
+        )
