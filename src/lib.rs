@@ -1121,8 +1121,8 @@ fn _floyd_warshall<Ty: EdgeType>(
 
     // Build adjacency matrix
     for edge in graph.edge_references() {
-        let i = graph.to_index(edge.source());
-        let j = graph.to_index(edge.target());
+        let i = NodeIndexable::to_index(&graph, edge.source());
+        let j = NodeIndexable::to_index(&graph, edge.target());
         let weight = edge.weight().clone();
 
         let edge_weight =
