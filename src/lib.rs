@@ -44,9 +44,9 @@ use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeReference;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{
-    Bfs, Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNeighbors,
-    IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed, VisitMap,
-    Visitable,
+    Bfs, Data, EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences,
+    IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable, Reversed,
+    VisitMap, Visitable,
 };
 use petgraph::EdgeType;
 
@@ -2346,10 +2346,9 @@ fn _all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
         let raw = res.to_object(py);
         raw.extract(py)
     };
-    let edge_bound: usize =
-        graph.edge_indices().map(|x| x.index()).max().unwrap();
-    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(edge_bound);
-    for index in 0..=edge_bound {
+    let mut edge_weights: Vec<Option<f64>> =
+        Vec::with_capacity(graph.edge_bound());
+    for index in 0..=graph.edge_bound() {
         let raw_weight = graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
             Some(weight) => {
@@ -2424,10 +2423,9 @@ fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         let raw = res.to_object(py);
         raw.extract(py)
     };
-    let edge_bound: usize =
-        graph.edge_indices().map(|x| x.index()).max().unwrap();
-    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(edge_bound);
-    for index in 0..=edge_bound {
+    let mut edge_weights: Vec<Option<f64>> =
+        Vec::with_capacity(graph.edge_bound());
+    for index in 0..=graph.edge_bound() {
         let raw_weight = graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
             Some(weight) => {
