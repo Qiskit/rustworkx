@@ -1065,101 +1065,251 @@ fn graph_k_shortest_path_lengths(
             .collect(),
     })
 }
-/// Return the shortest path lengths between ever pair of nodes that has a
-/// path connecting them
-///
-/// The runtime is :math:`O(|N|^3 + |E|)` where :math:`|N|` is the number
-/// of nodes and :math:`|E|` is the number of edges.
-///
-/// This is done with the Floyd Warshall algorithm:
-///      
-/// 1. Process all edges by setting the distance from the parent to
-///    the child equal to the edge weight.
-/// 2. Iterate through every pair of nodes (source, target) and an additional
-///    itermediary node (w). If the distance from source :math:`\rightarrow` w
-///    :math:`\rightarrow` target is less than the distance from source
-///    :math:`\rightarrow` target, update the source :math:`\rightarrow` target
-///    distance (to pass through w).
-///
-/// The return format is ``{Source Node: {Target Node: Distance}}``.
-///
-/// .. note::
-///
-///     Paths that do not exist are simply not found in the return dictionary,
-///     rather than setting the distance to infinity, or -1.
-///
-/// .. note::
-///
-///     Edge weights are restricted to 1 in the current implementation.
-///
-/// :param PyDigraph graph: The DiGraph to get all shortest paths from
-///
-/// :returns: A dictionary of shortest paths
-/// :rtype: dict
-#[pyfunction]
-#[text_signature = "(dag, /)"]
-fn floyd_warshall(py: Python, dag: &digraph::PyDiGraph) -> PyResult<PyObject> {
-    let mut dist: HashMap<(usize, usize), usize> =
-        HashMap::with_capacity(dag.node_count());
-    for node in dag.graph.node_indices() {
-        // Distance from a node to itself is zero
-        dist.insert((node.index(), node.index()), 0);
+
+fn _floyd_warshall<Ty: EdgeType>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    weight_fn: Option<PyObject>,
+    as_undirected: bool,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<AllPairsPathLengthMapping> {
+    if graph.node_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: HashMap::new(),
+        });
+    } else if graph.edge_count() == 0 {
+        return Ok(AllPairsPathLengthMapping {
+            path_lengths: graph
+                .node_indices()
+                .map(|i| {
+                    (
+                        i.index(),
+                        PathLengthMapping {
+                            path_lengths: HashMap::new(),
+                        },
+                    )
+                })
+                .collect(),
+        });
     }
-    for edge in dag.graph.edge_indices() {
-        // Distance between nodes that share an edge is 1
-        let source_target = dag.graph.edge_endpoints(edge).unwrap();
-        let u = source_target.0.index();
-        let v = source_target.1.index();
-        // Update dist only if the key hasn't been set to 0 already
-        // (i.e. in case edge is a self edge). Assumes edge weight = 1.
-        dist.entry((u, v)).or_insert(1);
+    let n = graph.node_bound();
+
+    // Allocate empty matrix
+    let mut mat: Vec<HashMap<usize, f64>> = vec![HashMap::new(); n];
+
+    // Set diagonal to 0
+    for i in 0..n {
+        if let Some(row_i) = mat.get_mut(i) {
+            row_i.entry(i).or_insert(0.0);
+        }
     }
-    // The shortest distance between any pair of nodes u, v is the min of the
-    // distance tracked so far from u->v and the distance from u to v thorough
-    // another node w, for any w.
-    for w in dag.graph.node_indices() {
-        for u in dag.graph.node_indices() {
-            for v in dag.graph.node_indices() {
-                let u_v_dist = match dist.get(&(u.index(), v.index())) {
-                    Some(u_v_dist) => *u_v_dist,
-                    None => std::usize::MAX,
-                };
-                let u_w_dist = match dist.get(&(u.index(), w.index())) {
-                    Some(u_w_dist) => *u_w_dist,
-                    None => std::usize::MAX,
-                };
-                let w_v_dist = match dist.get(&(w.index(), v.index())) {
-                    Some(w_v_dist) => *w_v_dist,
-                    None => std::usize::MAX,
-                };
-                if u_w_dist == std::usize::MAX || w_v_dist == std::usize::MAX {
-                    // Avoid overflow!
-                    continue;
-                }
-                if u_v_dist > u_w_dist + w_v_dist {
-                    dist.insert((u.index(), v.index()), u_w_dist + w_v_dist);
-                }
+
+    // Utility to set row_i[j] = min(row_i[j], m_ij)
+    macro_rules! insert_or_minimize {
+        ($row_i: expr, $j: expr, $m_ij: expr) => {{
+            $row_i
+                .entry($j)
+                .and_modify(|e| {
+                    if $m_ij < *e {
+                        *e = $m_ij;
+                    }
+                })
+                .or_insert($m_ij);
+        }};
+    }
+
+    // Build adjacency matrix
+    for edge in graph.edge_references() {
+        let i = NodeIndexable::to_index(&graph, edge.source());
+        let j = NodeIndexable::to_index(&graph, edge.target());
+        let weight = edge.weight().clone();
+
+        let edge_weight =
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
+        if let Some(row_i) = mat.get_mut(i) {
+            insert_or_minimize!(row_i, j, edge_weight);
+        }
+        if as_undirected {
+            if let Some(row_j) = mat.get_mut(j) {
+                insert_or_minimize!(row_j, i, edge_weight);
             }
         }
     }
 
-    // Some re-formatting for Python: Dict[int, Dict[int, int]]
-    let out_dict = PyDict::new(py);
-    for (nodes, distance) in dist {
-        let u_index = nodes.0;
-        let v_index = nodes.1;
-        if out_dict.contains(u_index)? {
-            let u_dict =
-                out_dict.get_item(u_index).unwrap().downcast::<PyDict>()?;
-            u_dict.set_item(v_index, distance)?;
-            out_dict.set_item(u_index, u_dict)?;
-        } else {
-            let u_dict = PyDict::new(py);
-            u_dict.set_item(v_index, distance)?;
-            out_dict.set_item(u_index, u_dict)?;
+    // Perform the Floyd-Warshall algorithm.
+    // In each loop, this finds the shortest path from point i
+    // to point j using intermediate nodes 0..k
+    if n < parallel_threshold {
+        for k in 0..n {
+            let row_k = mat.get(k).cloned().unwrap_or_default();
+            mat.iter_mut().for_each(|row_i| {
+                if let Some(m_ik) = row_i.get(&k).cloned() {
+                    for (j, m_kj) in row_k.iter() {
+                        let m_ikj = m_ik + *m_kj;
+                        insert_or_minimize!(row_i, *j, m_ikj);
+                    }
+                }
+            })
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.get(k).cloned().unwrap_or_default();
+            mat.par_iter_mut().for_each(|row_i| {
+                if let Some(m_ik) = row_i.get(&k).cloned() {
+                    for (j, m_kj) in row_k.iter() {
+                        let m_ikj = m_ik + *m_kj;
+                        insert_or_minimize!(row_i, *j, m_ikj);
+                    }
+                }
+            })
         }
     }
-    Ok(out_dict.into())
+
+    // Convert to return format
+    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+
+    let out_map: HashMap<usize, PathLengthMapping> = node_indices
+        .into_iter()
+        .map(|i| {
+            let out_map = PathLengthMapping {
+                path_lengths: mat[i.index()]
+                    .iter()
+                    .map(|(k, v)| (*k, *v))
+                    .collect(),
+            };
+            (i.index(), out_map)
+        })
+        .collect();
+    Ok(AllPairsPathLengthMapping {
+        path_lengths: out_map,
+    })
+}
+
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
+/// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         digraph_floyd_warshall(graph, weight_fn= lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         digraph_floyd_warshall(graph, weight_fn=float)
+///
+///     to cast the edge object as a float as the weight.
+/// :param as_undirected: If set to true each directed edge will be treated as
+///     bidirectional/undirected.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {0: 0.0, 1: 2.0, 2: 2.0},
+///             1: {1: 0.0, 2: 1.0},
+///             2: {0: 1.0, 2: 0.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
+#[pyfunction(
+    parallel_threshold = "300",
+    as_undirected = "false",
+    default_weight = "1.0"
+)]
+#[text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"]
+fn digraph_floyd_warshall(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+    as_undirected: bool,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<AllPairsPathLengthMapping> {
+    _floyd_warshall(
+        py,
+        &graph.graph,
+        weight_fn,
+        as_undirected,
+        default_weight,
+        parallel_threshold,
+    )
+}
+
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
+/// :param PyGraph graph: The graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_floyd_warshall(graph, weight_fn= lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_floyd_warshall(graph, weight_fn=float)
+///
+///     to cast the edge object as a float as the weight.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {0: 0.0, 1: 2.0, 2: 2.0},
+///             1: {1: 0.0, 2: 1.0},
+///             2: {0: 1.0, 2: 0.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
+#[pyfunction(parallel_threshold = "300", default_weight = "1.0")]
+#[text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"]
+fn graph_floyd_warshall(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<AllPairsPathLengthMapping> {
+    let as_undirected = true;
+    _floyd_warshall(
+        py,
+        &graph.graph,
+        weight_fn,
+        as_undirected,
+        default_weight,
+        parallel_threshold,
+    )
 }
 
 fn get_edge_iter_with_weights<G>(
@@ -4595,7 +4745,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
-    m.add_wrapped(wrap_pyfunction!(floyd_warshall))?;
+    m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(collect_runs))?;
