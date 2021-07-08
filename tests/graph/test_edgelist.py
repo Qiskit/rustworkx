@@ -188,7 +188,7 @@ class TestEdgeList(unittest.TestCase):
     def test_invalid_return_type_weight_fn(self):
         path = os.path.join(tempfile.gettempdir(), "fail.txt")
         graph = retworkx.undirected_gnm_random_graph(5, 4)
-        self.addCleanup(os.remove, path)
+        self.addCleanup(cleanup_file, path)
         with self.assertRaises(TypeError):
             graph.write_edge_list(path, weight_fn=lambda _: 4.5)
 
@@ -199,6 +199,13 @@ class TestEdgeList(unittest.TestCase):
         def weight_fn(edge):
             raise KeyError
 
-        self.addCleanup(os.remove, path)
+        self.addCleanup(cleanup_file, path)
         with self.assertRaises(KeyError):
             graph.write_edge_list(path, weight_fn=weight_fn)
+
+
+def cleanup_file(path):
+    try:
+        os.remove(path)
+    except Exception:
+        pass

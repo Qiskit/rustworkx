@@ -251,6 +251,92 @@ def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 
 @functools.singledispatch
+def floyd_warshall(
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+    parallel_threshold=300,
+):
+    """Find all-pairs shortest path lengths using Floyd's algorithm
+
+    Floyd's algorithm is used for finding shortest paths in dense graphs
+    or graphs with negative weights (where Dijkstra's algorithm fails).
+
+    This function is multithreaded and will launch a pool with threads equal
+    to the number of CPUs by default if the number of nodes in the graph is
+    above the value of ``parallel_threshold`` (it defaults to 300).
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads if parallelization was enabled.
+
+    :param graph: The graph to run Floyd's algorithm on. Can
+        either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param callable weight_fn: A callable object (function, lambda, etc) which
+        will be passed the edge object and expected to return a ``float``. This
+        tells retworkx/rust how to extract a numerical weight as a ``float``
+        for edge object. Some simple examples are::
+
+            floyd_warshall(graph, weight_fn= lambda x: 1)
+
+        to return a weight of 1 for all edges. Also::
+
+            floyd_warshall(graph, weight_fn=float)
+
+        to cast the edge object as a float as the weight. If this is not
+        specified a default value (either ``default_weight`` or 1) will be used
+        for all edges.
+    :param float default_weight: If ``weight_fn`` is not used this can be
+        optionally used to specify a default weight to use for all edges.
+    :param int parallel_threshold: The number of nodes to execute
+        the algorithm in parallel at. It defaults to 300, but this can
+        be tuned
+
+    :return: A read-only dictionary of path lengths. The keys are the source
+        node indices and the values are a dict of the target node and the
+        length of the shortest path to that node. For example::
+
+            {
+                0: {0: 0.0, 1: 2.0, 2: 2.0},
+                1: {1: 0.0, 2: 1.0},
+                2: {0: 1.0, 2: 0.0},
+            }
+
+    :rtype: AllPairsPathLengthMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@floyd_warshall.register(PyDiGraph)
+def _digraph_floyd_warshall(
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+    parallel_threshold=300,
+):
+    return digraph_floyd_warshall(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
+    )
+
+
+@floyd_warshall.register(PyGraph)
+def _graph_floyd_warshall(
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+    parallel_threshold=300,
+):
+    return graph_floyd_warshall(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
+    )
+
+
+@functools.singledispatch
 def floyd_warshall_numpy(
     graph,
     weight_fn=None,

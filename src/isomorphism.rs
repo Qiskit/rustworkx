@@ -15,10 +15,9 @@
 
 use fixedbitset::FixedBitSet;
 use std::cmp::Ordering;
-use std::iter::FromIterator;
 use std::marker;
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 
 use super::NodesRemoved;
 
@@ -144,15 +143,15 @@ where
                 return;
             }
 
-            let mut next_level: HashSet<usize> = HashSet::new();
+            let mut next_level: Vec<usize> = Vec::new();
 
             seen[root] = true;
-            next_level.insert(root);
+            next_level.push(root);
             while !next_level.is_empty() {
-                let this_level = Vec::from_iter(next_level);
+                let this_level = next_level;
                 let this_level = process(this_level);
 
-                next_level = HashSet::new();
+                next_level = Vec::new();
                 for bfs_node in this_level {
                     for neighbor in graph.neighbors_directed(
                         graph.from_index(bfs_node),
@@ -161,7 +160,7 @@ where
                         let neigh = graph.to_index(neighbor);
                         if !seen[neigh] {
                             seen[neigh] = true;
-                            next_level.insert(neigh);
+                            next_level.push(neigh);
                         }
                     }
                 }
@@ -169,7 +168,7 @@ where
         };
 
         let mut sorted_nodes: Vec<usize> = (0..n).collect();
-        sorted_nodes.par_sort_unstable_by_key(|&node| (dout[node], din[node]));
+        sorted_nodes.par_sort_by_key(|&node| (dout[node], din[node]));
         sorted_nodes.reverse();
 
         for node in sorted_nodes {
