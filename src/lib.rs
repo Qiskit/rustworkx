@@ -74,7 +74,7 @@ fn longest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
-) -> PyResult<Vec<usize>> {
+) -> PyResult<(Vec<usize>, usize)> {
     let edge_weight_callable =
         |source: usize, target: usize, weight: &PyObject| -> PyResult<usize> {
             match &weight_fn {
@@ -94,7 +94,7 @@ fn longest_path(
         }
     };
     if nodes.is_empty() {
-        return Ok(path);
+        return Ok((path, 0));
     }
     let mut dist: HashMap<NodeIndex, (usize, NodeIndex)> = HashMap::new();
     for node in nodes {
@@ -144,7 +144,8 @@ fn longest_path(
         v = dist[&v].1;
     }
     path.reverse();
-    Ok(path)
+    let path_weight = dist[first].0;
+    Ok((path, path_weight))
 }
 
 /// Find the longest path in a DAG
@@ -173,7 +174,7 @@ fn dag_longest_path(
     weight_fn: Option<PyObject>,
 ) -> PyResult<NodeIndices> {
     Ok(NodeIndices {
-        nodes: longest_path(py, graph, weight_fn)?,
+        nodes: longest_path(py, graph, weight_fn)?.0,
     })
 }
 
@@ -192,13 +193,10 @@ fn dag_longest_path(
 fn dag_longest_path_length(
     py: Python,
     graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
 ) -> PyResult<usize> {
-    let path = longest_path(py, graph, None)?;
-    if path.is_empty() {
-        return Ok(0);
-    }
-    let path_length: usize = path.len() - 1;
-    Ok(path_length)
+    let (_, path_weight) = longest_path(py, graph, weight_fn)?;
+    Ok(path_weight)
 }
 
 /// Find the number of weakly connected components in a DAG.
