@@ -182,6 +182,14 @@ fn dag_longest_path(
 ///
 /// :param PyDiGraph graph: The graph to find the longest path on. The input
 ///     object must be a DAG without a cycle.
+/// :param weight_fn: A python callable that if set will be passed the 3
+///     positional arguments, the source node, the target node, and the edge
+///     weight for each edge as the function traverses the graph. It is expected
+///     to return an unsigned integer weight for that edge. For example,
+///     ``dag_longest_path(graph, lambda: _, __, weight: weight)`` could be
+///     use to just use an integer edge weight. It's also worth noting that this
+///     function traverses in topological order and only checks incoming edges to
+///     each node.
 ///
 /// :returns: The longest path length on the DAG
 /// :rtype: int
@@ -189,7 +197,7 @@ fn dag_longest_path(
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
-#[text_signature = "(graph, /)"]
+#[text_signature = "(graph, /, weight_fn=None)"]
 fn dag_longest_path_length(
     py: Python,
     graph: &digraph::PyDiGraph,
