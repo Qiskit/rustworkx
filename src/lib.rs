@@ -25,6 +25,7 @@ mod layout;
 mod max_weight_matching;
 mod union;
 
+use std::cmp;
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeSet, BinaryHeap};
 
@@ -69,7 +70,21 @@ trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
-fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
+fn longest_path(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+) -> PyResult<Vec<usize>> {
+    let edge_weight_callable =
+        |source: usize, target: usize, weight: &PyObject| -> PyResult<usize> {
+            match &weight_fn {
+                Some(weight_fn) => {
+                    let res = weight_fn.call1(py, (source, target, weight))?;
+                    res.extract(py)
+                }
+                None => Ok(1),
+            }
+        };
     let dag = &graph.graph;
     let mut path: Vec<usize> = Vec::new();
     let nodes = match algo::toposort(graph, None) {
@@ -83,12 +98,24 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
     }
     let mut dist: HashMap<NodeIndex, (usize, NodeIndex)> = HashMap::new();
     for node in nodes {
-        let parents =
-            dag.neighbors_directed(node, petgraph::Direction::Incoming);
+        let parents = dag.edges_directed(node, petgraph::Direction::Incoming);
         let mut us: Vec<(usize, NodeIndex)> = Vec::new();
-        for p_node in parents {
-            let length = dist[&p_node].0 + 1;
-            us.push((length, p_node));
+        let mut local_dist: HashMap<NodeIndex, usize> = HashMap::new();
+        for p_edge in parents {
+            let p_node = p_edge.source();
+            let weight: usize = edge_weight_callable(
+                p_node.index(),
+                p_edge.target().index(),
+                p_edge.weight(),
+            )?;
+            local_dist
+                .entry(p_node)
+                .and_modify(|x| *x = cmp::max(*x, weight))
+                .or_insert(weight);
+        }
+        for (p_node, weight) in local_dist.iter() {
+            let length = dist[p_node].0 + weight;
+            us.push((length, *p_node));
         }
         let maxu: (usize, NodeIndex);
         if !us.is_empty() {
@@ -124,6 +151,14 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
 ///
 /// :param PyDiGraph graph: The graph to find the longest path on. The input
 ///     object must be a DAG without a cycle.
+/// :param weight_fn: A python callable that if set will be passed the 3
+///     positional arguments, the source node, the target node, and the edge
+///     weight for each edge as the function traverses the graph. It is expected
+///     to return an unsigned integer weight for that edge. For example,
+///     ``dag_longest_path(graph, lambda: _, __, weight: weight)`` could be
+///     use to just use an integer edge weight. It's also worth noting that this
+///     function traverses in topological order and only checks incoming edges to
+///     each node.
 ///
 /// :returns: The node indices of the longest path on the DAG
 /// :rtype: NodeIndices
@@ -131,10 +166,14 @@ fn longest_path(graph: &digraph::PyDiGraph) -> PyResult<Vec<usize>> {
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
-#[text_signature = "(graph, /)"]
-fn dag_longest_path(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
+#[text_signature = "(graph, /, weight_fn=None)"]
+fn dag_longest_path(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+) -> PyResult<NodeIndices> {
     Ok(NodeIndices {
-        nodes: longest_path(graph)?,
+        nodes: longest_path(py, graph, weight_fn)?,
     })
 }
 
@@ -150,8 +189,11 @@ fn dag_longest_path(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
 #[text_signature = "(graph, /)"]
-fn dag_longest_path_length(graph: &digraph::PyDiGraph) -> PyResult<usize> {
-    let path = longest_path(graph)?;
+fn dag_longest_path_length(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+) -> PyResult<usize> {
+    let path = longest_path(py, graph, None)?;
     if path.is_empty() {
         return Ok(0);
     }
