@@ -61,7 +61,9 @@ where
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -145,7 +147,7 @@ pub fn directed_cycle_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -220,7 +222,9 @@ pub fn cycle_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -293,7 +297,7 @@ pub fn directed_path_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn path_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -371,7 +375,9 @@ pub fn path_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -445,7 +451,7 @@ pub fn directed_star_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn star_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -506,7 +512,7 @@ pub fn star_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -571,7 +577,7 @@ pub fn mesh_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn directed_mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -646,7 +652,9 @@ pub fn directed_mesh_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"
+)]
 pub fn grid_graph(
     py: Python,
     rows: Option<usize>,
@@ -754,7 +762,9 @@ pub fn grid_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_grid_graph(
     py: Python,
     rows: Option<usize>,
@@ -867,7 +877,7 @@ pub fn directed_grid_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(order, /, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(order, /, weights=None, multigraph=True)")]
 pub fn binomial_tree_graph(
     py: Python,
     order: u32,
@@ -964,7 +974,9 @@ pub fn binomial_tree_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
@@ -1086,7 +1098,7 @@ pub fn directed_binomial_tree_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, rows=None, cols=None, multigraph=True)")]
 pub fn hexagonal_lattice_graph(
     py: Python,
     rows: usize,
@@ -1172,7 +1184,9 @@ pub fn hexagonal_lattice_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
     rows: usize,
