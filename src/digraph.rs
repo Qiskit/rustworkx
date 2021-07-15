@@ -19,6 +19,7 @@ use std::io::{BufReader, BufWriter};
 use std::ops::{Index, IndexMut};
 use std::str;
 
+use indexmap::IndexMap;
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
@@ -2300,8 +2301,8 @@ impl PyDiGraph {
             )));
         }
         // Copy nodes from other to self
-        let mut out_map: HashMap<usize, usize> =
-            HashMap::with_capacity(other.node_count());
+        let mut out_map: IndexMap<usize, usize> =
+            IndexMap::with_capacity(other.node_count());
         for node in other.graph.node_indices() {
             let node_weight = other[node].clone_ref(py);
             if !filter_fn(&node_weight, &node_filter)? {
@@ -2316,7 +2317,7 @@ impl PyDiGraph {
             self.graph.remove_node(node_index);
             // Return a new empty map to clear allocation from out_map
             return Ok(NodeMap {
-                node_map: HashMap::new(),
+                node_map: IndexMap::new(),
             });
         }
         // Copy edges from other to self

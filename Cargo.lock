@@ -272,8 +272,7 @@ dependencies = [
 [[package]]
 name = "numpy"
 version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09c15af63aa0c74e0f7230d4e95d9a3d71a23449905f30f50b055df9a6a6a3e6"
+source = "git+https://github.com/IvanIsCoding/rust-numpy?branch=indexmap-support#026cac7631c363721e33bd3a3aa7d1806b9a4547"
 dependencies = [
  "cfg-if 0.1.10",
  "libc",
@@ -367,11 +366,11 @@ dependencies = [
 [[package]]
 name = "pyo3"
 version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "338f7f3701e11fd7f76508c91fbcaabc982564bcaf4d1ca7e1574ff2b4778aec"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#42454bb739cc97efb742c07fcd14822aa0bcc530"
 dependencies = [
  "cfg-if 1.0.0",
  "hashbrown 0.9.1",
+ "indexmap",
  "indoc",
  "libc",
  "num-bigint",
@@ -385,8 +384,7 @@ dependencies = [
 [[package]]
 name = "pyo3-build-config"
 version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcb2e98cc9ccc83d4f7115c8f925e0057e88c8d324b1bc4c2db4a7270c06ac9d"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#42454bb739cc97efb742c07fcd14822aa0bcc530"
 dependencies = [
  "once_cell",
 ]
@@ -394,8 +392,7 @@ dependencies = [
 [[package]]
 name = "pyo3-macros"
 version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfb8671a42d0ecc4bec8cc107ae96d49292ca20cd1968e09b98af4aafd516adf"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#42454bb739cc97efb742c07fcd14822aa0bcc530"
 dependencies = [
  "pyo3-macros-backend",
  "quote",
@@ -405,8 +402,7 @@ dependencies = [
 [[package]]
 name = "pyo3-macros-backend"
 version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9addf6dc422f05d4949cc0990195ee74fa43e3c3780cc9a1972fe9e7b68a9f48"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#42454bb739cc97efb742c07fcd14822aa0bcc530"
 dependencies = [
  "proc-macro2",
  "pyo3-build-config",
