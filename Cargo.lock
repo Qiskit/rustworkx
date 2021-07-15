@@ -518,6 +518,7 @@ version = "0.10.0"
 dependencies = [
  "fixedbitset",
  "hashbrown 0.9.1",
+ "indexmap",
  "ndarray",
  "num-bigint",
  "numpy",

@@ -24,6 +24,7 @@ rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.5"
 num-bigint = "0.4"
+indexmap = "1.6.2"
 
 [dependencies.pyo3]
 version = "0.14.1"
