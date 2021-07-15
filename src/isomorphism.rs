@@ -132,7 +132,7 @@ where
                             dout[node],
                             conn_out[node],
                             din[node],
-                            -1 * node as isize,
+                            -(node as isize),
                         )
                     })
                     .unwrap();
@@ -191,9 +191,8 @@ where
 
         let mut sorted_nodes: Vec<usize> =
             graph.node_indices().map(|node| node.index()).collect();
-        sorted_nodes.par_sort_by_key(|&node| {
-            (dout[node], din[node], -1 * node as isize)
-        });
+        sorted_nodes
+            .par_sort_by_key(|&node| (dout[node], din[node], -(node as isize)));
         sorted_nodes.reverse();
 
         for node in sorted_nodes {
