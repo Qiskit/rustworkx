@@ -1663,7 +1663,7 @@ fn collect_runs(
 ///     is a list of node data payload/weight for the nodes in the bicolor run
 /// :rtype: list
 #[pyfunction]
-#[text_signature = "(graph, filter_fn, color_fn)"]
+#[pyo3(text_signature = "(graph, filter_fn, color_fn)")]
 fn collect_bicolor_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
