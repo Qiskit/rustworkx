@@ -168,12 +168,18 @@ class TestLongestPath(unittest.TestCase):
         dag.add_node(0)
         self.assertEqual([0], retworkx.dag_longest_path(dag, weight_fn=int))
         self.assertEqual(
-            0, retworkx.dag_longest_path_length(dag, weight_fn=int)
+            0,
+            retworkx.dag_longest_path_length(
+                dag, weight_fn=lambda _, __, weight: int(weight)
+            ),
         )
 
     def test_empty_graph_with_weights(self):
         dag = retworkx.PyDAG()
         self.assertEqual([], retworkx.dag_longest_path(dag, weight_fn=int))
         self.assertEqual(
-            0, retworkx.dag_longest_path_length(dag, weight_fn=int)
+            0,
+            retworkx.dag_longest_path_length(
+                dag, weight_fn=lambda _, __, weight: int(weight)
+            ),
         )
