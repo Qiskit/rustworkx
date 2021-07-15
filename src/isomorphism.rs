@@ -127,7 +127,13 @@ where
                     .iter()
                     .enumerate()
                     .max_by_key(|&(_, &node)| {
-                        (conn_in[node], dout[node], conn_out[node], din[node])
+                        (
+                            conn_in[node],
+                            dout[node],
+                            conn_out[node],
+                            din[node],
+                            -1 * node as isize,
+                        )
                     })
                     .unwrap();
 
@@ -185,7 +191,9 @@ where
 
         let mut sorted_nodes: Vec<usize> =
             graph.node_indices().map(|node| node.index()).collect();
-        sorted_nodes.par_sort_by_key(|&node| (dout[node], din[node]));
+        sorted_nodes.par_sort_by_key(|&node| {
+            (dout[node], din[node], -1 * node as isize)
+        });
         sorted_nodes.reverse();
 
         for node in sorted_nodes {
