@@ -2405,7 +2405,7 @@ fn _all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
     let out_map: IndexMap<usize, PathLengthMapping> = node_indices
-        .into_iter()
+        .into_par_iter()
         .map(|x| {
             let out_map = PathLengthMapping {
                 path_lengths: dijkstra::dijkstra(
@@ -2483,7 +2483,7 @@ fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
     Ok(AllPairsPathMapping {
         paths: node_indices
-            .into_iter()
+            .into_par_iter()
             .map(|x| {
                 let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
                     HashMap::with_capacity(graph.node_count());
