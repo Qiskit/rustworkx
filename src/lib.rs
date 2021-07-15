@@ -25,7 +25,6 @@ mod layout;
 mod max_weight_matching;
 mod union;
 
-use std::cmp;
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeSet, BinaryHeap};
 
