@@ -100,7 +100,6 @@ fn longest_path(
     for node in nodes {
         let parents = dag.edges_directed(node, petgraph::Direction::Incoming);
         let mut us: Vec<(usize, NodeIndex)> = Vec::new();
-        let mut local_dist: HashMap<NodeIndex, usize> = HashMap::new();
         for p_edge in parents {
             let p_node = p_edge.source();
             let weight: usize = edge_weight_callable(
@@ -108,14 +107,8 @@ fn longest_path(
                 p_edge.target().index(),
                 p_edge.weight(),
             )?;
-            local_dist
-                .entry(p_node)
-                .and_modify(|x| *x = cmp::max(*x, weight))
-                .or_insert(weight);
-        }
-        for (p_node, weight) in local_dist.iter() {
-            let length = dist[p_node].0 + weight;
-            us.push((length, *p_node));
+            let length = dist[&p_node].0 + weight;
+            us.push((length, p_node));
         }
         let maxu: (usize, NodeIndex);
         if !us.is_empty() {
