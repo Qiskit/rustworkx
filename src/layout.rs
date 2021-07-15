@@ -12,8 +12,8 @@
 
 use std::iter::Iterator;
 
-use indexmap::IndexMap;
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexMap;
 
 use pyo3::prelude::*;
 

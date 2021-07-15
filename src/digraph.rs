@@ -19,8 +19,8 @@ use std::io::{BufReader, BufWriter};
 use std::ops::{Index, IndexMut};
 use std::str;
 
-use indexmap::IndexMap;
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexMap;
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
