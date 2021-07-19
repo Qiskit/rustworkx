@@ -110,12 +110,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hashbrown"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -126,12 +120,12 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.7.0"
+version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc633605454125dec4b66843673f01c7df2b89479b32e0ed634e43a91cff62a5"
+checksum = "824845a0bf897a9042383849b02c1bc219c2383772efcd5c6f9766fa4b81aef3"
 dependencies = [
  "autocfg",
- "hashbrown 0.11.2",
+ "hashbrown",
  "rayon",
 ]
 
@@ -367,10 +361,10 @@ dependencies = [
 [[package]]
 name = "pyo3"
 version = "0.14.1"
-source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#2b2ce3c63e14c63f1b60838aaae65155af528989"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#d4b526491d5183d67bb562989aabae057cb66ca2"
 dependencies = [
  "cfg-if 1.0.0",
- "hashbrown 0.9.1",
+ "hashbrown",
  "indexmap",
  "indoc",
  "libc",
@@ -385,7 +379,7 @@ dependencies = [
 [[package]]
 name = "pyo3-build-config"
 version = "0.14.1"
-source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#2b2ce3c63e14c63f1b60838aaae65155af528989"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#d4b526491d5183d67bb562989aabae057cb66ca2"
 dependencies = [
  "once_cell",
 ]
@@ -393,7 +387,7 @@ dependencies = [
 [[package]]
 name = "pyo3-macros"
 version = "0.14.1"
-source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#2b2ce3c63e14c63f1b60838aaae65155af528989"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#d4b526491d5183d67bb562989aabae057cb66ca2"
 dependencies = [
  "pyo3-macros-backend",
  "quote",
@@ -403,7 +397,7 @@ dependencies = [
 [[package]]
 name = "pyo3-macros-backend"
 version = "0.14.1"
-source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#2b2ce3c63e14c63f1b60838aaae65155af528989"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#d4b526491d5183d67bb562989aabae057cb66ca2"
 dependencies = [
  "proc-macro2",
  "pyo3-build-config",
@@ -514,7 +508,7 @@ name = "retworkx"
 version = "0.10.0"
 dependencies = [
  "fixedbitset",
- "hashbrown 0.9.1",
+ "hashbrown",
  "indexmap",
  "ndarray",
  "num-bigint",
