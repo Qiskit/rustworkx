@@ -367,7 +367,7 @@ dependencies = [
 [[package]]
 name = "pyo3"
 version = "0.14.1"
-source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#42454bb739cc97efb742c07fcd14822aa0bcc530"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#2b2ce3c63e14c63f1b60838aaae65155af528989"
 dependencies = [
  "cfg-if 1.0.0",
  "hashbrown 0.9.1",
@@ -385,7 +385,7 @@ dependencies = [
 [[package]]
 name = "pyo3-build-config"
 version = "0.14.1"
-source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#42454bb739cc97efb742c07fcd14822aa0bcc530"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#2b2ce3c63e14c63f1b60838aaae65155af528989"
 dependencies = [
  "once_cell",
 ]
@@ -393,7 +393,7 @@ dependencies = [
 [[package]]
 name = "pyo3-macros"
 version = "0.14.1"
-source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#42454bb739cc97efb742c07fcd14822aa0bcc530"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#2b2ce3c63e14c63f1b60838aaae65155af528989"
 dependencies = [
  "pyo3-macros-backend",
  "quote",
@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "pyo3-macros-backend"
 version = "0.14.1"
-source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#42454bb739cc97efb742c07fcd14822aa0bcc530"
+source = "git+https://github.com/IvanIsCoding/pyo3?branch=indexmap-support#2b2ce3c63e14c63f1b60838aaae65155af528989"
 dependencies = [
  "proc-macro2",
  "pyo3-build-config",
