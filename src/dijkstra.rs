@@ -138,6 +138,20 @@ where
                     if next_score < *ent.get() {
                         *ent.into_mut() = next_score;
                         visit_next.push(MinScored(next_score, next));
+                        if path.is_some() {
+                            let mut node_path = path
+                                .as_mut()
+                                .unwrap()
+                                .get(&node)
+                                .unwrap()
+                                .clone();
+                            node_path.push(next);
+                            path.as_mut().unwrap().entry(next).and_modify(
+                                |new_vec| {
+                                    *new_vec = node_path;
+                                },
+                            );
+                        }
                     }
                 }
                 Vacant(ent) => {
@@ -146,12 +160,8 @@ where
                     if path.is_some() {
                         let mut node_path =
                             path.as_mut().unwrap().get(&node).unwrap().clone();
-                        path.as_mut().unwrap().entry(next).or_insert({
-                            let mut new_vec: Vec<G::NodeId> = Vec::new();
-                            new_vec.append(&mut node_path);
-                            new_vec.push(next);
-                            new_vec
-                        });
+                        node_path.push(next);
+                        path.as_mut().unwrap().entry(next).or_insert(node_path);
                     }
                 }
             }
