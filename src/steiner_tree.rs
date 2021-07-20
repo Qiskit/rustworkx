@@ -21,7 +21,6 @@ use petgraph::graph::NodeIndex;
 use crate::_all_pairs_dijkstra_shortest_paths;
 use crate::graph;
 
-#[derive(Debug)]
 struct MetricClosureEdge {
     source: usize,
     target: usize,
@@ -66,7 +65,8 @@ fn _metric_closure_edges(
     graph: &graph::PyGraph,
     weight_fn: PyObject,
 ) -> PyResult<Vec<MetricClosureEdge>> {
-    let mut out_vec = Vec::with_capacity(graph.graph.edge_count());
+    let node_count = graph.graph.node_count();
+    let mut out_vec = Vec::with_capacity(node_count * (node_count - 1) / 2);
     let mut distances = HashMap::with_capacity(graph.graph.node_count());
     let paths = _all_pairs_dijkstra_shortest_paths(
         py,
