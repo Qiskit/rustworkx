@@ -78,3 +78,69 @@ class TestSubgraph(unittest.TestCase):
         self.assertEqual([{"a": 0}, "b", "d"], subgraph.nodes())
         graph[0] = 4
         self.assertEqual(subgraph[0]["a"], 0)
+
+    def test_edge_subgraph(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_node("a")
+        graph.add_node("b")
+        graph.add_node("c")
+        graph.add_node("d")
+        graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
+        subgraph = graph.edge_subgraph([(0, 1), (1, 3)])
+        self.assertEqual(["a", "b", "d"], subgraph.nodes())
+        self.assertEqual([(0, 1, 1), (1, 3, 4)], subgraph.weighted_edge_list())
+
+    def test_edge_subgraph_parallel_edge(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.extend_from_weighted_edge_list(
+            [
+                (0, 1, 2),
+                (0, 1, 3),
+                (0, 2, 2),
+                (1, 2, 4),
+                (0, 3, 5),
+                (2, 3, 6),
+            ]
+        )
+        subgraph = graph.edge_subgraph([(0, 1), (1, 2)])
+        self.assertEqual([0, 1, 2], subgraph.nodes())
+        self.assertEqual(
+            [(0, 1, 2), (0, 1, 3), (1, 2, 4)], subgraph.weighted_edge_list()
+        )
+
+    def test_edge_subgraph_empty_list(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.extend_from_weighted_edge_list(
+            [
+                (0, 1, 2),
+                (0, 1, 3),
+                (0, 2, 2),
+                (1, 2, 4),
+                (0, 3, 5),
+                (2, 3, 6),
+            ]
+        )
+        subgraph = graph.edge_subgraph([])
+        self.assertEqual([], subgraph.nodes())
+
+    def test_edge_subgraph_non_edge(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.extend_from_weighted_edge_list(
+            [
+                (0, 1, 2),
+                (0, 1, 3),
+                (0, 2, 2),
+                (1, 2, 4),
+                (0, 3, 5),
+                (2, 3, 6),
+            ]
+        )
+        # 1->3 isn't an edge in graph
+        subgraph = graph.edge_subgraph([(0, 1), (1, 2), (1, 3)])
+        self.assertEqual([0, 1, 2], subgraph.nodes())
+        self.assertEqual(
+            [(0, 1, 2), (0, 1, 3), (1, 2, 4)], subgraph.weighted_edge_list()
+        )
