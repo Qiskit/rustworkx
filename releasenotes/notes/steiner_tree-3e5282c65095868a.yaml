@@ -3,7 +3,13 @@ features:
   - |
     Added a new function, :func:`~retworkx.metric_closure`, which is used
     to generate the metric closure of a given graph. This function is used in
-    the computation of for calculating the Steiner Tree using the algorithm
+    the computation for calculating the Steiner Tree using the algorithm
     from
     `Kou, Markowsky & Berman (1981). "A fast algorithm for Steiner trees".
     <https://link.springer.com/article/10.1007/BF00288961>`__
+  - |
+    Added a new function, :func:`~retworkx.steiner_tree`, which is used to
+    generate an approximation of the minimum Steiner tree using the
+    algorithm from:
+    `Kou, Markowsky & Berman (1981). "A fast algorithm for Steiner trees".
+    <https://link.springer.com/article/10.1007/BF00288961>

@@ -16,9 +16,9 @@ import unittest
 import retworkx
 
 
-class TestMetricClosure(unittest.TestCase):
+class TestSteinerTree(unittest.TestCase):
     def setUp(self):
-        self.graph = retworkx.PyGraph()
+        self.graph = retworkx.PyGraph(multigraph=False)
         self.graph.add_node(None)
         self.graph.extend_from_weighted_edge_list(
             [
@@ -112,3 +112,40 @@ class TestMetricClosure(unittest.TestCase):
         graph = retworkx.PyGraph()
         closure = retworkx.metric_closure(graph, weight_fn=float)
         self.assertEqual([], closure.weighted_edge_list())
+
+    def test_steiner_graph(self):
+        steiner_tree = retworkx.steiner_tree(
+            self.graph, [1, 2, 3, 4, 5], weight_fn=float
+        )
+        expected_steiner_tree = [
+            (1, 2, 10),
+            (2, 3, 10),
+            (2, 7, 1),
+            (3, 4, 10),
+            (7, 5, 1),
+        ]
+        steiner_tree_edge_list = steiner_tree.weighted_edge_list()
+        for edge in expected_steiner_tree:
+            self.assertIn(edge, steiner_tree_edge_list)
+
+    def test_steiner_graph_multigraph(self):
+        edge_list = [
+            (1, 2, 1),
+            (2, 3, 999),
+            (2, 3, 1),
+            (3, 4, 1),
+            (3, 5, 1),
+        ]
+        graph = retworkx.PyGraph()
+        graph.extend_from_weighted_edge_list(edge_list)
+        graph.remove_node(0)
+        terminal_nodes = [2, 4, 5]
+        tree = retworkx.steiner_tree(graph, terminal_nodes, weight_fn=float)
+        expected_edges = [
+            (2, 3, 1),
+            (3, 4, 1),
+            (3, 5, 1),
+        ]
+        steiner_tree_edge_list = tree.weighted_edge_list()
+        for edge in expected_edges:
+            self.assertIn(edge, steiner_tree_edge_list)
