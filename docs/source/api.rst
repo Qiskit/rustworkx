@@ -115,6 +115,16 @@ Connectivity and Cycles
    retworkx.cycle_basis
    retworkx.digraph_find_cycle
 
+.. _approximations:
+
+Approximations and Heuristics
+-----------------------------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.metric_closure
+
 .. _other-algorithms:
 
 Other Algorithm Functions
