@@ -66,7 +66,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         )
         expected = {
             1: [0, 1],
-            2: [0, 1, 2],
+            2: [0, 3, 2],
             3: [0, 3],
             4: [0, 3, 4],
             5: [0, 1, 5],
@@ -111,9 +111,9 @@ class TestDijkstraDiGraph(unittest.TestCase):
         expected = {
             1: [0, 1],
             2: [0, 2],
-            3: [0, 3],
-            4: [0, 3, 4],
-            5: [0, 1, 5],
+            3: [0, 2, 3],
+            4: [0, 2, 3, 4],
+            5: [0, 2, 5],
         }
         self.assertEqual(expected, paths)
 
@@ -135,7 +135,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
             as_undirected=True,
         )
         expected = {
-            4: [0, 3, 4],
+            4: [0, 2, 3, 4],
         }
         self.assertEqual(expected, paths)
 
@@ -197,11 +197,12 @@ class TestDijkstraDiGraph(unittest.TestCase):
         self.assertEqual(expected, lengths)
 
     def test_dijkstra_all_pair_paths(self):
-        lengths = retworkx.digraph_all_pairs_dijkstra_shortest_paths(
+        paths = retworkx.digraph_all_pairs_dijkstra_shortest_paths(
             self.graph, float
         )
+        print(paths)
         expected = {
-            0: {1: [0, 1], 2: [0, 1, 2], 3: [0, 3], 4: [0, 3, 4], 5: [0, 1, 5]},
+            0: {1: [0, 1], 2: [0, 3, 2], 3: [0, 3], 4: [0, 3, 4], 5: [0, 1, 5]},
             1: {
                 0: [1, 2, 0],
                 2: [1, 2],
@@ -226,7 +227,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
             4: {5: [4, 5]},
             5: {},
         }
-        self.assertEqual(expected, lengths)
+        self.assertEqual(expected, paths)
 
     def test_dijkstra_all_pair_path_lengths_with_node_removal(self):
         self.graph.remove_node(3)
