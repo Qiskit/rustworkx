@@ -116,17 +116,10 @@ where
         };
         dist.insert(node, maxu);
     }
-    let first = match dist
+    let first = dist
         .keys()
         .max_by(|a, b| dist[a].partial_cmp(&dist[b]).unwrap())
-    {
-        Some(first) => first,
-        None => {
-            return Err(PyException::new_err(
-                "Encountered something unexpected",
-            ))
-        }
-    };
+        .unwrap();
     let mut v = *first;
     let mut u: Option<NodeIndex> = None;
     while match u {

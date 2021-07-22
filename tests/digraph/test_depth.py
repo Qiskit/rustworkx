@@ -182,6 +182,13 @@ class TestLongestPath(unittest.TestCase):
             0, retworkx.dag_longest_path_length(dag, weight_fn=weight_fn)
         )
 
+    def test_cycle(self):
+        not_a_dag = retworkx.generators.directed_cycle_graph(250)
+        with self.assertRaises(retworkx.DAGHasCycle):
+            retworkx.dag_longest_path_length(not_a_dag, lambda *_: 1.0)
+        with self.assertRaises(retworkx.DAGHasCycle):
+            retworkx.dag_longest_path(not_a_dag, lambda *_: 1.0)
+
 
 def weight_fn(_, __, weight):
     return int(weight)
@@ -279,3 +286,8 @@ class TestWeightedLongestPath(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             retworkx.dag_weighted_longest_path_length(dag, weight_fn)
+
+    def test_cycle(self):
+        not_a_dag = retworkx.generators.directed_cycle_graph(250)
+        with self.assertRaises(retworkx.DAGHasCycle):
+            retworkx.dag_weighted_longest_path_length(not_a_dag, lambda *_: 1.0)
