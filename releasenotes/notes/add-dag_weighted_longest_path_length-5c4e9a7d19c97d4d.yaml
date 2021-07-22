@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    Added a new algorithm function,
+    :func:`~retworkx.dag_weighted_longest_path_length`, to find the length
+    of the longest path in a:class:`~retworkx.PyDiGraph` object without any
+    cycles. This new function is basically equivalent to
+    :func:`~retworkx.dag_longest_path_length` except for two key differences,
+    the ``weight_fn`` parameter is required for
+    :func:`~retworkx.dag_weighted_longest_path_length` while it is optional
+    in :func:`~retworkx.dag_longest_path_length` and
+    :func:`~retworkx.dag_weighted_longest_path_length` works with ``float``
+    weights (the function returns a float and the ``weight_fn`` callback is
+    expected to return a ``float``) while
+    :func:`~retworkx.dag_longest_path_length` works with an unsigned ``int``.

@@ -185,3 +185,88 @@ class TestLongestPath(unittest.TestCase):
 
 def weight_fn(_, __, weight):
     return int(weight)
+
+
+class TestWeightedLongestPath(unittest.TestCase):
+    def test_linear_with_weight(self):
+        """Longest depth for a simple dag.
+
+        a
+        |
+        b
+        |\
+        c d
+        |\
+        e |
+        | |
+        f g
+        """
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", 4)
+        node_c = dag.add_child(node_b, "c", 4)
+        dag.add_child(node_b, "d", 5)
+        node_e = dag.add_child(node_c, "e", 2)
+        dag.add_child(node_e, "f", 2)
+        dag.add_child(node_c, "g", 15)
+        self.assertEqual(
+            23,
+            retworkx.dag_weighted_longest_path_length(
+                dag, lambda _, __, weight: float(weight)
+            ),
+        )
+
+    def test_parallel_edges_with_weights(self):
+        dag = retworkx.PyDiGraph()
+        dag.extend_from_weighted_edge_list(
+            [
+                (0, 1, 1),
+                (0, 3, 1),
+                (3, 4, 1),
+                (4, 5, 1),
+                (1, 2, 1),
+                (0, 1, 3),
+            ]
+        )
+        self.assertEqual(
+            4.0,
+            retworkx.dag_weighted_longest_path_length(
+                dag, weight_fn=lambda _, __, weight: float(weight)
+            ),
+        )
+
+    def test_less_linear_with_weight(self):
+        dag = retworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", 1)
+        node_c = dag.add_child(node_b, "c", 1)
+        node_d = dag.add_child(node_c, "d", 1)
+        node_e = dag.add_child(node_d, "e", 1)
+        dag.add_edge(node_a, node_c, 3)
+        dag.add_edge(node_a, node_e, 3)
+        dag.add_edge(node_c, node_e, 3)
+        self.assertEqual(
+            6.0,
+            retworkx.dag_weighted_longest_path_length(
+                dag, weight_fn=lambda _, __, weight: float(weight)
+            ),
+        )
+
+    def test_degenerate_graph_with_weight(self):
+        dag = retworkx.PyDAG()
+        dag.add_node(0)
+        self.assertEqual(
+            0.0,
+            retworkx.dag_weighted_longest_path_length(
+                dag, lambda x: float(weight_fn(x))
+            ),
+        )
+
+    def test_empty_graph_with_weights(self):
+        dag = retworkx.PyDAG()
+        self.assertEqual(
+            0.0,
+            retworkx.dag_weighted_longest_path_length(
+                dag, lambda x: float(weight_fn(x))
+            ),
+        )
