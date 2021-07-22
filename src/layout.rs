@@ -12,8 +12,8 @@
 
 use std::iter::Iterator;
 
+use crate::dictmap::dictmap_new;
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexMap;
 
 use pyo3::prelude::*;
 
@@ -302,7 +302,7 @@ pub fn bipartite_layout<Ty: EdgeType>(
     let node_num = graph.node_count();
     if node_num == 0 {
         return Pos2DMapping {
-            pos_map: IndexMap::new(),
+            pos_map: dictmap_new!(),
         };
     }
     let left_num = first_nodes.len();

@@ -20,7 +20,7 @@
 //      defines a new type named `MyReadOnlyType` that holds a vector called `data`
 //      of values `(usize, f64)`.
 //
-// :`custom_hash_map_iter_impl` holds a `IndexMap<K, V>` and can be used as
+// :`custom_hash_map_iter_impl` holds a `DictMap<K, V>` and can be used as
 //  a read-only mapping/dict. To use it, you should specify the name of the new type,
 //  the name of the hash map that holds the data, the type of the keys `K`,
 //  the type of the values `V` and a docstring.
@@ -43,7 +43,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::convert::TryInto;
 use std::hash::Hasher;
 
-use indexmap::IndexMap;
+use crate::dictmap::{dictmap_new, DictMap};
 use num_bigint::BigUint;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
@@ -167,7 +167,7 @@ impl<T: PyHash> PyHash for Vec<T> {
     }
 }
 
-impl<K: PyHash, V: PyHash> PyHash for IndexMap<K, V> {
+impl<K: PyHash, V: PyHash> PyHash for DictMap<K, V> {
     #[inline]
     fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
         for (key, value) in self {
@@ -314,7 +314,7 @@ where
     }
 }
 
-impl<K, V> PyEq<PyObject> for IndexMap<K, V>
+impl<K, V> PyEq<PyObject> for DictMap<K, V>
 where
     for<'p> K: PyEq<K> + Clone + pyo3::ToBorrowedObject,
     for<'p> V: PyEq<PyAny>,
@@ -412,7 +412,7 @@ impl<A: PyDisplay> PyDisplay for Vec<A> {
     }
 }
 
-impl<K: PyDisplay, V: PyDisplay> PyDisplay for IndexMap<K, V> {
+impl<K: PyDisplay, V: PyDisplay> PyDisplay for DictMap<K, V> {
     fn str(&self, py: Python) -> PyResult<String> {
         let mut str_vec: Vec<String> = Vec::with_capacity(self.len());
         for elem in self {
@@ -779,7 +779,7 @@ macro_rules! custom_hash_map_iter_impl {
         #[pyclass(module = "retworkx", gc)]
         #[derive(Clone)]
         pub struct $name {
-            pub $data: IndexMap<$K, $V>,
+            pub $data: DictMap<$K, $V>,
         }
 
         #[pymethods]
@@ -787,15 +787,15 @@ macro_rules! custom_hash_map_iter_impl {
             #[new]
             fn new() -> $name {
                 $name {
-                    $data: IndexMap::new(),
+                    $data: dictmap_new!(),
                 }
             }
 
-            fn __getstate__(&self) -> IndexMap<$K, $V> {
+            fn __getstate__(&self) -> DictMap<$K, $V> {
                 self.$data.clone()
             }
 
-            fn __setstate__(&mut self, state: IndexMap<$K, $V>) {
+            fn __setstate__(&mut self, state: DictMap<$K, $V>) {
                 self.$data = state;
             }
 
@@ -924,7 +924,7 @@ impl PyGCProtocol for EdgeIndexMap {
     }
 
     fn __clear__(&mut self) {
-        self.edge_map = IndexMap::new();
+        self.edge_map = dictmap_new!();
     }
 }
 
@@ -955,7 +955,7 @@ impl PyGCProtocol for EdgeIndexMap {
 #[pyclass(module = "retworkx", gc)]
 #[derive(Clone)]
 pub struct PathMapping {
-    pub paths: IndexMap<usize, Vec<usize>>,
+    pub paths: DictMap<usize, Vec<usize>>,
 }
 
 #[pymethods]
@@ -963,15 +963,15 @@ impl PathMapping {
     #[new]
     fn new() -> PathMapping {
         PathMapping {
-            paths: IndexMap::new(),
+            paths: dictmap_new!(),
         }
     }
 
-    fn __getstate__(&self) -> IndexMap<usize, Vec<usize>> {
+    fn __getstate__(&self) -> DictMap<usize, Vec<usize>> {
         self.paths.clone()
     }
 
-    fn __setstate__(&mut self, state: IndexMap<usize, Vec<usize>>) {
+    fn __setstate__(&mut self, state: DictMap<usize, Vec<usize>>) {
         self.paths = state;
     }
 
