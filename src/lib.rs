@@ -254,7 +254,13 @@ fn dag_weighted_longest_path_length(
     let edge_weight_callable =
         |source: usize, target: usize, weight: &PyObject| -> PyResult<f64> {
             let res = weight_fn.call1(py, (source, target, weight))?;
-            res.extract(py)
+            let float_res: f64 = res.extract(py)?;
+            if float_res.is_nan() {
+                return Err(PyValueError::new_err(
+                    "NaN is not a valid edge weight",
+                ));
+            }
+            Ok(float_res)
         };
     let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)

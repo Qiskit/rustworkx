@@ -270,3 +270,12 @@ class TestWeightedLongestPath(unittest.TestCase):
                 dag, lambda x: float(weight_fn(x))
             ),
         )
+
+    def test_nan_not_valid_weight(self):
+        dag = retworkx.generators.directed_path_graph(526)
+
+        def weight_fn(*_):
+            return float("nan")
+
+        with self.assertRaises(ValueError):
+            retworkx.dag_weighted_longest_path_length(dag, weight_fn)
