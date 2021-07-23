@@ -214,6 +214,51 @@ fn dag_longest_path_length(
     Ok(path_weight)
 }
 
+/// Find the weighted longest path in a DAG
+///
+/// This function differs from :func:`retworkx.dag_longest_path` in that
+/// this function requires a ``weight_fn`` parameter, and the ``weight_fn`` is
+/// expected to return a ``float`` not an ``int``.
+///
+/// :param PyDiGraph graph: The graph to find the longest path on. The input
+///     object must be a DAG without a cycle.
+/// :param weight_fn: A python callable that will be passed the 3
+///     positional arguments, the source node, the target node, and the edge
+///     weight for each edge as the function traverses the graph. It is expected
+///     to return an float weight for that edge. For example,
+///     ``dag_longest_path(graph, lambda: _, __, weight: weight)`` could be
+///     use to just use an float edge weight. It's also worth noting that this
+///     function traverses in topological order and only checks incoming edges to
+///     each node.
+///
+/// :returns: The node indices of the longest path on the DAG
+/// :rtype: NodeIndices
+///
+/// :raises Exception: If an unexpected error occurs or a path can't be found
+/// :raises DAGHasCycle: If the input PyDiGraph has a cyc
+#[pyfunction]
+#[pyo3(text_signature = "(graph, weight_fn, /)")]
+fn dag_weighted_longest_path(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: PyObject,
+) -> PyResult<NodeIndices> {
+    let edge_weight_callable =
+        |source: usize, target: usize, weight: &PyObject| -> PyResult<f64> {
+            let res = weight_fn.call1(py, (source, target, weight))?;
+            let float_res: f64 = res.extract(py)?;
+            if float_res.is_nan() {
+                return Err(PyValueError::new_err(
+                    "NaN is not a valid edge weight",
+                ));
+            }
+            Ok(float_res)
+        };
+    Ok(NodeIndices {
+        nodes: longest_path(graph, edge_weight_callable)?.0,
+    })
+}
+
 /// Find the length of the weighted longest path in a DAG
 ///
 /// This function differs from :func:`retworkx.dag_longest_path_length` in that
@@ -222,7 +267,7 @@ fn dag_longest_path_length(
 ///
 /// :param PyDiGraph graph: The graph to find the longest path on. The input
 ///     object must be a DAG without a cycle.
-/// :param weight_fn: A python callable that if set will be passed the 3
+/// :param weight_fn: A python callable that will be passed the 3
 ///     positional arguments, the source node, the target node, and the edge
 ///     weight for each edge as the function traverses the graph. It is expected
 ///     to return an float weight for that edge. For example,
@@ -236,7 +281,6 @@ fn dag_longest_path_length(
 ///
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cyc
-
 #[pyfunction]
 #[pyo3(text_signature = "(graph, weight_fn, /)")]
 fn dag_weighted_longest_path_length(
@@ -4866,6 +4910,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
+    m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;

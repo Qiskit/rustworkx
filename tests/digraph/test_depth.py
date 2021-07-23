@@ -215,10 +215,16 @@ class TestWeightedLongestPath(unittest.TestCase):
         dag.add_child(node_b, "d", 5)
         node_e = dag.add_child(node_c, "e", 2)
         dag.add_child(node_e, "f", 2)
-        dag.add_child(node_c, "g", 15)
+        node_g = dag.add_child(node_c, "g", 15)
         self.assertEqual(
-            23,
+            23.0,
             retworkx.dag_weighted_longest_path_length(
+                dag, lambda _, __, weight: float(weight)
+            ),
+        )
+        self.assertEqual(
+            [node_a, node_b, node_c, node_g],
+            retworkx.dag_weighted_longest_path(
                 dag, lambda _, __, weight: float(weight)
             ),
         )
@@ -241,6 +247,12 @@ class TestWeightedLongestPath(unittest.TestCase):
                 dag, weight_fn=lambda _, __, weight: float(weight)
             ),
         )
+        self.assertEqual(
+            [0, 1, 2],
+            retworkx.dag_weighted_longest_path(
+                dag, lambda _, __, weight: float(weight)
+            ),
+        )
 
     def test_less_linear_with_weight(self):
         dag = retworkx.PyDAG()
@@ -258,6 +270,12 @@ class TestWeightedLongestPath(unittest.TestCase):
                 dag, weight_fn=lambda _, __, weight: float(weight)
             ),
         )
+        self.assertEqual(
+            [node_a, node_c, node_e],
+            retworkx.dag_weighted_longest_path(
+                dag, weight_fn=lambda _, __, weight: float(weight)
+            ),
+        )
 
     def test_degenerate_graph_with_weight(self):
         dag = retworkx.PyDAG()
@@ -265,6 +283,12 @@ class TestWeightedLongestPath(unittest.TestCase):
         self.assertEqual(
             0.0,
             retworkx.dag_weighted_longest_path_length(
+                dag, lambda x: float(weight_fn(x))
+            ),
+        )
+        self.assertEqual(
+            [0],
+            retworkx.dag_weighted_longest_path(
                 dag, lambda x: float(weight_fn(x))
             ),
         )
@@ -277,6 +301,12 @@ class TestWeightedLongestPath(unittest.TestCase):
                 dag, lambda x: float(weight_fn(x))
             ),
         )
+        self.assertEqual(
+            [],
+            retworkx.dag_weighted_longest_path(
+                dag, lambda x: float(weight_fn(x))
+            ),
+        )
 
     def test_nan_not_valid_weight(self):
         dag = retworkx.generators.directed_path_graph(526)
@@ -286,8 +316,12 @@ class TestWeightedLongestPath(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             retworkx.dag_weighted_longest_path_length(dag, weight_fn)
+        with self.assertRaises(ValueError):
+            retworkx.dag_weighted_longest_path(dag, weight_fn)
 
     def test_cycle(self):
         not_a_dag = retworkx.generators.directed_cycle_graph(250)
         with self.assertRaises(retworkx.DAGHasCycle):
             retworkx.dag_weighted_longest_path_length(not_a_dag, lambda *_: 1.0)
+        with self.assertRaises(retworkx.DAGHasCycle):
+            retworkx.dag_weighted_longest_path(not_a_dag, lambda *_: 1.0)
