@@ -1319,10 +1319,8 @@ fn _floyd_warshall<Ty: EdgeType>(
     }
 
     // Convert to return format
-    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-
-    let out_map: HashMap<usize, PathLengthMapping> = node_indices
-        .into_iter()
+    let out_map: HashMap<usize, PathLengthMapping> = graph
+        .node_indices()
         .map(|i| {
             let out_map = PathLengthMapping {
                 path_lengths: mat[i.index()]
