@@ -225,9 +225,9 @@ fn dag_longest_path_length(
 /// :param weight_fn: A python callable that will be passed the 3
 ///     positional arguments, the source node, the target node, and the edge
 ///     weight for each edge as the function traverses the graph. It is expected
-///     to return an float weight for that edge. For example,
+///     to return a float weight for that edge. For example,
 ///     ``dag_longest_path(graph, lambda: _, __, weight: weight)`` could be
-///     use to just use an float edge weight. It's also worth noting that this
+///     used to just use a float edge weight. It's also worth noting that this
 ///     function traverses in topological order and only checks incoming edges to
 ///     each node.
 ///
@@ -235,7 +235,7 @@ fn dag_longest_path_length(
 /// :rtype: NodeIndices
 ///
 /// :raises Exception: If an unexpected error occurs or a path can't be found
-/// :raises DAGHasCycle: If the input PyDiGraph has a cyc
+/// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
 #[pyo3(text_signature = "(graph, weight_fn, /)")]
 fn dag_weighted_longest_path(
@@ -270,9 +270,9 @@ fn dag_weighted_longest_path(
 /// :param weight_fn: A python callable that will be passed the 3
 ///     positional arguments, the source node, the target node, and the edge
 ///     weight for each edge as the function traverses the graph. It is expected
-///     to return an float weight for that edge. For example,
+///     to return a float weight for that edge. For example,
 ///     ``dag_longest_path(graph, lambda: _, __, weight: weight)`` could be
-///     use to just use an float edge weight. It's also worth noting that this
+///     used to just use a float edge weight. It's also worth noting that this
 ///     function traverses in topological order and only checks incoming edges to
 ///     each node.
 ///
@@ -280,7 +280,7 @@ fn dag_weighted_longest_path(
 /// :rtype: float
 ///
 /// :raises Exception: If an unexpected error occurs or a path can't be found
-/// :raises DAGHasCycle: If the input PyDiGraph has a cyc
+/// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
 #[pyo3(text_signature = "(graph, weight_fn, /)")]
 fn dag_weighted_longest_path_length(

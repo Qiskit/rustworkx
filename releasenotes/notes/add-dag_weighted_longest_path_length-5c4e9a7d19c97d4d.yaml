@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    Added two new algorithm function,
+    Added two new algorithm functions,
     :func:`~retworkx.dag_weighted_longest_path_length` and
     :func:`~retworkx.dag_weighted_longest_path`, to find the longest path
     and the length of the longest path in a:class:`~retworkx.PyDiGraph` object
