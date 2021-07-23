@@ -367,6 +367,7 @@ pub fn is_isomorphic<Ty: EdgeType>(
     id_order: bool,
     ordering: Ordering,
     induced: bool,
+    call_limit: Option<usize>,
 ) -> PyResult<bool> {
     if (g0.node_count().cmp(&g1.node_count()).then(ordering) != ordering)
         || (g0.edge_count().cmp(&g1.edge_count()).then(ordering) != ordering)
@@ -376,6 +377,7 @@ pub fn is_isomorphic<Ty: EdgeType>(
 
     let mut vf2 = Vf2Algorithm::new(
         py, g0, g1, node_match, edge_match, id_order, ordering, induced,
+        call_limit,
     );
     if vf2.next(py)?.is_some() {
         return Ok(true);
@@ -411,6 +413,8 @@ where
     node_map_g0: HashMap<usize, usize>,
     node_map_g1: HashMap<usize, usize>,
     stack: Vec<Frame<NodeIndex>>,
+    call_limit: Option<usize>,
+    _counter: usize,
 }
 
 impl<Ty, F, G> Vf2Algorithm<Ty, F, G>
@@ -428,6 +432,7 @@ where
         id_order: bool,
         ordering: Ordering,
         induced: bool,
+        call_limit: Option<usize>,
     ) -> Self {
         let (g0, node_map_g0) = if id_order {
             DefaultIdSorter.reorder(py, g0)
@@ -451,6 +456,8 @@ where
             node_map_g0,
             node_map_g1,
             stack: vec![Frame::Outer],
+            call_limit,
+            _counter: 0,
         }
     }
 
@@ -866,6 +873,12 @@ where
                             self.stack.push(f0);
                             return Ok(Some(self.mapping()));
                         }
+                        self._counter += 1;
+                        if let Some(limit) = self.call_limit {
+                            if self._counter > limit {
+                                return Ok(None);
+                            }
+                        }
                         // Check cardinalities of Tin, Tout sets
                         if self.st[0]
                             .out_size
@@ -930,10 +943,11 @@ macro_rules! vf2_mapping_impl {
                 id_order: bool,
                 ordering: Ordering,
                 induced: bool,
+                call_limit: Option<usize>,
             ) -> Self {
                 let vf2 = Vf2Algorithm::new(
                     py, g0, g1, node_match, edge_match, id_order, ordering,
-                    induced,
+                    induced, call_limit,
                 );
                 $name { vf2 }
             }

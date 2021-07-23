@@ -323,13 +323,17 @@ fn digraph_union(
 /// :param bool id_order: If set to ``False`` this function will use a
 ///     heuristic matching order based on [VF2]_ paper. Otherwise it will
 ///     default to matching the nodes in order specified by their ids.
+/// :param int call_limit: An optional bound on the number of states that VF2 algorithm
+///     visits while searching for a solution. If it exceeds this limit, the algorithm
+///     will stop and return ``False``. Default: ``None``.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction(id_order = "true")]
+#[pyfunction(id_order = "true", call_limit = "None")]
 #[pyo3(
-    text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"
+    text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
+                    id_order=True, call_limit=None)"
 )]
 fn digraph_is_isomorphic(
     py: Python,
@@ -338,6 +342,7 @@ fn digraph_is_isomorphic(
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
     id_order: bool,
+    call_limit: Option<usize>,
 ) -> PyResult<bool> {
     isomorphism::is_isomorphic(
         py,
@@ -348,6 +353,7 @@ fn digraph_is_isomorphic(
         id_order,
         Ordering::Equal,
         true,
+        call_limit,
     )
 }
 
@@ -380,13 +386,17 @@ fn digraph_is_isomorphic(
 /// :param bool (default=True) id_order:  If set to true, the algorithm matches the
 ///     nodes in order specified by their ids. Otherwise, it uses a heuristic
 ///     matching order based in [VF2]_ paper.
+/// :param int call_limit: An optional bound on the number of states that VF2 algorithm
+///     visits while searching for a solution. If it exceeds this limit, the algorithm
+///     will stop and return ``False``. Default: ``None``.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction(id_order = "true")]
+#[pyfunction(id_order = "true", call_limit = "None")]
 #[pyo3(
-    text_signature = "(first, second, node_matcher=None, edge_matcher=None, id_order=True, /)"
+    text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
+                    id_order=True, call_limit=None)"
 )]
 fn graph_is_isomorphic(
     py: Python,
@@ -395,6 +405,7 @@ fn graph_is_isomorphic(
     node_matcher: Option<PyObject>,
     edge_matcher: Option<PyObject>,
     id_order: bool,
+    call_limit: Option<usize>,
 ) -> PyResult<bool> {
     isomorphism::is_isomorphic(
         py,
@@ -405,6 +416,7 @@ fn graph_is_isomorphic(
         id_order,
         Ordering::Equal,
         true,
+        call_limit,
     )
 }
 
@@ -444,13 +456,17 @@ fn graph_is_isomorphic(
 /// :param bool induced: If set to ``True`` this function will check the existence
 ///     of a node-induced subgraph of first isomorphic to second graph.
 ///     Default: ``True``.
+/// :param int call_limit: An optional bound on the number of states that VF2 algorithm
+///     visits while searching for a solution. If it exceeds this limit, the algorithm
+///     will stop and return ``False``. Default: ``None``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false", induced = "true")]
+#[pyfunction(id_order = "false", induced = "true", call_limit = "None")]
 #[pyo3(
-    text_signature = "(first, second, /, node_matcher=None, edge_matcher=None, id_order=False, induced=True)"
+    text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
+                    id_order=False, induced=True, call_limit=None)"
 )]
 fn digraph_is_subgraph_isomorphic(
     py: Python,
@@ -460,6 +476,7 @@ fn digraph_is_subgraph_isomorphic(
     edge_matcher: Option<PyObject>,
     id_order: bool,
     induced: bool,
+    call_limit: Option<usize>,
 ) -> PyResult<bool> {
     isomorphism::is_isomorphic(
         py,
@@ -470,6 +487,7 @@ fn digraph_is_subgraph_isomorphic(
         id_order,
         Ordering::Greater,
         induced,
+        call_limit,
     )
 }
 
@@ -509,13 +527,17 @@ fn digraph_is_subgraph_isomorphic(
 /// :param bool induced: If set to ``True`` this function will check the existence
 ///     of a node-induced subgraph of first isomorphic to second graph.
 ///     Default: ``True``.
+/// :param int call_limit: An optional bound on the number of states that VF2 algorithm
+///     visits while searching for a solution. If it exceeds this limit, the algorithm
+///     will stop and return ``False``. Default: ``None``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false", induced = "true")]
+#[pyfunction(id_order = "false", induced = "true", call_limit = "None")]
 #[pyo3(
-    text_signature = "(first, second, /, node_matcher=None, edge_matcher=None, id_order=False, induced=True)"
+    text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
+                    id_order=False, induced=True, call_limit=None)"
 )]
 fn graph_is_subgraph_isomorphic(
     py: Python,
@@ -525,6 +547,7 @@ fn graph_is_subgraph_isomorphic(
     edge_matcher: Option<PyObject>,
     id_order: bool,
     induced: bool,
+    call_limit: Option<usize>,
 ) -> PyResult<bool> {
     isomorphism::is_isomorphic(
         py,
@@ -535,6 +558,7 @@ fn graph_is_subgraph_isomorphic(
         id_order,
         Ordering::Greater,
         induced,
+        call_limit,
     )
 }
 
@@ -574,14 +598,17 @@ fn graph_is_subgraph_isomorphic(
 /// :param bool induced: If set to ``True`` this function will check the existence
 ///     of a node-induced subgraph of first isomorphic to second graph.
 ///     Default: ``True``.
+/// :param int call_limit: An optional bound on the number of states that VF2 algorithm
+///     visits while searching for a solution. If it exceeds this limit, the algorithm
+///     will stop. Default: ``None``.
 ///
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
-#[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
+#[pyfunction(id_order = "true", subgraph = "false", induced = "true", call_limit = "None")]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
-                    id_order=True, subgraph=False, induced=True)"
+                    id_order=True, subgraph=False, induced=True, call_limit=None)"
 )]
 fn digraph_vf2_mapping(
     py: Python,
@@ -592,6 +619,7 @@ fn digraph_vf2_mapping(
     id_order: bool,
     subgraph: bool,
     induced: bool,
+    call_limit: Option<usize>,
 ) -> isomorphism::DiGraphVf2Mapping {
     let ordering = if subgraph {
         Ordering::Greater
@@ -608,6 +636,7 @@ fn digraph_vf2_mapping(
         id_order,
         ordering,
         induced,
+        call_limit,
     )
 }
 
@@ -646,14 +675,17 @@ fn digraph_vf2_mapping(
 /// :param bool induced: If set to ``True`` this function will check the existence
 ///     of a node-induced subgraph of first isomorphic to second graph.
 ///     Default: ``True``.
+/// :param int call_limit: An optional bound on the number of states that VF2 algorithm
+///     visits while searching for a solution. If it exceeds this limit, the algorithm
+///     will stop. Default: ``None``.
 ///
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
-#[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
+#[pyfunction(id_order = "true", subgraph = "false", induced = "true", call_limit = "None")]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
-                    id_order=True, subgraph=False, induced=True)"
+                    id_order=True, subgraph=False, induced=True, call_limit=None)"
 )]
 fn graph_vf2_mapping(
     py: Python,
@@ -664,6 +696,7 @@ fn graph_vf2_mapping(
     id_order: bool,
     subgraph: bool,
     induced: bool,
+    call_limit: Option<usize>,
 ) -> isomorphism::GraphVf2Mapping {
     let ordering = if subgraph {
         Ordering::Greater
@@ -680,6 +713,7 @@ fn graph_vf2_mapping(
         id_order,
         ordering,
         induced,
+        call_limit,
     )
 }
 
