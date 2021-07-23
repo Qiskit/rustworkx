@@ -19,14 +19,15 @@ crate-type = ["cdylib"]
 [dependencies]
 petgraph = "0.6.0"
 fixedbitset = "0.4.0"
-numpy = "0.13.2"
+numpy = "0.14.1"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.5"
-num-bigint = "0.3"
+num-traits = "0.2"
+num-bigint = "0.4"
 
 [dependencies.pyo3]
-version = "0.13.0"
+version = "0.14.1"
 features = ["extension-module", "hashbrown", "num-bigint"]
 
 [dependencies.hashbrown]
