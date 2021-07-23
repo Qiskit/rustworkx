@@ -645,7 +645,12 @@ fn graph_is_subgraph_isomorphic(
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
-#[pyfunction(id_order = "true", subgraph = "false", induced = "true", call_limit = "None")]
+#[pyfunction(
+    id_order = "true",
+    subgraph = "false",
+    induced = "true",
+    call_limit = "None"
+)]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, subgraph=False, induced=True, call_limit=None)"
@@ -722,7 +727,12 @@ fn digraph_vf2_mapping(
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
-#[pyfunction(id_order = "true", subgraph = "false", induced = "true", call_limit = "None")]
+#[pyfunction(
+    id_order = "true",
+    subgraph = "false",
+    induced = "true",
+    call_limit = "None"
+)]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, subgraph=False, induced=True, call_limit=None)"
