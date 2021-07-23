@@ -520,6 +520,7 @@ dependencies = [
  "hashbrown 0.9.1",
  "ndarray",
  "num-bigint",
+ "num-traits",
  "numpy",
  "petgraph",
  "pyo3",
