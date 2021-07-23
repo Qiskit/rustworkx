@@ -755,9 +755,9 @@ def is_isomorphic(
     :param bool id_order: If set to ``False`` this function will use a
         heuristic matching order based on [VF2]_ paper. Otherwise it will
         default to matching the nodes in order specified by their ids.
-    :param int call_limit: An optional bound on the number of states that VF2 algorithm
-        visits while searching for a solution. If it exceeds this limit, the algorithm
-        will stop and return ``False``. Default: ``None``.
+    :param int call_limit: An optional bound on the number of states that VF2
+        algorithm visits while searching for a solution. If it exceeds this limit,
+        the algorithm will stop and return ``False``. Default: ``None``.
 
     :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are
         not.
@@ -892,9 +892,9 @@ def is_subgraph_isomorphic(
     :param bool induced: If set to ``True`` this function will check the existence
         of a node-induced subgraph of first isomorphic to second graph.
         Default: ``True``.
-    :param int call_limit: An optional bound on the number of states that VF2 algorithm
-        visits while searching for a solution. If it exceeds this limit, the algorithm
-        will stop and return ``False``. Default: ``None``.
+    :param int call_limit: An optional bound on the number of states that VF2
+        algorithm visits while searching for a solution. If it exceeds this limit,
+        the algorithm will stop and return ``False``. Default: ``None``.
 
     :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
         , ``False`` if there is not.
@@ -1465,9 +1465,9 @@ def vf2_mapping(
     :param bool induced: If set to ``True`` this function will check the existence
         of a node-induced subgraph of first isomorphic to second graph.
         Default: ``True``.
-    :param int call_limit: An optional bound on the number of states that VF2 algorithm
-        visits while searching for a solution. If it exceeds this limit, the algorithm
-        will stop. Default: ``None``.
+    :param int call_limit: An optional bound on the number of states that VF2
+        algorithm visits while searching for a solution. If it exceeds this limit,
+        the algorithm will stop. Default: ``None``.
 
     :returns: An iterator over dicitonaries of node indices from ``first`` to node
         indices in ``second`` representing the mapping found.
