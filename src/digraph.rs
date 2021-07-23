@@ -1929,7 +1929,9 @@ impl PyDiGraph {
     ///
     #[staticmethod]
     #[args(labels = "false")]
-    #[pyo3(text_signature = "(path, /, comment=None, deliminator=None, labels=False)")]
+    #[pyo3(
+        text_signature = "(path, /, comment=None, deliminator=None, labels=False)"
+    )]
     pub fn read_edge_list(
         py: Python,
         path: &str,
