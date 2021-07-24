@@ -1072,7 +1072,25 @@ pub fn directed_binomial_tree_graph(
     })
 }
 
-/// Generate an undirected heavy square graph.
+/// Generate an undirected heavy square graph. Fig. 6 of
+/// https://arxiv.org/abs/1907.09528. 
+/// An ASCII diagram of the graph is given by:
+///
+/// ...       S   ...
+///    \     / \
+///    ... D   D   D ...
+///        |   |   |
+///    ... F-S-F-S-F-...
+///        |   |   |
+///    ... D   D   D ...
+///        |   |   |
+///    ... F-S-F-S-F-...
+///        |   |   |
+///        .........
+///        |   |   |
+///    ... D   D   D ...
+///         \ /     \
+///    ...   S       ...
 ///
 /// :param int d: distance of the code.
 /// :param bool multigraph: When set to False the output
