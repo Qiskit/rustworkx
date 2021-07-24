@@ -1072,7 +1072,39 @@ pub fn directed_binomial_tree_graph(
     })
 }
 
-/// Generate an undirected heavy hex graph.
+/// Generate an undirected heavy hex graph. Fig. 2 of
+/// https://arxiv.org/abs/1907.09528
+/// An ASCII diagram of the graph is given by:
+///
+///  ... D-S-D   D ...
+///      |   |   |
+///  ...-F   F-S-F ...
+///      |   |   |
+///  ... D   D   D ...
+///      |   |   |
+///  ... F-S-F   F-...
+///      |   |   |
+///      .........
+///      |   |   |
+///  ... D   D   D ...
+///      |   |   |
+///  ...-F   F-S-F ...
+///      |   |   |
+///  ... D   D   D ...
+///      |   |   |
+///  ... F-S-F   F-...
+///      |   |   |
+///      .........
+///      |   |   |
+///  ... D   D   D ...
+///      |   |   |
+///  ...-F   F-S-F ...
+///      |   |   |
+///  ... D   D   D ...
+///      |   |   |
+///  ... F-S-F   F-...
+///      |   |   |
+///  ... D   D-S-D ...
 ///
 /// :param int d: distance of the code.
 /// :param bool multigraph: When set to False the output
@@ -1108,7 +1140,7 @@ pub fn directed_binomial_tree_graph(
 ///   image
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, d=None, multigraph=True)"]
+#[pyo3(text_signature = "(d, /, multigraph=True)")]
 pub fn heavy_hex_graph(
     py: Python,
     d: usize,
