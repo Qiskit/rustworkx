@@ -26,9 +26,25 @@ class PyDAG(PyDiGraph):
 
     The PyDAG class is used to create a directed graph. It can be a
     multigraph (have multiple edges between nodes). Each node and edge
-    (although rarely used for edges) is indexed by an integer id. Additionally,
-    each node and edge contains an arbitrary Python object as a weight/data
-    payload.
+    (although rarely used for edges) is indexed by an integer id. These ids
+    are stable for the lifetime of the graph object and on node or edge
+    deletions you can have holes in the list of indices for the graph.
+    Node indices will be reused on additions after removal. For example:
+
+    .. jupyter-execute::
+
+        import retworkx
+
+        graph = retworkx.PyDAG()
+        graph.add_nodes_from(list(range(5)))
+        graph.add_nodes_from(list(range(2)))
+        graph.remove_node(2)
+        print("After deletion:", graph.node_indexes())
+        res_manual = graph.add_parent(6, None, None)
+        print("After adding a new node:", graph.node_indexes())
+
+    Additionally, each node and edge contains an arbitrary Python object as a
+    weight/data payload.
 
     You can use the index for access to the data payload as in the
     following example:
@@ -82,6 +98,26 @@ class PyDAG(PyDiGraph):
     penalty that grows as the graph does.  If you're adding a node and edge at
     the same time, leveraging :meth:`PyDAG.add_child` or
     :meth:`PyDAG.add_parent` will avoid this overhead.
+
+    By default a ``PyDAG`` is a multigraph (meaning there can be parallel
+    edges between nodes) however this can be disabled by setting the
+    ``multigraph`` kwarg to ``False`` when calling the ``PyDAG`` constructor.
+    For example::
+
+        import retworkx
+        dag = retworkx.PyDAG(multigraph=False)
+
+    This can only be set at ``PyDiGraph`` initialization and not adjusted after
+    creation. When :attr:`~retworkx.PyDiGraph.multigraph` is set to ``False``
+    if a method call is made that would add a parallel edge it will instead
+    update the existing edge's weight/data payload.
+
+    :param bool check_cycle: When this is set to ``True`` the created
+        ``PyDAG`` has runtime cycle detection enabled.
+    :param bool multgraph: When this is set to ``False`` the created
+        ``PyDAG`` object will not be a multigraph. When ``False`` if a method
+        call is made that would add parallel edges the the weight/weight from
+        that method call will be used to update the existing edge in place.
     """
 
     pass
@@ -211,6 +247,92 @@ def _digraph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     return graph_all_simple_paths(
         graph, from_, to, min_depth=min_depth, cutoff=cutoff
+    )
+
+
+@functools.singledispatch
+def floyd_warshall(
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+    parallel_threshold=300,
+):
+    """Find all-pairs shortest path lengths using Floyd's algorithm
+
+    Floyd's algorithm is used for finding shortest paths in dense graphs
+    or graphs with negative weights (where Dijkstra's algorithm fails).
+
+    This function is multithreaded and will launch a pool with threads equal
+    to the number of CPUs by default if the number of nodes in the graph is
+    above the value of ``parallel_threshold`` (it defaults to 300).
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads if parallelization was enabled.
+
+    :param graph: The graph to run Floyd's algorithm on. Can
+        either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param callable weight_fn: A callable object (function, lambda, etc) which
+        will be passed the edge object and expected to return a ``float``. This
+        tells retworkx/rust how to extract a numerical weight as a ``float``
+        for edge object. Some simple examples are::
+
+            floyd_warshall(graph, weight_fn= lambda x: 1)
+
+        to return a weight of 1 for all edges. Also::
+
+            floyd_warshall(graph, weight_fn=float)
+
+        to cast the edge object as a float as the weight. If this is not
+        specified a default value (either ``default_weight`` or 1) will be used
+        for all edges.
+    :param float default_weight: If ``weight_fn`` is not used this can be
+        optionally used to specify a default weight to use for all edges.
+    :param int parallel_threshold: The number of nodes to execute
+        the algorithm in parallel at. It defaults to 300, but this can
+        be tuned
+
+    :return: A read-only dictionary of path lengths. The keys are the source
+        node indices and the values are a dict of the target node and the
+        length of the shortest path to that node. For example::
+
+            {
+                0: {0: 0.0, 1: 2.0, 2: 2.0},
+                1: {1: 0.0, 2: 1.0},
+                2: {0: 1.0, 2: 0.0},
+            }
+
+    :rtype: AllPairsPathLengthMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@floyd_warshall.register(PyDiGraph)
+def _digraph_floyd_warshall(
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+    parallel_threshold=300,
+):
+    return digraph_floyd_warshall(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
+    )
+
+
+@floyd_warshall.register(PyGraph)
+def _graph_floyd_warshall(
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+    parallel_threshold=300,
+):
+    return graph_floyd_warshall(
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        parallel_threshold=parallel_threshold,
     )
 
 
@@ -396,6 +518,92 @@ def _graph_dijkstra_shortest_path(
         weight_fn=weight_fn,
         default_weight=default_weight,
     )
+
+
+@functools.singledispatch
+def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
+    """Find the shortest path from all nodes
+
+    This function will generate the shortest path from all nodes int the graph
+    using Dijkstra's algorithm. This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param edge_cost_fn: A callable object that acts as a weight function for
+        an edge. It will accept a single positional argument, the edge's weight
+        object and will return a float which will be used to represent the
+        weight/cost of the edge
+
+    :return: A read-only dictionary of paths. The keys are destination node
+        indices and the values are a dict of target node indices and a list
+        of node indices making the path. For example::
+
+            {
+                0: {1: [0, 1],  2: [0, 1, 2]},
+                1: {2: [1, 2]},
+                2: {0: [2, 0]},
+            }
+
+    :rtype: AllPairsPathMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@all_pairs_dijkstra_shortest_paths.register(PyDiGraph)
+def _digraph_all_pairsdijkstra_shortest_path(graph, edge_cost_fn):
+    return digraph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
+
+
+@all_pairs_dijkstra_shortest_paths.register(PyGraph)
+def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
+    return graph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
+def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    """Find the shortest path from a node
+
+    This function will generate the shortest path from a source node using
+    Dijkstra's algorithm. This function is multithreaded and will run
+    launch a thread pool with threads equal to the number of CPUs by default.
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param edge_cost_fn: A callable object that acts as a weight function for
+        an edge. It will accept a single positional argument, the edge's weight
+        object and will return a float which will be used to represent the
+        weight/cost of the edge
+
+    :return: A read-only dictionary of path lengths. The keys are the source
+        node indices and the values are a dict of the target node and the
+        length of the shortest path to that node. For example::
+
+            {
+                0: {1: 2.0, 2: 2.0},
+                1: {2: 1.0},
+                2: {0: 1.0},
+            }
+
+    :rtype: AllPairsPathLengthMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@all_pairs_dijkstra_path_lengths.register(PyDiGraph)
+def _digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    return digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
+
+
+@all_pairs_dijkstra_path_lengths.register(PyGraph)
+def _graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
+    return graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
 
 
 @functools.singledispatch
@@ -621,6 +829,87 @@ def _graph_is_isomorphic_node_match(first, second, matcher, id_order=True):
 
 
 @functools.singledispatch
+def is_subgraph_isomorphic(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=False,
+    induced=True,
+):
+    """Determine if 2 graphs are subgraph isomorphic
+
+    This checks if 2 graphs are subgraph isomorphic both structurally and also
+    comparing the node and edge data using the provided matcher functions.
+    The matcher functions take in 2 data objects and will compare them.
+    Since there is an ambiguity in the term 'subgraph', do note that we check
+    for an node-induced subgraph if argument `induced` is set to `True`. If it is
+    set to `False`, we check for a non induced subgraph, meaning the second graph
+    can have fewer edges than the subgraph of the first. By default it's `True`. A
+    simple example that checks if they're just equal would be::
+
+            graph_a = retworkx.PyGraph()
+            graph_b = retworkx.PyGraph()
+            retworkx.is_subgraph_isomorphic(graph_a, graph_b,
+                                            lambda x, y: x == y)
+
+
+    :param first: The first graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param second: The second graph to compare. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        It should be the same type as the first graph.
+    :param callable node_matcher: A python callable object that takes 2
+        positional one for each node data object. If the return of this
+        function evaluates to True then the nodes passed to it are viewed
+        as matching.
+    :param callable edge_matcher: A python callable object that takes 2
+        positional one for each edge data object. If the return of this
+        function evaluates to True then the edges passed to it are viewed
+        as matching.
+    :param bool id_order: If set to ``True`` this function will match the nodes
+        in order specified by their ids. Otherwise it will default to a heuristic
+        matching order based on [VF2]_ paper.
+    :param bool induced: If set to ``True`` this function will check the existence
+        of a node-induced subgraph of first isomorphic to second graph.
+        Default: ``True``.
+
+    :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
+        , ``False`` if there is not.
+    :rtype: bool
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@is_subgraph_isomorphic.register(PyDiGraph)
+def _digraph_is_subgraph_isomorphic(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=False,
+    induced=True,
+):
+    return digraph_is_subgraph_isomorphic(
+        first, second, node_matcher, edge_matcher, id_order, induced
+    )
+
+
+@is_subgraph_isomorphic.register(PyGraph)
+def _graph_is_subgraph_isomorphic(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=False,
+    induced=True,
+):
+    return graph_is_subgraph_isomorphic(
+        first, second, node_matcher, edge_matcher, id_order, induced
+    )
+
+
+@functools.singledispatch
 def transitivity(graph):
     """Compute the transitivity of a graph.
 
@@ -740,6 +1029,137 @@ def _graph_random_layout(graph, center=None, seed=None):
     return graph_random_layout(graph, center=center, seed=seed)
 
 
+@functools.singledispatch
+def spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    """
+    Position nodes using Fruchterman-Reingold force-directed algorithm.
+
+    The algorithm simulates a force-directed representation of the network
+    treating edges as springs holding nodes close, while treating nodes
+    as repelling objects, sometimes called an anti-gravity force.
+    Simulation continues until the positions are close to an equilibrium.
+
+    :param graph: Graph to be used. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param dict pos:
+        Initial node positions as a dictionary with node ids as keys and values
+        as a coordinate list. If ``None``, then use random initial positions.
+        (``default=None``)
+    :param set fixed: Nodes to keep fixed at initial position.
+        Error raised if fixed specified and ``pos`` is not. (``default=None``)
+    :param float  k:
+        Optimal distance between nodes. If ``None`` the distance is set to
+        :math:`\\frac{1}{\\sqrt{n}}` where :math:`n` is the number of nodes.
+        Increase this value to move nodes farther apart. (``default=None``)
+    :param int repulsive_exponent:
+        Repulsive force exponent. (``default=2``)
+    :param bool adaptive_cooling:
+        Use an adaptive cooling scheme. If set to ``False``,
+        a linear cooling scheme is used. (``default=True``)
+    :param int num_iter:
+        Maximum number of iterations. (``default=50``)
+    :param float tol:
+        Threshold for relative error in node position changes.
+        The iteration stops if the error is below this threshold.
+        (``default = 1e-6``)
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float
+        which will be used to represent the weight of the edge.
+    :param float (default=1) default_weight: If ``weight_fn`` isn't specified
+        this optional float value will be used for the weight/cost of each edge
+    :param float|None scale: Scale factor for positions.
+        Not used unless fixed is None. If scale is ``None``, no re-scaling is
+        performed. (``default=1.0``)
+    :param list center: Coordinate pair around which to center
+        the layout. Not used unless fixed is ``None``. (``default=None``)
+    :param int seed: An optional seed to use for the random number generator
+
+    :returns: A dictionary of positions keyed by node id.
+    :rtype: dict
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@spring_layout.register(PyDiGraph)
+def _digraph_spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    return digraph_spring_layout(
+        graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+
+
+@spring_layout.register(PyGraph)
+def _graph_spring_layout(
+    graph,
+    pos=None,
+    fixed=None,
+    k=None,
+    repulsive_exponent=2,
+    adaptive_cooling=True,
+    num_iter=50,
+    tol=1e-6,
+    weight_fn=None,
+    default_weight=1,
+    scale=1,
+    center=None,
+    seed=None,
+):
+    return graph_spring_layout(
+        graph,
+        pos,
+        fixed,
+        k,
+        repulsive_exponent,
+        adaptive_cooling,
+        num_iter,
+        tol,
+        weight_fn,
+        default_weight,
+        scale,
+        center,
+        seed,
+    )
+
+
 def networkx_converter(graph):
     """Convert a networkx graph object into a retworkx graph object.
 
@@ -770,3 +1190,205 @@ def networkx_converter(graph):
         ]
     )
     return new_graph
+
+
+@functools.singledispatch
+def bipartite_layout(
+    graph,
+    first_nodes,
+    horizontal=False,
+    scale=1,
+    center=None,
+    aspect_ratio=4 / 3,
+):
+    """Generate a bipartite layout of the graph
+
+    :param graph: The graph to generate the layout for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param set first_nodes: The set of node indexes on the left (or top if
+        horitontal is true)
+    :param bool horizontal: An optional bool specifying the orientation of the
+        layout
+    :param float scale: An optional scaling factor to scale positions
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param float aspect_ratio: An optional number for the ratio of the width to
+        the height of the layout.
+
+    :returns: The bipartite layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bipartite_layout.register(PyDiGraph)
+def _digraph_bipartite_layout(
+    graph,
+    first_nodes,
+    horizontal=False,
+    scale=1,
+    center=None,
+    aspect_ratio=4 / 3,
+):
+    return digraph_bipartite_layout(
+        graph,
+        first_nodes,
+        horizontal=horizontal,
+        scale=scale,
+        center=center,
+        aspect_ratio=aspect_ratio,
+    )
+
+
+@bipartite_layout.register(PyGraph)
+def _graph_bipartite_layout(
+    graph,
+    first_nodes,
+    horizontal=False,
+    scale=1,
+    center=None,
+    aspect_ratio=4 / 3,
+):
+    return graph_bipartite_layout(
+        graph,
+        first_nodes,
+        horizontal=horizontal,
+        scale=scale,
+        center=center,
+        aspect_ratio=aspect_ratio,
+    )
+
+
+@functools.singledispatch
+def circular_layout(graph, scale=1, center=None):
+    """Generate a circular layout of the graph
+
+    :param graph: The graph to generate the layout for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param float scale: An optional scaling factor to scale positions
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+
+    :returns: The circular layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@circular_layout.register(PyDiGraph)
+def _digraph_circular_layout(graph, scale=1, center=None):
+    return digraph_circular_layout(graph, scale=scale, center=center)
+
+
+@circular_layout.register(PyGraph)
+def _graph_circular_layout(graph, scale=1, center=None):
+    return graph_circular_layout(graph, scale=scale, center=center)
+
+
+@functools.singledispatch
+def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
+    """
+    Generate a shell layout of the graph
+
+    :param graph: The graph to generate the layout for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param list nlist: The list of lists of indexes which represents each shell
+    :param float rotate: Angle (in radians) by which to rotate the starting
+        position of each shell relative to the starting position of the
+        previous shell
+    :param float scale: An optional scaling factor to scale positions
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+
+    :returns: The shell layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@shell_layout.register(PyDiGraph)
+def _digraph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
+    return digraph_shell_layout(
+        graph, nlist=nlist, rotate=rotate, scale=scale, center=center
+    )
+
+
+@shell_layout.register(PyGraph)
+def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
+    return graph_shell_layout(
+        graph, nlist=nlist, rotate=rotate, scale=scale, center=center
+    )
+
+
+@functools.singledispatch
+def spiral_layout(
+    graph, scale=1, center=None, resolution=0.35, equidistant=False
+):
+    """
+    Generate a spiral layout of the graph
+
+    :param graph: The graph to generate the layout for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param float scale: An optional scaling factor to scale positions
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param float resolution: The compactness of the spiral layout returned.
+        Lower values result in more compressed spiral layouts.
+    :param bool equidistant: If true, nodes will be plotted equidistant from
+        each other.
+
+    :returns: The spiral layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@spiral_layout.register(PyDiGraph)
+def _digraph_spiral_layout(
+    graph, scale=1, center=None, resolution=0.35, equidistant=False
+):
+    return digraph_spiral_layout(
+        graph,
+        scale=scale,
+        center=center,
+        resolution=resolution,
+        equidistant=equidistant,
+    )
+
+
+@spiral_layout.register(PyGraph)
+def _graph_spiral_layout(
+    graph, scale=1, center=None, resolution=0.35, equidistant=False
+):
+    return graph_spiral_layout(
+        graph,
+        scale=scale,
+        center=center,
+        resolution=resolution,
+        equidistant=equidistant,
+    )
+
+
+@functools.singledispatch
+def num_shortest_paths_unweighted(graph, source):
+    """Get the number of unweighted shortest paths from a source node
+
+    :param PyDiGraph graph: The graph to find the number of shortest paths on
+    :param int source: The source node to find the shortest paths from
+
+    :returns: A mapping of target node indices to the number of shortest paths
+        from ``source`` to that node. If there is no path from ``source`` to
+        a node in the graph that node will not be preset in the output mapping.
+    :rtype: NodesCountMapping
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@num_shortest_paths_unweighted.register(PyDiGraph)
+def _digraph_num_shortest_paths_unweighted(graph, source):
+    return digraph_num_shortest_paths_unweighted(graph, source)
+
+
+@num_shortest_paths_unweighted.register(PyGraph)
+def _graph_num_shortest_paths_unweighted(graph, source):
+    return graph_num_shortest_paths_unweighted(graph, source)

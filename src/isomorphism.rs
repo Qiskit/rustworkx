@@ -14,10 +14,10 @@
 // It has then been modified to function with PyDiGraph inputs instead of Graph.
 
 use fixedbitset::FixedBitSet;
-use std::iter::FromIterator;
+use std::cmp::Ordering;
 use std::marker;
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 
 use super::NodesRemoved;
 
@@ -143,15 +143,15 @@ where
                 return;
             }
 
-            let mut next_level: HashSet<usize> = HashSet::new();
+            let mut next_level: Vec<usize> = Vec::new();
 
             seen[root] = true;
-            next_level.insert(root);
+            next_level.push(root);
             while !next_level.is_empty() {
-                let this_level = Vec::from_iter(next_level);
+                let this_level = next_level;
                 let this_level = process(this_level);
 
-                next_level = HashSet::new();
+                next_level = Vec::new();
                 for bfs_node in this_level {
                     for neighbor in graph.neighbors_directed(
                         graph.from_index(bfs_node),
@@ -160,7 +160,7 @@ where
                         let neigh = graph.to_index(neighbor);
                         if !seen[neigh] {
                             seen[neigh] = true;
-                            next_level.insert(neigh);
+                            next_level.push(neigh);
                         }
                     }
                 }
@@ -168,7 +168,7 @@ where
         };
 
         let mut sorted_nodes: Vec<usize> = (0..n).collect();
-        sorted_nodes.par_sort_unstable_by_key(|&node| (dout[node], din[node]));
+        sorted_nodes.par_sort_by_key(|&node| (dout[node], din[node]));
         sorted_nodes.reverse();
 
         for node in sorted_nodes {
@@ -346,12 +346,33 @@ where
     new_graph
 }
 
-/// [Graph] Return `true` if the graphs `g0` and `g1` are isomorphic.
+trait SemanticMatcher<T> {
+    fn enabled(&self) -> bool;
+    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
+}
+
+impl<T, F> SemanticMatcher<T> for Option<F>
+where
+    F: FnMut(&T, &T) -> PyResult<bool>,
+{
+    #[inline]
+    fn enabled(&self) -> bool {
+        self.is_some()
+    }
+    #[inline]
+    fn eq(&mut self, a: &T, b: &T) -> PyResult<bool> {
+        let res = (self.as_mut().unwrap())(a, b)?;
+        Ok(res)
+    }
+}
+
+/// [Graph] Return `true` if the graphs `g0` and `g1` are (sub) graph isomorphic.
 ///
 /// Using the VF2 algorithm, examining both syntactic and semantic
 /// graph isomorphism (graph structure and matching node and edge weights).
 ///
 /// The graphs should not be multigraphs.
+#[allow(clippy::too_many_arguments)]
 pub fn is_isomorphic<Ty, F, G>(
     py: Python,
     g0: &StablePyGraph<Ty>,
@@ -359,6 +380,8 @@ pub fn is_isomorphic<Ty, F, G>(
     mut node_match: Option<F>,
     mut edge_match: Option<G>,
     id_order: bool,
+    ordering: Ordering,
+    induced: bool,
 ) -> PyResult<bool>
 where
     Ty: EdgeType,
@@ -380,8 +403,10 @@ where
         g1
     };
 
-    if g0_out.node_count() != g1_out.node_count()
-        || g0_out.edge_count() != g1_out.edge_count()
+    if (g0_out.node_count().cmp(&g1_out.node_count()).then(ordering)
+        != ordering)
+        || (g0_out.edge_count().cmp(&g1_out.edge_count()).then(ordering)
+            != ordering)
     {
         return Ok(false);
     }
@@ -401,41 +426,16 @@ where
     };
 
     let mut st = [Vf2State::new(g0), Vf2State::new(g1)];
-    let res = try_match(&mut st, g0, g1, &mut node_match, &mut edge_match)?;
+    let res = try_match(
+        &mut st,
+        g0,
+        g1,
+        &mut node_match,
+        &mut edge_match,
+        ordering,
+        induced,
+    )?;
     Ok(res.unwrap_or(false))
-}
-
-trait SemanticMatcher<T> {
-    fn enabled(&self) -> bool;
-    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool>;
-}
-
-struct NoSemanticMatch;
-
-impl<T> SemanticMatcher<T> for NoSemanticMatch {
-    #[inline]
-    fn enabled(&self) -> bool {
-        false
-    }
-    #[inline]
-    fn eq(&mut self, _: &T, _: &T) -> PyResult<bool> {
-        Ok(true)
-    }
-}
-
-impl<T, F> SemanticMatcher<T> for Option<F>
-where
-    F: FnMut(&T, &T) -> PyResult<bool>,
-{
-    #[inline]
-    fn enabled(&self) -> bool {
-        self.is_some()
-    }
-    #[inline]
-    fn eq(&mut self, a: &T, b: &T) -> PyResult<bool> {
-        let res = (self.as_mut().unwrap())(a, b)?;
-        Ok(res)
-    }
 }
 
 /// Return Some(bool) if isomorphism is decided, else None.
@@ -445,13 +445,15 @@ fn try_match<Ty, F, G>(
     g1: &StablePyGraph<Ty>,
     node_match: &mut F,
     edge_match: &mut G,
+    ordering: Ordering,
+    induced: bool,
 ) -> PyResult<Option<bool>>
 where
     Ty: EdgeType,
     F: SemanticMatcher<PyObject>,
     G: SemanticMatcher<PyObject>,
 {
-    if st[0].is_complete() {
+    if st[1].is_complete() {
         return Ok(Some(true));
     }
 
@@ -574,6 +576,9 @@ where
         for j in graph_indices.clone() {
             for n_neigh in g[j].neighbors(nodes[j]) {
                 succ_count[j] += 1;
+                if !induced && j == 0 {
+                    continue;
+                }
                 // handle the self loop case; it's not in the mapping (yet)
                 let m_neigh = if nodes[j] != n_neigh {
                     st[j].mapping[n_neigh.index()]
@@ -593,7 +598,7 @@ where
                 }
             }
         }
-        if succ_count[0] != succ_count[1] {
+        if succ_count[0].cmp(&succ_count[1]).then(ordering) != ordering {
             return Ok(false);
         }
         // R_pred
@@ -602,6 +607,9 @@ where
             for j in graph_indices.clone() {
                 for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
                     pred_count[j] += 1;
+                    if !induced && j == 0 {
+                        continue;
+                    }
                     // the self loop case is handled in outgoing
                     let m_neigh = st[j].mapping[n_neigh.index()];
                     if m_neigh == end {
@@ -617,7 +625,7 @@ where
                     }
                 }
             }
-            if pred_count[0] != pred_count[1] {
+            if pred_count[0].cmp(&pred_count[1]).then(ordering) != ordering {
                 return Ok(false);
             }
         }
@@ -634,51 +642,68 @@ where
             }};
         }
         // R_out
-        if rule!(out, 0, Outgoing) != rule!(out, 1, Outgoing) {
+        if rule!(out, 0, Outgoing)
+            .cmp(&rule!(out, 1, Outgoing))
+            .then(ordering)
+            != ordering
+        {
             return Ok(false);
         }
         if g[0].is_directed()
-            && rule!(out, 0, Incoming) != rule!(out, 1, Incoming)
+            && rule!(out, 0, Incoming)
+                .cmp(&rule!(out, 1, Incoming))
+                .then(ordering)
+                != ordering
         {
             return Ok(false);
         }
         // R_in
         if g[0].is_directed() {
-            if rule!(ins, 0, Outgoing) != rule!(ins, 1, Outgoing) {
+            if rule!(ins, 0, Outgoing)
+                .cmp(&rule!(ins, 1, Outgoing))
+                .then(ordering)
+                != ordering
+            {
                 return Ok(false);
             }
 
-            if rule!(ins, 0, Incoming) != rule!(ins, 1, Incoming) {
+            if rule!(ins, 0, Incoming)
+                .cmp(&rule!(ins, 1, Incoming))
+                .then(ordering)
+                != ordering
+            {
                 return Ok(false);
             }
         }
         // R_new
-        let mut new_count = [0, 0];
-        for j in graph_indices.clone() {
-            for n_neigh in g[j].neighbors(nodes[j]) {
-                let index = n_neigh.index();
-                if st[j].out[index] == 0
-                    && (st[j].ins.is_empty() || st[j].ins[index] == 0)
-                {
-                    new_count[j] += 1;
-                }
-            }
-        }
-        if new_count[0] != new_count[1] {
-            return Ok(false);
-        }
-        if g[0].is_directed() {
+        if induced {
             let mut new_count = [0, 0];
             for j in graph_indices.clone() {
-                for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
+                for n_neigh in g[j].neighbors(nodes[j]) {
                     let index = n_neigh.index();
-                    if st[j].out[index] == 0 && st[j].ins[index] == 0 {
+                    if st[j].out[index] == 0
+                        && (st[j].ins.is_empty() || st[j].ins[index] == 0)
+                    {
                         new_count[j] += 1;
                     }
                 }
             }
-            if new_count[0] != new_count[1] {
+            if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
                 return Ok(false);
+            }
+            if g[0].is_directed() {
+                let mut new_count = [0, 0];
+                for j in graph_indices.clone() {
+                    for n_neigh in g[j].neighbors_directed(nodes[j], Incoming) {
+                        let index = n_neigh.index();
+                        if st[j].out[index] == 0 && st[j].ins[index] == 0 {
+                            new_count[j] += 1;
+                        }
+                    }
+                }
+                if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
+                    return Ok(false);
+                }
             }
         }
         // semantic feasibility: compare associated data for nodes
@@ -779,12 +804,14 @@ where
                 let feasible = is_feasible(&mut st, nodes)?;
                 if feasible {
                     push_state(&mut st, nodes);
-                    if st[0].is_complete() {
+                    if st[1].is_complete() {
                         return Ok(Some(true));
                     }
                     // Check cardinalities of Tin, Tout sets
-                    if st[0].out_size == st[1].out_size
-                        && st[0].ins_size == st[1].ins_size
+                    if st[0].out_size.cmp(&st[1].out_size).then(ordering)
+                        == ordering
+                        && st[0].ins_size.cmp(&st[1].ins_size).then(ordering)
+                            == ordering
                     {
                         let f0 = Frame::Unwind {
                             nodes,

@@ -12,3 +12,7 @@ docs/source/stubs/
 retworkx/*.so
 retworkx/*pyd
 *.stestr/
+*.ps
+*.png
+*.svg
+*.jpg
