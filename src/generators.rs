@@ -1126,9 +1126,7 @@ pub fn directed_binomial_tree_graph(
 ///   image
 ///
 #[pyfunction(multigraph = true)]
-#[pyo3(
-    text_signature = "(d, /, multigraph=True)"
-)]
+#[pyo3(text_signature = "(d, /, multigraph=True)")]
 pub fn heavy_square_graph(
     py: Python,
     d: usize,
