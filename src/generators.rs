@@ -1183,13 +1183,13 @@ pub fn heavy_hex_graph(
             );
         } else if i % 2 == 1 {
             graph.add_edge(
-                nodes_data[(i + 1) * d - 1],
+                nodes_data[i * d + (d - 1)],
                 syndrome_chunk[syndrome_chunk.len() - 1],
                 py.None(),
             );
             graph.add_edge(
                 syndrome_chunk[syndrome_chunk.len() - 1],
-                nodes_data[(i + 2) * d - 1],
+                nodes_data[i * d + (2 * d - 1)],
                 py.None(),
             );
         }
