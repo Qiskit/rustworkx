@@ -689,6 +689,80 @@ fn digraph_astar_shortest_path(
     })
 }
 
+/// Compute the A* shortest path for a PyGraph
+///
+/// :param PyGraph graph: The input graph to use
+/// :param int node: The node index to compute the path from
+/// :param goal_fn: A python callable that will take in 1 parameter, a node's data
+///     object and will return a boolean which will be True if it is the finish
+///     node.
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an edge's
+///     data object and will return a float that represents the cost of that
+///     edge. It must be non-negative.
+/// :param estimate_cost_fn: A python callable that will take in 1 parameter, a
+///     node's data object and will return a float which represents the estimated
+///     cost for the next node. The return must be non-negative. For the
+///     algorithm to find the actual shortest path, it should be admissible,
+///     meaning that it should never overestimate the actual cost to get to the
+///     nearest goal node.
+///
+/// :returns: The computed shortest path between node and finish as a list
+///     of node indices.
+/// :rtype: NodeIndices
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)")]
+fn graph_astar_shortest_path(
+    py: Python,
+    graph: &graph::PyGraph,
+    node: usize,
+    goal_fn: PyObject,
+    edge_cost_fn: PyObject,
+    estimate_cost_fn: PyObject,
+) -> PyResult<NodeIndices> {
+    let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
+        let res = goal_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: bool = raw.extract(py)?;
+        Ok(output)
+    };
+
+    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = edge_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: f64 = raw.extract(py)?;
+        Ok(output)
+    };
+
+    let estimate_cost_callable = |a: &PyObject| -> PyResult<f64> {
+        let res = estimate_cost_fn.call1(py, (a,))?;
+        let raw = res.to_object(py);
+        let output: f64 = raw.extract(py)?;
+        Ok(output)
+    };
+    let start = NodeIndex::new(node);
+
+    let astar_res = astar::astar(
+        graph,
+        start,
+        |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
+        |e| edge_cost_callable(e.weight()),
+        |estimate| {
+            estimate_cost_callable(graph.graph.node_weight(estimate).unwrap())
+        },
+    )?;
+    let path = match astar_res {
+        Some(path) => path,
+        None => {
+            return Err(NoPathFound::new_err(
+                "No path found that satisfies goal_fn",
+            ))
+        }
+    };
+    Ok(NodeIndices {
+        nodes: path.1.into_iter().map(|x| x.index()).collect(),
+    })
+}
+
 /// Compute the length of the kth shortest path
 ///
 /// Computes the lengths of the kth shortest path from ``start`` to every
