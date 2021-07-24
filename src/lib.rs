@@ -33,10 +33,10 @@ use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeSet, BinaryHeap};
 
 use dag_algorithms::*;
+use layout::*;
 use matching::*;
 use random_circuit::*;
 use shortest_path::*;
-use layout::*;
 
 use hashbrown::{HashMap, HashSet};
 

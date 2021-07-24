@@ -16,22 +16,19 @@ use crate::{digraph, graph, weight_callable};
 
 use hashbrown::{HashMap, HashSet};
 
-use pyo3::exceptions::{ PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::prelude::*;
-use petgraph::visit::{
-    IntoEdgeReferences,
-    NodeIndexable
-};
+use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
 
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
-use crate::iterators::{Pos2DMapping};
+use crate::iterators::Pos2DMapping;
 
 #[allow(clippy::too_many_arguments)]
 fn _spring_layout<Ty>(
