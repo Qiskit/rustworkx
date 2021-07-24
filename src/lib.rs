@@ -23,7 +23,8 @@ mod isomorphism;
 mod iterators;
 mod k_shortest_path;
 mod layout;
-mod max_weight_matching;
+mod matching;
+mod max_weight_matching_algo;
 mod shortest_path;
 mod union;
 
@@ -32,6 +33,7 @@ use std::collections::{BTreeSet, BinaryHeap};
 
 use dag_algorithms::*;
 use shortest_path::*;
+use matching::*;
 
 use hashbrown::{HashMap, HashSet};
 
@@ -1250,80 +1252,6 @@ fn weight_callable(
     }
 }
 
-/// Compute the A* shortest path for a PyGraph
-///
-/// :param PyGraph graph: The input graph to use
-/// :param int node: The node index to compute the path from
-/// :param goal_fn: A python callable that will take in 1 parameter, a node's data
-///     object and will return a boolean which will be True if it is the finish
-///     node.
-/// :param edge_cost_fn: A python callable that will take in 1 parameter, an edge's
-///     data object and will return a float that represents the cost of that
-///     edge. It must be non-negative.
-/// :param estimate_cost_fn: A python callable that will take in 1 parameter, a
-///     node's data object and will return a float which represents the estimated
-///     cost for the next node. The return must be non-negative. For the
-///     algorithm to find the actual shortest path, it should be admissible,
-///     meaning that it should never overestimate the actual cost to get to the
-///     nearest goal node.
-///
-/// :returns: The computed shortest path between node and finish as a list
-///     of node indices.
-/// :rtype: NodeIndices
-#[pyfunction]
-#[pyo3(text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)")]
-fn graph_astar_shortest_path(
-    py: Python,
-    graph: &graph::PyGraph,
-    node: usize,
-    goal_fn: PyObject,
-    edge_cost_fn: PyObject,
-    estimate_cost_fn: PyObject,
-) -> PyResult<NodeIndices> {
-    let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
-        let res = goal_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: bool = raw.extract(py)?;
-        Ok(output)
-    };
-
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: f64 = raw.extract(py)?;
-        Ok(output)
-    };
-
-    let estimate_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = estimate_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: f64 = raw.extract(py)?;
-        Ok(output)
-    };
-    let start = NodeIndex::new(node);
-
-    let astar_res = astar::astar(
-        graph,
-        start,
-        |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
-        |e| edge_cost_callable(e.weight()),
-        |estimate| {
-            estimate_cost_callable(graph.graph.node_weight(estimate).unwrap())
-        },
-    )?;
-    let path = match astar_res {
-        Some(path) => path,
-        None => {
-            return Err(NoPathFound::new_err(
-                "No path found that satisfies goal_fn",
-            ))
-        }
-    };
-    Ok(NodeIndices {
-        nodes: path.1.into_iter().map(|x| x.index()).collect(),
-    })
-}
-
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///
@@ -1880,72 +1808,6 @@ pub fn cycle_basis(
     cycles
 }
 
-/// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
-///
-/// A matching is a subset of edges in which no node occurs more than once.
-/// The weight of a matching is the sum of the weights of its edges.
-/// A maximal matching cannot add more edges and still be a matching.
-/// The cardinality of a matching is the number of matched edges.
-///
-/// This function takes time :math:`O(n^3)` where ``n`` is the number of nodes
-/// in the graph.
-///
-/// This method is based on the "blossom" method for finding augmenting
-/// paths and the "primal-dual" method for finding a matching of maximum
-/// weight, both methods invented by Jack Edmonds [1]_.
-///
-/// :param PyGraph graph: The undirected graph to compute the max weight
-///     matching for. Expects to have no parallel edges (multigraphs are
-///     untested currently).
-/// :param bool max_cardinality: If True, compute the maximum-cardinality
-///     matching with maximum weight among all maximum-cardinality matchings.
-///     Defaults False.
-/// :param callable weight_fn: An optional callable that will be passed a
-///     single argument the edge object for each edge in the graph. It is
-///     expected to return an ``int`` weight for that edge. For example,
-///     if the weights are all integers you can use: ``lambda x: x``. If not
-///     specified the value for ``default_weight`` will be used for all
-///     edge weights.
-/// :param int default_weight: The ``int`` value to use for all edge weights
-///     in the graph if ``weight_fn`` is not specified. Defaults to ``1``.
-/// :param bool verify_optimum: A boolean flag to run a check that the found
-///     solution is optimum. If set to true an exception will be raised if
-///     the found solution is not optimum. This is mostly useful for testing.
-///
-/// :returns: A set of tuples ofthe matching, Note that only a single
-///     direction will be listed in the output, for example:
-///     ``{(0, 1),}``.
-/// :rtype: set
-///
-/// .. [1] "Efficient Algorithms for Finding Maximum Matching in Graphs",
-///     Zvi Galil, ACM Computing Surveys, 1986.
-///
-#[pyfunction(
-    max_cardinality = "false",
-    default_weight = 1,
-    verify_optimum = "false"
-)]
-#[pyo3(
-    text_signature = "(graph, /, max_cardinality=False, weight_fn=None, default_weight=1, verify_optimum=False)"
-)]
-pub fn max_weight_matching(
-    py: Python,
-    graph: &graph::PyGraph,
-    max_cardinality: bool,
-    weight_fn: Option<PyObject>,
-    default_weight: i128,
-    verify_optimum: bool,
-) -> PyResult<HashSet<(usize, usize)>> {
-    max_weight_matching::max_weight_matching(
-        py,
-        graph,
-        max_cardinality,
-        weight_fn,
-        default_weight,
-        verify_optimum,
-    )
-}
-
 /// Compute the strongly connected components for a directed graph
 ///
 /// This function is implemented using Kosaraju's algorithm
@@ -2045,100 +1907,6 @@ pub fn digraph_find_cycle(
         }
     }
     EdgeList { edges: cycle }
-}
-
-fn _inner_is_matching(
-    graph: &graph::PyGraph,
-    matching: &HashSet<(usize, usize)>,
-) -> bool {
-    let has_edge = |e: &(usize, usize)| -> bool {
-        graph
-            .graph
-            .contains_edge(NodeIndex::new(e.0), NodeIndex::new(e.1))
-    };
-
-    if !matching.iter().all(|e| has_edge(e)) {
-        return false;
-    }
-    let mut found: HashSet<usize> = HashSet::with_capacity(2 * matching.len());
-    for (v1, v2) in matching {
-        if found.contains(v1) || found.contains(v2) {
-            return false;
-        }
-        found.insert(*v1);
-        found.insert(*v2);
-    }
-    true
-}
-
-/// Check if matching is valid for graph
-///
-/// A *matching* in a graph is a set of edges in which no two distinct
-/// edges share a common endpoint.
-///
-/// :param PyDiGraph graph: The graph to check if the matching is valid for
-/// :param set matching: A set of node index tuples for each edge in the
-///     matching.
-///
-/// :returns: Whether the provided matching is a valid matching for the graph
-/// :rtype: bool
-#[pyfunction]
-#[pyo3(text_signature = "(graph, matching, /)")]
-pub fn is_matching(
-    graph: &graph::PyGraph,
-    matching: HashSet<(usize, usize)>,
-) -> bool {
-    _inner_is_matching(graph, &matching)
-}
-
-/// Check if a matching is a maximal (**not** maximum) matching for a graph
-///
-/// A *maximal matching* in a graph is a matching in which adding any
-/// edge would cause the set to no longer be a valid matching.
-///
-/// .. note::
-///
-///   This is not checking for a *maximum* (globally optimal) matching, but
-///   a *maximal* (locally optimal) matching.
-///
-/// :param PyDiGraph graph: The graph to check if the matching is maximal for.
-/// :param set matching: A set of node index tuples for each edge in the
-///     matching.
-///
-/// :returns: Whether the provided matching is a valid matching and whether it
-///     is maximal or not.
-/// :rtype: bool
-#[pyfunction]
-#[pyo3(text_signature = "(graph, matching, /)")]
-pub fn is_maximal_matching(
-    graph: &graph::PyGraph,
-    matching: HashSet<(usize, usize)>,
-) -> bool {
-    if !_inner_is_matching(graph, &matching) {
-        return false;
-    }
-    let edge_list: HashSet<[usize; 2]> = graph
-        .edge_references()
-        .map(|edge| {
-            let mut tmp_array = [edge.source().index(), edge.target().index()];
-            tmp_array.sort_unstable();
-            tmp_array
-        })
-        .collect();
-    let matched_edges: HashSet<[usize; 2]> = matching
-        .iter()
-        .map(|edge| {
-            let mut tmp_array = [edge.0, edge.1];
-            tmp_array.sort_unstable();
-            tmp_array
-        })
-        .collect();
-    let mut unmatched_edges = edge_list.difference(&matched_edges);
-    unmatched_edges.all(|e| {
-        let mut tmp_set = matching.clone();
-        tmp_set.insert((e[0], e[1]));
-        !_inner_is_matching(graph, &tmp_set)
-    })
 }
 
 fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
