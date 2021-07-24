@@ -33,9 +33,9 @@ use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeSet, BinaryHeap};
 
 use dag_algorithms::*;
-use shortest_path::*;
 use matching::*;
 use random_circuit::*;
+use shortest_path::*;
 
 use hashbrown::{HashMap, HashSet};
 

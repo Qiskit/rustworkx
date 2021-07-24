@@ -12,11 +12,11 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::{graph, digraph};
+use crate::{digraph, graph};
 
-use pyo3::exceptions::{ PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict};
+use pyo3::types::PyDict;
 use pyo3::Python;
 
 use petgraph::algo;

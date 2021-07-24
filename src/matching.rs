@@ -13,18 +13,16 @@
 #![allow(clippy::float_cmp)]
 
 use super::max_weight_matching_algo;
-use crate::{graph};
+use crate::graph;
 
-use hashbrown::{HashSet};
+use hashbrown::HashSet;
 
 use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::{
-     IntoEdgeReferences
-};
+use petgraph::visit::IntoEdgeReferences;
 
 /// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
 ///
