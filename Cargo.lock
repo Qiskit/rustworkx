@@ -512,6 +512,7 @@ dependencies = [
  "indexmap",
  "ndarray",
  "num-bigint",
+ "num-traits",
  "numpy",
  "petgraph",
  "pyo3",

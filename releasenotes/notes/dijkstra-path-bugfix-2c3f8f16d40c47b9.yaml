@@ -1,0 +1,16 @@
+---
+fixes:
+  - |
+    Fixed an issue with the Dijkstra path functions:
+
+      * :func:`retworkx.dijkstra_shortest_paths`
+      * :func:`retworkx.all_pairs_dijkstra_shortest_paths`
+      * :func:`retworkx.digraph_dijkstra_shortest_paths`
+      * :func:`retworkx.graph_dijkstra_shortest_paths`
+      * :func:`retworkx.digraph_all_pairs_dijkstra_shortest_paths`
+      * :func:`retworkx.graph_all_pairs_dijkstra_shortest_paths`
+
+    where the returned paths could be incorrect in cases where there were
+    multiple paths between nodes and an edge weight callback function was
+    specified.
+    Fixed `#387 <https://github.com/Qiskit/retworkx/issues/387>`__
