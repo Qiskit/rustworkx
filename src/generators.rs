@@ -1073,7 +1073,7 @@ pub fn directed_binomial_tree_graph(
 }
 
 /// Generate an undirected heavy square graph. Fig. 6 of
-/// https://arxiv.org/abs/1907.09528. 
+/// https://arxiv.org/abs/1907.09528
 /// An ASCII diagram of the graph is given by:
 ///
 /// ...       S   ...
@@ -1162,13 +1162,13 @@ pub fn heavy_square_graph(
     for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
         if i % 2 == 0 {
             graph.add_edge(
-                nodes_data[(i + 1) * d - 1],
+                nodes_data[i * d + (d - 1)],
                 syndrome_chunk[syndrome_chunk.len() - 1],
                 py.None(),
             );
             graph.add_edge(
                 syndrome_chunk[syndrome_chunk.len() - 1],
-                nodes_data[(i + 2) * d - 1],
+                nodes_data[i * d + (2 * d - 1)],
                 py.None(),
             );
         } else if i % 2 == 1 {
