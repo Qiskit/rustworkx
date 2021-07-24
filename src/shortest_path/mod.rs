@@ -12,12 +12,13 @@
 
 #![allow(clippy::float_cmp)]
 
+mod astar;
+mod dijkstra;
+mod k_shortest_path;
+
 use hashbrown::{HashMap, HashSet};
 
-use crate::{
-    astar, digraph, dijkstra, get_edge_iter_with_weights, graph,
-    k_shortest_path, NoPathFound,
-};
+use crate::{digraph, get_edge_iter_with_weights, graph, NoPathFound};
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;

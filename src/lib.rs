@@ -12,16 +12,13 @@
 
 #![allow(clippy::float_cmp)]
 
-mod astar;
 mod dag_algorithms;
 mod digraph;
-mod dijkstra;
 mod dot_utils;
 mod generators;
 mod graph;
 mod isomorphism;
 mod iterators;
-mod k_shortest_path;
 mod layout;
 mod matching;
 mod random_circuit;
