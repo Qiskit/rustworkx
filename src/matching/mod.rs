@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use super::max_weight_matching_algo;
+mod max_weight_matching;
 use crate::graph;
 
 use hashbrown::HashSet;
@@ -80,7 +80,7 @@ pub fn max_weight_matching(
     default_weight: i128,
     verify_optimum: bool,
 ) -> PyResult<HashSet<(usize, usize)>> {
-    max_weight_matching_algo::max_weight_matching(
+    max_weight_matching::max_weight_matching(
         py,
         graph,
         max_cardinality,

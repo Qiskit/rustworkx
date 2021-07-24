@@ -24,7 +24,6 @@ mod iterators;
 mod k_shortest_path;
 mod layout;
 mod matching;
-mod max_weight_matching_algo;
 mod random_circuit;
 mod shortest_path;
 mod union;
