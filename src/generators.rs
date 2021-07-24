@@ -1076,6 +1076,7 @@ pub fn directed_binomial_tree_graph(
 /// https://arxiv.org/abs/1907.09528
 /// An ASCII diagram of the graph is given by:
 ///
+/// ```
 /// ...       S   ...
 ///    \     / \
 ///    ... D   D   D ...
@@ -1091,6 +1092,7 @@ pub fn directed_binomial_tree_graph(
 ///    ... D   D   D ...
 ///         \ /     \
 ///    ...   S       ...
+/// ```
 ///
 /// :param int d: distance of the code.
 /// :param bool multigraph: When set to False the output
