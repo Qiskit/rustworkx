@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Added new generators for constructing a hexagonal lattice graph (:func:`retworkx.generators.hexagonal_lattice_graph`)
-    and directed hexagonal lattice graph (:func:`retworkx.generators.directed_hexagonal_lattice_graph`).

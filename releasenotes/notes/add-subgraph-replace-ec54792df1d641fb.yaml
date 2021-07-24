@@ -1,0 +1,34 @@
+---
+features:
+  - |
+    A new method, :meth:`~retworkx.PyDiGraph.substitute_node_with_subgraph`,
+    to the :class:`~retworkx.PyDiGraph` class. This method is used to replace a
+    node in a :class:`~retworkx.PyDiGraph` object with another
+    :class:`~retwork.PyDiGraph` object. For example, first creating a new
+    graph:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      original_graph = retworkx.generators.directed_path_graph(5)
+      mpl_draw(original_graph, with_labels=True)
+
+    then create another graph to use in place of a node:
+
+    .. jupyter-execute::
+
+      other_graph = retworkx.generators.directed_star_graph(25)
+      mpl_draw(other_graph)
+
+    finally replace a node in the original graph with the second graph:
+
+    .. jupyter-execute::
+
+      def edge_map_fn(_source, _target, _weight):
+          return 0
+
+      node_mapping = original_graph.substitute_node_with_subgraph(2, other_graph, edge_map_fn)
+      print(node_mapping)
+      mpl_draw(original_graph, with_labels=True)
