@@ -18,6 +18,7 @@ mod k_shortest_path;
 
 use hashbrown::{HashMap, HashSet};
 
+use super::weight_callable;
 use crate::{digraph, get_edge_iter_with_weights, graph, NoPathFound};
 
 use pyo3::exceptions::PyIndexError;
@@ -40,21 +41,6 @@ use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
     NodesCountMapping, PathLengthMapping, PathMapping,
 };
-
-fn weight_callable(
-    py: Python,
-    weight_fn: &Option<PyObject>,
-    weight: &PyObject,
-    default: f64,
-) -> PyResult<f64> {
-    match weight_fn {
-        Some(weight_fn) => {
-            let res = weight_fn.call1(py, (weight,))?;
-            res.extract(py)
-        }
-        None => Ok(default),
-    }
-}
 
 /// Find the shortest path from a node
 ///
