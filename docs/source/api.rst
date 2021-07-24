@@ -63,6 +63,8 @@ DAG Algorithms
 
    retworkx.dag_longest_path
    retworkx.dag_longest_path_length
+   retworkx.dag_weighted_longest_path
+   retworkx.dag_weighted_longest_path_length
    retworkx.is_directed_acyclic_graph
    retworkx.layers
 

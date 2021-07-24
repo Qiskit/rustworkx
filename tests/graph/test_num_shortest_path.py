@@ -120,7 +120,6 @@ class TestNumShortestpath(unittest.TestCase):
             11: 1,
         }
         res = retworkx.num_shortest_paths_unweighted(graph, 0)
-        print(res)
         self.assertEqual(expected, res)
 
     def test_no_edges(self):
