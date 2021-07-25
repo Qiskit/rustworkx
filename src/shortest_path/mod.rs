@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+mod all_pairs_dijkstra;
 mod astar;
 mod dijkstra;
 mod floyd_warshall;
@@ -23,14 +24,11 @@ use hashbrown::{HashMap, HashSet};
 use super::weight_callable;
 use crate::{digraph, get_edge_iter_with_weights, graph, NoPathFound};
 
-use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
-use petgraph::prelude::*;
-use petgraph::visit::{EdgeIndexable, NodeCount};
-use petgraph::EdgeType;
+use petgraph::visit::NodeCount;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -296,171 +294,6 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     })
 }
 
-fn _all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
-    py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
-    edge_cost_fn: PyObject,
-) -> PyResult<AllPairsPathLengthMapping> {
-    if graph.node_count() == 0 {
-        return Ok(AllPairsPathLengthMapping {
-            path_lengths: HashMap::new(),
-        });
-    } else if graph.edge_count() == 0 {
-        return Ok(AllPairsPathLengthMapping {
-            path_lengths: graph
-                .node_indices()
-                .map(|i| {
-                    (
-                        i.index(),
-                        PathLengthMapping {
-                            path_lengths: HashMap::new(),
-                        },
-                    )
-                })
-                .collect(),
-        });
-    }
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        raw.extract(py)
-    };
-    let mut edge_weights: Vec<Option<f64>> =
-        Vec::with_capacity(graph.edge_bound());
-    for index in 0..=graph.edge_bound() {
-        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
-        match raw_weight {
-            Some(weight) => {
-                edge_weights.push(Some(edge_cost_callable(weight)?))
-            }
-            None => edge_weights.push(None),
-        };
-    }
-    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
-        match edge_weights[e.index()] {
-            Some(weight) => Ok(weight),
-            None => Err(PyIndexError::new_err("No edge found for index")),
-        }
-    };
-    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    let out_map: HashMap<usize, PathLengthMapping> = node_indices
-        .into_par_iter()
-        .map(|x| {
-            let out_map = PathLengthMapping {
-                path_lengths: dijkstra::dijkstra(
-                    graph,
-                    x,
-                    None,
-                    |e| edge_cost(e.id()),
-                    None,
-                )
-                .unwrap()
-                .iter()
-                .filter_map(|(index, cost)| {
-                    if *index == x {
-                        None
-                    } else {
-                        Some((index.index(), *cost))
-                    }
-                })
-                .collect(),
-            };
-            (x.index(), out_map)
-        })
-        .collect();
-    Ok(AllPairsPathLengthMapping {
-        path_lengths: out_map,
-    })
-}
-
-fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
-    py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
-    edge_cost_fn: PyObject,
-) -> PyResult<AllPairsPathMapping> {
-    if graph.node_count() == 0 {
-        return Ok(AllPairsPathMapping {
-            paths: HashMap::new(),
-        });
-    } else if graph.edge_count() == 0 {
-        return Ok(AllPairsPathMapping {
-            paths: graph
-                .node_indices()
-                .map(|i| {
-                    (
-                        i.index(),
-                        PathMapping {
-                            paths: HashMap::new(),
-                        },
-                    )
-                })
-                .collect(),
-        });
-    }
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        raw.extract(py)
-    };
-    let mut edge_weights: Vec<Option<f64>> =
-        Vec::with_capacity(graph.edge_bound());
-    for index in 0..=graph.edge_bound() {
-        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
-        match raw_weight {
-            Some(weight) => {
-                edge_weights.push(Some(edge_cost_callable(weight)?))
-            }
-            None => edge_weights.push(None),
-        };
-    }
-    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
-        match edge_weights[e.index()] {
-            Some(weight) => Ok(weight),
-            None => Err(PyIndexError::new_err("No edge found for index")),
-        }
-    };
-    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    Ok(AllPairsPathMapping {
-        paths: node_indices
-            .into_par_iter()
-            .map(|x| {
-                let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
-                    HashMap::with_capacity(graph.node_count());
-                dijkstra::dijkstra(
-                    graph,
-                    x,
-                    None,
-                    |e| edge_cost(e.id()),
-                    Some(&mut paths),
-                )
-                .unwrap();
-                let index = x.index();
-                let out_paths = PathMapping {
-                    paths: paths
-                        .iter()
-                        .filter_map(|path_mapping| {
-                            let path_index = path_mapping.0.index();
-                            if index != path_index {
-                                Some((
-                                    path_index,
-                                    path_mapping
-                                        .1
-                                        .iter()
-                                        .map(|x| x.index())
-                                        .collect(),
-                                ))
-                            } else {
-                                None
-                            }
-                        })
-                        .collect(),
-                };
-                (index, out_paths)
-            })
-            .collect(),
-    })
-}
-
 /// Calculate the the shortest length from all nodes in a
 /// :class:`~retworkx.PyDiGraph` object
 ///
@@ -495,7 +328,11 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
     graph: &digraph::PyDiGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathLengthMapping> {
-    _all_pairs_dijkstra_path_lengths(py, &graph.graph, edge_cost_fn)
+    all_pairs_dijkstra::all_pairs_dijkstra_path_lengths(
+        py,
+        &graph.graph,
+        edge_cost_fn,
+    )
 }
 
 /// Find the shortest path from all nodes in a :class:`~retworkx.PyDiGraph`
@@ -532,7 +369,11 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
     graph: &digraph::PyDiGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathMapping> {
-    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn)
+    all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths(
+        py,
+        &graph.graph,
+        edge_cost_fn,
+    )
 }
 
 /// Calculate the the shortest length from all nodes in a
@@ -565,7 +406,11 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
     graph: &graph::PyGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathLengthMapping> {
-    _all_pairs_dijkstra_path_lengths(py, &graph.graph, edge_cost_fn)
+    all_pairs_dijkstra::all_pairs_dijkstra_path_lengths(
+        py,
+        &graph.graph,
+        edge_cost_fn,
+    )
 }
 
 /// Find the shortest path from all nodes in a :class:`~retworkx.PyGraph`
@@ -598,7 +443,11 @@ pub fn graph_all_pairs_dijkstra_shortest_paths(
     graph: &graph::PyGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathMapping> {
-    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn)
+    all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths(
+        py,
+        &graph.graph,
+        edge_cost_fn,
+    )
 }
 
 /// Compute the A* shortest path for a PyDiGraph
