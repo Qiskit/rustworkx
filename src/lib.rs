@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-mod dag_algorithms;
+mod dag_algo;
 mod digraph;
 mod dot_utils;
 mod generators;
@@ -28,7 +28,7 @@ mod union;
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeSet, BinaryHeap};
 
-use dag_algorithms::*;
+use dag_algo::*;
 use isomorphism::*;
 use layout::*;
 use matching::*;

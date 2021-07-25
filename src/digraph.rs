@@ -54,7 +54,7 @@ use super::{
     NodesRemoved,
 };
 
-use super::dag_algorithms::is_directed_acyclic_graph;
+use super::dag_algo::is_directed_acyclic_graph;
 
 /// A class for creating directed graphs
 ///
