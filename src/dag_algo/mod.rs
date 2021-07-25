@@ -12,9 +12,11 @@
 
 #![allow(clippy::float_cmp)]
 
+mod longest_path;
+
 use hashbrown::{HashMap, HashSet};
 
-use crate::{digraph, longest_path};
+use crate::digraph;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -65,7 +67,7 @@ pub fn dag_longest_path(
             }
         };
     Ok(NodeIndices {
-        nodes: longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -104,7 +106,8 @@ pub fn dag_longest_path_length(
                 None => Ok(1),
             }
         };
-    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) =
+        longest_path::longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -149,7 +152,7 @@ pub fn dag_weighted_longest_path(
             Ok(float_res)
         };
     Ok(NodeIndices {
-        nodes: longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -193,7 +196,8 @@ pub fn dag_weighted_longest_path_length(
             }
             Ok(float_res)
         };
-    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) =
+        longest_path::longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
