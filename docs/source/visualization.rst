@@ -10,3 +10,4 @@ Visualization API
    :toctree: stubs
 
    retworkx.visualization.mpl_draw
+   retworkx.visualization.graphviz_draw

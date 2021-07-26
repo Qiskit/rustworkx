@@ -1,4 +1,8 @@
-.. release-notes:: Release Notes
+*************
+Release Notes
+*************
+
+.. release-notes::
 
 0.7.1
 =====
@@ -96,6 +100,7 @@ Fixes
   build versions of the rust dependencies were not passed through to
   source. This has been fixed so building from sdist will always use
   known working versions that we use for testing in CI.
+
 
 0.6.0
 =====

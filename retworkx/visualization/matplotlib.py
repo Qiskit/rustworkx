@@ -295,7 +295,6 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
 
     valid_label_kwds = {
         "labels",
-        "edge_labels",
         "font_size",
         "font_color",
         "font_family",

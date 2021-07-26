@@ -54,29 +54,16 @@ where
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_cycle_graph(5)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -153,29 +140,14 @@ pub fn directed_cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.cycle_graph(5)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -243,29 +215,16 @@ pub fn cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_path_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -331,29 +290,14 @@ pub fn directed_path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.path_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn path_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -416,52 +360,24 @@ pub fn path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_star_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_star_graph(10, inward=True)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -528,29 +444,14 @@ pub fn directed_star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.star_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn star_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -604,29 +505,14 @@ pub fn star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.mesh_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -684,29 +570,14 @@ pub fn mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_mesh_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = "true")]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn directed_mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -774,29 +645,16 @@ pub fn directed_mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.grid_graph(2, 3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"
+)]
 pub fn grid_graph(
     py: Python,
     rows: Option<usize>,
@@ -897,29 +755,16 @@ pub fn grid_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_grid_graph(2, 3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_grid_graph(
     py: Python,
     rows: Option<usize>,
@@ -1025,29 +870,14 @@ pub fn directed_grid_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.binomial_tree_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(order, /, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(order, /, weights=None, multigraph=True)")]
 pub fn binomial_tree_graph(
     py: Python,
     order: u32,
@@ -1137,29 +967,16 @@ pub fn binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_binomial_tree_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
@@ -1274,29 +1091,14 @@ pub fn directed_binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, rows=None, cols=None, multigraph=True)")]
 pub fn hexagonal_lattice_graph(
     py: Python,
     rows: usize,
@@ -1375,29 +1177,16 @@ pub fn hexagonal_lattice_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
-#[text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
     rows: usize,

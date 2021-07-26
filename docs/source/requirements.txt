@@ -1,7 +1,7 @@
 m2r2
-sphinx<3.3.0
+sphinx>=3.0.0
 sphinx_rtd_theme
-jupyter-sphinx==0.2.3
+jupyter-sphinx
 pydot
 pillow>=4.2.1
 reno>=3.2.0

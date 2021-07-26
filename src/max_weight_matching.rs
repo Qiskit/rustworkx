@@ -108,7 +108,7 @@ fn assign_label(
     best_edge[b] = None;
     if t == 1 {
         // b became an S-vertex/blossom; add it(s verticies) to the queue
-        queue.append(&mut blossom_leaves(b, num_nodes, &blossom_children)?);
+        queue.append(&mut blossom_leaves(b, num_nodes, blossom_children)?);
     } else if t == 2 {
         // b became a T-vertex/blossom; assign label S to its mate.
         // (If b is a non-trivial blossom, its base is the only vertex
@@ -279,7 +279,7 @@ fn add_blossom(
     // Set dual variable to 0
     dual_var[blossom] = 0;
     // Relabel vertices
-    for node in blossom_leaves(blossom, num_nodes, &blossom_children)? {
+    for node in blossom_leaves(blossom, num_nodes, blossom_children)? {
         if labels[in_blossoms[node]] == Some(2) {
             // This T-vertex now turns into an S-vertex because it becomes
             // part of an S-blossom; add it to the queue
@@ -296,7 +296,7 @@ fn add_blossom(
         // get the information from the vertices.
         let nblists: Vec<Vec<usize>> = if blossom_best_edges[bv].is_empty() {
             let mut tmp: Vec<Vec<usize>> = Vec::new();
-            for node in blossom_leaves(bv, num_nodes, &blossom_children)? {
+            for node in blossom_leaves(bv, num_nodes, blossom_children)? {
                 tmp.push(
                     neighbor_endpoints[node].iter().map(|p| p / 2).collect(),
                 );
@@ -316,12 +316,8 @@ fn add_blossom(
                 if blossom_j != blossom
                     && labels[blossom_j] == Some(1)
                     && (best_edge_to.get(&blossom_j).is_none()
-                        || slack(edge_index, &dual_var, &edges)
-                            < slack(
-                                best_edge_to[&blossom_j],
-                                &dual_var,
-                                &edges,
-                            ))
+                        || slack(edge_index, dual_var, edges)
+                            < slack(best_edge_to[&blossom_j], dual_var, edges))
                 {
                     best_edge_to.insert(blossom_j, edge_index);
                 }
@@ -336,8 +332,8 @@ fn add_blossom(
     best_edge[blossom] = None;
     for edge_index in &blossom_best_edges[blossom] {
         if best_edge[blossom].is_none()
-            || slack(*edge_index, &dual_var, &edges)
-                < slack(best_edge[blossom].unwrap(), &dual_var, &edges)
+            || slack(*edge_index, dual_var, edges)
+                < slack(best_edge[blossom].unwrap(), dual_var, edges)
         {
             best_edge[blossom] = Some(*edge_index);
         }

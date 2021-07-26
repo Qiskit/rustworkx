@@ -1,0 +1,45 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.spring_layout` to generate layouts
+    for :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
+    using the `Fruchterman-Reingold force-directed algorithm 
+    <https://onlinelibrary.wiley.com/doi/abs/10.1002/spe.4380211102>`__. This
+    layout method is used by default for the
+    :func:`~retworkx.visualization.mpl_drawer` visualization function. You
+    can also explicitly use it when calling
+    :func:`~retworkx.visualization.mpl_drawer` and
+    :func:`~retworkx.visualization.graphviz_drawer`. For example:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.random_geometric_graph(15, 1.42)
+      layout = retworkx.spring_layout(graph, adaptive_cooling=False)
+      mpl_draw(graph, pos=layout)
+
+    and with the graphviz drawer:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import graphviz_draw
+
+      graph = retworkx.random_geometric_graph(15, 1.42)
+      layout = retworkx.spring_layout(graph, adaptive_cooling=False)
+      for i in range(15):
+        graph[i] = i
+
+      def node_attr_fn(node):
+          point = layout[node]
+          return {
+              "shape": "circle",
+              "pos": '"%s,%s!"' % (point[0], point[1]),
+              "fillcolor": "yellow",
+              "style": "filled",
+              "fixedsize": "true"
+          }
+
+      graphviz_draw(graph, node_attr_fn=node_attr_fn, method='fdp')

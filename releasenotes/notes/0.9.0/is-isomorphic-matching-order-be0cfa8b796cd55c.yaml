@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    The :func:`~retworkx.is_isomorphic` and
+    :func:`~retworkx.is_isomorphic_node_match` functions have a new kwarg,
+    ``id_order`` which is used to adjust the node matching order used.
+    If you set ``id_order=False`` then the matching order used is the heuristic
+    matching order proposed in the
+    `VF2++ paper <http://bolyai.cs.elte.hu/egres/tr/egres-18-03.pdf>`__. If you
+    want to retain use the order based on node ids, you can set
+    ``id_order=True`` which is the default behavior.
