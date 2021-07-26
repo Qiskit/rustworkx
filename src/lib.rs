@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+mod coloring;
 mod connectivity;
 mod core_number;
 mod dag_algo;
@@ -32,8 +33,7 @@ mod traversal;
 mod tree;
 mod union;
 
-use std::cmp::Reverse;
-
+use coloring::*;
 use connectivity::*;
 use core_number::*;
 use dag_algo::*;
@@ -49,12 +49,11 @@ use traversal::*;
 use tree::*;
 use union::*;
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
 use pyo3::Python;
@@ -66,59 +65,10 @@ use petgraph::visit::{
     NodeCount, NodeIndexable,
 };
 
-use rayon::prelude::*;
-
 use crate::generators::PyInit_generators;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
-}
-
-/// Color a PyGraph using a largest_first strategy greedy graph coloring.
-///
-/// :param PyGraph: The input PyGraph object to color
-///
-/// :returns: A dictionary where keys are node indices and the value is
-///     the color
-/// :rtype: dict
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-fn graph_greedy_color(
-    py: Python,
-    graph: &graph::PyGraph,
-) -> PyResult<PyObject> {
-    let mut colors: HashMap<usize, usize> = HashMap::new();
-    let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let mut sort_map: HashMap<NodeIndex, usize> =
-        HashMap::with_capacity(graph.node_count());
-    for k in node_vec.iter() {
-        sort_map.insert(*k, graph.graph.edges(*k).count());
-    }
-    node_vec.par_sort_by_key(|k| Reverse(sort_map.get(k)));
-    for u_index in node_vec {
-        let mut neighbor_colors: HashSet<usize> = HashSet::new();
-        for edge in graph.graph.edges(u_index) {
-            let target = edge.target().index();
-            let existing_color = match colors.get(&target) {
-                Some(node) => node,
-                None => continue,
-            };
-            neighbor_colors.insert(*existing_color);
-        }
-        let mut count: usize = 0;
-        loop {
-            if !neighbor_colors.contains(&count) {
-                break;
-            }
-            count += 1;
-        }
-        colors.insert(u_index.index(), count);
-    }
-    let out_dict = PyDict::new(py);
-    for (index, color) in colors {
-        out_dict.set_item(index, color)?;
-    }
-    Ok(out_dict.into())
 }
 
 pub fn get_edge_iter_with_weights<G>(
