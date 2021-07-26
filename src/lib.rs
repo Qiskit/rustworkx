@@ -24,6 +24,7 @@ mod layout_algo;
 mod matching;
 mod random_circuit;
 mod shortest_path;
+mod simple_path;
 mod traversal;
 mod tree;
 mod union;
@@ -37,6 +38,7 @@ use layout_algo::*;
 use matching::*;
 use random_circuit::*;
 use shortest_path::*;
+use simple_path::*;
 use traversal::*;
 use tree::*;
 
@@ -50,7 +52,6 @@ use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
 use pyo3::Python;
 
-use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
@@ -291,114 +292,6 @@ fn graph_adjacency_matrix(
         matrix[[j, i]] += edge_weight;
     }
     Ok(matrix.into_pyarray(py).into())
-}
-
-/// Return all simple paths between 2 nodes in a PyGraph object
-///
-/// A simple path is a path with no repeated nodes.
-///
-/// :param PyGraph graph: The graph to find the path in
-/// :param int from: The node index to find the paths from
-/// :param int to: The node index to find the paths to
-/// :param int min_depth: The minimum depth of the path to include in the output
-///     list of paths. By default all paths are included regardless of depth,
-///     setting to 0 will behave like the default.
-/// :param int cutoff: The maximum depth of path to include in the output list
-///     of paths. By default includes all paths regardless of depth, setting to
-///     0 will behave like default.
-///
-/// :returns: A list of lists where each inner list is a path of node indices
-/// :rtype: list
-#[pyfunction]
-#[pyo3(text_signature = "(graph, from, to, /, min=None, cutoff=None)")]
-fn graph_all_simple_paths(
-    graph: &graph::PyGraph,
-    from: usize,
-    to: usize,
-    min_depth: Option<usize>,
-    cutoff: Option<usize>,
-) -> PyResult<Vec<Vec<usize>>> {
-    let from_index = NodeIndex::new(from);
-    if !graph.graph.contains_node(from_index) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'from' is not a valid node index",
-        ));
-    }
-    let to_index = NodeIndex::new(to);
-    if !graph.graph.contains_node(to_index) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'to' is not a valid node index",
-        ));
-    }
-    let min_intermediate_nodes: usize = match min_depth {
-        Some(depth) => depth - 2,
-        None => 0,
-    };
-    let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
-    let result: Vec<Vec<usize>> = algo::all_simple_paths(
-        graph,
-        from_index,
-        to_index,
-        min_intermediate_nodes,
-        cutoff_petgraph,
-    )
-    .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
-    .collect();
-    Ok(result)
-}
-
-/// Return all simple paths between 2 nodes in a PyDiGraph object
-///
-/// A simple path is a path with no repeated nodes.
-///
-/// :param PyDiGraph graph: The graph to find the path in
-/// :param int from: The node index to find the paths from
-/// :param int to: The node index to find the paths to
-/// :param int min_depth: The minimum depth of the path to include in the output
-///     list of paths. By default all paths are included regardless of depth,
-///     sett to 0 will behave like the default.
-/// :param int cutoff: The maximum depth of path to include in the output list
-///     of paths. By default includes all paths regardless of depth, setting to
-///     0 will behave like default.
-///
-/// :returns: A list of lists where each inner list is a path
-/// :rtype: list
-#[pyfunction]
-#[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
-fn digraph_all_simple_paths(
-    graph: &digraph::PyDiGraph,
-    from: usize,
-    to: usize,
-    min_depth: Option<usize>,
-    cutoff: Option<usize>,
-) -> PyResult<Vec<Vec<usize>>> {
-    let from_index = NodeIndex::new(from);
-    if !graph.graph.contains_node(from_index) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'from' is not a valid node index",
-        ));
-    }
-    let to_index = NodeIndex::new(to);
-    if !graph.graph.contains_node(to_index) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'to' is not a valid node index",
-        ));
-    }
-    let min_intermediate_nodes: usize = match min_depth {
-        Some(depth) => depth - 2,
-        None => 0,
-    };
-    let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
-    let result: Vec<Vec<usize>> = algo::all_simple_paths(
-        graph,
-        from_index,
-        to_index,
-        min_intermediate_nodes,
-        cutoff_petgraph,
-    )
-    .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
-    .collect();
-    Ok(result)
 }
 
 fn weight_callable(
