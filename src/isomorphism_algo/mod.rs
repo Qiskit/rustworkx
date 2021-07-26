@@ -11,7 +11,6 @@
 // under the License.
 
 #![allow(clippy::float_cmp)]
-#![allow(clippy::module_inception)]
 
 mod isomorphism;
 

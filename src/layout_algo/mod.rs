@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::module_inception)]
-
 mod layout;
 
 use crate::{digraph, graph, weight_callable};
