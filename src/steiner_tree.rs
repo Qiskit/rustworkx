@@ -66,6 +66,9 @@ fn _metric_closure_edges(
     weight_fn: PyObject,
 ) -> PyResult<Vec<MetricClosureEdge>> {
     let node_count = graph.graph.node_count();
+    if node_count == 0 {
+        return Ok(Vec::new());
+    }
     let mut out_vec = Vec::with_capacity(node_count * (node_count - 1) / 2);
     let mut distances = HashMap::with_capacity(graph.graph.node_count());
     let paths = _all_pairs_dijkstra_shortest_paths(
@@ -77,11 +80,12 @@ fn _metric_closure_edges(
     .paths;
     let mut nodes: HashSet<usize> =
         graph.graph.node_indices().map(|x| x.index()).collect();
-    let first_node = match graph.graph.node_indices().map(|x| x.index()).next()
-    {
-        Some(node) => node,
-        None => return Ok(Vec::new()),
-    };
+    let first_node = graph
+        .graph
+        .node_indices()
+        .map(|x| x.index())
+        .next()
+        .unwrap();
     let path_keys: HashSet<usize> =
         paths[&first_node].paths.keys().copied().collect();
     // first_node will always be missing from path_keys so if the difference
