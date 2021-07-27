@@ -81,3 +81,34 @@ class TestMetricClosure(unittest.TestCase):
         self.graph.add_node(None)
         with self.assertRaises(ValueError):
             retworkx.metric_closure(self.graph, weight_fn=float)
+
+    def test_partially_connected_metric_closure(self):
+        graph = retworkx.PyGraph()
+        graph.add_node(None)
+        graph.extend_from_weighted_edge_list(
+            [
+                (1, 2, 10),
+                (2, 3, 10),
+                (3, 4, 10),
+                (4, 5, 10),
+                (5, 6, 10),
+                (2, 7, 1),
+                (7, 5, 1),
+            ]
+        )
+        graph.extend_from_weighted_edge_list(
+            [
+                (0, 8, 20),
+                (0, 9, 20),
+                (0, 10, 20),
+                (8, 10, 10),
+                (9, 10, 5),
+            ]
+        )
+        with self.assertRaises(ValueError):
+            retworkx.metric_closure(graph, weight_fn=float)
+
+    def test_metric_closure_empty_graph(self):
+        graph = retworkx.PyGraph()
+        closure = retworkx.metric_closure(graph, weight_fn=float)
+        self.assertEqual([], closure.weighted_edge_list())

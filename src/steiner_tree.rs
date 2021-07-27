@@ -75,14 +75,19 @@ fn _metric_closure_edges(
         Some(&mut distances),
     )?
     .paths;
-    let path_keys: HashSet<usize> = paths
-        .keys()
-        .filter(|x| !paths[x].paths.is_empty())
-        .copied()
-        .collect();
     let mut nodes: HashSet<usize> =
         graph.graph.node_indices().map(|x| x.index()).collect();
-    if nodes.difference(&path_keys).count() > 0 {
+    let first_node = match graph.graph.node_indices().map(|x| x.index()).next()
+    {
+        Some(node) => node,
+        None => return Ok(Vec::new()),
+    };
+    let path_keys: HashSet<usize> =
+        paths[&first_node].paths.keys().copied().collect();
+    // first_node will always be missing from path_keys so if the difference
+    // is > 1 with nodes that means there is another node in the graph that
+    // first_node doesn't have a path to.
+    if nodes.difference(&path_keys).count() > 1 {
         return Err(PyValueError::new_err(
             "The input graph must be a connected graph. The metric closure is \
             not defined for a graph with unconnected nodes",
