@@ -14,7 +14,6 @@
 
 mod coloring;
 mod connectivity;
-mod core_number;
 mod dag_algo;
 mod digraph;
 mod dot_utils;
@@ -25,9 +24,7 @@ mod iterators;
 mod layout;
 mod matching;
 mod random_circuit;
-mod representation_algo;
 mod shortest_path;
-mod simple_path;
 mod transitivity;
 mod traversal;
 mod tree;
@@ -35,15 +32,12 @@ mod union;
 
 use coloring::*;
 use connectivity::*;
-use core_number::*;
 use dag_algo::*;
 use isomorphism::*;
 use layout::*;
 use matching::*;
 use random_circuit::*;
-use representation_algo::*;
 use shortest_path::*;
-use simple_path::*;
 use transitivity::*;
 use traversal::*;
 use tree::*;

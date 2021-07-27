@@ -12,8 +12,6 @@
 
 #![allow(clippy::float_cmp)]
 
-use super::{digraph, graph};
-
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::prelude::*;
@@ -26,7 +24,7 @@ use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
-pub fn _core_number<Ty>(
+pub fn core_number<Ty>(
     py: Python,
     graph: &StableGraph<PyObject, PyObject, Ty>,
 ) -> PyResult<PyObject>
@@ -95,51 +93,4 @@ where
         out_dict.set_item(v_index.index(), core)?;
     }
     Ok(out_dict.into())
-}
-
-/// Return the core number for each node in the graph.
-///
-/// A k-core is a maximal subgraph that contains nodes of degree k or more.
-///
-/// .. note::
-///
-///     The function implicitly assumes that there are no parallel edges
-///     or self loops. It may produce incorrect/unexpected results if the
-///     input graph has self loops or parallel edges.
-///
-/// :param PyGraph: The graph to get core numbers
-///
-/// :returns: A dictionary keyed by node index to the core number
-/// :rtype: dict
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-pub fn graph_core_number(
-    py: Python,
-    graph: &graph::PyGraph,
-) -> PyResult<PyObject> {
-    _core_number(py, &graph.graph)
-}
-
-/// Return the core number for each node in the directed graph.
-///
-/// A k-core is a maximal subgraph that contains nodes of degree k or more.
-/// For directed graphs, the degree is calculated as in_degree + out_degree.
-///
-/// .. note::
-///
-///     The function implicitly assumes that there are no parallel edges
-///     or self loops. It may produce incorrect/unexpected results if the
-///     input graph has self loops or parallel edges.
-///
-/// :param PyDiGraph: The directed graph to get core numbers
-///
-/// :returns: A dictionary keyed by node index to the core number
-/// :rtype: dict
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_core_number(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-) -> PyResult<PyObject> {
-    _core_number(py, &graph.graph)
 }
