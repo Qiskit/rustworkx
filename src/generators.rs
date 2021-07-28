@@ -1073,7 +1073,7 @@ pub fn directed_binomial_tree_graph(
 }
 
 /// Generate an undirected heavy square graph. Fig. 6 of
-/// https://arxiv.org/abs/1907.09528
+/// https://arxiv.org/abs/1907.09528.
 /// An ASCII diagram of the graph is given by:
 ///
 /// .. code-block:: console
@@ -1094,6 +1094,9 @@ pub fn directed_binomial_tree_graph(
 ///             \ /     \
 ///        ...   S       ...
 ///
+/// NOTE: This function generates the four-frequency variant of the heavy square code.
+/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function doesn't support the variant Fig 10.b right.
 ///
 /// :param int d: distance of the code.
 /// :param bool multigraph: When set to False the output
