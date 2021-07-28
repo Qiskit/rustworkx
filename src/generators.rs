@@ -1076,7 +1076,8 @@ pub fn directed_binomial_tree_graph(
 /// https://arxiv.org/abs/1907.09528
 /// An ASCII diagram of the graph is given by:
 ///
-/// .. code-block:: console
+/// .. code-block:: text
+///
 ///     ... D-S-D   D ...
 ///         |   |   |
 ///     ...-F   F-S-F ...
