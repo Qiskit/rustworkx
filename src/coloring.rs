@@ -14,7 +14,9 @@
 
 use crate::graph;
 
+use ahash::RandomState;
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexMap;
 use std::cmp::Reverse;
 
 use pyo3::prelude::*;
@@ -40,7 +42,8 @@ fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
 ) -> PyResult<PyObject> {
-    let mut colors: HashMap<usize, usize> = HashMap::new();
+    let mut colors: IndexMap<usize, usize, RandomState> =
+        IndexMap::with_hasher(RandomState::default());
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let mut sort_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(graph.node_count());
