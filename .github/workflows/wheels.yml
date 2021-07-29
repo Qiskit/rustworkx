@@ -126,7 +126,7 @@ jobs:
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
-          CIBW_ARCHS_LINUX: ppc64le s390x
+          CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
