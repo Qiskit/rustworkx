@@ -507,6 +507,7 @@ dependencies = [
 name = "retworkx"
 version = "0.10.0"
 dependencies = [
+ "ahash",
  "fixedbitset",
  "hashbrown",
  "indexmap",
