@@ -53,6 +53,7 @@ setup(
                                    binding=Binding.PyO3)],
     include_package_data=True,
     packages=["retworkx", "retworkx.visualization"],
+    package_data={"retworkx": ["py.typed", "*.pyi"]},
     zip_safe=False,
     python_requires=">=3.6",
     install_requires=['numpy>=1.16.0'],
