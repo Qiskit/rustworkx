@@ -1081,13 +1081,11 @@ pub fn directed_binomial_tree_graph(
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: The generated hexagonal lattice graph with the following nodes deleted:
-///           ```2*row + 1``` and
-///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
+/// :returns: The generated hexagonal lattice graph.
 ///
 /// :rtype: PyGraph
-/// :raises IndexError: If neither ``rows`` or ``cols`` are
-///      specified
+/// :raises TypeError: If either ``rows`` or ``cols`` are
+///      not specified
 ///
 /// .. jupyter-execute::
 ///
@@ -1098,14 +1096,22 @@ pub fn directed_binomial_tree_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, rows=None, cols=None, multigraph=True)")]
+#[pyo3(text_signature = "(rows, cols, /, multigraph=True)")]
 pub fn hexagonal_lattice_graph(
     py: Python,
     rows: usize,
     cols: usize,
     multigraph: bool,
-) -> PyResult<graph::PyGraph> {
+) -> graph::PyGraph {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    if rows == 0 || cols == 0 {
+        return graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        };
+    }
 
     let mut rowlen = rows;
     let mut collen = cols;
@@ -1113,46 +1119,68 @@ pub fn hexagonal_lattice_graph(
     // Needs two times the number of nodes vertically
     rowlen = 2 * rowlen + 2;
     collen += 1;
-    let num_nodes = rowlen * collen;
+    let num_nodes = rowlen * collen - 2;
 
     let nodes: Vec<NodeIndex> =
         (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
 
     // Add column edges
-    for i in 0..collen {
+    // first column
+    for j in 0..(rowlen - 2) {
+        graph.add_edge(nodes[j], nodes[j + 1], py.None());
+    }
+
+    for i in 1..(collen - 1) {
         for j in 0..(rowlen - 1) {
             graph.add_edge(
+                nodes[i * rowlen + j - 1],
                 nodes[i * rowlen + j],
-                nodes[i * rowlen + (j + 1)],
                 py.None(),
             );
         }
     }
 
+    // last column
+    for j in 0..(rowlen - 2) {
+        graph.add_edge(
+            nodes[(collen - 1) * rowlen + j - 1],
+            nodes[(collen - 1) * rowlen + j],
+            py.None(),
+        );
+    }
+
     // Add row edges
-    for i in 0..(collen - 1) {
+    for j in (0..(rowlen - 1)).step_by(2) {
+        graph.add_edge(nodes[j], nodes[j + rowlen - 1], py.None());
+    }
+
+    for i in 1..(collen - 2) {
         for j in 0..rowlen {
             if i % 2 == j % 2 {
                 graph.add_edge(
-                    nodes[i * rowlen + j],
-                    nodes[(i + 1) * rowlen + j],
+                    nodes[i * rowlen + j - 1],
+                    nodes[(i + 1) * rowlen + j - 1],
                     py.None(),
                 );
             }
         }
     }
 
-    // Remove corner nodes
-    graph.remove_node(nodes[rowlen - 1]);
-    graph.remove_node(
-        nodes[(collen - 1) * rowlen + (rowlen - 1) * ((collen - 1) % 2)],
-    );
+    if collen > 2 {
+        for j in ((collen % 2)..rowlen).step_by(2) {
+            graph.add_edge(
+                nodes[(collen - 2) * rowlen + j - 1],
+                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
+                py.None(),
+            );
+        }
+    }
 
-    Ok(graph::PyGraph {
+    graph::PyGraph {
         graph,
-        node_removed: true,
+        node_removed: false,
         multigraph,
-    })
+    }
 }
 
 /// Generate a directed hexagonal lattice graph. The edges propagate towards  
@@ -1167,13 +1195,11 @@ pub fn hexagonal_lattice_graph(
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: The generated directed hexagonal lattice graph with the following nodes deleted:
-///           ```2*row + 1``` and
-///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
+/// :returns: The generated directed hexagonal lattice graph.
 ///
 /// :rtype: PyDiGraph
-/// :raises IndexError: If neither ``rows`` or ``cols`` are
-///      specified
+/// :raises TypeError: If either ``rows`` or ``cols`` are
+///      not specified
 ///
 /// .. jupyter-execute::
 ///
@@ -1185,7 +1211,7 @@ pub fn hexagonal_lattice_graph(
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
 #[pyo3(
-    text_signature = "(/, rows=None, cols=None, bidirectional=False, multigraph=True)"
+    text_signature = "(rows, cols, /, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
@@ -1193,50 +1219,92 @@ pub fn directed_hexagonal_lattice_graph(
     cols: usize,
     bidirectional: bool,
     multigraph: bool,
-) -> PyResult<digraph::PyDiGraph> {
+) -> digraph::PyDiGraph {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+
+    if rows == 0 || cols == 0 {
+        return digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        };
+    }
 
     let mut rowlen = rows;
     let mut collen = cols;
+
     // Needs two times the number of nodes vertically
     rowlen = 2 * rowlen + 2;
     collen += 1;
-    let num_nodes = rowlen * collen;
+    let num_nodes = rowlen * collen - 2;
 
     let nodes: Vec<NodeIndex> =
         (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
 
     // Add column edges
-    for i in 0..collen {
+    // first column
+    for j in 0..(rowlen - 2) {
+        graph.add_edge(nodes[j], nodes[j + 1], py.None());
+        if bidirectional {
+            graph.add_edge(nodes[j + 1], nodes[j], py.None());
+        }
+    }
+
+    for i in 1..(collen - 1) {
         for j in 0..(rowlen - 1) {
             graph.add_edge(
+                nodes[i * rowlen + j - 1],
                 nodes[i * rowlen + j],
-                nodes[i * rowlen + (j + 1)],
                 py.None(),
             );
             if bidirectional {
                 graph.add_edge(
-                    nodes[i * rowlen + (j + 1)],
                     nodes[i * rowlen + j],
+                    nodes[i * rowlen + j - 1],
                     py.None(),
                 );
             }
         }
     }
 
+    // last column
+    for j in 0..(rowlen - 2) {
+        graph.add_edge(
+            nodes[(collen - 1) * rowlen + j - 1],
+            nodes[(collen - 1) * rowlen + j],
+            py.None(),
+        );
+        if bidirectional {
+            graph.add_edge(
+                nodes[(collen - 1) * rowlen + j],
+                nodes[(collen - 1) * rowlen + j - 1],
+                py.None(),
+            );
+        }
+    }
+
     // Add row edges
-    for i in 0..(collen - 1) {
+    for j in (0..(rowlen - 1)).step_by(2) {
+        graph.add_edge(nodes[j], nodes[j + rowlen - 1], py.None());
+        if bidirectional {
+            graph.add_edge(nodes[j + rowlen - 1], nodes[j], py.None());
+        }
+    }
+
+    for i in 1..(collen - 2) {
         for j in 0..rowlen {
             if i % 2 == j % 2 {
                 graph.add_edge(
-                    nodes[i * rowlen + j],
-                    nodes[(i + 1) * rowlen + j],
+                    nodes[i * rowlen + j - 1],
+                    nodes[(i + 1) * rowlen + j - 1],
                     py.None(),
                 );
                 if bidirectional {
                     graph.add_edge(
-                        nodes[(i + 1) * rowlen + j],
-                        nodes[i * rowlen + j],
+                        nodes[(i + 1) * rowlen + j - 1],
+                        nodes[i * rowlen + j - 1],
                         py.None(),
                     );
                 }
@@ -1244,19 +1312,30 @@ pub fn directed_hexagonal_lattice_graph(
         }
     }
 
-    // Remove corner nodes
-    graph.remove_node(nodes[rowlen - 1]);
-    graph.remove_node(
-        nodes[(collen - 1) * rowlen + (rowlen - 1) * ((collen - 1) % 2)],
-    );
+    if collen > 2 {
+        for j in ((collen % 2)..rowlen).step_by(2) {
+            graph.add_edge(
+                nodes[(collen - 2) * rowlen + j - 1],
+                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(
+                    nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
+                    nodes[(collen - 2) * rowlen + j - 1],
+                    py.None(),
+                );
+            }
+        }
+    }
 
-    Ok(digraph::PyDiGraph {
+    digraph::PyDiGraph {
         graph,
-        node_removed: true,
+        node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
-    })
+    }
 }
 
 #[pymodule]

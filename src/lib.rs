@@ -28,7 +28,9 @@ mod union;
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeSet, BinaryHeap};
 
+use ahash::RandomState;
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexMap;
 
 use pyo3::create_exception;
 use pyo3::exceptions::{PyException, PyIndexError, PyValueError};
@@ -1072,7 +1074,8 @@ fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
 ) -> PyResult<PyObject> {
-    let mut colors: HashMap<usize, usize> = HashMap::new();
+    let mut colors: IndexMap<usize, usize, RandomState> =
+        IndexMap::with_hasher(RandomState::default());
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let mut sort_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(graph.node_count());
