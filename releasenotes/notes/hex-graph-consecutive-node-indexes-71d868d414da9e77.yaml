@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Previously, the graphs created by :func:`retworkx.generators.directed_hexagonal_lattice_graph`
+    and :func:`retworkx.generators.hexagonal_lattice_graph` contained holes in the node indices.
+    This has been fixed by generating graphs with consecutive node indexes.
