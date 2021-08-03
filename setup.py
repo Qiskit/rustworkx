@@ -53,6 +53,7 @@ setup(
                                    binding=Binding.PyO3)],
     include_package_data=True,
     packages=["retworkx", "retworkx.visualization", "retworkx-stubs"],
+    package_dir={'retworkx-stubs': 'retworkx-stubs'},
     package_data={"retworkx-stubs": ["py.typed", "*.pyi"]},
     zip_safe=False,
     python_requires=">=3.6",
