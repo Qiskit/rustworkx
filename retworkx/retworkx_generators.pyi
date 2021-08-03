@@ -10,6 +10,8 @@
 # For implementation details, see __init__.py and lib.rs
 
 from typing import Any
+from .pygraph import PyGraph
+from .pydigraph import PyDiGraph
 
 def binomial_tree_graph(*args, **kwargs) -> Any: ...
 def cycle_graph(*args, **kwargs) -> Any: ...
