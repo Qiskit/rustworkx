@@ -1886,7 +1886,9 @@ fn collect_bicolor_runs(
                         block_list[block_id[c0].unwrap_or_default()]
                             .push(graph.graph[node].clone_ref(py));
                     } else {
-                        let mut new_block: Vec<PyObject> = Vec::with_capacity(pending_list[c0].len() + pending_list[c1].len() + 1);
+                        let mut new_block: Vec<PyObject> = Vec::with_capacity(
+                            pending_list[c0].len() + pending_list[c1].len() + 1,
+                        );
 
                         // Clears pending lits and add to new block
                         new_block.append(&mut pending_list[c0]);
