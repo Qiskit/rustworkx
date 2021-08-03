@@ -516,10 +516,13 @@ dependencies = [
 name = "retworkx"
 version = "0.10.0"
 dependencies = [
+ "ahash",
  "fixedbitset",
  "hashbrown 0.9.1",
+ "indexmap",
  "ndarray",
  "num-bigint",
+ "num-traits",
  "numpy",
  "petgraph",
  "pyo3",
