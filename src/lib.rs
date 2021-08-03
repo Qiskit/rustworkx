@@ -69,7 +69,7 @@ use crate::iterators::{
     NodesCountMapping, PathLengthMapping, PathMapping, Pos2DMapping,
     WeightedEdgeList,
 };
-use crate::steiner_tree::*;
+use steiner_tree::*;
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
