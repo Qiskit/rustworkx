@@ -12,8 +12,8 @@
 import numpy as np
 import retworkx_generators as generators
 from .custom_return_types import *
-from .pygraph import PyGraph
-from .pydigraph import PyDiGraph
+from .pygraph import PyGraph as PyGraph
+from .pydigraph import PyDiGraph as PyDiGraph
 
 from typing import (
     Any,
