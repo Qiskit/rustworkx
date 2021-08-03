@@ -13,17 +13,21 @@ except ImportError:
 
 STUBS_DIR = "retworkx-stubs"
 
+
 def readme():
     with open('README.md') as f:
         return f.read()
 
+
 def get_stub_files():
     current_dir = pathlib.Path(__file__).parents[0]
     pyi_files = [
-        str(pyi_file.relative_to(current_dir)) for pyi_file in current_dir.glob(f"{STUBS_DIR}/**/*.pyi")
+        str(pyi_file.relative_to(current_dir))
+        for pyi_file in current_dir.glob(f"{STUBS_DIR}/**/*.pyi")
     ]
     py_typed_files = [
-        str(typed_file.relative_to(current_dir)) for typed_file in current_dir.glob(f"{STUBS_DIR}/**/py.typed")
+        str(typed_file.relative_to(current_dir))
+        for typed_file in current_dir.glob(f"{STUBS_DIR}/**/py.typed")
     ]
     return pyi_files + py_typed_files
 
