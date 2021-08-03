@@ -1876,37 +1876,11 @@ fn layers(
     Ok(PyList::new(py, output).into())
 }
 
-/// Get the distance matrix for a directed graph
-///
-/// This differs from functions like digraph_floyd_warshall_numpy in that the
-/// edge weight/data payload is not used and each edge is treated as a
-/// distance of 1.
-///
-/// This function is also multithreaded and will run in parallel if the number
-/// of nodes in the graph is above the value of ``parallel_threshold`` (it
-/// defaults to 300). If the function will be running in parallel the env var
-/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
-///
-/// :param PyDiGraph graph: The graph to get the distance matrix for
-/// :param int parallel_threshold: The number of nodes to calculate the
-///     the distance matrix in parallel at. It defaults to 300, but this can
-///     be tuned
-/// :param bool as_undirected: If set to ``True`` the input directed graph
-///     will be treat as if each edge was bidirectional/undirected in the
-///     output distance matrix.
-///
-/// :returns: The distance matrix
-/// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "300", as_undirected = "false")]
-#[pyo3(
-    text_signature = "(graph, /, parallel_threshold=300, as_undirected=False)"
-)]
-pub fn digraph_distance_matrix(
-    py: Python,
+fn directed_distance_matrix(
     graph: &digraph::PyDiGraph,
     parallel_threshold: usize,
     as_undirected: bool,
-) -> PyResult<PyObject> {
+) -> Array2<f64> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
@@ -1961,34 +1935,13 @@ pub fn digraph_distance_matrix(
             .enumerate()
             .for_each(|(index, row)| bfs_traversal(index, row));
     }
-    Ok(matrix.into_pyarray(py).into())
+    matrix
 }
 
-/// Get the distance matrix for an undirected graph
-///
-/// This differs from functions like digraph_floyd_warshall_numpy in that the
-/// edge weight/data payload is not used and each edge is treated as a
-/// distance of 1.
-///
-/// This function is also multithreaded and will run in parallel if the number
-/// of nodes in the graph is above the value of ``paralllel_threshold`` (it
-/// defaults to 300). If the function will be running in parallel the env var
-/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
-///
-/// :param PyGraph graph: The graph to get the distance matrix for
-/// :param int parallel_threshold: The number of nodes to calculate the
-///     the distance matrix in parallel at. It defaults to 300, but this can
-///     be tuned
-///
-/// :returns: The distance matrix
-/// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "300")]
-#[pyo3(text_signature = "(graph, /, parallel_threshold=300)")]
-pub fn graph_distance_matrix(
-    py: Python,
+fn undirected_distance_matrix(
     graph: &graph::PyGraph,
     parallel_threshold: usize,
-) -> PyResult<PyObject> {
+) -> Array2<f64> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::zeros((n, n));
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
@@ -2032,7 +1985,164 @@ pub fn graph_distance_matrix(
             .enumerate()
             .for_each(|(index, row)| bfs_traversal(index, row));
     }
-    Ok(matrix.into_pyarray(py).into())
+    matrix
+}
+
+/// Get the distance matrix for a directed graph
+///
+/// This differs from functions like digraph_floyd_warshall_numpy in that the
+/// edge weight/data payload is not used and each edge is treated as a
+/// distance of 1.
+///
+/// This function is also multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 300). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyDiGraph graph: The graph to get the distance matrix for
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the distance matrix in parallel at. It defaults to 300, but this can
+///     be tuned
+/// :param bool as_undirected: If set to ``True`` the input directed graph
+///     will be treat as if each edge was bidirectional/undirected in the
+///     output distance matrix.
+///
+/// :returns: The distance matrix
+/// :rtype: numpy.ndarray
+#[pyfunction(parallel_threshold = "300", as_undirected = "false")]
+#[pyo3(
+    text_signature = "(graph, /, parallel_threshold=300, as_undirected=False)"
+)]
+pub fn digraph_distance_matrix(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    parallel_threshold: usize,
+    as_undirected: bool,
+) -> PyObject {
+    let matrix =
+        directed_distance_matrix(graph, parallel_threshold, as_undirected);
+    matrix.into_pyarray(py).into()
+}
+
+/// Get the distance matrix for an undirected graph
+///
+/// This differs from functions like digraph_floyd_warshall_numpy in that the
+/// edge weight/data payload is not used and each edge is treated as a
+/// distance of 1.
+///
+/// This function is also multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``paralllel_threshold`` (it
+/// defaults to 300). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyGraph graph: The graph to get the distance matrix for
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the distance matrix in parallel at. It defaults to 300, but this can
+///     be tuned
+///
+/// :returns: The distance matrix
+/// :rtype: numpy.ndarray
+#[pyfunction(parallel_threshold = "300")]
+#[pyo3(text_signature = "(graph, /, parallel_threshold=300)")]
+pub fn graph_distance_matrix(
+    py: Python,
+    graph: &graph::PyGraph,
+    parallel_threshold: usize,
+) -> PyObject {
+    let matrix = undirected_distance_matrix(graph, parallel_threshold);
+    matrix.into_pyarray(py).into()
+}
+
+/// Return the average shortest path length for a :class:`~retworkx.PyDiGraph`
+/// with unweighted edges.
+///
+/// The average shortest path length is calculated as
+///
+/// .. math::
+///
+///     a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
+///
+/// where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
+/// shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
+/// number of nodes in ``graph``.
+///
+/// This function is also multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 300). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+/// By default it will use all available CPUs if the environment variable is
+/// not specified.
+///
+/// :param PyDiGraph graph: The graph to compute the average shortest path length
+///     for
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the distance matrix in parallel at. It defaults to 300, but this can
+///     be tuned to any number of nodes.
+///
+/// :returns: The average shortest path length
+/// :rtype: float
+#[pyfunction(parallel_threshold = "300", as_undirected = "false")]
+#[pyo3(
+    text_signature = "(graph, /, parallel_threshold=300, as_undirected=False)"
+)]
+pub fn digraph_unweighted_average_shortest_path_length(
+    graph: &digraph::PyDiGraph,
+    parallel_threshold: usize,
+    as_undirected: bool,
+) -> f64 {
+    let n = graph.node_count() as f64;
+    let matrix =
+        directed_distance_matrix(graph, parallel_threshold, as_undirected);
+    if graph.node_count() < parallel_threshold {
+        matrix.into_iter().sum::<f64>() / (n * (n - 1.0))
+    } else {
+        // Parallelize by row and iterate from each row index in BFS order
+        matrix.par_iter().sum::<f64>() / (n * (n - 1.0))
+    }
+}
+
+/// Return the average shortest path length for a :class:`~retworkx.PyGraph`
+/// with unweighted edges.
+///
+/// The average shortest path length is calculated as
+///
+/// .. math::
+///
+///     a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
+///
+/// where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
+/// shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
+/// number of nodes in ``graph``.
+///
+/// This function is also multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 300). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+/// By default it will use all available CPUs if the environment variable is
+/// not specified.
+///
+/// :param PyGraph graph: The graph to compute the average shortest path length
+///     for
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the distance matrix in parallel at. It defaults to 300, but this can
+///     be tuned to any number of nodes.
+///
+/// :returns: The average shortest path length
+/// :rtype: float
+#[pyfunction(parallel_threshold = "300")]
+#[pyo3(text_signature = "(graph, /, parallel_threshold=300)")]
+pub fn graph_unweighted_average_shortest_path_length(
+    graph: &graph::PyGraph,
+    parallel_threshold: usize,
+) -> f64 {
+    let n = graph.node_count() as f64;
+    let matrix = undirected_distance_matrix(graph, parallel_threshold);
+    if graph.node_count() < parallel_threshold {
+        matrix.into_iter().sum::<f64>() / (n * (n - 1.0))
+    } else {
+        // Parallelize by row and iterate from each row index in BFS order
+        matrix.par_iter().sum::<f64>() / (n * (n - 1.0))
+    }
 }
 
 /// Return the adjacency matrix for a PyDiGraph object
@@ -4986,6 +5096,12 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_num_shortest_paths_unweighted))?;
     m.add_wrapped(wrap_pyfunction!(graph_num_shortest_paths_unweighted))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_unweighted_average_shortest_path_length
+    ))?;
+    m.add_wrapped(wrap_pyfunction!(
+        graph_unweighted_average_shortest_path_length
+    ))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
