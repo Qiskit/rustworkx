@@ -25,7 +25,6 @@ def get_stub_files():
     py_typed_files = [
         str(typed_file.relative_to(current_dir)) for typed_file in current_dir.glob(f"{STUBS_DIR}/**/py.typed")
     ]
-    print(pyi_files + py_typed_files)
     return pyi_files + py_typed_files
 
 
