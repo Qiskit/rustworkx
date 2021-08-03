@@ -97,8 +97,8 @@ fn _metric_closure_edges(
             not defined for a graph with unconnected nodes",
         ));
     }
-    for node in graph.graph.node_indices().map(|x| x.index()) {
-        let path_map = &paths[&node].paths;
+    for (node, path) in paths {
+        let path_map = path.paths;
         nodes.remove(&node);
         let distance = &distances[&node];
         for v in &nodes {
