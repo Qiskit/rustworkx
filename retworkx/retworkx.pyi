@@ -15,7 +15,6 @@ from .custom_return_types import *
 from .pygraph import PyGraph
 from .pydigraph import PyDiGraph
 
-
 from typing import (
     Any,
     Callable,
