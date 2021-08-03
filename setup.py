@@ -1,3 +1,5 @@
+import pathlib
+
 from setuptools import setup
 try:
     from setuptools_rust import Binding, RustExtension
@@ -9,10 +11,22 @@ except ImportError:
                      'setuptools-rust'])
     from setuptools_rust import Binding, RustExtension
 
+STUBS_DIR = "retworkx-stubs"
 
 def readme():
     with open('README.md') as f:
         return f.read()
+
+def get_stub_files():
+    current_dir = pathlib.Path(__file__).parents[0]
+    pyi_files = [
+        str(pyi_file.relative_to(current_dir)) for pyi_file in current_dir.glob(f"{STUBS_DIR}/**/*.pyi")
+    ]
+    py_typed_files = [
+        str(typed_file.relative_to(current_dir)) for typed_file in current_dir.glob(f"{STUBS_DIR}/**/py.typed")
+    ]
+    print(pyi_files + py_typed_files)
+    return pyi_files + py_typed_files
 
 
 mpl_extras = ['matplotlib>=3.0']
@@ -53,8 +67,7 @@ setup(
                                    binding=Binding.PyO3)],
     include_package_data=True,
     packages=["retworkx", "retworkx.visualization", "retworkx-stubs"],
-    package_dir={'retworkx-stubs': 'retworkx-stubs'},
-    package_data={"retworkx-stubs": ["py.typed", "*.pyi"]},
+    data_files=[("", get_stub_files())],
     zip_safe=False,
     python_requires=">=3.6",
     install_requires=['numpy>=1.16.0'],
