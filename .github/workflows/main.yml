@@ -83,6 +83,7 @@ jobs:
         run: tox -epy
       - name: 'Run stubs-tests'
         run: tox -estubs
+        if: runner.os == 'Linux' && python-version != 3.6
   coverage:
     needs: [tests]
     name: Coverage
