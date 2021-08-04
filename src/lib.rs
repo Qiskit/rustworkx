@@ -23,10 +23,12 @@ mod iterators;
 mod k_shortest_path;
 mod layout;
 mod max_weight_matching;
+mod steiner_tree;
 mod union;
 
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeSet, BinaryHeap};
+use std::sync::RwLock;
 
 use ahash::RandomState;
 use hashbrown::{HashMap, HashSet};
@@ -67,6 +69,7 @@ use crate::iterators::{
     NodesCountMapping, PathLengthMapping, PathMapping, Pos2DMapping,
     WeightedEdgeList,
 };
+use steiner_tree::*;
 
 trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -2713,10 +2716,11 @@ fn _all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     })
 }
 
-fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
+pub fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StableGraph<PyObject, PyObject, Ty>,
     edge_cost_fn: PyObject,
+    distances: Option<&mut HashMap<usize, HashMap<NodeIndex, f64>>>,
 ) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathMapping {
@@ -2760,13 +2764,20 @@ fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    Ok(AllPairsPathMapping {
+    let temp_distances: RwLock<HashMap<usize, HashMap<NodeIndex, f64>>> =
+        if distances.is_some() {
+            RwLock::new(HashMap::with_capacity(graph.node_count()))
+        } else {
+            // Avoid extra allocation if HashMap isn't used
+            RwLock::new(HashMap::new())
+        };
+    let out_map = AllPairsPathMapping {
         paths: node_indices
             .into_par_iter()
             .map(|x| {
                 let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
                     HashMap::with_capacity(graph.node_count());
-                dijkstra::dijkstra(
+                let distance = dijkstra::dijkstra(
                     graph,
                     x,
                     None,
@@ -2774,6 +2785,9 @@ fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                     Some(&mut paths),
                 )
                 .unwrap();
+                if distances.is_some() {
+                    temp_distances.write().unwrap().insert(x.index(), distance);
+                }
                 let index = x.index();
                 let out_paths = PathMapping {
                     paths: paths
@@ -2798,7 +2812,11 @@ fn _all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                 (index, out_paths)
             })
             .collect(),
-    })
+    };
+    if let Some(x) = distances {
+        *x = temp_distances.read().unwrap().clone()
+    };
+    Ok(out_map)
 }
 
 /// Calculate the the shortest length from all nodes in a
@@ -2872,7 +2890,7 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
     graph: &digraph::PyDiGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathMapping> {
-    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn)
+    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn, None)
 }
 
 /// Calculate the the shortest length from all nodes in a
@@ -2938,7 +2956,7 @@ pub fn graph_all_pairs_dijkstra_shortest_paths(
     graph: &graph::PyGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathMapping> {
-    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn)
+    _all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn, None)
 }
 
 /// Compute the A* shortest path for a PyGraph
@@ -5122,6 +5140,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_num_shortest_paths_unweighted))?;
     m.add_wrapped(wrap_pyfunction!(graph_num_shortest_paths_unweighted))?;
+    m.add_wrapped(wrap_pyfunction!(metric_closure))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;

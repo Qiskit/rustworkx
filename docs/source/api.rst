@@ -133,6 +133,7 @@ Other Algorithm Functions
    retworkx.core_number
    retworkx.graph_greedy_color
    retworkx.digraph_union
+   retworkx.metric_closure
 
 Generators
 ==========
