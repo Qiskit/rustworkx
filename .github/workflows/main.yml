@@ -81,6 +81,8 @@ jobs:
         if: runner.os == 'Linux'
       - name: 'Run tests'
         run: tox -epy
+      - name: 'Run stubs-tests'
+        run: tox -estubs
   coverage:
     needs: [tests]
     name: Coverage
