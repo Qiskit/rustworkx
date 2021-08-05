@@ -149,3 +149,13 @@ class TestSteinerTree(unittest.TestCase):
         steiner_tree_edge_list = tree.weighted_edge_list()
         for edge in expected_edges:
             self.assertIn(edge, steiner_tree_edge_list)
+
+    def test_not_connected_steiner_tree(self):
+        self.graph.add_node(None)
+        with self.assertRaises(ValueError):
+            retworkx.steiner_tree(self.graph, [0, 1, 2], weight_fn=float)
+
+    def test_steiner_tree_empty_graph(self):
+        graph = retworkx.PyGraph()
+        tree = retworkx.steiner_tree(graph, [], weight_fn=float)
+        self.assertEqual([], tree.weighted_edge_list())
