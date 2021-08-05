@@ -103,8 +103,9 @@ fn _metric_closure_edges(
             not defined for a graph with unconnected nodes",
         ));
     }
-    for (node, path) in paths {
-        let path_map = path.paths;
+    // Iterate over node indices for a deterministic order
+    for node in graph.graph.node_indices().map(|x| x.index()) {
+        let path_map = &paths[&node].paths;
         nodes.remove(&node);
         let distance = &distances[&node];
         for v in &nodes {
@@ -232,7 +233,6 @@ pub fn steiner_tree(
     }) {
         out_graph.graph.remove_edge(edge.id());
     }
-
     // Deduplicate potential duplicate edges
     if graph.multigraph {
         // Find all edges between nodes
