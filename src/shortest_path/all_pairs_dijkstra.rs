@@ -16,6 +16,8 @@ use hashbrown::HashMap;
 
 use super::dijkstra;
 
+use std::sync::RwLock;
+
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -113,6 +115,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StableGraph<PyObject, PyObject, Ty>,
     edge_cost_fn: PyObject,
+    distances: Option<&mut HashMap<usize, HashMap<NodeIndex, f64>>>,
 ) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathMapping {
@@ -156,13 +159,20 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    Ok(AllPairsPathMapping {
+    let temp_distances: RwLock<HashMap<usize, HashMap<NodeIndex, f64>>> =
+        if distances.is_some() {
+            RwLock::new(HashMap::with_capacity(graph.node_count()))
+        } else {
+            // Avoid extra allocation if HashMap isn't used
+            RwLock::new(HashMap::new())
+        };
+    let out_map = AllPairsPathMapping {
         paths: node_indices
             .into_par_iter()
             .map(|x| {
                 let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
                     HashMap::with_capacity(graph.node_count());
-                dijkstra::dijkstra(
+                let distance = dijkstra::dijkstra(
                     graph,
                     x,
                     None,
@@ -170,6 +180,9 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                     Some(&mut paths),
                 )
                 .unwrap();
+                if distances.is_some() {
+                    temp_distances.write().unwrap().insert(x.index(), distance);
+                }
                 let index = x.index();
                 let out_paths = PathMapping {
                     paths: paths
@@ -194,5 +207,9 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                 (index, out_paths)
             })
             .collect(),
-    })
+    };
+    if let Some(x) = distances {
+        *x = temp_distances.read().unwrap().clone()
+    };
+    Ok(out_map)
 }

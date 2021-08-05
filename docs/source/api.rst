@@ -51,6 +51,7 @@ Traversal
    retworkx.descendants
    retworkx.ancestors
    retworkx.collect_runs
+   retworkx.collect_bicolor_runs
 
 .. _dag-algorithms:
 
@@ -132,6 +133,7 @@ Other Algorithm Functions
    retworkx.core_number
    retworkx.graph_greedy_color
    retworkx.digraph_union
+   retworkx.metric_closure
 
 Generators
 ==========

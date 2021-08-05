@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-mod all_pairs_dijkstra;
+pub mod all_pairs_dijkstra;
 mod astar;
 mod dijkstra;
 mod floyd_warshall;
@@ -373,6 +373,7 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
         py,
         &graph.graph,
         edge_cost_fn,
+        None,
     )
 }
 
@@ -447,6 +448,7 @@ pub fn graph_all_pairs_dijkstra_shortest_paths(
         py,
         &graph.graph,
         edge_cost_fn,
+        None,
     )
 }
 
