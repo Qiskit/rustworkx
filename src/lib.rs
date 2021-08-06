@@ -33,6 +33,7 @@ mod traversal;
 mod tree;
 mod union;
 
+use centrality::*;
 use coloring::*;
 use connectivity::*;
 use dag_algo::*;

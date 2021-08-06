@@ -10,7 +10,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use crate::graph;
+use crate::digraph;
+
 use pyo3::prelude::*;
+use pyo3::Python;
+use pyo3::types::PyList;
 
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
@@ -22,8 +27,6 @@ use petgraph::visit::{
     NodeIndexable,
 };
 use hashbrown::HashMap;
-
-
 
 
 // Correspondence to notation in Brandes 2001
@@ -229,7 +232,7 @@ where
 }
 
 #[pyfunction(normalized = "true", endpoints = "false")]
-#[text_signature = "(graph, /, normalized=True, endpoints=False)"]
+#[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn graph_betweenness_centrality(
     py: Python,
     graph: &graph::PyGraph,
@@ -237,12 +240,12 @@ pub fn graph_betweenness_centrality(
     endpoints: bool,
 ) -> PyResult<PyObject> {
     let betweenness =
-        centrality::betweenness_centrality(&graph, endpoints, normalized);
+        betweenness_centrality(&graph, endpoints, normalized);
     Ok(PyList::new(py, betweenness).into())
 }
 
 #[pyfunction(normalized = "true", endpoints = "false")]
-#[text_signature = "(graph, /, normalized=True, endpoints=False)"]
+#[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn digraph_betweenness_centrality(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -250,6 +253,6 @@ pub fn digraph_betweenness_centrality(
     endpoints: bool,
 ) -> PyResult<PyObject> {
     let betweenness =
-        centrality::betweenness_centrality(&graph, endpoints, normalized);
+        betweenness_centrality(&graph, endpoints, normalized);
     Ok(PyList::new(py, betweenness).into())
 }
