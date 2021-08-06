@@ -11,9 +11,8 @@
 // under the License.
 
 #![allow(clippy::float_cmp)]
-#![allow(clippy::module_inception)]
 
-mod isomorphism;
+mod vf2;
 
 use crate::{digraph, graph};
 
@@ -81,7 +80,7 @@ fn digraph_is_isomorphic(
         }
     });
 
-    let res = isomorphism::is_isomorphic(
+    let res = vf2::is_isomorphic(
         py,
         &first.graph,
         &second.graph,
@@ -153,7 +152,7 @@ fn graph_is_isomorphic(
         }
     });
 
-    let res = isomorphism::is_isomorphic(
+    let res = vf2::is_isomorphic(
         py,
         &first.graph,
         &second.graph,
@@ -233,7 +232,7 @@ fn digraph_is_subgraph_isomorphic(
         }
     });
 
-    let res = isomorphism::is_isomorphic(
+    let res = vf2::is_isomorphic(
         py,
         &first.graph,
         &second.graph,
@@ -313,7 +312,7 @@ fn graph_is_subgraph_isomorphic(
         }
     });
 
-    let res = isomorphism::is_isomorphic(
+    let res = vf2::is_isomorphic(
         py,
         &first.graph,
         &second.graph,
