@@ -10,13 +10,14 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::graph;
 use crate::digraph;
+use crate::graph;
 
 use pyo3::prelude::*;
-use pyo3::Python;
 use pyo3::types::PyList;
+use pyo3::Python;
 
+use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
     GraphBase,
@@ -26,8 +27,6 @@ use petgraph::visit::{
     NodeCount,
     NodeIndexable,
 };
-use hashbrown::HashMap;
-
 
 // Correspondence to notation in Brandes 2001
 //
@@ -239,8 +238,7 @@ pub fn graph_betweenness_centrality(
     normalized: bool,
     endpoints: bool,
 ) -> PyResult<PyObject> {
-    let betweenness =
-        betweenness_centrality(&graph, endpoints, normalized);
+    let betweenness = betweenness_centrality(&graph, endpoints, normalized);
     Ok(PyList::new(py, betweenness).into())
 }
 
@@ -252,7 +250,6 @@ pub fn digraph_betweenness_centrality(
     normalized: bool,
     endpoints: bool,
 ) -> PyResult<PyObject> {
-    let betweenness =
-        betweenness_centrality(&graph, endpoints, normalized);
+    let betweenness = betweenness_centrality(&graph, endpoints, normalized);
     Ok(PyList::new(py, betweenness).into())
 }

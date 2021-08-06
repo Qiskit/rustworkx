@@ -12,7 +12,6 @@
 
 #![allow(clippy::float_cmp)]
 
-
 mod centrality;
 mod coloring;
 mod connectivity;
