@@ -10,114 +10,22 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::module_inception)]
+mod bipartite_layout;
+mod circular_layout;
+mod random_layout;
+mod shell_layout;
+mod spiral_layout;
+mod spring_layout;
 
-mod layout;
-
-use crate::{digraph, graph, weight_callable};
+use crate::{digraph, graph};
+use spring_layout::Point;
 
 use hashbrown::{HashMap, HashSet};
 
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::prelude::*;
-use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
-use petgraph::EdgeType;
-
-use rand::distributions::{Distribution, Uniform};
-use rand::prelude::*;
-use rand_pcg::Pcg64;
-
 use crate::iterators::Pos2DMapping;
-
-#[allow(clippy::too_many_arguments)]
-fn _spring_layout<Ty>(
-    py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
-    pos: Option<HashMap<usize, layout::Point>>,
-    fixed: Option<HashSet<usize>>,
-    k: Option<f64>,
-    repulsive_exponent: Option<i32>,
-    adaptive_cooling: Option<bool>,
-    num_iter: Option<usize>,
-    tol: Option<f64>,
-    weight_fn: Option<PyObject>,
-    default_weight: f64,
-    scale: Option<f64>,
-    center: Option<layout::Point>,
-    seed: Option<u64>,
-) -> PyResult<Pos2DMapping>
-where
-    Ty: EdgeType,
-{
-    if fixed.is_some() && pos.is_none() {
-        return Err(PyValueError::new_err("`fixed` specified but `pos` not."));
-    }
-
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-
-    let dist = Uniform::new(0.0, 1.0);
-
-    let pos = pos.unwrap_or_default();
-    let mut vpos: Vec<layout::Point> = (0..graph.node_bound())
-        .map(|_| [dist.sample(&mut rng), dist.sample(&mut rng)])
-        .collect();
-    for (n, p) in pos.into_iter() {
-        vpos[n] = p;
-    }
-
-    let fixed = fixed.unwrap_or_default();
-    let k = k.unwrap_or(1.0 / (graph.node_count() as f64).sqrt());
-    let f_a = layout::AttractiveForce::new(k);
-    let f_r = layout::RepulsiveForce::new(k, repulsive_exponent.unwrap_or(2));
-
-    let num_iter = num_iter.unwrap_or(50);
-    let tol = tol.unwrap_or(1e-6);
-    let step = 0.1;
-
-    let mut weights: HashMap<(usize, usize), f64> =
-        HashMap::with_capacity(2 * graph.edge_count());
-    for e in graph.edge_references() {
-        let w = weight_callable(py, &weight_fn, e.weight(), default_weight)?;
-        let source = e.source().index();
-        let target = e.target().index();
-
-        weights.insert((source, target), w);
-        weights.insert((target, source), w);
-    }
-
-    let pos = match adaptive_cooling {
-        Some(false) => {
-            let cs = layout::LinearCoolingScheme::new(step, num_iter);
-            layout::evolve(
-                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
-                scale, center,
-            )
-        }
-        _ => {
-            let cs = layout::AdaptiveCoolingScheme::new(step);
-            layout::evolve(
-                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
-                scale, center,
-            )
-        }
-    };
-
-    Ok(Pos2DMapping {
-        pos_map: graph
-            .node_indices()
-            .map(|n| {
-                let n = n.index();
-                (n, pos[n])
-            })
-            .collect(),
-    })
-}
 
 /// Position nodes using Fruchterman-Reingold force-directed algorithm.
 ///
@@ -171,7 +79,7 @@ where
 pub fn graph_spring_layout(
     py: Python,
     graph: &graph::PyGraph,
-    pos: Option<HashMap<usize, layout::Point>>,
+    pos: Option<HashMap<usize, Point>>,
     fixed: Option<HashSet<usize>>,
     k: Option<f64>,
     repulsive_exponent: Option<i32>,
@@ -181,10 +89,10 @@ pub fn graph_spring_layout(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
     seed: Option<u64>,
 ) -> PyResult<Pos2DMapping> {
-    _spring_layout(
+    spring_layout::spring_layout(
         py,
         &graph.graph,
         pos,
@@ -254,7 +162,7 @@ pub fn graph_spring_layout(
 pub fn digraph_spring_layout(
     py: Python,
     graph: &digraph::PyDiGraph,
-    pos: Option<HashMap<usize, layout::Point>>,
+    pos: Option<HashMap<usize, Point>>,
     fixed: Option<HashSet<usize>>,
     k: Option<f64>,
     repulsive_exponent: Option<i32>,
@@ -264,10 +172,10 @@ pub fn digraph_spring_layout(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
     seed: Option<u64>,
 ) -> PyResult<Pos2DMapping> {
-    _spring_layout(
+    spring_layout::spring_layout(
         py,
         &graph.graph,
         pos,
@@ -283,36 +191,6 @@ pub fn digraph_spring_layout(
         center,
         seed,
     )
-}
-
-fn _random_layout<Ty: EdgeType>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
-    center: Option<[f64; 2]>,
-    seed: Option<u64>,
-) -> Pos2DMapping {
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-
-    Pos2DMapping {
-        pos_map: graph
-            .node_indices()
-            .map(|n| {
-                let random_tuple: [f64; 2] = rng.gen();
-                match center {
-                    Some(center) => (
-                        n.index(),
-                        [
-                            random_tuple[0] + center[0],
-                            random_tuple[1] + center[1],
-                        ],
-                    ),
-                    None => (n.index(), random_tuple),
-                }
-            })
-            .collect(),
-    }
 }
 
 /// Generate a random layout
@@ -331,7 +209,7 @@ pub fn graph_random_layout(
     center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
-    _random_layout(&graph.graph, center, seed)
+    random_layout::random_layout(&graph.graph, center, seed)
 }
 
 /// Generate a random layout
@@ -350,7 +228,7 @@ pub fn digraph_random_layout(
     center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
-    _random_layout(&graph.graph, center, seed)
+    random_layout::random_layout(&graph.graph, center, seed)
 }
 
 /// Generate a bipartite layout of the graph
@@ -376,10 +254,10 @@ pub fn graph_bipartite_layout(
     first_nodes: HashSet<usize>,
     horizontal: Option<bool>,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
     aspect_ratio: Option<f64>,
 ) -> Pos2DMapping {
-    layout::bipartite_layout(
+    bipartite_layout::bipartite_layout(
         &graph.graph,
         first_nodes,
         horizontal,
@@ -412,10 +290,10 @@ pub fn digraph_bipartite_layout(
     first_nodes: HashSet<usize>,
     horizontal: Option<bool>,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
     aspect_ratio: Option<f64>,
 ) -> Pos2DMapping {
-    layout::bipartite_layout(
+    bipartite_layout::bipartite_layout(
         &graph.graph,
         first_nodes,
         horizontal,
@@ -439,9 +317,9 @@ pub fn digraph_bipartite_layout(
 pub fn graph_circular_layout(
     graph: &graph::PyGraph,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
 ) -> Pos2DMapping {
-    layout::circular_layout(&graph.graph, scale, center)
+    circular_layout::circular_layout(&graph.graph, scale, center)
 }
 
 /// Generate a circular layout of the graph
@@ -458,9 +336,9 @@ pub fn graph_circular_layout(
 pub fn digraph_circular_layout(
     graph: &digraph::PyDiGraph,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
 ) -> Pos2DMapping {
-    layout::circular_layout(&graph.graph, scale, center)
+    circular_layout::circular_layout(&graph.graph, scale, center)
 }
 
 /// Generate a shell layout of the graph
@@ -485,9 +363,9 @@ pub fn graph_shell_layout(
     nlist: Option<Vec<Vec<usize>>>,
     rotate: Option<f64>,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
 ) -> Pos2DMapping {
-    layout::shell_layout(&graph.graph, nlist, rotate, scale, center)
+    shell_layout::shell_layout(&graph.graph, nlist, rotate, scale, center)
 }
 
 /// Generate a shell layout of the graph
@@ -511,9 +389,9 @@ pub fn digraph_shell_layout(
     nlist: Option<Vec<Vec<usize>>>,
     rotate: Option<f64>,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
 ) -> Pos2DMapping {
-    layout::shell_layout(&graph.graph, nlist, rotate, scale, center)
+    shell_layout::shell_layout(&graph.graph, nlist, rotate, scale, center)
 }
 
 /// Generate a spiral layout of the graph
@@ -535,11 +413,17 @@ pub fn digraph_shell_layout(
 pub fn graph_spiral_layout(
     graph: &graph::PyGraph,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
     resolution: Option<f64>,
     equidistant: Option<bool>,
 ) -> Pos2DMapping {
-    layout::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
+    spiral_layout::spiral_layout(
+        &graph.graph,
+        scale,
+        center,
+        resolution,
+        equidistant,
+    )
 }
 
 /// Generate a spiral layout of the graph
@@ -561,9 +445,15 @@ pub fn graph_spiral_layout(
 pub fn digraph_spiral_layout(
     graph: &digraph::PyDiGraph,
     scale: Option<f64>,
-    center: Option<layout::Point>,
+    center: Option<Point>,
     resolution: Option<f64>,
     equidistant: Option<bool>,
 ) -> Pos2DMapping {
-    layout::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
+    spiral_layout::spiral_layout(
+        &graph.graph,
+        scale,
+        center,
+        resolution,
+        equidistant,
+    )
 }
