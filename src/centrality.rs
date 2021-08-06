@@ -23,6 +23,9 @@ use petgraph::visit::{
 };
 use hashbrown::HashMap;
 
+
+
+
 // Correspondence to notation in Brandes 2001
 //
 // P -- predecessors
@@ -223,4 +226,30 @@ where
         }
     }
     (sorted_by_distance, predecessors, sigma)
+}
+
+#[pyfunction(normalized = "true", endpoints = "false")]
+#[text_signature = "(graph, /, normalized=True, endpoints=False)"]
+pub fn graph_betweenness_centrality(
+    py: Python,
+    graph: &graph::PyGraph,
+    normalized: bool,
+    endpoints: bool,
+) -> PyResult<PyObject> {
+    let betweenness =
+        centrality::betweenness_centrality(&graph, endpoints, normalized);
+    Ok(PyList::new(py, betweenness).into())
+}
+
+#[pyfunction(normalized = "true", endpoints = "false")]
+#[text_signature = "(graph, /, normalized=True, endpoints=False)"]
+pub fn digraph_betweenness_centrality(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    normalized: bool,
+    endpoints: bool,
+) -> PyResult<PyObject> {
+    let betweenness =
+        centrality::betweenness_centrality(&graph, endpoints, normalized);
+    Ok(PyList::new(py, betweenness).into())
 }
