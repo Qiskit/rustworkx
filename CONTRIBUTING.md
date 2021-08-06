@@ -14,6 +14,74 @@ with Qiskit; the general guidelines and advice still apply here.
 In addition to the general guidelines there are specific details for
 contributing to retworkx, these are documented below.
 
+### Making changes to the code
+
+Retworkx is implemented primarily in Rust with a thin layer of Python.
+Because of that, most of your code changes will involve modifications to
+Rust files in `src`. To understand which files you need to change, we invite
+you for an overview of our simplified source tree:
+
+```
+├── src/
+│   ├── lib.rs
+│   ├── tiny.rs
+│   ├── large/
+│   │   ├── mod.rs
+│   │   ├── pure_rust_code.rs
+│   │   └── more_pure_rust_code.rs
+```
+
+#### Module exports in `lib.rs`
+
+To add new functions, you will need to export them in `lib.rs`. `lib.rs` will
+import functions defined in Rust modules (see the next section), and export
+them to Python using `m.add_wrapped(wrap_pyfunction!(your_new_function))?;`
+
+#### Adding and changing functions in modules
+
+To add and change functions, you will need to modify module files. Modules contain pyfunctions
+that will be exported, and can be defined either as a single file such as `tiny.rs` or as a
+directory with `mod.rs` such as `large/`.
+
+Rust functions that are exported to Python are annotated with `#[pyfunction]`. The
+annotation gives them power to interact both with the Python interpreter and pure
+Rust code. To change an existing function, search for its name and edit the code that
+already exists.
+
+If you want to add a new function, find the module you'd like to insert it in
+or create a new one like `your_module.rs`. Then, start with the boilerplate bellow:
+
+```rust
+/// Docstring containing description of the function
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn your_new_function(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> PyResult<()> {
+    /* Your code goes here */
+}
+```
+
+> __NOTE:__  If you create a new `your_module.rs`, remember to declare and import it in `lib.rs`:
+> ```rust
+> mod your_module;
+> use your_module::*;
+> ```
+
+#### Module directories: when a single file is not enough
+
+Sometimes you will find that it is hard to organize a module in a tiny
+file like `tiny.rs`. In those cases, we suggest moving the files to a directory
+and splitting them following the structure of `large/`.
+
+Module directories have a `mod.rs` file containing the pyfunctions. The pyfunctions
+in that file then delegate most of logic by importing and calling pure Rust code from
+`pure_rust_code.rs` and `more_pure_rust_code.rs`.
+
+> __NOTE:__ Do you still have questions about making your contribution?
+> Contact us at the [\#retworkx channel in Qiskit Slack](https://qiskit.slack.com/messages/retworkx/)
+
 ### Tests
 
 Once you've made a code change, it is important to verify that your change
