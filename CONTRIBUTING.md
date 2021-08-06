@@ -55,7 +55,7 @@ or create a new one like `your_module.rs`. Then, start with the boilerplate bell
 /// Docstring containing description of the function
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn your_new_function(
+pub fn your_new_function(
     py: Python,
     graph: &graph::PyGraph,
 ) -> PyResult<()> {
@@ -63,10 +63,10 @@ fn your_new_function(
 }
 ```
 
-> **_NOTE:_**  If you create a new `your_module.rs`, remember to declare and import it in `lib.rs`:
+> __NOTE:__  If you create a new `your_module.rs`, remember to declare and import it in `lib.rs`:
 > ```rust
 > mod your_module;
-> use your_module::*;
+> use your_module::your_new_function;
 > ```
 
 #### Module directories: when a single file is not enough
@@ -79,8 +79,8 @@ Module directories have a `mod.rs` file containing the pyfunctions. The pyfuncti
 in that file then delegate most of logic by importing and calling pure Rust code from 
 `pure_rust_code.rs` and `more_pure_rust_code.rs`.
 
-> **_NOTE:_**  Do you still have questions about making your first contribution?
-> Contact us at the [\#retworkx channel in Qiskit's Slack](https://qiskit.slack.com/messages/retworkx/)
+> __NOTE:__ Do you still have questions about making your first contribution?
+> Contact us at the [\#retworkx channel in Qiskit Slack](https://qiskit.slack.com/messages/retworkx/)
 
 ### Tests
 
