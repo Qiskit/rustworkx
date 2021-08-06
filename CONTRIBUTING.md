@@ -16,8 +16,8 @@ contributing to retworkx, these are documented below.
 
 ### Making changes to the code
 
-Retworkx is implemented primarily in Rust with a thin layer of Python. 
-Because of that, most of your code changes will involve modifications to 
+Retworkx is implemented primarily in Rust with a thin layer of Python.
+Because of that, most of your code changes will involve modifications to
 Rust files in `src`. To understand which files you need to change, we invite
 you for an overview of our simplified source tree:
 
@@ -39,8 +39,8 @@ them to Python using `m.add_wrapped(wrap_pyfunction!(your_new_function))?;`
 
 #### Adding and changing functions in modules
 
-To add and change functions, you will need to modify module files. Modules contain pyfunctions  
-that will be exported, and can be defined either as a single file such as `tiny.rs` or as a 
+To add and change functions, you will need to modify module files. Modules contain pyfunctions
+that will be exported, and can be defined either as a single file such as `tiny.rs` or as a
 directory with `mod.rs` such as `large/`.
 
 Rust functions that are exported to Python are annotated with `#[pyfunction]`. The
@@ -48,7 +48,7 @@ annotation gives them power to interact both with the Python interpreter and pur
 Rust code. To change an existing function, search for its name and edit the code that
 already exists.
 
-If you want to add a new function, find the module you'd like to insert it in 
+If you want to add a new function, find the module you'd like to insert it in
 or create a new one like `your_module.rs`. Then, start with the boilerplate bellow:
 
 ```rust
@@ -66,7 +66,7 @@ pub fn your_new_function(
 > __NOTE:__  If you create a new `your_module.rs`, remember to declare and import it in `lib.rs`:
 > ```rust
 > mod your_module;
-> use your_module::your_new_function;
+> use your_module::*;
 > ```
 
 #### Module directories: when a single file is not enough
@@ -76,10 +76,10 @@ file like `tiny.rs`. In those cases, we suggest moving the files to a directory
 and splitting them following the structure of `large/`.
 
 Module directories have a `mod.rs` file containing the pyfunctions. The pyfunctions
-in that file then delegate most of logic by importing and calling pure Rust code from 
+in that file then delegate most of logic by importing and calling pure Rust code from
 `pure_rust_code.rs` and `more_pure_rust_code.rs`.
 
-> __NOTE:__ Do you still have questions about making your first contribution?
+> __NOTE:__ Do you still have questions about making your contribution?
 > Contact us at the [\#retworkx channel in Qiskit Slack](https://qiskit.slack.com/messages/retworkx/)
 
 ### Tests
