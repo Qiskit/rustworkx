@@ -10,15 +10,15 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-mod bipartite_layout;
-mod circular_layout;
-mod random_layout;
-mod shell_layout;
-mod spiral_layout;
-mod spring_layout;
+mod bipartite;
+mod circular;
+mod random;
+mod shell;
+mod spiral;
+mod spring;
 
 use crate::{digraph, graph};
-use spring_layout::Point;
+use spring::Point;
 
 use hashbrown::{HashMap, HashSet};
 
@@ -92,7 +92,7 @@ pub fn graph_spring_layout(
     center: Option<Point>,
     seed: Option<u64>,
 ) -> PyResult<Pos2DMapping> {
-    spring_layout::spring_layout(
+    spring::spring_layout(
         py,
         &graph.graph,
         pos,
@@ -175,7 +175,7 @@ pub fn digraph_spring_layout(
     center: Option<Point>,
     seed: Option<u64>,
 ) -> PyResult<Pos2DMapping> {
-    spring_layout::spring_layout(
+    spring::spring_layout(
         py,
         &graph.graph,
         pos,
@@ -209,7 +209,7 @@ pub fn graph_random_layout(
     center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
-    random_layout::random_layout(&graph.graph, center, seed)
+    random::random_layout(&graph.graph, center, seed)
 }
 
 /// Generate a random layout
@@ -228,7 +228,7 @@ pub fn digraph_random_layout(
     center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {
-    random_layout::random_layout(&graph.graph, center, seed)
+    random::random_layout(&graph.graph, center, seed)
 }
 
 /// Generate a bipartite layout of the graph
@@ -257,7 +257,7 @@ pub fn graph_bipartite_layout(
     center: Option<Point>,
     aspect_ratio: Option<f64>,
 ) -> Pos2DMapping {
-    bipartite_layout::bipartite_layout(
+    bipartite::bipartite_layout(
         &graph.graph,
         first_nodes,
         horizontal,
@@ -293,7 +293,7 @@ pub fn digraph_bipartite_layout(
     center: Option<Point>,
     aspect_ratio: Option<f64>,
 ) -> Pos2DMapping {
-    bipartite_layout::bipartite_layout(
+    bipartite::bipartite_layout(
         &graph.graph,
         first_nodes,
         horizontal,
@@ -319,7 +319,7 @@ pub fn graph_circular_layout(
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
-    circular_layout::circular_layout(&graph.graph, scale, center)
+    circular::circular_layout(&graph.graph, scale, center)
 }
 
 /// Generate a circular layout of the graph
@@ -338,7 +338,7 @@ pub fn digraph_circular_layout(
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
-    circular_layout::circular_layout(&graph.graph, scale, center)
+    circular::circular_layout(&graph.graph, scale, center)
 }
 
 /// Generate a shell layout of the graph
@@ -365,7 +365,7 @@ pub fn graph_shell_layout(
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
-    shell_layout::shell_layout(&graph.graph, nlist, rotate, scale, center)
+    shell::shell_layout(&graph.graph, nlist, rotate, scale, center)
 }
 
 /// Generate a shell layout of the graph
@@ -391,7 +391,7 @@ pub fn digraph_shell_layout(
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
-    shell_layout::shell_layout(&graph.graph, nlist, rotate, scale, center)
+    shell::shell_layout(&graph.graph, nlist, rotate, scale, center)
 }
 
 /// Generate a spiral layout of the graph
@@ -417,13 +417,7 @@ pub fn graph_spiral_layout(
     resolution: Option<f64>,
     equidistant: Option<bool>,
 ) -> Pos2DMapping {
-    spiral_layout::spiral_layout(
-        &graph.graph,
-        scale,
-        center,
-        resolution,
-        equidistant,
-    )
+    spiral::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
 }
 
 /// Generate a spiral layout of the graph
@@ -449,11 +443,5 @@ pub fn digraph_spiral_layout(
     resolution: Option<f64>,
     equidistant: Option<bool>,
 ) -> Pos2DMapping {
-    spiral_layout::spiral_layout(
-        &graph.graph,
-        scale,
-        center,
-        resolution,
-        equidistant,
-    )
+    spiral::spiral_layout(&graph.graph, scale, center, resolution, equidistant)
 }

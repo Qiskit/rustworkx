@@ -18,7 +18,7 @@ use petgraph::prelude::*;
 use petgraph::visit::NodeIndexable;
 use petgraph::EdgeType;
 
-use super::spring_layout::{recenter, Point};
+use super::spring::{recenter, Point};
 use crate::iterators::Pos2DMapping;
 
 pub fn shell_layout<Ty: EdgeType>(

@@ -17,7 +17,7 @@ use pyo3::prelude::*;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
 
-use super::spring_layout::{recenter, rescale, Point};
+use super::spring::{recenter, rescale, Point};
 use crate::iterators::Pos2DMapping;
 
 pub fn circular_layout<Ty: EdgeType>(
