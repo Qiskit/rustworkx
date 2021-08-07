@@ -16,11 +16,12 @@ pub mod all_pairs_dijkstra;
 mod astar;
 mod average_length;
 mod dijkstra;
+mod distance_matrix;
 mod floyd_warshall;
 mod k_shortest_path;
 mod num_shortest_path;
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 
 use super::weight_callable;
 use crate::{digraph, get_edge_iter_with_weights, graph, NoPathFound};
@@ -1118,62 +1119,13 @@ pub fn digraph_distance_matrix(
     graph: &digraph::PyDiGraph,
     parallel_threshold: usize,
     as_undirected: bool,
-) -> PyResult<PyObject> {
-    let n = graph.node_count();
-    let mut matrix = Array2::<f64>::zeros((n, n));
-    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
-        let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
-        let start_index = NodeIndex::new(index);
-        let mut level = 0;
-        let mut next_level: HashSet<NodeIndex> = HashSet::new();
-        next_level.insert(start_index);
-        while !next_level.is_empty() {
-            let this_level = next_level;
-            next_level = HashSet::new();
-            let mut found: Vec<NodeIndex> = Vec::new();
-            for v in this_level {
-                if !seen.contains_key(&v) {
-                    seen.insert(v, level);
-                    found.push(v);
-                    row[[v.index()]] = level as f64;
-                }
-            }
-            if seen.len() == n {
-                return;
-            }
-            for node in found {
-                for v in graph
-                    .graph
-                    .neighbors_directed(node, petgraph::Direction::Outgoing)
-                {
-                    next_level.insert(v);
-                }
-                if as_undirected {
-                    for v in graph
-                        .graph
-                        .neighbors_directed(node, petgraph::Direction::Incoming)
-                    {
-                        next_level.insert(v);
-                    }
-                }
-            }
-            level += 1
-        }
-    };
-    if n < parallel_threshold {
-        matrix
-            .axis_iter_mut(Axis(0))
-            .enumerate()
-            .for_each(|(index, row)| bfs_traversal(index, row));
-    } else {
-        // Parallelize by row and iterate from each row index in BFS order
-        matrix
-            .axis_iter_mut(Axis(0))
-            .into_par_iter()
-            .enumerate()
-            .for_each(|(index, row)| bfs_traversal(index, row));
-    }
-    Ok(matrix.into_pyarray(py).into())
+) -> PyObject {
+    let matrix = distance_matrix::compute_distance_matrix(
+        &graph.graph,
+        parallel_threshold,
+        as_undirected,
+    );
+    matrix.into_pyarray(py).into()
 }
 
 /// Get the distance matrix for an undirected graph
@@ -1200,51 +1152,13 @@ pub fn graph_distance_matrix(
     py: Python,
     graph: &graph::PyGraph,
     parallel_threshold: usize,
-) -> PyResult<PyObject> {
-    let n = graph.node_count();
-    let mut matrix = Array2::<f64>::zeros((n, n));
-    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
-        let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
-        let start_index = NodeIndex::new(index);
-        let mut level = 0;
-        let mut next_level: HashSet<NodeIndex> = HashSet::new();
-        next_level.insert(start_index);
-        while !next_level.is_empty() {
-            let this_level = next_level;
-            next_level = HashSet::new();
-            let mut found: Vec<NodeIndex> = Vec::new();
-            for v in this_level {
-                if !seen.contains_key(&v) {
-                    seen.insert(v, level);
-                    found.push(v);
-                    row[[v.index()]] = level as f64;
-                }
-            }
-            if seen.len() == n {
-                return;
-            }
-            for node in found {
-                for v in graph.graph.neighbors(node) {
-                    next_level.insert(v);
-                }
-            }
-            level += 1
-        }
-    };
-    if n < parallel_threshold {
-        matrix
-            .axis_iter_mut(Axis(0))
-            .enumerate()
-            .for_each(|(index, row)| bfs_traversal(index, row));
-    } else {
-        // Parallelize by row and iterate from each row index in BFS order
-        matrix
-            .axis_iter_mut(Axis(0))
-            .into_par_iter()
-            .enumerate()
-            .for_each(|(index, row)| bfs_traversal(index, row));
-    }
-    Ok(matrix.into_pyarray(py).into())
+) -> PyObject {
+    let matrix = distance_matrix::compute_distance_matrix(
+        &graph.graph,
+        parallel_threshold,
+        true,
+    );
+    matrix.into_pyarray(py).into()
 }
 
 /// Return the average shortest path length for a :class:`~retworkx.PyDiGraph`
