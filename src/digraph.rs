@@ -51,9 +51,11 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
-    NoSuitableNeighbors, NodesRemoved,
+    DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes, NoSuitableNeighbors,
+    NodesRemoved,
 };
+
+use super::dag_algo::is_directed_acyclic_graph;
 
 /// A class for creating directed graphs
 ///

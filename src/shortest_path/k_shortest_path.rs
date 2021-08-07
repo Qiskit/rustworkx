@@ -28,7 +28,7 @@ use petgraph::visit::{
 
 use pyo3::prelude::*;
 
-use crate::astar::MinScored;
+use super::astar::MinScored;
 
 /// k'th shortest path algorithm.
 ///
