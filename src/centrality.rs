@@ -129,7 +129,7 @@ fn _rescale(
 fn _accumulate_basic(
     betweenness: &mut Vec<f64>,
     node_count: usize,
-    sorted_by_distance: &Vec<NodeIndex>,
+    sorted_by_distance: &[NodeIndex],
     mut predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
     sigma: HashMap<usize, i64>,
     is: usize,
@@ -152,7 +152,7 @@ fn _accumulate_basic(
 fn _accumulate_endpoints(
     betweenness: &mut Vec<f64>,
     node_count: usize,
-    sorted_by_distance: &Vec<NodeIndex>,
+    sorted_by_distance: &[NodeIndex],
     mut predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
     sigma: HashMap<usize, i64>,
     is: usize,
