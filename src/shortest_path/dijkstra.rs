@@ -28,7 +28,7 @@ use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
 
 use pyo3::prelude::*;
 
-use crate::astar::MinScored;
+use super::astar::MinScored;
 
 /// \[Generic\] Dijkstra's shortest path algorithm.
 ///

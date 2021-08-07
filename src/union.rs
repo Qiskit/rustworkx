@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::digraph::PyDiGraph;
+use crate::{digraph, digraph::PyDiGraph};
 use hashbrown::{HashMap, HashSet};
 use petgraph::algo;
 use petgraph::graph::EdgeIndex;
@@ -34,7 +34,7 @@ use std::cmp::Ordering;
 /// The nodes from graph `b` will replace nodes from `a`.
 ///
 ///  At this point, only `PyDiGraph` is supported.
-pub fn digraph_union(
+fn _digraph_union(
     py: Python,
     a: &PyDiGraph,
     b: &PyDiGraph,
@@ -110,4 +110,46 @@ pub fn digraph_union(
     }
 
     Ok(combined)
+}
+
+/// Return a new PyDiGraph by forming a union from two input PyDiGraph objects
+///
+/// The algorithm in this function operates in three phases:
+///
+///  1. Add all the nodes from  ``second`` into ``first``. operates in O(n),
+///     with n being number of nodes in `b`.
+///  2. Merge nodes from ``second`` over ``first`` given that:
+///
+///     - The ``merge_nodes`` is ``True``. operates in O(n^2), with n being the
+///       number of nodes in ``second``.
+///     - The respective node in ``second`` and ``first`` share the same
+///       weight/data payload.
+///
+///  3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
+///     parameter is ``True`` and the respective edge in ``second`` and
+///     first`` share the same weight/data payload they will be merged
+///     together.
+///
+///  :param PyDiGraph first: The first directed graph object
+///  :param PyDiGraph second: The second directed graph object
+///  :param bool merge_nodes: If set to ``True`` nodes will be merged between
+///     ``second`` and ``first`` if the weights are equal.
+///  :param bool merge_edges: If set to ``True`` edges will be merged between
+///     ``second`` and ``first`` if the weights are equal.
+///
+///  :returns: A new PyDiGraph object that is the union of ``second`` and
+///     ``first``. It's worth noting the weight/data payload objects are
+///     passed by reference from ``first`` and ``second`` to this new object.
+///  :rtype: PyDiGraph
+#[pyfunction]
+#[pyo3(text_signature = "(first, second, merge_nodes, merge_edges, /)")]
+fn digraph_union(
+    py: Python,
+    first: &digraph::PyDiGraph,
+    second: &digraph::PyDiGraph,
+    merge_nodes: bool,
+    merge_edges: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let res = _digraph_union(py, first, second, merge_nodes, merge_edges)?;
+    Ok(res)
 }
