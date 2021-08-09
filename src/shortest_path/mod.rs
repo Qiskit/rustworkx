@@ -23,7 +23,7 @@ mod num_shortest_path;
 use hashbrown::HashMap;
 
 use super::weight_callable;
-use crate::{digraph, get_edge_iter_with_weights, graph, NoPathFound};
+use crate::{digraph, graph, NoPathFound};
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -31,9 +31,7 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::NodeCount;
 
-use ndarray::prelude::*;
 use numpy::IntoPyArray;
-use rayon::prelude::*;
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
@@ -887,55 +885,15 @@ pub fn graph_floyd_warshall_numpy(
     default_weight: f64,
     parallel_threshold: usize,
 ) -> PyResult<PyObject> {
-    let n = graph.node_count();
-    // Allocate empty matrix
-    let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
-
-    // Build adjacency matrix
-    for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight =
-            weight_callable(py, &weight_fn, &weight, default_weight)?;
-        mat[[i, j]] = mat[[i, j]].min(edge_weight);
-        mat[[j, i]] = mat[[j, i]].min(edge_weight);
-    }
-
-    // 0 out the diagonal
-    for x in mat.diag_mut() {
-        *x = 0.0;
-    }
-    // Perform the Floyd-Warshall algorithm.
-    // In each loop, this finds the shortest path from point i
-    // to point j using intermediate nodes 0..k
-    if n < parallel_threshold {
-        for k in 0..n {
-            for i in 0..n {
-                for j in 0..n {
-                    let d_ijk = mat[[i, k]] + mat[[k, j]];
-                    if d_ijk < mat[[i, j]] {
-                        mat[[i, j]] = d_ijk;
-                    }
-                }
-            }
-        }
-    } else {
-        for k in 0..n {
-            let row_k = mat.slice(s![k, ..]).to_owned();
-            mat.axis_iter_mut(Axis(0))
-                .into_par_iter()
-                .for_each(|mut row_i| {
-                    let m_ik = row_i[k];
-                    row_i.iter_mut().zip(row_k.iter()).for_each(
-                        |(m_ij, m_kj)| {
-                            let d_ijk = m_ik + *m_kj;
-                            if d_ijk < *m_ij {
-                                *m_ij = d_ijk;
-                            }
-                        },
-                    )
-                })
-        }
-    }
-    Ok(mat.into_pyarray(py).into())
+    let matrix = floyd_warshall::floyd_warshall_numpy(
+        py,
+        &graph.graph,
+        weight_fn,
+        true,
+        default_weight,
+        parallel_threshold,
+    )?;
+    Ok(matrix.into_pyarray(py).into())
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -989,57 +947,15 @@ pub fn digraph_floyd_warshall_numpy(
     default_weight: f64,
     parallel_threshold: usize,
 ) -> PyResult<PyObject> {
-    let n = graph.node_count();
-
-    // Allocate empty matrix
-    let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
-
-    // Build adjacency matrix
-    for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight =
-            weight_callable(py, &weight_fn, &weight, default_weight)?;
-        mat[[i, j]] = mat[[i, j]].min(edge_weight);
-        if as_undirected {
-            mat[[j, i]] = mat[[j, i]].min(edge_weight);
-        }
-    }
-    // 0 out the diagonal
-    for x in mat.diag_mut() {
-        *x = 0.0;
-    }
-    // Perform the Floyd-Warshall algorithm.
-    // In each loop, this finds the shortest path from point i
-    // to point j using intermediate nodes 0..k
-    if n < parallel_threshold {
-        for k in 0..n {
-            for i in 0..n {
-                for j in 0..n {
-                    let d_ijk = mat[[i, k]] + mat[[k, j]];
-                    if d_ijk < mat[[i, j]] {
-                        mat[[i, j]] = d_ijk;
-                    }
-                }
-            }
-        }
-    } else {
-        for k in 0..n {
-            let row_k = mat.slice(s![k, ..]).to_owned();
-            mat.axis_iter_mut(Axis(0))
-                .into_par_iter()
-                .for_each(|mut row_i| {
-                    let m_ik = row_i[k];
-                    row_i.iter_mut().zip(row_k.iter()).for_each(
-                        |(m_ij, m_kj)| {
-                            let d_ijk = m_ik + *m_kj;
-                            if d_ijk < *m_ij {
-                                *m_ij = d_ijk;
-                            }
-                        },
-                    )
-                })
-        }
-    }
-    Ok(mat.into_pyarray(py).into())
+    let matrix = floyd_warshall::floyd_warshall_numpy(
+        py,
+        &graph.graph,
+        weight_fn,
+        as_undirected,
+        default_weight,
+        parallel_threshold,
+    )?;
+    Ok(matrix.into_pyarray(py).into())
 }
 
 /// Get the number of unweighted shortest paths from a source node
