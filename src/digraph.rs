@@ -50,9 +50,11 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    is_directed_acyclic_graph, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
-    NoSuitableNeighbors, NodesRemoved,
+    DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes, NoSuitableNeighbors,
+    NodesRemoved,
 };
+
+use super::dag_algo::is_directed_acyclic_graph;
 
 /// A class for creating directed graphs
 ///
@@ -561,6 +563,26 @@ impl PyDiGraph {
         self.multigraph
     }
 
+    /// Detect if the graph has parallel edges or not
+    ///
+    /// :returns: ``True`` if the graph has parallel edges, otherwise ``False``
+    /// :rtype: bool
+    #[pyo3(text_signature = "(self)")]
+    fn has_parallel_edges(&self) -> bool {
+        if !self.multigraph {
+            return false;
+        }
+        let mut edges: HashSet<[NodeIndex; 2]> =
+            HashSet::with_capacity(self.graph.edge_count());
+        for edge in self.graph.edge_references() {
+            let endpoints = [edge.source(), edge.target()];
+            if edges.contains(&endpoints) {
+                return true;
+            }
+            edges.insert(endpoints);
+        }
+        false
+    }
     /// Return the number of nodes in the graph
     #[pyo3(text_signature = "(self)")]
     pub fn num_nodes(&self) -> usize {
