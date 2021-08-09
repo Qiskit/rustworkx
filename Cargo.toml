@@ -17,10 +17,10 @@ name = "retworkx"
 crate-type = ["cdylib"]
 
 [dependencies]
-ahash = { version = "0.4.0", default-features = false }
+ahash = { version = "0.7.4", default-features = false }
 petgraph = "0.6.0"
 fixedbitset = "0.4.0"
-numpy = {git = "https://github.com/IvanIsCoding/rust-numpy", branch = "indexmap-support"}
+numpy = "0.14.1"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.5"
@@ -28,12 +28,11 @@ num-traits = "0.2"
 num-bigint = "0.4"
 
 [dependencies.pyo3]
-git = "https://github.com/IvanIsCoding/pyo3"
-branch = "indexmap-support"
+version = "0.14.2"
 features = ["extension-module", "hashbrown", "num-bigint", "indexmap"]
 
 [dependencies.hashbrown]
-version = "0.9"
+version = "0.11"
 features = ["rayon"]
 
 [dependencies.ndarray]
