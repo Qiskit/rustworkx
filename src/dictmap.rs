@@ -2,15 +2,14 @@
 // For the moment, we use ahash which is the default hasher
 // for hashbrown::HashMap, another hashmap we use
 
-pub type DictMap<K, V> =
-    indexmap::IndexMap<K, V, hashbrown::hash_map::DefaultHashBuilder>;
+pub type DictMap<K, V> = indexmap::IndexMap<K, V, ahash::RandomState>;
 
 #[macro_export]
 macro_rules! _dictmap_new {
     () => {
         indexmap::IndexMap::with_capacity_and_hasher(
             0,
-            hashbrown::hash_map::DefaultHashBuilder::default(),
+            ahash::RandomState::default(),
         )
     };
 }
@@ -23,7 +22,7 @@ macro_rules! _dictmap_with_capacity {
     ($n:expr) => {
         indexmap::IndexMap::with_capacity_and_hasher(
             $n,
-            hashbrown::hash_map::DefaultHashBuilder::default(),
+            ahash::RandomState::default(),
         )
     };
 }
