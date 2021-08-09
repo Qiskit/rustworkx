@@ -399,6 +399,29 @@ impl PyGraph {
         self.multigraph
     }
 
+    /// Detect if the graph has parallel edges or not
+    ///
+    /// :returns: ``True`` if the graph has parallel edges, otherwise ``False``
+    /// :rtype: bool
+    #[pyo3(text_signature = "(self)")]
+    fn has_parallel_edges(&self) -> bool {
+        if !self.multigraph {
+            return false;
+        }
+        let mut edges: HashSet<[NodeIndex; 2]> =
+            HashSet::with_capacity(2 * self.graph.edge_count());
+        for edge in self.graph.edge_references() {
+            let endpoints = [edge.source(), edge.target()];
+            let endpoints_rev = [edge.target(), edge.source()];
+            if edges.contains(&endpoints) || edges.contains(&endpoints_rev) {
+                return true;
+            }
+            edges.insert(endpoints);
+            edges.insert(endpoints_rev);
+        }
+        false
+    }
+
     /// Return the number of nodes in the graph
     #[pyo3(text_signature = "(self)")]
     pub fn num_nodes(&self) -> usize {
