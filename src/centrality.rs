@@ -138,7 +138,7 @@ fn _accumulate_basic(
     for w in sorted_by_distance {
         let iw = (*w).index();
         let coeff = (1.0 + delta[iw]) / (sigma[&iw] as f64);
-        let p_w = predecessors.get_mut(&w).unwrap();
+        let p_w = predecessors.get_mut(w).unwrap();
         for v in p_w {
             let iv = (*v).index();
             delta[iv] += (sigma[&iv] as f64) * coeff;
@@ -162,7 +162,7 @@ fn _accumulate_endpoints(
     for w in sorted_by_distance {
         let iw = (*w).index();
         let coeff = (1.0 + delta[iw]) / (sigma[&iw] as f64);
-        let p_w = predecessors.get_mut(&w).unwrap();
+        let p_w = predecessors.get_mut(w).unwrap();
         for v in p_w {
             let iv = (*v).index();
             delta[iv] += (sigma[&iv] as f64) * coeff;
@@ -210,17 +210,16 @@ where
     while !Q.is_empty() {
         let v = Q.remove(0);
         sorted_by_distance.push(v);
+        let distance_v = distance[&v];
         for w in graph.neighbors(v) {
-            if *(distance.get(&w).unwrap()) < 0 {
+            if distance[&w] < 0 {
                 Q.push(w);
-                distance.insert(w, *(distance.get(&v).unwrap()) + 1);
+                distance.insert(w, distance_v + 1);
             }
-            if *(distance.get(&w).unwrap()) == *(distance.get(&v).unwrap()) + 1
-            {
+            if distance[&w] == distance_v + 1 {
                 sigma.insert(
                     graph.to_index(w),
-                    *(sigma.get(&graph.to_index(w)).unwrap())
-                        + *(sigma.get(&graph.to_index(v)).unwrap()),
+                    sigma[&graph.to_index(w)] + sigma[&graph.to_index(v)],
                 );
                 let e_p = predecessors.get_mut(&w).unwrap();
                 e_p.push(v);
@@ -237,9 +236,9 @@ pub fn graph_betweenness_centrality(
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
-) -> PyResult<PyObject> {
+) -> PyResult<Vec<f64>> {
     let betweenness = betweenness_centrality(&graph, endpoints, normalized);
-    Ok(PyList::new(py, betweenness).into())
+    betweenness
 }
 
 #[pyfunction(normalized = "true", endpoints = "false")]
@@ -249,7 +248,7 @@ pub fn digraph_betweenness_centrality(
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
-) -> PyResult<PyObject> {
+) -> PyResult<Vec<f64>> {
     let betweenness = betweenness_centrality(&graph, endpoints, normalized);
-    Ok(PyList::new(py, betweenness).into())
+    betweenness
 }

@@ -32,19 +32,19 @@ class TestCentralityDiGraph(unittest.TestCase):
     def test_betweenness_centrality(self):
         betweenness = retworkx.digraph_betweenness_centrality(self.graph)
         expected = [0.0, 0.3333333333333333, 0.3333333333333333, 0.0]
-        self.assertEqual(expected, betweenness[0])
+        self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_endpoints(self):
         betweenness = retworkx.digraph_betweenness_centrality(
             self.graph, endpoints=True)
         expected = [0.25, 0.41666666666666663, 0.41666666666666663, 0.25]
-        self.assertEqual(expected, betweenness[0])
+        self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_unnormalized(self):
         betweenness = retworkx.digraph_betweenness_centrality(
             self.graph, endpoints=False, normalized=False)
         expected = [0.0, 2.0, 2.0, 0.0]
-        self.assertEqual(expected, betweenness[0])
+        self.assertEqual(expected, betweenness)
 
 
 class TestCentralityGraph(unittest.TestCase):
@@ -64,16 +64,16 @@ class TestCentralityGraph(unittest.TestCase):
     def test_betweenness_centrality(self):
         betweenness = retworkx.graph_betweenness_centrality(self.graph)
         expected = [0.0, 0.6666666666666666, 0.6666666666666666, 0.0]
-        self.assertEqual(expected, betweenness[0])
+        self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_endpoints(self):
         betweenness = retworkx.graph_betweenness_centrality(
             self.graph, endpoints=True)
         expected = [0.5, 0.8333333333333333, 0.8333333333333333, 0.5]
-        self.assertEqual(expected, betweenness[0])
+        self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_unnormalized(self):
         betweenness = retworkx.graph_betweenness_centrality(
             self.graph, endpoints=False, normalized=False)
         expected = [0.0, 2.0, 2.0, 0.0]
-        self.assertEqual(expected, betweenness[0])
+        self.assertEqual(expected, betweenness)
