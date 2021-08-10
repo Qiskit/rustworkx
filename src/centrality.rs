@@ -235,8 +235,11 @@ pub fn graph_betweenness_centrality(
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
-) -> PyResult<Vec<f64>> {
-    Ok(betweenness_centrality(&graph, endpoints, normalized))
+) -> PyResult<HashMap<usize, f64>> {
+    let betweenness = betweenness_centrality(&graph, endpoints, normalized);
+    let out_map: HashMap<usize, f64> =
+        betweenness.into_iter().enumerate().collect();
+    return Ok(out_map);
 }
 
 #[pyfunction(normalized = "true", endpoints = "false")]
@@ -246,6 +249,9 @@ pub fn digraph_betweenness_centrality(
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
-) -> PyResult<Vec<f64>> {
-    Ok(betweenness_centrality(&graph, endpoints, normalized))
+) -> PyResult<HashMap<usize, f64>> {
+    let betweenness = betweenness_centrality(&graph, endpoints, normalized);
+    let out_map: HashMap<usize, f64> =
+        betweenness.into_iter().enumerate().collect();
+    return Ok(out_map);
 }
