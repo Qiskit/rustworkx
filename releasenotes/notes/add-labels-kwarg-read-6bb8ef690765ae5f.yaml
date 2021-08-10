@@ -5,8 +5,8 @@ features:
     :meth:`retworkx.PyDiGraph.read_edge_list` and
     :meth:`retworkx.PyGraph.read_edge_list` constructor methods. When this
     kwarg is set to ``True`` the first 2 elements on a line in an edge list
-    file are treated as string labels instead of integer node indices. For
-    example:
+    file are treated as string labels uniquely identifying a node instead
+    of integer node indices. For example:
 
     .. jupyter-execute::
 
@@ -16,8 +16,8 @@ features:
       from retworkx.visualization import mpl_draw
 
       with tempfile.NamedTemporaryFile("wt") as fd:
-        fd.write('a b 0\n')
-        fd.write('b c 1\n')
+        fd.write('a b first_edge\n')
+        fd.write('b c second_edge\n')
         fd.flush()
         graph = retworkx.PyDiGraph.read_edge_list(fd.name, labels=True)
 
