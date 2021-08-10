@@ -14,7 +14,6 @@ use crate::digraph;
 use crate::graph;
 
 use pyo3::prelude::*;
-use pyo3::types::PyList;
 use pyo3::Python;
 
 use hashbrown::HashMap;
@@ -232,23 +231,21 @@ where
 #[pyfunction(normalized = "true", endpoints = "false")]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn graph_betweenness_centrality(
-    py: Python,
+    _py: Python,
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
 ) -> PyResult<Vec<f64>> {
-    let betweenness = betweenness_centrality(&graph, endpoints, normalized);
-    betweenness
+    betweenness_centrality(&graph, endpoints, normalized)
 }
 
 #[pyfunction(normalized = "true", endpoints = "false")]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn digraph_betweenness_centrality(
-    py: Python,
+    _py: Python,
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
 ) -> PyResult<Vec<f64>> {
-    let betweenness = betweenness_centrality(&graph, endpoints, normalized);
-    betweenness
+    betweenness_centrality(&graph, endpoints, normalized)
 }
