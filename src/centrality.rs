@@ -41,7 +41,7 @@ pub fn betweenness_centrality<G>(
     graph: G,
     endpoints: bool,
     normalized: bool,
-) -> Vec<f64>
+) -> Vec<Option<f64>>
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
@@ -55,9 +55,10 @@ where
     // + NodeCount // for node_count
     // + GraphProp // for is_directed
 {
-    let mut betweenness = vec![0.0; graph.node_count()];
+    let mut betweenness = vec![None; graph.node_count()];
     for node_s in graph.node_identifiers() {
         let is = graph.to_index(node_s);
+        betweenness[is] = Some(0.0);
         let (mut sorted_by_distance, predecessors, sigma) =
             shortest_path_for_centrality(&graph, &node_s);
         sorted_by_distance.reverse(); // will be effectively popping from the stack
@@ -93,7 +94,7 @@ where
 }
 
 fn _rescale(
-    betweenness: &mut Vec<f64>,
+    betweenness: &mut Vec<Option<f64>>,
     node_count: usize,
     normalized: bool,
     directed: bool,
@@ -120,13 +121,16 @@ fn _rescale(
     }
     if do_scale {
         for i in 0..betweenness.len() as usize {
-            betweenness[i] *= scale;
+            if betweenness[i].is_some() {
+//                betweenness[i] *= scale;
+                betweenness[i] = Some(betweenness[i].unwrap() * scale);
+            }
         }
     }
 }
 
 fn _accumulate_basic(
-    betweenness: &mut Vec<f64>,
+    betweenness: &mut Vec<Option<f64>>,
     node_count: usize,
     sorted_by_distance: &[NodeIndex],
     mut predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
@@ -143,20 +147,26 @@ fn _accumulate_basic(
             delta[iv] += (sigma[&iv] as f64) * coeff;
         }
         if iw != is {
-            betweenness[iw] += delta[iw];
+            //            betweenness[iw] += delta[iw];
+            if betweenness[iw].is_some() {
+                betweenness[iw] = Some(betweenness[iw].unwrap() + delta[iw]);
+            }
         }
     }
 }
 
 fn _accumulate_endpoints(
-    betweenness: &mut Vec<f64>,
+    betweenness: &mut Vec<Option<f64>>,
     node_count: usize,
     sorted_by_distance: &[NodeIndex],
     mut predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
     sigma: HashMap<usize, i64>,
     is: usize,
 ) {
-    betweenness[is] += (sorted_by_distance.len() - 1) as f64;
+    //    betweenness[is] += (sorted_by_distance.len() - 1) as f64;
+    if betweenness[is].is_some() {
+        betweenness[is] = Some(betweenness[is].unwrap() + ((sorted_by_distance.len() - 1) as f64));
+    }
     let mut delta = vec![0.0; node_count];
     for w in sorted_by_distance {
         let iw = (*w).index();
@@ -167,7 +177,10 @@ fn _accumulate_endpoints(
             delta[iv] += (sigma[&iv] as f64) * coeff;
         }
         if iw != is {
-            betweenness[iw] += delta[iw] + 1.0;
+            if betweenness[iw].is_some() {
+//                betweenness[iw] += delta[iw] + 1.0;
+                betweenness[iw] = Some(betweenness[iw].unwrap() + delta[iw] + 1.0);
+            }
         }
     }
 }
@@ -238,7 +251,8 @@ pub fn graph_betweenness_centrality(
 ) -> PyResult<HashMap<usize, f64>> {
     let betweenness = betweenness_centrality(&graph, endpoints, normalized);
     let out_map: HashMap<usize, f64> =
-        betweenness.into_iter().enumerate().collect();
+    //        betweenness.into_iter().enumerate().collect();
+        betweenness.into_iter().enumerate().filter(|(i, v)| v.is_some()).map(|(i, v)| (i, v.unwrap())).collect();
     return Ok(out_map);
 }
 
@@ -252,6 +266,7 @@ pub fn digraph_betweenness_centrality(
 ) -> PyResult<HashMap<usize, f64>> {
     let betweenness = betweenness_centrality(&graph, endpoints, normalized);
     let out_map: HashMap<usize, f64> =
-        betweenness.into_iter().enumerate().collect();
+    //        betweenness.into_iter().enumerate().collect();
+        betweenness.into_iter().enumerate().filter(|(i, v)| v.is_some()).map(|(i, v)| (i, v.unwrap())).collect();
     return Ok(out_map);
 }
