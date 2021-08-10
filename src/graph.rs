@@ -399,6 +399,29 @@ impl PyGraph {
         self.multigraph
     }
 
+    /// Detect if the graph has parallel edges or not
+    ///
+    /// :returns: ``True`` if the graph has parallel edges, otherwise ``False``
+    /// :rtype: bool
+    #[pyo3(text_signature = "(self)")]
+    fn has_parallel_edges(&self) -> bool {
+        if !self.multigraph {
+            return false;
+        }
+        let mut edges: HashSet<[NodeIndex; 2]> =
+            HashSet::with_capacity(2 * self.graph.edge_count());
+        for edge in self.graph.edge_references() {
+            let endpoints = [edge.source(), edge.target()];
+            let endpoints_rev = [edge.target(), edge.source()];
+            if edges.contains(&endpoints) || edges.contains(&endpoints_rev) {
+                return true;
+            }
+            edges.insert(endpoints);
+            edges.insert(endpoints_rev);
+        }
+        false
+    }
+
     /// Return the number of nodes in the graph
     #[pyo3(text_signature = "(self)")]
     pub fn num_nodes(&self) -> usize {
@@ -1517,6 +1540,64 @@ impl PyGraph {
             node_removed: false,
             multigraph: self.multigraph,
         }
+    }
+
+    /// Return a new PyGraph object for an edge induced subgrapph of this graph
+    ///
+    /// The induced subgraph contains each edge in `edges` and each node
+    /// incident to any of those edges.
+    ///
+    /// :param list edge_list: A list of edge tuples (2-tuples with the source
+    ///     and target node) to generate the subgraph from. In cases of parallel
+    ///     edges for a multigraph all edges between the specified node. In case
+    ///     of an edge specified that doesn't exist in the graph it will be
+    ///     silently ignored.
+    ///
+    /// :returns: The edge subgraph
+    /// :rtype: PyDiGraph
+    ///
+    #[pyo3(text_signature = "(self, edges, /)")]
+    pub fn edge_subgraph(&self, edge_list: Vec<[usize; 2]>) -> PyGraph {
+        // Filter non-existent edges
+        let edges: Vec<[usize; 2]> = edge_list
+            .into_iter()
+            .filter(|x| {
+                let source = NodeIndex::new(x[0]);
+                let target = NodeIndex::new(x[1]);
+                self.graph.find_edge(source, target).is_some()
+            })
+            .collect();
+
+        let nodes: HashSet<NodeIndex> = edges
+            .iter()
+            .map(|x| x.iter())
+            .flatten()
+            .copied()
+            .map(NodeIndex::new)
+            .collect();
+        let mut edge_set: HashSet<[NodeIndex; 2]> =
+            HashSet::with_capacity(edges.len());
+        for edge in edges {
+            let source_index = NodeIndex::new(edge[0]);
+            let target_index = NodeIndex::new(edge[1]);
+            edge_set.insert([source_index, target_index]);
+        }
+        let mut out_graph = self.clone();
+        for node in self
+            .graph
+            .node_indices()
+            .filter(|node| !nodes.contains(node))
+        {
+            out_graph.graph.remove_node(node);
+            out_graph.node_removed = true;
+        }
+        for edge in self.graph.edge_references().filter(|edge| {
+            !edge_set.contains(&[edge.source(), edge.target()])
+                && !edge_set.contains(&[edge.target(), edge.source()])
+        }) {
+            out_graph.graph.remove_edge(edge.id());
+        }
+        out_graph
     }
 
     /// Return a shallow copy of the graph
