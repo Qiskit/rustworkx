@@ -186,8 +186,7 @@ fn _accumulate_endpoints(
             delta[iv] += (sigma[&iv] as f64) * coeff;
         }
         if iw != is && betweenness[iw].is_some() {
-            betweenness[iw] =
-                Some(betweenness[iw].unwrap() + delta[iw] + 1.0);
+            betweenness[iw] = Some(betweenness[iw].unwrap() + delta[iw] + 1.0);
         }
     }
 }
@@ -248,6 +247,16 @@ where
     (sorted_by_distance, predecessors, sigma)
 }
 
+/// Compute the betweenness centrality of all nodes in a PyGraph.
+///
+/// :param PyGraph graph: The input graph
+/// :param bool normalized: Whether to normalize the betweenness scores by the number of nodes
+/// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
+///    compute the betweenness.
+///
+/// :returns a dict whose keys are the node indices and values are the betweenness score
+///     for each node.
+/// :rtype: dict
 #[pyfunction(normalized = "true", endpoints = "false")]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn graph_betweenness_centrality(
@@ -266,6 +275,16 @@ pub fn graph_betweenness_centrality(
     Ok(out_map)
 }
 
+/// Compute the betweenness centrality of all nodes in a PyDiGraph.
+///
+/// :param PyDiGraph graph: The input graph
+/// :param bool normalized: Whether to normalize the betweenness scores by the number of nodes
+/// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
+///    compute the betweenness.
+///
+/// :returns a dict whose keys are the node indices and values are the betweenness score
+///     for each node.
+/// :rtype: dict
 #[pyfunction(normalized = "true", endpoints = "false")]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn digraph_betweenness_centrality(
