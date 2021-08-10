@@ -41,7 +41,7 @@ pub fn betweenness_centrality<G>(
     graph: G,
     endpoints: bool,
     normalized: bool,
-) -> PyResult<Vec<f64>>
+) -> Vec<f64>
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
@@ -89,7 +89,7 @@ where
         endpoints,
     );
 
-    Ok(betweenness)
+    betweenness
 }
 
 fn _rescale(
@@ -236,7 +236,7 @@ pub fn graph_betweenness_centrality(
     normalized: bool,
     endpoints: bool,
 ) -> PyResult<Vec<f64>> {
-    betweenness_centrality(&graph, endpoints, normalized)
+    Ok(betweenness_centrality(&graph, endpoints, normalized))
 }
 
 #[pyfunction(normalized = "true", endpoints = "false")]
@@ -247,5 +247,5 @@ pub fn digraph_betweenness_centrality(
     normalized: bool,
     endpoints: bool,
 ) -> PyResult<Vec<f64>> {
-    betweenness_centrality(&graph, endpoints, normalized)
+    Ok(betweenness_centrality(&graph, endpoints, normalized))
 }
