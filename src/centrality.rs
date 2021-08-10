@@ -55,10 +55,27 @@ where
     // + NodeCount // for node_count
     // + GraphProp // for is_directed
 {
-    let mut betweenness = vec![None; graph.node_count()];
+
+    let mut max_index = 0;
     for node_s in graph.node_identifiers() {
-        let is = graph.to_index(node_s);
+        let is: usize = graph.to_index(node_s);
+        if is > max_index {
+            max_index = is;
+        }
+    }
+    max_index += 1;
+    println!("Found max_index : {}", max_index);
+
+    let mut betweenness: Vec<Option<f64>> = vec![None; max_index];
+//    let mut betweenness: Vec<Option<f64>> = vec![None; graph.node_count()];
+//    println!("node count {}", graph.node_count());
+    for node_s in graph.node_identifiers() {
+        let is: usize = graph.to_index(node_s);
+//        println!("{} is: ", is);
         betweenness[is] = Some(0.0);
+    }
+    for node_s in graph.node_identifiers() {
+        let is: usize = graph.to_index(node_s);
         let (mut sorted_by_distance, predecessors, sigma) =
             shortest_path_for_centrality(&graph, &node_s);
         sorted_by_distance.reverse(); // will be effectively popping from the stack
@@ -66,6 +83,7 @@ where
             _accumulate_endpoints(
                 &mut betweenness,
                 graph.node_count(),
+                max_index,
                 &sorted_by_distance,
                 predecessors,
                 sigma,
@@ -75,6 +93,7 @@ where
             _accumulate_basic(
                 &mut betweenness,
                 graph.node_count(),
+                max_index,
                 &sorted_by_distance,
                 predecessors,
                 sigma,
@@ -122,7 +141,7 @@ fn _rescale(
     if do_scale {
         for i in 0..betweenness.len() as usize {
             if betweenness[i].is_some() {
-//                betweenness[i] *= scale;
+                //                betweenness[i] *= scale;
                 betweenness[i] = Some(betweenness[i].unwrap() * scale);
             }
         }
@@ -132,12 +151,13 @@ fn _rescale(
 fn _accumulate_basic(
     betweenness: &mut Vec<Option<f64>>,
     node_count: usize,
+    max_index: usize,
     sorted_by_distance: &[NodeIndex],
     mut predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
     sigma: HashMap<usize, i64>,
     is: usize,
 ) {
-    let mut delta = vec![0.0; node_count];
+    let mut delta = vec![0.0; max_index];
     for w in sorted_by_distance {
         let iw = (*w).index();
         let coeff = (1.0 + delta[iw]) / (sigma[&iw] as f64);
@@ -158,6 +178,7 @@ fn _accumulate_basic(
 fn _accumulate_endpoints(
     betweenness: &mut Vec<Option<f64>>,
     node_count: usize,
+    max_index: usize,
     sorted_by_distance: &[NodeIndex],
     mut predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
     sigma: HashMap<usize, i64>,
@@ -165,9 +186,11 @@ fn _accumulate_endpoints(
 ) {
     //    betweenness[is] += (sorted_by_distance.len() - 1) as f64;
     if betweenness[is].is_some() {
-        betweenness[is] = Some(betweenness[is].unwrap() + ((sorted_by_distance.len() - 1) as f64));
+        betweenness[is] = Some(
+            betweenness[is].unwrap() + ((sorted_by_distance.len() - 1) as f64),
+        );
     }
-    let mut delta = vec![0.0; node_count];
+    let mut delta = vec![0.0; max_index];
     for w in sorted_by_distance {
         let iw = (*w).index();
         let coeff = (1.0 + delta[iw]) / (sigma[&iw] as f64);
@@ -178,8 +201,9 @@ fn _accumulate_endpoints(
         }
         if iw != is {
             if betweenness[iw].is_some() {
-//                betweenness[iw] += delta[iw] + 1.0;
-                betweenness[iw] = Some(betweenness[iw].unwrap() + delta[iw] + 1.0);
+                //                betweenness[iw] += delta[iw] + 1.0;
+                betweenness[iw] =
+                    Some(betweenness[iw].unwrap() + delta[iw] + 1.0);
             }
         }
     }
