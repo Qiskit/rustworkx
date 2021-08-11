@@ -44,22 +44,15 @@ pub fn compute_distance_sum<Ty: EdgeType + Sync>(
                 return count;
             }
             for node in found {
-                if graph.is_directed() {
+                for v in graph
+                    .neighbors_directed(node, petgraph::Direction::Outgoing)
+                {
+                    next_level.insert(v);
+                }
+                if graph.is_directed() && as_undirected {
                     for v in graph
-                        .neighbors_directed(node, petgraph::Direction::Outgoing)
+                        .neighbors_directed(node, petgraph::Direction::Incoming)
                     {
-                        next_level.insert(v);
-                    }
-                    if as_undirected {
-                        for v in graph.neighbors_directed(
-                            node,
-                            petgraph::Direction::Incoming,
-                        ) {
-                            next_level.insert(v);
-                        }
-                    }
-                } else {
-                    for v in graph.neighbors(node) {
                         next_level.insert(v);
                     }
                 }
