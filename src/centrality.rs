@@ -191,6 +191,7 @@ fn _accumulate_endpoints(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn shortest_path_for_centrality<G>(
     graph: G,
     node_s: &G::NodeId,
