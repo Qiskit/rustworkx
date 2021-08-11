@@ -30,7 +30,7 @@ use petgraph::visit::{
 // Correspondence to notation in Brandes 2001
 //
 // P -- predecessors
-// S -- sorted_by_distance,
+// S -- verts_sorted_by_distance,
 //      vertices in order of non-decreasing distance from s
 // Q -- Q
 // sigma -- sigma
@@ -64,18 +64,13 @@ where
     }
     for node_s in graph.node_identifiers() {
         let is: usize = graph.to_index(node_s);
-        let mut shortest_path_calc = shortest_path_for_centrality(&graph, &node_s);
-        // let (mut sorted_by_distance, predecessors, sigma) =
-        //     shortest_path_for_centrality(&graph, &node_s);
-        // sorted_by_distance.reverse(); // will be effectively popping from the stack
+        let mut shortest_path_calc =
+            shortest_path_for_centrality(&graph, &node_s);
         if endpoints {
             _accumulate_endpoints(
                 &mut betweenness,
                 max_index,
                 &mut shortest_path_calc,
-                // &sorted_by_distance,
-                // predecessors,
-                // sigma,
                 is,
             );
         } else {
@@ -83,9 +78,6 @@ where
                 &mut betweenness,
                 max_index,
                 &mut shortest_path_calc,
-                // &sorted_by_distance,
-                // predecessors,
-                // sigma,
                 is,
             );
         }
@@ -139,11 +131,11 @@ fn _rescale(
 fn _accumulate_basic(
     betweenness: &mut Vec<Option<f64>>,
     max_index: usize,
-    path_calc: &mut SortedDistance,
+    path_calc: &mut ShortestPathData,
     is: usize,
 ) {
     let mut delta = vec![0.0; max_index];
-    for w in &path_calc.sorted_by_distance {
+    for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
         let coeff = (1.0 + delta[iw]) / (path_calc.sigma[&iw] as f64);
         let p_w = path_calc.predecessors.get_mut(&w).unwrap();
@@ -160,16 +152,17 @@ fn _accumulate_basic(
 fn _accumulate_endpoints(
     betweenness: &mut Vec<Option<f64>>,
     max_index: usize,
-    path_calc: &mut SortedDistance,
+    path_calc: &mut ShortestPathData,
     is: usize,
 ) {
     if betweenness[is].is_some() {
         betweenness[is] = Some(
-            betweenness[is].unwrap() + ((path_calc.sorted_by_distance.len() - 1) as f64),
+            betweenness[is].unwrap()
+                + ((path_calc.verts_sorted_by_distance.len() - 1) as f64),
         );
     }
     let mut delta = vec![0.0; max_index];
-    for w in &path_calc.sorted_by_distance {
+    for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
         let coeff = (1.0 + delta[iw]) / (path_calc.sigma[&iw] as f64);
         let p_w = path_calc.predecessors.get_mut(&w).unwrap();
@@ -183,24 +176,23 @@ fn _accumulate_endpoints(
     }
 }
 
-struct SortedDistance {
-    sorted_by_distance: Vec<NodeIndex>,
+struct ShortestPathData {
+    verts_sorted_by_distance: Vec<NodeIndex>,
     predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
     sigma: HashMap<usize, i64>,
 }
 
-
 fn shortest_path_for_centrality<G>(
     graph: G,
     node_s: &G::NodeId,
-) -> SortedDistance
+) -> ShortestPathData
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
         + IntoNeighborsDirected
         + GraphBase<NodeId = NodeIndex>, // for get() and get_mut()
 {
-    let mut sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
+    let mut verts_sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
     #[allow(non_snake_case)]
     let mut Q: Vec<NodeIndex> = Vec::new(); // a queue
     let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::new();
@@ -222,7 +214,7 @@ where
     Q.push(index_s);
     while !Q.is_empty() {
         let v = Q.remove(0);
-        sorted_by_distance.push(v);
+        verts_sorted_by_distance.push(v);
         let distance_v = distance[&v];
         for w in graph.neighbors(v) {
             if distance[&w] < 0 {
@@ -239,8 +231,12 @@ where
             }
         }
     }
-    sorted_by_distance.reverse(); // will be effectively popping from the stack
-    SortedDistance {sorted_by_distance: sorted_by_distance, predecessors: predecessors, sigma: sigma}
+    verts_sorted_by_distance.reverse(); // will be effectively popping from the stack
+    ShortestPathData {
+        verts_sorted_by_distance: verts_sorted_by_distance,
+        predecessors: predecessors,
+        sigma: sigma,
+    }
 }
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
