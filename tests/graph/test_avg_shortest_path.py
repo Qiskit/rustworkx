@@ -59,7 +59,7 @@ class TestUnweightedAvgShortestPath(unittest.TestCase):
 
     def test_disconnected_graph(self):
         graph = retworkx.PyGraph()
-        node = graph.add_nodes_from(list(range(32)))
+        graph.add_nodes_from(list(range(32)))
         res = retworkx.unweighted_average_shortest_path_length(graph)
         self.assertEqual(math.inf, res)
 
