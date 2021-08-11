@@ -15,6 +15,7 @@
 use hashbrown::HashMap;
 
 use super::weight_callable;
+use crate::get_edge_iter_with_weights;
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -23,6 +24,7 @@ use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
 
+use ndarray::prelude::*;
 use rayon::prelude::*;
 
 use crate::iterators::{AllPairsPathLengthMapping, PathLengthMapping};
@@ -143,4 +145,64 @@ pub fn floyd_warshall<Ty: EdgeType>(
     Ok(AllPairsPathLengthMapping {
         path_lengths: out_map,
     })
+}
+
+pub fn floyd_warshall_numpy<Ty: EdgeType>(
+    py: Python,
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    weight_fn: Option<PyObject>,
+    as_undirected: bool,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<Array2<f64>> {
+    let n = graph.node_count();
+    // Allocate empty matrix
+    let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
+
+    // Build adjacency matrix
+    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+        let edge_weight =
+            weight_callable(py, &weight_fn, &weight, default_weight)?;
+        mat[[i, j]] = mat[[i, j]].min(edge_weight);
+        if as_undirected {
+            mat[[j, i]] = mat[[j, i]].min(edge_weight);
+        }
+    }
+    // 0 out the diagonal
+    for x in mat.diag_mut() {
+        *x = 0.0;
+    }
+    // Perform the Floyd-Warshall algorithm.
+    // In each loop, this finds the shortest path from point i
+    // to point j using intermediate nodes 0..k
+    if n < parallel_threshold {
+        for k in 0..n {
+            for i in 0..n {
+                for j in 0..n {
+                    let d_ijk = mat[[i, k]] + mat[[k, j]];
+                    if d_ijk < mat[[i, j]] {
+                        mat[[i, j]] = d_ijk;
+                    }
+                }
+            }
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.slice(s![k, ..]).to_owned();
+            mat.axis_iter_mut(Axis(0))
+                .into_par_iter()
+                .for_each(|mut row_i| {
+                    let m_ik = row_i[k];
+                    row_i.iter_mut().zip(row_k.iter()).for_each(
+                        |(m_ij, m_kj)| {
+                            let d_ijk = m_ik + *m_kj;
+                            if d_ijk < *m_ij {
+                                *m_ij = d_ijk;
+                            }
+                        },
+                    )
+                })
+        }
+    }
+    Ok(mat)
 }
