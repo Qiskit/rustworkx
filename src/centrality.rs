@@ -301,8 +301,7 @@ pub fn digraph_betweenness_centrality(
     let out_map: HashMap<usize, f64> = betweenness
         .into_iter()
         .enumerate()
-        .filter(|(_i, v)| v.is_some())
-        .map(|(i, v)| (i, v.unwrap()))
+        .filter_map(|(i, v)| v.map(|x| (i, x)))
         .collect();
     Ok(out_map)
 }
