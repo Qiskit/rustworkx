@@ -250,7 +250,8 @@ where
 /// Compute the betweenness centrality of all nodes in a PyGraph.
 ///
 /// :param PyGraph graph: The input graph
-/// :param bool normalized: Whether to normalize the betweenness scores by the number of nodes
+/// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
+///    paths between all pairs of nodes.
 /// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
 ///    compute the betweenness.
 ///
@@ -278,7 +279,8 @@ pub fn graph_betweenness_centrality(
 /// Compute the betweenness centrality of all nodes in a PyDiGraph.
 ///
 /// :param PyDiGraph graph: The input graph
-/// :param bool normalized: Whether to normalize the betweenness scores by the number of nodes
+/// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
+///    paths between all pairs of nodes.
 /// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
 ///    compute the betweenness.
 ///
