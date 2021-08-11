@@ -227,6 +227,16 @@ pub fn steiner_tree(
         out_graph.graph.remove_edge(edge.id());
     }
     // Deduplicate potential duplicate edges
+    deduplicate_edges(py, graph, &mut out_graph, &weight_fn)?;
+    Ok(out_graph)
+}
+
+fn deduplicate_edges(
+    py: Python,
+    graph: &graph::PyGraph,
+    out_graph: &mut graph::PyGraph,
+    weight_fn: &PyObject,
+) -> PyResult<()> {
     if graph.multigraph {
         // Find all edges between nodes
         let mut duplicate_map: HashMap<
@@ -273,5 +283,5 @@ pub fn steiner_tree(
             });
         }
     }
-    Ok(out_graph)
+    Ok(())
 }
