@@ -71,25 +71,28 @@ where
     }
     for node_s in graph.node_identifiers() {
         let is: usize = graph.to_index(node_s);
-        let (mut sorted_by_distance, predecessors, sigma) =
-            shortest_path_for_centrality(&graph, &node_s);
-        sorted_by_distance.reverse(); // will be effectively popping from the stack
+        let mut shortest_path_calc = shortest_path_for_centrality(&graph, &node_s);
+        // let (mut sorted_by_distance, predecessors, sigma) =
+        //     shortest_path_for_centrality(&graph, &node_s);
+        // sorted_by_distance.reverse(); // will be effectively popping from the stack
         if endpoints {
             _accumulate_endpoints(
                 &mut betweenness,
                 max_index,
-                &sorted_by_distance,
-                predecessors,
-                sigma,
+                &mut shortest_path_calc,
+                // &sorted_by_distance,
+                // predecessors,
+                // sigma,
                 is,
             );
         } else {
             _accumulate_basic(
                 &mut betweenness,
                 max_index,
-                &sorted_by_distance,
-                predecessors,
-                sigma,
+                &mut shortest_path_calc,
+                // &sorted_by_distance,
+                // predecessors,
+                // sigma,
                 is,
             );
         }
@@ -143,19 +146,17 @@ fn _rescale(
 fn _accumulate_basic(
     betweenness: &mut Vec<Option<f64>>,
     max_index: usize,
-    sorted_by_distance: &[NodeIndex],
-    mut predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
-    sigma: HashMap<usize, i64>,
+    path_calc: &mut SortedDistance,
     is: usize,
 ) {
     let mut delta = vec![0.0; max_index];
-    for w in sorted_by_distance {
-        let iw = (*w).index();
-        let coeff = (1.0 + delta[iw]) / (sigma[&iw] as f64);
-        let p_w = predecessors.get_mut(w).unwrap();
+    for w in &path_calc.sorted_by_distance {
+        let iw = w.index();
+        let coeff = (1.0 + delta[iw]) / (path_calc.sigma[&iw] as f64);
+        let p_w = path_calc.predecessors.get_mut(&w).unwrap();
         for v in p_w {
             let iv = (*v).index();
-            delta[iv] += (sigma[&iv] as f64) * coeff;
+            delta[iv] += (path_calc.sigma[&iv] as f64) * coeff;
         }
         if iw != is && betweenness[iw].is_some() {
             betweenness[iw] = Some(betweenness[iw].unwrap() + delta[iw]);
@@ -166,24 +167,22 @@ fn _accumulate_basic(
 fn _accumulate_endpoints(
     betweenness: &mut Vec<Option<f64>>,
     max_index: usize,
-    sorted_by_distance: &[NodeIndex],
-    mut predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
-    sigma: HashMap<usize, i64>,
+    path_calc: &mut SortedDistance,
     is: usize,
 ) {
     if betweenness[is].is_some() {
         betweenness[is] = Some(
-            betweenness[is].unwrap() + ((sorted_by_distance.len() - 1) as f64),
+            betweenness[is].unwrap() + ((path_calc.sorted_by_distance.len() - 1) as f64),
         );
     }
     let mut delta = vec![0.0; max_index];
-    for w in sorted_by_distance {
-        let iw = (*w).index();
-        let coeff = (1.0 + delta[iw]) / (sigma[&iw] as f64);
-        let p_w = predecessors.get_mut(w).unwrap();
+    for w in &path_calc.sorted_by_distance {
+        let iw = w.index();
+        let coeff = (1.0 + delta[iw]) / (path_calc.sigma[&iw] as f64);
+        let p_w = path_calc.predecessors.get_mut(&w).unwrap();
         for v in p_w {
             let iv = (*v).index();
-            delta[iv] += (sigma[&iv] as f64) * coeff;
+            delta[iv] += (path_calc.sigma[&iv] as f64) * coeff;
         }
         if iw != is && betweenness[iw].is_some() {
             betweenness[iw] = Some(betweenness[iw].unwrap() + delta[iw] + 1.0);
@@ -247,7 +246,8 @@ where
             }
         }
     }
-    (sorted_by_distance, predecessors, sigma)
+    sorted_by_distance.reverse(); // will be effectively popping from the stack
+    SortedDistance {sorted_by_distance: sorted_by_distance, predecessors: predecessors, sigma: sigma}
 }
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
