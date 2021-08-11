@@ -55,14 +55,7 @@ where
     // + NodeCount // for node_count
     // + GraphProp // for is_directed
 {
-    let mut max_index = 0;
-    for node_s in graph.node_identifiers() {
-        let is: usize = graph.to_index(node_s);
-        if is > max_index {
-            max_index = is;
-        }
-    }
-    max_index += 1;
+    let max_index = graph.node_bound();
 
     let mut betweenness: Vec<Option<f64>> = vec![None; max_index];
     for node_s in graph.node_identifiers() {
