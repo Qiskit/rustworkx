@@ -191,15 +191,17 @@ fn _accumulate_endpoints(
     }
 }
 
-#[allow(clippy::type_complexity)]
+struct SortedDistance {
+    sorted_by_distance: Vec<NodeIndex>,
+    predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
+    sigma: HashMap<usize, i64>,
+}
+
+
 fn shortest_path_for_centrality<G>(
     graph: G,
     node_s: &G::NodeId,
-) -> (
-    Vec<NodeIndex>,
-    HashMap<G::NodeId, Vec<G::NodeId>>,
-    HashMap<usize, i64>,
-)
+) -> SortedDistance
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
