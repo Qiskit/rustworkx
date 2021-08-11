@@ -43,3 +43,28 @@ class TestAvgShortestPath(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         res = retworkx.unweighted_average_shortest_path_length(graph)
         self.assertTrue(math.isnan(res), "Output is not NaN")
+
+    def test_single_node(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_node(0)
+        res = retworkx.unweighted_average_shortest_path_length(graph)
+        self.assertEqual(0.0, res)
+
+    def test_single_node_self_edge(self):
+        graph = retworkx.PyDiGraph()
+        node = graph.add_node(0)
+        graph.add_edge(node, node, 0)
+        res = retworkx.unweighted_average_shortest_path_length(graph)
+        self.assertEqual(0.0, res)
+
+    def test_disconnected_graph(self):
+        graph = retworkx.PyDiGraph()
+        node = graph.add_nodes_from(list(range(32)))
+        res = retworkx.unweighted_average_shortest_path_length(graph)
+        self.assertEqual(math.inf, res)
+
+    def test_partially_connected_graph(self):
+        graph = retworkx.generators.directed_cycle_graph(32)
+        graph.add_nodes_from(list(range(32)))
+        res = retworkx.unweighted_average_shortest_path_length(graph)
+        self.assertEqual(math.inf, res)

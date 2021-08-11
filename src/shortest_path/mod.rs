@@ -34,6 +34,7 @@ use petgraph::visit::NodeCount;
 
 use numpy::IntoPyArray;
 
+use crate::connectivity::connected::is_connected;
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
     NodesCountMapping, PathLengthMapping, PathMapping,
@@ -1106,7 +1107,9 @@ pub fn graph_distance_matrix(
 ///     will be treated as if each edge was bidirectional/undirected while
 ///     finding the shortest paths. Default: ``False``.
 ///
-/// :returns: The average shortest path length
+/// :returns: The average shortest path length. If the graph is empty this
+///     will return NaN, if there is a single node 0 will be returned and if
+///     the graph is disconnected it will return infinity.
 /// :rtype: float
 #[pyfunction(parallel_threshold = "300", as_undirected = "false")]
 #[pyo3(
@@ -1118,6 +1121,15 @@ pub fn digraph_unweighted_average_shortest_path_length(
     as_undirected: bool,
 ) -> f64 {
     let n = graph.node_count() as f64;
+    if n == 0.0 {
+        return std::f64::NAN;
+    }
+    if n == 1.0 {
+        return 0.0;
+    }
+    if !is_connected(&graph.graph) {
+        return std::f64::INFINITY;
+    }
     let sum = average_length::compute_distance_sum(
         &graph.graph,
         parallel_threshold,
@@ -1152,7 +1164,9 @@ pub fn digraph_unweighted_average_shortest_path_length(
 ///     the distance matrix in parallel at. It defaults to 300, but this can
 ///     be tuned to any number of nodes.
 ///
-/// :returns: The average shortest path length
+/// :returns: The average shortest path length. If the graph is empty this
+///     will return NaN, if there is a single node 0 will be returned and if
+///     the graph is disconnected it will return infinity.
 /// :rtype: float
 #[pyfunction(parallel_threshold = "300")]
 #[pyo3(text_signature = "(graph, /, parallel_threshold=300)")]
@@ -1161,6 +1175,15 @@ pub fn graph_unweighted_average_shortest_path_length(
     parallel_threshold: usize,
 ) -> f64 {
     let n = graph.node_count() as f64;
+    if n == 0.0 {
+        return std::f64::NAN;
+    }
+    if n == 1.0 {
+        return 0.0;
+    }
+    if !is_connected(&graph.graph) {
+        return std::f64::INFINITY;
+    }
     let sum = average_length::compute_distance_sum(
         &graph.graph,
         parallel_threshold,
