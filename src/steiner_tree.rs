@@ -130,7 +130,7 @@ fn _metric_closure_edges(
 /// The minimum steiner tree can be approximated by computing the minimum
 /// spanning tree of the subgraph of the metric closure of ``graph`` induced
 /// by the terminal nodes, where the metric closure of ``graph`` is the
-/// complete in which each edge is weighted by the shortest path distance
+/// complete graph in which each edge is weighted by the shortest path distance
 /// between nodes in ``graph``.
 ///
 /// This algorithm [1]_ produces a tree whose weight is within a
@@ -190,14 +190,7 @@ pub fn steiner_tree(
         let u = float_edge_pair.source;
         let v = float_edge_pair.target;
         if subgraphs.union(u, v) {
-            let w = float_edge_pair.distance;
-            let path = float_edge_pair.path;
-            mst_edges.push(MetricClosureEdge {
-                source: u,
-                target: v,
-                distance: w,
-                path,
-            });
+            mst_edges.push(float_edge_pair);
         }
     }
     // Generate the output graph from the MST of the metric closure
