@@ -1186,6 +1186,9 @@ pub fn graph_distance_matrix(
 /// :param int parallel_threshold: The number of nodes to calculate the
 ///     the distance matrix in parallel at. It defaults to 300, but this can
 ///     be tuned to any number of nodes.
+/// :param bool as_undirected: If set to ``True`` the input directed graph
+///     will be treated as if each edge was bidirectional/undirected while
+///     finding the shortest paths. Default: ``False``.
 ///
 /// :returns: The average shortest path length
 /// :rtype: float
