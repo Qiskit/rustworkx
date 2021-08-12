@@ -19,3 +19,8 @@ features:
         print(mapping)
       except StopIteration:
         pass
+  - |
+    Added a new kwarg, ``call_limit`` to :func:`retworkx.is_isomorphic` and
+    :func:`retworkx.is_subgraph_isomorphic` which is used to set an upper
+    bound on the number of states that VF2 algorithm visits while searching for a
+    solution. If it exceeds this limit, the algorithm will stop and return false.
