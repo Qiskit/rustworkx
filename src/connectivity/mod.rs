@@ -341,11 +341,7 @@ pub fn digraph_adjacency_matrix(
     null_value: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = if null_value != 0.0 {
-        Array2::<f64>::from_elem((n, n), null_value)
-    } else {
-        Array2::<f64>::zeros((n, n))
-    };
+    let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
