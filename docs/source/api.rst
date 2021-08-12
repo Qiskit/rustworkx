@@ -51,6 +51,7 @@ Traversal
    retworkx.descendants
    retworkx.ancestors
    retworkx.collect_runs
+   retworkx.collect_bicolor_runs
 
 .. _dag-algorithms:
 
@@ -62,6 +63,8 @@ DAG Algorithms
 
    retworkx.dag_longest_path
    retworkx.dag_longest_path_length
+   retworkx.dag_weighted_longest_path
+   retworkx.dag_weighted_longest_path_length
    retworkx.is_directed_acyclic_graph
    retworkx.layers
 
@@ -131,6 +134,7 @@ Other Algorithm Functions
    retworkx.core_number
    retworkx.graph_greedy_color
    retworkx.digraph_union
+   retworkx.metric_closure
 
 Generators
 ==========

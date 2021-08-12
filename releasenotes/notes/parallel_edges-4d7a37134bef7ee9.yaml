@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new method, :meth:`~retworkx.PyDiGraph.has_parallel_edges`, to the
+    :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph`
+    (:meth:`~retworkx.PyGraph.has_parallel_edges`) classes. This method returns
+    ``True`` if there are parallel edges in the graph and ``False`` otherwise.
