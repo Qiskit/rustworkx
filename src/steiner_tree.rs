@@ -227,39 +227,38 @@ pub fn steiner_tree(
         out_graph.graph.remove_edge(edge.id());
     }
     // Deduplicate potential duplicate edges
-    deduplicate_edges(py, graph, &mut out_graph, &weight_fn)?;
+    deduplicate_edges(py, &mut out_graph, &weight_fn)?;
     Ok(out_graph)
 }
 
 fn deduplicate_edges(
     py: Python,
-    graph: &graph::PyGraph,
     out_graph: &mut graph::PyGraph,
     weight_fn: &PyObject,
 ) -> PyResult<()> {
-    if graph.multigraph {
+    if out_graph.multigraph {
         // Find all edges between nodes
         let mut duplicate_map: HashMap<
             [NodeIndex; 2],
-            Vec<(EdgeIndex, &PyObject)>,
+            Vec<(EdgeIndex, PyObject)>,
         > = HashMap::new();
-        for edge in graph.graph.edge_references() {
+        for edge in out_graph.graph.edge_references() {
             if duplicate_map.contains_key(&[edge.source(), edge.target()]) {
                 duplicate_map
                     .get_mut(&[edge.source(), edge.target()])
                     .unwrap()
-                    .push((edge.id(), edge.weight()));
+                    .push((edge.id(), edge.weight().clone_ref(py)));
             } else if duplicate_map
                 .contains_key(&[edge.target(), edge.source()])
             {
                 duplicate_map
                     .get_mut(&[edge.target(), edge.source()])
                     .unwrap()
-                    .push((edge.id(), edge.weight()));
+                    .push((edge.id(), edge.weight().clone_ref(py)));
             } else {
                 duplicate_map.insert(
                     [edge.source(), edge.target()],
-                    vec![(edge.id(), edge.weight())],
+                    vec![(edge.id(), edge.weight().clone_ref(py))],
                 );
             }
         }
@@ -268,7 +267,7 @@ fn deduplicate_edges(
             let mut edges: Vec<(EdgeIndex, f64)> =
                 Vec::with_capacity(edges_raw.len());
             for edge in edges_raw {
-                let res = weight_fn.call1(py, (edge.1,))?;
+                let res = weight_fn.call1(py, (&edge.1,))?;
                 let raw = res.to_object(py);
                 let weight = raw.extract(py)?;
                 edges.push((edge.0, weight));
