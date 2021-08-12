@@ -323,23 +323,39 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     for all edges.
 /// :param float default_weight: If ``weight_fn`` is not used this can be
 ///     optionally used to specify a default weight to use for all edges.
+/// :param float null_value: An optional float that will treated as a null
+///     value. If any element in the input matrix is this value it will be
+///     treated as not an edge. By default this is ``0.0``.
 ///
 ///  :return: The adjacency matrix for the input dag as a numpy array
 ///  :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0)")]
+#[pyfunction(default_weight = "1.0", null_value = "0.0")]
+#[pyo3(
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    null_value: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array2::<f64>::zeros((n, n));
+    let mut matrix = if null_value != 0.0 {
+        Array2::<f64>::from_elem((n, n), null_value)
+    } else {
+        Array2::<f64>::zeros((n, n))
+    };
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
-        matrix[[i, j]] += edge_weight;
+        if matrix[[i, j]] == null_value
+            || (null_value.is_nan() && matrix[[i, j]].is_nan())
+        {
+            matrix[[i, j]] = edge_weight;
+        } else {
+            matrix[[i, j]] += edge_weight;
+        }
     }
     Ok(matrix.into_pyarray(py).into())
 }
@@ -366,24 +382,41 @@ pub fn digraph_adjacency_matrix(
 ///     for all edges.
 /// :param float default_weight: If ``weight_fn`` is not used this can be
 ///     optionally used to specify a default weight to use for all edges.
+/// :param float null_value: An optional float that will treated as a null
+///     value. If any element in the input matrix is this value it will be
+///     treated as not an edge. By default this is ``0.0``.///
 ///
 /// :return: The adjacency matrix for the input dag as a numpy array
 /// :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0)")]
+#[pyfunction(default_weight = "1.0", null_value = "0.0")]
+#[pyo3(
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    null_value: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array2::<f64>::zeros((n, n));
+    let mut matrix = if null_value != 0.0 {
+        Array2::<f64>::from_elem((n, n), null_value)
+    } else {
+        Array2::<f64>::zeros((n, n))
+    };
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
-        matrix[[i, j]] += edge_weight;
-        matrix[[j, i]] += edge_weight;
+        if matrix[[i, j]] == null_value
+            || (null_value.is_nan() && matrix[[i, j]].is_nan())
+        {
+            matrix[[i, j]] = edge_weight;
+            matrix[[j, i]] = edge_weight;
+        } else {
+            matrix[[i, j]] += edge_weight;
+            matrix[[j, i]] += edge_weight;
+        }
     }
     Ok(matrix.into_pyarray(py).into())
 }

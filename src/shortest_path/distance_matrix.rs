@@ -22,9 +22,14 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     parallel_threshold: usize,
     as_undirected: bool,
+    null_value: f64,
 ) -> Array2<f64> {
     let n = graph.node_count();
-    let mut matrix = Array2::<f64>::zeros((n, n));
+    let mut matrix = if null_value == 0.0 {
+        Array2::<f64>::zeros((n, n))
+    } else {
+        Array2::<f64>::from_elem((n, n), null_value)
+    };
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
         let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
         let start_index = NodeIndex::new(index);
@@ -39,7 +44,9 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
                 if !seen.contains_key(&v) {
                     seen.insert(v, level);
                     found.push(v);
-                    row[[v.index()]] = level as f64;
+                    if level > 0 {
+                        row[[v.index()]] = level as f64;
+                    }
                 }
             }
             if seen.len() == n {

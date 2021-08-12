@@ -12,7 +12,7 @@
 
 import unittest
 
-import numpy
+import numpy as np
 
 import retworkx
 
@@ -25,7 +25,7 @@ class TestDistanceMatrix(unittest.TestCase):
             [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
         )
         dist = retworkx.graph_distance_matrix(graph)
-        expected = numpy.array(
+        expected = np.array(
             [
                 [0.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0],
                 [1.0, 0.0, 1.0, 2.0, 3.0, 3.0, 2.0],
@@ -36,7 +36,7 @@ class TestDistanceMatrix(unittest.TestCase):
                 [1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 0.0],
             ]
         )
-        self.assertTrue(numpy.array_equal(dist, expected))
+        self.assertTrue(np.array_equal(dist, expected))
 
     def test_graph_distance_matrix_parallel(self):
         graph = retworkx.PyGraph()
@@ -45,7 +45,7 @@ class TestDistanceMatrix(unittest.TestCase):
             [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
         )
         dist = retworkx.graph_distance_matrix(graph, parallel_threshold=5)
-        expected = numpy.array(
+        expected = np.array(
             [
                 [0.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0],
                 [1.0, 0.0, 1.0, 2.0, 3.0, 3.0, 2.0],
@@ -56,4 +56,46 @@ class TestDistanceMatrix(unittest.TestCase):
                 [1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 0.0],
             ]
         )
-        self.assertTrue(numpy.array_equal(dist, expected))
+        self.assertTrue(np.array_equal(dist, expected))
+
+    def test_graph_distance_matrix_non_zero_null(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(7)))
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
+        dist = retworkx.graph_distance_matrix(graph, null_value=np.inf)
+        expected = np.array(
+            [
+                [np.inf, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0],
+                [1.0, np.inf, 1.0, 2.0, 3.0, 3.0, 2.0],
+                [2.0, 1.0, np.inf, 1.0, 2.0, 3.0, 3.0],
+                [3.0, 2.0, 1.0, np.inf, 1.0, 2.0, 3.0],
+                [3.0, 3.0, 2.0, 1.0, np.inf, 1.0, 2.0],
+                [2.0, 3.0, 3.0, 2.0, 1.0, np.inf, 1.0],
+                [1.0, 2.0, 3.0, 3.0, 2.0, 1.0, np.inf],
+            ]
+        )
+        self.assertTrue(np.array_equal(dist, expected))
+
+    def test_graph_distance_matrix_parallel_non_zero_null(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(7)))
+        graph.add_edges_from_no_data(
+            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+        )
+        dist = retworkx.graph_distance_matrix(
+            graph, parallel_threshold=5, null_value=np.inf
+        )
+        expected = np.array(
+            [
+                [np.inf, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0],
+                [1.0, np.inf, 1.0, 2.0, 3.0, 3.0, 2.0],
+                [2.0, 1.0, np.inf, 1.0, 2.0, 3.0, 3.0],
+                [3.0, 2.0, 1.0, np.inf, 1.0, 2.0, 3.0],
+                [3.0, 3.0, 2.0, 1.0, np.inf, 1.0, 2.0],
+                [2.0, 3.0, 3.0, 2.0, 1.0, np.inf, 1.0],
+                [1.0, 2.0, 3.0, 3.0, 2.0, 1.0, np.inf],
+            ]
+        )
+        self.assertTrue(np.array_equal(dist, expected))

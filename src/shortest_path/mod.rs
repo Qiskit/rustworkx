@@ -1022,23 +1022,32 @@ pub fn graph_num_shortest_paths_unweighted(
 /// :param bool as_undirected: If set to ``True`` the input directed graph
 ///     will be treat as if each edge was bidirectional/undirected in the
 ///     output distance matrix.
+/// :param float null_value: An optional float that will treated as a null
+///     value. This element will be the default in the matrix and represents
+///     the absense of an edge in the graph. By default this is ``0.0``.
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "300", as_undirected = "false")]
+#[pyfunction(
+    parallel_threshold = "300",
+    as_undirected = "false",
+    null_value = "0.0"
+)]
 #[pyo3(
-    text_signature = "(graph, /, parallel_threshold=300, as_undirected=False)"
+    text_signature = "(graph, /, parallel_threshold=300, as_undirected=False, null_value=0.0)"
 )]
 pub fn digraph_distance_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
     parallel_threshold: usize,
     as_undirected: bool,
+    null_value: f64,
 ) -> PyObject {
     let matrix = distance_matrix::compute_distance_matrix(
         &graph.graph,
         parallel_threshold,
         as_undirected,
+        null_value,
     );
     matrix.into_pyarray(py).into()
 }
@@ -1058,20 +1067,25 @@ pub fn digraph_distance_matrix(
 /// :param int parallel_threshold: The number of nodes to calculate the
 ///     the distance matrix in parallel at. It defaults to 300, but this can
 ///     be tuned
+/// :param float null_value: An optional float that will treated as a null
+///     value. This element will be the default in the matrix and represents
+///     the absense of an edge in the graph. By default this is ``0.0``.///
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "300")]
-#[pyo3(text_signature = "(graph, /, parallel_threshold=300)")]
+#[pyfunction(parallel_threshold = "300", null_value = "0.0")]
+#[pyo3(text_signature = "(graph, /, parallel_threshold=300, null_value=0.0)")]
 pub fn graph_distance_matrix(
     py: Python,
     graph: &graph::PyGraph,
     parallel_threshold: usize,
+    null_value: f64,
 ) -> PyObject {
     let matrix = distance_matrix::compute_distance_matrix(
         &graph.graph,
         parallel_threshold,
         true,
+        null_value,
     );
     matrix.into_pyarray(py).into()
 }
