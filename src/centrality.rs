@@ -138,7 +138,7 @@ fn _accumulate_basic(
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
         let coeff = (1.0 + delta[iw]) / (path_calc.sigma[&iw] as f64);
-        let p_w = path_calc.predecessors.get_mut(&w).unwrap();
+        let p_w = path_calc.predecessors.get_mut(w).unwrap();
         for v in p_w {
             let iv = (*v).index();
             delta[iv] += (path_calc.sigma[&iv] as f64) * coeff;
@@ -165,7 +165,7 @@ fn _accumulate_endpoints(
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
         let coeff = (1.0 + delta[iw]) / (path_calc.sigma[&iw] as f64);
-        let p_w = path_calc.predecessors.get_mut(&w).unwrap();
+        let p_w = path_calc.predecessors.get_mut(w).unwrap();
         for v in p_w {
             let iv = (*v).index();
             delta[iv] += (path_calc.sigma[&iv] as f64) * coeff;
