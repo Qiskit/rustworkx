@@ -181,8 +181,8 @@ pub fn steiner_tree(
         edge_list.push(edge);
     }
     edge_list.par_sort_unstable_by(|a, b| {
-        let weight_a = a.distance;
-        let weight_b = b.distance;
+        let weight_a = (a.distance, a.source, a.target);
+        let weight_b = (b.distance, b.source, b.target);
         weight_a.partial_cmp(&weight_b).unwrap_or(Ordering::Less)
     });
     let mut mst_edges: Vec<MetricClosureEdge> = Vec::new();
