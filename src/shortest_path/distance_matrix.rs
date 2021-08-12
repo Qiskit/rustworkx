@@ -44,9 +44,7 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
                 if !seen.contains_key(&v) {
                     seen.insert(v, level);
                     found.push(v);
-                    if level > 0 {
-                        row[[v.index()]] = level as f64;
-                    }
+                    row[[v.index()]] = level as f64;
                 }
             }
             if seen.len() == n {
