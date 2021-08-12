@@ -15,7 +15,6 @@ import unittest
 import retworkx
 
 
-
 class TestCentralityGraph(unittest.TestCase):
     def setUp(self):
         self.graph = retworkx.PyGraph()
@@ -32,18 +31,30 @@ class TestCentralityGraph(unittest.TestCase):
 
     def test_betweenness_centrality(self):
         betweenness = retworkx.graph_betweenness_centrality(self.graph)
-        expected = {0: 0.0, 1: 0.6666666666666666, 2: 0.6666666666666666, 3: 0.0}
+        expected = {
+            0: 0.0,
+            1: 0.6666666666666666,
+            2: 0.6666666666666666,
+            3: 0.0,
+        }
         self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_endpoints(self):
         betweenness = retworkx.graph_betweenness_centrality(
-            self.graph, endpoints=True)
-        expected = {0: 0.5, 1: 0.8333333333333333, 2: 0.8333333333333333, 3: 0.5}
+            self.graph, endpoints=True
+        )
+        expected = {
+            0: 0.5,
+            1: 0.8333333333333333,
+            2: 0.8333333333333333,
+            3: 0.5,
+        }
         self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_unnormalized(self):
         betweenness = retworkx.graph_betweenness_centrality(
-            self.graph, endpoints=False, normalized=False)
+            self.graph, endpoints=False, normalized=False
+        )
         expected = {0: 0.0, 1: 2.0, 2: 2.0, 3: 0.0}
         self.assertEqual(expected, betweenness)
 
@@ -66,17 +77,29 @@ class TestCentralityGraphDeletedNode(unittest.TestCase):
 
     def test_betweenness_centrality(self):
         betweenness = retworkx.graph_betweenness_centrality(self.graph)
-        expected = {0: 0.0, 1: 0.6666666666666666, 2: 0.6666666666666666, 4: 0.0}
+        expected = {
+            0: 0.0,
+            1: 0.6666666666666666,
+            2: 0.6666666666666666,
+            4: 0.0,
+        }
         self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_endpoints(self):
         betweenness = retworkx.graph_betweenness_centrality(
-            self.graph, endpoints=True)
-        expected = {0: 0.5, 1: 0.8333333333333333, 2: 0.8333333333333333, 4: 0.5}
+            self.graph, endpoints=True
+        )
+        expected = {
+            0: 0.5,
+            1: 0.8333333333333333,
+            2: 0.8333333333333333,
+            4: 0.5,
+        }
         self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_unnormalized(self):
         betweenness = retworkx.graph_betweenness_centrality(
-            self.graph, endpoints=False, normalized=False)
+            self.graph, endpoints=False, normalized=False
+        )
         expected = {0: 0.0, 1: 2.0, 2: 2.0, 4: 0.0}
         self.assertEqual(expected, betweenness)
