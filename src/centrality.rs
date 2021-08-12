@@ -233,9 +233,9 @@ where
     }
     verts_sorted_by_distance.reverse(); // will be effectively popping from the stack
     ShortestPathData {
-        verts_sorted_by_distance: verts_sorted_by_distance,
-        predecessors: predecessors,
-        sigma: sigma,
+        verts_sorted_by_distance,
+        predecessors,
+        sigma,
     }
 }
 
