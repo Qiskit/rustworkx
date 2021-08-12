@@ -2130,16 +2130,21 @@ impl PyDiGraph {
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
     ///     a new :class:`~retworkx.PyDiGraph` object from. It must be a 2
     ///     dimensional array and be a ``float``/``np.float64`` data type.
-    ///
+    /// :param float null_value: An optional float that will treated as a null
+    ///     value. If any element in the input matrix is this value it will be
+    ///     treated as not an edge. By default this is ``0.0``
     ///
     /// :returns: A new graph object generated from the adjacency matrix
     /// :rtype: PyDiGraph
     #[staticmethod]
+    #[args(null_value = "0.0")]
     #[pyo3(text_signature = "(matrix, /)")]
     pub fn from_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
+        null_value: f64,
     ) -> PyDiGraph {
+        let null_nan = null_value.is_nan();
         let array = matrix.as_array();
         let shape = array.shape();
         let mut out_graph = StableDiGraph::<PyObject, PyObject>::new();
@@ -2152,7 +2157,7 @@ impl PyDiGraph {
             .for_each(|(index, row)| {
                 let source_index = NodeIndex::new(index);
                 for target_index in 0..row.len() {
-                    if row[[target_index]] > 0.0 {
+                    if row[[target_index]] != null_value {
                         out_graph.add_edge(
                             source_index,
                             NodeIndex::new(target_index),

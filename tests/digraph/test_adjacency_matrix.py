@@ -144,3 +144,30 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
         adj_matrix = retworkx.digraph_adjacency_matrix(graph, lambda x: x)
         self.assertTrue(np.array_equal(adj_matrix, input_matrix))
+
+    def test_non_zero_null(self):
+        input_matrix = np.array(
+            [[np.Inf, 1, np.Inf], [1, np.Inf, 1], [np.Inf, 1, np.Inf]],
+            dtype=np.float64,
+        )
+        graph = retworkx.PyDiGraph.from_adjacency_matrix(
+            input_matrix, null_value=np.Inf
+        )
+        adj_matrix = retworkx.adjacency_matrix(graph, float)
+        expected_matrix = np.array(
+            [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]],
+            dtype=np.float64,
+        )
+        self.assertTrue(np.array_equal(adj_matrix, expected_matrix))
+
+    def test_negative_weight(self):
+        input_matrix = np.array(
+            [[0, 1, 0], [-1, 0, -1], [0, 1, 0]], dtype=float
+        )
+        graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
+        adj_matrix = retworkx.digraph_adjacency_matrix(graph, lambda x: x)
+        self.assertTrue(np.array_equal(adj_matrix, input_matrix))
+        self.assertEqual(
+            [(0, 1, 1), (1, 0, -1), (1, 2, -1), (2, 1, 1)],
+            graph.weighted_edge_list(),
+        )
