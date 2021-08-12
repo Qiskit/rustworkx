@@ -181,3 +181,17 @@ class TestGraphAdjacencyMatrix(unittest.TestCase):
         adj_matrix = retworkx.graph_adjacency_matrix(graph, lambda x: x)
         self.assertTrue(np.array_equal(adj_matrix, input_matrix))
         self.assertEqual([(0, 1, -1), (1, 2, -1)], graph.weighted_edge_list())
+
+    def test_nan_null(self):
+        input_matrix = np.array(
+            [[np.nan, 1, np.nan], [1, np.nan, 1], [np.nan, 1, np.nan]],
+            dtype=np.float64,
+        )
+        graph = retworkx.PyGraph.from_adjacency_matrix(
+            input_matrix, null_value=np.nan
+        )
+        adj_matrix = retworkx.adjacency_matrix(graph, float)
+        expected_matrix = np.array(
+            [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.float64
+        )
+        self.assertTrue(np.array_equal(adj_matrix, expected_matrix))

@@ -2144,7 +2144,6 @@ impl PyDiGraph {
         matrix: PyReadonlyArray2<'p, f64>,
         null_value: f64,
     ) -> PyDiGraph {
-        let null_nan = null_value.is_nan();
         let array = matrix.as_array();
         let shape = array.shape();
         let mut out_graph = StableDiGraph::<PyObject, PyObject>::new();
@@ -2157,7 +2156,15 @@ impl PyDiGraph {
             .for_each(|(index, row)| {
                 let source_index = NodeIndex::new(index);
                 for target_index in 0..row.len() {
-                    if row[[target_index]] != null_value {
+                    if null_value.is_nan() {
+                        if !row[[target_index]].is_nan() {
+                            out_graph.add_edge(
+                                source_index,
+                                NodeIndex::new(target_index),
+                                row[[target_index]].to_object(py),
+                            );
+                        }
+                    } else if row[[target_index]] != null_value {
                         out_graph.add_edge(
                             source_index,
                             NodeIndex::new(target_index),

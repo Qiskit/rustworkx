@@ -1407,7 +1407,15 @@ impl PyGraph {
                     if target_index < index {
                         continue;
                     }
-                    if row[[target_index]] != null_value {
+                    if null_value.is_nan() {
+                        if !row[[target_index]].is_nan() {
+                            out_graph.add_edge(
+                                source_index,
+                                NodeIndex::new(target_index),
+                                row[[target_index]].to_object(py),
+                            );
+                        }
+                    } else if row[[target_index]] != null_value {
                         out_graph.add_edge(
                             source_index,
                             NodeIndex::new(target_index),
