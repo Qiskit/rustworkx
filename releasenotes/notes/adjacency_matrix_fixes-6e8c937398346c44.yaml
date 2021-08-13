@@ -4,7 +4,7 @@ features:
     Added a new kwarg, ``null_value`` to the
     :meth:`retworkx.PyDiGraph.from_adjacency_matrix` and
     :meth:`retworkx.PyGraph.from_adjacency_matrix` which is used to optionally
-    change the null value in the matrix treated as the absense of an edge. By
+    change the null value in the matrix treated as the absence of an edge. By
     default ``0.0`` is used. For example:
 
     .. jupyter-execute::
