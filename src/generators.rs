@@ -25,7 +25,7 @@ use pyo3::Python;
 use super::digraph;
 use super::graph;
 
-fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
+pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
 where
     I: IntoIterator + Clone,
 {

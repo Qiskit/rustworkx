@@ -16,9 +16,9 @@ import unittest
 import retworkx
 
 
-class TestMetricClosure(unittest.TestCase):
+class TestSteinerTree(unittest.TestCase):
     def setUp(self):
-        self.graph = retworkx.PyGraph()
+        self.graph = retworkx.PyGraph(multigraph=False)
         self.graph.add_node(None)
         self.graph.extend_from_weighted_edge_list(
             [
@@ -112,3 +112,79 @@ class TestMetricClosure(unittest.TestCase):
         graph = retworkx.PyGraph()
         closure = retworkx.metric_closure(graph, weight_fn=float)
         self.assertEqual([], closure.weighted_edge_list())
+
+    def test_steiner_graph(self):
+        steiner_tree = retworkx.steiner_tree(
+            self.graph, [1, 2, 3, 4, 5], weight_fn=float
+        )
+        expected_steiner_tree = [
+            (1, 2, 10),
+            (2, 3, 10),
+            (2, 7, 1),
+            (3, 4, 10),
+            (7, 5, 1),
+        ]
+        steiner_tree_edge_list = steiner_tree.weighted_edge_list()
+        for edge in expected_steiner_tree:
+            self.assertIn(edge, steiner_tree_edge_list)
+
+    def test_steiner_graph_multigraph(self):
+        edge_list = [
+            (1, 2, 1),
+            (2, 3, 999),
+            (2, 3, 1),
+            (3, 4, 1),
+            (3, 5, 1),
+        ]
+        graph = retworkx.PyGraph()
+        graph.extend_from_weighted_edge_list(edge_list)
+        graph.remove_node(0)
+        terminal_nodes = [2, 4, 5]
+        tree = retworkx.steiner_tree(graph, terminal_nodes, weight_fn=float)
+        expected_edges = [
+            (2, 3, 1),
+            (3, 4, 1),
+            (3, 5, 1),
+        ]
+        steiner_tree_edge_list = tree.weighted_edge_list()
+        for edge in expected_edges:
+            self.assertIn(edge, steiner_tree_edge_list)
+
+    def test_not_connected_steiner_tree(self):
+        self.graph.add_node(None)
+        with self.assertRaises(ValueError):
+            retworkx.steiner_tree(self.graph, [0, 1, 2], weight_fn=float)
+
+    def test_steiner_tree_empty_graph(self):
+        graph = retworkx.PyGraph()
+        tree = retworkx.steiner_tree(graph, [], weight_fn=float)
+        self.assertEqual([], tree.weighted_edge_list())
+
+    def test_equal_distance_graph(self):
+        n = 3
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(range(n + 5))
+        graph.add_edges_from(
+            [
+                (n, n + 1, 0.5),
+                (n, n + 2, 0.5),
+                (n + 1, n + 2, 0.5),
+                (n, n + 3, 0.5),
+                (n + 1, n + 4, 0.5),
+            ]
+        )
+        graph.add_edges_from([(i, n + 2, 2) for i in range(n)])
+        terminals = list(range(5)) + [n + 3, n + 4]
+        tree = retworkx.steiner_tree(graph, terminals, weight_fn=float)
+        # Assert no cycle
+        self.assertEqual(retworkx.cycle_basis(tree), [])
+        expected_edges = [
+            (3, 4, 0.5),
+            (3, 5, 0.5),
+            (3, 6, 0.5),
+            (4, 7, 0.5),
+            (0, 5, 2),
+            (1, 5, 2),
+            (2, 5, 2),
+        ]
+        self.assertEqual(tree.weighted_edge_list(), expected_edges)
