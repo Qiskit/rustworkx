@@ -78,6 +78,7 @@ Tree
 
    retworkx.minimum_spanning_edges
    retworkx.minimum_spanning_tree
+   retworkx.steiner_tree
 
 .. _isomorphism:
 
@@ -134,7 +135,6 @@ Other Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.digraph_union
    retworkx.metric_closure
-   retworkx.steiner_tree
 
 Generators
 ==========
