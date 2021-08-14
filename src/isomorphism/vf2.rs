@@ -19,7 +19,7 @@ use std::marker;
 
 use hashbrown::HashMap;
 
-use super::NodesRemoved;
+use crate::NodesRemoved;
 
 use pyo3::prelude::*;
 

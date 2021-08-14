@@ -399,6 +399,29 @@ impl PyGraph {
         self.multigraph
     }
 
+    /// Detect if the graph has parallel edges or not
+    ///
+    /// :returns: ``True`` if the graph has parallel edges, otherwise ``False``
+    /// :rtype: bool
+    #[pyo3(text_signature = "(self)")]
+    fn has_parallel_edges(&self) -> bool {
+        if !self.multigraph {
+            return false;
+        }
+        let mut edges: HashSet<[NodeIndex; 2]> =
+            HashSet::with_capacity(2 * self.graph.edge_count());
+        for edge in self.graph.edge_references() {
+            let endpoints = [edge.source(), edge.target()];
+            let endpoints_rev = [edge.target(), edge.source()];
+            if edges.contains(&endpoints) || edges.contains(&endpoints_rev) {
+                return true;
+            }
+            edges.insert(endpoints);
+            edges.insert(endpoints_rev);
+        }
+        false
+    }
+
     /// Return the number of nodes in the graph
     #[pyo3(text_signature = "(self)")]
     pub fn num_nodes(&self) -> usize {
@@ -1152,6 +1175,9 @@ impl PyGraph {
     ///     there are no comment characters
     /// :param str deliminator: Optional character to use as a deliminator by
     ///     default any whitespace will be used
+    /// :param bool labels: If set to ``True`` the first two separated fields
+    ///     will be treated as string labels uniquely identifying a node
+    ///     instead of node indices.
     ///
     /// For example:
     ///
@@ -1174,16 +1200,21 @@ impl PyGraph {
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
-    #[pyo3(text_signature = "(path, /, comment=None, deliminator=None)")]
+    #[args(labels = "false")]
+    #[pyo3(
+        text_signature = "(path, /, comment=None, deliminator=None, labels=False)"
+    )]
     pub fn read_edge_list(
         py: Python,
         path: &str,
         comment: Option<String>,
         deliminator: Option<String>,
+        labels: bool,
     ) -> PyResult<PyGraph> {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
         let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let mut label_map: HashMap<String, usize> = HashMap::new();
         for line_raw in buf_reader.lines() {
             let line = line_raw?;
             let skip = match &comment {
@@ -1206,12 +1237,38 @@ impl PyGraph {
                 Some(del) => line_no_comments.split(del).collect(),
                 None => line_no_comments.split_whitespace().collect(),
             };
-            let src = pieces[0].parse::<usize>()?;
-            let target = pieces[1].parse::<usize>()?;
-            let max_index = cmp::max(src, target);
-            // Add nodes to graph
-            while max_index >= out_graph.node_count() {
-                out_graph.add_node(py.None());
+            let src: usize;
+            let target: usize;
+            if labels {
+                let src_str = pieces[0];
+                let target_str = pieces[1];
+                src = match label_map.get(src_str) {
+                    Some(index) => *index,
+                    None => {
+                        let index =
+                            out_graph.add_node(src_str.to_object(py)).index();
+                        label_map.insert(src_str.to_string(), index);
+                        index
+                    }
+                };
+                target = match label_map.get(target_str) {
+                    Some(index) => *index,
+                    None => {
+                        let index = out_graph
+                            .add_node(target_str.to_object(py))
+                            .index();
+                        label_map.insert(target_str.to_string(), index);
+                        index
+                    }
+                };
+            } else {
+                src = pieces[0].parse::<usize>()?;
+                target = pieces[1].parse::<usize>()?;
+                let max_index = cmp::max(src, target);
+                // Add nodes to graph
+                while max_index >= out_graph.node_count() {
+                    out_graph.add_node(py.None());
+                }
             }
             // Add edges tp graph
             let weight = if pieces.len() > 2 {
@@ -1321,14 +1378,19 @@ impl PyGraph {
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
     ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
     ///     dimensional array and be a ``float``/``np.float64`` data type.
+    /// :param float null_value: An optional float that will treated as a null
+    ///     value. If any element in the input matrix is this value it will be
+    ///     treated as not an edge. By default this is ``0.0``.
     ///
     /// :returns: A new graph object generated from the adjacency matrix
     /// :rtype: PyGraph
     #[staticmethod]
+    #[args(null_value = "0.0")]
     #[pyo3(text_signature = "(matrix, /)")]
     pub fn from_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
+        null_value: f64,
     ) -> PyGraph {
         let array = matrix.as_array();
         let shape = array.shape();
@@ -1345,7 +1407,15 @@ impl PyGraph {
                     if target_index < index {
                         continue;
                     }
-                    if row[[target_index]] > 0.0 {
+                    if null_value.is_nan() {
+                        if !row[[target_index]].is_nan() {
+                            out_graph.add_edge(
+                                source_index,
+                                NodeIndex::new(target_index),
+                                row[[target_index]].to_object(py),
+                            );
+                        }
+                    } else if row[[target_index]] != null_value {
                         out_graph.add_edge(
                             source_index,
                             NodeIndex::new(target_index),
@@ -1517,6 +1587,64 @@ impl PyGraph {
             node_removed: false,
             multigraph: self.multigraph,
         }
+    }
+
+    /// Return a new PyGraph object for an edge induced subgrapph of this graph
+    ///
+    /// The induced subgraph contains each edge in `edges` and each node
+    /// incident to any of those edges.
+    ///
+    /// :param list edge_list: A list of edge tuples (2-tuples with the source
+    ///     and target node) to generate the subgraph from. In cases of parallel
+    ///     edges for a multigraph all edges between the specified node. In case
+    ///     of an edge specified that doesn't exist in the graph it will be
+    ///     silently ignored.
+    ///
+    /// :returns: The edge subgraph
+    /// :rtype: PyDiGraph
+    ///
+    #[pyo3(text_signature = "(self, edges, /)")]
+    pub fn edge_subgraph(&self, edge_list: Vec<[usize; 2]>) -> PyGraph {
+        // Filter non-existent edges
+        let edges: Vec<[usize; 2]> = edge_list
+            .into_iter()
+            .filter(|x| {
+                let source = NodeIndex::new(x[0]);
+                let target = NodeIndex::new(x[1]);
+                self.graph.find_edge(source, target).is_some()
+            })
+            .collect();
+
+        let nodes: HashSet<NodeIndex> = edges
+            .iter()
+            .map(|x| x.iter())
+            .flatten()
+            .copied()
+            .map(NodeIndex::new)
+            .collect();
+        let mut edge_set: HashSet<[NodeIndex; 2]> =
+            HashSet::with_capacity(edges.len());
+        for edge in edges {
+            let source_index = NodeIndex::new(edge[0]);
+            let target_index = NodeIndex::new(edge[1]);
+            edge_set.insert([source_index, target_index]);
+        }
+        let mut out_graph = self.clone();
+        for node in self
+            .graph
+            .node_indices()
+            .filter(|node| !nodes.contains(node))
+        {
+            out_graph.graph.remove_node(node);
+            out_graph.node_removed = true;
+        }
+        for edge in self.graph.edge_references().filter(|edge| {
+            !edge_set.contains(&[edge.source(), edge.target()])
+                && !edge_set.contains(&[edge.target(), edge.source()])
+        }) {
+            out_graph.graph.remove_edge(edge.id());
+        }
+        out_graph
     }
 
     /// Return a shallow copy of the graph
