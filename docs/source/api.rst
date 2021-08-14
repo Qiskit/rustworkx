@@ -156,6 +156,7 @@ Generators
     retworkx.generators.hexagonal_lattice_graph
     retworkx.generators.directed_hexagonal_lattice_graph
     retworkx.generators.heavy_square_graph
+    retworkx.generators.directed_heavy_square_graph
 
 Random Circuit Functions
 ========================
