@@ -632,11 +632,35 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         self.assertEqual({}, graph.edge_index_map())
 
+    def test_has_parallel_edges(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1])
+        graph.add_edge(0, 1, None)
+        graph.add_edge(0, 1, 0)
+        self.assertTrue(graph.has_parallel_edges())
+
+    def test_has_parallel_edges_no_parallel_edges(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1])
+        graph.add_edge(0, 1, None)
+        self.assertFalse(graph.has_parallel_edges())
+
+    def test_has_parallel_edges_empty(self):
+        graph = retworkx.PyDiGraph()
+        self.assertFalse(graph.has_parallel_edges())
+
 
 class TestEdgesMultigraphFalse(unittest.TestCase):
     def test_multigraph_attr(self):
         graph = retworkx.PyDiGraph(multigraph=False)
         self.assertFalse(graph.multigraph)
+
+    def test_has_parallel_edges(self):
+        graph = retworkx.PyDiGraph(multigraph=False)
+        graph.add_nodes_from([0, 1])
+        graph.add_edge(0, 1, None)
+        graph.add_edge(0, 1, 0)
+        self.assertFalse(graph.has_parallel_edges())
 
     def test_get_edge_data(self):
         graph = retworkx.PyDiGraph(multigraph=False)
