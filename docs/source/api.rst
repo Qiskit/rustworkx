@@ -36,6 +36,16 @@ Shortest Paths
    retworkx.k_shortest_path_lengths
    retworkx.num_shortest_paths_unweighted
 
+.. _centrality:
+
+Centrality
+--------------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.graph_betweenness_centrality
+
 .. _traversal:
 
 Traversal
@@ -231,6 +241,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_spiral_layout
    retworkx.digraph_spring_layout
    retworkx.digraph_num_shortest_paths_unweighted
+   retworkx.digraph_betweenness_centrality
 
 
 .. _api-functions-pygraph:
@@ -270,6 +281,7 @@ typed API based on the data type.
    retworkx.graph_spiral_layout
    retworkx.graph_spring_layout
    retworkx.graph_num_shortest_paths_unweighted
+   retworkx.graph_betweenness_centrality
 
 Exceptions
 ==========

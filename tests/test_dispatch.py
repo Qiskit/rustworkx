@@ -103,6 +103,10 @@ class TestDispatchPyGraph(unittest.TestCase):
             else:
                 retworkx.is_isomorphic(self.graph, retworkx.PyGraph())
 
+    def test_betweenness_centrality(self):
+        res = retworkx.betweenness_centrality(self.graph)
+        self.assertIsInstance(res, dict)
+
 
 class TestDispatchPyDiGraph(TestDispatchPyGraph):
 
