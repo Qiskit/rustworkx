@@ -977,16 +977,12 @@ macro_rules! vf2_mapping_impl {
             ) -> Result<(), PyTraverseError> {
                 for j in 0..2 {
                     for node in
-                        self.vf2.st[j].graph.node_indices().map(|node| {
-                            self.vf2.st[j].graph.node_weight(node).unwrap()
-                        })
+                        self.vf2.st[j].graph.node_weights()
                     {
                         visit.call(node)?;
                     }
                     for edge in
-                        self.vf2.st[j].graph.edge_indices().map(|edge| {
-                            self.vf2.st[j].graph.edge_weight(edge).unwrap()
-                        })
+                        self.vf2.st[j].graph.edge_weights()
                     {
                         visit.call(edge)?;
                     }
