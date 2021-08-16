@@ -52,12 +52,12 @@ use pyo3::Python;
 ///     default to matching the nodes in order specified by their ids.
 /// :param int call_limit: An optional bound on the number of states that VF2 algorithm
 ///     visits while searching for a solution. If it exceeds this limit, the algorithm
-///     will stop and return ``False``. Default: ``None``.
+///     will stop and return ``False``.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction(id_order = "true", call_limit = "None")]
+#[pyfunction(id_order = "true")]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, call_limit=None)"
@@ -115,12 +115,12 @@ fn digraph_is_isomorphic(
 ///     matching order based in [VF2]_ paper.
 /// :param int call_limit: An optional bound on the number of states that VF2 algorithm
 ///     visits while searching for a solution. If it exceeds this limit, the algorithm
-///     will stop and return ``False``. Default: ``None``.
+///     will stop and return ``False``.
 ///
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction(id_order = "true", call_limit = "None")]
+#[pyfunction(id_order = "true")]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, call_limit=None)"
@@ -185,12 +185,12 @@ fn graph_is_isomorphic(
 ///     Default: ``True``.
 /// :param int call_limit: An optional bound on the number of states that VF2 algorithm
 ///     visits while searching for a solution. If it exceeds this limit, the algorithm
-///     will stop and return ``False``. Default: ``None``.
+///     will stop and return ``False``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false", induced = "true", call_limit = "None")]
+#[pyfunction(id_order = "false", induced = "true")]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=False, induced=True, call_limit=None)"
@@ -256,12 +256,12 @@ fn digraph_is_subgraph_isomorphic(
 ///     Default: ``True``.
 /// :param int call_limit: An optional bound on the number of states that VF2 algorithm
 ///     visits while searching for a solution. If it exceeds this limit, the algorithm
-///     will stop and return ``False``. Default: ``None``.
+///     will stop and return ``False``.
 ///
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false", induced = "true", call_limit = "None")]
+#[pyfunction(id_order = "false", induced = "true")]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=False, induced=True, call_limit=None)"
@@ -327,7 +327,7 @@ fn graph_is_subgraph_isomorphic(
 ///     Default: ``True``.
 /// :param int call_limit: An optional bound on the number of states that VF2 algorithm
 ///     visits while searching for a solution. If it exceeds this limit, the algorithm
-///     will stop. Default: ``None``.
+///     will stop.
 ///
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
@@ -336,7 +336,6 @@ fn graph_is_subgraph_isomorphic(
     id_order = "true",
     subgraph = "false",
     induced = "true",
-    call_limit = "None"
 )]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
@@ -418,7 +417,6 @@ fn digraph_vf2_mapping(
     id_order = "true",
     subgraph = "false",
     induced = "true",
-    call_limit = "None"
 )]
 #[pyo3(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,

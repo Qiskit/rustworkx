@@ -757,7 +757,7 @@ def is_isomorphic(
         default to matching the nodes in order specified by their ids.
     :param int call_limit: An optional bound on the number of states that VF2
         algorithm visits while searching for a solution. If it exceeds this limit,
-        the algorithm will stop and return ``False``. Default: ``None``.
+        the algorithm will stop and return ``False``.
 
     :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are
         not.
@@ -894,7 +894,7 @@ def is_subgraph_isomorphic(
         Default: ``True``.
     :param int call_limit: An optional bound on the number of states that VF2
         algorithm visits while searching for a solution. If it exceeds this limit,
-        the algorithm will stop and return ``False``. Default: ``None``.
+        the algorithm will stop and return ``False``.
 
     :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
         , ``False`` if there is not.
