@@ -11,6 +11,7 @@
 // under the License.
 
 #![allow(clippy::float_cmp)]
+#![allow(clippy::too_many_arguments)]
 
 mod vf2;
 
