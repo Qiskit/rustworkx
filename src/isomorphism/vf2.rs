@@ -338,7 +338,7 @@ where
 
 trait SemanticMatcher<T> {
     fn enabled(&self) -> bool;
-    fn eq(&mut self, _: Python, _: &T, _: &T) -> PyResult<bool>;
+    fn eq(&self, _: Python, _: &T, _: &T) -> PyResult<bool>;
 }
 
 impl SemanticMatcher<PyObject> for Option<PyObject> {
@@ -347,8 +347,8 @@ impl SemanticMatcher<PyObject> for Option<PyObject> {
         self.is_some()
     }
     #[inline]
-    fn eq(&mut self, py: Python, a: &PyObject, b: &PyObject) -> PyResult<bool> {
-        let res = self.as_mut().unwrap().call1(py, (a, b))?;
+    fn eq(&self, py: Python, a: &PyObject, b: &PyObject) -> PyResult<bool> {
+        let res = self.as_ref().unwrap().call1(py, (a, b))?;
         res.is_true(py)
     }
 }
@@ -977,14 +977,10 @@ macro_rules! vf2_mapping_impl {
                 visit: PyVisit,
             ) -> Result<(), PyTraverseError> {
                 for j in 0..2 {
-                    for node in
-                        self.vf2.st[j].graph.node_weights()
-                    {
+                    for node in self.vf2.st[j].graph.node_weights() {
                         visit.call(node)?;
                     }
-                    for edge in
-                        self.vf2.st[j].graph.edge_weights()
-                    {
+                    for edge in self.vf2.st[j].graph.edge_weights() {
                         visit.call(edge)?;
                     }
                 }
