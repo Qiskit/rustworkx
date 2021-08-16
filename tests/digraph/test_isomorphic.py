@@ -223,6 +223,62 @@ class TestIsomorphic(unittest.TestCase):
                     )
                 )
 
+    def test_digraph_isomorphic_self_loop(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0])
+        graph.add_edges_from([(0, 0, "a")])
+        self.assertTrue(retworkx.is_isomorphic(graph, graph))
+
+    def test_digraph_non_isomorphic_edge_mismatch_self_loop(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0])
+        graph.add_edges_from([(0, 0, "a")])
+        second_graph = retworkx.PyDiGraph()
+        second_graph.add_nodes_from([0])
+        second_graph.add_edges_from([(0, 0, "b")])
+        self.assertFalse(
+            retworkx.is_isomorphic(
+                graph, second_graph, edge_matcher=lambda x, y: x == y
+            )
+        )
+
+    def test_digraph_non_isomorphic_rule_out_incoming(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1, 2, 3])
+        graph.add_edges_from_no_data([(0, 1), (0, 2), (2, 1)])
+        second_graph = retworkx.PyDiGraph()
+        second_graph.add_nodes_from([0, 1, 2, 3])
+        second_graph.add_edges_from_no_data([(0, 1), (0, 2), (3, 1)])
+        self.assertFalse(
+            retworkx.is_isomorphic(graph, second_graph, id_order=True)
+        )
+
+    def test_digraph_non_isomorphic_rule_ins_outgoing(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1, 2, 3])
+        graph.add_edges_from_no_data([(1, 0), (2, 0), (1, 2)])
+        second_graph = retworkx.PyDiGraph()
+        second_graph.add_nodes_from([0, 1, 2, 3])
+        second_graph.add_edges_from_no_data([(1, 0), (2, 0), (1, 3)])
+        self.assertFalse(
+            retworkx.is_isomorphic(graph, second_graph, id_order=True)
+        )
+
+    def test_digraph_non_isomorphic_rule_ins_incoming(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1, 2, 3])
+        graph.add_edges_from_no_data([(1, 0), (2, 0), (3, 1)])
+        second_graph = retworkx.PyDiGraph()
+        second_graph.add_nodes_from([0, 1, 2, 3])
+        second_graph.add_edges_from_no_data([(1, 0), (2, 0), (3, 1)])
+        self.assertFalse(
+            retworkx.is_isomorphic(graph, second_graph, id_order=True)
+        )
+
+    def test_digraph_isomorphic_insufficient_call_limit(self):
+        graph = retworkx.generators.directed_path_graph(5)
+        self.assertFalse(retworkx.is_isomorphic(graph, graph, call_limit=2))
+
     def test_digraph_vf2_mapping_identical(self):
         graph = retworkx.generators.directed_grid_graph(2, 2)
         second_graph = retworkx.generators.directed_grid_graph(2, 2)

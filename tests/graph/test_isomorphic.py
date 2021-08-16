@@ -229,6 +229,16 @@ class TestIsomorphic(unittest.TestCase):
                     retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
                 )
 
+    def test_graph_isomorphic_self_loop(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from([0, 1])
+        graph.add_edges_from_no_data([(0, 0), (0, 1)])
+        self.assertTrue(retworkx.is_isomorphic(graph, graph))
+
+    def test_graph_isomorphic_insufficient_call_limit(self):
+        graph = retworkx.generators.path_graph(5)
+        self.assertFalse(retworkx.is_isomorphic(graph, graph, call_limit=2))
+
     def test_graph_vf2_mapping_identical(self):
         graph = retworkx.generators.grid_graph(2, 2)
         second_graph = retworkx.generators.grid_graph(2, 2)
