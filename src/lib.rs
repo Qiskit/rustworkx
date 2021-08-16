@@ -166,6 +166,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(digraph_is_subgraph_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(graph_is_subgraph_isomorphic))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_vf2_mapping))?;
+    m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
