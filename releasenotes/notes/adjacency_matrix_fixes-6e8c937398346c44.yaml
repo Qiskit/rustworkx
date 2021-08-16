@@ -1,0 +1,40 @@
+---
+features:
+  - |
+    Added a new kwarg, ``null_value`` to the
+    :meth:`retworkx.PyDiGraph.from_adjacency_matrix` and
+    :meth:`retworkx.PyGraph.from_adjacency_matrix` which is used to optionally
+    change the null value in the matrix treated as the absence of an edge. By
+    default ``0.0`` is used. For example:
+
+    .. jupyter-execute::
+
+      import numpy as np
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      matrix = np.array([[np.nan, 1, 1], [1, np.nan, 1], [1, 1, 0]], dtype=np.float64)
+      graph = retworkx.PyDiGraph.from_adjacency_matrix(matrix, null_value=np.nan)
+      mpl_draw(graph, with_labels=True, edge_labels=str)
+
+fixes:
+  - |
+    Support for negative weights in the
+    :meth:`retworkx.PyDiGraph.from_adjacency_matrix` and
+    :meth:`retworkx.PyGraph.from_adjacency_matrix` methods has been fixed.
+    Previously, if a negative weight were used it would be incorrectly treated
+    as a null value and no edge was added to the graph. This has been corrected
+    so that a negative value in the input matrix is now treated as an edge with
+    a negative weight. For example:
+
+    .. jupyter-execute::
+
+      import numpy as np
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      matrix = np.array([[0, -1, -1], [1, 0, -1], [1, 1, 0]], dtype=np.float64)
+      graph = retworkx.PyDiGraph.from_adjacency_matrix(matrix)
+      mpl_draw(graph, with_labels=True, edge_labels=str)
+
+    Fixed `#408 <https://github.com/Qiskit/retworkx/issues/408>`__

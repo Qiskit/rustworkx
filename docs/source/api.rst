@@ -78,6 +78,7 @@ Tree
 
    retworkx.minimum_spanning_edges
    retworkx.minimum_spanning_tree
+   retworkx.steiner_tree
 
 .. _isomorphism:
 
