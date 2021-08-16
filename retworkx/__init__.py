@@ -147,8 +147,9 @@ def distance_matrix(
         will be treat as if each edge was bidirectional/undirected in the
         output distance matrix.
     :param float null_value: An optional float that will treated as a null
-        value. If any element in the input matrix is this value it will be
-        treated as not an edge. By default this is ``0.0``.
+        value. For any node pair there isn't a path between the output matrix
+        will contain this value to indicate there isn't a path. By default this
+        is ``0.0``.
 
     :returns: The distance matrix
     :rtype: numpy.ndarray
@@ -201,8 +202,9 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
     :param float null_value: An optional float that will treated as a null
-        value. If any element in the input matrix is this value it will be
-        treated as not an edge. By default this is ``0.0``.
+        value. This is the default value in the output matrix and it is used
+        to indicate the absence of an edge between 2 nodes. By default this is
+        ``0.0``.
 
      :return: The adjacency matrix for the input dag as a numpy array
      :rtype: numpy.ndarray

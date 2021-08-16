@@ -324,8 +324,9 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 /// :param float default_weight: If ``weight_fn`` is not used this can be
 ///     optionally used to specify a default weight to use for all edges.
 /// :param float null_value: An optional float that will treated as a null
-///     value. If any element in the input matrix is this value it will be
-///     treated as not an edge. By default this is ``0.0``.
+///     value. This is the default value in the output matrix and it is used
+///     to indicate the absence of an edge between 2 nodes. By default this is
+///     ``0.0``.
 ///
 ///  :return: The adjacency matrix for the input dag as a numpy array
 ///  :rtype: numpy.ndarray
@@ -379,8 +380,9 @@ pub fn digraph_adjacency_matrix(
 /// :param float default_weight: If ``weight_fn`` is not used this can be
 ///     optionally used to specify a default weight to use for all edges.
 /// :param float null_value: An optional float that will treated as a null
-///     value. If any element in the input matrix is this value it will be
-///     treated as not an edge. By default this is ``0.0``.///
+///     value. This is the default value in the output matrix and it is used
+///     to indicate the absence of an edge between 2 nodes. By default this is
+///     ``0.0``.
 ///
 /// :return: The adjacency matrix for the input dag as a numpy array
 /// :rtype: numpy.ndarray
