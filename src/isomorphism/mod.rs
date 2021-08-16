@@ -313,10 +313,10 @@ fn graph_is_subgraph_isomorphic(
 /// :param node_matcher: An optional python callable object that takes 2
 ///     positional arguments, one for each node data object in either graph.
 ///     If the return of this function evaluates to True then the nodes
-///     passed to it are vieded as matching.
+///     passed to it are viewed as matching.
 /// :param edge_matcher: A python callable object that takes 2 positional
 ///     one for each edge data object. If the return of this
-///     function evaluates to True then the edges passed to it are vieded
+///     function evaluates to True then the edges passed to it are viewed
 ///     as matching.
 /// :param bool id_order: If set to ``False`` this function will use a
 ///     heuristic matching order based on [VF2]_ paper. Otherwise it will
@@ -390,10 +390,10 @@ fn digraph_vf2_mapping(
 /// :param node_matcher: An optional python callable object that takes 2
 ///     positional arguments, one for each node data object in either graph.
 ///     If the return of this function evaluates to True then the nodes
-///     passed to it are vieded as matching.
+///     passed to it are viewed as matching.
 /// :param edge_matcher: A python callable object that takes 2 positional
 ///     one for each edge data object. If the return of this
-///     function evaluates to True then the edges passed to it are vieded
+///     function evaluates to True then the edges passed to it are viewed
 ///     as matching.
 /// :param bool id_order: If set to ``False`` this function will use a
 ///     heuristic matching order based on [VF2]_ paper. Otherwise it will
