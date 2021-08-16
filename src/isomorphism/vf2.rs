@@ -11,8 +11,9 @@
 // under the License.
 
 #![allow(clippy::too_many_arguments)]
-// This module is a forked version of petgraph's isomorphism module @ 0.5.0.
-// It has then been modified to function with PyDiGraph inputs instead of Graph.
+// This module was originally forked from petgraph's isomorphism module @ v0.5.0
+// to handle PyDiGraph inputs instead of petgraph's generic Graph. However it has
+// since diverged significantly from the original petgraph implementation.
 
 use fixedbitset::FixedBitSet;
 use std::cmp::Ordering;
