@@ -267,7 +267,7 @@ class TestIsomorphic(unittest.TestCase):
     def test_digraph_non_isomorphic_rule_ins_incoming(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from([0, 1, 2, 3])
-        graph.add_edges_from_no_data([(1, 0), (2, 0), (3, 1)])
+        graph.add_edges_from_no_data([(1, 0), (2, 0), (2, 1)])
         second_graph = retworkx.PyDiGraph()
         second_graph.add_nodes_from([0, 1, 2, 3])
         second_graph.add_edges_from_no_data([(1, 0), (2, 0), (3, 1)])
