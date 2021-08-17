@@ -1450,7 +1450,8 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False):
         graph, normalized=normalized, endpoints=endpoints
     )
 
-@functools.singledispatch      
+
+@functools.singledispatch
 def vf2_mapping(
     first,
     second,
@@ -1506,6 +1507,7 @@ def vf2_mapping(
     :rtype: Iterable[NodeMap]
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
+
 
 @vf2_mapping.register(PyDiGraph)
 def _digraph_vf2_mapping(
