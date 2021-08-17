@@ -1,0 +1,26 @@
+---
+features:
+  - |
+    Added a new function, :func:`retworkx.vf2_mapping`, which will use the
+    vf2 isomorphism algorithm (which is also used for
+    :func:`retworkx.is_isomorphic` and :func:`retworkx.is_subgraph_isomorphic`)
+    to return an iterator over all valid isomorphic mappings between two graphs.
+    For example:
+
+    .. jupyter-execute::
+
+      import retworkx
+
+      graph = retworkx.generators.directed_grid_graph(10, 10)
+      other_graph = retworkx.generators.directed_grid_graph(4, 4)
+      vf2 = retworkx.vf2_mapping(graph, other_graph, subgraph=True)
+      try:
+        mapping = next(vf2)
+        print(mapping)
+      except StopIteration:
+        pass
+  - |
+    Added a new kwarg, ``call_limit`` to :func:`retworkx.is_isomorphic` and
+    :func:`retworkx.is_subgraph_isomorphic` which is used to set an upper
+    bound on the number of states that VF2 algorithm visits while searching for a
+    solution. If it exceeds this limit, the algorithm will stop and return false.
