@@ -124,7 +124,9 @@ class PyDAG(PyDiGraph):
 
 
 @functools.singledispatch
-def distance_matrix(graph, parallel_threshold=300):
+def distance_matrix(
+    graph, parallel_threshold=300, as_undirected=False, null_value=0.0
+):
     """Get the distance matrix for a graph
 
     This differs from functions like :func:`~retworkx.floyd_warshall_numpy` in
@@ -144,6 +146,10 @@ def distance_matrix(graph, parallel_threshold=300):
     :param bool as_undirected: If set to ``True`` the input directed graph
         will be treat as if each edge was bidirectional/undirected in the
         output distance matrix.
+    :param float null_value: An optional float that will treated as a null
+        value. This is the default value in the output matrix and it is used
+        to indicate the absence of an edge between 2 nodes. By default this
+        is ``0.0``.
 
     :returns: The distance matrix
     :rtype: numpy.ndarray
@@ -153,22 +159,25 @@ def distance_matrix(graph, parallel_threshold=300):
 
 @distance_matrix.register(PyDiGraph)
 def _digraph_distance_matrix(
-    graph, parallel_threshold=300, as_undirected=False
+    graph, parallel_threshold=300, as_undirected=False, null_value=0.0
 ):
     return digraph_distance_matrix(
         graph,
         parallel_threshold=parallel_threshold,
         as_undirected=as_undirected,
+        null_value=null_value,
     )
 
 
 @distance_matrix.register(PyGraph)
-def _graph_distance_matrix(graph, parallel_threshold=300):
-    return graph_distance_matrix(graph, parallel_threshold=parallel_threshold)
+def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
+    return graph_distance_matrix(
+        graph, parallel_threshold=parallel_threshold, null_value=null_value
+    )
 
 
 @functools.singledispatch
-def adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
+def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     """Return the adjacency matrix for a graph object
 
     In the case where there are multiple edges between nodes the value in the
@@ -192,6 +201,10 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
         for all edges.
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
+    :param float null_value: An optional float that will treated as a null
+        value. This is the default value in the output matrix and it is used
+        to indicate the absence of an edge between 2 nodes. By default this is
+        ``0.0``.
 
      :return: The adjacency matrix for the input dag as a numpy array
      :rtype: numpy.ndarray
@@ -200,16 +213,26 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
 
 
 @adjacency_matrix.register(PyDiGraph)
-def _digraph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
+def _digraph_adjacency_matrix(
+    graph, weight_fn=None, default_weight=1.0, null_value=0.0
+):
     return digraph_adjacency_matrix(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        null_value=null_value,
     )
 
 
 @adjacency_matrix.register(PyGraph)
-def _graph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
+def _graph_adjacency_matrix(
+    graph, weight_fn=None, default_weight=1.0, null_value=0.0
+):
     return graph_adjacency_matrix(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        null_value=null_value,
     )
 
 
