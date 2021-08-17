@@ -204,3 +204,43 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         self.assertTrue(
             retworkx.is_subgraph_isomorphic(g_a, g_b, induced=False)
         )
+
+    def test_subgraph_vf2_mapping(self):
+        graph = retworkx.generators.directed_grid_graph(10, 10)
+        second_graph = retworkx.generators.directed_grid_graph(2, 2)
+        mapping = retworkx.digraph_vf2_mapping(
+            graph, second_graph, subgraph=True
+        )
+        self.assertEqual(next(mapping), {0: 0, 1: 1, 10: 2, 11: 3})
+
+    def test_subgraph_vf2_all_mappings(self):
+        graph = retworkx.generators.directed_path_graph(3)
+        second_graph = retworkx.generators.directed_path_graph(2)
+        mapping = retworkx.digraph_vf2_mapping(
+            graph, second_graph, subgraph=True, id_order=True
+        )
+        self.assertEqual(next(mapping), {0: 0, 1: 1})
+        self.assertEqual(next(mapping), {2: 1, 1: 0})
+
+    def test_subgraph_vf2_mapping_vf2pp(self):
+        graph = retworkx.generators.directed_grid_graph(3, 3)
+        second_graph = retworkx.generators.directed_grid_graph(2, 2)
+        mapping = retworkx.digraph_vf2_mapping(
+            graph, second_graph, subgraph=True, id_order=False
+        )
+        self.assertEqual(next(mapping), {4: 0, 5: 1, 7: 2, 8: 3})
+
+    def test_vf2pp_remapping(self):
+        temp = retworkx.generators.directed_grid_graph(3, 3)
+
+        graph = retworkx.PyDiGraph()
+        dummy = graph.add_node(0)
+
+        graph.compose(temp, dict())
+        graph.remove_node(dummy)
+
+        second_graph = retworkx.generators.directed_grid_graph(2, 2)
+        mapping = retworkx.digraph_vf2_mapping(
+            graph, second_graph, subgraph=True, id_order=False
+        )
+        self.assertEqual(next(mapping), {5: 0, 6: 1, 8: 2, 9: 3})

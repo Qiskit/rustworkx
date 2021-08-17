@@ -29,6 +29,16 @@ use ndarray::prelude::*;
 use rayon::prelude::*;
 
 use crate::iterators::{AllPairsPathLengthMapping, PathLengthMapping};
+use crate::NodesRemoved;
+
+impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
+where
+    Ty: EdgeType,
+{
+    fn nodes_removed(&self) -> bool {
+        self.node_bound() != self.node_count()
+    }
+}
 
 pub fn floyd_warshall<Ty: EdgeType>(
     py: Python,
