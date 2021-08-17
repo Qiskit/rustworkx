@@ -275,7 +275,7 @@ pub fn graph_betweenness_centrality(
 /// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
 ///    compute the betweenness.
 ///
-/// :returns a dict whose keys are the node indices and values are the betweenness score
+/// :returns: a dict whose keys are the node indices and values are the betweenness score
 ///     for each node.
 /// :rtype: dict
 #[pyfunction(normalized = "true", endpoints = "false")]
