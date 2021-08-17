@@ -78,6 +78,7 @@ Tree
 
    retworkx.minimum_spanning_edges
    retworkx.minimum_spanning_tree
+   retworkx.steiner_tree
 
 .. _isomorphism:
 
@@ -90,6 +91,7 @@ Isomorphism
    retworkx.is_isomorphic
    retworkx.is_subgraph_isomorphic
    retworkx.is_isomorphic_node_match
+   retworkx.vf2_mapping
 
 .. _matching:
 
@@ -208,6 +210,7 @@ the functions from the explicitly typed based on the data type.
 
    retworkx.digraph_is_isomorphic
    retworkx.digraph_is_subgraph_isomorphic
+   retworkx.digraph_vf2_mapping
    retworkx.digraph_distance_matrix
    retworkx.digraph_floyd_warshall
    retworkx.digraph_floyd_warshall_numpy
@@ -248,6 +251,7 @@ typed API based on the data type.
 
    retworkx.graph_is_isomorphic
    retworkx.graph_is_subgraph_isomorphic
+   retworkx.graph_vf2_mapping
    retworkx.graph_distance_matrix
    retworkx.graph_floyd_warshall
    retworkx.graph_floyd_warshall_numpy
