@@ -1426,10 +1426,10 @@ def betweenness_centrality(graph, normalized=True, endpoints=False):
     of shortest paths between all pairs of nodes that pass through `v`.
 
     :param: graph: The graph to compute the betweenness centralities for.
-    :param: bool normalized: If true, normalize the betweenness scores by the number of
-        distinct paths between all pairs of nodes.
-    :param: bool endpoints: Whether to include the endpoints of paths in pathlengths used to
-        compute the betweenness.
+    :param: bool normalized: If true, normalize the betweenness scores by the number
+        of distinct paths between all pairs of nodes.
+    :param: bool endpoints: Whether to include the endpoints of paths in pathlengths
+        used to compute the betweenness.
 
     :returns: A dictionary mapping each node index to its betweenness centrality.
     :rtype: dict
