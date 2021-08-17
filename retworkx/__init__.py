@@ -147,8 +147,8 @@ def distance_matrix(
         will be treat as if each edge was bidirectional/undirected in the
         output distance matrix.
     :param float null_value: An optional float that will treated as a null
-        value. For any node pair there isn't a path between the output matrix
-        will contain this value to indicate there isn't a path. By default this
+        value. This is the default value in the output matrix and it is used
+        to indicate the absence of an edge between 2 nodes. By default this
         is ``0.0``.
 
     :returns: The distance matrix
