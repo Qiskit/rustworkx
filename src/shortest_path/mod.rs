@@ -1134,11 +1134,11 @@ pub fn digraph_unweighted_average_shortest_path_length(
     parallel_threshold: usize,
     as_undirected: bool,
 ) -> f64 {
-    let n = graph.node_count() as f64;
-    if n == 0.0 {
+    let n = graph.node_count();
+    if n == 0 {
         return std::f64::NAN;
     }
-    if n == 1.0 {
+    if n == 1 {
         return 0.0;
     }
     if !is_connected(&graph.graph) {
@@ -1149,7 +1149,7 @@ pub fn digraph_unweighted_average_shortest_path_length(
         parallel_threshold,
         as_undirected,
     ) as f64;
-    sum / (n * (n - 1.0))
+    sum / (n * (n - 1)) as f64
 }
 
 /// Return the average shortest path length for a :class:`~retworkx.PyGraph`
@@ -1188,11 +1188,11 @@ pub fn graph_unweighted_average_shortest_path_length(
     graph: &graph::PyGraph,
     parallel_threshold: usize,
 ) -> f64 {
-    let n = graph.node_count() as f64;
-    if n == 0.0 {
+    let n = graph.node_count();
+    if n == 0 {
         return std::f64::NAN;
     }
-    if n == 1.0 {
+    if n == 1 {
         return 0.0;
     }
     if !is_connected(&graph.graph) {
@@ -1203,5 +1203,5 @@ pub fn graph_unweighted_average_shortest_path_length(
         parallel_threshold,
         true,
     ) as f64;
-    sum / (n * (n - 1.0))
+    sum / (n * (n - 1)) as f64
 }
