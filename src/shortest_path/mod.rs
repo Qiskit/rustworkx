@@ -1122,8 +1122,7 @@ pub fn graph_distance_matrix(
 ///     finding the shortest paths. Default: ``False``.
 ///
 /// :returns: The average shortest path length. If the graph is empty this
-///     will return NaN, if there is a single node 0 will be returned and if
-///     the graph is disconnected it will return infinity.
+///     will return NaN and if there is a single node 0 will be returned.
 /// :rtype: float
 #[pyfunction(parallel_threshold = "300", as_undirected = "false")]
 #[pyo3(
@@ -1177,8 +1176,7 @@ pub fn digraph_unweighted_average_shortest_path_length(
 ///     be tuned to any number of nodes.
 ///
 /// :returns: The average shortest path length. If the graph is empty this
-///     will return NaN, if there is a single node 0 will be returned and if
-///     the graph is disconnected it will return infinity.
+///     will return NaN and if there is a single node 0 will be returned.
 /// :rtype: float
 #[pyfunction(parallel_threshold = "300")]
 #[pyo3(text_signature = "(graph, /, parallel_threshold=300)")]
