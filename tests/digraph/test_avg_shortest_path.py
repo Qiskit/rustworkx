@@ -68,8 +68,8 @@ class TestAvgShortestPath(unittest.TestCase):
         graph.add_nodes_from(list(range(32)))
         res = retworkx.unweighted_average_shortest_path_length(graph)
         s = 15872
-        n = 4032  # n*(n-1)
-        self.assertAlmostEqual(s / n, res, delta=1e-7)
+        den = 4032  # n*(n-1)
+        self.assertAlmostEqual(s / den, res, delta=1e-7)
 
     def test_connected_cycle_graph(self):
         # Show the difference between a fully connected example compared to
@@ -77,5 +77,5 @@ class TestAvgShortestPath(unittest.TestCase):
         graph = retworkx.generators.directed_cycle_graph(32)
         res = retworkx.unweighted_average_shortest_path_length(graph)
         s = 15872
-        n = 992  # n*(n-1)
-        self.assertAlmostEqual(s / n, res, delta=1e-7)
+        den = 992  # n*(n-1)
+        self.assertAlmostEqual(s / den, res, delta=1e-7)
