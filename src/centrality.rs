@@ -121,9 +121,7 @@ fn _rescale(
     }
     if do_scale {
         for i in 0..betweenness.len() as usize {
-            if betweenness[i].is_some() {
-                betweenness[i] = Some(betweenness[i].unwrap() * scale);
-            }
+             betweenness[i] = betweenness[i].map(|x| x * scale);
         }
     }
 }
@@ -143,8 +141,8 @@ fn _accumulate_basic(
             let iv = (*v).index();
             delta[iv] += (path_calc.sigma[&iv] as f64) * coeff;
         }
-        if iw != is && betweenness[iw].is_some() {
-            betweenness[iw] = Some(betweenness[iw].unwrap() + delta[iw]);
+        if iw != is {
+            betweenness[iw] = betweenness[iw].map(|x| x + delta[iw]);
         }
     }
 }
@@ -170,8 +168,8 @@ fn _accumulate_endpoints(
             let iv = (*v).index();
             delta[iv] += (path_calc.sigma[&iv] as f64) * coeff;
         }
-        if iw != is && betweenness[iw].is_some() {
-            betweenness[iw] = Some(betweenness[iw].unwrap() + delta[iw] + 1.0);
+        if iw != is {
+            betweenness[iw] = betweenness[iw].map(|x| x + delta[iw] + 1.0);
         }
     }
 }
