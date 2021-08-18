@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    Added a new algorithm function,
+    :func:`retworkx.unweighted_average_shortest_path_length` for computing
+    the average shortest path length of a :class:`~retworkx.PyDiGraph` or
+    :class:`~retworkx.PyGraph` object. The average shortest path length
+    is defined as
+
+    .. math::
+
+        a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
+
+    where :math:`V` is the set of nodes in the graph, :math:`d(s, t)` is the
+    shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
+    number of nodes in graph.
