@@ -28,8 +28,7 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::NodeCount;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -237,31 +236,16 @@ pub fn digraph_find_cycle(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
-    if graph.graph.node_count() == 0 {
-        return 0;
-    }
+    let mut weak_components = graph.node_count();
     let mut vertex_sets = UnionFind::new(graph.node_bound());
-    let first = graph
-        .graph
-        .node_indices()
-        .next()
-        .map(|a| graph.graph.to_index(a))
-        .unwrap();
-    for ix in 0..graph.node_bound() {
-        if !graph.graph.contains_node(NodeIndex::new(ix)) {
-            vertex_sets.union(first, ix);
-        }
-    }
     for edge in graph.graph.edge_references() {
         let (a, b) = (edge.source(), edge.target());
-
         // union the two vertices of the edge
-        vertex_sets.union(graph.graph.to_index(a), graph.graph.to_index(b));
+        if vertex_sets.union(graph.graph.to_index(a), graph.graph.to_index(b)) {
+            weak_components -= 1
+        };
     }
-    let mut labels = vertex_sets.into_labeling();
-    labels.sort_unstable();
-    labels.dedup();
-    labels.len()
+    weak_components
 }
 
 /// Find the weakly connected components in a directed graph
