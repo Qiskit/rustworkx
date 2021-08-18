@@ -120,8 +120,8 @@ fn _rescale(
         do_scale = false;
     }
     if do_scale {
-        for i in 0..betweenness.len() as usize {
-             betweenness[i] = betweenness[i].map(|x| x * scale);
+        for x in betweenness.iter_mut() {
+            *x = x.map(|y| y * scale);
         }
     }
 }
