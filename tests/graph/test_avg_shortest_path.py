@@ -61,10 +61,21 @@ class TestUnweightedAvgShortestPath(unittest.TestCase):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(32)))
         res = retworkx.unweighted_average_shortest_path_length(graph)
-        self.assertEqual(math.inf, res)
+        self.assertEqual(0.0, res)
 
     def test_partially_connected_graph(self):
         graph = retworkx.generators.cycle_graph(32)
         graph.add_nodes_from(list(range(32)))
         res = retworkx.unweighted_average_shortest_path_length(graph)
-        self.assertEqual(math.inf, res)
+        s = 8192
+        n = 4032  # n*(n-1)
+        self.assertAlmostEqual(s / n, res, delta=1e-7)
+
+    def test_connected_cycle_graph(self):
+        # Show the difference between a fully connected example compared to
+        # a partially connected example in "test_partially_connected_graph":
+        graph = retworkx.generators.cycle_graph(32)
+        res = retworkx.unweighted_average_shortest_path_length(graph)
+        s = 8192
+        n = 992  # n*(n-1)
+        self.assertAlmostEqual(s / n, res, delta=1e-7)

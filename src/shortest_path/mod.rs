@@ -34,7 +34,6 @@ use petgraph::visit::NodeCount;
 
 use numpy::IntoPyArray;
 
-use crate::connectivity::connected::is_connected;
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
     NodesCountMapping, PathLengthMapping, PathMapping,
@@ -1103,7 +1102,8 @@ pub fn graph_distance_matrix(
 ///
 /// where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
 /// shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
-/// number of nodes in ``graph``.
+/// number of nodes in ``graph``. This also assumes that
+/// :math:`d(s, t) = 0` if :math:`t` cannot be reached from :math:`s`.
 ///
 /// This function is also multithreaded and will run in parallel if the number
 /// of nodes in the graph is above the value of ``parallel_threshold`` (it
@@ -1141,9 +1141,6 @@ pub fn digraph_unweighted_average_shortest_path_length(
     if n == 1 {
         return 0.0;
     }
-    if !is_connected(&graph.graph) {
-        return std::f64::INFINITY;
-    }
     let sum = average_length::compute_distance_sum(
         &graph.graph,
         parallel_threshold,
@@ -1162,8 +1159,9 @@ pub fn digraph_unweighted_average_shortest_path_length(
 ///     a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
 ///
 /// where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
-/// shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
-/// number of nodes in ``graph``.
+/// shortest path length from node :math:`s` to node :math:`t`, and :math:`n`
+/// is the number of nodes in ``graph``. This also assumes that
+/// :math:`d(s, t) = 0` if :math:`t` cannot be reached from :math:`s`.
 ///
 /// This function is also multithreaded and will run in parallel if the number
 /// of nodes in the graph is above the value of ``parallel_threshold`` (it
@@ -1194,9 +1192,6 @@ pub fn graph_unweighted_average_shortest_path_length(
     }
     if n == 1 {
         return 0.0;
-    }
-    if !is_connected(&graph.graph) {
-        return std::f64::INFINITY;
     }
     let sum = average_length::compute_distance_sum(
         &graph.graph,

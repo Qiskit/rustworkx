@@ -188,7 +188,8 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300):
 
     where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
     shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
-    number of nodes in ``graph``.
+    number of nodes in ``graph``. This also assumes that :math:`d(s, t) = 0`
+    if :math:`t` cannot be reached from :math:`s`.
 
     This function is also multithreaded and will run in parallel if the number
     of nodes in the graph is above the value of ``parallel_threshold`` (it

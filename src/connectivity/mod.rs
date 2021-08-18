@@ -12,7 +12,6 @@
 
 #![allow(clippy::float_cmp)]
 
-pub mod connected;
 mod core_number;
 
 use super::{
