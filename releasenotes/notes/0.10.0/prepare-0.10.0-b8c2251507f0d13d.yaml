@@ -1,4 +1,19 @@
 ---
 prelude: |
   This release is a new feature release that includes many new features and
-  bug fixes. The highlights of this release are:
+  bug fixes. The highlights of this release are a slew of new algorithm
+  functions including :func:`~retworkx.steiner_tree` and
+  :func:`~retworkx.betweenness_centrality`, improvements to the isomorphism
+  functions including the addition of :func:`~retworkx.vf2_mapping` to get
+  an isomorphic mapping between two graphs, and improvements to working with
+  graph objects such as :meth:`retworkx.PyDiGraph.substitute_node_with_subgraph`
+  for replacing a node with a subgraph.
+fixes:
+  - |
+    The iteration order of the output ``dict`` returned by
+    :func:`~retworkx.graph_greedy_color` was previously not deterministic
+    and multiple executions with the same input would return identical
+    dictionaries that had different insertion orders which would result in
+    different iteration order. This has been fixed so that the iteration order
+    of the output dictionary is now deterministic.
+    Fixed `#347 <https://github.com/Qiskit/retworkx/issues/347>`__
