@@ -34,7 +34,7 @@ where
 {
     let dag = &graph.graph;
     let mut path: Vec<usize> = Vec::new();
-    let nodes = match algo::toposort(graph, None) {
+    let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))

@@ -20,12 +20,14 @@
 
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
-use std::hash::Hash;
 
 use hashbrown::hash_map::Entry::{Occupied, Vacant};
 use hashbrown::HashMap;
 
-use petgraph::visit::{EdgeRef, GraphBase, IntoEdges, VisitMap, Visitable};
+use petgraph::graph::DefaultIx;
+use petgraph::stable_graph::{EdgeReference, NodeIndex, StableGraph};
+use petgraph::visit::{EdgeRef, VisitMap, Visitable};
+use petgraph::EdgeType;
 
 use petgraph::algo::Measure;
 use pyo3::prelude::*;
@@ -136,25 +138,24 @@ impl<K: PartialOrd, T> Ord for MinScored<K, T> {
 ///
 /// Returns the total cost + the path of subsequent `NodeId` from start to finish, if one was
 /// found.
-pub fn astar<G, F, H, K, IsGoal>(
-    graph: G,
-    start: G::NodeId,
+pub fn astar<Ty, F, H, K, IsGoal>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    start: NodeIndex,
     mut is_goal: IsGoal,
     mut edge_cost: F,
     mut estimate_cost: H,
-) -> PyResult<Option<(K, Vec<G::NodeId>)>>
+) -> PyResult<Option<(K, Vec<NodeIndex>)>>
 where
-    G: IntoEdges + Visitable,
-    IsGoal: FnMut(G::NodeId) -> PyResult<bool>,
-    G::NodeId: Eq + Hash,
-    F: FnMut(G::EdgeRef) -> PyResult<K>,
-    H: FnMut(G::NodeId) -> PyResult<K>,
+    Ty: EdgeType,
+    IsGoal: FnMut(NodeIndex) -> PyResult<bool>,
+    F: FnMut(EdgeReference<PyObject, DefaultIx>) -> PyResult<K>,
+    H: FnMut(NodeIndex) -> PyResult<K>,
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();
     let mut visit_next = BinaryHeap::new();
     let mut scores = HashMap::new();
-    let mut path_tracker = PathTracker::<G>::new();
+    let mut path_tracker = PathTracker::new();
 
     let zero_score = K::default();
     scores.insert(start, zero_score);
@@ -213,30 +214,22 @@ where
     Ok(None)
 }
 
-struct PathTracker<G>
-where
-    G: GraphBase,
-    G::NodeId: Eq + Hash,
-{
-    came_from: HashMap<G::NodeId, G::NodeId>,
+struct PathTracker {
+    came_from: HashMap<NodeIndex, NodeIndex>,
 }
 
-impl<G> PathTracker<G>
-where
-    G: GraphBase,
-    G::NodeId: Eq + Hash,
-{
-    fn new() -> PathTracker<G> {
+impl PathTracker {
+    fn new() -> PathTracker {
         PathTracker {
             came_from: HashMap::new(),
         }
     }
 
-    fn set_predecessor(&mut self, node: G::NodeId, previous: G::NodeId) {
+    fn set_predecessor(&mut self, node: NodeIndex, previous: NodeIndex) {
         self.came_from.insert(node, previous);
     }
 
-    fn reconstruct_path_to(&self, last: G::NodeId) -> Vec<G::NodeId> {
+    fn reconstruct_path_to(&self, last: NodeIndex) -> Vec<NodeIndex> {
         let mut path = vec![last];
 
         let mut current = last;

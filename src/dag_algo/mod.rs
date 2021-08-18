@@ -211,7 +211,7 @@ pub fn dag_weighted_longest_path_length(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
-    match algo::toposort(graph, None) {
+    match algo::toposort(&graph.graph, None) {
         Ok(_nodes) => true,
         Err(_err) => false,
     }
@@ -297,7 +297,7 @@ pub fn layers(
         }
         let mut layer_node_data: Vec<&PyObject> = Vec::new();
         for layer_node in &next_layer {
-            layer_node_data.push(&dag[*layer_node]);
+            layer_node_data.push(&dag.graph[*layer_node]);
         }
         if !layer_node_data.is_empty() {
             output.push(layer_node_data);
@@ -407,7 +407,7 @@ fn lexicographical_topological_sort(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
-    let nodes = match algo::toposort(graph, None) {
+    let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
@@ -449,7 +449,7 @@ fn collect_runs(
         res.extract(py)
     };
 
-    let nodes = match algo::toposort(graph, None) {
+    let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
@@ -533,7 +533,7 @@ fn collect_bicolor_runs(
         res.extract(py)
     };
 
-    let nodes = match algo::toposort(graph, None) {
+    let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))

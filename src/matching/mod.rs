@@ -161,6 +161,7 @@ pub fn is_maximal_matching(
         return false;
     }
     let edge_list: HashSet<[usize; 2]> = graph
+        .graph
         .edge_references()
         .map(|edge| {
             let mut tmp_array = [edge.source().index(), edge.target().index()];

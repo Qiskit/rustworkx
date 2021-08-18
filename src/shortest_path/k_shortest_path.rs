@@ -18,14 +18,12 @@
 // raised in Python instead of panicking
 
 use std::collections::BinaryHeap;
-use std::hash::Hash;
 
 use hashbrown::HashMap;
 
-use petgraph::visit::{
-    Data, EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
-};
-
+use petgraph::stable_graph::{NodeIndex, StableGraph};
+use petgraph::visit::{EdgeRef, NodeIndexable};
+use petgraph::EdgeType;
 use pyo3::prelude::*;
 
 use super::astar::MinScored;
@@ -45,17 +43,15 @@ use super::astar::MinScored;
 /// Computes in **O(k * (|E| + |V|*log(|V|)))** time (average).
 ///
 /// Returns a `HashMap` that maps `NodeId` to path cost.
-pub fn k_shortest_path<G, F>(
-    graph: G,
-    start: G::NodeId,
-    goal: Option<G::NodeId>,
+pub fn k_shortest_path<Ty, F>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    start: NodeIndex,
+    goal: Option<NodeIndex>,
     k: usize,
     mut edge_cost: F,
-) -> PyResult<HashMap<G::NodeId, f64>>
+) -> PyResult<HashMap<NodeIndex, f64>>
 where
-    G: IntoEdges + Visitable + NodeCount + NodeIndexable,
-    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
-    G::NodeId: Eq + Hash,
+    Ty: EdgeType,
     F: FnMut(&PyObject) -> PyResult<f64>,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_count()];

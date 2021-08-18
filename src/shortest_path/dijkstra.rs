@@ -18,13 +18,16 @@
 // raised in Python instead of panicking
 
 use std::collections::BinaryHeap;
-use std::hash::Hash;
 
 use hashbrown::hash_map::Entry::{Occupied, Vacant};
 use hashbrown::HashMap;
 
 use petgraph::algo::Measure;
-use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
+use petgraph::stable_graph::{
+    DefaultIx, EdgeReference, NodeIndex, StableGraph,
+};
+use petgraph::visit::{EdgeRef, VisitMap, Visitable};
+use petgraph::EdgeType;
 
 use pyo3::prelude::*;
 
@@ -97,17 +100,16 @@ use super::astar::MinScored;
 /// assert_eq!(res, expected_res);
 /// // z is not inside res because there is not path from b to z.
 /// ```
-pub fn dijkstra<G, F, K>(
-    graph: G,
-    start: G::NodeId,
-    goal: Option<G::NodeId>,
+pub fn dijkstra<Ty, F, K>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+    start: NodeIndex,
+    goal: Option<NodeIndex>,
     mut edge_cost: F,
-    mut path: Option<&mut HashMap<G::NodeId, Vec<G::NodeId>>>,
-) -> PyResult<HashMap<G::NodeId, K>>
+    mut path: Option<&mut HashMap<NodeIndex, Vec<NodeIndex>>>,
+) -> PyResult<HashMap<NodeIndex, K>>
 where
-    G: IntoEdges + Visitable,
-    G::NodeId: Eq + Hash,
-    F: FnMut(G::EdgeRef) -> PyResult<K>,
+    Ty: EdgeType,
+    F: FnMut(EdgeReference<PyObject, DefaultIx>) -> PyResult<K>,
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();

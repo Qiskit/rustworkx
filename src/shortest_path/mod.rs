@@ -75,7 +75,7 @@ pub fn graph_dijkstra_shortest_paths(
     let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
         HashMap::with_capacity(graph.node_count());
     dijkstra::dijkstra(
-        graph,
+        &graph.graph,
         start,
         goal_index,
         |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -143,7 +143,7 @@ pub fn digraph_dijkstra_shortest_paths(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
-            &graph.to_undirected(py, true, None)?,
+            &graph.to_undirected(py, true, None)?.graph,
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -151,7 +151,7 @@ pub fn digraph_dijkstra_shortest_paths(
         )?;
     } else {
         dijkstra::dijkstra(
-            graph,
+            &graph.graph,
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -215,7 +215,7 @@ pub fn graph_dijkstra_shortest_path_lengths(
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
-        graph,
+        &graph.graph,
         start,
         goal_index,
         |e| edge_cost_callable(e.weight()),
@@ -273,7 +273,7 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
-        graph,
+        &graph.graph,
         start,
         goal_index,
         |e| edge_cost_callable(e.weight()),
@@ -505,7 +505,7 @@ fn digraph_astar_shortest_path(
     let start = NodeIndex::new(node);
 
     let astar_res = astar::astar(
-        graph,
+        &graph.graph,
         start,
         |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
         |e| edge_cost_callable(e.weight()),
@@ -579,7 +579,7 @@ fn graph_astar_shortest_path(
     let start = NodeIndex::new(node);
 
     let astar_res = astar::astar(
-        graph,
+        &graph.graph,
         start,
         |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
         |e| edge_cost_callable(e.weight()),
@@ -635,7 +635,7 @@ fn digraph_k_shortest_path_lengths(
     };
 
     let out_map = k_shortest_path::k_shortest_path(
-        graph,
+        &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,
@@ -691,7 +691,7 @@ pub fn graph_k_shortest_path_lengths(
     };
 
     let out_map = k_shortest_path::k_shortest_path(
-        graph,
+        &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,

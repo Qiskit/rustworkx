@@ -15,24 +15,19 @@
 use hashbrown::{HashMap, HashSet};
 
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{
-    GraphBase, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable,
-    VisitMap, Visitable,
-};
+use petgraph::stable_graph::StableGraph;
+use petgraph::visit::{IntoNodeIdentifiers, NodeIndexable};
+use petgraph::EdgeType;
 
-pub fn dfs_edges<G>(
-    graph: G,
+use pyo3::PyObject;
+
+pub fn dfs_edges<Ty>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
     source: Option<usize>,
     edge_count: usize,
 ) -> Vec<(usize, usize)>
 where
-    G: GraphBase<NodeId = NodeIndex>
-        + IntoNodeIdentifiers
-        + NodeIndexable
-        + IntoNeighbors
-        + NodeCount
-        + Visitable,
-    <G as Visitable>::Map: VisitMap<NodeIndex>,
+    Ty: EdgeType,
 {
     let nodes: Vec<NodeIndex> = match source {
         Some(start) => vec![NodeIndex::new(start)],
