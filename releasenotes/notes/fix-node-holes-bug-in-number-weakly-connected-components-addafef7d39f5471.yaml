@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixes the output of :func:`~retworkx.number_weakly_connected_components`
+    in case of holes in the graph node indices.
