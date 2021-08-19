@@ -1,12 +1,12 @@
 ---
 prelude: |
   This release includes many new features and bug fixes. The highlights of this
-  release are a slew of new algorithm functions including 
+  release are a slew of new algorithm functions including
   :func:`~retworkx.steiner_tree` and :func:`~retworkx.betweenness_centrality`,
-  improvements to the isomorphism functions including the addition of 
-  :func:`~retworkx.vf2_mapping` to get an isomorphic mapping between two 
-  graphs, and improvements to working with graph objects such as 
-  :meth:`retworkx.PyDiGraph.substitute_node_with_subgraph` for replacing a 
+  improvements to the isomorphism functions including the addition of
+  :func:`~retworkx.vf2_mapping` to get an isomorphic mapping between two
+  graphs, and improvements to working with graph objects such as
+  :meth:`retworkx.PyDiGraph.substitute_node_with_subgraph` for replacing a
   node with a subgraph.
 fixes:
   - |
