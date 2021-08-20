@@ -159,7 +159,6 @@ fn _accumulate_endpoints(
 ) {
     betweenness[is] = betweenness[is]
         .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
-    }
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
@@ -189,6 +188,7 @@ where
     G: NodeIndexable
         + IntoNodeIdentifiers
         + IntoNeighborsDirected
+        + NodeCount
         + GraphBase<NodeId = NodeIndex>, // for get() and get_mut()
 {
     let mut verts_sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
