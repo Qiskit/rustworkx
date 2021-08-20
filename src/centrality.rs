@@ -15,6 +15,7 @@ use crate::graph;
 
 use pyo3::prelude::*;
 use pyo3::Python;
+use std::collections::VecDeque;
 
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
@@ -192,13 +193,13 @@ where
         + GraphBase<NodeId = NodeIndex>, // for get() and get_mut()
 {
     let mut verts_sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
-    #[allow(non_snake_case)]
-    let mut Q: Vec<NodeIndex> = Vec::new(); // a queue
     let c = graph.node_count();
     let mut predecessors =
         HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
     let mut sigma = HashMap::<usize, i64>::with_capacity(c);
     let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
+    #[allow(non_snake_case)]
+    let mut Q: VecDeque<NodeIndex> = VecDeque::with_capacity(c); // a queue
 
     let i_s = graph.to_index(*node_s);
     let index_s = NodeIndex::new(i_s);
@@ -212,14 +213,14 @@ where
     }
     sigma.insert(index_s.index(), 1);
     distance.insert(index_s, 0);
-    Q.push(index_s);
+    Q.push_back(index_s);
     while !Q.is_empty() {
-        let v = Q.remove(0);
+        let v = Q.pop_front().unwrap(); // remove(0);
         verts_sorted_by_distance.push(v);
         let distance_v = distance[&v];
         for w in graph.neighbors(v) {
             if distance[&w] < 0 {
-                Q.push(w);
+                Q.push_back(w);
                 distance.insert(w, distance_v + 1);
             }
             if distance[&w] == distance_v + 1 {
