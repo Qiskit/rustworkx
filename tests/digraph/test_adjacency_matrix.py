@@ -85,6 +85,20 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(np.array([[0.0, 7.5], [0.0, 0.0]]), res))
 
+    def test_multigraph_sum_cast_weight_func_non_zero_null(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, 7.0)
+        graph.add_edge(node_a, node_b, 0.5)
+        res = retworkx.adjacency_matrix(
+            graph, lambda x: float(x), null_value=np.inf
+        )
+        self.assertIsInstance(res, np.ndarray)
+        self.assertTrue(
+            np.array_equal(np.array([[np.inf, 7.5], [np.inf, np.inf]]), res)
+        )
+
     def test_graph_to_digraph_adjacency_matrix(self):
         graph = retworkx.PyGraph()
         self.assertRaises(TypeError, retworkx.digraph_adjacency_matrix, graph)
@@ -144,3 +158,44 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
         adj_matrix = retworkx.digraph_adjacency_matrix(graph, lambda x: x)
         self.assertTrue(np.array_equal(adj_matrix, input_matrix))
+
+    def test_non_zero_null(self):
+        input_matrix = np.array(
+            [[np.Inf, 1, np.Inf], [1, np.Inf, 1], [np.Inf, 1, np.Inf]],
+            dtype=np.float64,
+        )
+        graph = retworkx.PyDiGraph.from_adjacency_matrix(
+            input_matrix, null_value=np.Inf
+        )
+        adj_matrix = retworkx.adjacency_matrix(graph, float)
+        expected_matrix = np.array(
+            [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]],
+            dtype=np.float64,
+        )
+        self.assertTrue(np.array_equal(adj_matrix, expected_matrix))
+
+    def test_negative_weight(self):
+        input_matrix = np.array(
+            [[0, 1, 0], [-1, 0, -1], [0, 1, 0]], dtype=float
+        )
+        graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
+        adj_matrix = retworkx.digraph_adjacency_matrix(graph, lambda x: x)
+        self.assertTrue(np.array_equal(adj_matrix, input_matrix))
+        self.assertEqual(
+            [(0, 1, 1), (1, 0, -1), (1, 2, -1), (2, 1, 1)],
+            graph.weighted_edge_list(),
+        )
+
+    def test_nan_null(self):
+        input_matrix = np.array(
+            [[np.nan, 1, np.nan], [1, np.nan, 1], [np.nan, 1, np.nan]],
+            dtype=np.float64,
+        )
+        graph = retworkx.PyDiGraph.from_adjacency_matrix(
+            input_matrix, null_value=np.nan
+        )
+        adj_matrix = retworkx.adjacency_matrix(graph, float)
+        expected_matrix = np.array(
+            [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.float64
+        )
+        self.assertTrue(np.array_equal(adj_matrix, expected_matrix))

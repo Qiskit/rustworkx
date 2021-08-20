@@ -35,6 +35,7 @@ Shortest Paths
    retworkx.astar_shortest_path
    retworkx.k_shortest_path_lengths
    retworkx.num_shortest_paths_unweighted
+   retworkx.unweighted_average_shortest_path_length
 
 .. _traversal:
 
@@ -78,6 +79,7 @@ Tree
 
    retworkx.minimum_spanning_edges
    retworkx.minimum_spanning_tree
+   retworkx.steiner_tree
 
 .. _isomorphism:
 
@@ -90,6 +92,7 @@ Isomorphism
    retworkx.is_isomorphic
    retworkx.is_subgraph_isomorphic
    retworkx.is_isomorphic_node_match
+   retworkx.vf2_mapping
 
 .. _matching:
 
@@ -208,6 +211,7 @@ the functions from the explicitly typed based on the data type.
 
    retworkx.digraph_is_isomorphic
    retworkx.digraph_is_subgraph_isomorphic
+   retworkx.digraph_vf2_mapping
    retworkx.digraph_distance_matrix
    retworkx.digraph_floyd_warshall
    retworkx.digraph_floyd_warshall_numpy
@@ -231,6 +235,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_spiral_layout
    retworkx.digraph_spring_layout
    retworkx.digraph_num_shortest_paths_unweighted
+   retworkx.digraph_unweighted_average_shortest_path_length
 
 
 .. _api-functions-pygraph:
@@ -248,6 +253,7 @@ typed API based on the data type.
 
    retworkx.graph_is_isomorphic
    retworkx.graph_is_subgraph_isomorphic
+   retworkx.graph_vf2_mapping
    retworkx.graph_distance_matrix
    retworkx.graph_floyd_warshall
    retworkx.graph_floyd_warshall_numpy
@@ -270,6 +276,7 @@ typed API based on the data type.
    retworkx.graph_spiral_layout
    retworkx.graph_spring_layout
    retworkx.graph_num_shortest_paths_unweighted
+   retworkx.graph_unweighted_average_shortest_path_length
 
 Exceptions
 ==========

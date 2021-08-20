@@ -222,3 +222,117 @@ class TestIsomorphic(unittest.TestCase):
                         id_order=id_order,
                     )
                 )
+
+    def test_digraph_isomorphic_self_loop(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0])
+        graph.add_edges_from([(0, 0, "a")])
+        self.assertTrue(retworkx.is_isomorphic(graph, graph))
+
+    def test_digraph_non_isomorphic_edge_mismatch_self_loop(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0])
+        graph.add_edges_from([(0, 0, "a")])
+        second_graph = retworkx.PyDiGraph()
+        second_graph.add_nodes_from([0])
+        second_graph.add_edges_from([(0, 0, "b")])
+        self.assertFalse(
+            retworkx.is_isomorphic(
+                graph, second_graph, edge_matcher=lambda x, y: x == y
+            )
+        )
+
+    def test_digraph_non_isomorphic_rule_out_incoming(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1, 2, 3])
+        graph.add_edges_from_no_data([(0, 1), (0, 2), (2, 1)])
+        second_graph = retworkx.PyDiGraph()
+        second_graph.add_nodes_from([0, 1, 2, 3])
+        second_graph.add_edges_from_no_data([(0, 1), (0, 2), (3, 1)])
+        self.assertFalse(
+            retworkx.is_isomorphic(graph, second_graph, id_order=True)
+        )
+
+    def test_digraph_non_isomorphic_rule_ins_outgoing(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1, 2, 3])
+        graph.add_edges_from_no_data([(1, 0), (2, 0), (1, 2)])
+        second_graph = retworkx.PyDiGraph()
+        second_graph.add_nodes_from([0, 1, 2, 3])
+        second_graph.add_edges_from_no_data([(1, 0), (2, 0), (1, 3)])
+        self.assertFalse(
+            retworkx.is_isomorphic(graph, second_graph, id_order=True)
+        )
+
+    def test_digraph_non_isomorphic_rule_ins_incoming(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1, 2, 3])
+        graph.add_edges_from_no_data([(1, 0), (2, 0), (2, 1)])
+        second_graph = retworkx.PyDiGraph()
+        second_graph.add_nodes_from([0, 1, 2, 3])
+        second_graph.add_edges_from_no_data([(1, 0), (2, 0), (3, 1)])
+        self.assertFalse(
+            retworkx.is_isomorphic(graph, second_graph, id_order=True)
+        )
+
+    def test_digraph_isomorphic_insufficient_call_limit(self):
+        graph = retworkx.generators.directed_path_graph(5)
+        self.assertFalse(retworkx.is_isomorphic(graph, graph, call_limit=2))
+
+    def test_digraph_vf2_mapping_identical(self):
+        graph = retworkx.generators.directed_grid_graph(2, 2)
+        second_graph = retworkx.generators.directed_grid_graph(2, 2)
+        mapping = retworkx.digraph_vf2_mapping(graph, second_graph)
+        self.assertEqual(next(mapping), {0: 0, 1: 1, 2: 2, 3: 3})
+
+    def test_digraph_vf2_mapping_identical_removals(self):
+        graph = retworkx.generators.directed_path_graph(2)
+        second_graph = retworkx.generators.directed_path_graph(4)
+        second_graph.remove_nodes_from([1, 2])
+        second_graph.add_edge(0, 3, None)
+        mapping = retworkx.digraph_vf2_mapping(graph, second_graph)
+        self.assertEqual({0: 0, 1: 3}, next(mapping))
+
+    def test_digraph_vf2_mapping_identical_removals_first(self):
+        second_graph = retworkx.generators.directed_path_graph(2)
+        graph = retworkx.generators.directed_path_graph(4)
+        graph.remove_nodes_from([1, 2])
+        graph.add_edge(0, 3, None)
+        mapping = retworkx.digraph_vf2_mapping(graph, second_graph)
+        self.assertEqual({0: 0, 3: 1}, next(mapping))
+
+    def test_digraph_vf2_mapping_identical_vf2pp(self):
+        graph = retworkx.generators.directed_grid_graph(2, 2)
+        second_graph = retworkx.generators.directed_grid_graph(2, 2)
+        mapping = retworkx.digraph_vf2_mapping(
+            graph, second_graph, id_order=False
+        )
+        self.assertEqual(next(mapping), {0: 0, 1: 1, 2: 2, 3: 3})
+
+    def test_digraph_vf2_mapping_identical_removals_vf2pp(self):
+        graph = retworkx.generators.directed_path_graph(2)
+        second_graph = retworkx.generators.directed_path_graph(4)
+        second_graph.remove_nodes_from([1, 2])
+        second_graph.add_edge(0, 3, None)
+        mapping = retworkx.digraph_vf2_mapping(
+            graph, second_graph, id_order=False
+        )
+        self.assertEqual({0: 0, 1: 3}, next(mapping))
+
+    def test_digraph_vf2_mapping_identical_removals_first_vf2pp(self):
+        second_graph = retworkx.generators.directed_path_graph(2)
+        graph = retworkx.generators.directed_path_graph(4)
+        graph.remove_nodes_from([1, 2])
+        graph.add_edge(0, 3, None)
+        mapping = retworkx.digraph_vf2_mapping(
+            graph, second_graph, id_order=False
+        )
+        self.assertEqual({0: 0, 3: 1}, next(mapping))
+
+    def test_digraph_vf2_number_of_valid_mappings(self):
+        graph = retworkx.generators.directed_mesh_graph(3)
+        mapping = retworkx.digraph_vf2_mapping(graph, graph, id_order=True)
+        total = 0
+        for _ in mapping:
+            total += 1
+        self.assertEqual(total, 6)

@@ -124,7 +124,9 @@ class PyDAG(PyDiGraph):
 
 
 @functools.singledispatch
-def distance_matrix(graph, parallel_threshold=300):
+def distance_matrix(
+    graph, parallel_threshold=300, as_undirected=False, null_value=0.0
+):
     """Get the distance matrix for a graph
 
     This differs from functions like :func:`~retworkx.floyd_warshall_numpy` in
@@ -144,6 +146,10 @@ def distance_matrix(graph, parallel_threshold=300):
     :param bool as_undirected: If set to ``True`` the input directed graph
         will be treat as if each edge was bidirectional/undirected in the
         output distance matrix.
+    :param float null_value: An optional float that will treated as a null
+        value. This is the default value in the output matrix and it is used
+        to indicate the absence of an edge between 2 nodes. By default this
+        is ``0.0``.
 
     :returns: The distance matrix
     :rtype: numpy.ndarray
@@ -153,22 +159,82 @@ def distance_matrix(graph, parallel_threshold=300):
 
 @distance_matrix.register(PyDiGraph)
 def _digraph_distance_matrix(
-    graph, parallel_threshold=300, as_undirected=False
+    graph, parallel_threshold=300, as_undirected=False, null_value=0.0
 ):
     return digraph_distance_matrix(
+        graph,
+        parallel_threshold=parallel_threshold,
+        as_undirected=as_undirected,
+        null_value=null_value,
+    )
+
+
+@distance_matrix.register(PyGraph)
+def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
+    return graph_distance_matrix(
+        graph, parallel_threshold=parallel_threshold, null_value=null_value
+    )
+
+
+@functools.singledispatch
+def unweighted_average_shortest_path_length(graph, parallel_threshold=300):
+    r"""Return the average shortest path length with unweighted edges.
+
+    The average shortest path length is calculated as
+
+    .. math::
+
+        a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
+
+    where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
+    shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
+    number of nodes in ``graph``. This also assumes that :math:`d(s, t) = 0`
+    if :math:`t` cannot be reached from :math:`s`.
+
+    This function is also multithreaded and will run in parallel if the number
+    of nodes in the graph is above the value of ``parallel_threshold`` (it
+    defaults to 300). If the function will be running in parallel the env var
+    ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+    By default it will use all available CPUs if the environment variable is
+    not specified.
+
+    :param PyDiGraph graph: The graph to compute the average shortest path length
+        for
+    :param int parallel_threshold: The number of nodes to calculate the
+        the distance matrix in parallel at. It defaults to 300, but this can
+        be tuned to any number of nodes.
+    :param bool as_undirected: If set to ``True`` the input directed graph
+        will be treated as if each edge was bidirectional/undirected while
+        finding the shortest paths. Default: ``False``.
+
+    :returns: The average shortest path length. If the graph is empty this
+        will return NaN and if there is a single node 0 will be returned.
+
+    :rtype: float
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@unweighted_average_shortest_path_length.register(PyDiGraph)
+def _digraph_unweighted_average_shortest_path_length(
+    graph, parallel_threshold=300, as_undirected=False
+):
+    return digraph_unweighted_average_shortest_path_length(
         graph,
         parallel_threshold=parallel_threshold,
         as_undirected=as_undirected,
     )
 
 
-@distance_matrix.register(PyGraph)
-def _graph_distance_matrix(graph, parallel_threshold=300):
-    return graph_distance_matrix(graph, parallel_threshold=parallel_threshold)
+@unweighted_average_shortest_path_length.register(PyGraph)
+def _graph_unweighted_shortest_path_length(graph, parallel_threshold=300):
+    return graph_unweighted_average_shortest_path_length(
+        graph, parallel_threshold=parallel_threshold
+    )
 
 
 @functools.singledispatch
-def adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
+def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     """Return the adjacency matrix for a graph object
 
     In the case where there are multiple edges between nodes the value in the
@@ -192,6 +258,10 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
         for all edges.
     :param float default_weight: If ``weight_fn`` is not used this can be
         optionally used to specify a default weight to use for all edges.
+    :param float null_value: An optional float that will treated as a null
+        value. This is the default value in the output matrix and it is used
+        to indicate the absence of an edge between 2 nodes. By default this is
+        ``0.0``.
 
      :return: The adjacency matrix for the input dag as a numpy array
      :rtype: numpy.ndarray
@@ -200,16 +270,26 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
 
 
 @adjacency_matrix.register(PyDiGraph)
-def _digraph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
+def _digraph_adjacency_matrix(
+    graph, weight_fn=None, default_weight=1.0, null_value=0.0
+):
     return digraph_adjacency_matrix(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        null_value=null_value,
     )
 
 
 @adjacency_matrix.register(PyGraph)
-def _graph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0):
+def _graph_adjacency_matrix(
+    graph, weight_fn=None, default_weight=1.0, null_value=0.0
+):
     return graph_adjacency_matrix(
-        graph, weight_fn=weight_fn, default_weight=default_weight
+        graph,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        null_value=null_value,
     )
 
 
@@ -715,7 +795,12 @@ def _graph_dfs_edges(graph, source):
 
 @functools.singledispatch
 def is_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=True
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    call_limit=None,
 ):
     """Determine if 2 graphs are isomorphic
 
@@ -750,6 +835,9 @@ def is_isomorphic(
     :param bool id_order: If set to ``False`` this function will use a
         heuristic matching order based on [VF2]_ paper. Otherwise it will
         default to matching the nodes in order specified by their ids.
+    :param int call_limit: An optional bound on the number of states that VF2
+        algorithm visits while searching for a solution. If it exceeds this limit,
+        the algorithm will stop and return ``False``.
 
     :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are
         not.
@@ -763,19 +851,29 @@ def is_isomorphic(
 
 @is_isomorphic.register(PyDiGraph)
 def _digraph_is_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=True
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    call_limit=None,
 ):
     return digraph_is_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order
+        first, second, node_matcher, edge_matcher, id_order, call_limit
     )
 
 
 @is_isomorphic.register(PyGraph)
 def _graph_is_isomorphic(
-    first, second, node_matcher=None, edge_matcher=None, id_order=True
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    call_limit=None,
 ):
     return graph_is_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order
+        first, second, node_matcher, edge_matcher, id_order, call_limit
     )
 
 
@@ -836,6 +934,7 @@ def is_subgraph_isomorphic(
     edge_matcher=None,
     id_order=False,
     induced=True,
+    call_limit=None,
 ):
     """Determine if 2 graphs are subgraph isomorphic
 
@@ -873,6 +972,9 @@ def is_subgraph_isomorphic(
     :param bool induced: If set to ``True`` this function will check the existence
         of a node-induced subgraph of first isomorphic to second graph.
         Default: ``True``.
+    :param int call_limit: An optional bound on the number of states that VF2
+        algorithm visits while searching for a solution. If it exceeds this limit,
+        the algorithm will stop and return ``False``.
 
     :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
         , ``False`` if there is not.
@@ -889,9 +991,10 @@ def _digraph_is_subgraph_isomorphic(
     edge_matcher=None,
     id_order=False,
     induced=True,
+    call_limit=None,
 ):
     return digraph_is_subgraph_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, induced
+        first, second, node_matcher, edge_matcher, id_order, induced, call_limit
     )
 
 
@@ -903,9 +1006,10 @@ def _graph_is_subgraph_isomorphic(
     edge_matcher=None,
     id_order=False,
     induced=True,
+    call_limit=None,
 ):
     return graph_is_subgraph_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, induced
+        first, second, node_matcher, edge_matcher, id_order, induced, call_limit
     )
 
 
@@ -1392,3 +1496,107 @@ def _digraph_num_shortest_paths_unweighted(graph, source):
 @num_shortest_paths_unweighted.register(PyGraph)
 def _graph_num_shortest_paths_unweighted(graph, source):
     return graph_num_shortest_paths_unweighted(graph, source)
+
+
+@functools.singledispatch
+def vf2_mapping(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    subgraph=False,
+    induced=True,
+    call_limit=None,
+):
+    """
+    Return an iterator over all vf2 mappings between two graphs.
+
+    This funcion will run the vf2 algorithm used from
+    :func:`~retworkx.is_isomorphic` and :func:`~retworkx.is_subgraph_isomorphic`
+    but instead of returning a boolean it will return an iterator over all possible
+    mapping of node ids found from ``first`` to ``second``. If the graphs are not
+    isomorphic then the iterator will be empty. A simple example that retrieves
+    one mapping would be::
+
+            graph_a = retworkx.generators.path_graph(3)
+            graph_b = retworkx.generators.path_graph(2)
+            vf2 = retworkx.vf2_mapping(graph_a, graph_b, subgraph=True)
+            try:
+                mapping = next(vf2)
+            except StopIteration:
+                pass
+
+    :param first: The first graph to find the mapping for
+    :param second: The second graph to find the mapping for
+    :param node_matcher: An optional python callable object that takes 2
+        positional arguments, one for each node data object in either graph.
+        If the return of this function evaluates to True then the nodes
+        passed to it are viewed as matching.
+    :param edge_matcher: A python callable object that takes 2 positional
+        one for each edge data object. If the return of this
+        function evaluates to True then the edges passed to it are viewed
+        as matching.
+    :param bool id_order: If set to ``False`` this function will use a
+        heuristic matching order based on [VF2]_ paper. Otherwise it will
+        default to matching the nodes in order specified by their ids.
+    :param bool subgraph: If set to ``True`` the function will return the
+        subgraph isomorphic found between the graphs.
+    :param bool induced: If set to ``True`` this function will check the existence
+        of a node-induced subgraph of first isomorphic to second graph.
+        Default: ``True``.
+    :param int call_limit: An optional bound on the number of states that VF2
+        algorithm visits while searching for a solution. If it exceeds this limit,
+        the algorithm will stop. Default: ``None``.
+
+    :returns: An iterator over dicitonaries of node indices from ``first`` to node
+        indices in ``second`` representing the mapping found.
+    :rtype: Iterable[NodeMap]
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@vf2_mapping.register(PyDiGraph)
+def _digraph_vf2_mapping(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    subgraph=False,
+    induced=True,
+    call_limit=None,
+):
+    return digraph_vf2_mapping(
+        first,
+        second,
+        node_matcher=node_matcher,
+        edge_matcher=edge_matcher,
+        id_order=id_order,
+        subgraph=subgraph,
+        induced=induced,
+        call_limit=call_limit,
+    )
+
+
+@vf2_mapping.register(PyGraph)
+def _graph_vf2_mapping(
+    first,
+    second,
+    node_matcher=None,
+    edge_matcher=None,
+    id_order=True,
+    subgraph=False,
+    induced=True,
+    call_limit=None,
+):
+    return graph_vf2_mapping(
+        first,
+        second,
+        node_matcher=node_matcher,
+        edge_matcher=edge_matcher,
+        id_order=id_order,
+        subgraph=subgraph,
+        induced=induced,
+        call_limit=call_limit,
+    )

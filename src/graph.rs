@@ -1420,14 +1420,19 @@ impl PyGraph {
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
     ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
     ///     dimensional array and be a ``float``/``np.float64`` data type.
+    /// :param float null_value: An optional float that will treated as a null
+    ///     value. If any element in the input matrix is this value it will be
+    ///     treated as not an edge. By default this is ``0.0``.
     ///
     /// :returns: A new graph object generated from the adjacency matrix
     /// :rtype: PyGraph
     #[staticmethod]
+    #[args(null_value = "0.0")]
     #[pyo3(text_signature = "(matrix, /)")]
     pub fn from_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
+        null_value: f64,
     ) -> PyGraph {
         let array = matrix.as_array();
         let shape = array.shape();
@@ -1444,7 +1449,15 @@ impl PyGraph {
                     if target_index < index {
                         continue;
                     }
-                    if row[[target_index]] > 0.0 {
+                    if null_value.is_nan() {
+                        if !row[[target_index]].is_nan() {
+                            out_graph.add_edge(
+                                source_index,
+                                NodeIndex::new(target_index),
+                                row[[target_index]].to_object(py),
+                            );
+                        }
+                    } else if row[[target_index]] != null_value {
                         out_graph.add_edge(
                             source_index,
                             NodeIndex::new(target_index),
