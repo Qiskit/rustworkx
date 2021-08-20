@@ -199,7 +199,7 @@ where
     let mut sigma = HashMap::<usize, i64>::with_capacity(c);
     let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
     #[allow(non_snake_case)]
-    let mut Q: VecDeque<NodeIndex> = VecDeque::with_capacity(c); // a queue
+    let mut Q: VecDeque<NodeIndex> = VecDeque::with_capacity(c);
 
     let i_s = graph.to_index(*node_s);
     let index_s = NodeIndex::new(i_s);
