@@ -2595,9 +2595,21 @@ impl PyDiGraph {
         multigraph: bool,
         weight_combo_fn: Option<PyObject>,
     ) -> PyResult<crate::graph::PyGraph> {
-        let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let node_count = self.node_count();
+        let mut new_graph = if multigraph {
+            StableUnGraph::<PyObject, PyObject>::with_capacity(
+                node_count,
+                self.graph.edge_count(),
+            )
+        } else {
+            // If multigraph is false edge count is difficult to predict
+            // without counting parallel edges. So, just stick with 0 and
+            // reallocate dynamically
+            StableUnGraph::<PyObject, PyObject>::with_capacity(node_count, 0)
+        };
+
         let mut node_map: HashMap<NodeIndex, NodeIndex> =
-            HashMap::with_capacity(self.node_count());
+            HashMap::with_capacity(node_count);
 
         let combine = |a: &PyObject,
                        b: &PyObject,

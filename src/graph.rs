@@ -37,8 +37,10 @@ use super::iterators::{
 };
 use super::{NoEdgeBetweenNodes, NodesRemoved};
 
+use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
+use petgraph::stable_graph::StableDiGraph;
 use petgraph::stable_graph::StableUnGraph;
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
@@ -1078,6 +1080,46 @@ impl PyGraph {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.edges(index);
         neighbors.count()
+    }
+
+    /// Generate a new :class:`~retworkx.PyDiGraph` object from this graph
+    ///
+    /// This will create a new :class:`~retworkx.PyDiGraph` object from this
+    /// graph. All edges in this graph will result in a bidirectional edge
+    /// pair in the output graph.
+    ///
+    /// :returns: A new :class:`~retworkx.PyDiGraph` object with a
+    ///     bidirectional edge pair for each edge in this graph. Also all
+    ///     node and edge weights/data payloads are copied by reference to
+    ///     the output graph
+    /// :rtype: PyDiGraph
+    pub fn to_directed(&self, py: Python) -> crate::digraph::PyDiGraph {
+        let node_count = self.node_count();
+        let mut new_graph = StableDiGraph::<PyObject, PyObject>::with_capacity(
+            node_count,
+            2 * self.graph.edge_count(),
+        );
+        let mut node_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(node_count);
+        for node_index in self.graph.node_indices() {
+            let node = self.graph[node_index].clone_ref(py);
+            let new_index = new_graph.add_node(node);
+            node_map.insert(node_index, new_index);
+        }
+        for edge in self.edge_references() {
+            let &source = node_map.get(&edge.source()).unwrap();
+            let &target = node_map.get(&edge.target()).unwrap();
+            let weight = edge.weight();
+            new_graph.add_edge(source, target, weight.clone_ref(py));
+            new_graph.add_edge(target, source, weight.clone_ref(py));
+        }
+        crate::digraph::PyDiGraph {
+            graph: new_graph,
+            node_removed: false,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
+            multigraph: self.multigraph,
+        }
     }
 
     /// Generate a dot file from the graph
