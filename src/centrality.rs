@@ -27,7 +27,11 @@ use petgraph::visit::{
     NodeIndexable,
 };
 
-// Correspondence to notation in Brandes 2001
+// The algorithm here is taken from:
+// Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
+// Journal of Mathematical Sociology 25(2):163-177, 2001.
+//
+// Correspondence of variable names to quantities in the paper is as follows:
 //
 // P -- predecessors
 // S -- verts_sorted_by_distance,
