@@ -56,10 +56,9 @@ use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::{
-    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
-    NodeCount, NodeIndexable,
-};
+use petgraph::stable_graph::StableGraph;
+use petgraph::visit::{IntoEdgeReferences, IntoNodeIdentifiers, NodeIndexable};
+use petgraph::EdgeType;
 
 use crate::generators::PyInit_generators;
 
@@ -67,19 +66,18 @@ pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
-pub fn get_edge_iter_with_weights<G>(
-    graph: G,
-) -> impl Iterator<Item = (usize, usize, PyObject)>
+impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
 where
-    G: GraphBase
-        + IntoEdgeReferences
-        + IntoNodeIdentifiers
-        + NodeIndexable
-        + NodeCount
-        + GraphProp
-        + NodesRemoved,
-    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
+    Ty: EdgeType,
 {
+    fn nodes_removed(&self) -> bool {
+        self.node_bound() != self.node_count()
+    }
+}
+
+pub fn get_edge_iter_with_weights<Ty: EdgeType>(
+    graph: &StableGraph<PyObject, PyObject, Ty>,
+) -> impl Iterator<Item = (usize, usize, PyObject)> + '_ {
     let node_map: Option<HashMap<NodeIndex, usize>> = if graph.nodes_removed() {
         let mut node_hash_map: HashMap<NodeIndex, usize> =
             HashMap::with_capacity(graph.node_count());
