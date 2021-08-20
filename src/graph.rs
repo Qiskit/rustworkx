@@ -1088,6 +1088,11 @@ impl PyGraph {
     /// graph. All edges in this graph will result in a bidirectional edge
     /// pair in the output graph.
     ///
+    /// .. note::
+    ///
+    ///     The node indices in the output :class:`~retworkx.PyDiGraph` may
+    ///     differ if nodes have been removed.
+    ///
     /// :returns: A new :class:`~retworkx.PyDiGraph` object with a
     ///     bidirectional edge pair for each edge in this graph. Also all
     ///     node and edge weights/data payloads are copied by reference to

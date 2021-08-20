@@ -2586,6 +2586,11 @@ impl PyDiGraph {
     /// Do note that the node and edge weights/data payloads will be passed
     /// by reference to the new :class:`~retworkx.PyGraph` object.
     ///
+    /// .. note::
+    ///
+    ///     The node indices in the output :class:`~retworkx.PyGraph` may
+    ///     differ if nodes have been removed.
+    ///
     /// :param bool multigraph: If set to `False` the output graph will not
     ///     allow parallel edges. Instead parallel edges will be condensed
     ///     into a single edge and their data will be combined using
