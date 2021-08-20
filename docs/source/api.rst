@@ -45,7 +45,7 @@ Centrality
 .. autosummary::
    :toctree: stubs
 
-   retworkx.graph_betweenness_centrality
+   retworkx.betweenness_centrality
 
 .. _traversal:
 

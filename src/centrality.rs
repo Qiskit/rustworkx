@@ -140,7 +140,7 @@ fn _accumulate_basic(
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
         let coeff = (1.0 + delta[iw]) / (path_calc.sigma[&iw] as f64);
-        let p_w = path_calc.predecessors.get_mut(w).unwrap();
+        let p_w = path_calc.predecessors.get(w).unwrap();
         for v in p_w {
             let iv = (*v).index();
             delta[iv] += (path_calc.sigma[&iv] as f64) * coeff;
@@ -157,17 +157,14 @@ fn _accumulate_endpoints(
     path_calc: &mut ShortestPathData,
     is: usize,
 ) {
-    if betweenness[is].is_some() {
-        betweenness[is] = Some(
-            betweenness[is].unwrap()
-                + ((path_calc.verts_sorted_by_distance.len() - 1) as f64),
-        );
+    betweenness[is] = betweenness[is]
+        .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
     }
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
         let coeff = (1.0 + delta[iw]) / (path_calc.sigma[&iw] as f64);
-        let p_w = path_calc.predecessors.get_mut(w).unwrap();
+        let p_w = path_calc.predecessors.get(w).unwrap();
         for v in p_w {
             let iv = (*v).index();
             delta[iv] += (path_calc.sigma[&iv] as f64) * coeff;
@@ -197,9 +194,11 @@ where
     let mut verts_sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
     #[allow(non_snake_case)]
     let mut Q: Vec<NodeIndex> = Vec::new(); // a queue
-    let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::new();
-    let mut sigma = HashMap::<usize, i64>::new();
-    let mut distance = HashMap::<G::NodeId, i64>::new();
+    let c = graph.node_count();
+    let mut predecessors =
+        HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
+    let mut sigma = HashMap::<usize, i64>::with_capacity(c);
+    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
 
     let i_s = graph.to_index(*node_s);
     let index_s = NodeIndex::new(i_s);
