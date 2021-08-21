@@ -206,16 +206,14 @@ where
 
     for node in graph.node_identifiers() {
         let i = graph.to_index(node);
-        let index = NodeIndex::new(i);
-        predecessors.insert(index, Vec::new());
+        predecessors.insert(node, Vec::new());
         sigma.insert(i, 0);
-        distance.insert(index, -1);
+        distance.insert(node, -1);
     }
     sigma.insert(index_s.index(), 1);
     distance.insert(index_s, 0);
     Q.push_back(index_s);
-    while !Q.is_empty() {
-        let v = Q.pop_front().unwrap(); // remove(0);
+    while let Some(v) = Q.pop_front() {
         verts_sorted_by_distance.push(v);
         let distance_v = distance[&v];
         for w in graph.neighbors(v) {
