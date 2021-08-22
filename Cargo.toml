@@ -29,7 +29,7 @@ num-bigint = "0.4"
 indexmap = "1.6.2"
 
 [dependencies.pyo3]
-version = "0.14.2"
+version = "0.14.3"
 features = ["extension-module", "hashbrown", "num-bigint"]
 
 [dependencies.hashbrown]
