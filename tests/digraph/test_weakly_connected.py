@@ -37,6 +37,12 @@ class TestWeaklyConnected(unittest.TestCase):
             G.add_child(node, str(i), {})
         self.assertEqual(retworkx.number_weakly_connected_components(G), 100000)
 
+    def test_number_weakly_connected_node_holes(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1, 2])
+        graph.remove_node(1)
+        self.assertEqual(retworkx.number_weakly_connected_components(graph), 2)
+
     def test_weakly_connected_components(self):
         graph = retworkx.PyDiGraph()
         graph.extend_from_edge_list(

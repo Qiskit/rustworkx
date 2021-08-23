@@ -27,7 +27,8 @@ use pyo3::Python;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::NodeCount;
+use petgraph::unionfind::UnionFind;
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -225,17 +226,26 @@ pub fn digraph_find_cycle(
     EdgeList { edges: cycle }
 }
 
-/// Find the number of weakly connected components in a DAG.
+/// Find the number of weakly connected components in a directed graph
 ///
 /// :param PyDiGraph graph: The graph to find the number of weakly connected
 ///     components on
 ///
-/// :returns: The number of weakly connected components in the DAG
+/// :returns: The number of weakly connected components in the graph
 /// :rtype: int
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
-    algo::connected_components(graph)
+    let mut weak_components = graph.node_count();
+    let mut vertex_sets = UnionFind::new(graph.node_bound());
+    for edge in graph.graph.edge_references() {
+        let (a, b) = (edge.source(), edge.target());
+        // union the two vertices of the edge
+        if vertex_sets.union(graph.graph.to_index(a), graph.graph.to_index(b)) {
+            weak_components -= 1
+        };
+    }
+    weak_components
 }
 
 /// Find the weakly connected components in a directed graph
@@ -323,23 +333,36 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     for all edges.
 /// :param float default_weight: If ``weight_fn`` is not used this can be
 ///     optionally used to specify a default weight to use for all edges.
+/// :param float null_value: An optional float that will treated as a null
+///     value. This is the default value in the output matrix and it is used
+///     to indicate the absence of an edge between 2 nodes. By default this is
+///     ``0.0``.
 ///
 ///  :return: The adjacency matrix for the input dag as a numpy array
 ///  :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0)")]
+#[pyfunction(default_weight = "1.0", null_value = "0.0")]
+#[pyo3(
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    null_value: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array2::<f64>::zeros((n, n));
+    let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
-        matrix[[i, j]] += edge_weight;
+        if matrix[[i, j]] == null_value
+            || (null_value.is_nan() && matrix[[i, j]].is_nan())
+        {
+            matrix[[i, j]] = edge_weight;
+        } else {
+            matrix[[i, j]] += edge_weight;
+        }
     }
     Ok(matrix.into_pyarray(py).into())
 }
@@ -366,24 +389,38 @@ pub fn digraph_adjacency_matrix(
 ///     for all edges.
 /// :param float default_weight: If ``weight_fn`` is not used this can be
 ///     optionally used to specify a default weight to use for all edges.
+/// :param float null_value: An optional float that will treated as a null
+///     value. This is the default value in the output matrix and it is used
+///     to indicate the absence of an edge between 2 nodes. By default this is
+///     ``0.0``.
 ///
 /// :return: The adjacency matrix for the input dag as a numpy array
 /// :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0)")]
+#[pyfunction(default_weight = "1.0", null_value = "0.0")]
+#[pyo3(
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
+    null_value: f64,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
-    let mut matrix = Array2::<f64>::zeros((n, n));
+    let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
-        matrix[[i, j]] += edge_weight;
-        matrix[[j, i]] += edge_weight;
+        if matrix[[i, j]] == null_value
+            || (null_value.is_nan() && matrix[[i, j]].is_nan())
+        {
+            matrix[[i, j]] = edge_weight;
+            matrix[[j, i]] = edge_weight;
+        } else {
+            matrix[[i, j]] += edge_weight;
+            matrix[[j, i]] += edge_weight;
+        }
     }
     Ok(matrix.into_pyarray(py).into())
 }

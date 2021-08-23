@@ -12,26 +12,23 @@
 
 use hashbrown::{HashMap, HashSet};
 
-use ndarray::prelude::*;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
-pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
+pub fn compute_distance_sum<Ty: EdgeType + Sync>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
     parallel_threshold: usize,
     as_undirected: bool,
-    null_value: f64,
-) -> Array2<f64> {
+) -> usize {
     let n = graph.node_count();
-    let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
-    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
+    let bfs_traversal = |start_index: NodeIndex| -> usize {
         let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
-        let start_index = NodeIndex::new(index);
         let mut level = 0;
         let mut next_level: HashSet<NodeIndex> = HashSet::new();
         next_level.insert(start_index);
+        let mut count = 0;
         while !next_level.is_empty() {
             let this_level = next_level;
             next_level = HashSet::new();
@@ -40,48 +37,37 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
                 if !seen.contains_key(&v) {
                     seen.insert(v, level);
                     found.push(v);
-                    row[[v.index()]] = level as f64;
+                    count += level;
                 }
             }
             if seen.len() == n {
-                return;
+                return count;
             }
             for node in found {
-                if graph.is_directed() {
+                for v in graph
+                    .neighbors_directed(node, petgraph::Direction::Outgoing)
+                {
+                    next_level.insert(v);
+                }
+                if graph.is_directed() && as_undirected {
                     for v in graph
-                        .neighbors_directed(node, petgraph::Direction::Outgoing)
+                        .neighbors_directed(node, petgraph::Direction::Incoming)
                     {
-                        next_level.insert(v);
-                    }
-                    if as_undirected {
-                        for v in graph.neighbors_directed(
-                            node,
-                            petgraph::Direction::Incoming,
-                        ) {
-                            next_level.insert(v);
-                        }
-                    }
-                } else {
-                    for v in graph.neighbors(node) {
                         next_level.insert(v);
                     }
                 }
             }
             level += 1
         }
+        count
     };
+    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
     if n < parallel_threshold {
-        matrix
-            .axis_iter_mut(Axis(0))
-            .enumerate()
-            .for_each(|(index, row)| bfs_traversal(index, row));
+        node_indices.iter().map(|index| bfs_traversal(*index)).sum()
     } else {
-        // Parallelize by row and iterate from each row index in BFS order
-        matrix
-            .axis_iter_mut(Axis(0))
-            .into_par_iter()
-            .enumerate()
-            .for_each(|(index, row)| bfs_traversal(index, row));
+        node_indices
+            .par_iter()
+            .map(|index| bfs_traversal(*index))
+            .sum()
     }
-    matrix
 }
