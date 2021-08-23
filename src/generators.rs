@@ -1240,7 +1240,7 @@ pub fn heavy_hex_graph(
     })
 }
 
-/// Generate an directed heavy hex graph. Fig. 2 of
+/// Generate a directed heavy hex graph. Fig. 2 of
 /// https://arxiv.org/abs/1907.09528
 /// An ASCII diagram of the graph is given by:
 ///
@@ -1311,7 +1311,7 @@ pub fn heavy_hex_graph(
 ///   image
 ///
 #[pyfunction(bidirectional = false, multigraph = true)]
-#[pyo3(text_signature = "(d, /, bidirecational=False, multigraph=True)")]
+#[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
 pub fn directed_heavy_hex_graph(
     py: Python,
     d: usize,
