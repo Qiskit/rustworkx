@@ -1340,10 +1340,10 @@ pub fn directed_heavy_hex_graph(
     for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
         for (j, flag) in flag_chunk.iter().enumerate() {
             graph.add_edge(nodes_data[i * d + j], *flag, py.None());
-            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
+            graph.add_edge(nodes_data[i * d + j + 1], *flag, py.None());
             if bidirectional {
                 graph.add_edge(*flag, nodes_data[i * d + j], py.None());
-                graph.add_edge(nodes_data[i * d + j + 1], *flag, py.None());
+                graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
             }
         }
     }
@@ -1353,15 +1353,15 @@ pub fn directed_heavy_hex_graph(
         if i % 2 == 0 {
             graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
             graph.add_edge(
-                syndrome_chunk[0],
                 nodes_data[(i + 1) * d],
+                syndrome_chunk[0],
                 py.None(),
             );
             if bidirectional {
                 graph.add_edge(syndrome_chunk[0], nodes_data[i * d], py.None());
                 graph.add_edge(
-                    nodes_data[(i + 1) * d],
                     syndrome_chunk[0],
+                    nodes_data[(i + 1) * d],
                     py.None(),
                 );
             }
@@ -1372,8 +1372,8 @@ pub fn directed_heavy_hex_graph(
                 py.None(),
             );
             graph.add_edge(
-                syndrome_chunk[syndrome_chunk.len() - 1],
                 nodes_data[i * d + (2 * d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
                 py.None(),
             );
             if bidirectional {
@@ -1383,8 +1383,8 @@ pub fn directed_heavy_hex_graph(
                     py.None(),
                 );
                 graph.add_edge(
-                    nodes_data[i * d + (2 * d - 1)],
                     syndrome_chunk[syndrome_chunk.len() - 1],
+                    nodes_data[i * d + (2 * d - 1)],
                     py.None(),
                 );
             }
@@ -1397,8 +1397,8 @@ pub fn directed_heavy_hex_graph(
             for (j, syndrome) in syndrome_chunk.iter().enumerate() {
                 if j != 0 {
                     graph.add_edge(
-                        nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
                         *syndrome,
+                        nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
                         py.None(),
                     );
                     graph.add_edge(
@@ -1408,8 +1408,8 @@ pub fn directed_heavy_hex_graph(
                     );
                     if bidirectional {
                         graph.add_edge(
-                            *syndrome,
                             nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
+                            *syndrome,
                             py.None(),
                         );
                         graph.add_edge(
@@ -1424,8 +1424,8 @@ pub fn directed_heavy_hex_graph(
             for (j, syndrome) in syndrome_chunk.iter().enumerate() {
                 if j != syndrome_chunk.len() - 1 {
                     graph.add_edge(
-                        nodes_flag[i * (d - 1) + 2 * j],
                         *syndrome,
+                        nodes_flag[i * (d - 1) + 2 * j],
                         py.None(),
                     );
                     graph.add_edge(
@@ -1435,8 +1435,8 @@ pub fn directed_heavy_hex_graph(
                     );
                     if bidirectional {
                         graph.add_edge(
-                            *syndrome,
                             nodes_flag[i * (d - 1) + 2 * j],
+                            *syndrome,
                             py.None(),
                         );
                         graph.add_edge(
