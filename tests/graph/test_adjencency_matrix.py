@@ -93,6 +93,20 @@ class TestGraphAdjacencyMatrix(unittest.TestCase):
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(np.array([[0.0, 7.5], [7.5, 0.0]]), res))
 
+    def test_multigraph_sum_cast_weight_func_non_zero_null(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, 7.0)
+        graph.add_edge(node_a, node_b, 0.5)
+        res = retworkx.graph_adjacency_matrix(
+            graph, lambda x: float(x), null_value=np.inf
+        )
+        self.assertIsInstance(res, np.ndarray)
+        self.assertTrue(
+            np.array_equal(np.array([[np.inf, 7.5], [7.5, np.inf]]), res)
+        )
+
     def test_dag_to_graph_adjacency_matrix(self):
         dag = retworkx.PyDAG()
         self.assertRaises(TypeError, retworkx.graph_adjacency_matrix, dag)
