@@ -1072,6 +1072,371 @@ pub fn directed_binomial_tree_graph(
     })
 }
 
+/// Generate an undirected heavy square graph. Fig. 6 of
+/// https://arxiv.org/abs/1907.09528.
+/// An ASCII diagram of the graph is given by:
+///
+/// .. code-block:: console
+///
+///     ...       S   ...
+///        \     / \
+///        ... D   D   D ...
+///            |   |   |
+///        ... F-S-F-S-F-...
+///            |   |   |
+///        ... D   D   D ...
+///            |   |   |
+///        ... F-S-F-S-F-...
+///            |   |   |
+///            .........
+///            |   |   |
+///        ... D   D   D ...
+///             \ /     \
+///        ...   S       ...
+///
+/// NOTE: This function generates the four-frequency variant of the heavy square code.
+/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function doesn't support the variant Fig 10.b right.
+///
+/// :param int d: distance of the code.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated heavy square graph
+/// :rtype: PyGraph
+/// :raises IndexError: If d is even.
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.heavy_square_graph(3)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(d, /, multigraph=True)")]
+pub fn heavy_square_graph(
+    py: Python,
+    d: usize,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    if d % 2 == 0 {
+        return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    let num_data = d * d;
+    let num_syndrome = d * (d - 1);
+    let num_flag = d * (d - 1);
+
+    let nodes_data: Vec<NodeIndex> =
+        (0..num_data).map(|_| graph.add_node(py.None())).collect();
+    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
+        .map(|_| graph.add_node(py.None()))
+        .collect();
+    let nodes_flag: Vec<NodeIndex> =
+        (0..num_flag).map(|_| graph.add_node(py.None())).collect();
+
+    // connect data and flags
+    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
+        for (j, flag) in flag_chunk.iter().enumerate() {
+            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
+            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
+        }
+    }
+
+    // connect data and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
+        if i % 2 == 0 {
+            graph.add_edge(
+                nodes_data[i * d + (d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            graph.add_edge(
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                nodes_data[i * d + (2 * d - 1)],
+                py.None(),
+            );
+        } else if i % 2 == 1 {
+            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
+            graph.add_edge(
+                syndrome_chunk[0],
+                nodes_data[(i + 1) * d],
+                py.None(),
+            );
+        }
+    }
+
+    // connect flag and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
+        if i % 2 == 0 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != syndrome_chunk.len() - 1 {
+                    graph.add_edge(
+                        nodes_flag[i * (d - 1) + j],
+                        *syndrome,
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j],
+                        py.None(),
+                    );
+                }
+            }
+        } else if i % 2 == 1 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != 0 {
+                    graph.add_edge(
+                        nodes_flag[i * (d - 1) + j - 1],
+                        *syndrome,
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j - 1],
+                        py.None(),
+                    );
+                }
+            }
+        }
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
+/// Generate an directed heavy square graph. Fig. 6 of
+/// https://arxiv.org/abs/1907.09528.
+/// An ASCII diagram of the graph is given by:
+///
+/// .. code-block:: console
+///
+///     ...       S   ...
+///        \     / \
+///        ... D   D   D ...
+///            |   |   |
+///        ... F-S-F-S-F-...
+///            |   |   |
+///        ... D   D   D ...
+///            |   |   |
+///        ... F-S-F-S-F-...
+///            |   |   |
+///            .........
+///            |   |   |
+///        ... D   D   D ...
+///             \ /     \
+///        ...   S       ...
+///
+/// NOTE: This function generates the four-frequency variant of the heavy square code.
+/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function doesn't support the variant Fig 10.b right.
+///
+/// :param int d: distance of the code.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated directed heavy square graph
+/// :rtype: PyDiGraph
+/// :raises IndexError: If d is even.
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.heavy_square_graph(3)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(bidirectional = false, multigraph = true)]
+#[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
+pub fn directed_heavy_square_graph(
+    py: Python,
+    d: usize,
+    bidirectional: bool,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+
+    if d % 2 == 0 {
+        return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    let num_data = d * d;
+    let num_syndrome = d * (d - 1);
+    let num_flag = d * (d - 1);
+
+    let nodes_data: Vec<NodeIndex> =
+        (0..num_data).map(|_| graph.add_node(py.None())).collect();
+    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
+        .map(|_| graph.add_node(py.None()))
+        .collect();
+    let nodes_flag: Vec<NodeIndex> =
+        (0..num_flag).map(|_| graph.add_node(py.None())).collect();
+
+    // connect data and flags
+    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
+        for (j, flag) in flag_chunk.iter().enumerate() {
+            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
+            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
+            if bidirectional {
+                graph.add_edge(*flag, nodes_data[i * d + j], py.None());
+                graph.add_edge(nodes_data[i * d + j + 1], *flag, py.None());
+            }
+        }
+    }
+
+    // connect data and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
+        if i % 2 == 0 {
+            graph.add_edge(
+                nodes_data[i * d + (d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            graph.add_edge(
+                nodes_data[i * d + (2 * d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(
+                    syndrome_chunk[syndrome_chunk.len() - 1],
+                    nodes_data[i * d + (d - 1)],
+                    py.None(),
+                );
+                graph.add_edge(
+                    syndrome_chunk[syndrome_chunk.len() - 1],
+                    nodes_data[i * d + (2 * d - 1)],
+                    py.None(),
+                );
+            }
+        } else if i % 2 == 1 {
+            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
+            graph.add_edge(
+                nodes_data[(i + 1) * d],
+                syndrome_chunk[0],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(syndrome_chunk[0], nodes_data[i * d], py.None());
+                graph.add_edge(
+                    syndrome_chunk[0],
+                    nodes_data[(i + 1) * d],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    // connect flag and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
+        if i % 2 == 0 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != syndrome_chunk.len() - 1 {
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[i * (d - 1) + j],
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j],
+                        py.None(),
+                    );
+                    if bidirectional {
+                        graph.add_edge(
+                            nodes_flag[i * (d - 1) + j],
+                            *syndrome,
+                            py.None(),
+                        );
+                        graph.add_edge(
+                            nodes_flag[(i + 1) * (d - 1) + j],
+                            *syndrome,
+                            py.None(),
+                        );
+                    }
+                }
+            }
+        } else if i % 2 == 1 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != 0 {
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[i * (d - 1) + j - 1],
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j - 1],
+                        py.None(),
+                    );
+                    if bidirectional {
+                        graph.add_edge(
+                            nodes_flag[i * (d - 1) + j - 1],
+                            *syndrome,
+                            py.None(),
+                        );
+                        graph.add_edge(
+                            nodes_flag[(i + 1) * (d - 1) + j - 1],
+                            *syndrome,
+                            py.None(),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph,
+    })
+}
+
 /// Generate an undirected heavy hex graph. Fig. 2 of
 /// https://arxiv.org/abs/1907.09528
 /// An ASCII diagram of the graph is given by:
@@ -1737,6 +2102,8 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(heavy_square_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_heavy_square_graph))?;
     m.add_wrapped(wrap_pyfunction!(heavy_hex_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_heavy_hex_graph))?;
     m.add_wrapped(wrap_pyfunction!(binomial_tree_graph))?;
