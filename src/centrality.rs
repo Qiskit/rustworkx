@@ -140,11 +140,11 @@ fn _accumulate_basic(
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
-        let coeff = (1.0 + delta[iw]) / path_calc.sigma[&iw];
+        let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
         let p_w = path_calc.predecessors.get(w).unwrap();
         for v in p_w {
             let iv = (*v).index();
-            delta[iv] += path_calc.sigma[&iv] * coeff;
+            delta[iv] += path_calc.sigma[v] * coeff;
         }
         if iw != is {
             betweenness[iw] = betweenness[iw].map(|x| x + delta[iw]);
@@ -163,11 +163,11 @@ fn _accumulate_endpoints(
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
-        let coeff = (1.0 + delta[iw]) / path_calc.sigma[&iw];
+        let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
         let p_w = path_calc.predecessors.get(w).unwrap();
         for v in p_w {
             let iv = (*v).index();
-            delta[iv] += path_calc.sigma[&iv] * coeff;
+            delta[iv] += path_calc.sigma[v] * coeff;
         }
         if iw != is {
             betweenness[iw] = betweenness[iw].map(|x| x + delta[iw] + 1.0);
@@ -178,7 +178,7 @@ fn _accumulate_endpoints(
 struct ShortestPathData {
     verts_sorted_by_distance: Vec<NodeIndex>,
     predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
-    sigma: HashMap<usize, f64>,
+    sigma: HashMap<NodeIndex, f64>,
 }
 
 fn shortest_path_for_centrality<G>(
@@ -196,7 +196,7 @@ where
     let c = graph.node_count();
     let mut predecessors =
         HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
-    let mut sigma = HashMap::<usize, f64>::with_capacity(c);
+    let mut sigma = HashMap::<NodeIndex, f64>::with_capacity(c);
     let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
     #[allow(non_snake_case)]
     let mut Q: VecDeque<NodeIndex> = VecDeque::with_capacity(c);
@@ -207,10 +207,10 @@ where
     for node in graph.node_identifiers() {
         let i = graph.to_index(node);
         predecessors.insert(node, Vec::new());
-        sigma.insert(i, 0.0);
+        sigma.insert(node, 0.0);
         distance.insert(node, -1);
     }
-    sigma.insert(index_s.index(), 1.0);
+    sigma.insert(index_s, 1.0);
     distance.insert(index_s, 0);
     Q.push_back(index_s);
     while let Some(v) = Q.pop_front() {
@@ -223,8 +223,8 @@ where
             }
             if distance[&w] == distance_v + 1 {
                 sigma.insert(
-                    graph.to_index(w),
-                    sigma[&graph.to_index(w)] + sigma[&graph.to_index(v)],
+                    w,
+                    sigma[&w] + sigma[&v],
                 );
                 let e_p = predecessors.get_mut(&w).unwrap();
                 e_p.push(v);
