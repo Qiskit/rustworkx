@@ -196,7 +196,7 @@ where
     let c = graph.node_count();
     let mut predecessors =
         HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
-    let mut sigma = HashMap::<NodeIndex, f64>::with_capacity(c);
+    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
     let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
     #[allow(non_snake_case)]
     let mut Q: VecDeque<NodeIndex> = VecDeque::with_capacity(c);
