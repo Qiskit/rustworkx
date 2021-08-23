@@ -157,6 +157,8 @@ Generators
     retworkx.generators.binomial_tree_graph
     retworkx.generators.hexagonal_lattice_graph
     retworkx.generators.directed_hexagonal_lattice_graph
+    retworkx.generators.heavy_hex_graph
+    retworkx.generators.directed_heavy_hex_graph
 
 Random Circuit Functions
 ========================
