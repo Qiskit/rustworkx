@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use crate::iterators::CentralityMapping;
+
 use crate::digraph;
 use crate::graph;
 
@@ -205,7 +207,6 @@ where
     let index_s = NodeIndex::new(i_s);
 
     for node in graph.node_identifiers() {
-        let i = graph.to_index(node);
         predecessors.insert(node, Vec::new());
         sigma.insert(node, 0.0);
         distance.insert(node, -1);
@@ -222,10 +223,7 @@ where
                 distance.insert(w, distance_v + 1);
             }
             if distance[&w] == distance_v + 1 {
-                sigma.insert(
-                    w,
-                    sigma[&w] + sigma[&v],
-                );
+                sigma.insert(w, sigma[&w] + sigma[&v]);
                 let e_p = predecessors.get_mut(&w).unwrap();
                 e_p.push(v);
             }
@@ -247,9 +245,9 @@ where
 /// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
 ///    compute the betweenness.
 ///
-/// :returns: a dict whose keys are the node indices and values are the betweenness score
-///     for each node.
-/// :rtype: dict
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      betweenness score for each node.
+/// :rtype: CentralityMapping
 #[pyfunction(normalized = "true", endpoints = "false")]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn graph_betweenness_centrality(
@@ -257,13 +255,15 @@ pub fn graph_betweenness_centrality(
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
-) -> PyResult<HashMap<usize, f64>> {
+) -> PyResult<CentralityMapping> {
     let betweenness = betweenness_centrality(&graph, endpoints, normalized);
-    let out_map: HashMap<usize, f64> = betweenness
-        .into_iter()
-        .enumerate()
-        .filter_map(|(i, v)| v.map(|x| (i, x)))
-        .collect();
+    let out_map = CentralityMapping {
+        centralities: betweenness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    };
     Ok(out_map)
 }
 
@@ -275,9 +275,9 @@ pub fn graph_betweenness_centrality(
 /// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
 ///    compute the betweenness.
 ///
-/// :returns: a dict whose keys are the node indices and values are the betweenness score
-///     for each node.
-/// :rtype: dict
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      betweenness score for each node.
+/// :rtype: CentralityMapping
 #[pyfunction(normalized = "true", endpoints = "false")]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn digraph_betweenness_centrality(
@@ -285,12 +285,14 @@ pub fn digraph_betweenness_centrality(
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
-) -> PyResult<HashMap<usize, f64>> {
+) -> PyResult<CentralityMapping> {
     let betweenness = betweenness_centrality(&graph, endpoints, normalized);
-    let out_map: HashMap<usize, f64> = betweenness
-        .into_iter()
-        .enumerate()
-        .filter_map(|(i, v)| v.map(|x| (i, x)))
-        .collect();
+    let out_map = CentralityMapping {
+        centralities: betweenness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    };
     Ok(out_map)
 }

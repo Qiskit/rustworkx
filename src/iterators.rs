@@ -1131,6 +1131,45 @@ impl PyDisplay for PathLengthMapping {
 }
 
 custom_hash_map_iter_impl!(
+    CentralityMapping,
+    CentralityMappingKeys,
+    CentralityMappingValues,
+    CentralityMappingItems,
+    centralities,
+    centralities_keys,
+    centralities_values,
+    centralities_items,
+    usize,
+    f64,
+    "A custom class for the return of centralities at target nodes
+
+    This class is a container class for the results of functions that
+    return a mapping of target nodes and paths. It implements the Python
+    mapping protocol. So you can treat the return as a read-only
+    mapping/dict. If you want to use it as an iterator you can by
+    wrapping it in an ``iter()`` that will yield the results in
+    order.
+
+    For example::
+
+        import retworkx
+
+        graph = retworkx.generators.directed_path_graph(5)
+        edges = retworkx.dijkstra_shortest_path_lengths(0)
+        # Target node access
+        third_element = edges[2]
+        # Use as iterator
+        edges_iter = iter(edges)
+        first_target = next(edges_iter)
+        first_path = edges[first_target]
+        second_target = next(edges_iter)
+        second_path = edges[second_target]
+
+    "
+);
+default_pygc_protocol_impl!(CentralityMapping);
+
+custom_hash_map_iter_impl!(
     NodesCountMapping,
     NodesCountMappingKeys,
     NodesCountMappingValues,
