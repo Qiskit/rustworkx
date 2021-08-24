@@ -105,7 +105,7 @@ class TestDispatchPyGraph(unittest.TestCase):
 
     def test_betweenness_centrality(self):
         res = retworkx.betweenness_centrality(self.graph)
-        self.assertIsInstance(res, dict)
+        self.assertIsInstance(res, retworkx.CentralityMapping)
 
 
 class TestDispatchPyDiGraph(TestDispatchPyGraph):
