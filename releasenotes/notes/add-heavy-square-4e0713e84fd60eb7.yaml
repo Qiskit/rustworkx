@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Added new generator for constructing a heavy square graph (:func:`retworetworkx.generators.heavy_square_graphrkx.generators.heavy_square_graph`)
-    and a directed heavy square graph (:func:`retworkx.generators.directed_heavy_square_graph`).
