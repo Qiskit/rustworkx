@@ -375,6 +375,9 @@ pub fn is_isomorphic<Ty: EdgeType>(
     {
         return Ok(false);
     }
+    if g0.node_count() == 0 && g1.node_count() == 0 {
+        return Ok(true);
+    }
 
     let mut vf2 = Vf2Algorithm::new(
         py, g0, g1, node_match, edge_match, id_order, ordering, induced,
