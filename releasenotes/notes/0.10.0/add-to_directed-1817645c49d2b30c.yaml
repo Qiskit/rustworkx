@@ -3,7 +3,7 @@ features:
   - |
     Added a new method, :meth:`~retwork.PyGraph.to_directed`, to the
     :class:`~retworkx.PyGraph` class. This method is used to generate a new
-    :class:`retworkx.PyDiGraph` directed graph object from a
+    :class:`retworkx.PyDiGraph` directed graph object from an undirected
     :class:`~retworkx.PyGraph` object. The output :class:`retworkx.PyDiGraph`
     object will have a bidirectional edge pair for each edge in the original
     :class:`~retworkx.PyGraph` object.
