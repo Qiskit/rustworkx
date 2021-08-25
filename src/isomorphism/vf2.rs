@@ -375,6 +375,12 @@ pub fn is_isomorphic<Ty: EdgeType>(
     {
         return Ok(false);
     }
+    // TODO: Remove this. This is just a hacky workaround to fix #421 fast,
+    // we should fix VF2Algorithm.next() to return an empty hashmap for
+    // 2 empty graphs
+    if g1.node_count() == 0 && g1.edge_count() == 0 {
+        return Ok(true);
+    }
 
     let mut vf2 = Vf2Algorithm::new(
         py, g0, g1, node_match, edge_match, id_order, ordering, induced,
