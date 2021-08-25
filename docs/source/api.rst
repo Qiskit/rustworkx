@@ -324,3 +324,4 @@ Custom Return Types
    retworkx.Pos2DMapping
    retworkx.AllPairsPathMapping
    retworkx.AllPairsPathLengthMapping
+   retworkx.CentralityMapping
