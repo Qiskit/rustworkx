@@ -375,12 +375,6 @@ pub fn is_isomorphic<Ty: EdgeType>(
     {
         return Ok(false);
     }
-    // TODO: Remove this. This is just a hacky workaround to fix #421 fast,
-    // we should fix VF2Algorithm.next() to return an empty hashmap for
-    // 2 empty graphs
-    if g1.node_count() == 0 && g1.edge_count() == 0 {
-        return Ok(true);
-    }
 
     let mut vf2 = Vf2Algorithm::new(
         py, g0, g1, node_match, edge_match, id_order, ordering, induced,
@@ -845,7 +839,12 @@ where
                 Frame::Outer => {
                     match Vf2Algorithm::<Ty, F, G>::next_candidate(&mut self.st)
                     {
-                        None => continue,
+                        None => {
+                            if self.st[1].is_complete() {
+                                return Ok(Some(self.mapping()));
+                            }
+                            continue;
+                        }
                         Some((nx, mx, ol)) => {
                             let f = Frame::Inner {
                                 nodes: [nx, mx],
@@ -872,20 +871,6 @@ where
                             &mut self.st,
                             nodes,
                         );
-                        if self.st[1].is_complete() {
-                            let f0 = Frame::Unwind {
-                                nodes,
-                                open_list: ol,
-                            };
-                            self.stack.push(f0);
-                            return Ok(Some(self.mapping()));
-                        }
-                        self._counter += 1;
-                        if let Some(limit) = self.call_limit {
-                            if self._counter > limit {
-                                return Ok(None);
-                            }
-                        }
                         // Check cardinalities of Tin, Tout sets
                         if self.st[0]
                             .out_size
@@ -898,6 +883,12 @@ where
                                 .then(self.ordering)
                                 == self.ordering
                         {
+                            self._counter += 1;
+                            if let Some(limit) = self.call_limit {
+                                if self._counter > limit {
+                                    return Ok(None);
+                                }
+                            }
                             let f0 = Frame::Unwind {
                                 nodes,
                                 open_list: ol,
