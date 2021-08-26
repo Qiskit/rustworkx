@@ -15,14 +15,13 @@
 use hashbrown::{HashMap, HashSet};
 
 use petgraph::graph::NodeIndex;
-use petgraph::stable_graph::StableGraph;
 use petgraph::visit::{IntoNodeIdentifiers, NodeIndexable};
 use petgraph::EdgeType;
 
-use pyo3::PyObject;
+use crate::StablePyGraph;
 
 pub fn dfs_edges<Ty>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     source: Option<usize>,
     edge_count: usize,
 ) -> Vec<(usize, usize)>

@@ -21,12 +21,14 @@ use std::collections::BinaryHeap;
 
 use hashbrown::HashMap;
 
-use petgraph::stable_graph::{NodeIndex, StableGraph};
+use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{EdgeRef, NodeIndexable};
 use petgraph::EdgeType;
 use pyo3::prelude::*;
 
 use super::astar::MinScored;
+
+use crate::StablePyGraph;
 
 /// k'th shortest path algorithm.
 ///
@@ -44,7 +46,7 @@ use super::astar::MinScored;
 ///
 /// Returns a `HashMap` that maps `NodeId` to path cost.
 pub fn k_shortest_path<Ty, F>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     start: NodeIndex,
     goal: Option<NodeIndex>,
     k: usize,

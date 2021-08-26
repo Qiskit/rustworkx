@@ -62,11 +62,13 @@ use petgraph::EdgeType;
 
 use crate::generators::PyInit_generators;
 
+pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
-impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
+impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
@@ -76,7 +78,7 @@ where
 }
 
 pub fn get_edge_iter_with_weights<Ty: EdgeType>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
 ) -> impl Iterator<Item = (usize, usize, PyObject)> + '_ {
     let node_map: Option<HashMap<NodeIndex, usize>> = if graph.nodes_removed() {
         let mut node_hash_map: HashMap<NodeIndex, usize> =

@@ -25,12 +25,14 @@ use hashbrown::hash_map::Entry::{Occupied, Vacant};
 use hashbrown::HashMap;
 
 use petgraph::graph::DefaultIx;
-use petgraph::stable_graph::{EdgeReference, NodeIndex, StableGraph};
+use petgraph::stable_graph::{EdgeReference, NodeIndex};
 use petgraph::visit::{EdgeRef, VisitMap, Visitable};
 use petgraph::EdgeType;
 
 use petgraph::algo::Measure;
 use pyo3::prelude::*;
+
+use crate::StablePyGraph;
 
 /// `MinScored<K, T>` holds a score `K` and a scored object `T` in
 /// a pair for use with a `BinaryHeap`.
@@ -139,7 +141,7 @@ impl<K: PartialOrd, T> Ord for MinScored<K, T> {
 /// Returns the total cost + the path of subsequent `NodeId` from start to finish, if one was
 /// found.
 pub fn astar<Ty, F, H, K, IsGoal>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     start: NodeIndex,
     mut is_goal: IsGoal,
     mut edge_cost: F,

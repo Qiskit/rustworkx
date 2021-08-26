@@ -18,14 +18,15 @@ use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 
 use petgraph::graph::NodeIndex;
-use petgraph::prelude::*;
 use petgraph::visit::{Bfs, NodeIndexable};
 use petgraph::EdgeType;
 
 use num_bigint::{BigUint, ToBigUint};
 
+use crate::StablePyGraph;
+
 pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     source: usize,
 ) -> PyResult<HashMap<usize, BigUint>> {
     let mut out_map: Vec<BigUint> =

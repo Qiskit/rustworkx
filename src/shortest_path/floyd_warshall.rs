@@ -28,10 +28,11 @@ use ndarray::prelude::*;
 use rayon::prelude::*;
 
 use crate::iterators::{AllPairsPathLengthMapping, PathLengthMapping};
+use crate::StablePyGraph;
 
 pub fn floyd_warshall<Ty: EdgeType>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
@@ -149,7 +150,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
 
 pub fn floyd_warshall_numpy<Ty: EdgeType>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,

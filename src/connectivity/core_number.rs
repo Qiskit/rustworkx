@@ -19,14 +19,15 @@ use pyo3::types::PyDict;
 use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
-use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
+use crate::StablePyGraph;
+
 pub fn core_number<Ty>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
 ) -> PyResult<PyObject>
 where
     Ty: EdgeType,

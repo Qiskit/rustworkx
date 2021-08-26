@@ -28,7 +28,6 @@ use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 
 use petgraph::stable_graph::NodeIndex;
-use petgraph::stable_graph::StableGraph;
 use petgraph::visit::{
     EdgeRef, GetAdjacencyMatrix, IntoEdgeReferences, NodeIndexable,
 };
@@ -38,8 +37,7 @@ use petgraph::{Directed, Incoming, Outgoing, Undirected};
 use rayon::slice::ParallelSliceMut;
 
 use crate::iterators::NodeMap;
-
-type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+use crate::StablePyGraph;
 
 trait NodeSorter<Ty>
 where

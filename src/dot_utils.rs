@@ -13,19 +13,20 @@
 use std::collections::BTreeMap;
 use std::io::prelude::*;
 
-use petgraph::stable_graph::StableGraph;
 use petgraph::visit::{
     EdgeRef, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,
 };
 use petgraph::EdgeType;
 use pyo3::prelude::*;
 
+use crate::StablePyGraph;
+
 static TYPE: [&str; 2] = ["graph", "digraph"];
 static EDGE: [&str; 2] = ["--", "->"];
 
 pub fn build_dot<T: Write, Ty: EdgeType>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     file: &mut T,
     graph_attrs: Option<BTreeMap<String, String>>,
     node_attrs: Option<PyObject>,
