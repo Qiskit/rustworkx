@@ -958,7 +958,7 @@ impl PyGraph {
             let new_index = new_graph.add_node(node);
             node_map.insert(node_index, new_index);
         }
-        for edge in self.edge_references() {
+        for edge in self.graph.edge_references() {
             let &source = node_map.get(&edge.source()).unwrap();
             let &target = node_map.get(&edge.target()).unwrap();
             let weight = edge.weight();

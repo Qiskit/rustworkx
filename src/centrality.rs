@@ -11,24 +11,16 @@
 // under the License.
 
 use crate::iterators::CentralityMapping;
-
-use crate::digraph;
-use crate::graph;
+use crate::{digraph, graph, StablePyGraph};
 
 use pyo3::prelude::*;
-use pyo3::Python;
 use std::collections::VecDeque;
 
 use hashbrown::HashMap;
+
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{
-    GraphBase,
-    GraphProp, // allows is_directed
-    IntoNeighborsDirected,
-    IntoNodeIdentifiers,
-    NodeCount,
-    NodeIndexable,
-};
+use petgraph::visit::{IntoNodeIdentifiers, NodeIndexable};
+use petgraph::EdgeType;
 
 // The algorithm here is taken from:
 // Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
@@ -39,29 +31,16 @@ use petgraph::visit::{
 // P -- predecessors
 // S -- verts_sorted_by_distance,
 //      vertices in order of non-decreasing distance from s
-// Q -- Q
+// Q -- queue
 // sigma -- sigma
 // delta -- delta
 // d -- distance
 
-pub fn betweenness_centrality<G>(
-    graph: G,
+pub fn betweenness_centrality<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
     endpoints: bool,
     normalized: bool,
-) -> Vec<Option<f64>>
-where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNeighborsDirected
-        + NodeCount
-        + GraphProp
-        + GraphBase<NodeId = NodeIndex>,
-    // rustfmt deletes the following comments if placed inline above
-    // + IntoNodeIdentifiers // for node_identifiers()
-    // + IntoNeighborsDirected // for neighbors()
-    // + NodeCount // for node_count
-    // + GraphProp // for is_directed
-{
+) -> Vec<Option<f64>> {
     let max_index = graph.node_bound();
 
     let mut betweenness: Vec<Option<f64>> = vec![None; max_index];
@@ -72,7 +51,7 @@ where
     for node_s in graph.node_identifiers() {
         let is: usize = graph.to_index(node_s);
         let mut shortest_path_calc =
-            shortest_path_for_centrality(&graph, &node_s);
+            shortest_path_for_centrality(graph, node_s);
         if endpoints {
             _accumulate_endpoints(
                 &mut betweenness,
@@ -183,43 +162,32 @@ struct ShortestPathData {
     sigma: HashMap<NodeIndex, f64>,
 }
 
-fn shortest_path_for_centrality<G>(
-    graph: G,
-    node_s: &G::NodeId,
-) -> ShortestPathData
-where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNeighborsDirected
-        + NodeCount
-        + GraphBase<NodeId = NodeIndex>, // for get() and get_mut()
-{
+fn shortest_path_for_centrality<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    node_s: NodeIndex,
+) -> ShortestPathData {
     let mut verts_sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
     let c = graph.node_count();
     let mut predecessors =
-        HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
-    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
-    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
-    #[allow(non_snake_case)]
-    let mut Q: VecDeque<NodeIndex> = VecDeque::with_capacity(c);
-
-    let i_s = graph.to_index(*node_s);
-    let index_s = NodeIndex::new(i_s);
+        HashMap::<NodeIndex, Vec<NodeIndex>>::with_capacity(c);
+    let mut sigma = HashMap::<NodeIndex, f64>::with_capacity(c);
+    let mut distance = HashMap::<NodeIndex, i64>::with_capacity(c);
+    let mut queue: VecDeque<NodeIndex> = VecDeque::with_capacity(c);
 
     for node in graph.node_identifiers() {
         predecessors.insert(node, Vec::new());
         sigma.insert(node, 0.0);
         distance.insert(node, -1);
     }
-    sigma.insert(index_s, 1.0);
-    distance.insert(index_s, 0);
-    Q.push_back(index_s);
-    while let Some(v) = Q.pop_front() {
+    sigma.insert(node_s, 1.0);
+    distance.insert(node_s, 0);
+    queue.push_back(node_s);
+    while let Some(v) = queue.pop_front() {
         verts_sorted_by_distance.push(v);
         let distance_v = distance[&v];
         for w in graph.neighbors(v) {
             if distance[&w] < 0 {
-                Q.push_back(w);
+                queue.push_back(w);
                 distance.insert(w, distance_v + 1);
             }
             if distance[&w] == distance_v + 1 {
@@ -251,20 +219,19 @@ where
 #[pyfunction(normalized = "true", endpoints = "false")]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn graph_betweenness_centrality(
-    _py: Python,
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
-) -> PyResult<CentralityMapping> {
-    let betweenness = betweenness_centrality(&graph, endpoints, normalized);
-    let out_map = CentralityMapping {
+) -> CentralityMapping {
+    let betweenness =
+        betweenness_centrality(&graph.graph, endpoints, normalized);
+    CentralityMapping {
         centralities: betweenness
             .into_iter()
             .enumerate()
             .filter_map(|(i, v)| v.map(|x| (i, x)))
             .collect(),
-    };
-    Ok(out_map)
+    }
 }
 
 /// Compute the betweenness centrality of all nodes in a PyDiGraph.
@@ -281,18 +248,17 @@ pub fn graph_betweenness_centrality(
 #[pyfunction(normalized = "true", endpoints = "false")]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
 pub fn digraph_betweenness_centrality(
-    _py: Python,
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
-) -> PyResult<CentralityMapping> {
-    let betweenness = betweenness_centrality(&graph, endpoints, normalized);
-    let out_map = CentralityMapping {
+) -> CentralityMapping {
+    let betweenness =
+        betweenness_centrality(&graph.graph, endpoints, normalized);
+    CentralityMapping {
         centralities: betweenness
             .into_iter()
             .enumerate()
             .filter_map(|(i, v)| v.map(|x| (i, x)))
             .collect(),
-    };
-    Ok(out_map)
+    }
 }
