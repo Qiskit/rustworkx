@@ -1131,6 +1131,27 @@ impl PyDisplay for PathLengthMapping {
 }
 
 custom_hash_map_iter_impl!(
+    CentralityMapping,
+    CentralityMappingKeys,
+    CentralityMappingValues,
+    CentralityMappingItems,
+    centralities,
+    centralities_keys,
+    centralities_values,
+    centralities_items,
+    usize,
+    f64,
+    "A custom class for the return of centralities at target nodes
+
+    This class is a container class for the results of functions that
+    return a mapping of node index to the betweenness score for that node.
+    It implements the Python mapping protocol so you can treat the return
+    as a read-only mapping/dict.
+    "
+);
+default_pygc_protocol_impl!(CentralityMapping);
+
+custom_hash_map_iter_impl!(
     NodesCountMapping,
     NodesCountMappingKeys,
     NodesCountMappingValues,

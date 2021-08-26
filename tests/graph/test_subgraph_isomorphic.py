@@ -16,6 +16,34 @@ import retworkx
 
 
 class TestSubgraphIsomorphic(unittest.TestCase):
+    def test_empty_subgraph_isomorphic_identical(self):
+        g_a = retworkx.PyGraph()
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_subgraph_isomorphic(g_a, g_a, id_order=id_order)
+                )
+
+    def test_empty_subgraph_isomorphic_mismatch_node_data(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_subgraph_isomorphic(g_a, g_b, id_order=id_order)
+                )
+
+    def test_empty_subgraph_isomorphic_compare_nodes_mismatch_node_data(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_subgraph_isomorphic(
+                        g_a, g_b, lambda x, y: x == y, id_order=id_order
+                    )
+                )
+
     def test_subgraph_isomorphic_identical(self):
         g_a = retworkx.PyGraph()
         nodes = g_a.add_nodes_from(["a_1", "a_2", "a_3"])

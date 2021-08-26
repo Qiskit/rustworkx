@@ -17,6 +17,38 @@ import retworkx
 
 
 class TestIsomorphic(unittest.TestCase):
+    def test_empty_isomorphic_identical(self):
+        dag_a = retworkx.PyDAG()
+        dag_b = retworkx.PyDAG()
+
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_isomorphic(dag_a, dag_b, id_order=id_order)
+                )
+
+    def test_empty_isomorphic_mismatch_node_data(self):
+        dag_a = retworkx.PyDAG()
+        dag_b = retworkx.PyDAG()
+
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_isomorphic(dag_a, dag_b, id_order=id_order)
+                )
+
+    def test_empty_isomorphic_compare_nodes_mismatch_node_data(self):
+        dag_a = retworkx.PyDAG()
+        dag_b = retworkx.PyDAG()
+
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_isomorphic(
+                        dag_a, dag_b, lambda x, y: x == y, id_order=id_order
+                    )
+                )
+
     def test_isomorphic_identical(self):
         dag_a = retworkx.PyDAG()
         dag_b = retworkx.PyDAG()

@@ -2587,6 +2587,11 @@ impl PyDiGraph {
     /// Do note that the node and edge weights/data payloads will be passed
     /// by reference to the new :class:`~retworkx.PyGraph` object.
     ///
+    /// .. note::
+    ///
+    ///     The node indices in the output :class:`~retworkx.PyGraph` may
+    ///     differ if nodes have been removed.
+    ///
     /// :param bool multigraph: If set to `False` the output graph will not
     ///     allow parallel edges. Instead parallel edges will be condensed
     ///     into a single edge and their data will be combined using
@@ -2608,9 +2613,21 @@ impl PyDiGraph {
         multigraph: bool,
         weight_combo_fn: Option<PyObject>,
     ) -> PyResult<crate::graph::PyGraph> {
-        let mut new_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let node_count = self.node_count();
+        let mut new_graph = if multigraph {
+            StableUnGraph::<PyObject, PyObject>::with_capacity(
+                node_count,
+                self.graph.edge_count(),
+            )
+        } else {
+            // If multigraph is false edge count is difficult to predict
+            // without counting parallel edges. So, just stick with 0 and
+            // reallocate dynamically
+            StableUnGraph::<PyObject, PyObject>::with_capacity(node_count, 0)
+        };
+
         let mut node_map: HashMap<NodeIndex, NodeIndex> =
-            HashMap::with_capacity(self.node_count());
+            HashMap::with_capacity(node_count);
 
         let combine = |a: &PyObject,
                        b: &PyObject,

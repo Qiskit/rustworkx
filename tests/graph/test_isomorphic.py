@@ -16,6 +16,35 @@ import retworkx
 
 
 class TestIsomorphic(unittest.TestCase):
+    def test_empty_isomorphic_identical(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
+                )
+
+    def test_empty_isomorphic_mismatch_node_data(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
+                )
+
+    def test_empty_isomorphic_compare_nodes_mismatch_node_data(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                self.assertTrue(
+                    retworkx.is_isomorphic(
+                        g_a, g_b, lambda x, y: x == y, id_order=id_order
+                    )
+                )
+
     def test_isomorphic_identical(self):
         g_a = retworkx.PyGraph()
         g_b = retworkx.PyGraph()
