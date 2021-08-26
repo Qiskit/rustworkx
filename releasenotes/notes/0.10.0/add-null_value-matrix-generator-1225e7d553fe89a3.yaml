@@ -11,7 +11,7 @@ features:
       import numpy as np
       import retworkx
 
-      graph = retworkx.generators.cycle_graph(25)
+      graph = retworkx.generators.cycle_graph(4)
       distance_matrix = retworkx.adjacency_matrix(graph, null_value=np.inf)
       print(distance_matrix)
 
@@ -26,6 +26,8 @@ features:
       import numpy as np
       import retworkx
 
-      graph = retworkx.generators.cycle_graph(25)
+      graph = retworkx.generators.cycle_graph(4)
+      graph.add_node(None)
+      graph.add_node(None)
       distance_matrix = retworkx.distance_matrix(graph, null_value=np.inf)
       print(distance_matrix)
