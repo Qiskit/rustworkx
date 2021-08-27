@@ -24,7 +24,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
                     retworkx.is_subgraph_isomorphic(g_a, g_a, id_order=id_order)
                 )
 
-    def test_empty_subgraph_isomorphic_mismatch_node_data(self):
+    def test_empty_subgraph_isomorphic(self):
         g_a = retworkx.PyDiGraph()
         g_b = retworkx.PyDiGraph()
         for id_order in [False, True]:
@@ -33,7 +33,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
                     retworkx.is_subgraph_isomorphic(g_a, g_b, id_order=id_order)
                 )
 
-    def test_empty_subgraph_isomorphic_compare_nodes_mismatch_node_data(self):
+    def test_empty_subgraph_isomorphic_compare_nodes(self):
         g_a = retworkx.PyDiGraph()
         g_b = retworkx.PyDiGraph()
         for id_order in [False, True]:
@@ -272,3 +272,13 @@ class TestSubgraphIsomorphic(unittest.TestCase):
             graph, second_graph, subgraph=True, id_order=False
         )
         self.assertEqual(next(mapping), {5: 0, 6: 1, 8: 2, 9: 3})
+
+    def test_empty_digraph_subgraph_vf2_mapping(self):
+        g_a = retworkx.PyDiGraph()
+        g_b = retworkx.PyDiGraph()
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                mapping = retworkx.digraph_vf2_mapping(
+                    g_a, g_b, id_order=id_order, subgraph=True
+                )
+                self.assertEqual({}, next(mapping))

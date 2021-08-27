@@ -16,7 +16,7 @@
 // since diverged significantly from the original petgraph implementation.
 
 use fixedbitset::FixedBitSet;
-use std::cmp::Ordering;
+use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
 
@@ -133,7 +133,7 @@ where
                             dout[node],
                             conn_out[node],
                             din[node],
-                            -(node as isize),
+                            Reverse(node),
                         )
                     })
                     .unwrap();
@@ -193,7 +193,7 @@ where
         let mut sorted_nodes: Vec<usize> =
             graph.node_indices().map(|node| node.index()).collect();
         sorted_nodes
-            .par_sort_by_key(|&node| (dout[node], din[node], -(node as isize)));
+            .par_sort_by_key(|&node| (dout[node], din[node], Reverse(node)));
         sorted_nodes.reverse();
 
         for node in sorted_nodes {
@@ -374,12 +374,6 @@ pub fn is_isomorphic<Ty: EdgeType>(
         || (g0.edge_count().cmp(&g1.edge_count()).then(ordering) != ordering)
     {
         return Ok(false);
-    }
-    // TODO: Remove this. This is just a hacky workaround to fix #421 fast,
-    // we should fix VF2Algorithm.next() to return an empty hashmap for
-    // 2 empty graphs
-    if g1.node_count() == 0 && g1.edge_count() == 0 {
-        return Ok(true);
     }
 
     let mut vf2 = Vf2Algorithm::new(
@@ -845,7 +839,12 @@ where
                 Frame::Outer => {
                     match Vf2Algorithm::<Ty, F, G>::next_candidate(&mut self.st)
                     {
-                        None => continue,
+                        None => {
+                            if self.st[1].is_complete() {
+                                return Ok(Some(self.mapping()));
+                            }
+                            continue;
+                        }
                         Some((nx, mx, ol)) => {
                             let f = Frame::Inner {
                                 nodes: [nx, mx],
@@ -872,20 +871,6 @@ where
                             &mut self.st,
                             nodes,
                         );
-                        if self.st[1].is_complete() {
-                            let f0 = Frame::Unwind {
-                                nodes,
-                                open_list: ol,
-                            };
-                            self.stack.push(f0);
-                            return Ok(Some(self.mapping()));
-                        }
-                        self._counter += 1;
-                        if let Some(limit) = self.call_limit {
-                            if self._counter > limit {
-                                return Ok(None);
-                            }
-                        }
                         // Check cardinalities of Tin, Tout sets
                         if self.st[0]
                             .out_size
@@ -898,6 +883,12 @@ where
                                 .then(self.ordering)
                                 == self.ordering
                         {
+                            self._counter += 1;
+                            if let Some(limit) = self.call_limit {
+                                if self._counter > limit {
+                                    return Ok(None);
+                                }
+                            }
                             let f0 = Frame::Unwind {
                                 nodes,
                                 open_list: ol,
