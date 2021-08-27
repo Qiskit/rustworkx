@@ -16,7 +16,7 @@
 // since diverged significantly from the original petgraph implementation.
 
 use fixedbitset::FixedBitSet;
-use std::cmp::Ordering;
+use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
 
@@ -133,7 +133,7 @@ where
                             dout[node],
                             conn_out[node],
                             din[node],
-                            -(node as isize),
+                            Reverse(node),
                         )
                     })
                     .unwrap();
@@ -193,7 +193,7 @@ where
         let mut sorted_nodes: Vec<usize> =
             graph.node_indices().map(|node| node.index()).collect();
         sorted_nodes
-            .par_sort_by_key(|&node| (dout[node], din[node], -(node as isize)));
+            .par_sort_by_key(|&node| (dout[node], din[node], Reverse(node)));
         sorted_nodes.reverse();
 
         for node in sorted_nodes {
