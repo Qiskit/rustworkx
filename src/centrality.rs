@@ -29,6 +29,7 @@ use petgraph::visit::{
     NodeCount,
     NodeIndexable,
 };
+use rayon::prelude::*;
 
 // The algorithm here is taken from:
 // Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
@@ -55,7 +56,8 @@ where
         + IntoNeighborsDirected
         + NodeCount
         + GraphProp
-        + GraphBase<NodeId = NodeIndex>,
+        + GraphBase<NodeId = NodeIndex>
+        + std::marker::Sync,
     // rustfmt deletes the following comments if placed inline above
     // + IntoNodeIdentifiers // for node_identifiers()
     // + IntoNeighborsDirected // for neighbors()
@@ -69,23 +71,30 @@ where
         let is: usize = graph.to_index(node_s);
         betweenness[is] = Some(0.0);
     }
-    for node_s in graph.node_identifiers() {
-        let is: usize = graph.to_index(node_s);
-        let mut shortest_path_calc =
-            shortest_path_for_centrality(&graph, &node_s);
+    let node_indices: Vec<NodeIndex> = graph.node_identifiers().collect();
+    let mut shortest_path_calcs: Vec<(ShortestPathData, usize)> = node_indices
+        .par_iter()
+        .map(|node_s| {
+            (
+                shortest_path_for_centrality(&graph, node_s),
+                graph.to_index(*node_s),
+            )
+        })
+        .collect();
+    for (shortest_path_calc, is) in shortest_path_calcs.iter_mut() {
         if endpoints {
             _accumulate_endpoints(
                 &mut betweenness,
                 max_index,
-                &mut shortest_path_calc,
-                is,
+                shortest_path_calc,
+                *is,
             );
         } else {
             _accumulate_basic(
                 &mut betweenness,
                 max_index,
-                &mut shortest_path_calc,
-                is,
+                shortest_path_calc,
+                *is,
             );
         }
     }
