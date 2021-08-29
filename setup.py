@@ -1,3 +1,11 @@
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
 from setuptools import setup
 try:
     from setuptools_rust import Binding, RustExtension
@@ -21,7 +29,7 @@ graphviz_extras = ['pydot>=1.4', 'pillow>=5.4']
 
 setup(
     name="retworkx",
-    version="0.10.2",
+    version="0.11.0",
     description="A python graph library implemented in Rust",
     long_description=readme(),
     long_description_content_type='text/markdown',
