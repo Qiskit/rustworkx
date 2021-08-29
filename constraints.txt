@@ -1,1 +1,2 @@
 decorator==4.4.2
+importlib-metadata==4.7.1
