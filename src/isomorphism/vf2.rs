@@ -15,7 +15,6 @@
 // to handle PyDiGraph inputs instead of petgraph's generic Graph. However it has
 // since diverged significantly from the original petgraph implementation.
 
-use fixedbitset::FixedBitSet;
 use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
@@ -29,9 +28,7 @@ use pyo3::PyTraverseError;
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::stable_graph::StableGraph;
-use petgraph::visit::{
-    EdgeRef, GetAdjacencyMatrix, IntoEdgeReferences, NodeIndexable,
-};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing, Undirected};
 
@@ -40,6 +37,48 @@ use rayon::slice::ParallelSliceMut;
 use crate::iterators::NodeMap;
 
 type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+
+/// Returns the adjacency_matrix of a graph with `(i, j)` entry equal
+/// to number of edges from node `i` to node `j`.
+fn adjacency_matrix<Ty: EdgeType>(graph: &StablePyGraph<Ty>) -> Vec<usize> {
+    let n = graph.node_bound();
+    let mut matrix = vec![0; n * n];
+    for edge in graph.edge_references() {
+        let i = edge.source().index() * n + edge.target().index();
+        matrix[i] += 1;
+        if !graph.is_directed() {
+            let j = edge.source().index() + n * edge.target().index();
+            matrix[j] += 1;
+        }
+    }
+    matrix
+}
+
+/// Returns the number of edges from node `a` to node `b`.
+fn edge_multiplicity<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    matrix: &[usize],
+    a: NodeIndex,
+    b: NodeIndex,
+) -> usize {
+    let n = graph.node_bound();
+    let index = n * a.index() + b.index();
+    matrix[index]
+}
+
+/// Nodes `a`, `b` are adjacent if the number of edges
+/// from node `a` to node `b` are greater than `val`.
+fn is_adjacent<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    matrix: &[usize],
+    a: NodeIndex,
+    b: NodeIndex,
+    val: usize,
+) -> bool {
+    let n = graph.node_bound();
+    let index = n * a.index() + b.index();
+    matrix[index] >= val
+}
 
 trait NodeSorter<Ty>
 where
@@ -54,8 +93,12 @@ where
     ) -> (StablePyGraph<Ty>, HashMap<usize, usize>) {
         let order = self.sort(graph);
 
-        let mut new_graph = StablePyGraph::<Ty>::default();
-        let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut new_graph = StablePyGraph::<Ty>::with_capacity(
+            graph.node_count(),
+            graph.edge_count(),
+        );
+        let mut id_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(graph.node_count());
         for node_index in order {
             let node_data = graph.node_weight(node_index).unwrap();
             let new_index = new_graph.add_node(node_data.clone_ref(py));
@@ -74,7 +117,7 @@ where
     }
 }
 
-// Sort nodes based on node ids.
+/// Sort nodes based on node ids.
 struct DefaultIdSorter;
 
 impl<Ty> NodeSorter<Ty> for DefaultIdSorter
@@ -86,7 +129,7 @@ where
     }
 }
 
-// Sort nodes based on  VF2++ heuristic.
+/// Sort nodes based on  VF2++ heuristic.
 struct Vf2ppSorter;
 
 impl<Ty> NodeSorter<Ty> for Vf2ppSorter
@@ -224,7 +267,7 @@ where
     ins: Vec<usize>,
     out_size: usize,
     ins_size: usize,
-    adjacency_matrix: FixedBitSet,
+    adjacency_matrix: Vec<usize>,
     generation: usize,
     _etype: marker::PhantomData<Directed>,
 }
@@ -236,7 +279,7 @@ where
     pub fn new(graph: StablePyGraph<Ty>) -> Self {
         let c0 = graph.node_count();
         let is_directed = graph.is_directed();
-        let adjacency_matrix = graph.adjacency_matrix();
+        let adjacency_matrix = adjacency_matrix(&graph);
         Vf2State {
             graph,
             mapping: vec![NodeIndex::end(); c0],
@@ -593,10 +636,19 @@ where
                 if m_neigh == end {
                     continue;
                 }
-                let has_edge = st[1 - j].graph.is_adjacent(
+                let val = edge_multiplicity(
+                    &st[j].graph,
+                    &st[j].adjacency_matrix,
+                    nodes[j],
+                    n_neigh,
+                );
+
+                let has_edge = is_adjacent(
+                    &st[1 - j].graph,
                     &st[1 - j].adjacency_matrix,
                     nodes[1 - j],
                     m_neigh,
+                    val,
                 );
                 if !has_edge {
                     return Ok(false);
@@ -622,10 +674,19 @@ where
                     if m_neigh == end {
                         continue;
                     }
-                    let has_edge = st[1 - j].graph.is_adjacent(
+                    let val = edge_multiplicity(
+                        &st[j].graph,
+                        &st[j].adjacency_matrix,
+                        n_neigh,
+                        nodes[j],
+                    );
+
+                    let has_edge = is_adjacent(
+                        &st[1 - j].graph,
                         &st[1 - j].adjacency_matrix,
                         m_neigh,
                         nodes[1 - j],
+                        val,
                     );
                     if !has_edge {
                         return Ok(false);
