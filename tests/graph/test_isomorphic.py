@@ -266,13 +266,9 @@ class TestIsomorphic(unittest.TestCase):
 
     def test_isomorphic_parallel_edges(self):
         first = retworkx.PyGraph()
-        first.extend_from_edge_list([
-            (0, 1), (0, 1), (1, 2), (2, 3)
-        ])
+        first.extend_from_edge_list([(0, 1), (0, 1), (1, 2), (2, 3)])
         second = retworkx.PyGraph()
-        second.extend_from_edge_list([
-            (0, 1), (1, 2), (1, 2), (2, 3)
-        ])
+        second.extend_from_edge_list([(0, 1), (1, 2), (1, 2), (2, 3)])
         self.assertFalse(retworkx.is_isomorphic(first, second))
 
     def test_graph_isomorphic_insufficient_call_limit(self):
