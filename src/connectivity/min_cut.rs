@@ -67,6 +67,13 @@ impl<K: PartialOrd> Ord for Score<K> {
     }
 }
 
+fn zip<T, U>(a: Option<T>, b: Option<U>) -> Option<(T, U)> {
+    match (a, b) {
+        (Some(a), Some(b)) => Some((a, b)),
+        _ => None,
+    }
+}
+
 fn stoer_wagner_phase<E>(
     graph: &StableUnGraph<Vec<NodeIndex>, E>,
 ) -> Option<((NodeIndex, NodeIndex), E)>
@@ -93,7 +100,7 @@ where
         }
     }
 
-    s.zip(t).zip(cut_w)
+    zip(zip(s, t), cut_w)
 }
 
 pub fn stoer_wagner_min_cut<E>(
@@ -122,5 +129,5 @@ where
         }
     }
 
-    min_cut_val.zip(min_cut)
+    zip(min_cut_val, min_cut)
 }
