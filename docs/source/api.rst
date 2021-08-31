@@ -130,6 +130,7 @@ Connectivity and Cycles
    retworkx.is_weakly_connected
    retworkx.cycle_basis
    retworkx.digraph_find_cycle
+   retworkx.stoer_wagner_min_cut
 
 .. _other-algorithms:
 

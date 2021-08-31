@@ -246,6 +246,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
     m.add_wrapped(wrap_pyfunction!(steiner_tree))?;
+    m.add_wrapped(wrap_pyfunction!(stoer_wagner_min_cut))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;

@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    Added a new algorithm function,
+    :func:`retworkx.stoer_wagner_min_cut` that uses the
+    Stoer Wagner algorithm for computing a weighted minimum cut
+    in an undirected graph.
+    For example:
+
+    .. jupyter-execute::
+
+      import retworkx
+
+      graph = retworkx.generators.grid_graph(2, 2)
+      cut_val, partition = retworkx.stoer_wagner_min_cut(graph)

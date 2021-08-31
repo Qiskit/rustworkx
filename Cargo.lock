@@ -349,6 +349,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
+name = "priority-queue"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e1340009a04e81f656a4e45e295f0b1191c81de424bf940c865e33577a8e223"
+dependencies = [
+ "autocfg",
+ "indexmap",
+]
+
+[[package]]
 name = "proc-macro-hack"
 version = "0.5.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -524,6 +534,7 @@ dependencies = [
  "num-traits",
  "numpy",
  "petgraph",
+ "priority-queue",
  "pyo3",
  "rand",
  "rand_pcg",

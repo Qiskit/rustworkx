@@ -27,6 +27,7 @@ rayon = "1.5"
 num-traits = "0.2"
 num-bigint = "0.4"
 indexmap = "1.6.2"
+priority-queue = "1.1.1"
 
 [dependencies.pyo3]
 version = "0.14.4"

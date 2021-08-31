@@ -13,10 +13,11 @@
 #![allow(clippy::float_cmp)]
 
 mod core_number;
+mod min_cut;
 
 use super::{
-    digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode,
-    NullGraph,
+    digraph, get_edge_iter_with_weights, graph, iterators::NodeIndices,
+    weight_callable, InvalidNode, NullGraph,
 };
 
 use hashbrown::{HashMap, HashSet};
@@ -26,9 +27,11 @@ use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
+use petgraph::stable_graph::{EdgeIndex, NodeIndex};
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable};
+use petgraph::visit::{
+    EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable,
+};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -241,7 +244,7 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     for edge in graph.graph.edge_references() {
         let (a, b) = (edge.source(), edge.target());
         // union the two vertices of the edge
-        if vertex_sets.union(graph.graph.to_index(a), graph.graph.to_index(b)) {
+        if vertex_sets.union(a.index(), b.index()) {
             weak_components -= 1
         };
     }
@@ -661,4 +664,67 @@ pub fn digraph_core_number(
     graph: &digraph::PyDiGraph,
 ) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
+}
+
+/// Compute a weighted minimum cut using the Stoer-Wagner algorithm.
+///
+/// Determine the minimum cut of a graph using the Stoer-Wagner algorithm [stoer_simple_1997].
+/// All weights must be nonnegative. If the input graph is disconnected,
+/// a cut with zero value will be returned. For graphs with less than
+/// two nodes, this function returns ``None``.
+///
+/// :param PyGraph: The graph to be used
+/// :param weight_fn:  An optional callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``.
+///     Edges with ``NaN`` weights will be ignored. If ``weight_fn`` is not
+///     specified a default value of ``1.0`` will be used
+///     for all edges.
+///
+/// :returns: A tuple with the minimum cut value and a list of all
+///     the node indexes contained in one part of the partition
+///     that defines a minimum cut.
+/// :rtype: (usize, NodeIndices)
+///
+/// .. [stoer_simple_1997] Stoer, Mechthild and Frank Wagner, "A simple min-cut
+///     algorithm". Journal of the ACM 44 (4), 585-591, 1997.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+pub fn stoer_wagner_min_cut(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+) -> PyResult<Option<(f64, NodeIndices)>> {
+    let mut edges_w: Vec<Option<f64>> = vec![None; graph.graph.edge_bound()];
+    for edge in graph.graph.edge_references() {
+        edges_w[edge.id().index()] =
+            Some(weight_callable(py, &weight_fn, edge.weight(), 1.0)?);
+    }
+
+    let node_map = |nx: NodeIndex, _: &PyObject| -> Option<Vec<NodeIndex>> {
+        Some(vec![nx])
+    };
+
+    let edge_map =
+        |ex: EdgeIndex, _: &PyObject| -> Option<min_cut::Score<f64>> {
+            if let Some(x) = edges_w[ex.index()] {
+                if x.is_nan() {
+                    return None;
+                }
+                return Some(min_cut::Score(x));
+            }
+            None
+        };
+
+    let cut = min_cut::stoer_wagner_min_cut(
+        graph.graph.filter_map(node_map, edge_map),
+    );
+
+    Ok(cut.map(|(value, partition)| {
+        (
+            value.0,
+            NodeIndices {
+                nodes: partition.iter().map(|&nx| nx.index()).collect(),
+            },
+        )
+    }))
 }
