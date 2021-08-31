@@ -668,7 +668,7 @@ pub fn digraph_core_number(
 
 /// Compute a weighted minimum cut using the Stoer-Wagner algorithm.
 ///
-/// Determine the minimum cut of a graph using the Stoer-Wagner algorithm [stoer_simple_1997].
+/// Determine the minimum cut of a graph using the Stoer-Wagner algorithm [stoer_simple_1997]_.
 /// All weights must be nonnegative. If the input graph is disconnected,
 /// a cut with zero value will be returned. For graphs with less than
 /// two nodes, this function returns ``None``.
