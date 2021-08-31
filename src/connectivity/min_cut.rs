@@ -80,7 +80,7 @@ fn stoer_wagner_phase<E>(
 where
     E: Copy + Ord + Zero + AddAssign,
 {
-    let mut pq = PriorityQueue::<NodeIndex, E>::from(
+    let mut pq = PriorityQueue::<NodeIndex, E, ahash::RandomState>::from(
         graph
             .node_indices()
             .map(|nx| (nx, E::zero()))
