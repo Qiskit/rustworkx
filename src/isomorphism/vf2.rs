@@ -38,18 +38,27 @@ use crate::iterators::NodeMap;
 
 type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
-/// Returns the adjacency_matrix of a graph with `(i, j)` entry equal
-/// to number of edges from node `i` to node `j`.
-fn adjacency_matrix<Ty: EdgeType>(graph: &StablePyGraph<Ty>) -> Vec<usize> {
-    let n = graph.node_bound();
-    let mut matrix = vec![0; n * n];
+#[inline]
+fn sorted<N: std::cmp::PartialOrd>(x: &mut (N, N)) {
+    let (a, b) = x;
+    if b < a {
+        std::mem::swap(a, b)
+    }
+}
+
+/// Returns the adjacency matrix of a graph as a dictionary
+/// with `(i, j)` entry equal to number of edges from node `i` to node `j`.
+fn adjacency_matrix<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+) -> HashMap<(NodeIndex, NodeIndex), usize> {
+    let mut matrix = HashMap::with_capacity(graph.edge_count());
     for edge in graph.edge_references() {
-        let i = edge.source().index() * n + edge.target().index();
-        matrix[i] += 1;
+        let mut item = (edge.source(), edge.target());
         if !graph.is_directed() {
-            let j = edge.source().index() + n * edge.target().index();
-            matrix[j] += 1;
+            sorted(&mut item);
         }
+        let entry = matrix.entry(item).or_insert(0);
+        *entry += 1;
     }
     matrix
 }
@@ -57,27 +66,31 @@ fn adjacency_matrix<Ty: EdgeType>(graph: &StablePyGraph<Ty>) -> Vec<usize> {
 /// Returns the number of edges from node `a` to node `b`.
 fn edge_multiplicity<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
-    matrix: &[usize],
+    matrix: &HashMap<(NodeIndex, NodeIndex), usize>,
     a: NodeIndex,
     b: NodeIndex,
 ) -> usize {
-    let n = graph.node_bound();
-    let index = n * a.index() + b.index();
-    matrix[index]
+    let mut item = (a, b);
+    if !graph.is_directed() {
+        sorted(&mut item);
+    }
+    matrix.get(&item).cloned().unwrap_or(0)
 }
 
 /// Nodes `a`, `b` are adjacent if the number of edges
-/// from node `a` to node `b` are greater than `val`.
+/// from node `a` to node `b` is greater than `val`.
 fn is_adjacent<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
-    matrix: &[usize],
+    matrix: &HashMap<(NodeIndex, NodeIndex), usize>,
     a: NodeIndex,
     b: NodeIndex,
     val: usize,
 ) -> bool {
-    let n = graph.node_bound();
-    let index = n * a.index() + b.index();
-    matrix[index] >= val
+    let mut item = (a, b);
+    if !graph.is_directed() {
+        sorted(&mut item);
+    }
+    matrix.get(&item).cloned().unwrap_or(0) >= val
 }
 
 trait NodeSorter<Ty>
@@ -267,7 +280,7 @@ where
     ins: Vec<usize>,
     out_size: usize,
     ins_size: usize,
-    adjacency_matrix: Vec<usize>,
+    adjacency_matrix: HashMap<(NodeIndex, NodeIndex), usize>,
     generation: usize,
     _etype: marker::PhantomData<Directed>,
 }
