@@ -245,6 +245,17 @@ class TestIsomorphic(unittest.TestCase):
                     )
                 )
 
+    def test_digraph_isomorphic_parallel_edges_with_edge_matcher(self):
+        graph = retworkx.PyDiGraph()
+        graph.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (0, 1, "b"), (1, 2, "c")]
+        )
+        self.assertTrue(
+            retworkx.is_isomorphic(
+                graph, graph, edge_matcher=lambda x, y: x == y
+            )
+        )
+
     def test_digraph_isomorphic_self_loop(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from([0])

@@ -38,6 +38,31 @@ use crate::iterators::NodeMap;
 
 type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
+/// Returns `true` if we can map every element of `xs` to a unique
+/// element of `ys` while using `matcher` func to compare two elements.
+fn is_subset<T: Copy, F>(xs: &[T], ys: &[T], matcher: F) -> PyResult<bool>
+where
+    F: Fn(T, T) -> PyResult<bool>,
+{
+    let mut valid = vec![true; ys.len()];
+    for &a in xs {
+        let mut found = false;
+        for (&b, free) in ys.iter().zip(valid.iter_mut()) {
+            if *free && matcher(a, b)? {
+                found = true;
+                *free = false;
+                break;
+            }
+        }
+
+        if !found {
+            return Ok(false);
+        }
+    }
+
+    Ok(true)
+}
+
 #[inline]
 fn sorted<N: std::cmp::PartialOrd>(x: &mut (N, N)) {
     let (a, b) = x;
@@ -802,62 +827,77 @@ where
         }
         // semantic feasibility: compare associated data for edges
         if edge_match.enabled() {
-            // outgoing edges
-            for j in 0..2 {
-                let mut edges = st[j].graph.neighbors(nodes[j]).detach();
-                while let Some((n_edge, n_neigh)) = edges.next(&st[j].graph) {
-                    // handle the self loop case; it's not in the mapping (yet)
-                    let m_neigh = if nodes[j] != n_neigh {
-                        st[j].mapping[n_neigh.index()]
-                    } else {
-                        nodes[1 - j]
-                    };
-                    if m_neigh == end {
-                        continue;
-                    }
-                    match st[1 - j].graph.find_edge(nodes[1 - j], m_neigh) {
-                        Some(m_edge) => {
-                            let match_result = edge_match.eq(
-                                py,
-                                &st[j].graph[n_edge],
-                                &st[1 - j].graph[m_edge],
-                            )?;
-                            if !match_result {
-                                return Ok(false);
-                            }
-                        }
-                        None => unreachable!(), // covered by syntactic check
-                    }
+            let matcher = |a: (NodeIndex, &PyObject),
+                           b: (NodeIndex, &PyObject)|
+             -> PyResult<bool> {
+                let (nx, n_edge) = a;
+                let (mx, m_edge) = b;
+                if nx == mx && edge_match.eq(py, n_edge, m_edge)? {
+                    return Ok(true);
                 }
+                Ok(false)
+            };
+
+            // outgoing edges
+            let range = if induced { 0..2 } else { 1..2 };
+            for j in range {
+                let e_first: Vec<(NodeIndex, &PyObject)> = st[j]
+                    .graph
+                    .edges(nodes[j])
+                    .filter_map(|edge| {
+                        let n_neigh = edge.target();
+                        let m_neigh = if nodes[j] != n_neigh {
+                            st[j].mapping[n_neigh.index()]
+                        } else {
+                            nodes[1 - j]
+                        };
+                        if m_neigh == end {
+                            return None;
+                        }
+                        Some((m_neigh, edge.weight()))
+                    })
+                    .collect();
+
+                let e_second: Vec<(NodeIndex, &PyObject)> = st[1 - j]
+                    .graph
+                    .edges(nodes[1 - j])
+                    .map(|edge| (edge.target(), edge.weight()))
+                    .collect();
+
+                if !is_subset(&e_first, &e_second, matcher)? {
+                    return Ok(false);
+                };
             }
             // incoming edges
             if st[0].graph.is_directed() {
-                for j in 0..2 {
-                    let mut edges = st[j]
+                let range = if induced { 0..2 } else { 1..2 };
+                for j in range {
+                    let e_first: Vec<(NodeIndex, &PyObject)> = st[j]
                         .graph
-                        .neighbors_directed(nodes[j], Incoming)
-                        .detach();
-                    while let Some((n_edge, n_neigh)) = edges.next(&st[j].graph)
-                    {
-                        // the self loop case is handled in outgoing
-                        let m_neigh = st[j].mapping[n_neigh.index()];
-                        if m_neigh == end {
-                            continue;
-                        }
-                        match st[1 - j].graph.find_edge(m_neigh, nodes[1 - j]) {
-                            Some(m_edge) => {
-                                let match_result = edge_match.eq(
-                                    py,
-                                    &st[j].graph[n_edge],
-                                    &st[1 - j].graph[m_edge],
-                                )?;
-                                if !match_result {
-                                    return Ok(false);
-                                }
+                        .edges_directed(nodes[j], Incoming)
+                        .filter_map(|edge| {
+                            let n_neigh = edge.source();
+                            let m_neigh = if nodes[j] != n_neigh {
+                                st[j].mapping[n_neigh.index()]
+                            } else {
+                                nodes[1 - j]
+                            };
+                            if m_neigh == end {
+                                return None;
                             }
-                            None => unreachable!(), // covered by syntactic check
-                        }
-                    }
+                            Some((m_neigh, edge.weight()))
+                        })
+                        .collect();
+
+                    let e_second: Vec<(NodeIndex, &PyObject)> = st[1 - j]
+                        .graph
+                        .edges_directed(nodes[1 - j], Incoming)
+                        .map(|edge| (edge.source(), edge.weight()))
+                        .collect();
+
+                    if !is_subset(&e_first, &e_second, matcher)? {
+                        return Ok(false);
+                    };
                 }
             }
         }

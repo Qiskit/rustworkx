@@ -3,3 +3,7 @@ fixes:
   - |
     Fixes the output of :func:`~retworkx.is_subgraph_isomorphic`
     if the input graphs have parallel edges.
+  - |
+    Fixes the output of :func:`~retworkx.is_isomorphic`
+    if the input graphs have parallel edges and an `edge_matcher`
+    is specified.
