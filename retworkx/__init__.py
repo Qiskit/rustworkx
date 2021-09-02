@@ -1499,17 +1499,43 @@ def _graph_num_shortest_paths_unweighted(graph, source):
 
 
 @functools.singledispatch
-def betweenness_centrality(graph, normalized=True, endpoints=False):
-    """Returns the betweenness centrality of each node in the graph.
+def betweenness_centrality(
+    graph, normalized=True, endpoints=False, parallel_threshold=50
+):
+    r"""Returns the betweenness centrality of each node in the graph.
 
-    Betweenness centrality of a node `v` is the sum of the fraction
-    of shortest paths between all pairs of nodes that pass through `v`.
+    Betweenness centrality of a node :math:`v` is the sum of the
+    fraction of all-pairs shortest paths that pass through :math`v`
 
-    :param graph: The graph to compute the betweenness centralities for.
-    :param bool normalized: If true, normalize the betweenness scores by the number
-        of distinct paths between all pairs of nodes.
-    :param bool endpoints: Whether to include the endpoints of paths in pathlengths
-        used to compute the betweenness.
+    .. math::
+
+       c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
+
+    where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
+    shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+    those paths  passing through some  node :math:`v` other than :math:`s, t`.
+    If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
+    :math:`\sigma(s, t|v) = 0`
+
+    The algorithm used in this function is based on:
+
+    Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
+    Journal of Mathematical Sociology 25(2):163-177, 2001.
+
+    This function is multithreaded and will run in parallel if the number
+    of nodes in the graph is above the value of ``parallel_threshold`` (it
+    defaults to 50). If the function will be running in parallel the env var
+    ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+
+    :param PyDiGraph graph: The input graph
+    :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
+       paths between all pairs of nodes.
+    :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
+       compute the betweenness.
+    :param int parallel_threshold: The number of nodes to calculate the
+        the betweenness centrality in parallel at if the number of nodes in
+        the graph is less than this value it will run in a single thread. The
+        default value is 50
 
     :returns: A dictionary mapping each node index to its betweenness centrality.
     :rtype: dict
@@ -1518,16 +1544,26 @@ def betweenness_centrality(graph, normalized=True, endpoints=False):
 
 
 @betweenness_centrality.register(PyDiGraph)
-def _digraph_betweenness_centrality(graph, normalized=True, endpoints=False):
+def _digraph_betweenness_centrality(
+    graph, normalized=True, endpoints=False, parallel_threshold=50
+):
     return digraph_betweenness_centrality(
-        graph, normalized=normalized, endpoints=endpoints
+        graph,
+        normalized=normalized,
+        endpoints=endpoints,
+        parallel_threshold=parallel_threshold,
     )
 
 
 @betweenness_centrality.register(PyGraph)
-def _graph_betweenness_centrality(graph, normalized=True, endpoints=False):
+def _graph_betweenness_centrality(
+    graph, normalized=True, endpoints=False, parallel_threshold=50
+):
     return graph_betweenness_centrality(
-        graph, normalized=normalized, endpoints=endpoints
+        graph,
+        normalized=normalized,
+        endpoints=endpoints,
+        parallel_threshold=parallel_threshold,
     )
 
 
