@@ -1528,10 +1528,10 @@ def betweenness_centrality(
     ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 
     :param PyDiGraph graph: The input graph
-    :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
-       paths between all pairs of nodes.
-    :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
-       compute the betweenness.
+    :param bool normalized: Whether to normalize the betweenness scores by
+        the number of distinct paths between all pairs of nodes.
+    :param bool endpoints: Whether to include the endpoints of paths in
+        path lengths used to compute the betweenness.
     :param int parallel_threshold: The number of nodes to calculate the
         the betweenness centrality in parallel at if the number of nodes in
         the graph is less than this value it will run in a single thread. The
