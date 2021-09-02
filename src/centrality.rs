@@ -85,14 +85,14 @@ where
         .for_each(|(mut shortest_path_calc, is)| {
             if endpoints {
                 _accumulate_endpoints(
-                    &mut locked_betweenness.write().unwrap(),
+                    &locked_betweenness,
                     max_index,
                     &mut shortest_path_calc,
                     is,
                 );
             } else {
                 _accumulate_basic(
-                    &mut locked_betweenness.write().unwrap(),
+                    &locked_betweenness,
                     max_index,
                     &mut shortest_path_calc,
                     is,
@@ -144,7 +144,7 @@ fn _rescale(
 }
 
 fn _accumulate_basic(
-    betweenness: &mut Vec<Option<f64>>,
+    locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
     max_index: usize,
     path_calc: &mut ShortestPathData,
     is: usize,
@@ -158,6 +158,10 @@ fn _accumulate_basic(
             let iv = (*v).index();
             delta[iv] += path_calc.sigma[v] * coeff;
         }
+    }
+    let mut betweenness = locked_betweenness.write().unwrap();
+    for w in &path_calc.verts_sorted_by_distance {
+        let iw = w.index();
         if iw != is {
             betweenness[iw] = betweenness[iw].map(|x| x + delta[iw]);
         }
@@ -165,13 +169,13 @@ fn _accumulate_basic(
 }
 
 fn _accumulate_endpoints(
-    betweenness: &mut Vec<Option<f64>>,
+    locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
     max_index: usize,
     path_calc: &mut ShortestPathData,
     is: usize,
 ) {
-    betweenness[is] = betweenness[is]
-        .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
+    // Drop lock after updating is to unblock other threads
+    {}
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
@@ -181,6 +185,12 @@ fn _accumulate_endpoints(
             let iv = (*v).index();
             delta[iv] += path_calc.sigma[v] * coeff;
         }
+    }
+    let mut betweenness = locked_betweenness.write().unwrap();
+    betweenness[is] = betweenness[is]
+        .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
+    for w in &path_calc.verts_sorted_by_distance {
+        let iw = w.index();
         if iw != is {
             betweenness[iw] = betweenness[iw].map(|x| x + delta[iw] + 1.0);
         }
