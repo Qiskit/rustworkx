@@ -18,6 +18,7 @@ use crate::graph;
 use pyo3::prelude::*;
 use pyo3::Python;
 use std::collections::VecDeque;
+use std::sync::RwLock;
 
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
@@ -71,8 +72,9 @@ where
         let is: usize = graph.to_index(node_s);
         betweenness[is] = Some(0.0);
     }
+    let locked_betweenness = RwLock::new(&mut betweenness);
     let node_indices: Vec<NodeIndex> = graph.node_identifiers().collect();
-    let mut shortest_path_calcs: Vec<(ShortestPathData, usize)> = node_indices
+    node_indices
         .par_iter()
         .map(|node_s| {
             (
@@ -80,24 +82,23 @@ where
                 graph.to_index(*node_s),
             )
         })
-        .collect();
-    for (shortest_path_calc, is) in shortest_path_calcs.iter_mut() {
-        if endpoints {
-            _accumulate_endpoints(
-                &mut betweenness,
-                max_index,
-                shortest_path_calc,
-                *is,
-            );
-        } else {
-            _accumulate_basic(
-                &mut betweenness,
-                max_index,
-                shortest_path_calc,
-                *is,
-            );
-        }
-    }
+        .for_each(|(mut shortest_path_calc, is)| {
+            if endpoints {
+                _accumulate_endpoints(
+                    &mut locked_betweenness.write().unwrap(),
+                    max_index,
+                    &mut shortest_path_calc,
+                    is,
+                );
+            } else {
+                _accumulate_basic(
+                    &mut locked_betweenness.write().unwrap(),
+                    max_index,
+                    &mut shortest_path_calc,
+                    is,
+                );
+            }
+        });
     _rescale(
         &mut betweenness,
         graph.node_count(),
