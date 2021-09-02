@@ -99,7 +99,7 @@ fn edge_multiplicity<Ty: EdgeType>(
     if !graph.is_directed() {
         sorted(&mut item);
     }
-    matrix.get(&item).cloned().unwrap_or(0)
+    *matrix.get(&item).unwrap_or(&0)
 }
 
 /// Nodes `a`, `b` are adjacent if the number of edges
@@ -115,7 +115,7 @@ fn is_adjacent<Ty: EdgeType>(
     if !graph.is_directed() {
         sorted(&mut item);
     }
-    matrix.get(&item).cloned().unwrap_or(0) >= val
+    *matrix.get(&item).unwrap_or(&0) >= val
 }
 
 trait NodeSorter<Ty>
