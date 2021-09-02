@@ -174,8 +174,6 @@ fn _accumulate_endpoints(
     path_calc: &mut ShortestPathData,
     is: usize,
 ) {
-    // Drop lock after updating is to unblock other threads
-    {}
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
