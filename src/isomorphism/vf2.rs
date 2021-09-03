@@ -111,11 +111,7 @@ fn is_adjacent<Ty: EdgeType>(
     b: NodeIndex,
     val: usize,
 ) -> bool {
-    let mut item = (a, b);
-    if !graph.is_directed() {
-        sorted(&mut item);
-    }
-    *matrix.get(&item).unwrap_or(&0) >= val
+    edge_multiplicity(&graph, &matrix, a, b) >= val
 }
 
 trait NodeSorter<Ty>
