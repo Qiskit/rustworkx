@@ -111,7 +111,7 @@ fn is_adjacent<Ty: EdgeType>(
     b: NodeIndex,
     val: usize,
 ) -> bool {
-    edge_multiplicity(&graph, &matrix, a, b) >= val
+    edge_multiplicity(graph, matrix, a, b) >= val
 }
 
 trait NodeSorter<Ty>
