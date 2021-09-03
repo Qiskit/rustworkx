@@ -188,6 +188,36 @@ class TestSubgraphIsomorphic(unittest.TestCase):
                     retworkx.is_subgraph_isomorphic(g_a, g_b, id_order=id_order)
                 )
 
+    def test_subgraph_isomorphic_edge_matcher(self):
+        first = retworkx.PyDiGraph()
+        first.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (1, 2, "b"), (2, 0, "c")]
+        )
+        second = retworkx.PyDiGraph()
+        second.extend_from_weighted_edge_list([(0, 1, "a"), (1, 2, "b")])
+
+        self.assertTrue(
+            retworkx.is_subgraph_isomorphic(
+                first, second, induced=False, edge_matcher=lambda x, y: x == y
+            )
+        )
+
+    def test_subgraph_isomorphic_mismatch_edge_data_parallel_edges(self):
+        first = retworkx.PyDiGraph()
+        first.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (0, 1, "f"), (1, 2, "b"), (2, 0, "c")]
+        )
+        second = retworkx.PyDiGraph()
+        second.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (0, 1, "a"), (1, 2, "b")]
+        )
+
+        self.assertFalse(
+            retworkx.is_subgraph_isomorphic(
+                first, second, id_order=True, edge_matcher=lambda x, y: x == y
+            )
+        )
+
     def test_non_induced_subgraph_isomorphic(self):
         g_a = retworkx.PyDiGraph()
         g_b = retworkx.PyDiGraph()

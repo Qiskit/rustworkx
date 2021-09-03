@@ -219,6 +219,48 @@ class TestSubgraphIsomorphic(unittest.TestCase):
                     )
                 )
 
+    def test_subgraph_isomorphic_edge_matcher(self):
+        first = retworkx.PyGraph()
+        first.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (1, 2, "b"), (2, 0, "c")]
+        )
+        second = retworkx.PyGraph()
+        second.extend_from_weighted_edge_list([(0, 1, "a"), (1, 2, "b")])
+
+        self.assertTrue(
+            retworkx.is_subgraph_isomorphic(
+                first, second, induced=False, edge_matcher=lambda x, y: x == y
+            )
+        )
+
+    def test_subgraph_isomorphic_mismatch_edge_data_parallel_edges(self):
+        first = retworkx.PyGraph()
+        first.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (0, 1, "f"), (1, 2, "b"), (2, 0, "c")]
+        )
+        second = retworkx.PyGraph()
+        second.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (0, 1, "a"), (1, 2, "b")]
+        )
+
+        self.assertFalse(
+            retworkx.is_subgraph_isomorphic(
+                first, second, id_order=True, edge_matcher=lambda x, y: x == y
+            )
+        )
+
+    def test_subgraph_isomorphic_parallel_edges(self):
+        first = retworkx.PyGraph()
+        first.extend_from_edge_list([(0, 1), (1, 2), (2, 3)])
+        second = retworkx.PyGraph()
+        second.extend_from_edge_list([(0, 1), (0, 1)])
+        self.assertFalse(
+            retworkx.is_subgraph_isomorphic(first, second, induced=True)
+        )
+        self.assertFalse(
+            retworkx.is_subgraph_isomorphic(first, second, induced=False)
+        )
+
     def test_non_induced_grid_subgraph_isomorphic(self):
         g_a = retworkx.generators.grid_graph(2, 2)
         g_b = retworkx.PyGraph()
@@ -231,6 +273,18 @@ class TestSubgraphIsomorphic(unittest.TestCase):
 
         self.assertTrue(
             retworkx.is_subgraph_isomorphic(g_a, g_b, induced=False)
+        )
+
+    def test_non_induced_subgraph_isomorphic_parallel_edges(self):
+        first = retworkx.PyGraph()
+        first.extend_from_edge_list([(0, 1), (0, 1), (1, 2), (1, 2)])
+        second = retworkx.PyGraph()
+        second.extend_from_edge_list([(0, 1), (1, 2), (1, 2)])
+        self.assertFalse(
+            retworkx.is_subgraph_isomorphic(first, second, induced=True)
+        )
+        self.assertTrue(
+            retworkx.is_subgraph_isomorphic(first, second, induced=False)
         )
 
     def test_subgraph_vf2_mapping(self):
