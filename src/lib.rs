@@ -48,6 +48,7 @@ use tree::*;
 use union::*;
 
 use hashbrown::HashMap;
+use num_complex::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
@@ -64,6 +65,27 @@ use petgraph::visit::{
 };
 
 use crate::generators::PyInit_generators;
+
+trait IsNan {
+    fn is_nan(&self) -> bool;
+}
+
+/// https://doc.rust-lang.org/nightly/src/core/num/f64.rs.html#441
+impl IsNan for f64 {
+    #[inline]
+    #[allow(clippy::eq_op)]
+    fn is_nan(&self) -> bool {
+        self != self
+    }
+}
+
+/// https://docs.rs/num-complex/0.4.0/src/num_complex/lib.rs.html#572-574
+impl IsNan for Complex64 {
+    #[inline]
+    fn is_nan(&self) -> bool {
+        self.re.is_nan() || self.im.is_nan()
+    }
+}
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
