@@ -264,6 +264,24 @@ class TestIsomorphic(unittest.TestCase):
         graph.add_edges_from_no_data([(0, 0), (0, 1)])
         self.assertTrue(retworkx.is_isomorphic(graph, graph))
 
+    def test_isomorphic_parallel_edges(self):
+        first = retworkx.PyGraph()
+        first.extend_from_edge_list([(0, 1), (0, 1), (1, 2), (2, 3)])
+        second = retworkx.PyGraph()
+        second.extend_from_edge_list([(0, 1), (1, 2), (1, 2), (2, 3)])
+        self.assertFalse(retworkx.is_isomorphic(first, second))
+
+    def test_isomorphic_parallel_edges_with_edge_matcher(self):
+        graph = retworkx.PyGraph()
+        graph.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (0, 1, "b"), (1, 2, "c")]
+        )
+        self.assertTrue(
+            retworkx.is_isomorphic(
+                graph, graph, edge_matcher=lambda x, y: x == y
+            )
+        )
+
     def test_graph_isomorphic_insufficient_call_limit(self):
         graph = retworkx.generators.path_graph(5)
         self.assertFalse(retworkx.is_isomorphic(graph, graph, call_limit=2))

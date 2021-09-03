@@ -1,0 +1,14 @@
+---
+fixes:
+  - |
+    Fixes the output of :func:`~retworkx.is_subgraph_isomorphic`
+    if the input graphs have parallel edges.
+  - |
+    Fixes the output of :func:`~retworkx.is_isomorphic`
+    if the input graphs have parallel edges and an `edge_matcher`
+    is specified.
+  - |
+    Reduces the memory requirements of VF2 graph isomorphism algorithm
+    by making use of a hash map with number of entries scaling
+    as the number of edges in the graph rather than building the
+    full adjacency matrix.
