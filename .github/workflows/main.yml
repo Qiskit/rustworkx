@@ -94,7 +94,7 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: nightly-2021-08-31
           override: true
           profile: default
           components: llvm-tools-preview
