@@ -38,7 +38,7 @@ graphviz_extras = ['pydot>=1.4', 'pillow>=5.4']
 
 setup(
     name="retworkx",
-    version="0.10.0",
+    version="0.11.0",
     description="A python graph library implemented in Rust",
     long_description=readme(),
     long_description_content_type='text/markdown',

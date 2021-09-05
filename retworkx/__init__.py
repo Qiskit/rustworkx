@@ -1499,6 +1499,39 @@ def _graph_num_shortest_paths_unweighted(graph, source):
 
 
 @functools.singledispatch
+def betweenness_centrality(graph, normalized=True, endpoints=False):
+    """Returns the betweenness centrality of each node in the graph.
+
+    Betweenness centrality of a node `v` is the sum of the fraction
+    of shortest paths between all pairs of nodes that pass through `v`.
+
+    :param graph: The graph to compute the betweenness centralities for.
+    :param bool normalized: If true, normalize the betweenness scores by the number
+        of distinct paths between all pairs of nodes.
+    :param bool endpoints: Whether to include the endpoints of paths in pathlengths
+        used to compute the betweenness.
+
+    :returns: A dictionary mapping each node index to its betweenness centrality.
+    :rtype: dict
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@betweenness_centrality.register(PyDiGraph)
+def _digraph_betweenness_centrality(graph, normalized=True, endpoints=False):
+    return digraph_betweenness_centrality(
+        graph, normalized=normalized, endpoints=endpoints
+    )
+
+
+@betweenness_centrality.register(PyGraph)
+def _graph_betweenness_centrality(graph, normalized=True, endpoints=False):
+    return graph_betweenness_centrality(
+        graph, normalized=normalized, endpoints=endpoints
+    )
+
+
+@functools.singledispatch
 def vf2_mapping(
     first,
     second,

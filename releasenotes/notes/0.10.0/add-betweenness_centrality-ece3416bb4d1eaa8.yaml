@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.betweenness_centrality` to compute
+    betweenness centrality of all nodes in a :class:`~retworkx.PyGraph` or
+    :class:`~retworkx.PyDiGraph` object.
