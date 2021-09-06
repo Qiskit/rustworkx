@@ -44,9 +44,9 @@ use petgraph::stable_graph::StableDiGraph;
 use petgraph::stable_graph::StableUnGraph;
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoNeighbors, IntoNeighborsDirected,
-    IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
-    NodeFiltered, NodeIndexable, Visitable,
+    IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers,
+    IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeFiltered,
+    NodeIndexable, Visitable,
 };
 
 /// A class for creating undirected graphs
