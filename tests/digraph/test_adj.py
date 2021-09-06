@@ -24,6 +24,12 @@ class TestAdj(unittest.TestCase):
         res = dag.adj(node_a)
         self.assertEqual({node_b: {"a": 1}, node_c: {"a": 2}}, res)
 
+    def test_in_and_out_adj_neighbor(self):
+        dag = retworkx.PyDAG()
+        dag.extend_from_weighted_edge_list([(0, 1, "a"), (1, 2, "b")])
+        res = dag.adj(1)
+        self.assertEqual({0: "a", 2: "b"}, res)
+
     def test_single_neighbor_dir(self):
         dag = retworkx.PyDAG()
         node_a = dag.add_node("a")

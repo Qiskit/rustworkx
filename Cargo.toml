@@ -30,7 +30,7 @@ num-complex = "0.2"
 indexmap = "1.6.2"
 
 [dependencies.pyo3]
-version = "0.14.4"
+version = "0.14.5"
 features = ["extension-module", "hashbrown", "num-bigint", "num-complex"]
 
 [dependencies.hashbrown]
