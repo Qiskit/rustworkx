@@ -44,9 +44,9 @@ use petgraph::stable_graph::StableDiGraph;
 use petgraph::stable_graph::StableUnGraph;
 use petgraph::visit::{
     GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers,
-    IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeFiltered,
-    NodeIndexable, Visitable,
+    IntoNeighbors, IntoNeighborsDirected,
+    IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
+    NodeFiltered, NodeIndexable, Visitable,
 };
 
 /// A class for creating undirected graphs
@@ -1035,17 +1035,12 @@ impl PyGraph {
     ///     edge with the specified node.
     /// :rtype: dict
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn adj(&mut self, node: usize) -> PyResult<HashMap<usize, &PyObject>> {
+    pub fn adj(&mut self, node: usize) -> HashMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
-        let neighbors = self.graph.neighbors(index);
-        let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
-
-        for neighbor in neighbors {
-            let edge = self.graph.find_edge(index, neighbor);
-            let edge_w = self.graph.edge_weight(edge.unwrap());
-            out_map.insert(neighbor.index(), edge_w.unwrap());
-        }
-        Ok(out_map)
+        self.graph
+            .edges_directed(index, petgraph::Direction::Outgoing)
+            .map(|edge| (edge.target().index(), edge.weight()))
+            .collect()
     }
 
     /// Get the neighbors of a node.
