@@ -1454,7 +1454,7 @@ impl PyGraph {
     ///
     /// This method can be used to construct a new :class:`~retworkx.PyGraph`
     /// object from an input adjacency matrix. The node weights will be the
-    /// index from the matrix. The edge weights will be a float value of the
+    /// index from the matrix. The edge weights will be a complex value of the
     /// value from the matrix.
     ///
     /// This differs from the
@@ -1469,12 +1469,12 @@ impl PyGraph {
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
     ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
     ///     dimensional array and be a ``complex``/``np.complex128`` data type.
-    /// :param float null_value: An optional float that will treated as a null
+    /// :param float null_value: An optional complex that will treated as a null
     ///     value. If any element in the input matrix is this value it will be
     ///     treated as not an edge. By default this is ``0.0+0.0j``
     ///
     /// :returns: A new graph object generated from the adjacency matrix
-    /// :rtype: PyDiGraph
+    /// :rtype: PyGraph
     #[staticmethod]
     #[args(null_value = "Complex64::zero()")]
     #[pyo3(text_signature = "(matrix, /, null_value=0.0+0.0j)")]

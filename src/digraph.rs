@@ -2141,7 +2141,7 @@ impl PyDiGraph {
     ///
     /// This method can be used to construct a new :class:`~retworkx.PyDiGraph`
     /// object from an input adjacency matrix. The node weights will be the
-    /// index from the matrix. The edge weights will be a float value of the
+    /// index from the matrix. The edge weights will be a complex value of the
     /// value from the matrix.
     ///
     /// This differs from the
