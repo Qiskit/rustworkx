@@ -12,7 +12,7 @@ features:
 
 
     The betweenness centrality of a node :math:`v` is the sum of the fraction
-    of all-pairs shortest paths that pass through :math`v`
+    of all-pairs shortest paths that pass through :math:`v`
 
     .. math::
 
