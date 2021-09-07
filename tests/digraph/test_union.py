@@ -95,3 +95,17 @@ class TestUnion(unittest.TestCase):
             first, second, merge_nodes=True, merge_edges=True
         )
         self.assertEqual(final.weighted_edge_list(), [(0, 1, "a")])
+
+    def test_union_edge_between_merged_and_unmerged_nodes(self):
+        first = retworkx.PyDiGraph()
+        nodes = first.add_nodes_from([0, 1])
+        first.add_edges_from([(nodes[0], nodes[1], "a")])
+
+        second = retworkx.PyDiGraph()
+        nodes = second.add_nodes_from([0, 2])
+        second.add_edges_from([(nodes[0], nodes[1], "b")])
+
+        final = retworkx.digraph_union(
+            first, second, merge_nodes=True, merge_edges=True
+        )
+        self.assertEqual(final.weighted_edge_list(), [(0, 1, "a"), (0, 2, "b")])
