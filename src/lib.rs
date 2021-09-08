@@ -62,8 +62,11 @@ use petgraph::visit::{
     Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
     NodeCount, NodeIndexable,
 };
+use petgraph::EdgeType;
 
 use crate::generators::PyInit_generators;
+
+type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -128,6 +131,26 @@ fn weight_callable(
         }
         None => Ok(default),
     }
+}
+
+fn find_node_by_weight<Ty: EdgeType>(
+    py: Python,
+    graph: &StablePyGraph<Ty>,
+    obj: &PyObject,
+) -> PyResult<Option<NodeIndex>> {
+    let mut index = None;
+    for node in graph.node_indices() {
+        let weight = graph.node_weight(node).unwrap();
+        if obj
+            .as_ref(py)
+            .rich_compare(weight, pyo3::basic::CompareOp::Eq)?
+            .is_true()?
+        {
+            index = Some(node);
+            break;
+        }
+    }
+    Ok(index)
 }
 
 // The provided node is invalid.

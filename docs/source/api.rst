@@ -145,8 +145,7 @@ Other Algorithm Functions
    retworkx.transitivity
    retworkx.core_number
    retworkx.graph_greedy_color
-   retworkx.digraph_union
-   retworkx.graph_union
+   retworkx.union
    retworkx.metric_closure
 
 Generators
@@ -243,6 +242,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_transitivity
    retworkx.digraph_core_number
    retworkx.digraph_complement
+   retworkx.digraph_union
    retworkx.digraph_random_layout
    retworkx.digraph_bipartite_layout
    retworkx.digraph_circular_layout
@@ -284,6 +284,7 @@ typed API based on the data type.
    retworkx.graph_transitivity
    retworkx.graph_core_number
    retworkx.graph_complement
+   retworkx.graph_union
    retworkx.graph_random_layout
    retworkx.graph_bipartite_layout
    retworkx.graph_circular_layout

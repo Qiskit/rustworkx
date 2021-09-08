@@ -10,36 +10,14 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{digraph, graph};
+use crate::{digraph, find_node_by_weight, graph, StablePyGraph};
 
-use petgraph::stable_graph::{NodeIndex, StableGraph};
+use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 use petgraph::{algo, EdgeType};
 
 use pyo3::prelude::*;
 use pyo3::Python;
-
-type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
-
-fn find_node_by_weight<Ty: EdgeType>(
-    py: Python,
-    graph: &StablePyGraph<Ty>,
-    obj: &PyObject,
-) -> PyResult<Option<NodeIndex>> {
-    let mut index = None;
-    for node in graph.node_indices() {
-        let weight = graph.node_weight(node).unwrap();
-        if obj
-            .as_ref(py)
-            .rich_compare(weight, pyo3::basic::CompareOp::Eq)?
-            .is_true()?
-        {
-            index = Some(node);
-            break;
-        }
-    }
-    Ok(index)
-}
 
 #[derive(Copy, Clone)]
 enum Entry<T> {
@@ -127,31 +105,31 @@ fn union<Ty: EdgeType>(
 ///
 /// The algorithm in this function operates in three phases:
 ///
-///  1. Add all the nodes from  ``second`` into ``first``. operates in O(n),
-///     with n being number of nodes in `b`.
-///  2. Merge nodes from ``second`` over ``first`` given that:
+/// 1. Add all the nodes from  ``second`` into ``first``. operates in :math:`\mathcal{O}(n_2)`,
+///    with :math:`n_2` being number of nodes in ``second``.
+/// 2. Merge nodes from ``second`` over ``first`` given that:
 ///
-///     - The ``merge_nodes`` is ``True``. operates in O(n^2), with n being the
-///       number of nodes in ``second``.
-///     - The respective node in ``second`` and ``first`` share the same
-///       weight/data payload.
+///    - The ``merge_nodes`` is ``True``. operates in :math:`\mathcal{O}(n_1 n_2)`,
+///      with :math:`n_1` being the number of nodes in ``first`` and :math:`n_2`
+///      the number of nodes in ``second``
+///    - The respective node in ``second`` and ``first`` share the same
+///      weight/data payload.
 ///
-///  3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
-///     parameter is ``True`` and the respective edge in ``second`` and
-///     first`` share the same weight/data payload they will be merged
-///     together.
+/// 3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
+///    parameter is ``True`` and the respective edge in ``second`` and
+///    ``first`` share the same weight/data payload they will be merged together.
 ///
-///  :param PyGraph first: The first directed graph object
-///  :param PyGraph second: The second directed graph object
-///  :param bool merge_nodes: If set to ``True`` nodes will be merged between
-///     ``second`` and ``first`` if the weights are equal.
-///  :param bool merge_edges: If set to ``True`` edges will be merged between
-///     ``second`` and ``first`` if the weights are equal.
+/// :param PyGraph first: The first undirected graph object
+/// :param PyGraph second: The second undirected graph object
+/// :param bool merge_nodes: If set to ``True`` nodes will be merged between
+///     ``second`` and ``first`` if the weights are equal. Default: ``False``.
+/// :param bool merge_edges: If set to ``True`` edges will be merged between
+///     ``second`` and ``first`` if the weights are equal. Default: ``False``.
 ///
-///  :returns: A new PyGraph object that is the union of ``second`` and
+/// :returns: A new PyGraph object that is the union of ``second`` and
 ///     ``first``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
-///  :rtype: PyGraph
+/// :rtype: PyGraph
 #[pyfunction(merge_nodes = false, merge_edges = false)]
 #[pyo3(
     text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)"
@@ -177,31 +155,31 @@ fn graph_union(
 ///
 /// The algorithm in this function operates in three phases:
 ///
-///  1. Add all the nodes from  ``second`` into ``first``. operates in O(n),
-///     with n being number of nodes in `b`.
-///  2. Merge nodes from ``second`` over ``first`` given that:
+/// 1. Add all the nodes from  ``second`` into ``first``. operates in :math:`\mathcal{O}(n_2)`,
+///    with :math:`n_2` being number of nodes in ``second``.
+/// 2. Merge nodes from ``second`` over ``first`` given that:
 ///
-///     - The ``merge_nodes`` is ``True``. operates in O(n^2), with n being the
-///       number of nodes in ``second``.
-///     - The respective node in ``second`` and ``first`` share the same
-///       weight/data payload.
+///    - The ``merge_nodes`` is ``True``. operates in :math:`\mathcal{O}(n_1 n_2)`,
+///      with :math:`n_1` being the number of nodes in ``first`` and :math:`n_2`
+///      the number of nodes in ``second``
+///    - The respective node in ``second`` and ``first`` share the same
+///      weight/data payload.
 ///
-///  3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
-///     parameter is ``True`` and the respective edge in ``second`` and
-///     first`` share the same weight/data payload they will be merged
-///     together.
+/// 3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
+///    parameter is ``True`` and the respective edge in ``second`` and
+///    ``first`` share the same weight/data payload they will be merged together.
 ///
-///  :param PyDiGraph first: The first directed graph object
-///  :param PyDiGraph second: The second directed graph object
-///  :param bool merge_nodes: If set to ``True`` nodes will be merged between
-///     ``second`` and ``first`` if the weights are equal.
-///  :param bool merge_edges: If set to ``True`` edges will be merged between
-///     ``second`` and ``first`` if the weights are equal.
+/// :param PyDiGraph first: The first directed graph object
+/// :param PyDiGraph second: The second directed graph object
+/// :param bool merge_nodes: If set to ``True`` nodes will be merged between
+///     ``second`` and ``first`` if the weights are equal. Default: ``False``.
+/// :param bool merge_edges: If set to ``True`` edges will be merged between
+///     ``second`` and ``first`` if the weights are equal. Default: ``False``.
 ///
-///  :returns: A new PyDiGraph object that is the union of ``second`` and
+/// :returns: A new PyDiGraph object that is the union of ``second`` and
 ///     ``first``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
-///  :rtype: PyDiGraph
+/// :rtype: PyDiGraph
 #[pyfunction(merge_nodes = false, merge_edges = false)]
 #[pyo3(
     text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)"

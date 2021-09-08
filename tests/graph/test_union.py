@@ -18,8 +18,10 @@ class TestUnion(unittest.TestCase):
     def setUp(self):
         self.graph = retworkx.PyGraph()
         self.graph.add_nodes_from(["a_1", "a_2", "a_3"])
-        self.graph.extend_from_weighted_edge_list([(0, 1, "e_1"), (1, 2, "e_2")])
-    
+        self.graph.extend_from_weighted_edge_list(
+            [(0, 1, "e_1"), (1, 2, "e_2")]
+        )
+
     def test_union_basic_merge_none(self):
         final = retworkx.graph_union(
             self.graph, self.graph, merge_nodes=False, merge_edges=False
