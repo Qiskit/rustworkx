@@ -35,7 +35,7 @@ use super::dot_utils::build_dot;
 use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList,
 };
-use super::{NoEdgeBetweenNodes, NodesRemoved};
+use super::{find_node_by_weight, NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -1018,6 +1018,26 @@ impl PyGraph {
             self.graph.remove_node(node);
         }
         Ok(())
+    }
+
+    /// Find node within this graph given a specific weight
+    ///
+    /// This algorithm has a worst case of O(n) since it searches the node
+    /// indices in order. If there is more than one node in the graph with the
+    /// same weight only the first match (by node index) will be returned.
+    ///
+    /// :param obj: The weight to look for in the graph.
+    ///
+    /// :returns: the index of the first node in the graph that is equal to the
+    ///     weight. If no match is found ``None`` will be returned.
+    /// :rtype: int
+    pub fn find_node_by_weight(
+        &self,
+        py: Python,
+        obj: PyObject,
+    ) -> PyResult<Option<usize>> {
+        find_node_by_weight(py, &self.graph, &obj)
+            .map(|node| node.map(|x| x.index()))
     }
 
     /// Get the index and data for the neighbors of a node.
