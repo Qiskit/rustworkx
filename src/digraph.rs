@@ -50,8 +50,8 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes, NoSuitableNeighbors,
-    NodesRemoved,
+    find_node_by_weight, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
+    NoSuitableNeighbors, NodesRemoved,
 };
 
 use super::dag_algo::is_directed_acyclic_graph;
@@ -1401,21 +1401,9 @@ impl PyDiGraph {
         &self,
         py: Python,
         obj: PyObject,
-    ) -> Option<usize> {
-        let mut index = None;
-        for node in self.graph.node_indices() {
-            let weight = self.graph.node_weight(node).unwrap();
-            let weight_compare = |a: &PyAny, b: &PyAny| -> PyResult<bool> {
-                let res = a.compare(b)?;
-                Ok(res == Ordering::Equal)
-            };
-
-            if weight_compare(obj.as_ref(py), weight.as_ref(py)).unwrap() {
-                index = Some(node.index());
-                break;
-            }
-        }
-        index
+    ) -> PyResult<Option<usize>> {
+        find_node_by_weight(py, &self.graph, &obj)
+            .map(|node| node.map(|x| x.index()))
     }
 
     /// Merge two nodes in the graph.
@@ -1553,18 +1541,15 @@ impl PyDiGraph {
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn adj(&mut self, node: usize) -> HashMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
-        let neighbors = self.graph.neighbors(index);
-        let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
-        for neighbor in neighbors {
-            let mut edge = self.graph.find_edge(index, neighbor);
-            // If there is no edge then it must be a parent neighbor
-            if edge.is_none() {
-                edge = self.graph.find_edge(neighbor, index);
-            }
-            let edge_w = self.graph.edge_weight(edge.unwrap());
-            out_map.insert(neighbor.index(), edge_w.unwrap());
-        }
-        out_map
+        self.graph
+            .edges_directed(index, petgraph::Direction::Incoming)
+            .map(|edge| (edge.source().index(), edge.weight()))
+            .chain(
+                self.graph
+                    .edges_directed(index, petgraph::Direction::Outgoing)
+                    .map(|edge| (edge.target().index(), edge.weight())),
+            )
+            .collect()
     }
 
     /// Get the index and data for either the parent or children of a node.
@@ -1588,39 +1573,19 @@ impl PyDiGraph {
         &mut self,
         node: usize,
         direction: bool,
-    ) -> PyResult<HashMap<usize, &PyObject>> {
+    ) -> HashMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
-        let dir = if direction {
-            petgraph::Direction::Incoming
+        if direction {
+            self.graph
+                .edges_directed(index, petgraph::Direction::Incoming)
+                .map(|edge| (edge.source().index(), edge.weight()))
+                .collect()
         } else {
-            petgraph::Direction::Outgoing
-        };
-        let neighbors = self.graph.neighbors_directed(index, dir);
-        let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
-        for neighbor in neighbors {
-            let edge = if direction {
-                match self.graph.find_edge(neighbor, index) {
-                    Some(edge) => edge,
-                    None => {
-                        return Err(NoEdgeBetweenNodes::new_err(
-                            "No edge found between nodes",
-                        ))
-                    }
-                }
-            } else {
-                match self.graph.find_edge(index, neighbor) {
-                    Some(edge) => edge,
-                    None => {
-                        return Err(NoEdgeBetweenNodes::new_err(
-                            "No edge found between nodes",
-                        ))
-                    }
-                }
-            };
-            let edge_w = self.graph.edge_weight(edge);
-            out_map.insert(neighbor.index(), edge_w.unwrap());
+            self.graph
+                .edges_directed(index, petgraph::Direction::Outgoing)
+                .map(|edge| (edge.target().index(), edge.weight()))
+                .collect()
         }
-        Ok(out_map)
     }
 
     /// Get the neighbors (i.e. successors) of a node.
