@@ -2,7 +2,7 @@
 fixes:
   - |
     Previously, :func:`~retworkx.digraph_union` would incorrectly keep or delete edges
-    if argument `merge_edges` is set to true. This has been fixed and an edge from
+    if argument ``merge_edges`` is set to true. This has been fixed and an edge from
     the second graph will be skipped if both its endpoints were merged to nodes from
     the first graph and these nodes already share an edge with equal weight data.
     Fixed `#432 <https://github.com/Qiskit/retworkx/issues/432>`__
@@ -26,7 +26,7 @@ features:
       graph = retworkx.graph_union(first, second, merge_nodes=True)
       mpl_draw(graph)
   - |
-    The kwargs `merge_nodes` and `merge_edges` of :func:`~retworkx.union` are
+    The kwargs ``merge_nodes`` and ``merge_edges`` of :func:`~retworkx.digraph_union` are
     now optional and by default are set `False`.
   - |
     Add a new :meth:`~retworkx.PyGraph.find_node_by_weight` that finds the index
