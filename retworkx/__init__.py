@@ -1633,3 +1633,64 @@ def _graph_vf2_mapping(
         induced=induced,
         call_limit=call_limit,
     )
+
+
+@functools.singledispatch
+def union(
+    first,
+    second,
+    merge_nodes=False,
+    merge_edges=False,
+):
+    """Return a new graph by forming a union from two input graph objects
+
+    The algorithm in this function operates in three phases:
+
+    1. Add all the nodes from  ``second`` into ``first``. operates in
+    :math:`\\mathcal{O}(n_2)`, with :math:`n_2` being number of nodes in
+    ``second``.
+    2. Merge nodes from ``second`` over ``first`` given that:
+
+       - The ``merge_nodes`` is ``True``. operates in :math:`\\mathcal{O}(n_1 n_2)`,
+         with :math:`n_1` being the number of nodes in ``first`` and :math:`n_2`
+         the number of nodes in ``second``
+       - The respective node in ``second`` and ``first`` share the same
+         weight/data payload.
+
+    3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
+       parameter is ``True`` and the respective edge in ``second`` and
+       ``first`` share the same weight/data payload they will be merged together.
+
+    :param first: The first graph object
+    :param second: The second graph object
+    :param bool merge_nodes: If set to ``True`` nodes will be merged between
+        ``second`` and ``first`` if the weights are equal. Default: ``False``.
+    :param bool merge_edges: If set to ``True`` edges will be merged between
+        ``second`` and ``first`` if the weights are equal. Default: ``False``.
+
+    :returns: A new graph object that is the union of ``second`` and
+        ``first``. It's worth noting the weight/data payload objects are
+        passed by reference from ``first`` and ``second`` to this new object.
+    :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@union.register(PyDiGraph)
+def _digraph_union(
+    first,
+    second,
+    merge_nodes=False,
+    merge_edges=False,
+):
+    return digraph_union(first, second, merge_nodes=False, merge_edges=False)
+
+
+@union.register(PyGraph)
+def _graph_union(
+    first,
+    second,
+    merge_nodes=False,
+    merge_edges=False,
+):
+    return graph_union(first, second, merge_nodes=False, merge_edges=False)
