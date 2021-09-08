@@ -105,8 +105,9 @@ fn union<Ty: EdgeType>(
 ///
 /// The algorithm in this function operates in three phases:
 ///
-/// 1. Add all the nodes from  ``second`` into ``first``. operates in :math:`\mathcal{O}(n_2)`,
-///    with :math:`n_2` being number of nodes in ``second``.
+/// 1. Add all the nodes from  ``second`` into ``first``. operates in
+///    :math:`\mathcal{O}(n_2)`, with :math:`n_2` being number of nodes in
+///    ``second``.
 /// 2. Merge nodes from ``second`` over ``first`` given that:
 ///
 ///    - The ``merge_nodes`` is ``True``. operates in :math:`\mathcal{O}(n_1 n_2)`,
@@ -155,8 +156,9 @@ fn graph_union(
 ///
 /// The algorithm in this function operates in three phases:
 ///
-/// 1. Add all the nodes from  ``second`` into ``first``. operates in :math:`\mathcal{O}(n_2)`,
-///    with :math:`n_2` being number of nodes in ``second``.
+/// 1. Add all the nodes from  ``second`` into ``first``. operates in
+///    :math:`\mathcal{O}(n_2)`, with :math:`n_2` being number of nodes in
+///    ``second``.
 /// 2. Merge nodes from ``second`` over ``first`` given that:
 ///
 ///    - The ``merge_nodes`` is ``True``. operates in :math:`\mathcal{O}(n_1 n_2)`,

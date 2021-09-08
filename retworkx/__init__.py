@@ -1646,11 +1646,12 @@ def union(
 
     The algorithm in this function operates in three phases:
 
-    1. Add all the nodes from  ``second`` into ``first``. operates in :math:`\mathcal{O}(n_2)`,
-       with :math:`n_2` being number of nodes in ``second``.
+    1. Add all the nodes from  ``second`` into ``first``. operates in
+    :math:`\\mathcal{O}(n_2)`, with :math:`n_2` being number of nodes in
+    ``second``.
     2. Merge nodes from ``second`` over ``first`` given that:
 
-       - The ``merge_nodes`` is ``True``. operates in :math:`\mathcal{O}(n_1 n_2)`,
+       - The ``merge_nodes`` is ``True``. operates in :math:`\\mathcal{O}(n_1 n_2)`,
          with :math:`n_1` being the number of nodes in ``first`` and :math:`n_2`
          the number of nodes in ``second``
        - The respective node in ``second`` and ``first`` share the same
