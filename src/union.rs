@@ -52,7 +52,7 @@ fn extract<T>(x: Entry<T>) -> T {
     match x {
         Entry::Merged(val) => val,
         Entry::Added(val) => val,
-        Entry::None => panic!("called `Entry::extract()` on a `None` value"),
+        Entry::None => panic!("Unexpected internal error: called `Entry::extract()` on a `None` value. Please file an issue at https://github.com/Qiskit/retworkx/issues/new/choose with the details on how you encountered this."),
     }
 }
 

@@ -1,7 +1,7 @@
 ---
 fixes:
   - |
-    Previously, :func:`~retworkx.digraph_union` would falsely keep or delete edges
+    Previously, :func:`~retworkx.digraph_union` would incorrectly keep or delete edges
     if argument `merge_edges` is set to true. This has been fixed and an edge from
     the second graph will be skipped if both its endpoints were merged to nodes from
     the first graph and these nodes already share an edge with equal weight data.
@@ -9,7 +9,9 @@ fixes:
 features:
   - |
     Adds a new function :func:`~retworkx.graph_union` that returns the union
-    of two :class:`~retworkx.PyGraph` objects.
+    of two :class:`~retworkx.PyGraph` objects. This is the equivalent to 
+    :func:`~retworkx.digraph_union` but for a :class:`~retworkx.PyGraph`
+    instead of for a :class:`~retworkx.PyDiGraph`.
     For example:
 
     .. jupyter-execute::
@@ -21,4 +23,3 @@ features:
       second = retworkx.generators.cycle_graph(3, weights=["node", "b_0", "b_1"])
       graph = retworkx.graph_union(first, second, merge_nodes=True)
       mpl_draw(graph)
-    
