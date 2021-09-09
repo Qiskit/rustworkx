@@ -171,8 +171,8 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         paths: node_indices
             .into_par_iter()
             .map(|x| {
-                let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
-                    HashMap::with_capacity(graph.node_count());
+                let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
+                    DictMap::with_capacity(graph.node_count());
                 let distance = dijkstra::dijkstra(
                     graph,
                     x,

@@ -21,7 +21,6 @@ use std::collections::BinaryHeap;
 use std::hash::Hash;
 
 use crate::dictmap::*;
-use hashbrown::HashMap;
 use indexmap::map::Entry::{Occupied, Vacant};
 
 use petgraph::algo::Measure;
@@ -103,7 +102,7 @@ pub fn dijkstra<G, F, K>(
     start: G::NodeId,
     goal: Option<G::NodeId>,
     mut edge_cost: F,
-    mut path: Option<&mut HashMap<G::NodeId, Vec<G::NodeId>>>,
+    mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
 ) -> PyResult<DictMap<G::NodeId, K>>
 where
     G: IntoEdges + Visitable,

@@ -21,9 +21,8 @@ mod floyd_warshall;
 mod k_shortest_path;
 mod num_shortest_path;
 
-use hashbrown::HashMap;
-
 use super::weight_callable;
+use crate::dictmap::*;
 use crate::{digraph, graph, NoPathFound};
 
 use pyo3::prelude::*;
@@ -72,8 +71,8 @@ pub fn graph_dijkstra_shortest_paths(
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
-    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
-        HashMap::with_capacity(graph.node_count());
+    let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
+        DictMap::with_capacity(graph.node_count());
     dijkstra::dijkstra(
         graph,
         start,
@@ -136,8 +135,8 @@ pub fn digraph_dijkstra_shortest_paths(
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
-    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
-        HashMap::with_capacity(graph.node_count());
+    let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
+        DictMap::with_capacity(graph.node_count());
     if as_undirected {
         dijkstra::dijkstra(
             // TODO: Use petgraph undirected adapter after
