@@ -20,7 +20,7 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use crate::dictmap::{dictmap_with_capacity, DictMap};
+use crate::dictmap::*;
 
 use petgraph::visit::{
     Data, EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
@@ -59,7 +59,7 @@ where
     F: FnMut(&PyObject) -> PyResult<f64>,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_count()];
-    let mut scores = dictmap_with_capacity!(graph.node_count());
+    let mut scores = DictMap::with_capacity(graph.node_count());
     let mut visit_next = BinaryHeap::new();
     let zero_score = 0.0;
 

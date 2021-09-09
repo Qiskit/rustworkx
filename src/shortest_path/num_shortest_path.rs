@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::dictmap::DictMap;
+use crate::dictmap::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;

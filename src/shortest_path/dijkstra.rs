@@ -20,7 +20,7 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use crate::dictmap::{dictmap_new, DictMap};
+use crate::dictmap::*;
 use hashbrown::HashMap;
 use indexmap::map::Entry::{Occupied, Vacant};
 
@@ -112,7 +112,7 @@ where
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();
-    let mut scores = dictmap_new!();
+    let mut scores = DictMap::new();
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
     scores.insert(start, zero_score);

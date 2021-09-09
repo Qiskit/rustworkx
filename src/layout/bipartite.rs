@@ -20,7 +20,7 @@ use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use super::spring::{recenter, rescale, Point};
-use crate::dictmap::dictmap_new;
+use crate::dictmap::*;
 use crate::iterators::Pos2DMapping;
 
 pub fn bipartite_layout<Ty: EdgeType>(
@@ -34,7 +34,7 @@ pub fn bipartite_layout<Ty: EdgeType>(
     let node_num = graph.node_count();
     if node_num == 0 {
         return Pos2DMapping {
-            pos_map: dictmap_new!(),
+            pos_map: DictMap::new(),
         };
     }
     let left_num = first_nodes.len();

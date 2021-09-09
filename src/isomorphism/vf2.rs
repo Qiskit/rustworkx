@@ -19,7 +19,7 @@ use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
 
-use crate::dictmap::{dictmap_new, dictmap_with_capacity, DictMap};
+use crate::dictmap::*;
 use hashbrown::HashMap;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
@@ -77,7 +77,7 @@ fn sorted<N: std::cmp::PartialOrd>(x: &mut (N, N)) {
 fn adjacency_matrix<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
 ) -> DictMap<(NodeIndex, NodeIndex), usize> {
-    let mut matrix = dictmap_with_capacity!(graph.edge_count());
+    let mut matrix = DictMap::with_capacity(graph.edge_count());
     for edge in graph.edge_references() {
         let mut item = (edge.source(), edge.target());
         if !graph.is_directed() {
@@ -541,7 +541,7 @@ where
     }
 
     fn mapping(&self) -> NodeMap {
-        let mut mapping: DictMap<usize, usize> = dictmap_new!();
+        let mut mapping: DictMap<usize, usize> = DictMap::new();
         self.st[1]
             .mapping
             .iter()

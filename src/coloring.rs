@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::dictmap::{dictmap_new, DictMap};
+use crate::dictmap::*;
 use crate::graph;
 
 use hashbrown::{HashMap, HashSet};
@@ -41,7 +41,7 @@ fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
 ) -> PyResult<PyObject> {
-    let mut colors: DictMap<usize, usize> = dictmap_new!();
+    let mut colors: DictMap<usize, usize> = DictMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let mut sort_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(graph.node_count());

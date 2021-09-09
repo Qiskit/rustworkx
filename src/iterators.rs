@@ -43,7 +43,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::convert::TryInto;
 use std::hash::Hasher;
 
-use crate::dictmap::{dictmap_new, DictMap};
+use crate::dictmap::*;
 use num_bigint::BigUint;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
@@ -787,7 +787,7 @@ macro_rules! custom_hash_map_iter_impl {
             #[new]
             fn new() -> $name {
                 $name {
-                    $data: dictmap_new!(),
+                    $data: DictMap::new(),
                 }
             }
 
@@ -924,7 +924,7 @@ impl PyGCProtocol for EdgeIndexMap {
     }
 
     fn __clear__(&mut self) {
-        self.edge_map = dictmap_new!();
+        self.edge_map = DictMap::new();
     }
 }
 
@@ -963,7 +963,7 @@ impl PathMapping {
     #[new]
     fn new() -> PathMapping {
         PathMapping {
-            paths: dictmap_new!(),
+            paths: DictMap::new(),
         }
     }
 

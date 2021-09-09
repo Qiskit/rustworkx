@@ -18,7 +18,7 @@ use std::io::{BufReader, BufWriter};
 use std::ops::{Index, IndexMut};
 use std::str;
 
-use crate::dictmap::DictMap;
+use crate::dictmap::*;
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;

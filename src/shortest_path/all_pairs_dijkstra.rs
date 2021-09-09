@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::dictmap::{dictmap_new, DictMap};
+use crate::dictmap::*;
 use hashbrown::HashMap;
 
 use super::dijkstra;
@@ -42,7 +42,7 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
-            path_lengths: dictmap_new!(),
+            path_lengths: DictMap::new(),
         });
     } else if graph.edge_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
@@ -52,7 +52,7 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
                     (
                         i.index(),
                         PathLengthMapping {
-                            path_lengths: dictmap_new!(),
+                            path_lengths: DictMap::new(),
                         },
                     )
                 })
@@ -120,7 +120,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
 ) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathMapping {
-            paths: dictmap_new!(),
+            paths: DictMap::new(),
         });
     } else if graph.edge_count() == 0 {
         return Ok(AllPairsPathMapping {
@@ -130,7 +130,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                     (
                         i.index(),
                         PathMapping {
-                            paths: dictmap_new!(),
+                            paths: DictMap::new(),
                         },
                     )
                 })
