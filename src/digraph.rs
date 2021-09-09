@@ -51,8 +51,8 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes, NoSuitableNeighbors,
-    NodesRemoved,
+    find_node_by_weight, DAGHasCycle, DAGWouldCycle, NoEdgeBetweenNodes,
+    NoSuitableNeighbors, NodesRemoved,
 };
 
 use super::dag_algo::is_directed_acyclic_graph;
@@ -1402,21 +1402,9 @@ impl PyDiGraph {
         &self,
         py: Python,
         obj: PyObject,
-    ) -> Option<usize> {
-        let mut index = None;
-        for node in self.graph.node_indices() {
-            let weight = self.graph.node_weight(node).unwrap();
-            let weight_compare = |a: &PyAny, b: &PyAny| -> PyResult<bool> {
-                let res = a.compare(b)?;
-                Ok(res == Ordering::Equal)
-            };
-
-            if weight_compare(obj.as_ref(py), weight.as_ref(py)).unwrap() {
-                index = Some(node.index());
-                break;
-            }
-        }
-        index
+    ) -> PyResult<Option<usize>> {
+        find_node_by_weight(py, &self.graph, &obj)
+            .map(|node| node.map(|x| x.index()))
     }
 
     /// Merge two nodes in the graph.

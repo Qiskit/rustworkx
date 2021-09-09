@@ -1,0 +1,8 @@
+---
+prelude: >
+  This release is a bugfix release that fixes some issues found since the 0.10.1
+  release. The fixes in this release are primarily in the vf2 implementation
+  and most importantly fixes the output of :func:`~retworkx.vf2_mapping` with
+  an empty input graph and the output of :func:`~retworkx.vf2_mapping`,
+  :func:`~retworkx.is_isomorphic`, and :func:`~retworkx.is_subgraph_isomorphic`
+  with graphs that have parallel edges.
