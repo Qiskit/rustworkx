@@ -19,7 +19,7 @@ use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
 
-use crate::dictmap::{dictmap_new, DictMap};
+use crate::dictmap::{dictmap_new, dictmap_with_capacity, DictMap};
 use hashbrown::HashMap;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
@@ -76,8 +76,8 @@ fn sorted<N: std::cmp::PartialOrd>(x: &mut (N, N)) {
 /// with `(i, j)` entry equal to number of edges from node `i` to node `j`.
 fn adjacency_matrix<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
-) -> HashMap<(NodeIndex, NodeIndex), usize> {
-    let mut matrix = HashMap::with_capacity(graph.edge_count());
+) -> DictMap<(NodeIndex, NodeIndex), usize> {
+    let mut matrix = dictmap_with_capacity!(graph.edge_count());
     for edge in graph.edge_references() {
         let mut item = (edge.source(), edge.target());
         if !graph.is_directed() {
@@ -92,7 +92,7 @@ fn adjacency_matrix<Ty: EdgeType>(
 /// Returns the number of edges from node `a` to node `b`.
 fn edge_multiplicity<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
-    matrix: &HashMap<(NodeIndex, NodeIndex), usize>,
+    matrix: &DictMap<(NodeIndex, NodeIndex), usize>,
     a: NodeIndex,
     b: NodeIndex,
 ) -> usize {
@@ -107,7 +107,7 @@ fn edge_multiplicity<Ty: EdgeType>(
 /// from node `a` to node `b` is greater than `val`.
 fn is_adjacent<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
-    matrix: &HashMap<(NodeIndex, NodeIndex), usize>,
+    matrix: &DictMap<(NodeIndex, NodeIndex), usize>,
     a: NodeIndex,
     b: NodeIndex,
     val: usize,
@@ -302,7 +302,7 @@ where
     ins: Vec<usize>,
     out_size: usize,
     ins_size: usize,
-    adjacency_matrix: HashMap<(NodeIndex, NodeIndex), usize>,
+    adjacency_matrix: DictMap<(NodeIndex, NodeIndex), usize>,
     generation: usize,
     _etype: marker::PhantomData<Directed>,
 }

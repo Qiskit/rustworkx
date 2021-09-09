@@ -1540,7 +1540,7 @@ impl PyDiGraph {
     ///     specified node.
     /// :rtype: dict
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn adj(&mut self, node: usize) -> HashMap<usize, &PyObject> {
+    pub fn adj(&mut self, node: usize) -> DictMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
         self.graph
             .edges_directed(index, petgraph::Direction::Incoming)
@@ -1574,7 +1574,7 @@ impl PyDiGraph {
         &mut self,
         node: usize,
         direction: bool,
-    ) -> HashMap<usize, &PyObject> {
+    ) -> DictMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
         if direction {
             self.graph

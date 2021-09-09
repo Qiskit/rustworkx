@@ -116,7 +116,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StableGraph<PyObject, PyObject, Ty>,
     edge_cost_fn: PyObject,
-    distances: Option<&mut HashMap<usize, HashMap<NodeIndex, f64>>>,
+    distances: Option<&mut HashMap<usize, DictMap<NodeIndex, f64>>>,
 ) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathMapping {
@@ -160,7 +160,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    let temp_distances: RwLock<HashMap<usize, HashMap<NodeIndex, f64>>> =
+    let temp_distances: RwLock<HashMap<usize, DictMap<NodeIndex, f64>>> =
         if distances.is_some() {
             RwLock::new(HashMap::with_capacity(graph.node_count()))
         } else {
