@@ -1568,12 +1568,12 @@ impl PyGraph {
         &mut self,
         py: Python,
         other: &PyGraph,
-        node_map: HashMap<usize, (usize, PyObject)>,
+        node_map: DictMap<usize, (usize, PyObject)>,
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
-        let mut new_node_map: HashMap<NodeIndex, NodeIndex> =
-            HashMap::with_capacity(other.node_count());
+        let mut new_node_map: DictMap<NodeIndex, NodeIndex> =
+            DictMap::with_capacity(other.node_count());
 
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph
