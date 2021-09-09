@@ -13,7 +13,7 @@
 #![allow(clippy::float_cmp)]
 
 use crate::dictmap::*;
-use hashbrown::HashSet;
+use hashbrown::{HashMap, HashSet};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
