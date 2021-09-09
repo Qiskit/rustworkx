@@ -2217,7 +2217,7 @@ impl PyDiGraph {
         &mut self,
         py: Python,
         other: &PyDiGraph,
-        node_map: DictMap<usize, (usize, PyObject)>,
+        node_map: HashMap<usize, (usize, PyObject)>,
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {

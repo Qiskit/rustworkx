@@ -39,12 +39,12 @@ where
 
     let mut cores: DictMap<NodeIndex, usize> = DictMap::with_capacity(node_num);
     let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
-    let mut degree_map: DictMap<NodeIndex, usize> =
-        DictMap::with_capacity(node_num);
-    let mut nbrs: DictMap<NodeIndex, HashSet<NodeIndex>> =
-        DictMap::with_capacity(node_num);
-    let mut node_pos: DictMap<NodeIndex, usize> =
-        DictMap::with_capacity(node_num);
+    let mut degree_map: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(node_num);
+    let mut nbrs: HashMap<NodeIndex, HashSet<NodeIndex>> =
+        HashMap::with_capacity(node_num);
+    let mut node_pos: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(node_num);
 
     for k in node_vec.iter() {
         let k_nbrs: HashSet<NodeIndex> =
