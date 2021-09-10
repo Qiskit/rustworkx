@@ -1822,12 +1822,7 @@ fn _from_adjacency_matrix<'p, T>(
     null_value: T,
 ) -> PyGraph
 where
-    T: Copy
-        + num_traits::Zero
-        + std::cmp::PartialEq
-        + numpy::Element
-        + pyo3::ToPyObject
-        + IsNan,
+    T: Copy + std::cmp::PartialEq + numpy::Element + pyo3::ToPyObject + IsNan,
 {
     let array = matrix.as_array();
     let shape = array.shape();
