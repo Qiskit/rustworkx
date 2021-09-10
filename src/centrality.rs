@@ -56,10 +56,10 @@ pub fn betweenness_centrality<Ty: EdgeType + Sync>(
     if graph.node_count() < parallel_threshold {
         node_indices
             .iter()
-            .map(|node_s| {
+            .map(|&node_s| {
                 (
-                    shortest_path_for_centrality(&graph, *node_s),
-                    graph.to_index(*node_s),
+                    shortest_path_for_centrality(graph, node_s),
+                    graph.to_index(node_s),
                 )
             })
             .for_each(|(mut shortest_path_calc, is)| {
@@ -82,10 +82,10 @@ pub fn betweenness_centrality<Ty: EdgeType + Sync>(
     } else {
         node_indices
             .par_iter()
-            .map(|node_s| {
+            .map(|&node_s| {
                 (
-                    shortest_path_for_centrality(&graph, *node_s),
-                    graph.to_index(*node_s),
+                    shortest_path_for_centrality(graph, node_s),
+                    graph.to_index(node_s),
                 )
             })
             .for_each(|(mut shortest_path_calc, is)| {
