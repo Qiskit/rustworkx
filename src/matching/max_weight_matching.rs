@@ -21,8 +21,7 @@ use std::cmp::max;
 use std::mem;
 use std::panic;
 
-use crate::dictmap::*;
-use hashbrown::HashSet;
+use hashbrown::{HashMap, HashSet};
 
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
@@ -97,7 +96,7 @@ fn assign_label(
     blossom_children: &[Vec<usize>],
     blossom_base: &[Option<usize>],
     endpoints: &[usize],
-    mate: &DictMap<usize, usize>,
+    mate: &HashMap<usize, usize>,
 ) -> PyResult<()> {
     let b = in_blossoms[w];
     assert!(labels[w] == Some(0) && labels[b] == Some(0));
@@ -146,7 +145,7 @@ fn scan_blossom(
     endpoints: &[usize],
     labels: &mut Vec<Option<usize>>,
     label_ends: &[Option<usize>],
-    mate: &DictMap<usize, usize>,
+    mate: &HashMap<usize, usize>,
 ) -> Option<usize> {
     let mut v: Option<usize> = Some(node_a);
     let mut w: Option<usize> = Some(node_b);
@@ -214,7 +213,7 @@ fn add_blossom(
     blossom_best_edges: &mut Vec<Vec<usize>>,
     blossom_parents: &mut Vec<Option<usize>>,
     neighbor_endpoints: &[Vec<usize>],
-    mate: &DictMap<usize, usize>,
+    mate: &HashMap<usize, usize>,
 ) -> PyResult<()> {
     let (mut v, mut w, _weight) = edges[edge];
     let blossom_b = in_blossoms[base];
@@ -289,8 +288,8 @@ fn add_blossom(
         in_blossoms[node] = blossom;
     }
     // Compute blossom_best_edges[blossom]
-    let mut best_edge_to: DictMap<usize, usize> =
-        DictMap::with_capacity(2 * num_nodes);
+    let mut best_edge_to: HashMap<usize, usize> =
+        HashMap::with_capacity(2 * num_nodes);
     for bv_ref in &blossom_children[blossom] {
         let bv = *bv_ref;
         // This sub-blossom does not have a list of least-slack edges;
@@ -357,7 +356,7 @@ fn expand_blossom(
     queue: &mut Vec<usize>,
     blossom_base: &mut Vec<Option<usize>>,
     endpoints: &[usize],
-    mate: &DictMap<usize, usize>,
+    mate: &HashMap<usize, usize>,
     blossom_endpoints: &mut Vec<Vec<usize>>,
     allowed_edge: &mut Vec<bool>,
     unused_blossoms: &mut Vec<usize>,
@@ -577,7 +576,7 @@ fn augment_blossom(
     blossom_children: &mut Vec<Vec<usize>>,
     blossom_endpoints: &mut Vec<Vec<usize>>,
     blossom_base: &mut Vec<Option<usize>>,
-    mate: &mut DictMap<usize, usize>,
+    mate: &mut HashMap<usize, usize>,
 ) {
     // Bubble up through the blossom tree from vertex v to an immediate
     // sub-blossom of b.
@@ -700,7 +699,7 @@ fn augment_matching(
     blossom_children: &mut Vec<Vec<usize>>,
     blossom_endpoints: &mut Vec<Vec<usize>>,
     blossom_base: &mut Vec<Option<usize>>,
-    mate: &mut DictMap<usize, usize>,
+    mate: &mut HashMap<usize, usize>,
 ) {
     let (v, w, _weight) = edges[edge];
     for (s_ref, p_ref) in [(v, 2 * edge + 1), (w, 2 * edge)].iter() {
@@ -781,7 +780,7 @@ fn verify_optimum(
     blossom_parents: &[Option<usize>],
     blossom_endpoints: &[Vec<usize>],
     blossom_base: &[Option<usize>],
-    mate: &DictMap<usize, usize>,
+    mate: &HashMap<usize, usize>,
 ) {
     let dual_var_node_min: i128 = *dual_var[..num_nodes].iter().min().unwrap();
     let node_dual_offset: i128 = if max_cardinality {
@@ -878,7 +877,7 @@ pub fn max_weight_matching(
     // algorithm operates on contiguous indices 0..num_nodes. node_map maps
     // the PyGraph's NodeIndex to the contingous usize used inside the
     // algorithm
-    let node_map: DictMap<NodeIndex, usize> = graph
+    let node_map: HashMap<NodeIndex, usize> = graph
         .graph
         .node_indices()
         .enumerate()
@@ -929,7 +928,7 @@ pub fn max_weight_matching(
     // mate[v] is the remote endpoint of its matched edge, or None if it is
     // single (i.e. endpoint[mate[v]] is v's partner vertex).
     // Initially all vertices are single; updated during augmentation.
-    let mut mate: DictMap<usize, usize> = DictMap::with_capacity(num_nodes);
+    let mut mate: HashMap<usize, usize> = HashMap::with_capacity(num_nodes);
     // If b is a top-level blossom
     // label[b] is 0 if b is unlabeled (free);
     //             1 if b is a S-vertex/blossom;
