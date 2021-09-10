@@ -374,6 +374,7 @@ dependencies = [
  "indoc",
  "libc",
  "num-bigint",
+ "num-complex",
  "parking_lot",
  "paste",
  "pyo3-build-config",
@@ -513,7 +514,7 @@ dependencies = [
 
 [[package]]
 name = "retworkx"
-version = "0.10.2"
+version = "0.11.0"
 dependencies = [
  "ahash",
  "fixedbitset",
@@ -521,6 +522,7 @@ dependencies = [
  "indexmap",
  "ndarray",
  "num-bigint",
+ "num-complex",
  "num-traits",
  "numpy",
  "petgraph",
