@@ -1499,17 +1499,43 @@ def _graph_num_shortest_paths_unweighted(graph, source):
 
 
 @functools.singledispatch
-def betweenness_centrality(graph, normalized=True, endpoints=False):
-    """Returns the betweenness centrality of each node in the graph.
+def betweenness_centrality(
+    graph, normalized=True, endpoints=False, parallel_threshold=50
+):
+    r"""Returns the betweenness centrality of each node in the graph.
 
-    Betweenness centrality of a node `v` is the sum of the fraction
-    of shortest paths between all pairs of nodes that pass through `v`.
+    Betweenness centrality of a node :math:`v` is the sum of the
+    fraction of all-pairs shortest paths that pass through :math`v`
 
-    :param graph: The graph to compute the betweenness centralities for.
-    :param bool normalized: If true, normalize the betweenness scores by the number
-        of distinct paths between all pairs of nodes.
-    :param bool endpoints: Whether to include the endpoints of paths in pathlengths
-        used to compute the betweenness.
+    .. math::
+
+       c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
+
+    where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
+    shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+    those paths  passing through some  node :math:`v` other than :math:`s, t`.
+    If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
+    :math:`\sigma(s, t|v) = 0`
+
+    The algorithm used in this function is based on:
+
+    Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
+    Journal of Mathematical Sociology 25(2):163-177, 2001.
+
+    This function is multithreaded and will run in parallel if the number
+    of nodes in the graph is above the value of ``parallel_threshold`` (it
+    defaults to 50). If the function will be running in parallel the env var
+    ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+
+    :param PyDiGraph graph: The input graph
+    :param bool normalized: Whether to normalize the betweenness scores by
+        the number of distinct paths between all pairs of nodes.
+    :param bool endpoints: Whether to include the endpoints of paths in
+        path lengths used to compute the betweenness.
+    :param int parallel_threshold: The number of nodes to calculate the
+        the betweenness centrality in parallel at if the number of nodes in
+        the graph is less than this value it will run in a single thread. The
+        default value is 50
 
     :returns: A dictionary mapping each node index to its betweenness centrality.
     :rtype: dict
@@ -1518,16 +1544,26 @@ def betweenness_centrality(graph, normalized=True, endpoints=False):
 
 
 @betweenness_centrality.register(PyDiGraph)
-def _digraph_betweenness_centrality(graph, normalized=True, endpoints=False):
+def _digraph_betweenness_centrality(
+    graph, normalized=True, endpoints=False, parallel_threshold=50
+):
     return digraph_betweenness_centrality(
-        graph, normalized=normalized, endpoints=endpoints
+        graph,
+        normalized=normalized,
+        endpoints=endpoints,
+        parallel_threshold=parallel_threshold,
     )
 
 
 @betweenness_centrality.register(PyGraph)
-def _graph_betweenness_centrality(graph, normalized=True, endpoints=False):
+def _graph_betweenness_centrality(
+    graph, normalized=True, endpoints=False, parallel_threshold=50
+):
     return graph_betweenness_centrality(
-        graph, normalized=normalized, endpoints=endpoints
+        graph,
+        normalized=normalized,
+        endpoints=endpoints,
+        parallel_threshold=parallel_threshold,
     )
 
 
@@ -1633,3 +1669,64 @@ def _graph_vf2_mapping(
         induced=induced,
         call_limit=call_limit,
     )
+
+
+@functools.singledispatch
+def union(
+    first,
+    second,
+    merge_nodes=False,
+    merge_edges=False,
+):
+    """Return a new graph by forming a union from two input graph objects
+
+    The algorithm in this function operates in three phases:
+
+    1. Add all the nodes from  ``second`` into ``first``. operates in
+    :math:`\\mathcal{O}(n_2)`, with :math:`n_2` being number of nodes in
+    ``second``.
+    2. Merge nodes from ``second`` over ``first`` given that:
+
+       - The ``merge_nodes`` is ``True``. operates in :math:`\\mathcal{O}(n_1 n_2)`,
+         with :math:`n_1` being the number of nodes in ``first`` and :math:`n_2`
+         the number of nodes in ``second``
+       - The respective node in ``second`` and ``first`` share the same
+         weight/data payload.
+
+    3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
+       parameter is ``True`` and the respective edge in ``second`` and
+       ``first`` share the same weight/data payload they will be merged together.
+
+    :param first: The first graph object
+    :param second: The second graph object
+    :param bool merge_nodes: If set to ``True`` nodes will be merged between
+        ``second`` and ``first`` if the weights are equal. Default: ``False``.
+    :param bool merge_edges: If set to ``True`` edges will be merged between
+        ``second`` and ``first`` if the weights are equal. Default: ``False``.
+
+    :returns: A new graph object that is the union of ``second`` and
+        ``first``. It's worth noting the weight/data payload objects are
+        passed by reference from ``first`` and ``second`` to this new object.
+    :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@union.register(PyDiGraph)
+def _digraph_union(
+    first,
+    second,
+    merge_nodes=False,
+    merge_edges=False,
+):
+    return digraph_union(first, second, merge_nodes=False, merge_edges=False)
+
+
+@union.register(PyGraph)
+def _graph_union(
+    first,
+    second,
+    merge_nodes=False,
+    merge_edges=False,
+):
+    return graph_union(first, second, merge_nodes=False, merge_edges=False)

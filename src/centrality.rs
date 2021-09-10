@@ -15,12 +15,14 @@ use crate::{digraph, graph, StablePyGraph};
 
 use pyo3::prelude::*;
 use std::collections::VecDeque;
+use std::sync::RwLock;
 
 use hashbrown::HashMap;
 
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{IntoNodeIdentifiers, NodeIndexable};
 use petgraph::EdgeType;
+use rayon::prelude::*;
 
 // The algorithm here is taken from:
 // Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
@@ -36,10 +38,11 @@ use petgraph::EdgeType;
 // delta -- delta
 // d -- distance
 
-pub fn betweenness_centrality<Ty: EdgeType>(
+pub fn betweenness_centrality<Ty: EdgeType + Sync>(
     graph: &StablePyGraph<Ty>,
     endpoints: bool,
     normalized: bool,
+    parallel_threshold: usize,
 ) -> Vec<Option<f64>> {
     let max_index = graph.node_bound();
 
@@ -48,25 +51,60 @@ pub fn betweenness_centrality<Ty: EdgeType>(
         let is: usize = graph.to_index(node_s);
         betweenness[is] = Some(0.0);
     }
-    for node_s in graph.node_identifiers() {
-        let is: usize = graph.to_index(node_s);
-        let mut shortest_path_calc =
-            shortest_path_for_centrality(graph, node_s);
-        if endpoints {
-            _accumulate_endpoints(
-                &mut betweenness,
-                max_index,
-                &mut shortest_path_calc,
-                is,
-            );
-        } else {
-            _accumulate_basic(
-                &mut betweenness,
-                max_index,
-                &mut shortest_path_calc,
-                is,
-            );
-        }
+    let locked_betweenness = RwLock::new(&mut betweenness);
+    let node_indices: Vec<NodeIndex> = graph.node_identifiers().collect();
+    if graph.node_count() < parallel_threshold {
+        node_indices
+            .iter()
+            .map(|node_s| {
+                (
+                    shortest_path_for_centrality(&graph, *node_s),
+                    graph.to_index(*node_s),
+                )
+            })
+            .for_each(|(mut shortest_path_calc, is)| {
+                if endpoints {
+                    _accumulate_endpoints(
+                        &locked_betweenness,
+                        max_index,
+                        &mut shortest_path_calc,
+                        is,
+                    );
+                } else {
+                    _accumulate_basic(
+                        &locked_betweenness,
+                        max_index,
+                        &mut shortest_path_calc,
+                        is,
+                    );
+                }
+            });
+    } else {
+        node_indices
+            .par_iter()
+            .map(|node_s| {
+                (
+                    shortest_path_for_centrality(&graph, *node_s),
+                    graph.to_index(*node_s),
+                )
+            })
+            .for_each(|(mut shortest_path_calc, is)| {
+                if endpoints {
+                    _accumulate_endpoints(
+                        &locked_betweenness,
+                        max_index,
+                        &mut shortest_path_calc,
+                        is,
+                    );
+                } else {
+                    _accumulate_basic(
+                        &locked_betweenness,
+                        max_index,
+                        &mut shortest_path_calc,
+                        is,
+                    );
+                }
+            });
     }
     _rescale(
         &mut betweenness,
@@ -113,7 +151,7 @@ fn _rescale(
 }
 
 fn _accumulate_basic(
-    betweenness: &mut Vec<Option<f64>>,
+    locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
     max_index: usize,
     path_calc: &mut ShortestPathData,
     is: usize,
@@ -127,6 +165,10 @@ fn _accumulate_basic(
             let iv = (*v).index();
             delta[iv] += path_calc.sigma[v] * coeff;
         }
+    }
+    let mut betweenness = locked_betweenness.write().unwrap();
+    for w in &path_calc.verts_sorted_by_distance {
+        let iw = w.index();
         if iw != is {
             betweenness[iw] = betweenness[iw].map(|x| x + delta[iw]);
         }
@@ -134,13 +176,11 @@ fn _accumulate_basic(
 }
 
 fn _accumulate_endpoints(
-    betweenness: &mut Vec<Option<f64>>,
+    locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
     max_index: usize,
     path_calc: &mut ShortestPathData,
     is: usize,
 ) {
-    betweenness[is] = betweenness[is]
-        .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
@@ -150,6 +190,12 @@ fn _accumulate_endpoints(
             let iv = (*v).index();
             delta[iv] += path_calc.sigma[v] * coeff;
         }
+    }
+    let mut betweenness = locked_betweenness.write().unwrap();
+    betweenness[is] = betweenness[is]
+        .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
+    for w in &path_calc.verts_sorted_by_distance {
+        let iw = w.index();
         if iw != is {
             betweenness[iw] = betweenness[iw].map(|x| x + delta[iw] + 1.0);
         }
@@ -207,24 +253,62 @@ fn shortest_path_for_centrality<Ty: EdgeType>(
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
 ///
+/// Betweenness centrality of a node :math:`v` is the sum of the
+/// fraction of all-pairs shortest paths that pass through :math`v`
+///
+/// .. math::
+///
+///    c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
+///
+/// where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
+/// shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+/// those paths  passing through some  node :math:`v` other than :math:`s, t`.
+/// If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
+/// :math:`\sigma(s, t|v) = 0`
+///
+/// The algorithm used in this function is based on:
+///
+/// Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
+/// Journal of Mathematical Sociology 25(2):163-177, 2001.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
 ///    paths between all pairs of nodes.
 /// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
 ///    compute the betweenness.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      betweenness score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction(normalized = "true", endpoints = "false")]
-#[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
+#[pyfunction(
+    normalized = "true",
+    endpoints = "false",
+    parallel_threshold = "50"
+)]
+#[pyo3(
+    text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)"
+)]
 pub fn graph_betweenness_centrality(
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
+    parallel_threshold: usize,
 ) -> CentralityMapping {
-    let betweenness =
-        betweenness_centrality(&graph.graph, endpoints, normalized);
+    let betweenness = betweenness_centrality(
+        &graph.graph,
+        endpoints,
+        normalized,
+        parallel_threshold,
+    );
     CentralityMapping {
         centralities: betweenness
             .into_iter()
@@ -236,24 +320,62 @@ pub fn graph_betweenness_centrality(
 
 /// Compute the betweenness centrality of all nodes in a PyDiGraph.
 ///
+/// Betweenness centrality of a node :math:`v` is the sum of the
+/// fraction of all-pairs shortest paths that pass through :math`v`
+///
+/// .. math::
+///
+///    c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
+///
+/// where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
+/// shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+/// those paths  passing through some  node :math:`v` other than :math:`s, t`.
+/// If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
+/// :math:`\sigma(s, t|v) = 0`
+///
+/// The algorithm used in this function is based on:
+///
+/// Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
+/// Journal of Mathematical Sociology 25(2):163-177, 2001.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyDiGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
 ///    paths between all pairs of nodes.
 /// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
 ///    compute the betweenness.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      betweenness score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction(normalized = "true", endpoints = "false")]
-#[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False)")]
+#[pyfunction(
+    normalized = "true",
+    endpoints = "false",
+    parallel_threshold = "50"
+)]
+#[pyo3(
+    text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)"
+)]
 pub fn digraph_betweenness_centrality(
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
+    parallel_threshold: usize,
 ) -> CentralityMapping {
-    let betweenness =
-        betweenness_centrality(&graph.graph, endpoints, normalized);
+    let betweenness = betweenness_centrality(
+        &graph.graph,
+        endpoints,
+        normalized,
+        parallel_threshold,
+    );
     CentralityMapping {
         centralities: betweenness
             .into_iter()

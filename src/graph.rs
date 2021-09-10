@@ -28,13 +28,15 @@ use pyo3::PyTraverseError;
 use pyo3::Python;
 
 use ndarray::prelude::*;
+use num_complex::Complex64;
+use num_traits::Zero;
 use numpy::PyReadonlyArray2;
 
 use super::dot_utils::build_dot;
 use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList,
 };
-use super::{NoEdgeBetweenNodes, NodesRemoved};
+use super::{find_node_by_weight, IsNan, NoEdgeBetweenNodes, NodesRemoved};
 
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -867,6 +869,26 @@ impl PyGraph {
         Ok(())
     }
 
+    /// Find node within this graph given a specific weight
+    ///
+    /// This algorithm has a worst case of O(n) since it searches the node
+    /// indices in order. If there is more than one node in the graph with the
+    /// same weight only the first match (by node index) will be returned.
+    ///
+    /// :param obj: The weight to look for in the graph.
+    ///
+    /// :returns: the index of the first node in the graph that is equal to the
+    ///     weight. If no match is found ``None`` will be returned.
+    /// :rtype: int
+    pub fn find_node_by_weight(
+        &self,
+        py: Python,
+        obj: PyObject,
+    ) -> PyResult<Option<usize>> {
+        find_node_by_weight(py, &self.graph, &obj)
+            .map(|node| node.map(|x| x.index()))
+    }
+
     /// Get the index and data for the neighbors of a node.
     ///
     /// This will return a dictionary where the keys are the node indexes of
@@ -882,17 +904,12 @@ impl PyGraph {
     ///     edge with the specified node.
     /// :rtype: dict
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn adj(&mut self, node: usize) -> PyResult<HashMap<usize, &PyObject>> {
+    pub fn adj(&mut self, node: usize) -> HashMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
-        let neighbors = self.graph.neighbors(index);
-        let mut out_map: HashMap<usize, &PyObject> = HashMap::new();
-
-        for neighbor in neighbors {
-            let edge = self.graph.find_edge(index, neighbor);
-            let edge_w = self.graph.edge_weight(edge.unwrap());
-            out_map.insert(neighbor.index(), edge_w.unwrap());
-        }
-        Ok(out_map)
+        self.graph
+            .edges_directed(index, petgraph::Direction::Outgoing)
+            .map(|edge| (edge.target().index(), edge.weight()))
+            .collect()
     }
 
     /// Get the neighbors of a node.
@@ -1273,11 +1290,21 @@ impl PyGraph {
     }
 
     /// Create a new :class:`~retworkx.PyGraph` object from an adjacency matrix
+    /// with matrix elements of type ``float``
     ///
     /// This method can be used to construct a new :class:`~retworkx.PyGraph`
     /// object from an input adjacency matrix. The node weights will be the
     /// index from the matrix. The edge weights will be a float value of the
     /// value from the matrix.
+    ///
+    /// This differs from the
+    /// :meth:`~retworkx.PyGraph.from_complex_adjacency_matrix` in that the
+    /// type of the elements of input matrix must be a ``float`` (specifically
+    /// a ``numpy.float64``) and the output graph edge weights will be ``float``
+    /// too. While in :meth:`~retworkx.PyGraph.from_complex_adjacency_matrix`
+    /// the matrix elements are of type ``complex`` (specifically
+    /// ``numpy.complex128``) and the edge weights in the output graph will be
+    /// ``complex`` too.
     ///
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
     ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
@@ -1296,43 +1323,44 @@ impl PyGraph {
         matrix: PyReadonlyArray2<'p, f64>,
         null_value: f64,
     ) -> PyGraph {
-        let array = matrix.as_array();
-        let shape = array.shape();
-        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
-        let _node_indices: Vec<NodeIndex> = (0..shape[0])
-            .map(|node| out_graph.add_node(node.to_object(py)))
-            .collect();
-        array
-            .axis_iter(Axis(0))
-            .enumerate()
-            .for_each(|(index, row)| {
-                let source_index = NodeIndex::new(index);
-                for target_index in 0..row.len() {
-                    if target_index < index {
-                        continue;
-                    }
-                    if null_value.is_nan() {
-                        if !row[[target_index]].is_nan() {
-                            out_graph.add_edge(
-                                source_index,
-                                NodeIndex::new(target_index),
-                                row[[target_index]].to_object(py),
-                            );
-                        }
-                    } else if row[[target_index]] != null_value {
-                        out_graph.add_edge(
-                            source_index,
-                            NodeIndex::new(target_index),
-                            row[[target_index]].to_object(py),
-                        );
-                    }
-                }
-            });
-        PyGraph {
-            graph: out_graph,
-            node_removed: false,
-            multigraph: true,
-        }
+        _from_adjacency_matrix(py, matrix, null_value)
+    }
+
+    /// Create a new :class:`~retworkx.PyGraph` object from an adjacency matrix
+    /// with matrix elements of type ``complex``
+    ///
+    /// This method can be used to construct a new :class:`~retworkx.PyGraph`
+    /// object from an input adjacency matrix. The node weights will be the
+    /// index from the matrix. The edge weights will be a complex value of the
+    /// value from the matrix.
+    ///
+    /// This differs from the
+    /// :meth:`~retworkx.PyGraph.from_adjacency_matrix` in that the type of
+    /// the elements of the input matrix in this method must be a ``complex``
+    /// (specifically a ``numpy.complex128``) and the output graph edge weights
+    /// will be ``complex`` too. While in
+    /// :meth:`~retworkx.PyGraph.from_adjacency_matrix` the matrix elements
+    /// are of type ``float`` (specifically ``numpy.float64``) and the edge
+    /// weights in the output graph will be ``float`` too.
+    ///
+    /// :param ndarray matrix: The input numpy array adjacency matrix to create
+    ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
+    ///     dimensional array and be a ``complex``/``np.complex128`` data type.
+    /// :param float null_value: An optional complex that will treated as a null
+    ///     value. If any element in the input matrix is this value it will be
+    ///     treated as not an edge. By default this is ``0.0+0.0j``
+    ///
+    /// :returns: A new graph object generated from the adjacency matrix
+    /// :rtype: PyGraph
+    #[staticmethod]
+    #[args(null_value = "Complex64::zero()")]
+    #[pyo3(text_signature = "(matrix, /, null_value=0.0+0.0j)")]
+    pub fn from_complex_adjacency_matrix<'p>(
+        py: Python<'p>,
+        matrix: PyReadonlyArray2<'p, Complex64>,
+        null_value: Complex64,
+    ) -> PyGraph {
+        _from_adjacency_matrix(py, matrix, null_value)
     }
 
     /// Add another PyGraph object into this PyGraph
@@ -1642,5 +1670,52 @@ fn weight_transform_callable(
             Ok(res.to_object(py))
         }
         None => Ok(value.clone_ref(py)),
+    }
+}
+
+fn _from_adjacency_matrix<'p, T>(
+    py: Python<'p>,
+    matrix: PyReadonlyArray2<'p, T>,
+    null_value: T,
+) -> PyGraph
+where
+    T: Copy + std::cmp::PartialEq + numpy::Element + pyo3::ToPyObject + IsNan,
+{
+    let array = matrix.as_array();
+    let shape = array.shape();
+    let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+    let _node_indices: Vec<NodeIndex> = (0..shape[0])
+        .map(|node| out_graph.add_node(node.to_object(py)))
+        .collect();
+    array
+        .axis_iter(Axis(0))
+        .enumerate()
+        .for_each(|(index, row)| {
+            let source_index = NodeIndex::new(index);
+            for (target_index, elem) in row.iter().enumerate() {
+                if target_index < index {
+                    continue;
+                }
+                if null_value.is_nan() {
+                    if !elem.is_nan() {
+                        out_graph.add_edge(
+                            source_index,
+                            NodeIndex::new(target_index),
+                            elem.to_object(py),
+                        );
+                    }
+                } else if *elem != null_value {
+                    out_graph.add_edge(
+                        source_index,
+                        NodeIndex::new(target_index),
+                        elem.to_object(py),
+                    );
+                }
+            }
+        });
+    PyGraph {
+        graph: out_graph,
+        node_removed: false,
+        multigraph: true,
     }
 }

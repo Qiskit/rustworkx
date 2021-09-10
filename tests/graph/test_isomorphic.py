@@ -25,7 +25,7 @@ class TestIsomorphic(unittest.TestCase):
                     retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
                 )
 
-    def test_empty_isomorphic_mismatch_node_data(self):
+    def test_empty_isomorphic(self):
         g_a = retworkx.PyGraph()
         g_b = retworkx.PyGraph()
         for id_order in [False, True]:
@@ -34,7 +34,7 @@ class TestIsomorphic(unittest.TestCase):
                     retworkx.is_isomorphic(g_a, g_b, id_order=id_order)
                 )
 
-    def test_empty_isomorphic_compare_nodes_mismatch_node_data(self):
+    def test_empty_isomorphic_compare_nodes(self):
         g_a = retworkx.PyGraph()
         g_b = retworkx.PyGraph()
         for id_order in [False, True]:
@@ -264,6 +264,24 @@ class TestIsomorphic(unittest.TestCase):
         graph.add_edges_from_no_data([(0, 0), (0, 1)])
         self.assertTrue(retworkx.is_isomorphic(graph, graph))
 
+    def test_isomorphic_parallel_edges(self):
+        first = retworkx.PyGraph()
+        first.extend_from_edge_list([(0, 1), (0, 1), (1, 2), (2, 3)])
+        second = retworkx.PyGraph()
+        second.extend_from_edge_list([(0, 1), (1, 2), (1, 2), (2, 3)])
+        self.assertFalse(retworkx.is_isomorphic(first, second))
+
+    def test_isomorphic_parallel_edges_with_edge_matcher(self):
+        graph = retworkx.PyGraph()
+        graph.extend_from_weighted_edge_list(
+            [(0, 1, "a"), (0, 1, "b"), (1, 2, "c")]
+        )
+        self.assertTrue(
+            retworkx.is_isomorphic(
+                graph, graph, edge_matcher=lambda x, y: x == y
+            )
+        )
+
     def test_graph_isomorphic_insufficient_call_limit(self):
         graph = retworkx.generators.path_graph(5)
         self.assertFalse(retworkx.is_isomorphic(graph, graph, call_limit=2))
@@ -328,3 +346,13 @@ class TestIsomorphic(unittest.TestCase):
         for _ in mapping:
             total += 1
         self.assertEqual(total, 6)
+
+    def test_empty_graph_vf2_mapping(self):
+        g_a = retworkx.PyGraph()
+        g_b = retworkx.PyGraph()
+        for id_order in [False, True]:
+            with self.subTest(id_order=id_order):
+                mapping = retworkx.graph_vf2_mapping(
+                    g_a, g_b, id_order=id_order, subgraph=False
+                )
+                self.assertEqual({}, next(mapping))
