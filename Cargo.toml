@@ -26,10 +26,11 @@ rand_pcg = "0.3"
 rayon = "1.5"
 num-traits = "0.2"
 num-bigint = "0.4"
+num-complex = "0.2"
 
 [dependencies.pyo3]
 version = "0.14.5"
-features = ["extension-module", "hashbrown", "num-bigint", "indexmap"]
+features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.hashbrown]
 version = "0.11"
