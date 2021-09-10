@@ -130,6 +130,7 @@ Connectivity and Cycles
    retworkx.is_weakly_connected
    retworkx.cycle_basis
    retworkx.digraph_find_cycle
+   retworkx.chain_decomposition
 
 .. _other-algorithms:
 

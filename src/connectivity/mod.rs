@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+mod chain;
 mod core_number;
 
 use super::{
@@ -661,4 +662,46 @@ pub fn digraph_core_number(
     graph: &digraph::PyDiGraph,
 ) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
+}
+
+/// Returns the chain decomposition of a graph.
+///
+/// The *chain decomposition* of a graph with respect to a depth-first
+/// search tree is a set of cycles or paths derived from the set of
+/// fundamental cycles of the tree in the following manner. Consider
+/// each fundamental cycle with respect to the given tree, represented
+/// as a list of edges beginning with the nontree edge oriented away
+/// from the root of the tree. For each fundamental cycle, if it
+/// overlaps with any previous fundamental cycle, just take the initial
+/// non-overlapping segment, which is a path instead of a cycle. Each
+/// cycle or path is called a *chain*. For more information, see [Jens]_.
+///
+/// .. note::
+///
+///     It's a recursive implementation and might run out of memory
+///     in large graphs.
+///
+/// :param PyGraph: The undirected graph to be used
+/// :param int source: An optional node index in the graph. If specified,
+///     only the chain decomposition for the connected component containing
+///     this node will be returned. This node indicates the root of the depth-first
+///     search tree. If this is not specified then a source will be chosen
+///     arbitrarly and repeated until all components of the graph are searched.
+/// :returns: A list of list of edges where each inner list is a chain.
+/// :rtype: list of EdgeList
+///
+/// .. [Jens] Jens M. Schmidt (2013). "A simple test on 2-vertex-
+///       and 2-edge-connectivity." *Information Processing Letters*,
+///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, source=None)")]
+pub fn chain_decomposition(
+    graph: graph::PyGraph,
+    source: Option<usize>,
+) -> Vec<EdgeList> {
+    let chains = chain::chain_decomposition(&graph.graph, source);
+    chains
+        .into_iter()
+        .map(|chain| EdgeList { edges: chain })
+        .collect()
 }
