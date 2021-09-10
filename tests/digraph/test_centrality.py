@@ -58,6 +58,37 @@ class TestCentralityDiGraph(unittest.TestCase):
         expected = {0: 0.0, 1: 2.0, 2: 2.0, 3: 0.0}
         self.assertEqual(expected, betweenness)
 
+    def test_betweenness_centrality_parallel(self):
+        betweenness = retworkx.digraph_betweenness_centrality(
+            self.graph, parallel_threshold=1
+        )
+        expected = {
+            0: 0.0,
+            1: 0.3333333333333333,
+            2: 0.3333333333333333,
+            3: 0.0,
+        }
+        self.assertEqual(expected, betweenness)
+
+    def test_betweenness_centrality_endpoints_parallel(self):
+        betweenness = retworkx.digraph_betweenness_centrality(
+            self.graph, endpoints=True, parallel_threshold=1
+        )
+        expected = {
+            0: 0.25,
+            1: 0.41666666666666663,
+            2: 0.41666666666666663,
+            3: 0.25,
+        }
+        self.assertEqual(expected, betweenness)
+
+    def test_betweenness_centrality_unnormalized_parallel(self):
+        betweenness = retworkx.digraph_betweenness_centrality(
+            self.graph, endpoints=False, normalized=False, parallel_threshold=1
+        )
+        expected = {0: 0.0, 1: 2.0, 2: 2.0, 3: 0.0}
+        self.assertEqual(expected, betweenness)
+
 
 class TestCentralityDiGraphDeletedNode(unittest.TestCase):
     def setUp(self):

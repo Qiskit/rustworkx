@@ -63,6 +63,7 @@ use petgraph::visit::{
     Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
     NodeCount, NodeIndexable,
 };
+use petgraph::EdgeType;
 
 use crate::generators::PyInit_generators;
 
@@ -86,6 +87,7 @@ impl IsNan for Complex64 {
         self.re.is_nan() || self.im.is_nan()
     }
 }
+type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -152,6 +154,26 @@ fn weight_callable(
     }
 }
 
+fn find_node_by_weight<Ty: EdgeType>(
+    py: Python,
+    graph: &StablePyGraph<Ty>,
+    obj: &PyObject,
+) -> PyResult<Option<NodeIndex>> {
+    let mut index = None;
+    for node in graph.node_indices() {
+        let weight = graph.node_weight(node).unwrap();
+        if obj
+            .as_ref(py)
+            .rich_compare(weight, pyo3::basic::CompareOp::Eq)?
+            .is_true()?
+        {
+            index = Some(node);
+            break;
+        }
+    }
+    Ok(index)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -193,6 +215,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
+    m.add_wrapped(wrap_pyfunction!(graph_union))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
