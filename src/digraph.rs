@@ -2794,20 +2794,20 @@ where
         .enumerate()
         .for_each(|(index, row)| {
             let source_index = NodeIndex::new(index);
-            for target_index in 0..row.len() {
+            for (target_index, elem) in row.iter().enumerate() {
                 if null_value.is_nan() {
-                    if !row[[target_index]].is_nan() {
+                    if !elem.is_nan() {
                         out_graph.add_edge(
                             source_index,
                             NodeIndex::new(target_index),
-                            row[[target_index]].to_object(py),
+                            elem.to_object(py),
                         );
                     }
-                } else if row[[target_index]] != null_value {
+                } else if *elem != null_value {
                     out_graph.add_edge(
                         source_index,
                         NodeIndex::new(target_index),
-                        row[[target_index]].to_object(py),
+                        elem.to_object(py),
                     );
                 }
             }
