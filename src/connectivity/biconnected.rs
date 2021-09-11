@@ -38,7 +38,7 @@ fn flattened<T>(xs: &[[T; 2]]) -> HashSet<T>
 where
     T: std::hash::Hash + std::cmp::Eq + Clone,
 {
-    xs.into_iter().flatten().cloned().collect()
+    xs.iter().flatten().cloned().collect()
 }
 
 #[inline]
