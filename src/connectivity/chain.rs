@@ -19,20 +19,17 @@ use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::VisitMap;
 use petgraph::visit::{depth_first_search, DfsEvent, NodeIndexable, Visitable};
 
-fn _build_chain<VM: VisitMap<NodeIndex>>(
-    parent: &[NodeIndex],
-    u: NodeIndex,
-    v: NodeIndex,
+fn _build_chain<VM: VisitMap<usize>>(
+    parent: &[usize],
+    mut u: usize,
+    mut v: usize,
     visited: &mut VM,
 ) -> Vec<(usize, usize)> {
-    let mut u = u.index();
-    let mut v = v.index();
-
     let mut chain = Vec::new();
-    while visited.visit(NodeIndex::new(v)) {
+    while visited.visit(v) {
         chain.push((u, v));
         u = v;
-        v = parent[u].index();
+        v = parent[u];
     }
     chain.push((u, v));
 
@@ -48,22 +45,27 @@ pub fn chain_decomposition(
         None => graph.node_indices().collect(),
     };
 
-    let mut parent = vec![NodeIndex::end(); graph.node_bound()];
-    let mut back_edges: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    let mut parent = vec![std::usize::MAX; graph.node_bound()];
+    let mut back_edges: HashMap<usize, Vec<usize>> = HashMap::new();
 
     // depth-first-index (DFI) ordered nodes.
     let mut nodes = Vec::with_capacity(graph.node_count());
     depth_first_search(graph, roots, |event| match event {
         DfsEvent::Discover(u, _) => {
+            let u = u.index();
             nodes.push(u);
         }
         DfsEvent::TreeEdge(u, v) => {
+            let u = u.index();
             let v = v.index();
             parent[v] = u;
         }
         DfsEvent::BackEdge(u, v) => {
-            // do *not* consider (u, v) as a back edge if (v, u) is a tree edge.
-            if parent[u.index()] != v {
+            let u = u.index();
+            let v = v.index();
+
+            // do *not* consider ``(u, v)`` as a back edge if ``(v, u)`` is a tree edge.
+            if parent[u] != v {
                 back_edges
                     .entry(v)
                     .and_modify(|v_edges| v_edges.push(u))
@@ -78,9 +80,9 @@ pub fn chain_decomposition(
 
     for u in nodes {
         visited.visit(u);
-        if let Some(vs) = back_edges.get_mut(&u) {
-            for v in vs.drain(..) {
-                let chain = _build_chain(&parent, u, v, visited);
+        if let Some(vs) = back_edges.get(&u) {
+            for v in vs {
+                let chain = _build_chain(&parent, u, *v, visited);
                 chains.push(chain);
             }
         }

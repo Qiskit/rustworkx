@@ -678,8 +678,10 @@ pub fn digraph_core_number(
 ///
 /// .. note::
 ///
-///     It's a recursive implementation and might run out of memory
-///     in large graphs.
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges. It's also a recursive
+///     implementation and might run out of memory in large graphs.
 ///
 /// :param PyGraph: The undirected graph to be used
 /// :param int source: An optional node index in the graph. If specified,
