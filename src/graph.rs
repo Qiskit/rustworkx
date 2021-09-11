@@ -18,6 +18,7 @@ use std::io::{BufReader, BufWriter};
 use std::ops::{Index, IndexMut};
 use std::str;
 
+use crate::dictmap::*;
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
@@ -1057,7 +1058,7 @@ impl PyGraph {
     ///     edge with the specified node.
     /// :rtype: dict
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn adj(&mut self, node: usize) -> HashMap<usize, &PyObject> {
+    pub fn adj(&mut self, node: usize) -> DictMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
         self.graph
             .edges_directed(index, petgraph::Direction::Outgoing)
@@ -1584,8 +1585,8 @@ impl PyGraph {
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
-        let mut new_node_map: HashMap<NodeIndex, NodeIndex> =
-            HashMap::with_capacity(other.node_count());
+        let mut new_node_map: DictMap<NodeIndex, NodeIndex> =
+            DictMap::with_capacity(other.node_count());
 
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph

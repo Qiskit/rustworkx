@@ -20,8 +20,8 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use hashbrown::hash_map::Entry::{Occupied, Vacant};
-use hashbrown::HashMap;
+use crate::dictmap::*;
+use indexmap::map::Entry::{Occupied, Vacant};
 
 use petgraph::algo::Measure;
 use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
@@ -102,8 +102,8 @@ pub fn dijkstra<G, F, K>(
     start: G::NodeId,
     goal: Option<G::NodeId>,
     mut edge_cost: F,
-    mut path: Option<&mut HashMap<G::NodeId, Vec<G::NodeId>>>,
-) -> PyResult<HashMap<G::NodeId, K>>
+    mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
+) -> PyResult<DictMap<G::NodeId, K>>
 where
     G: IntoEdges + Visitable,
     G::NodeId: Eq + Hash,
@@ -111,7 +111,7 @@ where
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();
-    let mut scores = HashMap::new();
+    let mut scores = DictMap::new();
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
     scores.insert(start, zero_score);
