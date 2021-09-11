@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+mod biconnected;
 mod core_number;
 
 use super::{
@@ -661,4 +662,55 @@ pub fn digraph_core_number(
     graph: &digraph::PyDiGraph,
 ) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
+}
+
+/// Return the articulation points of an undirected graph.
+///
+/// An articulation point or cut vertex is any node whose removal (along with
+/// all its incident edges) increases the number of connected components of
+/// a graph. An undirected connected graph without articulation points is
+/// biconnected.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges. It's also a recursive
+///     implementation and might run out of memory in large graphs.
+///
+/// :param PyGraph: The undirected graph to be used.
+///
+/// :returns: A set with node indexes of the articulation points in the graph.
+/// :rtype: set
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
+    biconnected::articulation_points(&graph.graph, None)
+}
+
+/// Return the biconnected components of an undirected graph.
+///
+/// Biconnected components are maximal subgraphs such that the removal
+/// of a node (and all edges incident on that node) will not disconnect
+/// the subgraph. Note that nodes may be part of more than one biconnected
+// component. Those nodes are articulation points, or cut vertices.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges. It's also a recursive
+///     implementation and might run out of memory in large graphs.
+///
+/// :param PyGraph: The undirected graph to be used.
+///
+/// :returns: A list of sets where each set is a biconnected component of
+///     the graph
+/// :rtype: list
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn biconnected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
+    let mut out_vec = Vec::new();
+    biconnected::articulation_points(&graph.graph, Some(&mut out_vec));
+    out_vec
 }

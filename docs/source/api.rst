@@ -130,6 +130,8 @@ Connectivity and Cycles
    retworkx.is_weakly_connected
    retworkx.cycle_basis
    retworkx.digraph_find_cycle
+   retworkx.articulation_points
+   retworkx.biconnected_components
 
 .. _other-algorithms:
 
