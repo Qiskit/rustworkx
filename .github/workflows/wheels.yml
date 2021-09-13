@@ -45,7 +45,7 @@ jobs:
           toolchain: stable
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.0.1 twine
+          python -m pip install cibuildwheel==2.1.1 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -89,7 +89,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.0.1 twine
+          python -m pip install cibuildwheel==2.1.1 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -134,7 +134,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.0.1 twine
+          python -m pip install cibuildwheel==2.1.1 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -179,7 +179,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.0.1 twine
+          python -m pip install cibuildwheel==2.1.1 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -248,7 +248,7 @@ jobs:
         run: rustup default stable-i686-pc-windows-msvc
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.0.1 twine
+          python -m pip install cibuildwheel==2.1.1 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
