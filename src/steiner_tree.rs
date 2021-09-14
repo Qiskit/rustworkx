@@ -307,8 +307,10 @@ pub fn steiner_tree(
         out_edge_list.iter().map(|x| (x[0], x[1])).collect();
     let mut out_graph = graph.clone();
     let out_nodes: HashSet<NodeIndex> = out_edge_list
-        .into_iter()
+        .iter()
+        .map(|x| x.iter())
         .flatten()
+        .cloned()
         .map(NodeIndex::new)
         .collect();
     for node in graph
