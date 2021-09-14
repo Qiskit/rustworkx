@@ -15,7 +15,7 @@
 pub mod all_pairs_dijkstra;
 mod astar;
 mod average_length;
-mod dijkstra;
+pub mod dijkstra;
 mod distance_matrix;
 mod floyd_warshall;
 mod k_shortest_path;
