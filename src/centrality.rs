@@ -31,6 +31,7 @@ use petgraph::visit::{
     NodeIndexable,
 };
 use rayon::prelude::*;
+use rayon_cond::CondIterator;
 
 // The algorithm here is taken from:
 // Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
@@ -75,59 +76,32 @@ where
     }
     let locked_betweenness = RwLock::new(&mut betweenness);
     let node_indices: Vec<NodeIndex> = graph.node_identifiers().collect();
-    if graph.node_count() < parallel_threshold {
-        node_indices
-            .iter()
-            .map(|node_s| {
-                (
-                    shortest_path_for_centrality(&graph, node_s),
-                    graph.to_index(*node_s),
-                )
-            })
-            .for_each(|(mut shortest_path_calc, is)| {
-                if endpoints {
-                    _accumulate_endpoints(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        is,
-                    );
-                } else {
-                    _accumulate_basic(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        is,
-                    );
-                }
-            });
-    } else {
-        node_indices
-            .par_iter()
-            .map(|node_s| {
-                (
-                    shortest_path_for_centrality(&graph, node_s),
-                    graph.to_index(*node_s),
-                )
-            })
-            .for_each(|(mut shortest_path_calc, is)| {
-                if endpoints {
-                    _accumulate_endpoints(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        is,
-                    );
-                } else {
-                    _accumulate_basic(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        is,
-                    );
-                }
-            });
-    }
+
+    CondIterator::new(node_indices, graph.node_count() >= parallel_threshold)
+        .map(|node_s| {
+            (
+                shortest_path_for_centrality(&graph, &node_s),
+                graph.to_index(node_s),
+            )
+        })
+        .for_each(|(mut shortest_path_calc, is)| {
+            if endpoints {
+                _accumulate_endpoints(
+                    &locked_betweenness,
+                    max_index,
+                    &mut shortest_path_calc,
+                    is,
+                );
+            } else {
+                _accumulate_basic(
+                    &locked_betweenness,
+                    max_index,
+                    &mut shortest_path_calc,
+                    is,
+                );
+            }
+        });
+
     _rescale(
         &mut betweenness,
         graph.node_count(),
