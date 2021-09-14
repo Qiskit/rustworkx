@@ -30,7 +30,6 @@ use petgraph::visit::{
     NodeCount,
     NodeIndexable,
 };
-use rayon::prelude::*;
 use rayon_cond::CondIterator;
 
 // The algorithm here is taken from:

@@ -15,7 +15,7 @@ use hashbrown::{HashMap, HashSet};
 use petgraph::prelude::*;
 use petgraph::EdgeType;
 use pyo3::prelude::*;
-use rayon::prelude::*;
+use rayon_cond::CondIterator;
 
 pub fn compute_distance_sum<Ty: EdgeType + Sync>(
     graph: &StableGraph<PyObject, PyObject, Ty>,
@@ -62,12 +62,7 @@ pub fn compute_distance_sum<Ty: EdgeType + Sync>(
         count
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    if n < parallel_threshold {
-        node_indices.iter().map(|index| bfs_traversal(*index)).sum()
-    } else {
-        node_indices
-            .par_iter()
-            .map(|index| bfs_traversal(*index))
-            .sum()
-    }
+    CondIterator::new(node_indices, n >= parallel_threshold)
+        .map(bfs_traversal)
+        .sum()
 }
