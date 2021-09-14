@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use hashbrown::HashMap;
+use crate::dictmap::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
@@ -28,7 +28,7 @@ use crate::StablePyGraph;
 pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
     source: usize,
-) -> PyResult<HashMap<usize, BigUint>> {
+) -> PyResult<DictMap<usize, BigUint>> {
     let mut out_map: Vec<BigUint> =
         vec![0.to_biguint().unwrap(); graph.node_bound()];
     let node_index = NodeIndex::new(source);

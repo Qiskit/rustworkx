@@ -19,6 +19,7 @@ use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
 
+use crate::dictmap::*;
 use hashbrown::HashMap;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
@@ -538,7 +539,7 @@ where
     }
 
     fn mapping(&self) -> NodeMap {
-        let mut mapping: HashMap<usize, usize> = HashMap::new();
+        let mut mapping: DictMap<usize, usize> = DictMap::new();
         self.st[1]
             .mapping
             .iter()

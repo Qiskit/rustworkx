@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+use crate::dictmap::*;
 use hashbrown::HashMap;
 
 use super::weight_callable;
@@ -40,7 +41,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
-            path_lengths: HashMap::new(),
+            path_lengths: DictMap::new(),
         });
     } else if graph.edge_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
@@ -50,7 +51,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
                     (
                         i.index(),
                         PathLengthMapping {
-                            path_lengths: HashMap::new(),
+                            path_lengths: DictMap::new(),
                         },
                     )
                 })
@@ -131,7 +132,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
     }
 
     // Convert to return format
-    let out_map: HashMap<usize, PathLengthMapping> = graph
+    let out_map: DictMap<usize, PathLengthMapping> = graph
         .node_indices()
         .map(|i| {
             let out_map = PathLengthMapping {

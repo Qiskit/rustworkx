@@ -18,6 +18,7 @@ use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
 use std::str;
 
+use crate::dictmap::*;
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::class::PyMappingProtocol;
@@ -1377,7 +1378,7 @@ impl PyDiGraph {
     ///     specified node.
     /// :rtype: dict
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn adj(&mut self, node: usize) -> HashMap<usize, &PyObject> {
+    pub fn adj(&mut self, node: usize) -> DictMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
         self.graph
             .edges_directed(index, petgraph::Direction::Incoming)
@@ -1411,7 +1412,7 @@ impl PyDiGraph {
         &mut self,
         node: usize,
         direction: bool,
-    ) -> HashMap<usize, &PyObject> {
+    ) -> DictMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
         if direction {
             self.graph
@@ -2079,8 +2080,8 @@ impl PyDiGraph {
         node_map_func: Option<PyObject>,
         edge_map_func: Option<PyObject>,
     ) -> PyResult<PyObject> {
-        let mut new_node_map: HashMap<NodeIndex, NodeIndex> =
-            HashMap::with_capacity(other.node_count());
+        let mut new_node_map: DictMap<NodeIndex, NodeIndex> =
+            DictMap::with_capacity(other.node_count());
 
         // TODO: Reimplement this without looping over the graphs
         // Loop over other nodes add add to self graph
@@ -2192,8 +2193,8 @@ impl PyDiGraph {
             )));
         }
         // Copy nodes from other to self
-        let mut out_map: HashMap<usize, usize> =
-            HashMap::with_capacity(other.node_count());
+        let mut out_map: DictMap<usize, usize> =
+            DictMap::with_capacity(other.node_count());
         for node in other.graph.node_indices() {
             let node_weight = other.graph[node].clone_ref(py);
             if !filter_fn(&node_weight, &node_filter)? {
@@ -2208,7 +2209,7 @@ impl PyDiGraph {
             self.graph.remove_node(node_index);
             // Return a new empty map to clear allocation from out_map
             return Ok(NodeMap {
-                node_map: HashMap::new(),
+                node_map: DictMap::new(),
             });
         }
         // Copy edges from other to self
