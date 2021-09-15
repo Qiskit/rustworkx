@@ -24,11 +24,18 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
     as_undirected: bool,
     null_value: f64,
 ) -> Array2<f64> {
+    let node_map: HashMap<NodeIndex, usize> = graph
+        .node_indices()
+        .enumerate()
+        .map(|(i, v)| (v, i))
+        .collect();
+    let node_map_inv: Vec<NodeIndex> = graph.node_indices().collect();
+
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
         let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
-        let start_index = NodeIndex::new(index);
+        let start_index = node_map_inv[index];
         let mut level = 0;
         let mut next_level: HashSet<NodeIndex> = HashSet::new();
         next_level.insert(start_index);
@@ -40,29 +47,22 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
                 if !seen.contains_key(&v) {
                     seen.insert(v, level);
                     found.push(v);
-                    row[[v.index()]] = level as f64;
+                    row[[node_map[&v]]] = level as f64;
                 }
             }
             if seen.len() == n {
                 return;
             }
             for node in found {
-                if graph.is_directed() {
+                for v in graph
+                    .neighbors_directed(node, petgraph::Direction::Outgoing)
+                {
+                    next_level.insert(v);
+                }
+                if graph.is_directed() && as_undirected {
                     for v in graph
-                        .neighbors_directed(node, petgraph::Direction::Outgoing)
+                        .neighbors_directed(node, petgraph::Direction::Incoming)
                     {
-                        next_level.insert(v);
-                    }
-                    if as_undirected {
-                        for v in graph.neighbors_directed(
-                            node,
-                            petgraph::Direction::Incoming,
-                        ) {
-                            next_level.insert(v);
-                        }
-                    }
-                } else {
-                    for v in graph.neighbors(node) {
                         next_level.insert(v);
                     }
                 }
