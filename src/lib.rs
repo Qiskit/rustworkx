@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 mod centrality;
 mod coloring;
 mod connectivity;
@@ -60,8 +58,10 @@ use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::stable_graph::StableGraph;
-use petgraph::visit::{IntoEdgeReferences, IntoNodeIdentifiers, NodeIndexable};
+use petgraph::visit::{
+    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
+    NodeCount, NodeIndexable,
+};
 use petgraph::EdgeType;
 
 use crate::generators::PyInit_generators;
@@ -101,9 +101,19 @@ where
     }
 }
 
-pub fn get_edge_iter_with_weights<Ty: EdgeType>(
-    graph: &StablePyGraph<Ty>,
-) -> impl Iterator<Item = (usize, usize, PyObject)> + '_ {
+pub fn get_edge_iter_with_weights<G>(
+    graph: G,
+) -> impl Iterator<Item = (usize, usize, PyObject)>
+where
+    G: GraphBase
+        + IntoEdgeReferences
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + NodeCount
+        + GraphProp
+        + NodesRemoved,
+    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
+{
     let node_map: Option<HashMap<NodeIndex, usize>> = if graph.nodes_removed() {
         let mut node_hash_map: HashMap<NodeIndex, usize> =
             HashMap::with_capacity(graph.node_count());

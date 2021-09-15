@@ -14,24 +14,31 @@ use std::collections::BTreeMap;
 use std::io::prelude::*;
 
 use petgraph::visit::{
-    EdgeRef, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,
+    Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences,
+    IntoNodeReferences, NodeIndexable, NodeRef,
 };
-use petgraph::EdgeType;
 use pyo3::prelude::*;
-
-use crate::StablePyGraph;
 
 static TYPE: [&str; 2] = ["graph", "digraph"];
 static EDGE: [&str; 2] = ["--", "->"];
 
-pub fn build_dot<T: Write, Ty: EdgeType>(
+pub fn build_dot<G, T>(
     py: Python,
-    graph: &StablePyGraph<Ty>,
+    graph: G,
     file: &mut T,
     graph_attrs: Option<BTreeMap<String, String>>,
     node_attrs: Option<PyObject>,
     edge_attrs: Option<PyObject>,
-) -> PyResult<()> {
+) -> PyResult<()>
+where
+    T: Write,
+    G: GraphBase
+        + IntoEdgeReferences
+        + IntoNodeReferences
+        + NodeIndexable
+        + GraphProp,
+    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
+{
     writeln!(file, "{} {{", TYPE[graph.is_directed() as usize])?;
     if let Some(graph_attr_map) = graph_attrs {
         for (key, value) in graph_attr_map.iter() {

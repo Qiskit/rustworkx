@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 mod longest_path;
 
 use hashbrown::{HashMap, HashSet};

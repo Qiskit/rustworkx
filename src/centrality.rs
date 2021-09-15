@@ -11,17 +11,24 @@
 // under the License.
 
 use crate::iterators::CentralityMapping;
-use crate::{digraph, graph, StablePyGraph};
+
+use crate::digraph;
+use crate::graph;
 
 use pyo3::prelude::*;
 use std::collections::VecDeque;
 use std::sync::RwLock;
 
 use hashbrown::HashMap;
-
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{IntoNodeIdentifiers, NodeIndexable};
-use petgraph::EdgeType;
+use petgraph::visit::{
+    GraphBase,
+    GraphProp, // allows is_directed
+    IntoNeighborsDirected,
+    IntoNodeIdentifiers,
+    NodeCount,
+    NodeIndexable,
+};
 use rayon::prelude::*;
 
 // The algorithm here is taken from:
@@ -33,17 +40,31 @@ use rayon::prelude::*;
 // P -- predecessors
 // S -- verts_sorted_by_distance,
 //      vertices in order of non-decreasing distance from s
-// Q -- queue
+// Q -- Q
 // sigma -- sigma
 // delta -- delta
 // d -- distance
 
-pub fn betweenness_centrality<Ty: EdgeType + Sync>(
-    graph: &StablePyGraph<Ty>,
+pub fn betweenness_centrality<G>(
+    graph: G,
     endpoints: bool,
     normalized: bool,
     parallel_threshold: usize,
-) -> Vec<Option<f64>> {
+) -> Vec<Option<f64>>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphProp
+        + GraphBase<NodeId = NodeIndex>
+        + std::marker::Sync,
+    // rustfmt deletes the following comments if placed inline above
+    // + IntoNodeIdentifiers // for node_identifiers()
+    // + IntoNeighborsDirected // for neighbors()
+    // + NodeCount // for node_count
+    // + GraphProp // for is_directed
+{
     let max_index = graph.node_bound();
 
     let mut betweenness: Vec<Option<f64>> = vec![None; max_index];
@@ -56,10 +77,10 @@ pub fn betweenness_centrality<Ty: EdgeType + Sync>(
     if graph.node_count() < parallel_threshold {
         node_indices
             .iter()
-            .map(|&node_s| {
+            .map(|node_s| {
                 (
-                    shortest_path_for_centrality(graph, node_s),
-                    graph.to_index(node_s),
+                    shortest_path_for_centrality(&graph, node_s),
+                    graph.to_index(*node_s),
                 )
             })
             .for_each(|(mut shortest_path_calc, is)| {
@@ -82,10 +103,10 @@ pub fn betweenness_centrality<Ty: EdgeType + Sync>(
     } else {
         node_indices
             .par_iter()
-            .map(|&node_s| {
+            .map(|node_s| {
                 (
-                    shortest_path_for_centrality(graph, node_s),
-                    graph.to_index(node_s),
+                    shortest_path_for_centrality(&graph, node_s),
+                    graph.to_index(*node_s),
                 )
             })
             .for_each(|(mut shortest_path_calc, is)| {
@@ -208,32 +229,43 @@ struct ShortestPathData {
     sigma: HashMap<NodeIndex, f64>,
 }
 
-fn shortest_path_for_centrality<Ty: EdgeType>(
-    graph: &StablePyGraph<Ty>,
-    node_s: NodeIndex,
-) -> ShortestPathData {
+fn shortest_path_for_centrality<G>(
+    graph: G,
+    node_s: &G::NodeId,
+) -> ShortestPathData
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphBase<NodeId = NodeIndex>, // for get() and get_mut()
+{
     let mut verts_sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
     let c = graph.node_count();
     let mut predecessors =
-        HashMap::<NodeIndex, Vec<NodeIndex>>::with_capacity(c);
-    let mut sigma = HashMap::<NodeIndex, f64>::with_capacity(c);
-    let mut distance = HashMap::<NodeIndex, i64>::with_capacity(c);
-    let mut queue: VecDeque<NodeIndex> = VecDeque::with_capacity(c);
+        HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
+    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
+    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
+    #[allow(non_snake_case)]
+    let mut Q: VecDeque<NodeIndex> = VecDeque::with_capacity(c);
+
+    let i_s = graph.to_index(*node_s);
+    let index_s = NodeIndex::new(i_s);
 
     for node in graph.node_identifiers() {
         predecessors.insert(node, Vec::new());
         sigma.insert(node, 0.0);
         distance.insert(node, -1);
     }
-    sigma.insert(node_s, 1.0);
-    distance.insert(node_s, 0);
-    queue.push_back(node_s);
-    while let Some(v) = queue.pop_front() {
+    sigma.insert(index_s, 1.0);
+    distance.insert(index_s, 0);
+    Q.push_back(index_s);
+    while let Some(v) = Q.pop_front() {
         verts_sorted_by_distance.push(v);
         let distance_v = distance[&v];
         for w in graph.neighbors(v) {
             if distance[&w] < 0 {
-                queue.push_back(w);
+                Q.push_back(w);
                 distance.insert(w, distance_v + 1);
             }
             if distance[&w] == distance_v + 1 {

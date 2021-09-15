@@ -18,20 +18,17 @@
 // raised in Python instead of panicking
 
 use std::collections::BinaryHeap;
+use std::hash::Hash;
 
 use crate::dictmap::*;
 use indexmap::map::Entry::{Occupied, Vacant};
 
 use petgraph::algo::Measure;
-use petgraph::stable_graph::{DefaultIx, EdgeReference, NodeIndex};
-use petgraph::visit::{EdgeRef, VisitMap, Visitable};
-use petgraph::EdgeType;
+use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
 
 use pyo3::prelude::*;
 
 use super::astar::MinScored;
-
-use crate::StablePyGraph;
 
 /// \[Generic\] Dijkstra's shortest path algorithm.
 ///
@@ -100,16 +97,17 @@ use crate::StablePyGraph;
 /// assert_eq!(res, expected_res);
 /// // z is not inside res because there is not path from b to z.
 /// ```
-pub fn dijkstra<Ty, F, K>(
-    graph: &StablePyGraph<Ty>,
-    start: NodeIndex,
-    goal: Option<NodeIndex>,
+pub fn dijkstra<G, F, K>(
+    graph: G,
+    start: G::NodeId,
+    goal: Option<G::NodeId>,
     mut edge_cost: F,
-    mut path: Option<&mut DictMap<NodeIndex, Vec<NodeIndex>>>,
-) -> PyResult<DictMap<NodeIndex, K>>
+    mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
+) -> PyResult<DictMap<G::NodeId, K>>
 where
-    Ty: EdgeType,
-    F: FnMut(EdgeReference<PyObject, DefaultIx>) -> PyResult<K>,
+    G: IntoEdges + Visitable,
+    G::NodeId: Eq + Hash,
+    F: FnMut(G::EdgeRef) -> PyResult<K>,
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();
