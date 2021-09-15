@@ -94,6 +94,15 @@ pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
+impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
+where
+    Ty: EdgeType,
+{
+    fn nodes_removed(&self) -> bool {
+        self.node_bound() != self.node_count()
+    }
+}
+
 pub fn get_edge_iter_with_weights<G>(
     graph: G,
 ) -> impl Iterator<Item = (usize, usize, PyObject)>

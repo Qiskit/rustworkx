@@ -46,3 +46,11 @@ class TestKShortestpath(unittest.TestCase):
             graph, 0, 2, lambda _: 1, 3
         )
         self.assertEqual({3: 4}, res)
+
+    def test_k_graph_shortest_path_with_goal_node_hole(self):
+        graph = retworkx.generators.path_graph(4)
+        graph.remove_node(0)
+        res = retworkx.graph_k_shortest_path_lengths(
+            graph, start=1, k=1, edge_cost=lambda _: 1, goal=3
+        )
+        self.assertEqual({3: 2}, res)
