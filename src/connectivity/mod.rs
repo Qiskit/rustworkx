@@ -686,6 +686,9 @@ pub fn digraph_core_number(
 #[pyo3(text_signature = "(graph, /)")]
 pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
     biconnected::articulation_points(&graph.graph, None)
+        .into_iter()
+        .map(|nx| nx.index())
+        .collect()
 }
 
 /// Return the biconnected components of an undirected graph.
@@ -713,4 +716,7 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
     let mut out_vec = Vec::new();
     biconnected::articulation_points(&graph.graph, Some(&mut out_vec));
     out_vec
+        .into_iter()
+        .map(|component| component.into_iter().map(|nx| nx.index()).collect())
+        .collect()
 }
