@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+use crate::dictmap::*;
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::prelude::*;
@@ -36,7 +37,7 @@ where
         return Ok(PyDict::new(py).into());
     }
 
-    let mut cores: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_num);
+    let mut cores: DictMap<NodeIndex, usize> = DictMap::with_capacity(node_num);
     let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
     let mut degree_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(node_num);
