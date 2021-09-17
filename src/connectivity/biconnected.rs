@@ -20,21 +20,9 @@ use petgraph::visit::{
 
 const NULL: usize = std::usize::MAX;
 
-#[inline]
-/// Finds the position of ``elem`` in vector ``xs``.
-fn search<T>(xs: &[T], elem: T) -> Option<usize>
-where
-    T: std::cmp::Eq,
-{
-    xs.iter()
-        .enumerate()
-        .find(|&(_, x)| *x == elem)
-        .map(|(idx, _)| idx)
-}
-
-#[inline]
 /// Returns the unique elements of type ``T`` contained
 /// in a vector that holds pairs of ``T`` values.
+#[inline]
 fn flattened<T>(xs: &[[T; 2]]) -> HashSet<T>
 where
     T: Eq + Hash + Copy,
@@ -114,7 +102,9 @@ where
                     // now find a biconnected component that the
                     // current articulation point belongs.
                     if components.is_some() {
-                        if let Some(at) = search(&edge_stack, [pu_id, u_id]) {
+                        if let Some(at) =
+                            edge_stack.iter().rposition(|&x| x == [pu_id, u_id])
+                        {
                             tmp_components.push(flattened(&edge_stack[at..]));
                             edge_stack.truncate(at);
                         }
@@ -122,8 +112,11 @@ where
                 }
 
                 if is_root(&parent, pu) && components.is_some() {
-                    if let Some(at) = search(&edge_stack, [pu_id, u_id]) {
+                    if let Some(at) =
+                        edge_stack.iter().position(|&x| x == [pu_id, u_id])
+                    {
                         tmp_components.push(flattened(&edge_stack[at..]));
+                        edge_stack.truncate(at);
                     }
                 }
             }
