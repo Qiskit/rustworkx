@@ -14,17 +14,15 @@ use std::iter::Iterator;
 
 use hashbrown::HashSet;
 
-use pyo3::prelude::*;
-
-use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use super::spring::{recenter, rescale, Point};
 use crate::dictmap::*;
 use crate::iterators::Pos2DMapping;
+use crate::StablePyGraph;
 
 pub fn bipartite_layout<Ty: EdgeType>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     first_nodes: HashSet<usize>,
     horizontal: Option<bool>,
     scale: Option<f64>,
