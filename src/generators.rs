@@ -1144,6 +1144,15 @@ pub fn heavy_square_graph(
         return Err(PyIndexError::new_err("d must be odd"));
     }
 
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        });
+    }
+
     let num_data = d * d;
     let num_syndrome = d * (d - 1);
     let num_flag = d * (d - 1);
@@ -1300,6 +1309,17 @@ pub fn directed_heavy_square_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -1520,6 +1540,15 @@ pub fn heavy_hex_graph(
         return Err(PyIndexError::new_err("d must be odd"));
     }
 
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        });
+    }
+
     let num_data = d * d;
     let num_syndrome = (d - 1) * (d + 1) / 2;
     let num_flag = d * (d - 1);
@@ -1687,6 +1716,17 @@ pub fn directed_heavy_hex_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        });
     }
 
     let num_data = d * d;
