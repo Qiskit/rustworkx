@@ -28,7 +28,6 @@ use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 
 use petgraph::stable_graph::NodeIndex;
-use petgraph::stable_graph::StableGraph;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing, Undirected};
@@ -36,8 +35,7 @@ use petgraph::{Directed, Incoming, Outgoing, Undirected};
 use rayon::slice::ParallelSliceMut;
 
 use crate::iterators::NodeMap;
-
-type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+use crate::StablePyGraph;
 
 /// Returns `true` if we can map every element of `xs` to a unique
 /// element of `ys` while using `matcher` func to compare two elements.

@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 mod centrality;
 mod coloring;
 mod connectivity;
@@ -88,13 +86,13 @@ impl IsNan for Complex64 {
         self.re.is_nan() || self.im.is_nan()
     }
 }
-type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
-impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
+impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {

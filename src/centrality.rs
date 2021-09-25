@@ -16,7 +16,6 @@ use crate::digraph;
 use crate::graph;
 
 use pyo3::prelude::*;
-use pyo3::Python;
 use std::collections::VecDeque;
 use std::sync::RwLock;
 
@@ -331,26 +330,24 @@ where
     text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)"
 )]
 pub fn graph_betweenness_centrality(
-    _py: Python,
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
     parallel_threshold: usize,
-) -> PyResult<CentralityMapping> {
+) -> CentralityMapping {
     let betweenness = betweenness_centrality(
-        &graph,
+        &graph.graph,
         endpoints,
         normalized,
         parallel_threshold,
     );
-    let out_map = CentralityMapping {
+    CentralityMapping {
         centralities: betweenness
             .into_iter()
             .enumerate()
             .filter_map(|(i, v)| v.map(|x| (i, x)))
             .collect(),
-    };
-    Ok(out_map)
+    }
 }
 
 /// Compute the betweenness centrality of all nodes in a PyDiGraph.
@@ -400,24 +397,22 @@ pub fn graph_betweenness_centrality(
     text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)"
 )]
 pub fn digraph_betweenness_centrality(
-    _py: Python,
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
     parallel_threshold: usize,
-) -> PyResult<CentralityMapping> {
+) -> CentralityMapping {
     let betweenness = betweenness_centrality(
-        &graph,
+        &graph.graph,
         endpoints,
         normalized,
         parallel_threshold,
     );
-    let out_map = CentralityMapping {
+    CentralityMapping {
         centralities: betweenness
             .into_iter()
             .enumerate()
             .filter_map(|(i, v)| v.map(|x| (i, x)))
             .collect(),
-    };
-    Ok(out_map)
+    }
 }

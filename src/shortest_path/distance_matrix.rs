@@ -17,10 +17,10 @@ use hashbrown::{HashMap, HashSet};
 use ndarray::prelude::*;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
-use pyo3::prelude::*;
 use rayon::prelude::*;
 
 use crate::NodesRemoved;
+use crate::StablePyGraph;
 
 #[inline]
 fn apply<I, M>(
@@ -39,7 +39,7 @@ where
 }
 
 pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     parallel_threshold: usize,
     as_undirected: bool,
     null_value: f64,

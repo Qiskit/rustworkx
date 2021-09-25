@@ -10,18 +10,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use pyo3::prelude::*;
-
-use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
 use crate::iterators::Pos2DMapping;
+use crate::StablePyGraph;
 
 pub fn random_layout<Ty: EdgeType>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     center: Option<[f64; 2]>,
     seed: Option<u64>,
 ) -> Pos2DMapping {

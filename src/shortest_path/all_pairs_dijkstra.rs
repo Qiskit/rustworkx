@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 use crate::dictmap::*;
 use hashbrown::HashMap;
 
@@ -34,10 +32,11 @@ use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, PathLengthMapping,
     PathMapping,
 };
+use crate::StablePyGraph;
 
 pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
@@ -114,7 +113,7 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
 
 pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     edge_cost_fn: PyObject,
     distances: Option<&mut HashMap<usize, DictMap<NodeIndex, f64>>>,
 ) -> PyResult<AllPairsPathMapping> {
