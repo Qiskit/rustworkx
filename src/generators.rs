@@ -2090,6 +2090,93 @@ pub fn directed_hexagonal_lattice_graph(
     }
 }
 
+/// Generate an undirected lollipop graph where a mesh graph is connected to a
+/// path
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+///     be ignored and ``mesh_weights`` will be used.
+/// :param list path_weights: A list of node weights for the path. If both
+///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+///     be ignored and ``path_weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated mesh graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_mesh_nodes`` or ``mesh_weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.lollipop_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=True)"
+)]
+pub fn lollipop_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    mesh_weights: Option<Vec<PyObject>>,
+    path_weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    if mesh_weights.is_none() && num_mesh_nodes.is_none() {
+        return Err(PyIndexError::new_err(
+            "num_mesh_nodes and mesh_weights list not specified",
+        ));
+    }
+    let meshlen: usize = match &mesh_weights {
+        Some(mesh_weights) => mesh_weights.len(),
+        None => num_mesh_nodes.unwrap(),
+    };
+    let mut graph = mesh_graph(py, num_mesh_nodes, mesh_weights, multigraph)?;
+
+    let path_nodes: Vec<usize> = match path_weights {
+        Some(path_weights) => {
+            let mut node_list: Vec<usize> = Vec::new();
+            for weight in path_weights {
+                let index = graph.add_node(weight)?;
+                node_list.push(index);
+            }
+            node_list
+        }
+        None => match num_path_nodes {
+            Some(num_path_nodes) => (0..num_path_nodes)
+                .map(|_| graph.add_node(py.None()).unwrap())
+                .collect(),
+            None => Vec::new(),
+        },
+    };
+
+    let pathlen = path_nodes.len();
+    if pathlen > 0 {
+        graph.add_edge(meshlen - 1, meshlen, py.None())?;
+        for (node_a, node_b) in pairwise(path_nodes) {
+            match node_a {
+                Some(node_a) => graph.add_edge(node_a, node_b, py.None())?,
+                None => continue,
+            };
+        }
+    }
+    Ok(graph)
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2110,5 +2197,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
+    m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
     Ok(())
 }
