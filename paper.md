@@ -1,0 +1,105 @@
+---
+title: 'retworkx: A High-Performance Graph Library for Python'
+tags:
+  - graph theory
+  - Python
+  - Rust
+  - quantum computing
+authors:
+  - name: Matthew Treinish
+    orcid: 0000-0001-9713-2875
+    affiliation: 1
+  - name: Ivan Carvalho
+    orcid: 0000-0002-8257-2103
+    affiliation: 2
+  - name: Georgios Tsilimigkounakis
+    orcid: 0000-0001-6174-0801
+    affiliation: 3
+  - name: Nahum Sá
+    orcid: 0000-0002-3234-8154
+    affiliation: 4
+affiliations:
+ - name: IBM T.J. Watson Research Center, Yorktown Heights, USA
+   index: 1
+ - name: University of British Columbia, Kelowna, Canada
+   index: 2
+ - name: National Technical University of Athens, Athens, Greece
+   index: 3
+ - name: Centro Brasileiro de Pesquisas Físicas, Rio de Janeiro, Brazil
+   index: 4
+date: 10 September 2021
+bibliography: paper.bib
+---
+
+&nbsp;
+
+>> Network and graph analysis is a widely applicable field of research, and Python is a popular language. In _[retworkx](https://github.com/Qiskit/retworkx)_, we provide a high-performance, flexible graph and network analysis library for Python. _retworkx_ is inspired by _NetworkX_ [@SciPyProceedings_11] but addresses many performance concerns of the latter. _retworkx_ is particularly suited for performance-sensitive applications that use graph representations.
+
+# Statement of need
+
+_retworkx_ is a general-purpose graph theory library focused on performance. It wraps low-level Rust code [@Matsakis2014] into a flexible Python API, providing fast implementations for popular graph algorithms.
+
+_retworkx_ originated from the performance demands of the Qiskit compiler [@Qiskit2021]. At first, Qiskit used the _NetworkX_ library [@SciPyProceedings_11] to construct directed acyclic graph (DAG) representations of quantum circuits which the compiler operates on to perform analysis and transformations [@Childs2019]. As the development of Qiskit progressed, the input size of the executed quantum circuits grew, and _NetworkX_ started to become a bottleneck. Hence, _retworkx_ development emerged to cover the graph usage in Qiskit. The library is now also used by other projects such as atompack [@Ullberg2021].
+
+# Related work
+
+To address the performance issues in Qiskit, we explored several graph library alternatives. _SNAP_ [@Leskovec2016], _graphtool_ [@Peixoto2014], and _igraph_ [@Csardi2006] are stable Python libraries written in C or C++ that can replace _NetworkX_.
+
+However, there was a strong desire to keep the flexibility that _NetworkX_ provided for exploring and interacting with the graphs, which precluded custom data structures. The investigated graph libraries either had issues integrating with Qiskit or APIs that were too rigid, such that the migration of existing code was more complex than desired. Thus, the main contribution of _retworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
+
+# Graph data structures
+
+_retworkx_ provides two core data structures: `PyGraph` and `PyDiGraph`. They correspond to undirected and directed graphs, respectively. Graphs describe a set of nodes and the edges connecting pairs of those nodes. Internally, _retworkx_ leverages the _petgraph_ [@bluss2021] and the _PyO3_ libraries [@Hewitt2021] to store the graphs.
+
+Nodes and edges of the graph may also be associated with weights. Weights can contain arbitrary data, such as node labels or edge lengths. Any Python object can be a weight, which makes the library flexible because no assumptions are made about the weight types. 
+
+A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges during the graph object's lifetime. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with weights.
+
+_retworkx_ operates on weights with callbacks. Callbacks are functions that take weights and return statically typed data. They resemble the named attributes in _NetworkX_. Callbacks are beneficial because they bridge the arbitrary stored data with the static types _retworkx_ expects. We illustrate indices and callbacks usage with an example.
+
+## Example
+
+```python
+import retworkx
+
+graph = retworkx.PyGraph()
+
+a = graph.add_node("A")
+b = graph.add_node("B")
+c = graph.add_node("C")
+
+graph.add_edges_from([(a, b, 1.5), (a, c, 5.0), (b, c, 2.5)])
+retworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
+```
+
+In the provided example, we find the shortest path from $A$ to $C$ using Dijkstra's algorithm. Firstly, we create the graph and add three nodes labeled A, B, and C. Each time **`add_node`** is called, the method returns the node index associated with the newly added node.
+
+Secondly, we add three edges connecting the nodes. **`add_edges_from`** accepts a list containing tuples of node indices and the edge weight, and returns a list of associated edge indices.
+
+Lastly, we compute the shortest path from $A$ to $C$. We provide the graph, the source node, and the target node to **`dijkstra_shortest_paths`**. In addition, we also provide a callback to **`weight_fn`**, which is the built-in **`float`** function for this case. The algorithm returns a mapping containing the shortest path, $A \rightarrow B \rightarrow C$.
+
+# Use Cases
+
+TODO
+
+## Shortest Path
+
+Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
+
+## Topological Sorting
+
+Talk about transpiler passes using sorting and other applications. TODO: find benchmark.
+
+## Graph Isomorphism
+
+Talk about VF2++ and applications on comparing circuits. TODO: find benchmark.
+
+## Maximum Weight Matching
+
+Talk about applications in error correcting codes, cite qtcodes [@Jha2021]. TODO: find benchmark.
+
+# Acknowledgements
+
+TODO
+
+# References
