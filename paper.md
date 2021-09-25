@@ -86,17 +86,13 @@ TODO
 
 Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
 
-## Topological Sorting
-
-Talk about transpiler passes using sorting and other applications. TODO: find benchmark.
-
 ## Graph Isomorphism
 
-Talk about VF2++ and applications on comparing circuits. TODO: find benchmark.
+Talk about VF2++ and applications on comparing circuits. TODO: benchmark on ICPR2014 [@Carletti2015].
 
 ## Maximum Weight Matching
 
-Talk about applications in error correcting codes, cite qtcodes [@Jha2021]. TODO: find benchmark.
+Talk about applications in error correcting codes, cite qtcodes [@Jha2021]. TODO: benchmark on SNAP dataset [@Leskovec2014].
 
 # Acknowledgements
 
