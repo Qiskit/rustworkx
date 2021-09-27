@@ -96,7 +96,7 @@ Talk about definition, applications [@Cordella2001] and VF2++ [@Juttner2018]. TO
 
 ## Maximum Weight Matching
 
-Talk about applications in error correcting codes, cite qtcodes [@Jha2021]. TODO: benchmark on graphs based on Topological Codes [@Criger2018].
+Talk about Blossom algorithm [@Edmonds1965], applications in error correcting codes, cite qtcodes [@Jha2021]. TODO: benchmark on graphs based on Topological Codes [@Criger2018].
 
 # Acknowledgements
 
