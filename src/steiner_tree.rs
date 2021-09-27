@@ -19,13 +19,15 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::graph::{EdgeIndex, NodeIndex};
+use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 
+use crate::dictmap::*;
 use crate::generators::pairwise;
 use crate::graph;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
+use crate::shortest_path::dijkstra;
 
 struct MetricClosureEdge {
     source: usize,
@@ -121,6 +123,119 @@ fn _metric_closure_edges(
     Ok(out_vec)
 }
 
+/// Computes the shortest path between all pairs `(s, t)` of the given `terminal_nodes`
+/// *provided* that:
+///   - there is an edge `(u, v)` in the graph and path pass through this edge.
+///   - node `s` is the closest node to  `u` among all `terminal_nodes`
+///   - node `t` is the closest node to `v` among all `terminal_nodes`
+/// and wraps the result inside a `MetricClosureEdge`
+///
+/// For example, if all vertices are terminals, it returns the original edges of the graph.
+fn fast_metric_edges(
+    py: Python,
+    graph: &mut graph::PyGraph,
+    terminal_nodes: &[usize],
+    weight_fn: &PyObject,
+) -> PyResult<Vec<MetricClosureEdge>> {
+    // temporarily add a ``dummy`` node, connect it with
+    // all the terminal nodes and find all the shortest paths
+    // starting from ``dummy`` node.
+    let dummy = graph.graph.add_node(py.None());
+    for node in terminal_nodes {
+        graph
+            .graph
+            .add_edge(dummy, NodeIndex::new(*node), py.None());
+    }
+
+    let cost_fn = |edge: EdgeReference<'_, PyObject>| -> PyResult<f64> {
+        if edge.source() != dummy && edge.target() != dummy {
+            let weight: f64 =
+                weight_fn.call1(py, (edge.weight(),))?.extract(py)?;
+            if weight.is_nan() {
+                Err(PyValueError::new_err("NaN found as an edge weight"))
+            } else {
+                Ok(weight)
+            }
+        } else {
+            Ok(0.0)
+        }
+    };
+
+    let mut paths = DictMap::with_capacity(graph.graph.node_count());
+    let mut distance = dijkstra::dijkstra(
+        &graph.graph,
+        dummy,
+        None,
+        cost_fn,
+        Some(&mut paths),
+    )?;
+    paths.remove(&dummy);
+    distance.remove(&dummy);
+    graph.graph.remove_node(dummy);
+
+    // ``partition[u]`` holds the terminal node closest to node ``u``.
+    let mut partition: Vec<usize> =
+        vec![std::usize::MAX; graph.graph.node_bound()];
+    for (u, path) in paths.iter() {
+        let u = u.index();
+        partition[u] = path[1].index();
+    }
+
+    let mut out_edges: Vec<MetricClosureEdge> =
+        Vec::with_capacity(graph.graph.edge_count());
+
+    for edge in graph.graph.edge_references() {
+        let source = edge.source();
+        let target = edge.target();
+        // assert that ``source`` is reachable from a terminal node.
+        if distance.contains_key(&source) {
+            let weight = distance[&source] + cost_fn(edge)? + distance[&target];
+            let mut path: Vec<usize> =
+                paths[&source].iter().skip(1).map(|x| x.index()).collect();
+            path.append(
+                &mut paths[&target]
+                    .iter()
+                    .skip(1)
+                    .rev()
+                    .map(|x| x.index())
+                    .collect(),
+            );
+
+            let source = source.index();
+            let target = target.index();
+
+            let mut source = partition[source];
+            let mut target = partition[target];
+
+            match source.cmp(&target) {
+                Ordering::Equal => continue,
+                Ordering::Greater => std::mem::swap(&mut source, &mut target),
+                _ => {}
+            }
+
+            out_edges.push(MetricClosureEdge {
+                source,
+                target,
+                distance: weight,
+                path,
+            });
+        }
+    }
+
+    // if parallel edges, keep the edge with minimum distance.
+    out_edges.par_sort_unstable_by(|a, b| {
+        let weight_a = (a.source, a.target, a.distance);
+        let weight_b = (b.source, b.target, b.distance);
+        weight_a.partial_cmp(&weight_b).unwrap_or(Ordering::Less)
+    });
+
+    out_edges.dedup_by(|edge_a, edge_b| {
+        edge_a.source == edge_b.source && edge_a.target == edge_b.target
+    });
+
+    Ok(out_edges)
+}
+
 /// Return an approximation to the minimum Steiner tree of a graph.
 ///
 /// The minimum tree of ``graph`` with regard to a set of ``terminal_nodes``
@@ -135,7 +250,10 @@ fn _metric_closure_edges(
 ///
 /// This algorithm [1]_ produces a tree whose weight is within a
 /// :math:`(2 - (2 / t))` factor of the weight of the optimal Steiner tree
-/// where :math:`t` is the number of terminal nodes.
+/// where :math:`t` is the number of terminal nodes. The algorithm implemented
+/// here is due to [2]_ . It avoids computing all pairs shortest paths but rather
+/// reduces the problem to a single source shortest path and a minimum spanning tree
+/// problem.
 ///
 /// :param PyGraph graph: The graph to compute the minimum Steiner tree for
 /// :param list terminal_nodes: The list of node indices for which the Steiner
@@ -152,34 +270,20 @@ fn _metric_closure_edges(
 ///    "A fast algorithm for Steiner trees"
 ///    Acta Informatica 15, 141–145 (1981).
 ///    https://link.springer.com/article/10.1007/BF00288961
+/// .. [2] Kurt Mehlhorn,
+///    "A faster approximation algorithm for the Steiner problem in graphs"
+///    https://doi.org/10.1016/0020-0190(88)90066-X
 #[pyfunction]
 #[pyo3(text_signature = "(graph, terminal_nodes, weight_fn, /)")]
 pub fn steiner_tree(
     py: Python,
-    graph: &graph::PyGraph,
+    graph: &mut graph::PyGraph,
     terminal_nodes: Vec<usize>,
     weight_fn: PyObject,
 ) -> PyResult<graph::PyGraph> {
-    let terminal_node_set: HashSet<usize> =
-        terminal_nodes.into_iter().collect();
-    let metric_edges =
-        _metric_closure_edges(py, graph, weight_fn.clone_ref(py))?;
-    // Calculate mst edges from metric closure edge list:
+    let mut edge_list =
+        fast_metric_edges(py, graph, &terminal_nodes, &weight_fn)?;
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
-    let mut edge_list: Vec<MetricClosureEdge> =
-        Vec::with_capacity(metric_edges.len());
-    for edge in metric_edges {
-        if !terminal_node_set.contains(&edge.source)
-            || !terminal_node_set.contains(&edge.target)
-        {
-            continue;
-        }
-        let weight = edge.distance;
-        if weight.is_nan() {
-            return Err(PyValueError::new_err("NaN found as an edge weight"));
-        }
-        edge_list.push(edge);
-    }
     edge_list.par_sort_unstable_by(|a, b| {
         let weight_a = (a.distance, a.source, a.target);
         let weight_b = (b.distance, b.source, b.target);
@@ -193,10 +297,18 @@ pub fn steiner_tree(
             mst_edges.push(float_edge_pair);
         }
     }
-    // Generate the output graph from the MST of the metric closure
+    // assert that the terminal nodes are connected.
+    if !terminal_nodes.is_empty() && mst_edges.len() != terminal_nodes.len() - 1
+    {
+        return Err(PyValueError::new_err(
+            "The terminal nodes in the input graph must belong to the same connected component. \
+                  The steiner tree is not defined for a graph with unconnected terminal nodes",
+        ));
+    }
+    // Generate the output graph from the MST
     let out_edge_list: Vec<[usize; 2]> = mst_edges
-        .iter()
-        .map(|edge| pairwise(edge.path.clone()))
+        .into_iter()
+        .map(|edge| pairwise(edge.path))
         .flatten()
         .filter_map(|x| x.0.map(|a| [a, x.1]))
         .collect();
