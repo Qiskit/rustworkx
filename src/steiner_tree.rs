@@ -123,6 +123,14 @@ fn _metric_closure_edges(
     Ok(out_vec)
 }
 
+/// Computes the shortest path between all pairs `(s, t)` of the given `terminal_nodes`
+/// *provided* that:
+///   - there is an edge `(u, v)` in the graph and path pass through this edge.
+///   - node `s` is the closest node to  `u` among all `terminal_nodes`
+///   - node `t` is the closest node to `v` among all `terminal_nodes`
+/// and wraps the result inside a `MetricClosureEdge`
+///
+/// For example, if all vertices are terminals, it returns the original edges of the graph.
 fn fast_metric_edges(
     py: Python,
     graph: &mut graph::PyGraph,
@@ -166,7 +174,8 @@ fn fast_metric_edges(
     graph.graph.remove_node(dummy);
 
     // ``partition[u]`` holds the terminal node closest to node ``u``.
-    let mut partition: Vec<usize> = vec![std::usize::MAX; graph.node_bound()];
+    let mut partition: Vec<usize> =
+        vec![std::usize::MAX; graph.graph.node_bound()];
     for (u, path) in paths.iter() {
         let u = u.index();
         partition[u] = path[1].index();
@@ -310,7 +319,7 @@ pub fn steiner_tree(
         .iter()
         .map(|x| x.iter())
         .flatten()
-        .cloned()
+        .copied()
         .map(NodeIndex::new)
         .collect();
     for node in graph
