@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 mod max_weight_matching;
 use crate::graph;
 
@@ -161,6 +159,7 @@ pub fn is_maximal_matching(
         return false;
     }
     let edge_list: HashSet<[usize; 2]> = graph
+        .graph
         .edge_references()
         .map(|edge| {
             let mut tmp_array = [edge.source().index(), edge.target().index()];

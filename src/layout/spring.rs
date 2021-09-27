@@ -29,9 +29,10 @@ use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
+use crate::StablePyGraph;
+
 type Nt = f64;
 pub type Point = [Nt; 2];
-type Graph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
 const LBOUND: Nt = 1e-8;
 
@@ -213,7 +214,7 @@ pub fn recenter(pos: &mut Vec<Point>, center: Point) {
 
 #[allow(clippy::too_many_arguments)]
 pub fn evolve<Ty, Fa, Fr, C>(
-    graph: &Graph<Ty>,
+    graph: &StablePyGraph<Ty>,
     mut pos: Vec<Point>,
     fixed: HashSet<usize>,
     f_a: Fa,
@@ -299,7 +300,7 @@ where
 #[allow(clippy::too_many_arguments)]
 pub fn spring_layout<Ty>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     pos: Option<HashMap<usize, Point>>,
     fixed: Option<HashSet<usize>>,
     k: Option<f64>,

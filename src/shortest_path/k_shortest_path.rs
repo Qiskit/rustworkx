@@ -58,7 +58,7 @@ where
     G::NodeId: Eq + Hash,
     F: FnMut(&PyObject) -> PyResult<f64>,
 {
-    let mut counter: Vec<usize> = vec![0; graph.node_count()];
+    let mut counter: Vec<usize> = vec![0; graph.node_bound()];
     let mut scores = DictMap::with_capacity(graph.node_count());
     let mut visit_next = BinaryHeap::new();
     let zero_score = 0.0;
