@@ -16,7 +16,6 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
-use std::ops::{Index, IndexMut};
 use std::str;
 
 use crate::dictmap::*;
@@ -42,10 +41,8 @@ use petgraph::stable_graph::StableDiGraph;
 use petgraph::stable_graph::StableUnGraph;
 
 use petgraph::visit::{
-    GetAdjacencyMatrix, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
-    IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount,
-    NodeFiltered, NodeIndexable, Visitable,
+    GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
+    NodeIndexable, Visitable,
 };
 
 use super::dot_utils::build_dot;
@@ -167,9 +164,6 @@ pub struct PyDiGraph {
     pub multigraph: bool,
 }
 
-pub type Edges<'a, E> =
-    petgraph::stable_graph::Edges<'a, E, petgraph::Directed>;
-
 impl GraphBase for PyDiGraph {
     type NodeId = NodeIndex;
     type EdgeId = EdgeIndex;
@@ -184,167 +178,6 @@ impl<'a> NodesRemoved for &'a PyDiGraph {
 impl NodeCount for PyDiGraph {
     fn node_count(&self) -> usize {
         self.graph.node_count()
-    }
-}
-
-impl GraphProp for PyDiGraph {
-    type EdgeType = petgraph::Directed;
-    fn is_directed(&self) -> bool {
-        true
-    }
-}
-
-impl petgraph::visit::Visitable for PyDiGraph {
-    type Map = <StableDiGraph<PyObject, PyObject> as Visitable>::Map;
-    fn visit_map(&self) -> Self::Map {
-        self.graph.visit_map()
-    }
-    fn reset_map(&self, map: &mut Self::Map) {
-        self.graph.reset_map(map)
-    }
-}
-
-impl petgraph::visit::Data for PyDiGraph {
-    type NodeWeight = PyObject;
-    type EdgeWeight = PyObject;
-}
-
-impl petgraph::data::DataMap for PyDiGraph {
-    fn node_weight(&self, id: Self::NodeId) -> Option<&Self::NodeWeight> {
-        self.graph.node_weight(id)
-    }
-    fn edge_weight(&self, id: Self::EdgeId) -> Option<&Self::EdgeWeight> {
-        self.graph.edge_weight(id)
-    }
-}
-
-impl petgraph::data::DataMapMut for PyDiGraph {
-    fn node_weight_mut(
-        &mut self,
-        id: Self::NodeId,
-    ) -> Option<&mut Self::NodeWeight> {
-        self.graph.node_weight_mut(id)
-    }
-    fn edge_weight_mut(
-        &mut self,
-        id: Self::EdgeId,
-    ) -> Option<&mut Self::EdgeWeight> {
-        self.graph.edge_weight_mut(id)
-    }
-}
-
-impl<'a> IntoNeighbors for &'a PyDiGraph {
-    type Neighbors = petgraph::stable_graph::Neighbors<'a, PyObject>;
-    fn neighbors(self, n: NodeIndex) -> Self::Neighbors {
-        self.graph.neighbors(n)
-    }
-}
-
-impl<'a> IntoNeighborsDirected for &'a PyDiGraph {
-    type NeighborsDirected = petgraph::stable_graph::Neighbors<'a, PyObject>;
-    fn neighbors_directed(
-        self,
-        n: NodeIndex,
-        d: petgraph::Direction,
-    ) -> Self::Neighbors {
-        self.graph.neighbors_directed(n, d)
-    }
-}
-
-impl<'a> IntoEdgeReferences for &'a PyDiGraph {
-    type EdgeRef = petgraph::stable_graph::EdgeReference<'a, PyObject>;
-    type EdgeReferences = petgraph::stable_graph::EdgeReferences<'a, PyObject>;
-    fn edge_references(self) -> Self::EdgeReferences {
-        self.graph.edge_references()
-    }
-}
-
-impl<'a> IntoEdges for &'a PyDiGraph {
-    type Edges = Edges<'a, PyObject>;
-    fn edges(self, a: Self::NodeId) -> Self::Edges {
-        self.graph.edges(a)
-    }
-}
-
-impl<'a> IntoEdgesDirected for &'a PyDiGraph {
-    type EdgesDirected = Edges<'a, PyObject>;
-    fn edges_directed(
-        self,
-        a: Self::NodeId,
-        dir: petgraph::Direction,
-    ) -> Self::EdgesDirected {
-        self.graph.edges_directed(a, dir)
-    }
-}
-
-impl<'a> IntoNodeIdentifiers for &'a PyDiGraph {
-    type NodeIdentifiers = petgraph::stable_graph::NodeIndices<'a, PyObject>;
-    fn node_identifiers(self) -> Self::NodeIdentifiers {
-        self.graph.node_identifiers()
-    }
-}
-
-impl<'a> IntoNodeReferences for &'a PyDiGraph {
-    type NodeRef = (NodeIndex, &'a PyObject);
-    type NodeReferences = petgraph::stable_graph::NodeReferences<'a, PyObject>;
-    fn node_references(self) -> Self::NodeReferences {
-        self.graph.node_references()
-    }
-}
-
-impl NodeIndexable for PyDiGraph {
-    fn node_bound(&self) -> usize {
-        self.graph.node_bound()
-    }
-    fn to_index(&self, ix: NodeIndex) -> usize {
-        self.graph.to_index(ix)
-    }
-    fn from_index(&self, ix: usize) -> Self::NodeId {
-        self.graph.from_index(ix)
-    }
-}
-
-impl NodeCompactIndexable for PyDiGraph {}
-
-impl Index<NodeIndex> for PyDiGraph {
-    type Output = PyObject;
-    fn index(&self, index: NodeIndex) -> &PyObject {
-        &self.graph[index]
-    }
-}
-
-impl IndexMut<NodeIndex> for PyDiGraph {
-    fn index_mut(&mut self, index: NodeIndex) -> &mut PyObject {
-        &mut self.graph[index]
-    }
-}
-
-impl Index<EdgeIndex> for PyDiGraph {
-    type Output = PyObject;
-    fn index(&self, index: EdgeIndex) -> &PyObject {
-        &self.graph[index]
-    }
-}
-
-impl IndexMut<EdgeIndex> for PyDiGraph {
-    fn index_mut(&mut self, index: EdgeIndex) -> &mut PyObject {
-        &mut self.graph[index]
-    }
-}
-
-impl GetAdjacencyMatrix for PyDiGraph {
-    type AdjMatrix =
-        <StableDiGraph<PyObject, PyObject> as GetAdjacencyMatrix>::AdjMatrix;
-    fn adjacency_matrix(&self) -> Self::AdjMatrix {
-        self.graph.adjacency_matrix()
-    }
-    fn is_adjacent(
-        &self,
-        matrix: &Self::AdjMatrix,
-        a: NodeIndex,
-        b: NodeIndex,
-    ) -> bool {
-        self.graph.is_adjacent(matrix, a, b)
     }
 }
 
@@ -936,6 +769,7 @@ impl PyDiGraph {
     pub fn edge_list(&self) -> EdgeList {
         EdgeList {
             edges: self
+                .graph
                 .edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect(),
@@ -953,6 +787,7 @@ impl PyDiGraph {
     pub fn weighted_edge_list(&self, py: Python) -> WeightedEdgeList {
         WeightedEdgeList {
             edges: self
+                .graph
                 .edge_references()
                 .map(|edge| {
                     (
@@ -977,6 +812,7 @@ impl PyDiGraph {
     pub fn edge_index_map(&self, py: Python) -> EdgeIndexMap {
         EdgeIndexMap {
             edge_map: self
+                .graph
                 .edge_references()
                 .map(|edge| {
                     (
@@ -1865,14 +1701,24 @@ impl PyDiGraph {
             Some(filename) => {
                 let mut file = File::create(filename)?;
                 build_dot(
-                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                    py,
+                    &self.graph,
+                    &mut file,
+                    graph_attr,
+                    node_attr,
+                    edge_attr,
                 )?;
                 Ok(None)
             }
             None => {
                 let mut file = Vec::<u8>::new();
                 build_dot(
-                    py, self, &mut file, graph_attr, node_attr, edge_attr,
+                    py,
+                    &self.graph,
+                    &mut file,
+                    graph_attr,
+                    node_attr,
+                    edge_attr,
                 )?;
                 Ok(Some(
                     PyString::new(py, str::from_utf8(&file)?).to_object(py),
@@ -2350,7 +2196,7 @@ impl PyDiGraph {
         let mut out_map: DictMap<usize, usize> =
             DictMap::with_capacity(other.node_count());
         for node in other.graph.node_indices() {
-            let node_weight = other[node].clone_ref(py);
+            let node_weight = other.graph[node].clone_ref(py);
             if !filter_fn(&node_weight, &node_filter)? {
                 continue;
             }
@@ -2450,7 +2296,7 @@ impl PyDiGraph {
         let node_filter =
             |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
         let mut out_graph = StableDiGraph::<PyObject, PyObject>::new();
-        let filtered = NodeFiltered(self, node_filter);
+        let filtered = NodeFiltered(&self.graph, node_filter);
         for node in filtered.node_references() {
             let new_node = out_graph.add_node(node.1.clone_ref(py));
             node_map.insert(node.0, new_node);
@@ -2625,7 +2471,7 @@ impl PyDiGraph {
             let new_index = new_graph.add_node(node);
             node_map.insert(node_index, new_index);
         }
-        for edge in self.edge_references() {
+        for edge in self.graph.edge_references() {
             let &source = node_map.get(&edge.source()).unwrap();
             let &target = node_map.get(&edge.target()).unwrap();
             let weight = edge.weight().clone_ref(py);

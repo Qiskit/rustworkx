@@ -10,25 +10,63 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::ops::Index;
+
 use hashbrown::{HashMap, HashSet};
 
 use ndarray::prelude::*;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
-use pyo3::prelude::*;
 use rayon::prelude::*;
 
+use crate::NodesRemoved;
+use crate::StablePyGraph;
+
+#[inline]
+fn apply<I, M>(
+    map_fn: &Option<M>,
+    x: I,
+    default: <M as Index<I>>::Output,
+) -> <M as Index<I>>::Output
+where
+    M: Index<I>,
+    <M as Index<I>>::Output: Sized + Copy,
+{
+    match map_fn {
+        Some(map) => map[x],
+        None => default,
+    }
+}
+
 pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     parallel_threshold: usize,
     as_undirected: bool,
     null_value: f64,
 ) -> Array2<f64> {
+    let node_map: Option<HashMap<NodeIndex, usize>> = if graph.nodes_removed() {
+        Some(
+            graph
+                .node_indices()
+                .enumerate()
+                .map(|(i, v)| (v, i))
+                .collect(),
+        )
+    } else {
+        None
+    };
+
+    let node_map_inv: Option<Vec<NodeIndex>> = if graph.nodes_removed() {
+        Some(graph.node_indices().collect())
+    } else {
+        None
+    };
+
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
         let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
-        let start_index = NodeIndex::new(index);
+        let start_index = apply(&node_map_inv, index, NodeIndex::new(index));
         let mut level = 0;
         let mut next_level: HashSet<NodeIndex> = HashSet::new();
         next_level.insert(start_index);
@@ -40,29 +78,22 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
                 if !seen.contains_key(&v) {
                     seen.insert(v, level);
                     found.push(v);
-                    row[[v.index()]] = level as f64;
+                    row[[apply(&node_map, &v, v.index())]] = level as f64;
                 }
             }
             if seen.len() == n {
                 return;
             }
             for node in found {
-                if graph.is_directed() {
+                for v in graph
+                    .neighbors_directed(node, petgraph::Direction::Outgoing)
+                {
+                    next_level.insert(v);
+                }
+                if graph.is_directed() && as_undirected {
                     for v in graph
-                        .neighbors_directed(node, petgraph::Direction::Outgoing)
+                        .neighbors_directed(node, petgraph::Direction::Incoming)
                     {
-                        next_level.insert(v);
-                    }
-                    if as_undirected {
-                        for v in graph.neighbors_directed(
-                            node,
-                            petgraph::Direction::Incoming,
-                        ) {
-                            next_level.insert(v);
-                        }
-                    }
-                } else {
-                    for v in graph.neighbors(node) {
                         next_level.insert(v);
                     }
                 }

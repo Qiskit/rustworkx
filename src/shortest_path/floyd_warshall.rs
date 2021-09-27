@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 use crate::dictmap::*;
 use hashbrown::HashMap;
 
@@ -29,20 +27,11 @@ use ndarray::prelude::*;
 use rayon::prelude::*;
 
 use crate::iterators::{AllPairsPathLengthMapping, PathLengthMapping};
-use crate::NodesRemoved;
-
-impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
-where
-    Ty: EdgeType,
-{
-    fn nodes_removed(&self) -> bool {
-        self.node_bound() != self.node_count()
-    }
-}
+use crate::StablePyGraph;
 
 pub fn floyd_warshall<Ty: EdgeType>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
@@ -160,7 +149,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
 
 pub fn floyd_warshall_numpy<Ty: EdgeType>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,

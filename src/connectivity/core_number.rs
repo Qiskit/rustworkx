@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 use crate::dictmap::*;
 use hashbrown::{HashMap, HashSet};
 
@@ -20,14 +18,15 @@ use pyo3::types::PyDict;
 use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
-use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
+use crate::StablePyGraph;
+
 pub fn core_number<Ty>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
 ) -> PyResult<PyObject>
 where
     Ty: EdgeType,

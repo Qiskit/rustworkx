@@ -12,17 +12,15 @@
 
 use std::iter::Iterator;
 
-use pyo3::prelude::*;
-
-use petgraph::prelude::*;
 use petgraph::visit::NodeIndexable;
 use petgraph::EdgeType;
 
 use super::spring::{recenter, Point};
 use crate::iterators::Pos2DMapping;
+use crate::StablePyGraph;
 
 pub fn shell_layout<Ty: EdgeType>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     nlist: Option<Vec<Vec<usize>>>,
     rotate: Option<f64>,
     scale: Option<f64>,
