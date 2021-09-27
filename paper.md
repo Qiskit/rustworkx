@@ -43,7 +43,7 @@ _retworkx_ originated from the performance demands of the Qiskit compiler [@Qisk
 
 # Related work
 
-To address the performance issues in Qiskit, we explored several graph library alternatives. _SNAP_ [@Leskovec2016], _graphtool_ [@Peixoto2014], and _igraph_ [@Csardi2006] are stable Python libraries written in C or C++ that can replace _NetworkX_.
+To address the performance issues in Qiskit, we explored several graph library alternatives. _igraph_ [@Csardi2006], _graphtool_ [@Peixoto2014], and _SNAP_ [@Leskovec2016] are stable Python libraries written in C or C++ that can replace _NetworkX_.
 
 However, there was a strong desire to keep the flexibility that _NetworkX_ provided for exploring and interacting with the graphs, which precluded custom data structures. The investigated graph libraries either had issues integrating with Qiskit or APIs that were too rigid, such that the migration of existing code was more complex than desired. Thus, the main contribution of _retworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
 
@@ -82,17 +82,21 @@ Lastly, we compute the shortest path from $A$ to $C$. We provide the graph, the 
 
 TODO
 
+## Graph Creation
+
+TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
+
 ## Shortest Path
 
 Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
 
 ## Graph Isomorphism
 
-Talk about VF2++ and applications on comparing circuits. TODO: benchmark on ICPR2014 [@Carletti2015].
+Talk about definition, applications [@Cordella2001] and VF2++ [@Juttner2018]. TODO: benchmark on ICPR2014 [@Carletti2015].
 
 ## Maximum Weight Matching
 
-Talk about applications in error correcting codes, cite qtcodes [@Jha2021]. TODO: benchmark on SNAP dataset [@Leskovec2014].
+Talk about applications in error correcting codes, cite qtcodes [@Jha2021]. TODO: benchmark on graphs based on Topological Codes [@Criger2018].
 
 # Acknowledgements
 
