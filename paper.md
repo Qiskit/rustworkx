@@ -49,7 +49,7 @@ However, there was a strong desire to keep the flexibility that _NetworkX_ provi
 
 # Graph data structures
 
-_retworkx_ provides two core data structures: `PyGraph` and `PyDiGraph`. They correspond to undirected and directed graphs, respectively. Graphs describe a set of nodes and the edges connecting pairs of those nodes. Internally, _retworkx_ leverages the _petgraph_ [@bluss2021] and the _PyO3_ libraries [@Hewitt2021] to store the graphs.
+_retworkx_ provides two core data structures: `PyGraph` and `PyDiGraph`. They correspond to undirected and directed graphs, respectively. Graphs describe a set of nodes and the edges connecting pairs of those nodes. Internally, _retworkx_ leverages the _petgraph_ library [@bluss2021] that provides the underlying graph data structure and the _PyO3_ library [@Hewitt2021] for the Python bindings.
 
 Nodes and edges of the graph may also be associated with weights. Weights can contain arbitrary data, such as node labels or edge lengths. Any Python object can be a weight, which makes the library flexible because no assumptions are made about the weight types. 
 
