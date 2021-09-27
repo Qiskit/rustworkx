@@ -13,8 +13,10 @@
 #![allow(clippy::float_cmp)]
 
 mod dfs_edges;
+pub mod dfs_visit;
 
 use super::{digraph, graph, iterators};
+use dfs_visit::{depth_first_search, handler, PyDfsVisitor};
 
 use hashbrown::HashSet;
 
@@ -166,4 +168,150 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     }
     out_set.remove(&node);
     out_set
+}
+
+/// Depth-first traversal of a directed graph.
+///
+/// The pseudo-code for the DFS algorithm is listed below, with the annotated
+/// event points, for which the given visitor object will be called with the
+/// appropriate method.
+///
+/// ::
+///
+///     DFS(G)
+///       for each vertex u in V
+///           color[u] := WHITE                 initialize vertex u
+///       end for
+///       time := 0
+///       call DFS-VISIT(G, source)           start vertex s
+///
+///     DFS-VISIT(G, u)
+///       color[u] := GRAY                    discover vertex u
+///       for each v in Adj[u]                examine edge (u,v)
+///           if (color[v] = WHITE)             (u,v) is a tree edge
+///               all DFS-VISIT(G, v)
+///           else if (color[v] = GRAY)         (u,v) is a back edge
+///           ...
+///           else if (color[v] = BLACK)        (u,v) is a cross or forward edge
+///           ...
+///       end for
+///       color[u] := BLACK                   finish vertex u
+///
+/// In the following example we keep track of the tree edges:
+///
+/// .. jupyter-execute::
+///
+///        import retworkx
+///        from retworkx.visit import DFSVisitor
+///   
+///        class TreeEdgesRecorder(DFSVisitor):
+///
+///            def __init__(self):
+///                self.edges = []
+///
+///            def tree_edge(self, edge):
+///                self.edges.append(edge)
+///
+///        graph = retworkx.PyGraph()
+///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
+///        vis = TreeEdgesRecorder()
+///        retworkx.dfs_search(graph, 0, vis)
+///        print('Tree edges:', vis.edges)
+///
+/// :param PyDiGraph graph: The graph to be used.
+/// :param int source: An optional node index to use as the starting node
+///     for the depth-first search. If this is not specified then a source
+///     will be chosen arbitrarly and repeated until all components of the
+///     graph are searched.
+/// :param visitor: A visitor object that is invoked at the event points inside the
+///     algorithm. This should be a subclass of :class:`~retworkx.visit.DFSVisitor`.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, source, visitor)")]
+pub fn digraph_dfs_search(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: Option<usize>,
+    visitor: PyDfsVisitor,
+) -> PyResult<()> {
+    let starts = match source {
+        Some(nx) => vec![NodeIndex::new(nx)],
+        None => graph.graph.node_indices().collect(),
+    };
+
+    depth_first_search(&graph.graph, starts, |event| {
+        handler(py, &visitor, event)
+    })
+}
+
+/// Depth-first traversal of an undirected graph.
+///
+/// The pseudo-code for the DFS algorithm is listed below, with the annotated
+/// event points, for which the given visitor object will be called with the
+/// appropriate method.
+///
+/// ::
+///
+///     DFS(G)
+///       for each vertex u in V
+///           color[u] := WHITE                 initialize vertex u
+///       end for
+///       time := 0
+///       call DFS-VISIT(G, source)           start vertex s
+///
+///     DFS-VISIT(G, u)
+///       color[u] := GRAY                    discover vertex u
+///       for each v in Adj[u]                examine edge (u,v)
+///           if (color[v] = WHITE)             (u,v) is a tree edge
+///               all DFS-VISIT(G, v)
+///           else if (color[v] = GRAY)         (u,v) is a back edge
+///           ...
+///           else if (color[v] = BLACK)        (u,v) is a cross or forward edge
+///           ...
+///       end for
+///       color[u] := BLACK                   finish vertex u
+///
+/// In the following example we keep track of the tree edges:
+///
+/// .. jupyter-execute::
+///
+///        import retworkx
+///        from retworkx.visit import DFSVisitor
+///   
+///        class TreeEdgesRecorder(DFSVisitor):
+///
+///            def __init__(self):
+///                self.edges = []
+///
+///            def tree_edge(self, edge):
+///                self.edges.append(edge)
+///
+///        graph = retworkx.PyGraph()
+///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
+///        vis = TreeEdgesRecorder()
+///        retworkx.dfs_search(graph, 0, vis)
+///        print('Tree edges:', vis.edges)
+///
+/// :param PyGraph graph: The graph to be used.
+/// :param int source: An optional node index to use as the starting node
+///     for the depth-first search. If this is not specified then a source
+///     will be chosen arbitrarly and repeated until all components of the
+///     graph are searched.
+/// :param visitor: A visitor object that is invoked at the event points inside the
+///     algorithm. This should be a subclass of :class:`~retworkx.visit.DFSVisitor`.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, source, visitor)")]
+pub fn graph_dfs_search(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: Option<usize>,
+    visitor: PyDfsVisitor,
+) -> PyResult<()> {
+    let starts = match source {
+        Some(nx) => vec![NodeIndex::new(nx)],
+        None => graph.graph.node_indices().collect(),
+    };
+
+    depth_first_search(&graph.graph, starts, |event| {
+        handler(py, &visitor, event)
+    })
 }
