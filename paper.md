@@ -53,9 +53,9 @@ _retworkx_ provides two core data structures: `PyGraph` and `PyDiGraph`. They co
 
 Nodes and edges of the graph may also be associated with weights. Weights can contain arbitrary data, such as node labels or edge lengths. Any Python object can be a weight, which makes the library flexible because no assumptions are made about the weight types. 
 
-A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges during the graph object's lifetime. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with weights.
+_retworkx_ operates on weights with callbacks. Callbacks are functions that take weights and return statically typed data. They resemble the named attributes in _NetworkX_. Callbacks are beneficial because they bridge the arbitrary stored data with the static types _retworkx_ expects.
 
-_retworkx_ operates on weights with callbacks. Callbacks are functions that take weights and return statically typed data. They resemble the named attributes in _NetworkX_. Callbacks are beneficial because they bridge the arbitrary stored data with the static types _retworkx_ expects. We illustrate indices and callbacks usage with an example.
+A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges during the graph object's lifetime. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with weights. We illustrate indices and callbacks usage with an example.
 
 ## Example
 
