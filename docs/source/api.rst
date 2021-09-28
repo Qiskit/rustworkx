@@ -312,6 +312,8 @@ Exceptions
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph
+   retworkx.visit.StopSearch
+   retworkx.visit.PruneSearch
 
 Custom Return Types
 ===================

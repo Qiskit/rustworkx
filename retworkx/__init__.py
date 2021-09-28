@@ -11,8 +11,12 @@ import sys
 import functools
 
 from .retworkx import *
+from .visitor import DFSVisitor
+
+visit.DFSVisitor = DFSVisitor
 
 sys.modules["retworkx.generators"] = generators
+sys.modules["retworkx.visit"] = visit
 
 
 class PyDAG(PyDiGraph):
@@ -1761,6 +1765,11 @@ def dfs_search(graph, source, visitor):
           end for
           color[u] := BLACK                   finish vertex u
 
+    If an exception is raised inside the callback function, the graph traversal
+    will be stopped immediately. You can exploit this to exit early by raising a
+    :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
+    search tree by raising :class:`~retworkx.visit.PruneSearch`.
+
     In the following example we keep track of the tree edges:
 
     .. jupyter-execute::
@@ -1781,6 +1790,10 @@ def dfs_search(graph, source, visitor):
            vis = TreeEdgesRecorder()
            retworkx.dfs_search(graph, 0, vis)
            print('Tree edges:', vis.edges)
+
+    .. note::
+
+        Graph can *not* be mutated while traversing.
 
     :param PyGraph graph: The graph to be used.
     :param int source: An optional node index to use as the starting node

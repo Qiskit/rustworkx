@@ -18,8 +18,10 @@ use pyo3::prelude::*;
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{
-    ControlFlow, DfsEvent, IntoNeighbors, Time, VisitMap, Visitable,
+    Control, ControlFlow, DfsEvent, IntoNeighbors, Time, VisitMap, Visitable,
 };
+
+use crate::PruneSearch;
 
 /// Return if the expression is a break value, execute the provided statement
 /// if it is a prune value.
@@ -169,27 +171,36 @@ pub fn handler(
     py: Python,
     vis: &PyDfsVisitor,
     event: DfsEvent<NodeIndex>,
-) -> PyResult<()> {
-    match event {
+) -> PyResult<Control<()>> {
+    let res = match event {
         DfsEvent::Discover(u, Time(t)) => {
-            vis.discover_vertex.call1(py, (u.index(), t))?;
+            vis.discover_vertex.call1(py, (u.index(), t))
         }
         DfsEvent::TreeEdge(u, v) => {
             let edge = (u.index(), v.index());
-            vis.tree_edge.call1(py, (edge,))?;
+            vis.tree_edge.call1(py, (edge,))
         }
         DfsEvent::BackEdge(u, v) => {
             let edge = (u.index(), v.index());
-            vis.back_edge.call1(py, (edge,))?;
+            vis.back_edge.call1(py, (edge,))
         }
         DfsEvent::CrossForwardEdge(u, v) => {
             let edge = (u.index(), v.index());
-            vis.forward_or_cross_edge.call1(py, (edge,))?;
+            vis.forward_or_cross_edge.call1(py, (edge,))
         }
         DfsEvent::Finish(u, Time(t)) => {
-            vis.finish_vertex.call1(py, (u.index(), t))?;
+            vis.finish_vertex.call1(py, (u.index(), t))
         }
-    }
+    };
 
-    Ok(())
+    match res {
+        Err(e) => {
+            if e.is_instance::<PruneSearch>(py) {
+                Ok(Control::Prune)
+            } else {
+                Err(e)
+            }
+        }
+        Ok(_) => Ok(Control::Continue),
+    }
 }

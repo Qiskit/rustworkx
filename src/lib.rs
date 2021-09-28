@@ -196,6 +196,17 @@ create_exception!(retworkx, NoSuitableNeighbors, PyException);
 create_exception!(retworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, PyException);
+// Prune part of the search tree while traversing a graph.
+create_exception!(retworkx, PruneSearch, PyException);
+// Stop graph traversal.
+create_exception!(retworkx, StopSearch, PyException);
+
+#[pymodule]
+fn visit(py: Python, m: &PyModule) -> PyResult<()> {
+    m.add("StopSearch", py.get_type::<StopSearch>())?;
+    m.add("PruneSearch", py.get_type::<PruneSearch>())?;
+    Ok(())
+}
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -318,5 +329,6 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodesCountMapping>()?;
     m.add_class::<iterators::NodeMap>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
+    m.add_wrapped(wrap_pymodule!(visit))?;
     Ok(())
 }

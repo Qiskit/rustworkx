@@ -203,6 +203,11 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///       end for
 ///       color[u] := BLACK                   finish vertex u
 ///
+/// If an exception is raised inside the callback function, the graph traversal
+/// will be stopped immediately. You can exploit this to exit early by raising a
+/// :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
+/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+///
 /// In the following example we keep track of the tree edges:
 ///
 /// .. jupyter-execute::
@@ -223,6 +228,10 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///        vis = TreeEdgesRecorder()
 ///        retworkx.dfs_search(graph, 0, vis)
 ///        print('Tree edges:', vis.edges)
+///
+/// .. note::
+///
+///     Graph can *not* be mutated while traversing.
 ///
 /// :param PyDiGraph graph: The graph to be used.
 /// :param int source: An optional node index to use as the starting node
@@ -246,7 +255,9 @@ pub fn digraph_dfs_search(
 
     depth_first_search(&graph.graph, starts, |event| {
         handler(py, &visitor, event)
-    })
+    })?;
+
+    Ok(())
 }
 
 /// Depth-first traversal of an undirected graph.
@@ -276,6 +287,11 @@ pub fn digraph_dfs_search(
 ///       end for
 ///       color[u] := BLACK                   finish vertex u
 ///
+/// If an exception is raised inside the callback function, the graph traversal
+/// will be stopped immediately. You can exploit this to exit early by raising a
+/// :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
+/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+///
 /// In the following example we keep track of the tree edges:
 ///
 /// .. jupyter-execute::
@@ -296,6 +312,10 @@ pub fn digraph_dfs_search(
 ///        vis = TreeEdgesRecorder()
 ///        retworkx.dfs_search(graph, 0, vis)
 ///        print('Tree edges:', vis.edges)
+///
+/// .. note::
+///
+///     Graph can *not* be mutated while traversing.
 ///
 /// :param PyGraph graph: The graph to be used.
 /// :param int source: An optional node index to use as the starting node
@@ -319,5 +339,7 @@ pub fn graph_dfs_search(
 
     depth_first_search(&graph.graph, starts, |event| {
         handler(py, &visitor, event)
-    })
+    })?;
+
+    Ok(())
 }
