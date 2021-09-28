@@ -100,6 +100,6 @@ Talk about Blossom algorithm [@Edmonds1965], applications in error correcting co
 
 # Acknowledgements
 
-We thank Kevin Krsulich for his help in getting retworkx ready for use by Qiskit, Lauren Capelluto and Itoko Toshinari for their continued contributing and help with code review, and all the retworkx contributors who have helped retworkx improve over time.
+We thank Kevin Krsulich for his help in getting retworkx ready for use by Qiskit; Lauren Capelluto and Itoko Toshinari for their continued support and help with code review; and all of the retworkx contributors who have helped the library improve over time.
 
 # References
