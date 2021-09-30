@@ -2112,7 +2112,7 @@ pub fn directed_hexagonal_lattice_graph(
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: The generated mesh graph
+/// :returns: The generated lollipop graph
 /// :rtype: PyGraph
 /// :raises IndexError: If neither ``num_mesh_nodes`` or ``mesh_weights`` are specified
 ///
@@ -2146,30 +2146,30 @@ pub fn lollipop_graph(
         None => num_mesh_nodes.unwrap(),
     };
     let mut graph = mesh_graph(py, num_mesh_nodes, mesh_weights, multigraph)?;
+    if num_path_nodes.is_none() && path_weights.is_none() {
+        return Ok(graph);
+    }
 
-    let path_nodes: Vec<usize> = match path_weights {
-        Some(path_weights) => {
-            let mut node_list: Vec<usize> = Vec::new();
-            for weight in path_weights {
-                let index = graph.add_node(weight)?;
-                node_list.push(index);
-            }
-            node_list
-        }
-        None => match num_path_nodes {
-            Some(num_path_nodes) => (0..num_path_nodes)
-                .map(|_| graph.add_node(py.None()).unwrap())
-                .collect(),
-            None => Vec::new(),
-        },
+    let path_nodes: Vec<NodeIndex> = match path_weights {
+        Some(path_weights) => path_weights
+            .into_iter()
+            .map(|node| graph.graph.add_node(node))
+            .collect(),
+        None => (0..num_path_nodes.unwrap())
+            .map(|_| graph.graph.add_node(py.None()))
+            .collect(),
     };
 
     let pathlen = path_nodes.len();
     if pathlen > 0 {
-        graph.add_edge(meshlen - 1, meshlen, py.None())?;
+        graph.graph.add_edge(
+            NodeIndex::new(meshlen - 1),
+            NodeIndex::new(meshlen),
+            py.None(),
+        );
         for (node_a, node_b) in pairwise(path_nodes) {
             match node_a {
-                Some(node_a) => graph.add_edge(node_a, node_b, py.None())?,
+                Some(node_a) => graph.graph.add_edge(node_a, node_b, py.None()),
                 None => continue,
             };
         }
