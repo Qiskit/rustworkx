@@ -45,7 +45,7 @@ jobs:
           toolchain: stable
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.1.1 twine
+          python -m pip install cibuildwheel==2.1.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -55,7 +55,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2010_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2010_i686:latest
-          CIBW_SKIP: cp27-* cp34-* cp35-* pp* *win32
+          CIBW_SKIP: pp* *win32
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -89,7 +89,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.1.1 twine
+          python -m pip install cibuildwheel==2.1.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -99,7 +99,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2010_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2010_i686:latest
-          CIBW_SKIP: cp27-* cp34-* cp35-* pp* *win32
+          CIBW_SKIP: pp* *win32
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -134,7 +134,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.1.1 twine
+          python -m pip install cibuildwheel==2.1.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -144,7 +144,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2010_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2010_i686:latest
-          CIBW_SKIP: cp27-* cp34-* cp35-* pp* *win32
+          CIBW_SKIP: pp* *win32
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -179,7 +179,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.1.1 twine
+          python -m pip install cibuildwheel==2.1.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -189,7 +189,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2010_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2010_i686:latest
-          CIBW_SKIP: cp27-* cp34-* cp35-* pp* *win32
+          CIBW_SKIP: pp* *win32
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
@@ -248,13 +248,13 @@ jobs:
         run: rustup default stable-i686-pc-windows-msvc
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.1.1 twine
+          python -m pip install cibuildwheel==2.1.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_SKIP: cp27-* cp34-* cp35-* pp* *amd64
+          CIBW_SKIP: pp* *amd64
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests
