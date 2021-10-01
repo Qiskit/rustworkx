@@ -948,6 +948,97 @@ pub fn binomial_tree_graph(
     })
 }
 
+///--------------------
+
+/// Creates a full r-ary tree of `n` nodes.
+/// Sometimes called a k-ary, n-ary, or m-ary tree.
+///
+/// :param int order: Order of the tree.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than 2**order extra nodes with with None will be appended.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.full_rary_tree(4)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(branching_factor num_nodes, /, weights=None, multigraph=True)")]
+pub fn full_rary_tree(
+    py: Python,
+    branching_factor: u32,
+    num_nodes: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    let nodes: Vec<NodeIndex> = match weights {
+        
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::new();
+            let mut node_count = num_nodes.unwrap();
+            if weights.len() > num_nodes.unwrap() {
+                return Err(PyIndexError::new_err(
+                    "weights can't be greater than nodes",
+                ));
+            }
+
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+                node_count -= 1;
+            }
+            for _i in 0..node_count {
+                let index = graph.add_node(py.None());
+                node_list.push(index);
+            }
+            node_list
+        }
+        None => (0..num_nodes.unwrap())
+            .map(|_| graph.add_node(py.None()))
+            .collect(),
+    };
+
+    if num_nodes.unwrap() > 0 {
+        let mut parents: Vec<usize> = vec![nodes[0].index()];
+        let mut nod_it: usize = 1;
+        
+        while !parents.is_empty() {
+            let source: usize = parents.remove(0);
+            for _ in 0..branching_factor {
+                if nod_it < num_nodes.unwrap() {
+                    let target: usize = nodes[nod_it].index();
+                    parents.push(target);
+                    nod_it += 1;
+                    graph.add_edge(nodes[source], nodes[target], py.None());                
+                }
+            }
+        }
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
+
+///--------------------
+
+
 /// Generate an undirected binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
 ///
@@ -2110,5 +2201,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
+    m.add_wrapped(wrap_pyfunction!(full_rary_tree))?;
     Ok(())
 }
