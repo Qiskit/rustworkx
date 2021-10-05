@@ -96,15 +96,15 @@ _retworkx_ is competitive and TODO. TODO.
 
 TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
 
-![TODO Caption.\label{fig:creation}](paper_img/creation.png){ scale=50% }
+![TODO Caption.\label{fig:creation}](paper_img/creation.png){ width=50% height=50% }
 
 ## Shortest Path
 
 Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
 
-![TODO Caption.\label{fig:sssp}](paper_img/single_source_shortest_path.png){ scale=50% }
+![TODO Caption.\label{fig:sssp}](paper_img/single_source_shortest_path.png){ width=50% height=50%  }
 
-![TODO Caption.\label{fig:allpairs}](paper_img/all_pairs.png){ scale=50% }
+![TODO Caption.\label{fig:allpairs}](paper_img/all_pairs.png){ width=50% height=50% }
 
 ## Graph Isomorphism
 
