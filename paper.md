@@ -84,12 +84,9 @@ _retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up t
 
 To demonstrate _retworkx_'s performance, we conducted a benchmark comparing _retworkx_ to other popular graph libraries^[_SNAP_ was dropped from benchmarks because its Python wrapper did not contain most of the functions tested in this benchmark]:
 
-| Library         | Version  |
-|-----------------|----------|
-| _retworkx_      | 0.10.2   |
-| _NetworkX_      | 2.6.3    |
-| _python-igraph_ | 0.9.6    |
-| _graphtool_     | 2.43     |
+| Library   | _retworkx_| _NetworkX_ | _python-igraph_ | _graphtool_ |
+|-----------|-----------|------------|-----------------|-------------|
+| Version   | 0.10.2    | 2.6.3      | 0.9.6           | 2.43        |
 
 The benchmark is [available on Github](https://github.com/mtreinish/retworkx-comparison-benchmarks)^[https://github.com/mtreinish/retworkx-comparison-benchmarks] for reproducibility. We present results conducted on the same machine running Python 3.9.3, with 128GB of DDR4 RAM @ 3200MHz and Intel(R) Core i7-6900K CPU @ 3.20GHz with eight cores and 16 threads.
 
