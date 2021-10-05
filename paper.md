@@ -80,7 +80,18 @@ Lastly, we compute the shortest path from $A$ to $C$. We provide the graph, the 
 
 # Use Cases
 
-TODO
+_retworkx_ is suitable for TODO.
+
+To demonstate _retworkx_'s performance, we conducted a benchmark comparing _retworkx_ to other popular graph libraries^[_SNAP_ was dropped from benchmarks because its Python wrappers did not contain most of the functions present in this benchmark]:
+
+|                 | Version  |
+|-----------------|----------|
+| _retworkx_      | 0.10.2   |
+| _NetworkX_      | 2.6.3    |
+| _python-igraph_ | 0.9.6    |
+| _graphtool_     | 2.43     |
+
+The benchmark is [available on Github](https://github.com/mtreinish/retworkx-comparison-benchmarks)^[https://github.com/mtreinish/retworkx-comparison-benchmarks] for reproducibility. We present results conducted on the same machine running Python 3.9.3, with 128GB of DDR4 3200MHz RAM and Intel(R) Core i7-6900K CPU @ 3.20GHz with 8 cores and 16 threads.
 
 ## Graph Creation
 
