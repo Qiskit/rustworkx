@@ -29,6 +29,8 @@ affiliations:
    index: 4
 date: 10 September 2021
 bibliography: paper.bib
+header-includes:
+  - \usepackage{multicol}
 ---
 
 &nbsp;
@@ -102,9 +104,13 @@ TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
 
 Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
 
+\begin{multicols}{2}
+
 ![TODO Caption.\label{fig:sssp}](paper_img/single_source_shortest_path.png){ width=50% height=50%  }
 
 ![TODO Caption.\label{fig:allpairs}](paper_img/all_pairs.png){ width=50% height=50% }
+
+\end{multicols}
 
 ## Graph Isomorphism
 
