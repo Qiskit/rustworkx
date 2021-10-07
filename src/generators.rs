@@ -857,7 +857,7 @@ pub fn directed_grid_graph(
 // MAX_ORDER is determined based on the pointer width of the target platform
 #[cfg(target_pointer_width = "64")]
 const MAX_ORDER: u32 = 60;
-#[cfg(target_pointer_width = "32")]
+#[cfg(not(target_pointer_width = "64"))]
 const MAX_ORDER: u32 = 29;
 
 /// Generate an undirected binomial tree of order n recursively.
