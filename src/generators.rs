@@ -1098,7 +1098,11 @@ pub fn directed_binomial_tree_graph(
 /// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// :param int d: distance of the code.
+/// Note that if ``d`` is set to ``1`` a :class:`~retworkx.PyGraph` with a
+/// single node will be returned.
+///
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1264,7 +1268,8 @@ pub fn heavy_square_graph(
 /// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1494,7 +1499,8 @@ pub fn directed_heavy_square_graph(
 ///     ... D   D-S-D ...
 ///
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1671,7 +1677,8 @@ pub fn heavy_hex_graph(
 ///     ... D   D-S-D ...
 ///
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
