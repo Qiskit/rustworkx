@@ -854,9 +854,19 @@ pub fn directed_grid_graph(
     })
 }
 
+// MAX_ORDER is determined based on the pointer width of the target platform
+#[cfg(target_pointer_width = "64")]
+const MAX_ORDER: u32 = 60;
+#[cfg(target_pointer_width = "32")]
+const MAX_ORDER: u32 = 29;
+
 /// Generate an undirected binomial tree of order n recursively.
 ///
-/// :param int order: Order of the binomial tree.
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
+///     depends
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
@@ -866,7 +876,9 @@ pub fn directed_grid_graph(
 ///
 /// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises IndexError: If the length of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
 ///
 /// .. jupyter-execute::
 ///
@@ -884,7 +896,7 @@ pub fn binomial_tree_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if order >= 60 {
+    if order >= MAX_ORDER {
         return Err(PyOverflowError::new_err(format!(
             "An order of {} exceeds the max allowable size",
             order
@@ -943,7 +955,10 @@ pub fn binomial_tree_graph(
 /// Generate an undirected binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
 ///
-/// :param int order: Order of the binomial tree.
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with None will be appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
@@ -956,6 +971,8 @@ pub fn binomial_tree_graph(
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyDiGraph
 /// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
 ///
 /// .. jupyter-execute::
 ///
@@ -976,7 +993,7 @@ pub fn directed_binomial_tree_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    if order >= 60 {
+    if order >= MAX_ORDER {
         return Err(PyOverflowError::new_err(format!(
             "An order of {} exceeds the max allowable size",
             order
