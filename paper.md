@@ -108,7 +108,7 @@ Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challeng
 
 ## Graph Isomorphism
 
-Talk about definition [@Cordella2001], applications [@Raymond2002] and VF2++ [@Juttner2018]. TODO: benchmark on ICPR2014 [@Carletti2015] or on the more challenging [@Neuen2017].
+Talk about definition [@Cordella2001], applications [@Raymond2002] and VF2++ [@Juttner2018]. TODO: benchmark on ARG Database from MIVIA group [@DeSanto2003] or on the more challenging [@Neuen2017].
 
 ## Maximum Weight Matching
 
