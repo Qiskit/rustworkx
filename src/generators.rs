@@ -2091,7 +2091,8 @@ pub fn directed_hexagonal_lattice_graph(
 }
 
 /// Generate an undirected lollipop graph where a mesh graph is connected to a
-/// path
+/// path. If neither ``num_path_nodes`` nor ``path_weights`` (both described
+/// below) are specified then this is equivalent to a mesh graph.
 ///
 /// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
 ///     with. Node weights will be None if this is specified. If both
@@ -2136,19 +2137,11 @@ pub fn lollipop_graph(
     path_weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if mesh_weights.is_none() && num_mesh_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_mesh_nodes and mesh_weights list not specified",
-        ));
-    }
-    let meshlen: usize = match &mesh_weights {
-        Some(mesh_weights) => mesh_weights.len(),
-        None => num_mesh_nodes.unwrap(),
-    };
     let mut graph = mesh_graph(py, num_mesh_nodes, mesh_weights, multigraph)?;
     if num_path_nodes.is_none() && path_weights.is_none() {
         return Ok(graph);
     }
+    let meshlen = graph.num_nodes();
 
     let path_nodes: Vec<NodeIndex> = match path_weights {
         Some(path_weights) => path_weights
