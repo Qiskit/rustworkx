@@ -19,13 +19,13 @@ authors:
     orcid: 0000-0002-3234-8154
     affiliation: 4
 affiliations:
- - name: IBM Quantum, IBM T.J. Watson Research Center, Yorktown Heights, USA
+ - name: "IBM Quantum, IBM T.J. Watson Research Center, Yorktown Heights, USA \\newline"
    index: 1
- - name: University of British Columbia, Kelowna, Canada
+ - name: "University of British Columbia, Kelowna, Canada \\newline"
    index: 2
- - name: National Technical University of Athens, Athens, Greece
+ - name: "National Technical University of Athens, Athens, Greece \\newline"
    index: 3
- - name: Centro Brasileiro de Pesquisas Físicas, Rio de Janeiro, Brazil
+ - name: "Centro Brasileiro de Pesquisas Físicas, Rio de Janeiro, Brazil \\newline"
    index: 4
 date: 10 September 2021
 bibliography: paper.bib
