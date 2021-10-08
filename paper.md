@@ -39,7 +39,7 @@ bibliography: paper.bib
 
 _retworkx_ is a general-purpose graph theory library focused on performance. It wraps low-level Rust code [@Matsakis2014] into a flexible Python API, providing fast implementations for popular graph algorithms.
 
-_retworkx_ originated from the performance demands of the Qiskit compiler [@Qiskit2021]. At first, Qiskit used the _NetworkX_ library [@SciPyProceedings_11] to construct directed acyclic graph (DAG) representations of quantum circuits which the compiler operates on to perform analysis and transformations [@Childs2019]. As the development of Qiskit progressed, the input size of the executed quantum circuits grew, and _NetworkX_ started to become a bottleneck. Hence, _retworkx_ development emerged to cover the graph usage in Qiskit. The library is now also used by other projects such as atompack [@Ullberg2021].
+_retworkx_ originated from the performance demands of the Qiskit compiler [@Qiskit2021]. At first, Qiskit used the _NetworkX_ library [@SciPyProceedings_11] to construct directed acyclic graph (DAG) representations of quantum circuits which the compiler operates on to perform analysis and transformations [@Childs2019]. As the development of Qiskit progressed, the input size of the executed quantum circuits grew, and _NetworkX_ started to become a bottleneck. Hence, _retworkx_ development emerged to cover the graph usage in Qiskit. The library is now also used by other projects [@Ullberg2021; @Jha2021].
 
 # Related work
 
@@ -109,10 +109,6 @@ Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challeng
 ## Graph Isomorphism
 
 Talk about definition [@Cordella2001], applications [@Raymond2002] and VF2++ [@Juttner2018]. TODO: benchmark on ARG Database from MIVIA group [@DeSanto2003] or on the more challenging [@Neuen2017].
-
-## Maximum Weight Matching
-
-Talk about Blossom algorithm [@Edmonds1965], applications in error correcting codes, cite qtcodes [@Jha2021]. TODO: benchmark on graphs based on Topological Codes [@Criger2018].
 
 # Acknowledgements
 
