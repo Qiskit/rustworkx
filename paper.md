@@ -102,6 +102,8 @@ TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
 
 Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
 
+Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977].
+
 ![TODO Caption.\label{fig:sssp}](paper_img/single_source_shortest_path.png){ width=50% height=50%  }
 
 ![TODO Caption.\label{fig:allpairs}](paper_img/all_pairs.png){ width=50% height=50% }
