@@ -25,7 +25,7 @@ affiliations:
    index: 2
  - name: "National Technical University of Athens, Athens, Greece \\newline"
    index: 3
- - name: "Centro Brasileiro de Pesquisas Físicas, Rio de Janeiro, Brazil \\newline"
+ - name: "Centro Brasileiro de Pesquisas Físicas, Rio de Janeiro, Brazil"
    index: 4
 date: 10 September 2021
 bibliography: paper.bib
