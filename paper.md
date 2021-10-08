@@ -19,7 +19,7 @@ authors:
     orcid: 0000-0002-3234-8154
     affiliation: 4
 affiliations:
- - name: IBM T.J. Watson Research Center, Yorktown Heights, USA
+ - name: IBM Quantum, IBM T.J. Watson Research Center, Yorktown Heights, USA
    index: 1
  - name: University of British Columbia, Kelowna, Canada
    index: 2
