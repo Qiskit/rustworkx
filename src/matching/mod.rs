@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-mod max_weight_matching;
 use crate::graph;
+use retworkx_lib::max_weight_matching;
 
 use hashbrown::HashSet;
 
@@ -21,6 +21,21 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::IntoEdgeReferences;
+
+fn weight_callable(
+    py: Python,
+    weight_fn: &Option<PyObject>,
+    weight: &PyObject,
+    default: i128,
+) -> PyResult<i128> {
+    match weight_fn {
+        Some(weight_fn) => {
+            let res = weight_fn.call1(py, (weight,))?;
+            res.extract(py)
+        }
+        None => Ok(default),
+    }
+}
 
 /// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
 ///
@@ -79,11 +94,9 @@ pub fn max_weight_matching(
     verify_optimum: bool,
 ) -> PyResult<HashSet<(usize, usize)>> {
     max_weight_matching::max_weight_matching(
-        py,
-        graph,
+        &graph.graph,
         max_cardinality,
-        weight_fn,
-        default_weight,
+        |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
         verify_optimum,
     )
 }

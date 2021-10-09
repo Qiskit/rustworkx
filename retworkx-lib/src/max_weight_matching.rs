@@ -19,31 +19,15 @@
 
 use std::cmp::max;
 use std::mem;
-use std::panic;
 
 use hashbrown::{HashMap, HashSet};
 
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences};
-
-use crate::graph::PyGraph;
-use pyo3::exceptions::PyException;
-use pyo3::prelude::*;
-
-fn weight_callable(
-    py: Python,
-    weight: PyObject,
-    weight_fn: &Option<PyObject>,
-    default: i128,
-) -> PyResult<i128> {
-    match weight_fn {
-        Some(weight_fn) => {
-            let res = weight_fn.call1(py, (weight,))?;
-            res.extract(py)
-        }
-        None => Ok(default),
-    }
-}
+use petgraph::visit::{
+    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers,
+    NodeCount,
+};
+use petgraph::Undirected;
 
 /// Return 2 * slack of edge k (does not work inside blossoms).
 fn slack(
@@ -56,11 +40,11 @@ fn slack(
 }
 
 /// Generate the leaf vertices of a blossom.
-fn blossom_leaves(
+fn blossom_leaves<E>(
     blossom: usize,
     num_nodes: usize,
     blossom_children: &[Vec<usize>],
-) -> PyResult<Vec<usize>> {
+) -> Result<Vec<usize>, E> {
     let mut out_vec: Vec<usize> = Vec::new();
     if blossom < num_nodes {
         out_vec.push(blossom);
@@ -83,7 +67,7 @@ fn blossom_leaves(
 /// Assign label t to the top-level blossom containing vertex w
 /// and record the fact that w was reached through the edge with
 /// remote endpoint p.
-fn assign_label(
+fn assign_label<E>(
     w: usize,
     t: usize,
     p: Option<usize>,
@@ -97,7 +81,7 @@ fn assign_label(
     blossom_base: &[Option<usize>],
     endpoints: &[usize],
     mate: &HashMap<usize, usize>,
-) -> PyResult<()> {
+) -> Result<(), E> {
     let b = in_blossoms[w];
     assert!(labels[w] == Some(0) && labels[b] == Some(0));
     labels[w] = Some(t);
@@ -194,7 +178,7 @@ fn scan_blossom(
 /// Construct a new blossom with given base, containing edge k which
 /// connects a pair of S vertices. Label the new blossom as S; set its dual
 /// variable to zero; relabel its T-vertices to S and add them to the queue.
-fn add_blossom(
+fn add_blossom<E>(
     base: usize,
     edge: usize,
     blossom_children: &mut Vec<Vec<usize>>,
@@ -214,7 +198,7 @@ fn add_blossom(
     blossom_parents: &mut Vec<Option<usize>>,
     neighbor_endpoints: &[Vec<usize>],
     mate: &HashMap<usize, usize>,
-) -> PyResult<()> {
+) -> Result<(), E> {
     let (mut v, mut w, _weight) = edges[edge];
     let blossom_b = in_blossoms[base];
     let mut blossom_v = in_blossoms[v];
@@ -342,7 +326,7 @@ fn add_blossom(
 }
 
 /// Expand the given top level blossom
-fn expand_blossom(
+fn expand_blossom<E>(
     blossom: usize,
     end_stage: bool,
     num_nodes: usize,
@@ -360,7 +344,7 @@ fn expand_blossom(
     blossom_endpoints: &mut Vec<Vec<usize>>,
     allowed_edge: &mut Vec<bool>,
     unused_blossoms: &mut Vec<usize>,
-) -> PyResult<()> {
+) -> Result<(), E> {
     // Convert sub-blossoms into top-level blossoms.
     for s in blossom_children[blossom].clone() {
         blossom_parents[s] = None;
@@ -857,16 +841,23 @@ fn verify_optimum(
 /// http://jorisvr.nl/files/graphmatching/20130407/mwmatching.py
 ///
 /// The function takes time O(n**3)
-pub fn max_weight_matching(
-    py: Python,
-    graph: &PyGraph,
+pub fn max_weight_matching<G, F, E>(
+    graph: G,
     max_cardinality: bool,
-    weight_fn: Option<PyObject>,
-    default_weight: i128,
+    mut weight_fn: F,
     verify_optimum_flag: bool,
-) -> PyResult<HashSet<(usize, usize)>> {
-    let num_edges = graph.graph.edge_count();
-    let num_nodes = graph.graph.node_count();
+) -> Result<HashSet<(usize, usize)>, E>
+where
+    G: EdgeCount
+        + NodeCount
+        + IntoNodeIdentifiers
+        + GraphProp<EdgeType = Undirected>
+        + GraphBase<NodeId = NodeIndex>
+        + IntoEdges,
+    F: FnMut(G::EdgeRef) -> Result<i128, E>,
+{
+    let num_edges = graph.edge_count();
+    let num_nodes = graph.node_count();
     let mut out_set: HashSet<(usize, usize)> =
         HashSet::with_capacity(num_nodes);
     // Exit fast for graph without edges
@@ -878,20 +869,14 @@ pub fn max_weight_matching(
     // the PyGraph's NodeIndex to the contingous usize used inside the
     // algorithm
     let node_map: HashMap<NodeIndex, usize> = graph
-        .graph
-        .node_indices()
+        .node_identifiers()
         .enumerate()
         .map(|(index, node_index)| (node_index, index))
         .collect();
     let mut edges: Vec<(usize, usize, i128)> = Vec::with_capacity(num_edges);
     let mut max_weight: i128 = 0;
-    for edge in graph.graph.edge_references() {
-        let edge_weight: i128 = weight_callable(
-            py,
-            edge.weight().clone_ref(py),
-            &weight_fn,
-            default_weight,
-        )?;
+    for edge in graph.edge_references() {
+        let edge_weight: i128 = weight_fn(edge)?;
         if edge_weight > max_weight {
             max_weight = edge_weight;
         };
@@ -1366,27 +1351,18 @@ pub fn max_weight_matching(
         }
     }
     if verify_optimum_flag {
-        match panic::catch_unwind(|| {
-            verify_optimum(
-                max_cardinality,
-                num_nodes,
-                num_edges,
-                &edges,
-                &endpoints,
-                &dual_var,
-                &blossom_parents,
-                &blossom_endpoints,
-                &blossom_base,
-                &mate,
-            );
-        }) {
-            Ok(_) => (),
-            Err(_) => {
-                return Err(PyException::new_err(
-                    "The found solution was not optimal",
-                ))
-            }
-        }
+        verify_optimum(
+            max_cardinality,
+            num_nodes,
+            num_edges,
+            &edges,
+            &endpoints,
+            &dual_var,
+            &blossom_parents,
+            &blossom_endpoints,
+            &blossom_base,
+            &mate,
+        );
     }
 
     // Transform mate[] such that mate[v] is the vertex to which v is paired
@@ -1394,7 +1370,7 @@ pub fn max_weight_matching(
     // linear index to node index.
     let mut seen: HashSet<(usize, usize)> =
         HashSet::with_capacity(2 * num_nodes);
-    let node_list: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let node_list: Vec<NodeIndex> = graph.node_identifiers().collect();
     for (index, node) in mate.iter() {
         let tmp = (
             node_list[*index].index(),

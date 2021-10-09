@@ -14,3 +14,4 @@ pub mod astar;
 pub mod centrality;
 pub mod dictmap;
 pub mod dijkstra;
+pub mod max_weight_matching;
