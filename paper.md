@@ -94,7 +94,7 @@ The benchmark is [available on Github](https://github.com/mtreinish/retworkx-com
 
 The first use case is to represent real-world networks by creating graphs with their respective nodes and edges. We compare the time to create graphs representing the USA road network from 9th DIMACS challenge dataset [@Demetrescu2016]. Each graph contains $\lvert V \rvert = 23,947,347$ nodes and $\lvert E \rvert = 58,333,344$ weighted edges.
 
-![Time to create the USA road network graph. retworkx is the fastest library among the four.\label{fig:creation}](paper_img/creation.png){ width=50% height=50% }
+![Time to create the USA road network graph with 23,947,347 nodes and 58,333,344 edges.\label{fig:creation}](paper_img/creation.png){ width=50% height=50% }
 
 The results show that _retworkx_ is 3.1x faster than the second best library in the benchmark, _NetworkX_. The performance gap is even wider compared with _igraph_ and _graphtool_, which are at least 5x slower than _retworkx_.
 
@@ -109,19 +109,19 @@ Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977].
 \begin{figure}
 \centering
 \includegraphics[width=0.5\textwidth,height=0.5\textheight]{paper_img/single_source_shortest_path.png}
-\caption{TODO Caption.\label{fig:sssp}}
+\caption{Time to find the shortest path between two nodes in the USA road network.\label{fig:sssp}}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=0.5\textwidth,height=0.5\textheight]{paper_img/all_pairs.png}
-\caption{TODO Caption.\label{fig:allpairs}}
+\caption{Time to find the shortest path among all nodes in road network of the city of Rome.\label{fig:allpairs}}
 \end{figure}
 \end{multicols}
 
 ## Graph Isomorphism
 
-Talk about definition [@Cordella2001], applications [@Raymond2002] and VF2++ [@Juttner2018]. TODO: benchmark on ARG Database from MIVIA group [@DeSanto2003] or on the more challenging [@Neuen2017].
+Talk about definition [@Cordella2001], applications [@Raymond2002] and VF2++ [@Juttner2018]. TODO: benchmark on ARG Database from MIVIA group [@DeSanto2003].
 
 # Acknowledgements
 
