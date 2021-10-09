@@ -23,11 +23,12 @@ use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 
-use crate::dictmap::*;
 use crate::generators::pairwise;
 use crate::graph;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
-use crate::shortest_path::dijkstra;
+
+use retworkx_lib::dictmap::*;
+use retworkx_lib::dijkstra;
 
 struct MetricClosureEdge {
     source: usize,

@@ -28,7 +28,6 @@ use hashbrown::HashMap;
 use petgraph::visit::{EdgeRef, GraphBase, IntoEdges, VisitMap, Visitable};
 
 use petgraph::algo::Measure;
-use pyo3::prelude::*;
 
 /// `MinScored<K, T>` holds a score `K` and a scored object `T` in
 /// a pair for use with a `BinaryHeap`.
@@ -80,6 +79,8 @@ impl<K: PartialOrd, T> Ord for MinScored<K, T> {
         }
     }
 }
+
+type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 
 /// \[Generic\] A* shortest path algorithm.
 ///
@@ -136,19 +137,19 @@ impl<K: PartialOrd, T> Ord for MinScored<K, T> {
 ///
 /// Returns the total cost + the path of subsequent `NodeId` from start to finish, if one was
 /// found.
-pub fn astar<G, F, H, K, IsGoal>(
+pub fn astar<G, F, H, K, IsGoal, E>(
     graph: G,
     start: G::NodeId,
     mut is_goal: IsGoal,
     mut edge_cost: F,
     mut estimate_cost: H,
-) -> PyResult<Option<(K, Vec<G::NodeId>)>>
+) -> Result<AstarOutput<K, G::NodeId>, E>
 where
     G: IntoEdges + Visitable,
-    IsGoal: FnMut(G::NodeId) -> PyResult<bool>,
+    IsGoal: FnMut(G::NodeId) -> Result<bool, E>,
     G::NodeId: Eq + Hash,
-    F: FnMut(G::EdgeRef) -> PyResult<K>,
-    H: FnMut(G::NodeId) -> PyResult<K>,
+    F: FnMut(G::EdgeRef) -> Result<K, E>,
+    H: FnMut(G::NodeId) -> Result<K, E>,
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();

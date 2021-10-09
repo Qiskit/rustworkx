@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::dictmap::*;
 use hashbrown::HashMap;
+use retworkx_lib::dictmap::*;
 
 use super::weight_callable;
 use crate::get_edge_iter_with_weights;

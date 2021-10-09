@@ -19,8 +19,8 @@ use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
 
-use crate::dictmap::*;
 use hashbrown::HashMap;
+use retworkx_lib::dictmap::*;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
 use pyo3::gc::{PyGCProtocol, PyVisit};

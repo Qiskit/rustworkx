@@ -43,8 +43,8 @@ use std::collections::hash_map::DefaultHasher;
 use std::convert::TryInto;
 use std::hash::Hasher;
 
-use crate::dictmap::*;
 use num_bigint::BigUint;
+use retworkx_lib::dictmap::*;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
 use pyo3::class::{PyMappingProtocol, PyObjectProtocol, PySequenceProtocol};

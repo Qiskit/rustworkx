@@ -12,6 +12,11 @@ edition = "2018"
 [badges]
 travis-ci = {repository = "Qiskit/retworkx"}
 
+[workspace]
+members = [
+    "retworkx-lib",
+]
+
 [lib]
 name = "retworkx"
 crate-type = ["cdylib"]
@@ -27,6 +32,7 @@ rayon = "1.5"
 num-traits = "0.2"
 num-bigint = "0.4"
 num-complex = "0.2"
+retworkx-lib = { path = "./retworkx-lib" }
 
 [dependencies.pyo3]
 version = "0.14.5"

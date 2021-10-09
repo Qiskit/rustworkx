@@ -11,16 +11,13 @@
 // under the License.
 
 pub mod all_pairs_dijkstra;
-mod astar;
 mod average_length;
-pub mod dijkstra;
 mod distance_matrix;
 mod floyd_warshall;
 mod k_shortest_path;
 mod num_shortest_path;
 
 use super::weight_callable;
-use crate::dictmap::*;
 use crate::{digraph, graph, NoPathFound};
 
 use pyo3::prelude::*;
@@ -30,6 +27,9 @@ use petgraph::graph::NodeIndex;
 use petgraph::visit::NodeCount;
 
 use numpy::IntoPyArray;
+
+use retworkx_lib::dictmap::*;
+use retworkx_lib::{astar, dijkstra};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,

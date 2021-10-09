@@ -20,7 +20,7 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use crate::dictmap::*;
+use retworkx_lib::dictmap::*;
 
 use petgraph::visit::{
     Data, EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,

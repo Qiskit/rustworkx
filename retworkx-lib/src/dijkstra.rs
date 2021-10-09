@@ -20,13 +20,11 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use crate::dictmap::*;
+use super::dictmap::*;
 use indexmap::map::Entry::{Occupied, Vacant};
 
 use petgraph::algo::Measure;
 use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
-
-use pyo3::prelude::*;
 
 use super::astar::MinScored;
 
@@ -97,17 +95,17 @@ use super::astar::MinScored;
 /// assert_eq!(res, expected_res);
 /// // z is not inside res because there is not path from b to z.
 /// ```
-pub fn dijkstra<G, F, K>(
+pub fn dijkstra<G, F, K, E>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
     mut edge_cost: F,
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
-) -> PyResult<DictMap<G::NodeId, K>>
+) -> Result<DictMap<G::NodeId, K>, E>
 where
     G: IntoEdges + Visitable,
     G::NodeId: Eq + Hash,
-    F: FnMut(G::EdgeRef) -> PyResult<K>,
+    F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();

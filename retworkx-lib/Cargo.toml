@@ -1,0 +1,23 @@
+[package]
+name = "retworkx-lib"
+version = "0.11.0"
+edition = "2018"
+authors = ["Matthew Treinish <mtreinish@kortar.org>"]
+description = "Rust APIs used for retworkx algorithms"
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/Qiskit/retworkx"
+keywords = ["graph"]
+
+[dependencies]
+ahash = { version = "0.7.4", default-features = false }
+petgraph = "0.6.0"
+rayon = "1.5"
+
+[dependencies.hashbrown]
+version = "0.11"
+features = ["rayon"]
+
+[dependencies.indexmap]
+version = "1.7"
+features = ["rayon"]

@@ -18,8 +18,8 @@ use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
 use std::str;
 
-use crate::dictmap::*;
 use hashbrown::{HashMap, HashSet};
+use retworkx_lib::dictmap::*;
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;

@@ -14,7 +14,6 @@ mod centrality;
 mod coloring;
 mod connectivity;
 mod dag_algo;
-mod dictmap;
 mod digraph;
 mod dot_utils;
 mod generators;

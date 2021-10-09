@@ -10,10 +10,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::dictmap::*;
 use hashbrown::HashMap;
 
-use super::dijkstra;
+use retworkx_lib::dictmap::*;
+use retworkx_lib::dijkstra;
 
 use std::sync::RwLock;
 
