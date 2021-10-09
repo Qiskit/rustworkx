@@ -62,7 +62,18 @@ class TestLollipopGraph(unittest.TestCase):
             (5, 6, None),
         ]
         self.assertEqual(weighted_edge_list, expected_weighted_edge_list)
+        self.assertEqual(graph.nodes(), [0, 1, 2, 3, 0, 1, 2])
 
-    def test_mesh_no_weights_or_num(self):
+    def test_lollipop_graph_no_path_weights_or_num(self):
+        graph = retworkx.generators.lollipop_graph(mesh_weights=list(range(4)))
+        mesh = retworkx.generators.mesh_graph(weights=list(range(4)))
+        self.assertEqual(graph.nodes(), mesh.nodes())
+        self.assertEqual(graph.weighted_edge_list(), mesh.weighted_edge_list())
+        self.assertEqual(
+            retworkx.generators.lollipop_graph(4).edge_list(),
+            retworkx.generators.mesh_graph(4).edge_list(),
+        )
+
+    def test_lollipop_graph_no_mesh_weights_or_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.lollipop_graph()
