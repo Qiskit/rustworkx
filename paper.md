@@ -29,6 +29,8 @@ affiliations:
    index: 4
 date: 10 September 2021
 bibliography: paper.bib
+header-includes:
+  - \usepackage{multicol}
 ---
 
 &nbsp;
@@ -88,8 +90,6 @@ To demonstrate _retworkx_'s performance, we conducted a benchmark comparing _ret
 
 The benchmark is [available on Github](https://github.com/mtreinish/retworkx-comparison-benchmarks)^[https://github.com/mtreinish/retworkx-comparison-benchmarks] for reproducibility. We present results conducted on the same machine running Python 3.9.3, with 128GB of DDR4 RAM @ 3200MHz and Intel(R) Core i7-6900K CPU @ 3.20GHz with eight cores and 16 threads.
 
-_retworkx_ is competitive and TODO. TODO.
-
 ## Graph Creation
 
 TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
@@ -102,9 +102,19 @@ Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challeng
 
 Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977].
 
-![TODO Caption.\label{fig:sssp}](paper_img/single_source_shortest_path.png){ width=50% height=50%  }
+\begin{multicols}{2}
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth,height=0.5\textheight]{paper_img/single_source_shortest_path.png}
+\caption{TODO Caption.\label{fig:sssp}}
+\end{figure}
 
-![TODO Caption.\label{fig:allpairs}](paper_img/all_pairs.png){ width=50% height=50% }
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth,height=0.5\textheight]{paper_img/all_pairs.png}
+\caption{TODO Caption.\label{fig:allpairs}}
+\end{figure}
+\end{multicols}
 
 ## Graph Isomorphism
 
