@@ -92,7 +92,7 @@ The benchmark is [available on Github](https://github.com/mtreinish/retworkx-com
 
 ## Graph Creation
 
-The first use case is to represent real-world networks by creating graphs with their respective nodes and edges. We compare the time to create graphs representing the USA road network from 9th DIMACS challenge dataset [@Demetrescu2016]. Each graph contains $\lvert V \rvert = 23,947,347$ nodes and $\lvert E \rvert = 58,333,344$ weighted edges.
+The first use case is to represent real-world networks by creating graphs with their respective nodes and edges. We compare the time to create graphs representing the USA road network from the 9th DIMACS challenge dataset [@Demetrescu2016]. Each graph contains $\lvert V \rvert = 23,947,347$ nodes and $\lvert E \rvert = 58,333,344$ weighted edges.
 
 ![Time to create the USA road network graph with 23,947,347 nodes and 58,333,344 edges.\label{fig:creation}](paper_img/creation.png){ width=50% height=50% }
 
@@ -101,9 +101,7 @@ The results show that _retworkx_ is 3.1x faster than the second best library in 
 
 ## Shortest Path
 
-Talk about wide-range of applications. TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
-
-Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977].
+The second use case is to calculate the distance among nodes in a graph using shortest-path algorithms. We compare two scenarios. In the first scenario, we calculate the distance between two nodes in the USA road network. In the second scenario, we calculate the distance among all nodes in the City of Rome road network, with the dataset also coming from the 9th DIMACS challenge. The City of Rome network has $\lvert V \rvert = 3,353$ nodes and $\lvert E \rvert = 8,870$ weighted edges.
 
 \begin{multicols}{2}
 \begin{figure}
@@ -115,9 +113,11 @@ Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977].
 \begin{figure}
 \centering
 \includegraphics[width=0.5\textwidth,height=0.5\textheight]{paper_img/all_pairs.png}
-\caption{Time to find the shortest path among all nodes in road network of the city of Rome.\label{fig:allpairs}}
+\caption{Time to find the shortest path among all nodes in the City of Rome road network.\label{fig:allpairs}}
 \end{figure}
 \end{multicols}
+
+TODO. Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977].
 
 ## Graph Isomorphism
 
