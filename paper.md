@@ -72,9 +72,7 @@ graph.add_edges_from([(a, b, 1.5), (a, c, 5.0), (b, c, 2.5)])
 retworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
 ```
 
-In the provided example, we find the shortest path from $A$ to $C$ using Dijkstra's algorithm [@Dijkstra1959ANO]. Firstly, we create the graph and add three nodes labeled A, B, and C. Each time **`add_node`** is called, the method returns the node index associated with the newly added node.
-
-Secondly, we add three edges connecting the nodes. **`add_edges_from`** accepts a list containing tuples of node indices and the edge weight, and returns a list of associated edge indices.
+In the provided example, we find the shortest path from $A$ to $C$ using Dijkstra's algorithm [@Dijkstra1959ANO]. Firstly, we create the graph and add three nodes labeled A, B, and C. Each time **`add_node`** is called, the method returns the node index associated with the newly added node. Secondly, we add three edges connecting the nodes with **`add_edges_from`**.
 
 Lastly, we compute the shortest path from $A$ to $C$. We provide the graph, the source node, and the target node to **`dijkstra_shortest_paths`**. In addition, we also provide a callback to **`weight_fn`**, which is the built-in **`float`** function for this case. The algorithm returns a mapping containing the shortest path, $A \rightarrow B \rightarrow C$.
 
