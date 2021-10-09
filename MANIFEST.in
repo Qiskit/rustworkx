@@ -2,3 +2,4 @@ include README.md
 include Cargo.toml
 include Cargo.lock
 recursive-include src *
+recursive-include retworkx-lib *
