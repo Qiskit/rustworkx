@@ -92,11 +92,12 @@ The benchmark is [available on Github](https://github.com/mtreinish/retworkx-com
 
 ## Graph Creation
 
-The first use case is to represent real-world networks by creating graphs and adding nodes and edges. We compare the time to create graphs representing the USA road network from 9th DIMACS challenge dataset [@Demetrescu2016]. Each graph contains $\mid V \mid = 23,947,347$ nodes and $\mid E \mid = 58,333,344$ weighted edges.
+The first use case is to represent real-world networks by creating graphs with their respective nodes and edges. We compare the time to create graphs representing the USA road network from 9th DIMACS challenge dataset [@Demetrescu2016]. Each graph contains $\lvert V \rvert = 23,947,347$ nodes and $\lvert E \rvert = 58,333,344$ weighted edges.
 
-_retworkx_ is $3.1 \times$ faster than the second best library in the benchmark, _NetworkX_. 
+![Time to create the USA road network graph. retworkx is the fastest library among the four.\label{fig:creation}](paper_img/creation.png){ width=50% height=50% }
 
-![TODO Caption.\label{fig:creation}](paper_img/creation.png){ width=50% height=50% }
+The results show that _retworkx_ is 3.1x faster than the second best library in the benchmark, _NetworkX_. The performance gap is even wider compared with _igraph_ and _graphtool_, which are at least 5x slower than _retworkx_.
+
 
 ## Shortest Path
 
