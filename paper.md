@@ -80,9 +80,9 @@ Lastly, we compute the shortest path from $A$ to $C$. We provide the graph, the 
 
 # Use Cases
 
-_retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions and inherits the network science applications. The library is particularly suited for applications that have core routines executing graph algorithms, such as Qiskit. In those applications, the performance of _retworkx_ makes the difference because it reduces computation time considerably.
+_retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms, such as Qiskit. In those applications, the performance of _retworkx_ makes the difference because it reduces computation time considerably.
 
-To demonstrate _retworkx_'s performance, we conducted a benchmark comparing _retworkx_ to other popular graph libraries^[_SNAP_ was dropped from the benchmarks because its Python wrapper did not contain the required functions]:
+We demonstrate the library's performance and use cases comparing _retworkx_ to other popular graph libraries^[_SNAP_ was dropped from the benchmarks because its Python wrapper did not contain the required functions] on a benchmark:
 
 | Library   | _retworkx_| _NetworkX_ | _python-igraph_ | _graphtool_ |
 |-----------|-----------|------------|-----------------|-------------|
