@@ -92,7 +92,9 @@ The benchmark is [available on Github](https://github.com/mtreinish/retworkx-com
 
 ## Graph Creation
 
-TODO: benchmark using 9th DIMACS challenge dataset [@Demetrescu2016].
+The first use case is to represent real-world networks by creating graphs and adding nodes and edges. We compare the time to create graphs representing the USA road network from 9th DIMACS challenge dataset [@Demetrescu2016]. Each graph contains $\mid V \mid = 23,947,347$ nodes and $\mid E \mid = 58,333,344$ weighted edges.
+
+_retworkx_ is $3.1 \times$ faster than the second best library in the benchmark, _NetworkX_. 
 
 ![TODO Caption.\label{fig:creation}](paper_img/creation.png){ width=50% height=50% }
 
