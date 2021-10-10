@@ -833,14 +833,46 @@ fn verify_optimum(
 /// Matching in Graphs" by Zvi Galil, ACM Computing Surveys, 1986.
 ///
 /// Based on networkx implementation
-/// https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/matching.py
+/// <https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/matching.py>
 ///
 /// With reference to the standalone protoype implementation from:
-/// http://jorisvr.nl/article/maximum-matching
+/// <http://jorisvr.nl/article/maximum-matching>
 ///
-/// http://jorisvr.nl/files/graphmatching/20130407/mwmatching.py
+/// <http://jorisvr.nl/files/graphmatching/20130407/mwmatching.py>
 ///
 /// The function takes time O(n**3)
+///
+/// For example:
+///
+/// ```rust
+/// use retworkx_lib::petgraph;
+/// use retworkx_lib::max_weight_matching::max_weight_matching;
+///
+/// use hashbrown::HashSet;
+///
+/// // Create a path graph
+/// let g = petgraph::graph::UnGraph::<i32, i128>::from_edges(&[
+///     (1, 2, 5), (2, 3, 11), (3, 4, 5)
+/// ]);
+///
+/// // Run max weight matching with max cardinality set to false
+/// let res: Result<HashSet<(usize, usize)>, &'static str> = max_weight_matching(
+///     &g, false, |e| Ok(*e.weight()), true
+/// );
+/// // Run max weight matching with max cardinality set to true
+/// let maxc_res: Result<HashSet<(usize, usize)>, &'static str> = max_weight_matching(
+///     &g, true, |e| Ok(*e.weight()), true
+/// );
+///
+/// let matching = res.unwrap();
+/// let maxc_matching = maxc_res.unwrap();
+/// // Check output
+/// assert_eq!(matching.len(), 1);
+/// assert!(matching.contains(&(2, 3)) || matching.contains(&(3, 2)));
+/// assert_eq!(maxc_matching.len(), 2);
+/// assert!(maxc_matching.contains(&(1, 2)) || maxc_matching.contains(&(2, 1)));
+/// assert!(maxc_matching.contains(&(3, 4)) || maxc_matching.contains(&(4, 3)));
+/// ```
 pub fn max_weight_matching<G, F, E>(
     graph: G,
     max_cardinality: bool,

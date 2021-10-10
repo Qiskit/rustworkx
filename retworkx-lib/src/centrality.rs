@@ -25,19 +25,47 @@ use petgraph::visit::{
 };
 use rayon::prelude::*;
 
-/// The algorithm here is taken from:
+/// Compute the betweenness centrality of all nodes in a PyGraph.
+///
+/// The algorithm used in this function is based on:
+///
 /// Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
 /// Journal of Mathematical Sociology 25(2):163-177, 2001.
 ///
-/// Correspondence of variable names to quantities in the paper is as follows:
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold``. If the
+/// function will be running in parallel the env var ``RAYON_NUM_THREADS`` can
+/// be used to adjust how many threads will be used.
 ///
-/// P -- predecessors
-/// S -- verts_sorted_by_distance,
-///      vertices in order of non-decreasing distance from s
-/// Q -- Q
-/// sigma -- sigma
-/// delta -- delta
-/// d -- distance
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `endpoints` - Whether to include the endpoints of paths in the path
+///     lengths used to compute the betweenness
+/// * `normalized` - Whether to normalize the betweenness scores by the number
+///     of distinct paths between all pairs of nodes
+/// * `parallel_threshold` - The number of nodes to calculate the betweenness
+///     centrality in parallel at, if the number of nodes in `graph` is less
+///     than this value it will run in a single thread. A good default to use
+///     here if you're not sure is `50` as that was found to be roughly the
+///     number of nodes where parallelism improves performance
+///
+/// Example:
+///
+/// ```rust
+/// use retworkx_lib::petgraph;
+/// use retworkx_lib::centrality::betweenness_centrality;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
+/// ]);
+/// // Calculate the betweeness centrality
+/// let output = betweenness_centrality(&g, true, true, 200);
+/// assert_eq!(
+///     vec![Some(0.4), Some(0.5), Some(0.45), Some(0.5), Some(0.75)],
+///     output
+/// );
+/// ```
 pub fn betweenness_centrality<G>(
     graph: G,
     endpoints: bool,
@@ -58,6 +86,15 @@ where
     // + NodeCount // for node_count
     // + GraphProp // for is_directed
 {
+    // Correspondence of variable names to quantities in the paper is as follows:
+    //
+    // P -- predecessors
+    // S -- verts_sorted_by_distance,
+    //      vertices in order of non-decreasing distance from s
+    // Q -- Q
+    // sigma -- sigma
+    // delta -- delta
+    // d -- distance
     let max_index = graph.node_bound();
 
     let mut betweenness: Vec<Option<f64>> = vec![None; max_index];

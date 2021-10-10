@@ -48,10 +48,10 @@ use crate::min_scored::MinScored;
 /// Returns a `HashMap` that maps `NodeId` to path cost.
 /// # Example
 /// ```rust
-/// use petgraph::Graph;
-/// use petgraph::algo::dijkstra;
-/// use petgraph::prelude::*;
-/// use std::collections::HashMap;
+/// use retworkx_lib::petgraph::Graph;
+/// use retworkx_lib::petgraph::prelude::*;
+/// use retworkx_lib::dictmap::DictMap;
+/// use retworkx_lib::shortest_path::dijkstra::dijkstra;
 ///
 /// let mut graph : Graph<(),(),Directed>= Graph::new();
 /// let a = graph.add_node(()); // node with no weight
@@ -81,7 +81,7 @@ use crate::min_scored::MinScored;
 /// // |       v       |       v
 /// // d <---- c       h <---- g
 ///
-/// let expected_res: HashMap<NodeIndex, usize> = [
+/// let expected_res: DictMap<NodeIndex, usize> = [
 ///      (a, 3),
 ///      (b, 0),
 ///      (c, 1),
@@ -91,8 +91,10 @@ use crate::min_scored::MinScored;
 ///      (g, 3),
 ///      (h, 4)
 ///     ].iter().cloned().collect();
-/// let res = dijkstra(&graph,b,None, |_| 1);
-/// assert_eq!(res, expected_res);
+/// let res: Result<DictMap<NodeIndex, usize>, &'static str> = dijkstra(
+///     &graph, b, None, |_| Ok(1), None
+/// );
+/// assert_eq!(res.unwrap(), expected_res);
 /// // z is not inside res because there is not path from b to z.
 /// ```
 pub fn dijkstra<G, F, K, E>(
