@@ -41,7 +41,39 @@ use crate::min_scored::MinScored;
 ///
 /// Computes in **O(k * (|E| + |V|*log(|V|)))** time (average).
 ///
-/// Returns a `HashMap` that maps `NodeId` to path cost.
+/// Returns a `DictMap` that maps `NodeId` to path cost as a `f64.
+///
+/// Example:
+///
+/// ```rust
+///
+/// use retworkx_lib::petgraph;
+/// use retworkx_lib::petgraph::graph::NodeIndex;
+/// use retworkx_lib::shortest_path::k_shortest_path;
+/// use retworkx_lib::dictmap::DictMap;
+///
+/// let g = petgraph::graph::UnGraph::<i32, _>::from_edges(&[
+///     (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (1, 4), (5, 6), (6, 7), (7, 5)
+/// ]);
+///
+/// let res: Result<DictMap<NodeIndex, f64>, &'static str> = k_shortest_path(
+///     &g, NodeIndex::new(1), None, 2,
+///     |e: retworkx_lib::petgraph::graph::EdgeReference<&'static str>| Ok(1.0),
+/// );
+///
+/// let output = res.unwrap();
+/// let expected: DictMap<NodeIndex, f64> = [
+///     (NodeIndex::new(0), 3.0),
+///     (NodeIndex::new(1), 2.0),
+///     (NodeIndex::new(2), 3.0),
+///     (NodeIndex::new(3), 2.0),
+///     (NodeIndex::new(4), 3.0),
+///     (NodeIndex::new(5), 4.0),
+///     (NodeIndex::new(6), 4.0),
+///     (NodeIndex::new(7), 4.0),
+/// ].iter().cloned().collect();
+/// assert_eq!(expected, output);
+/// ```
 pub fn k_shortest_path<G, F, E>(
     graph: G,
     start: G::NodeId,

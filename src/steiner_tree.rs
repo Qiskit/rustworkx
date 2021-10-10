@@ -28,7 +28,7 @@ use crate::graph;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
 
 use retworkx_lib::dictmap::*;
-use retworkx_lib::dijkstra;
+use retworkx_lib::shortest_path::dijkstra;
 
 struct MetricClosureEdge {
     source: usize,
@@ -163,7 +163,7 @@ fn fast_metric_edges(
     };
 
     let mut paths = DictMap::with_capacity(graph.graph.node_count());
-    let mut distance = dijkstra::dijkstra(
+    let mut distance = dijkstra(
         &graph.graph,
         dummy,
         None,

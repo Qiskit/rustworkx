@@ -74,10 +74,6 @@ pub mod shortest_path;
 pub mod dictmap;
 pub mod min_scored;
 
-// Re-export for common usage
-pub use shortest_path::astar;
-pub use shortest_path::dijkstra;
-
 // re-export petgraph so there is a consistent version available to users and
 // then only need to require retworkx-lib in their dependencies
 pub use petgraph;

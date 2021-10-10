@@ -28,7 +28,7 @@ use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
 use crate::dictmap::*;
 use crate::min_scored::MinScored;
 
-/// \[Generic\] Dijkstra's shortest path algorithm.
+/// Dijkstra's shortest path algorithm.
 ///
 /// Compute the length of the shortest path from `start` to every reachable
 /// node.
@@ -41,17 +41,17 @@ use crate::min_scored::MinScored;
 /// cost is calculated.
 ///
 /// If `path` is not `None`, then the algorithm will mutate the input
-/// hashbrown::HashMap to insert an entry where the index is the dest node index
+/// `DictMap` to insert an entry where the index is the dest node index
 /// the value is a Vec of node indices of the path starting with `start` and
 /// ending at the index.
 ///
-/// Returns a `HashMap` that maps `NodeId` to path cost.
+/// Returns a `DictMap` that maps `NodeId` to path cost.
 /// # Example
 /// ```rust
 /// use retworkx_lib::petgraph::Graph;
 /// use retworkx_lib::petgraph::prelude::*;
 /// use retworkx_lib::dictmap::DictMap;
-/// use retworkx_lib::shortest_path::dijkstra::dijkstra;
+/// use retworkx_lib::shortest_path::dijkstra;
 ///
 /// let mut graph : Graph<(),(),Directed>= Graph::new();
 /// let a = graph.add_node(()); // node with no weight

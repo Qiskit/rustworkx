@@ -10,6 +10,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-pub mod astar;
-pub mod dijkstra;
-pub mod k_shortest_path;
+//! This module contains functions for various algorithms that compute the
+//! shortest path of a graph.
+
+mod astar;
+mod dijkstra;
+mod k_shortest_path;
+
+pub use astar::astar;
+pub use dijkstra::dijkstra;
+pub use k_shortest_path::k_shortest_path;

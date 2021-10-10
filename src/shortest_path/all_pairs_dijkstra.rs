@@ -13,7 +13,7 @@
 use hashbrown::HashMap;
 
 use retworkx_lib::dictmap::*;
-use retworkx_lib::dijkstra;
+use retworkx_lib::shortest_path::dijkstra;
 
 use std::sync::RwLock;
 
@@ -85,7 +85,7 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
         .into_par_iter()
         .map(|x| {
             let out_map = PathLengthMapping {
-                path_lengths: dijkstra::dijkstra(
+                path_lengths: dijkstra(
                     graph,
                     x,
                     None,
@@ -172,7 +172,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
             .map(|x| {
                 let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
                     DictMap::with_capacity(graph.node_count());
-                let distance = dijkstra::dijkstra(
+                let distance = dijkstra(
                     graph,
                     x,
                     None,

@@ -31,7 +31,7 @@ use crate::min_scored::MinScored;
 
 type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 
-/// \[Generic\] A* shortest path algorithm.
+/// A* shortest path algorithm.
 ///
 /// Computes the shortest path from `start` to `finish`, including the total path cost.
 ///
@@ -50,8 +50,9 @@ type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 ///
 /// # Example
 /// ```
-/// use petgraph::Graph;
-/// use petgraph::algo::astar;
+/// use retworkx_lib::petgraph::graph::NodeIndex;
+/// use retworkx_lib::petgraph::Graph;
+/// use retworkx_lib::shortest_path::astar;
 ///
 /// let mut g = Graph::new();
 /// let a = g.add_node((0., 0.));
@@ -80,7 +81,10 @@ type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 /// // | 1*    | 1*    |
 /// // \------ e ------/
 ///
-/// let path = astar(&g, a, |finish| finish == f, |e| *e.weight(), |_| 0);
+/// let res: Result<Option<(u64, Vec<NodeIndex>)>, &'static str> = astar(
+///     &g, a, |finish| Ok(finish == f), |e| Ok(*e.weight()), |_| Ok(0)
+/// );
+/// let path = res.unwrap();
 /// assert_eq!(path, Some((6, vec![a, d, e, f])));
 /// ```
 ///

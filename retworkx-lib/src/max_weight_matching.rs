@@ -842,6 +842,19 @@ fn verify_optimum(
 ///
 /// The function takes time O(n**3)
 ///
+/// Arguments:
+///
+/// * graph - The undirected graph to compute the maximum weight matching for
+/// * max_cardinality - If set to true compute the maximum-cardinality matching
+///     with maximum weight among all maximum-cardinality matchings
+/// * weight_fn - A callback function that will be give a edge reference and
+///     expected to return a `i128` representing the weight of the edge
+/// * verify_optimum_flag: If true an prior to returning an additional routine
+///     to verify the optimal solution was found will be run after computing
+///     the maximum weight matching. If it's true and the found matching is not
+///     an optimal solution this function will panic. This option should
+///     normally be only set true during testing.
+///
 /// For example:
 ///
 /// ```rust
