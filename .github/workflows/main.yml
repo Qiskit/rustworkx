@@ -40,6 +40,8 @@ jobs:
         run: black --check --diff retworkx tests
       - name: Python Lint
         run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests
+      - name: Retworkx Rust Tests
+        run: cd retworkx-lib && cargo test
   tests:
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
