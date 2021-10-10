@@ -13,22 +13,19 @@
 // This module was originally copied and forked from the upstream petgraph
 // repository, specifically:
 // https://github.com/petgraph/petgraph/blob/master/src/k_shortest_path.rs
-// this was necessary to modify the error handling to allow python callables
-// to be use for the input functions for edge_cost and return any exceptions
-// raised in Python instead of panicking
+// prior to the 0.6.0 release. This was necessary to modify the error handling
+// to allow python callables to be use for the input functions for edge_cost
+// and return any exceptions raised in Python instead of panicking
 
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use retworkx_lib::dictmap::*;
-
 use petgraph::visit::{
-    Data, EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
+    EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
 };
 
-use pyo3::prelude::*;
-
-use super::astar::MinScored;
+use crate::dictmap::*;
+use crate::min_scored::MinScored;
 
 /// k'th shortest path algorithm.
 ///
@@ -45,18 +42,17 @@ use super::astar::MinScored;
 /// Computes in **O(k * (|E| + |V|*log(|V|)))** time (average).
 ///
 /// Returns a `HashMap` that maps `NodeId` to path cost.
-pub fn k_shortest_path<G, F>(
+pub fn k_shortest_path<G, F, E>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
     k: usize,
     mut edge_cost: F,
-) -> PyResult<DictMap<G::NodeId, f64>>
+) -> Result<DictMap<G::NodeId, f64>, E>
 where
     G: IntoEdges + Visitable + NodeCount + NodeIndexable,
-    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
     G::NodeId: Eq + Hash,
-    F: FnMut(&PyObject) -> PyResult<f64>,
+    F: FnMut(G::EdgeRef) -> Result<f64, E>,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_bound()];
     let mut scores = DictMap::with_capacity(graph.node_count());
@@ -83,10 +79,8 @@ where
         }
 
         for edge in graph.edges(node) {
-            visit_next.push(MinScored(
-                node_score + edge_cost(edge.weight())?,
-                edge.target(),
-            ));
+            visit_next
+                .push(MinScored(node_score + edge_cost(edge)?, edge.target()));
         }
     }
     Ok(scores)

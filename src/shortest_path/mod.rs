@@ -14,7 +14,6 @@ pub mod all_pairs_dijkstra;
 mod average_length;
 mod distance_matrix;
 mod floyd_warshall;
-mod k_shortest_path;
 mod num_shortest_path;
 
 use super::weight_callable;
@@ -29,7 +28,7 @@ use petgraph::visit::NodeCount;
 use numpy::IntoPyArray;
 
 use retworkx_lib::dictmap::*;
-use retworkx_lib::{astar, dijkstra};
+use retworkx_lib::shortest_path::{astar, dijkstra, k_shortest_path};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
@@ -636,7 +635,7 @@ fn digraph_k_shortest_path_lengths(
         NodeIndex::new(start),
         out_goal,
         k,
-        edge_cost_callable,
+        |e| edge_cost_callable(e.weight()),
     )?;
     Ok(PathLengthMapping {
         path_lengths: out_map
@@ -692,7 +691,7 @@ pub fn graph_k_shortest_path_lengths(
         NodeIndex::new(start),
         out_goal,
         k,
-        edge_cost_callable,
+        |e| edge_cost_callable(e.weight()),
     )?;
     Ok(PathLengthMapping {
         path_lengths: out_map

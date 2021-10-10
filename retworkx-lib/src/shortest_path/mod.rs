@@ -10,11 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-pub mod centrality;
-pub mod dictmap;
-pub mod max_weight_matching;
-pub mod min_scored;
-pub mod shortest_path;
-
-pub use shortest_path::astar;
-pub use shortest_path::dijkstra;
+pub mod astar;
+pub mod dijkstra;
+pub mod k_shortest_path;

@@ -20,13 +20,13 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use super::dictmap::*;
 use indexmap::map::Entry::{Occupied, Vacant};
 
 use petgraph::algo::Measure;
 use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
 
-use super::astar::MinScored;
+use crate::dictmap::*;
+use crate::min_scored::MinScored;
 
 /// \[Generic\] Dijkstra's shortest path algorithm.
 ///
