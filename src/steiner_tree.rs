@@ -163,13 +163,8 @@ fn fast_metric_edges(
     };
 
     let mut paths = DictMap::with_capacity(graph.graph.node_count());
-    let mut distance = dijkstra(
-        &graph.graph,
-        dummy,
-        None,
-        cost_fn,
-        Some(&mut paths),
-    )?;
+    let mut distance =
+        dijkstra(&graph.graph, dummy, None, cost_fn, Some(&mut paths))?;
     paths.remove(&dummy);
     distance.remove(&dummy);
     graph.graph.remove_node(dummy);
