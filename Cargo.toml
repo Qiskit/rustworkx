@@ -9,9 +9,6 @@ repository = "https://github.com/Qiskit/retworkx"
 keywords = ["python", "graph"]
 edition = "2018"
 
-[badges]
-travis-ci = {repository = "Qiskit/retworkx"}
-
 [workspace]
 members = [
     "retworkx-lib",
