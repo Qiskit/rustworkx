@@ -17,7 +17,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
-use pyo3::exceptions::PyIndexError;
+use pyo3::exceptions::{PyIndexError, PyOverflowError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
@@ -854,9 +854,19 @@ pub fn directed_grid_graph(
     })
 }
 
+// MAX_ORDER is determined based on the pointer width of the target platform
+#[cfg(target_pointer_width = "64")]
+const MAX_ORDER: u32 = 60;
+#[cfg(not(target_pointer_width = "64"))]
+const MAX_ORDER: u32 = 29;
+
 /// Generate an undirected binomial tree of order n recursively.
 ///
-/// :param int order: Order of the binomial tree.
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
+///     depends
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
@@ -866,7 +876,9 @@ pub fn directed_grid_graph(
 ///
 /// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises IndexError: If the length of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
 ///
 /// .. jupyter-execute::
 ///
@@ -884,59 +896,51 @@ pub fn binomial_tree_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
-
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
     let num_nodes = usize::pow(2, order);
-
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-
-            let mut node_count = num_nodes;
-
-            if weights.len() > num_nodes {
-                return Err(PyIndexError::new_err(
-                    "weights should be <= 2**order",
-                ));
+    let num_edges = usize::pow(2, order) - 1;
+    let mut graph = StableUnGraph::<PyObject, PyObject>::with_capacity(
+        num_nodes, num_edges,
+    );
+    for i in 0..num_nodes {
+        match weights {
+            Some(ref weights) => {
+                if weights.len() > num_nodes {
+                    return Err(PyIndexError::new_err(
+                        "weights should be <= 2**order",
+                    ));
+                }
+                if i < weights.len() {
+                    graph.add_node(weights[i].clone_ref(py))
+                } else {
+                    graph.add_node(py.None())
+                }
             }
-
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-                node_count -= 1;
-            }
-
-            for _i in 0..node_count {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
-            }
-
-            node_list
-        }
-
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
-    };
+            None => graph.add_node(py.None()),
+        };
+    }
 
     let mut n = 1;
+    let zero_index = NodeIndex::new(0);
 
     for _ in 0..order {
         let edges: Vec<(NodeIndex, NodeIndex)> = graph
             .edge_references()
             .map(|e| (e.source(), e.target()))
             .collect();
-
         for (source, target) in edges {
-            let source_index = source.index();
-            let target_index = target.index();
+            let source_index = NodeIndex::new(source.index() + n);
+            let target_index = NodeIndex::new(target.index() + n);
 
-            graph.add_edge(
-                nodes[source_index + n],
-                nodes[target_index + n],
-                py.None(),
-            );
+            graph.add_edge(source_index, target_index, py.None());
         }
 
-        graph.add_edge(nodes[0], nodes[n], py.None());
+        graph.add_edge(zero_index, NodeIndex::new(n), py.None());
 
         n *= 2;
     }
@@ -951,7 +955,10 @@ pub fn binomial_tree_graph(
 /// Generate an undirected binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
 ///
-/// :param int order: Order of the binomial tree.
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with None will be appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
@@ -964,6 +971,8 @@ pub fn binomial_tree_graph(
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyDiGraph
 /// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
 ///
 /// .. jupyter-execute::
 ///
@@ -984,39 +993,38 @@ pub fn directed_binomial_tree_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
-
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
     let num_nodes = usize::pow(2, order);
+    let num_edges = usize::pow(2, order) - 1;
+    let mut graph = StableDiGraph::<PyObject, PyObject>::with_capacity(
+        num_nodes, num_edges,
+    );
 
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            let mut node_count = num_nodes;
-
-            if weights.len() > num_nodes {
-                return Err(PyIndexError::new_err(
-                    "weights should be <= 2**order",
-                ));
+    for i in 0..num_nodes {
+        match weights {
+            Some(ref weights) => {
+                if weights.len() > num_nodes {
+                    return Err(PyIndexError::new_err(
+                        "weights should be <= 2**order",
+                    ));
+                }
+                if i < weights.len() {
+                    graph.add_node(weights[i].clone_ref(py))
+                } else {
+                    graph.add_node(py.None())
+                }
             }
-
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-                node_count -= 1;
-            }
-
-            for _i in 0..node_count {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
-            }
-
-            node_list
-        }
-
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
-    };
+            None => graph.add_node(py.None()),
+        };
+    }
 
     let mut n = 1;
+    let zero_index = NodeIndex::new(0);
 
     for _ in 0..order {
         let edges: Vec<(NodeIndex, NodeIndex)> = graph
@@ -1025,39 +1033,27 @@ pub fn directed_binomial_tree_graph(
             .collect();
 
         for (source, target) in edges {
-            let source_index = source.index();
-            let target_index = target.index();
+            let source_index = NodeIndex::new(source.index() + n);
+            let target_index = NodeIndex::new(target.index() + n);
 
-            if graph
-                .find_edge(nodes[source_index + n], nodes[target_index + n])
-                .is_none()
-            {
-                graph.add_edge(
-                    nodes[source_index + n],
-                    nodes[target_index + n],
-                    py.None(),
-                );
+            if graph.find_edge(source_index, target_index).is_none() {
+                graph.add_edge(source_index, target_index, py.None());
             }
 
             if bidirectional
-                && graph
-                    .find_edge(nodes[target_index + n], nodes[source_index + n])
-                    .is_none()
+                && graph.find_edge(target_index, source_index).is_none()
             {
-                graph.add_edge(
-                    nodes[target_index + n],
-                    nodes[source_index + n],
-                    py.None(),
-                );
+                graph.add_edge(target_index, source_index, py.None());
             }
         }
+        let n_index = NodeIndex::new(n);
 
-        if graph.find_edge(nodes[0], nodes[n]).is_none() {
-            graph.add_edge(nodes[0], nodes[n], py.None());
+        if graph.find_edge(zero_index, n_index).is_none() {
+            graph.add_edge(zero_index, n_index, py.None());
         }
 
-        if bidirectional && graph.find_edge(nodes[n], nodes[0]).is_none() {
-            graph.add_edge(nodes[n], nodes[0], py.None());
+        if bidirectional && graph.find_edge(n_index, zero_index).is_none() {
+            graph.add_edge(n_index, zero_index, py.None());
         }
 
         n *= 2;
