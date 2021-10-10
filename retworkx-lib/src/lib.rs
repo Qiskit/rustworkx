@@ -61,6 +61,8 @@
 
 /// Module for centrality algorithms
 pub mod centrality;
+/// Module for depth first search edge methods
+pub mod dfs_edges;
 /// Module for maximum weight matching algorithmss
 pub mod max_weight_matching;
 /// Modules for shortest path algorithms
