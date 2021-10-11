@@ -65,12 +65,8 @@ pub mod centrality;
 pub mod dfs_edges;
 /// Module for maximum weight matching algorithmss
 pub mod max_weight_matching;
-/// Modules for shortest path algorithms
 pub mod shortest_path;
 // These modules define additional data structures
-/// This module contains the DictMap type which is a combination of IndexMap
-/// and ahash which is used as a return type for retworkx for compatibility
-/// with Python's dict which preserves insertion order
 pub mod dictmap;
 pub mod min_scored;
 

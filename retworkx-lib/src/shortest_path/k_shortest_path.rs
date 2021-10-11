@@ -32,16 +32,16 @@ use crate::min_scored::MinScored;
 /// Compute the length of the k'th shortest path from `start` to every reachable
 /// node.
 ///
-/// The graph should be `Visitable` and implement `IntoEdges`. The function
+/// The graph should be [`Visitable`] and implement [`IntoEdges`]. The function
 /// `edge_cost` should return the cost for a particular edge, which is used
 /// to compute path costs. Edge costs must be non-negative.
 ///
-/// If `goal` is not `None`, then the algorithm terminates once the `goal` node's
+/// If `goal` is not [`None`], then the algorithm terminates once the `goal` node's
 /// cost is calculated.
 ///
 /// Computes in **O(k * (|E| + |V|*log(|V|)))** time (average).
 ///
-/// Returns a `DictMap` that maps `NodeId` to path cost as a `f64.
+/// Returns a [`DictMap`] that maps `NodeId` to path cost as a [`f64`].
 ///
 /// Example:
 ///

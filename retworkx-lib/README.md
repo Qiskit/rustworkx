@@ -5,7 +5,7 @@
 
 This crate contains the rust library retworkx-lib. This library is part of the
 retworkx project. However while the larger retworkx project is a Python library
-that offers a general purpose high performance graph library written in Rust
+that offers a general purpose high performance graph library written in Rust,
 retworkx-lib is a pure rust library that offers a stable rust API for any
 downstream crate that need it.
 

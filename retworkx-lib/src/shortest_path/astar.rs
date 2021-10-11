@@ -46,7 +46,7 @@ type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 /// it should never overestimate the actual cost to get to the nearest goal node. Estimate costs
 /// must also be non-negative.
 ///
-/// The graph should be `Visitable` and implement `IntoEdges`.
+/// The graph should be [`Visitable`] and implement [`IntoEdges`].
 ///
 /// # Example
 /// ```

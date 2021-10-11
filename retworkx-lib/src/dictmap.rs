@@ -10,10 +10,22 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-/// Convenient alias to build IndexMap using a custom hasher.
+//! This module contains the [`DictMap`] type alias which is a combination of
+//! [`IndexMap`] and [`AHash`].
+//!
+//! It is used as a return type for retworkx for compatibility
+//! with Python's dict which preserves insertion order.
+//!
+//! [`AHash`]: https://crates.io/crates/ahash
+
+use indexmap::IndexMap;
+
+/// Convenient alias to build an [`IndexMap`] using a custom hasher.
 /// For the moment, we use ahash which is the default hasher
-/// for hashbrown::HashMap, another hashmap we use
-pub type DictMap<K, V> = indexmap::IndexMap<K, V, ahash::RandomState>;
+/// for [`HashMap`], another hashmap we use.
+///
+/// [`HashMap`]: https://docs.rs/hashbrown/0.11.2/hashbrown/hash_map/struct.HashMap.html
+pub type DictMap<K, V> = IndexMap<K, V, ahash::RandomState>;
 
 pub trait InitWithHasher {
     fn new() -> Self

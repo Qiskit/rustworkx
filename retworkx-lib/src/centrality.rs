@@ -25,7 +25,7 @@ use petgraph::visit::{
 };
 use rayon::prelude::*;
 
-/// Compute the betweenness centrality of all nodes in a PyGraph.
+/// Compute the betweenness centrality of all nodes in a graph.
 ///
 /// The algorithm used in this function is based on:
 ///
@@ -50,8 +50,7 @@ use rayon::prelude::*;
 ///     here if you're not sure is `50` as that was found to be roughly the
 ///     number of nodes where parallelism improves performance
 ///
-/// Example:
-///
+/// # Example
 /// ```rust
 /// use retworkx_lib::petgraph;
 /// use retworkx_lib::centrality::betweenness_centrality;

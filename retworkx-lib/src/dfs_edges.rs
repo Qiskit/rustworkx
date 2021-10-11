@@ -18,7 +18,7 @@ use petgraph::visit::{
     NodeIndexable, VisitMap, Visitable,
 };
 
-/// Return an edge list in depth first order
+/// Return an edge list in depth first order.
 ///
 /// Arguments:
 ///
@@ -29,8 +29,7 @@ use petgraph::visit::{
 ///     then a source will be chosen arbitrarily and repeated until all
 ///     components of the graph are searched
 ///
-/// Example:
-///
+/// # Example
 /// ```rust
 /// use retworkx_lib::petgraph;
 /// use retworkx_lib::dfs_edges::dfs_edges;

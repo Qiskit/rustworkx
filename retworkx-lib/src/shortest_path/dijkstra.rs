@@ -33,19 +33,19 @@ use crate::min_scored::MinScored;
 /// Compute the length of the shortest path from `start` to every reachable
 /// node.
 ///
-/// The graph should be `Visitable` and implement `IntoEdges`. The function
+/// The graph should be [`Visitable`] and implement [`IntoEdges`]. The function
 /// `edge_cost` should return the cost for a particular edge, which is used
 /// to compute path costs. Edge costs must be non-negative.
 ///
-/// If `goal` is not `None`, then the algorithm terminates once the `goal` node's
+/// If `goal` is not [`None`], then the algorithm terminates once the `goal` node's
 /// cost is calculated.
 ///
-/// If `path` is not `None`, then the algorithm will mutate the input
-/// `DictMap` to insert an entry where the index is the dest node index
+/// If `path` is not [`None`], then the algorithm will mutate the input
+/// [`DictMap`] to insert an entry where the index is the dest node index
 /// the value is a Vec of node indices of the path starting with `start` and
 /// ending at the index.
 ///
-/// Returns a `DictMap` that maps `NodeId` to path cost.
+/// Returns a [`DictMap`] that maps `NodeId` to path cost.
 /// # Example
 /// ```rust
 /// use retworkx_lib::petgraph::Graph;

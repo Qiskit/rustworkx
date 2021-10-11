@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+//! Module for shortest path algorithms.
+//!
 //! This module contains functions for various algorithms that compute the
 //! shortest path of a graph.
 
