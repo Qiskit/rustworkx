@@ -56,7 +56,15 @@
 //! documentation which is hosted at:
 //!
 //! <https://qiskit.org/documentation/retworkx/release_notes.html>
-//!
+
+use std::convert::Infallible;
+
+/// A convenient type alias that by default assumes no error can happen.
+///
+/// It can be used to avoid type annotations when the function you want
+/// to use needs a callback that returns [`Result`] but in your case no
+/// error can happen.
+pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 
 /// Module for centrality algorithms
 pub mod centrality;

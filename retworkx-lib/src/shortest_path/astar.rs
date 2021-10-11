@@ -53,6 +53,7 @@ type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 /// use retworkx_lib::petgraph::graph::NodeIndex;
 /// use retworkx_lib::petgraph::Graph;
 /// use retworkx_lib::shortest_path::astar;
+/// use retworkx_lib::Result;
 ///
 /// let mut g = Graph::new();
 /// let a = g.add_node((0., 0.));
@@ -81,7 +82,7 @@ type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 /// // | 1*    | 1*    |
 /// // \------ e ------/
 ///
-/// let res: Result<Option<(u64, Vec<NodeIndex>)>, &'static str> = astar(
+/// let res: Result<Option<(u64, Vec<NodeIndex>)>> = astar(
 ///     &g, a, |finish| Ok(finish == f), |e| Ok(*e.weight()), |_| Ok(0)
 /// );
 /// let path = res.unwrap();

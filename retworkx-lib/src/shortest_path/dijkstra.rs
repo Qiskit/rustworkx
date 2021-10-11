@@ -52,6 +52,7 @@ use crate::min_scored::MinScored;
 /// use retworkx_lib::petgraph::prelude::*;
 /// use retworkx_lib::dictmap::DictMap;
 /// use retworkx_lib::shortest_path::dijkstra;
+/// use retworkx_lib::Result;
 ///
 /// let mut graph : Graph<(),(),Directed>= Graph::new();
 /// let a = graph.add_node(()); // node with no weight
@@ -91,7 +92,7 @@ use crate::min_scored::MinScored;
 ///      (g, 3),
 ///      (h, 4)
 ///     ].iter().cloned().collect();
-/// let res: Result<DictMap<NodeIndex, usize>, &'static str> = dijkstra(
+/// let res: Result<DictMap<NodeIndex, usize>> = dijkstra(
 ///     &graph, b, None, |_| Ok(1), None
 /// );
 /// assert_eq!(res.unwrap(), expected_res);

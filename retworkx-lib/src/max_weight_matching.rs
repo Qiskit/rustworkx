@@ -859,6 +859,7 @@ fn verify_optimum(
 /// ```rust
 /// use retworkx_lib::petgraph;
 /// use retworkx_lib::max_weight_matching::max_weight_matching;
+/// use retworkx_lib::Result;
 ///
 /// use hashbrown::HashSet;
 ///
@@ -868,11 +869,11 @@ fn verify_optimum(
 /// ]);
 ///
 /// // Run max weight matching with max cardinality set to false
-/// let res: Result<HashSet<(usize, usize)>, &'static str> = max_weight_matching(
+/// let res: Result<HashSet<(usize, usize)>> = max_weight_matching(
 ///     &g, false, |e| Ok(*e.weight()), true
 /// );
 /// // Run max weight matching with max cardinality set to true
-/// let maxc_res: Result<HashSet<(usize, usize)>, &'static str> = max_weight_matching(
+/// let maxc_res: Result<HashSet<(usize, usize)>> = max_weight_matching(
 ///     &g, true, |e| Ok(*e.weight()), true
 /// );
 ///
