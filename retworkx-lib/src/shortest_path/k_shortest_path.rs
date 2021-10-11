@@ -44,8 +44,7 @@ use crate::min_scored::MinScored;
 ///
 /// Returns a [`DictMap`] that maps `NodeId` to path cost as the value.
 ///
-/// Example:
-///
+/// # Example:
 /// ```rust
 ///
 /// use retworkx_lib::petgraph;
