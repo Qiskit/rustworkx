@@ -20,6 +20,7 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
+use petgraph::algo::Measure;
 use petgraph::visit::{
     EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
 };
@@ -41,7 +42,7 @@ use crate::min_scored::MinScored;
 ///
 /// Computes in **O(k * (|E| + |V|*log(|V|)))** time (average).
 ///
-/// Returns a [`DictMap`] that maps `NodeId` to path cost as a [`f64`].
+/// Returns a [`DictMap`] that maps `NodeId` to path cost as the value.
 ///
 /// Example:
 ///
@@ -74,22 +75,23 @@ use crate::min_scored::MinScored;
 /// ].iter().cloned().collect();
 /// assert_eq!(expected, output);
 /// ```
-pub fn k_shortest_path<G, F, E>(
+pub fn k_shortest_path<G, F, E, K>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
     k: usize,
     mut edge_cost: F,
-) -> Result<DictMap<G::NodeId, f64>, E>
+) -> Result<DictMap<G::NodeId, K>, E>
 where
     G: IntoEdges + Visitable + NodeCount + NodeIndexable,
     G::NodeId: Eq + Hash,
-    F: FnMut(G::EdgeRef) -> Result<f64, E>,
+    F: FnMut(G::EdgeRef) -> Result<K, E>,
+    K: Measure + Copy,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_bound()];
     let mut scores = DictMap::with_capacity(graph.node_count());
     let mut visit_next = BinaryHeap::new();
-    let zero_score = 0.0;
+    let zero_score = K::default();
 
     visit_next.push(MinScored(zero_score, start));
 
