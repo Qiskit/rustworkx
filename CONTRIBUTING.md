@@ -265,6 +265,13 @@ crate. After it's built the compiled documentation will be located in
 `target/doc/retworkx_lib` (which is off the repo root not the `retworkx-lib`
 dir)
 
+You can build and open the documentation directly in your configured default
+web browser by running:
+
+```
+cargo doc --open
+```
+
 ### Release Notes
 
 It is important to document any end user facing changes when we release a new
