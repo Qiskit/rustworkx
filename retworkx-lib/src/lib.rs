@@ -68,7 +68,7 @@ pub mod max_weight_matching;
 pub mod shortest_path;
 // These modules define additional data structures
 pub mod dictmap;
-pub mod min_scored;
+mod min_scored;
 
 // re-export petgraph so there is a consistent version available to users and
 // then only need to require retworkx-lib in their dependencies
