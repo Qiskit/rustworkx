@@ -12,10 +12,9 @@
 
 //! # retworkx-lib
 //!
-//! retworkx-lib is a graph algorithm crate built on top of petgraph.
-//! it offers Petgraph graph implementation generic set of functions
-//! to run different graph algorithms that are used in the larger retworkx
-//! project.
+//! retworkx-lib is a graph algorithm crate built on top of petgraph. It offers
+//! a set of functions that are used in the larger retworkx project but
+//! implemented in a generic manner for use by downstream rust projects.
 //!
 //! ## Usage
 //!
