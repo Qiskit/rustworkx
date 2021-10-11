@@ -64,7 +64,10 @@ where
     let mut out_vec: Vec<(usize, usize)> = if source.is_some() {
         Vec::new()
     } else {
-        Vec::with_capacity(core::cmp::min(graph.node_count() - 1, graph.edge_count()))
+        Vec::with_capacity(core::cmp::min(
+            graph.node_count() - 1,
+            graph.edge_count(),
+        ))
     };
     for start in nodes {
         if visited.contains(&start) {
