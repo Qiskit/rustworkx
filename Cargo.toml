@@ -28,7 +28,7 @@ rand_pcg = "0.3"
 rayon = "1.5"
 num-traits = "0.2"
 num-bigint = "0.4"
-num-complex = "0.2"
+num-complex = "0.4"
 retworkx-lib = { path = "./retworkx-lib" }
 
 [dependencies.pyo3]

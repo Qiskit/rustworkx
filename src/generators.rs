@@ -1094,7 +1094,11 @@ pub fn directed_binomial_tree_graph(
 /// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// :param int d: distance of the code.
+/// Note that if ``d`` is set to ``1`` a :class:`~retworkx.PyGraph` with a
+/// single node will be returned.
+///
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1138,6 +1142,15 @@ pub fn heavy_square_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -1251,7 +1264,8 @@ pub fn heavy_square_graph(
 /// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1296,6 +1310,17 @@ pub fn directed_heavy_square_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -1470,7 +1495,8 @@ pub fn directed_heavy_square_graph(
 ///     ... D   D-S-D ...
 ///
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1514,6 +1540,15 @@ pub fn heavy_hex_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -1638,7 +1673,8 @@ pub fn heavy_hex_graph(
 ///     ... D   D-S-D ...
 ///
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1683,6 +1719,17 @@ pub fn directed_heavy_hex_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -2086,6 +2133,89 @@ pub fn directed_hexagonal_lattice_graph(
     }
 }
 
+/// Generate an undirected lollipop graph where a mesh graph is connected to a
+/// path.
+///
+/// If neither ``num_path_nodes`` nor ``path_weights`` (both described
+/// below) are specified then this is equivalent to
+/// :func:`~retworkx.generators.mesh_graph`
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+///     be ignored and ``mesh_weights`` will be used.
+/// :param list path_weights: A list of node weights for the path. If both
+///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+///     be ignored and ``path_weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated lollipop graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_mesh_nodes`` or ``mesh_weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.lollipop_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=True)"
+)]
+pub fn lollipop_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    mesh_weights: Option<Vec<PyObject>>,
+    path_weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = mesh_graph(py, num_mesh_nodes, mesh_weights, multigraph)?;
+    if num_path_nodes.is_none() && path_weights.is_none() {
+        return Ok(graph);
+    }
+    let meshlen = graph.num_nodes();
+
+    let path_nodes: Vec<NodeIndex> = match path_weights {
+        Some(path_weights) => path_weights
+            .into_iter()
+            .map(|node| graph.graph.add_node(node))
+            .collect(),
+        None => (0..num_path_nodes.unwrap())
+            .map(|_| graph.graph.add_node(py.None()))
+            .collect(),
+    };
+
+    let pathlen = path_nodes.len();
+    if pathlen > 0 {
+        graph.graph.add_edge(
+            NodeIndex::new(meshlen - 1),
+            NodeIndex::new(meshlen),
+            py.None(),
+        );
+        for (node_a, node_b) in pairwise(path_nodes) {
+            match node_a {
+                Some(node_a) => graph.graph.add_edge(node_a, node_b, py.None()),
+                None => continue,
+            };
+        }
+    }
+    Ok(graph)
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2106,5 +2236,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
+    m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
     Ok(())
 }
