@@ -16,4 +16,4 @@ retworkx/*pyd
 *.png
 *.svg
 *.jpg
-retworkx-lib/Cargo.lock
+retworkx-core/Cargo.lock

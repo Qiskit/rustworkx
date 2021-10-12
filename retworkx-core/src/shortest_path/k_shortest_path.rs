@@ -47,11 +47,11 @@ use crate::min_scored::MinScored;
 /// # Example:
 /// ```rust
 ///
-/// use retworkx_lib::petgraph;
-/// use retworkx_lib::petgraph::graph::NodeIndex;
-/// use retworkx_lib::shortest_path::k_shortest_path;
-/// use retworkx_lib::dictmap::DictMap;
-/// use retworkx_lib::Result;
+/// use retworkx_core::petgraph;
+/// use retworkx_core::petgraph::graph::NodeIndex;
+/// use retworkx_core::shortest_path::k_shortest_path;
+/// use retworkx_core::dictmap::DictMap;
+/// use retworkx_core::Result;
 ///
 /// let g = petgraph::graph::UnGraph::<i32, _>::from_edges(&[
 ///     (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (1, 4), (5, 6), (6, 7), (7, 5)
@@ -59,7 +59,7 @@ use crate::min_scored::MinScored;
 ///
 /// let res: Result<DictMap<NodeIndex, f64>> = k_shortest_path(
 ///     &g, NodeIndex::new(1), None, 2,
-///     |e: retworkx_lib::petgraph::graph::EdgeReference<&'static str>| Ok(1.0),
+///     |e: retworkx_core::petgraph::graph::EdgeReference<&'static str>| Ok(1.0),
 /// );
 ///
 /// let output = res.unwrap();

@@ -48,11 +48,11 @@ use crate::min_scored::MinScored;
 /// Returns a [`DictMap`] that maps `NodeId` to path cost.
 /// # Example
 /// ```rust
-/// use retworkx_lib::petgraph::Graph;
-/// use retworkx_lib::petgraph::prelude::*;
-/// use retworkx_lib::dictmap::DictMap;
-/// use retworkx_lib::shortest_path::dijkstra;
-/// use retworkx_lib::Result;
+/// use retworkx_core::petgraph::Graph;
+/// use retworkx_core::petgraph::prelude::*;
+/// use retworkx_core::dictmap::DictMap;
+/// use retworkx_core::shortest_path::dijkstra;
+/// use retworkx_core::Result;
 ///
 /// let mut graph : Graph<(),(),Directed>= Graph::new();
 /// let a = graph.add_node(()); // node with no weight

@@ -19,7 +19,7 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
-use retworkx_lib::dictmap::*;
+use retworkx_core::dictmap::*;
 
 use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;

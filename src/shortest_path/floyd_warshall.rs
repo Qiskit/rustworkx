@@ -11,7 +11,7 @@
 // under the License.
 
 use hashbrown::HashMap;
-use retworkx_lib::dictmap::*;
+use retworkx_core::dictmap::*;
 
 use super::weight_callable;
 use crate::get_edge_iter_with_weights;

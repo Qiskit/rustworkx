@@ -44,7 +44,7 @@ use std::convert::TryInto;
 use std::hash::Hasher;
 
 use num_bigint::BigUint;
-use retworkx_lib::dictmap::*;
+use retworkx_core::dictmap::*;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
 use pyo3::class::{PyMappingProtocol, PyObjectProtocol, PySequenceProtocol};

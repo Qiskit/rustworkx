@@ -17,7 +17,7 @@ use crate::graph;
 
 use pyo3::prelude::*;
 
-use retworkx_lib::centrality;
+use retworkx_core::centrality;
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
 ///

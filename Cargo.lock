@@ -541,11 +541,11 @@ dependencies = [
  "rand",
  "rand_pcg",
  "rayon",
- "retworkx-lib",
+ "retworkx-core",
 ]
 
 [[package]]
-name = "retworkx-lib"
+name = "retworkx-core"
 version = "0.11.0"
 dependencies = [
  "ahash",

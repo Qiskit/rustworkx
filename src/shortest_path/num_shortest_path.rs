@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use retworkx_lib::dictmap::*;
+use retworkx_core::dictmap::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;

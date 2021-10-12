@@ -27,8 +27,8 @@ use petgraph::visit::NodeCount;
 
 use numpy::IntoPyArray;
 
-use retworkx_lib::dictmap::*;
-use retworkx_lib::shortest_path::{astar, dijkstra, k_shortest_path};
+use retworkx_core::dictmap::*;
+use retworkx_core::shortest_path::{astar, dijkstra, k_shortest_path};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,

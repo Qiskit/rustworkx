@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use retworkx_lib::dfs_edges;
+use retworkx_core::dfs_edges;
 
 use super::{digraph, graph, iterators};
 

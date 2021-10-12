@@ -10,9 +10,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-//! # retworkx-lib
+//! # retworkx-core
 //!
-//! retworkx-lib is a graph algorithm crate built on top of [`petgraph`]. It offers
+//! retworkx-core is a graph algorithm crate built on top of [`petgraph`]. It offers
 //! a set of functions that are used in the larger retworkx project but
 //! implemented in a generic manner for use by downstream rust projects.
 //!
@@ -22,14 +22,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! retworkx-lib = "0.11"
+//! retworkx-core = "0.11"
 //! ```
 //!
 //! Then in your code, it may be used something like this:
 //!
 //! ```rust
-//! use retworkx_lib::petgraph;
-//! use retworkx_lib::centrality::betweenness_centrality;
+//! use retworkx_core::petgraph;
+//! use retworkx_core::centrality::betweenness_centrality;
 //!
 //! let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 //!     (1, 2), (2, 3), (3, 4), (1, 4)
@@ -52,7 +52,7 @@
 //!
 //! ## Release Notes
 //!
-//! The release notes for retworkx-lib are included as part of the retworkx
+//! The release notes for retworkx-core are included as part of the retworkx
 //! documentation which is hosted at:
 //!
 //! <https://qiskit.org/documentation/retworkx/release_notes.html>
@@ -78,5 +78,5 @@ pub mod dictmap;
 mod min_scored;
 
 // re-export petgraph so there is a consistent version available to users and
-// then only need to require retworkx-lib in their dependencies
+// then only need to require retworkx-core in their dependencies
 pub use petgraph;

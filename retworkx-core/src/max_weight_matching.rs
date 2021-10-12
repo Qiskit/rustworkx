@@ -857,9 +857,9 @@ fn verify_optimum(
 ///
 /// # Example
 /// ```rust
-/// use retworkx_lib::petgraph;
-/// use retworkx_lib::max_weight_matching::max_weight_matching;
-/// use retworkx_lib::Result;
+/// use retworkx_core::petgraph;
+/// use retworkx_core::max_weight_matching::max_weight_matching;
+/// use retworkx_core::Result;
 ///
 /// use hashbrown::HashSet;
 ///

@@ -50,10 +50,10 @@ type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 ///
 /// # Example
 /// ```
-/// use retworkx_lib::petgraph::graph::NodeIndex;
-/// use retworkx_lib::petgraph::Graph;
-/// use retworkx_lib::shortest_path::astar;
-/// use retworkx_lib::Result;
+/// use retworkx_core::petgraph::graph::NodeIndex;
+/// use retworkx_core::petgraph::Graph;
+/// use retworkx_core::shortest_path::astar;
+/// use retworkx_core::Result;
 ///
 /// let mut g = Graph::new();
 /// let a = g.add_node((0., 0.));

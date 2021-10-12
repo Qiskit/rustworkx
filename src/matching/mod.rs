@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph;
-use retworkx_lib::max_weight_matching;
+use retworkx_core::max_weight_matching;
 
 use hashbrown::HashSet;
 

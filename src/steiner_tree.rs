@@ -27,8 +27,8 @@ use crate::generators::pairwise;
 use crate::graph;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
 
-use retworkx_lib::dictmap::*;
-use retworkx_lib::shortest_path::dijkstra;
+use retworkx_core::dictmap::*;
+use retworkx_core::shortest_path::dijkstra;
 
 struct MetricClosureEdge {
     source: usize,

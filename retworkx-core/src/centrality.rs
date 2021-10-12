@@ -52,8 +52,8 @@ use rayon::prelude::*;
 ///
 /// # Example
 /// ```rust
-/// use retworkx_lib::petgraph;
-/// use retworkx_lib::centrality::betweenness_centrality;
+/// use retworkx_core::petgraph;
+/// use retworkx_core::centrality::betweenness_centrality;
 ///
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)

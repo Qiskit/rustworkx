@@ -40,14 +40,14 @@ jobs:
         run: black --check --diff retworkx tests
       - name: Python Lint
         run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests
-      - name: retworkx-lib Rust Tests
-        run: pushd retworkx-lib && cargo test && popd
-      - name: retworkx-lib Docs
-        run: pushd retworkx-lib && cargo doc && popd
+      - name: retworkx-core Rust Tests
+        run: pushd retworkx-core && cargo test && popd
+      - name: retworkx-core Docs
+        run: pushd retworkx-core && cargo doc && popd
       - uses: actions/upload-artifact@v2
         with:
-          name: retworkx_lib_docs
-          path: target/doc/retworkx_lib
+          name: retworkx_core_docs
+          path: target/doc/retworkx_core
   tests:
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
