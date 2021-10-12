@@ -2091,8 +2091,11 @@ pub fn directed_hexagonal_lattice_graph(
 }
 
 /// Generate an undirected lollipop graph where a mesh graph is connected to a
-/// path. If neither ``num_path_nodes`` nor ``path_weights`` (both described
-/// below) are specified then this is equivalent to a mesh graph.
+/// path.
+///
+/// If neither ``num_path_nodes`` nor ``path_weights`` (both described
+/// below) are specified then this is equivalent to
+/// :func:`~retworkx.generators.mesh_graph`
 ///
 /// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
 ///     with. Node weights will be None if this is specified. If both
