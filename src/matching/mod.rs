@@ -22,20 +22,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::IntoEdgeReferences;
 
-fn weight_callable(
-    py: Python,
-    weight_fn: &Option<PyObject>,
-    weight: &PyObject,
-    default: i128,
-) -> PyResult<i128> {
-    match weight_fn {
-        Some(weight_fn) => {
-            let res = weight_fn.call1(py, (weight,))?;
-            res.extract(py)
-        }
-        None => Ok(default),
-    }
-}
+use crate::weight_callable;
 
 /// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
 ///
