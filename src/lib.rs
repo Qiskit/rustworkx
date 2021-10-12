@@ -10,12 +10,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 mod centrality;
 mod coloring;
 mod connectivity;
 mod dag_algo;
+mod dictmap;
 mod digraph;
 mod dot_utils;
 mod generators;
@@ -48,6 +47,7 @@ use tree::*;
 use union::*;
 
 use hashbrown::HashMap;
+use num_complex::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
@@ -62,11 +62,43 @@ use petgraph::visit::{
     Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
     NodeCount, NodeIndexable,
 };
+use petgraph::EdgeType;
 
 use crate::generators::PyInit_generators;
 
+trait IsNan {
+    fn is_nan(&self) -> bool;
+}
+
+/// https://doc.rust-lang.org/nightly/src/core/num/f64.rs.html#441
+impl IsNan for f64 {
+    #[inline]
+    #[allow(clippy::eq_op)]
+    fn is_nan(&self) -> bool {
+        self != self
+    }
+}
+
+/// https://docs.rs/num-complex/0.4.0/src/num_complex/lib.rs.html#572-574
+impl IsNan for Complex64 {
+    #[inline]
+    fn is_nan(&self) -> bool {
+        self.re.is_nan() || self.im.is_nan()
+    }
+}
+pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
+}
+
+impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
+where
+    Ty: EdgeType,
+{
+    fn nodes_removed(&self) -> bool {
+        self.node_bound() != self.node_count()
+    }
 }
 
 pub fn get_edge_iter_with_weights<G>(
@@ -130,6 +162,26 @@ fn weight_callable(
     }
 }
 
+fn find_node_by_weight<Ty: EdgeType>(
+    py: Python,
+    graph: &StablePyGraph<Ty>,
+    obj: &PyObject,
+) -> PyResult<Option<NodeIndex>> {
+    let mut index = None;
+    for node in graph.node_indices() {
+        let weight = graph.node_weight(node).unwrap();
+        if obj
+            .as_ref(py)
+            .rich_compare(weight, pyo3::basic::CompareOp::Eq)?
+            .is_true()?
+        {
+            index = Some(node);
+            break;
+        }
+    }
+    Ok(index)
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -171,6 +223,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
+    m.add_wrapped(wrap_pyfunction!(graph_union))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;

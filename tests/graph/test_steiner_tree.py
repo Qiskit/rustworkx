@@ -153,7 +153,7 @@ class TestSteinerTree(unittest.TestCase):
     def test_not_connected_steiner_tree(self):
         self.graph.add_node(None)
         with self.assertRaises(ValueError):
-            retworkx.steiner_tree(self.graph, [0, 1, 2], weight_fn=float)
+            retworkx.steiner_tree(self.graph, [1, 2, 8], weight_fn=float)
 
     def test_steiner_tree_empty_graph(self):
         graph = retworkx.PyGraph()
@@ -180,7 +180,7 @@ class TestSteinerTree(unittest.TestCase):
         self.assertEqual(retworkx.cycle_basis(tree), [])
         expected_edges = [
             (3, 4, 0.5),
-            (3, 5, 0.5),
+            (4, 5, 0.5),
             (3, 6, 0.5),
             (4, 7, 0.5),
             (0, 5, 2),

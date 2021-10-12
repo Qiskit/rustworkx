@@ -10,20 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 pub mod all_pairs_dijkstra;
 mod astar;
 mod average_length;
-mod dijkstra;
+pub mod dijkstra;
 mod distance_matrix;
 mod floyd_warshall;
 mod k_shortest_path;
 mod num_shortest_path;
 
-use hashbrown::HashMap;
-
 use super::weight_callable;
+use crate::dictmap::*;
 use crate::{digraph, graph, NoPathFound};
 
 use pyo3::prelude::*;
@@ -72,10 +69,10 @@ pub fn graph_dijkstra_shortest_paths(
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
-    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
-        HashMap::with_capacity(graph.node_count());
+    let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
+        DictMap::with_capacity(graph.node_count());
     dijkstra::dijkstra(
-        graph,
+        &graph.graph,
         start,
         goal_index,
         |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -136,14 +133,14 @@ pub fn digraph_dijkstra_shortest_paths(
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
-    let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
-        HashMap::with_capacity(graph.node_count());
+    let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
+        DictMap::with_capacity(graph.node_count());
     if as_undirected {
         dijkstra::dijkstra(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
-            &graph.to_undirected(py, true, None)?,
+            &graph.to_undirected(py, true, None)?.graph,
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -151,7 +148,7 @@ pub fn digraph_dijkstra_shortest_paths(
         )?;
     } else {
         dijkstra::dijkstra(
-            graph,
+            &graph.graph,
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -215,7 +212,7 @@ pub fn graph_dijkstra_shortest_path_lengths(
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
-        graph,
+        &graph.graph,
         start,
         goal_index,
         |e| edge_cost_callable(e.weight()),
@@ -273,7 +270,7 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
     let res = dijkstra::dijkstra(
-        graph,
+        &graph.graph,
         start,
         goal_index,
         |e| edge_cost_callable(e.weight()),
@@ -505,7 +502,7 @@ fn digraph_astar_shortest_path(
     let start = NodeIndex::new(node);
 
     let astar_res = astar::astar(
-        graph,
+        &graph.graph,
         start,
         |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
         |e| edge_cost_callable(e.weight()),
@@ -579,7 +576,7 @@ fn graph_astar_shortest_path(
     let start = NodeIndex::new(node);
 
     let astar_res = astar::astar(
-        graph,
+        &graph.graph,
         start,
         |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
         |e| edge_cost_callable(e.weight()),
@@ -635,7 +632,7 @@ fn digraph_k_shortest_path_lengths(
     };
 
     let out_map = k_shortest_path::k_shortest_path(
-        graph,
+        &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,
@@ -691,7 +688,7 @@ pub fn graph_k_shortest_path_lengths(
     };
 
     let out_map = k_shortest_path::k_shortest_path(
-        graph,
+        &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,

@@ -142,7 +142,7 @@ pub fn cycle_basis(
 pub fn strongly_connected_components(
     graph: &digraph::PyDiGraph,
 ) -> Vec<Vec<usize>> {
-    algo::kosaraju_scc(graph)
+    algo::kosaraju_scc(&graph.graph)
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
         .collect()
@@ -240,7 +240,7 @@ pub fn digraph_find_cycle(
 #[pyo3(text_signature = "(graph, /)")]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     let mut weak_components = graph.node_count();
-    let mut vertex_sets = UnionFind::new(graph.node_bound());
+    let mut vertex_sets = UnionFind::new(graph.graph.node_bound());
     for edge in graph.graph.edge_references() {
         let (a, b) = (edge.source(), edge.target());
         // union the two vertices of the edge
@@ -356,7 +356,7 @@ pub fn digraph_adjacency_matrix(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
-    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value
@@ -412,7 +412,7 @@ pub fn graph_adjacency_matrix(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
-    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value
@@ -554,7 +554,7 @@ fn graph_all_simple_paths(
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
-        graph,
+        &graph.graph,
         from_index,
         to_index,
         min_intermediate_nodes,
@@ -608,7 +608,7 @@ fn digraph_all_simple_paths(
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
-        graph,
+        &graph.graph,
         from_index,
         to_index,
         min_intermediate_nodes,

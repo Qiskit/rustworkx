@@ -15,11 +15,11 @@
 // to handle PyDiGraph inputs instead of petgraph's generic Graph. However it has
 // since diverged significantly from the original petgraph implementation.
 
-use fixedbitset::FixedBitSet;
 use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
 
+use crate::dictmap::*;
 use hashbrown::HashMap;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
@@ -28,18 +28,90 @@ use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 
 use petgraph::stable_graph::NodeIndex;
-use petgraph::stable_graph::StableGraph;
-use petgraph::visit::{
-    EdgeRef, GetAdjacencyMatrix, IntoEdgeReferences, NodeIndexable,
-};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing, Undirected};
 
 use rayon::slice::ParallelSliceMut;
 
 use crate::iterators::NodeMap;
+use crate::StablePyGraph;
 
-type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+/// Returns `true` if we can map every element of `xs` to a unique
+/// element of `ys` while using `matcher` func to compare two elements.
+fn is_subset<T: Copy, F>(xs: &[T], ys: &[T], matcher: F) -> PyResult<bool>
+where
+    F: Fn(T, T) -> PyResult<bool>,
+{
+    let mut valid = vec![true; ys.len()];
+    for &a in xs {
+        let mut found = false;
+        for (&b, free) in ys.iter().zip(valid.iter_mut()) {
+            if *free && matcher(a, b)? {
+                found = true;
+                *free = false;
+                break;
+            }
+        }
+
+        if !found {
+            return Ok(false);
+        }
+    }
+
+    Ok(true)
+}
+
+#[inline]
+fn sorted<N: std::cmp::PartialOrd>(x: &mut (N, N)) {
+    let (a, b) = x;
+    if b < a {
+        std::mem::swap(a, b)
+    }
+}
+
+/// Returns the adjacency matrix of a graph as a dictionary
+/// with `(i, j)` entry equal to number of edges from node `i` to node `j`.
+fn adjacency_matrix<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+) -> HashMap<(NodeIndex, NodeIndex), usize> {
+    let mut matrix = HashMap::with_capacity(graph.edge_count());
+    for edge in graph.edge_references() {
+        let mut item = (edge.source(), edge.target());
+        if !graph.is_directed() {
+            sorted(&mut item);
+        }
+        let entry = matrix.entry(item).or_insert(0);
+        *entry += 1;
+    }
+    matrix
+}
+
+/// Returns the number of edges from node `a` to node `b`.
+fn edge_multiplicity<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    matrix: &HashMap<(NodeIndex, NodeIndex), usize>,
+    a: NodeIndex,
+    b: NodeIndex,
+) -> usize {
+    let mut item = (a, b);
+    if !graph.is_directed() {
+        sorted(&mut item);
+    }
+    *matrix.get(&item).unwrap_or(&0)
+}
+
+/// Nodes `a`, `b` are adjacent if the number of edges
+/// from node `a` to node `b` is greater than `val`.
+fn is_adjacent<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    matrix: &HashMap<(NodeIndex, NodeIndex), usize>,
+    a: NodeIndex,
+    b: NodeIndex,
+    val: usize,
+) -> bool {
+    edge_multiplicity(graph, matrix, a, b) >= val
+}
 
 trait NodeSorter<Ty>
 where
@@ -54,8 +126,12 @@ where
     ) -> (StablePyGraph<Ty>, HashMap<usize, usize>) {
         let order = self.sort(graph);
 
-        let mut new_graph = StablePyGraph::<Ty>::default();
-        let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+        let mut new_graph = StablePyGraph::<Ty>::with_capacity(
+            graph.node_count(),
+            graph.edge_count(),
+        );
+        let mut id_map: HashMap<NodeIndex, NodeIndex> =
+            HashMap::with_capacity(graph.node_count());
         for node_index in order {
             let node_data = graph.node_weight(node_index).unwrap();
             let new_index = new_graph.add_node(node_data.clone_ref(py));
@@ -74,7 +150,7 @@ where
     }
 }
 
-// Sort nodes based on node ids.
+/// Sort nodes based on node ids.
 struct DefaultIdSorter;
 
 impl<Ty> NodeSorter<Ty> for DefaultIdSorter
@@ -86,7 +162,7 @@ where
     }
 }
 
-// Sort nodes based on  VF2++ heuristic.
+/// Sort nodes based on  VF2++ heuristic.
 struct Vf2ppSorter;
 
 impl<Ty> NodeSorter<Ty> for Vf2ppSorter
@@ -224,7 +300,7 @@ where
     ins: Vec<usize>,
     out_size: usize,
     ins_size: usize,
-    adjacency_matrix: FixedBitSet,
+    adjacency_matrix: HashMap<(NodeIndex, NodeIndex), usize>,
     generation: usize,
     _etype: marker::PhantomData<Directed>,
 }
@@ -236,7 +312,7 @@ where
     pub fn new(graph: StablePyGraph<Ty>) -> Self {
         let c0 = graph.node_count();
         let is_directed = graph.is_directed();
-        let adjacency_matrix = graph.adjacency_matrix();
+        let adjacency_matrix = adjacency_matrix(&graph);
         Vf2State {
             graph,
             mapping: vec![NodeIndex::end(); c0],
@@ -463,7 +539,7 @@ where
     }
 
     fn mapping(&self) -> NodeMap {
-        let mut mapping: HashMap<usize, usize> = HashMap::new();
+        let mut mapping: DictMap<usize, usize> = DictMap::new();
         self.st[1]
             .mapping
             .iter()
@@ -593,10 +669,19 @@ where
                 if m_neigh == end {
                     continue;
                 }
-                let has_edge = st[1 - j].graph.is_adjacent(
+                let val = edge_multiplicity(
+                    &st[j].graph,
+                    &st[j].adjacency_matrix,
+                    nodes[j],
+                    n_neigh,
+                );
+
+                let has_edge = is_adjacent(
+                    &st[1 - j].graph,
                     &st[1 - j].adjacency_matrix,
                     nodes[1 - j],
                     m_neigh,
+                    val,
                 );
                 if !has_edge {
                     return Ok(false);
@@ -622,10 +707,19 @@ where
                     if m_neigh == end {
                         continue;
                     }
-                    let has_edge = st[1 - j].graph.is_adjacent(
+                    let val = edge_multiplicity(
+                        &st[j].graph,
+                        &st[j].adjacency_matrix,
+                        n_neigh,
+                        nodes[j],
+                    );
+
+                    let has_edge = is_adjacent(
+                        &st[1 - j].graph,
                         &st[1 - j].adjacency_matrix,
                         m_neigh,
                         nodes[1 - j],
+                        val,
                     );
                     if !has_edge {
                         return Ok(false);
@@ -728,62 +822,77 @@ where
         }
         // semantic feasibility: compare associated data for edges
         if edge_match.enabled() {
-            // outgoing edges
-            for j in 0..2 {
-                let mut edges = st[j].graph.neighbors(nodes[j]).detach();
-                while let Some((n_edge, n_neigh)) = edges.next(&st[j].graph) {
-                    // handle the self loop case; it's not in the mapping (yet)
-                    let m_neigh = if nodes[j] != n_neigh {
-                        st[j].mapping[n_neigh.index()]
-                    } else {
-                        nodes[1 - j]
-                    };
-                    if m_neigh == end {
-                        continue;
-                    }
-                    match st[1 - j].graph.find_edge(nodes[1 - j], m_neigh) {
-                        Some(m_edge) => {
-                            let match_result = edge_match.eq(
-                                py,
-                                &st[j].graph[n_edge],
-                                &st[1 - j].graph[m_edge],
-                            )?;
-                            if !match_result {
-                                return Ok(false);
-                            }
-                        }
-                        None => unreachable!(), // covered by syntactic check
-                    }
+            let matcher = |a: (NodeIndex, &PyObject),
+                           b: (NodeIndex, &PyObject)|
+             -> PyResult<bool> {
+                let (nx, n_edge) = a;
+                let (mx, m_edge) = b;
+                if nx == mx && edge_match.eq(py, n_edge, m_edge)? {
+                    return Ok(true);
                 }
+                Ok(false)
+            };
+
+            // outgoing edges
+            let range = if induced { 0..2 } else { 1..2 };
+            for j in range {
+                let e_first: Vec<(NodeIndex, &PyObject)> = st[j]
+                    .graph
+                    .edges(nodes[j])
+                    .filter_map(|edge| {
+                        let n_neigh = edge.target();
+                        let m_neigh = if nodes[j] != n_neigh {
+                            st[j].mapping[n_neigh.index()]
+                        } else {
+                            nodes[1 - j]
+                        };
+                        if m_neigh == end {
+                            return None;
+                        }
+                        Some((m_neigh, edge.weight()))
+                    })
+                    .collect();
+
+                let e_second: Vec<(NodeIndex, &PyObject)> = st[1 - j]
+                    .graph
+                    .edges(nodes[1 - j])
+                    .map(|edge| (edge.target(), edge.weight()))
+                    .collect();
+
+                if !is_subset(&e_first, &e_second, matcher)? {
+                    return Ok(false);
+                };
             }
             // incoming edges
             if st[0].graph.is_directed() {
-                for j in 0..2 {
-                    let mut edges = st[j]
+                let range = if induced { 0..2 } else { 1..2 };
+                for j in range {
+                    let e_first: Vec<(NodeIndex, &PyObject)> = st[j]
                         .graph
-                        .neighbors_directed(nodes[j], Incoming)
-                        .detach();
-                    while let Some((n_edge, n_neigh)) = edges.next(&st[j].graph)
-                    {
-                        // the self loop case is handled in outgoing
-                        let m_neigh = st[j].mapping[n_neigh.index()];
-                        if m_neigh == end {
-                            continue;
-                        }
-                        match st[1 - j].graph.find_edge(m_neigh, nodes[1 - j]) {
-                            Some(m_edge) => {
-                                let match_result = edge_match.eq(
-                                    py,
-                                    &st[j].graph[n_edge],
-                                    &st[1 - j].graph[m_edge],
-                                )?;
-                                if !match_result {
-                                    return Ok(false);
-                                }
+                        .edges_directed(nodes[j], Incoming)
+                        .filter_map(|edge| {
+                            let n_neigh = edge.source();
+                            let m_neigh = if nodes[j] != n_neigh {
+                                st[j].mapping[n_neigh.index()]
+                            } else {
+                                nodes[1 - j]
+                            };
+                            if m_neigh == end {
+                                return None;
                             }
-                            None => unreachable!(), // covered by syntactic check
-                        }
-                    }
+                            Some((m_neigh, edge.weight()))
+                        })
+                        .collect();
+
+                    let e_second: Vec<(NodeIndex, &PyObject)> = st[1 - j]
+                        .graph
+                        .edges_directed(nodes[1 - j], Incoming)
+                        .map(|edge| (edge.source(), edge.weight()))
+                        .collect();
+
+                    if !is_subset(&e_first, &e_second, matcher)? {
+                        return Ok(false);
+                    };
                 }
             }
         }
