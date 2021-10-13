@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-mod dfs_edges;
+use retworkx_core::dfs_edges;
 
 use super::{digraph, graph, iterators};
 
@@ -44,11 +44,7 @@ fn digraph_dfs_edges(
     source: Option<usize>,
 ) -> EdgeList {
     EdgeList {
-        edges: dfs_edges::dfs_edges(
-            &graph.graph,
-            source,
-            graph.graph.edge_count(),
-        ),
+        edges: dfs_edges::dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
 }
 
@@ -68,11 +64,7 @@ fn digraph_dfs_edges(
 #[pyo3(text_signature = "(graph, /, source=None)")]
 fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
-        edges: dfs_edges::dfs_edges(
-            &graph.graph,
-            source,
-            graph.graph.edge_count(),
-        ),
+        edges: dfs_edges::dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
 }
 
