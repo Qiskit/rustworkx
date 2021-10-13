@@ -60,7 +60,7 @@ impl<K> DisjointSet<K>
 where
     K: IndexType,
 {
-    /// Create a new `UnionFind` of `n` disjoint sets.
+    /// Create a new `DisjointSet` of `n` disjoint sets.
     pub fn new(n: usize) -> Self {
         let rank = vec![0; n];
         let parent = (0..n).map(K::new).collect::<Vec<K>>();
