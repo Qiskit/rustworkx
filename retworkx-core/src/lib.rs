@@ -68,11 +68,10 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 
 /// Module for centrality algorithms
 pub mod centrality;
-/// Module for depth first search edge methods
-pub mod dfs_edges;
 /// Module for maximum weight matching algorithmss
 pub mod max_weight_matching;
 pub mod shortest_path;
+pub mod traversal;
 // These modules define additional data structures
 pub mod dictmap;
 mod min_scored;

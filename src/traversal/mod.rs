@@ -11,10 +11,11 @@
 // under the License.
 
 pub mod dfs_visit;
-use retworkx_core::dfs_edges;
+
+use retworkx_core::traversal::{depth_first_search, dfs_edges};
 
 use super::{digraph, graph, iterators};
-use dfs_visit::{depth_first_search, handler, PyDfsVisitor};
+use dfs_visit::{handler, PyDfsVisitor};
 
 use hashbrown::HashSet;
 
@@ -46,7 +47,7 @@ fn digraph_dfs_edges(
     source: Option<usize>,
 ) -> EdgeList {
     EdgeList {
-        edges: dfs_edges::dfs_edges(&graph.graph, source.map(NodeIndex::new)),
+        edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
 }
 
@@ -66,7 +67,7 @@ fn digraph_dfs_edges(
 #[pyo3(text_signature = "(graph, /, source=None)")]
 fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
-        edges: dfs_edges::dfs_edges(&graph.graph, source.map(NodeIndex::new)),
+        edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
 }
 
