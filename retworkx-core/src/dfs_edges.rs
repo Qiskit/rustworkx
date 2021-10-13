@@ -14,26 +14,45 @@ use hashbrown::{HashMap, HashSet};
 
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    GraphBase, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable,
-    VisitMap, Visitable,
+    EdgeCount, GraphBase, IntoNeighbors, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable, VisitMap, Visitable,
 };
 
-pub fn dfs_edges<G>(
-    graph: G,
-    source: Option<usize>,
-    edge_count: usize,
-) -> Vec<(usize, usize)>
+/// Return an edge list in depth first order.
+///
+/// Arguments:
+///
+/// * `graph` - the graph to run on
+/// * `source` - the optional node index to use as the starting node for the
+///     depth-first search. If specified the edge list will only return edges
+///     in the components reachable from this index. If this is not specified
+///     then a source will be chosen arbitrarily and repeated until all
+///     components of the graph are searched
+///
+/// # Example
+/// ```rust
+/// use retworkx_core::petgraph;
+/// use retworkx_core::dfs_edges::dfs_edges;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 1), (1, 2), (1, 3), (2, 4), (3, 4)
+/// ]);
+/// let dfs_edges = dfs_edges(&g, Some(petgraph::graph::NodeIndex::new(0)));
+/// assert_eq!(vec![(0, 1), (1, 2), (2, 4), (4, 3)], dfs_edges);
+/// ```
+pub fn dfs_edges<G>(graph: G, source: Option<G::NodeId>) -> Vec<(usize, usize)>
 where
     G: GraphBase<NodeId = NodeIndex>
         + IntoNodeIdentifiers
         + NodeIndexable
         + IntoNeighbors
         + NodeCount
+        + EdgeCount
         + Visitable,
     <G as Visitable>::Map: VisitMap<NodeIndex>,
 {
     let nodes: Vec<NodeIndex> = match source {
-        Some(start) => vec![NodeIndex::new(start)],
+        Some(start) => vec![start],
         None => graph
             .node_identifiers()
             .map(|ind| NodeIndex::new(graph.to_index(ind)))
@@ -41,7 +60,15 @@ where
     };
     let node_count = graph.node_count();
     let mut visited: HashSet<NodeIndex> = HashSet::with_capacity(node_count);
-    let mut out_vec: Vec<(usize, usize)> = Vec::with_capacity(edge_count);
+    // Avoid potential overallocation if source node is provided
+    let mut out_vec: Vec<(usize, usize)> = if source.is_some() {
+        Vec::new()
+    } else {
+        Vec::with_capacity(core::cmp::min(
+            graph.node_count() - 1,
+            graph.edge_count(),
+        ))
+    };
     for start in nodes {
         if visited.contains(&start) {
             continue;
