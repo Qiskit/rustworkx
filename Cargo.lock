@@ -360,9 +360,9 @@ checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
 name = "priority-queue"
-version = "1.1.1"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e1340009a04e81f656a4e45e295f0b1191c81de424bf940c865e33577a8e223"
+checksum = "cf40e51ccefb72d42720609e1d3c518de8b5800d723a09358d4a6d6245e1f8ca"
 dependencies = [
  "autocfg",
  "indexmap",
@@ -547,7 +547,6 @@ dependencies = [
  "num-traits",
  "numpy",
  "petgraph",
- "priority-queue",
  "pyo3",
  "rand",
  "rand_pcg",
@@ -562,7 +561,9 @@ dependencies = [
  "ahash",
  "hashbrown",
  "indexmap",
+ "num-traits",
  "petgraph",
+ "priority-queue",
  "rayon",
 ]
 

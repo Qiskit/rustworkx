@@ -15,7 +15,6 @@ mod coloring;
 mod connectivity;
 mod dag_algo;
 mod digraph;
-mod disjoint_set;
 mod dot_utils;
 mod generators;
 mod graph;

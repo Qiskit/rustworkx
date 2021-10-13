@@ -29,7 +29,6 @@ rayon = "1.5"
 num-traits = "0.2"
 num-bigint = "0.4"
 num-complex = "0.4"
-priority-queue = "1.1.1"
 retworkx-core = { path = "./retworkx-core" }
 
 [dependencies.pyo3]

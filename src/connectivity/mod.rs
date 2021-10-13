@@ -13,7 +13,6 @@
 #![allow(clippy::float_cmp)]
 
 mod core_number;
-mod min_cut;
 
 use super::{
     digraph, get_edge_iter_with_weights, graph, iterators::NodeIndices, score,
@@ -37,6 +36,7 @@ use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
 use crate::iterators::EdgeList;
+use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -696,14 +696,14 @@ pub fn stoer_wagner_min_cut(
     let mut edges_w: Vec<Option<score::Score<f64>>> =
         vec![None; graph.graph.edge_bound()];
     for edge in graph.graph.edge_references() {
-        let val = weight_callable(py, &weight_fn, edge.weight(), 1.0)?;
+        let val: f64 = weight_callable(py, &weight_fn, edge.weight(), 1.0)?;
         if !val.is_nan() {
             let ix = edge.id().index();
             edges_w[ix] = Some(score::Score(val));
         }
     }
 
-    let cut = min_cut::stoer_wagner_min_cut(&graph.graph, |edge| {
+    let cut = connectivity::stoer_wagner_min_cut(&graph.graph, |edge| {
         let ix = edge.id().index();
         edges_w[ix].unwrap_or(score::Score(0.0))
     });

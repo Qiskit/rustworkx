@@ -79,6 +79,59 @@ where
     zip(zip(s, t), cut_w)
 }
 
+/// Stoer-Wagner's min cut algorithm.
+///
+/// Compute a weighted minimum cut using the Stoer-Wagner algorithm [`stoer_simple_1997`](https://dl.acm.org/doi/10.1145/263867.263872).
+///
+/// The graph should be undirected. If the input graph is disconnected,
+/// a cut with zero value will be returned. For graphs with less than
+/// two nodes, this function returns [`None`]. The function `edge_cost`
+/// should return the cost for a particular edge. Edge costs must be non-negative.
+///
+/// Returns a tuple containing the value of a minimum cut and a vector
+/// of all `NodeId`s contained in one part of the partition that defines a minimum cut.
+///
+/// # Example
+/// ```rust
+/// use std::collections::HashSet;
+/// use std::iter::FromIterator;
+///
+/// use retworkx_core::connectivity::stoer_wagner_min_cut;
+/// use retworkx_core::petgraph::graph::{NodeIndex, UnGraph};
+///
+/// let mut graph : UnGraph<(), ()> = UnGraph::new_undirected();
+/// let a = graph.add_node(()); // node with no weight
+/// let b = graph.add_node(());
+/// let c = graph.add_node(());
+/// let d = graph.add_node(());
+/// let e = graph.add_node(());
+/// let f = graph.add_node(());
+/// let g = graph.add_node(());
+/// let h = graph.add_node(());
+///
+/// graph.extend_with_edges(&[
+///     (a, b),
+///     (b, c),
+///     (c, d),
+///     (d, a),
+///     (e, f),
+///     (b, e),
+///     (f, g),
+///     (g, h),
+///     (h, e)
+/// ]);
+/// // a ---- b ---- e ---- f
+/// // |      |      |      |
+/// // d ---- c      h ---- g
+///
+/// let (min_cut, partition): (usize, Vec<_>) =
+///     stoer_wagner_min_cut(&graph, |_| 1).unwrap();
+/// assert_eq!(min_cut, 1);
+/// assert_eq!(
+///     HashSet::<NodeIndex>::from_iter(partition),
+///     HashSet::from_iter([e, f, g, h])
+/// );
+/// ```
 pub fn stoer_wagner_min_cut<G, F, K>(
     graph: G,
     mut edge_cost: F,
