@@ -23,11 +23,12 @@ use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 
-use crate::dictmap::*;
 use crate::generators::pairwise;
 use crate::graph;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
-use crate::shortest_path::dijkstra;
+
+use retworkx_core::dictmap::*;
+use retworkx_core::shortest_path::dijkstra;
 
 struct MetricClosureEdge {
     source: usize,
@@ -162,13 +163,8 @@ fn fast_metric_edges(
     };
 
     let mut paths = DictMap::with_capacity(graph.graph.node_count());
-    let mut distance = dijkstra::dijkstra(
-        &graph.graph,
-        dummy,
-        None,
-        cost_fn,
-        Some(&mut paths),
-    )?;
+    let mut distance =
+        dijkstra(&graph.graph, dummy, None, cost_fn, Some(&mut paths))?;
     paths.remove(&dummy);
     distance.remove(&dummy);
     graph.graph.remove_node(dummy);
