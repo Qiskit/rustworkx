@@ -10,66 +10,82 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use pyo3::prelude::*;
+use std::cmp::Eq;
+use std::hash::Hash;
 
 use hashbrown::HashMap;
 
-use petgraph::prelude::*;
-use petgraph::stable_graph::NodeIndex;
-use petgraph::visit::VisitMap;
-use petgraph::visit::{depth_first_search, DfsEvent, NodeIndexable, Visitable};
+use petgraph::visit::{
+    depth_first_search, DfsEvent, GraphProp, IntoNeighbors,
+    IntoNodeIdentifiers, NodeCount, NodeIndexable, VisitMap, Visitable,
+};
+use petgraph::Undirected;
 
-fn _build_chain<VM: VisitMap<usize>>(
+fn _build_chain<G, VM: VisitMap<G::NodeId>>(
+    graph: G,
     parent: &[usize],
-    mut u: usize,
-    mut v: usize,
+    mut u_id: G::NodeId,
+    mut v_id: G::NodeId,
     visited: &mut VM,
-) -> Vec<(usize, usize)> {
+) -> Vec<(G::NodeId, G::NodeId)>
+where
+    G: Visitable + NodeIndexable,
+{
     let mut chain = Vec::new();
-    while visited.visit(v) {
-        chain.push((u, v));
-        u = v;
-        v = parent[u];
+    while visited.visit(v_id) {
+        chain.push((u_id, v_id));
+        u_id = v_id;
+        let u = graph.to_index(u_id);
+        let v = parent[u];
+        v_id = graph.from_index(v);
     }
-    chain.push((u, v));
+    chain.push((u_id, v_id));
 
     chain
 }
 
-pub fn chain_decomposition(
-    graph: &StableUnGraph<PyObject, PyObject>,
-    source: Option<usize>,
-) -> Vec<Vec<(usize, usize)>> {
+pub fn chain_decomposition<G>(
+    graph: G,
+    source: Option<G::NodeId>,
+) -> Vec<Vec<(G::NodeId, G::NodeId)>>
+where
+    G: IntoNodeIdentifiers
+        + IntoNeighbors
+        + Visitable
+        + NodeIndexable
+        + NodeCount
+        + GraphProp<EdgeType = Undirected>,
+    G::NodeId: Eq + Hash,
+{
     let roots = match source {
-        Some(node) => vec![NodeIndex::new(node)],
-        None => graph.node_indices().collect(),
+        Some(node) => vec![node],
+        None => graph.node_identifiers().collect(),
     };
 
     let mut parent = vec![std::usize::MAX; graph.node_bound()];
-    let mut back_edges: HashMap<usize, Vec<usize>> = HashMap::new();
+    let mut back_edges: HashMap<G::NodeId, Vec<G::NodeId>> = HashMap::new();
 
     // depth-first-index (DFI) ordered nodes.
     let mut nodes = Vec::with_capacity(graph.node_count());
     depth_first_search(graph, roots, |event| match event {
         DfsEvent::Discover(u, _) => {
-            let u = u.index();
             nodes.push(u);
         }
         DfsEvent::TreeEdge(u, v) => {
-            let u = u.index();
-            let v = v.index();
+            let u = graph.to_index(u);
+            let v = graph.to_index(v);
             parent[v] = u;
         }
-        DfsEvent::BackEdge(u, v) => {
-            let u = u.index();
-            let v = v.index();
+        DfsEvent::BackEdge(u_id, v_id) => {
+            let u = graph.to_index(u_id);
+            let v = graph.to_index(v_id);
 
             // do *not* consider ``(u, v)`` as a back edge if ``(v, u)`` is a tree edge.
             if parent[u] != v {
                 back_edges
-                    .entry(v)
-                    .and_modify(|v_edges| v_edges.push(u))
-                    .or_insert(vec![u]);
+                    .entry(v_id)
+                    .and_modify(|v_edges| v_edges.push(u_id))
+                    .or_insert(vec![u_id]);
             }
         }
         _ => {}
@@ -82,7 +98,7 @@ pub fn chain_decomposition(
         visited.visit(u);
         if let Some(vs) = back_edges.get(&u) {
             for v in vs {
-                let chain = _build_chain(&parent, u, *v, visited);
+                let chain = _build_chain(graph, &parent, u, *v, visited);
                 chains.push(chain);
             }
         }

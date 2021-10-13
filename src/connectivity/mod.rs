@@ -701,9 +701,15 @@ pub fn chain_decomposition(
     graph: graph::PyGraph,
     source: Option<usize>,
 ) -> Vec<EdgeList> {
-    let chains = chain::chain_decomposition(&graph.graph, source);
+    let chains =
+        chain::chain_decomposition(&graph.graph, source.map(NodeIndex::new));
     chains
         .into_iter()
-        .map(|chain| EdgeList { edges: chain })
+        .map(|chain| EdgeList {
+            edges: chain
+                .into_iter()
+                .map(|(a, b)| (a.index(), b.index()))
+                .collect(),
+        })
         .collect()
 }
