@@ -11,16 +11,12 @@
 // under the License.
 
 pub mod all_pairs_dijkstra;
-mod astar;
 mod average_length;
-pub mod dijkstra;
 mod distance_matrix;
 mod floyd_warshall;
-mod k_shortest_path;
 mod num_shortest_path;
 
 use super::weight_callable;
-use crate::dictmap::*;
 use crate::{digraph, graph, NoPathFound};
 
 use pyo3::prelude::*;
@@ -30,6 +26,9 @@ use petgraph::graph::NodeIndex;
 use petgraph::visit::NodeCount;
 
 use numpy::IntoPyArray;
+
+use retworkx_core::dictmap::*;
+use retworkx_core::shortest_path::{astar, dijkstra, k_shortest_path};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
@@ -71,7 +70,7 @@ pub fn graph_dijkstra_shortest_paths(
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
         DictMap::with_capacity(graph.node_count());
-    dijkstra::dijkstra(
+    dijkstra(
         &graph.graph,
         start,
         goal_index,
@@ -136,7 +135,7 @@ pub fn digraph_dijkstra_shortest_paths(
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
         DictMap::with_capacity(graph.node_count());
     if as_undirected {
-        dijkstra::dijkstra(
+        dijkstra(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
@@ -147,7 +146,7 @@ pub fn digraph_dijkstra_shortest_paths(
             Some(&mut paths),
         )?;
     } else {
-        dijkstra::dijkstra(
+        dijkstra(
             &graph.graph,
             start,
             goal_index,
@@ -211,7 +210,7 @@ pub fn graph_dijkstra_shortest_path_lengths(
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
-    let res = dijkstra::dijkstra(
+    let res = dijkstra(
         &graph.graph,
         start,
         goal_index,
@@ -269,7 +268,7 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
-    let res = dijkstra::dijkstra(
+    let res = dijkstra(
         &graph.graph,
         start,
         goal_index,
@@ -501,7 +500,7 @@ fn digraph_astar_shortest_path(
     };
     let start = NodeIndex::new(node);
 
-    let astar_res = astar::astar(
+    let astar_res = astar(
         &graph.graph,
         start,
         |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
@@ -575,7 +574,7 @@ fn graph_astar_shortest_path(
     };
     let start = NodeIndex::new(node);
 
-    let astar_res = astar::astar(
+    let astar_res = astar(
         &graph.graph,
         start,
         |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
@@ -631,12 +630,12 @@ fn digraph_k_shortest_path_lengths(
         res.extract(py)
     };
 
-    let out_map = k_shortest_path::k_shortest_path(
+    let out_map = k_shortest_path(
         &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,
-        edge_cost_callable,
+        |e| edge_cost_callable(e.weight()),
     )?;
     Ok(PathLengthMapping {
         path_lengths: out_map
@@ -687,12 +686,12 @@ pub fn graph_k_shortest_path_lengths(
         res.extract(py)
     };
 
-    let out_map = k_shortest_path::k_shortest_path(
+    let out_map = k_shortest_path(
         &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,
-        edge_cost_callable,
+        |e| edge_cost_callable(e.weight()),
     )?;
     Ok(PathLengthMapping {
         path_lengths: out_map
