@@ -10,8 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
+use crate::dictmap::*;
 use hashbrown::HashMap;
 
 use super::weight_callable;
@@ -28,20 +27,11 @@ use ndarray::prelude::*;
 use rayon::prelude::*;
 
 use crate::iterators::{AllPairsPathLengthMapping, PathLengthMapping};
-use crate::NodesRemoved;
-
-impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
-where
-    Ty: EdgeType,
-{
-    fn nodes_removed(&self) -> bool {
-        self.node_bound() != self.node_count()
-    }
-}
+use crate::StablePyGraph;
 
 pub fn floyd_warshall<Ty: EdgeType>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
@@ -49,7 +39,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
-            path_lengths: HashMap::new(),
+            path_lengths: DictMap::new(),
         });
     } else if graph.edge_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
@@ -59,7 +49,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
                     (
                         i.index(),
                         PathLengthMapping {
-                            path_lengths: HashMap::new(),
+                            path_lengths: DictMap::new(),
                         },
                     )
                 })
@@ -140,7 +130,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
     }
 
     // Convert to return format
-    let out_map: HashMap<usize, PathLengthMapping> = graph
+    let out_map: DictMap<usize, PathLengthMapping> = graph
         .node_indices()
         .map(|i| {
             let out_map = PathLengthMapping {
@@ -159,7 +149,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
 
 pub fn floyd_warshall_numpy<Ty: EdgeType>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,

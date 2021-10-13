@@ -10,8 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
+use crate::dictmap::*;
 use hashbrown::{HashMap, HashSet};
 
 use pyo3::prelude::*;
@@ -19,14 +18,15 @@ use pyo3::types::PyDict;
 use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
-use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
+use crate::StablePyGraph;
+
 pub fn core_number<Ty>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
 ) -> PyResult<PyObject>
 where
     Ty: EdgeType,
@@ -36,7 +36,7 @@ where
         return Ok(PyDict::new(py).into());
     }
 
-    let mut cores: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_num);
+    let mut cores: DictMap<NodeIndex, usize> = DictMap::with_capacity(node_num);
     let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
     let mut degree_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(node_num);

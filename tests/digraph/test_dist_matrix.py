@@ -147,3 +147,10 @@ class TestDistanceMatrix(unittest.TestCase):
             ]
         )
         self.assertTrue(np.array_equal(dist, expected, equal_nan=True))
+
+    def test_digraph_distance_matrix_node_hole(self):
+        graph = retworkx.generators.directed_path_graph(4)
+        graph.remove_node(0)
+        dist = retworkx.digraph_distance_matrix(graph)
+        expected = np.array([[0.0, 1.0, 2.0], [0.0, 0.0, 1.0], [0.0, 0.0, 0.0]])
+        self.assertTrue(np.array_equal(dist, expected))

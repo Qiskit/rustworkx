@@ -10,12 +10,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 mod centrality;
 mod coloring;
 mod connectivity;
 mod dag_algo;
+mod dictmap;
 mod digraph;
 mod dot_utils;
 mod generators;
@@ -87,10 +86,19 @@ impl IsNan for Complex64 {
         self.re.is_nan() || self.im.is_nan()
     }
 }
-type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
+}
+
+impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
+where
+    Ty: EdgeType,
+{
+    fn nodes_removed(&self) -> bool {
+        self.node_bound() != self.node_count()
+    }
 }
 
 pub fn get_edge_iter_with_weights<G>(

@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 use std::cmp::Ordering;
 
 use super::{graph, weight_callable};
@@ -63,7 +61,7 @@ pub fn minimum_spanning_edges(
 
     let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> =
         Vec::with_capacity(graph.graph.edge_count());
-    for edge in graph.edge_references() {
+    for edge in graph.graph.edge_references() {
         let weight =
             weight_callable(py, &weight_fn, edge.weight(), default_weight)?;
         if weight.is_nan() {
