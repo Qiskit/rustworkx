@@ -16,7 +16,7 @@ mod core_number;
 mod min_cut;
 
 use super::{
-    digraph, get_edge_iter_with_weights, graph, iterators::NodeIndices,
+    digraph, get_edge_iter_with_weights, graph, iterators::NodeIndices, score,
     weight_callable, InvalidNode, NullGraph,
 };
 
@@ -27,7 +27,7 @@ use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::stable_graph::{EdgeIndex, NodeIndex};
+use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{
     EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable,
@@ -674,11 +674,10 @@ pub fn digraph_core_number(
 /// two nodes, this function returns ``None``.
 ///
 /// :param PyGraph: The graph to be used
-/// :param weight_fn:  An optional callable object (function, lambda, etc) which
+/// :param Callable weight_fn:  An optional callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``.
-///     Edges with ``NaN`` weights will be ignored. If ``weight_fn`` is not
-///     specified a default value of ``1.0`` will be used
-///     for all edges.
+///     Edges with ``NaN`` weights will be ignored, i.e it's conidered to have zero weight.
+///     If ``weight_fn`` is not specified a default value of ``1.0`` will be used for all edges.
 ///
 /// :returns: A tuple with the minimum cut value and a list of all
 ///     the node indexes contained in one part of the partition
@@ -694,30 +693,20 @@ pub fn stoer_wagner_min_cut(
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
 ) -> PyResult<Option<(f64, NodeIndices)>> {
-    let mut edges_w: Vec<Option<f64>> = vec![None; graph.graph.edge_bound()];
+    let mut edges_w: Vec<Option<score::Score<f64>>> =
+        vec![None; graph.graph.edge_bound()];
     for edge in graph.graph.edge_references() {
-        edges_w[edge.id().index()] =
-            Some(weight_callable(py, &weight_fn, edge.weight(), 1.0)?);
+        let val = weight_callable(py, &weight_fn, edge.weight(), 1.0)?;
+        if !val.is_nan() {
+            let ix = edge.id().index();
+            edges_w[ix] = Some(score::Score(val));
+        }
     }
 
-    let node_map = |nx: NodeIndex, _: &PyObject| -> Option<Vec<NodeIndex>> {
-        Some(vec![nx])
-    };
-
-    let edge_map =
-        |ex: EdgeIndex, _: &PyObject| -> Option<min_cut::Score<f64>> {
-            if let Some(x) = edges_w[ex.index()] {
-                if x.is_nan() {
-                    return None;
-                }
-                return Some(min_cut::Score(x));
-            }
-            None
-        };
-
-    let cut = min_cut::stoer_wagner_min_cut(
-        graph.graph.filter_map(node_map, edge_map),
-    );
+    let cut = min_cut::stoer_wagner_min_cut(&graph.graph, |edge| {
+        let ix = edge.id().index();
+        edges_w[ix].unwrap_or(score::Score(0.0))
+    });
 
     Ok(cut.map(|(value, partition)| {
         (

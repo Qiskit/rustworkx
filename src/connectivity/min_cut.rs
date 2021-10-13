@@ -10,62 +10,24 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::cmp::Ordering;
-use std::ops::{Add, AddAssign};
-
 use num_traits::Zero;
+use std::ops::AddAssign;
 
 use priority_queue::PriorityQueue;
 
-use petgraph::stable_graph::{NodeIndex, StableUnGraph};
-use petgraph::visit::EdgeRef;
+use petgraph::{
+    graph::IndexType,
+    visit::{
+        EdgeRef, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
+        NodeIndexable,
+    },
+    Undirected,
+};
 
-/// `Score<K>` holds a score `K` for use with a `PriorityHeap`.
-///
-/// **Note:** `Score` implements a total order (`Ord`), so that it is
-/// possible to use float types as scores.
-#[derive(Clone, Copy, PartialEq)]
-pub struct Score<K>(pub K);
+use crate::disjoint_set::DisjointSet;
 
-impl<K: Add<Output = K>> Add for Score<K> {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self::Output {
-        Score(self.0 + rhs.0)
-    }
-}
-
-impl<K: AddAssign> AddAssign for Score<K> {
-    #[inline]
-    fn add_assign(&mut self, rhs: Self) {
-        self.0 += rhs.0
-    }
-}
-
-impl<K: Zero> Zero for Score<K> {
-    fn zero() -> Self {
-        Score(K::zero())
-    }
-
-    fn is_zero(&self) -> bool {
-        self.0.is_zero()
-    }
-}
-
-impl<K: PartialOrd> PartialOrd for Score<K> {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
-    }
-}
-
-impl<K: PartialOrd> Eq for Score<K> {}
-impl<K: PartialOrd> Ord for Score<K> {
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        // Order NaN less, so that it is last in the Score.
-        self.partial_cmp(other).unwrap_or(Ordering::Less)
-    }
-}
+type StCut<K, T> = Option<((T, T), K)>;
+type MinCut<K, T> = Option<(K, Vec<T>)>;
 
 fn zip<T, U>(a: Option<T>, b: Option<U>) -> Option<(T, U)> {
     match (a, b) {
@@ -74,17 +36,28 @@ fn zip<T, U>(a: Option<T>, b: Option<U>) -> Option<(T, U)> {
     }
 }
 
-fn stoer_wagner_phase<E>(
-    graph: &StableUnGraph<Vec<NodeIndex>, E>,
-) -> Option<((NodeIndex, NodeIndex), E)>
+fn stoer_wagner_phase<G, F, K>(
+    graph: G,
+    edge_cost: &mut F,
+    clusters: &DisjointSet<G::NodeId>,
+) -> StCut<K, G::NodeId>
 where
-    E: Copy + Ord + Zero + AddAssign,
+    G: GraphProp<EdgeType = Undirected> + IntoEdges + IntoNodeIdentifiers,
+    G::NodeId: IndexType,
+    F: FnMut(G::EdgeRef) -> K,
+    K: Copy + Ord + Zero + AddAssign,
 {
-    let mut pq = PriorityQueue::<NodeIndex, E, ahash::RandomState>::from(
+    let mut pq = PriorityQueue::<G::NodeId, K, ahash::RandomState>::from(
         graph
-            .node_indices()
-            .map(|nx| (nx, E::zero()))
-            .collect::<Vec<(NodeIndex, E)>>(),
+            .node_identifiers()
+            .filter_map(|nx| {
+                if clusters.is_root(nx) {
+                    Some((nx, K::zero()))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<(G::NodeId, K)>>(),
     );
 
     let mut cut_w = None;
@@ -93,39 +66,45 @@ where
         s = t;
         t = Some(nx);
         cut_w = Some(nx_val);
-        for edge in graph.edges(nx) {
-            pq.change_priority_by(&edge.target(), |x| {
-                *x += *edge.weight();
-            })
+        for nx_equiv in clusters.set(nx) {
+            for edge in graph.edges(nx_equiv) {
+                let target = clusters.find(edge.target());
+                pq.change_priority_by(&target, |p| {
+                    *p += edge_cost(edge);
+                })
+            }
         }
     }
 
     zip(zip(s, t), cut_w)
 }
 
-pub fn stoer_wagner_min_cut<E>(
-    mut graph: StableUnGraph<Vec<NodeIndex>, E>,
-) -> Option<(E, Vec<NodeIndex>)>
+pub fn stoer_wagner_min_cut<G, F, K>(
+    graph: G,
+    mut edge_cost: F,
+) -> MinCut<K, G::NodeId>
 where
-    E: Copy + Ord + Zero + AddAssign,
+    G: GraphProp<EdgeType = Undirected>
+        + IntoEdges
+        + IntoNodeIdentifiers
+        + NodeCount
+        + NodeIndexable,
+    G::NodeId: IndexType,
+    F: FnMut(G::EdgeRef) -> K,
+    K: Copy + Ord + Zero + AddAssign,
 {
     let (mut min_cut, mut min_cut_val) = (None, None);
+    let mut clusters = DisjointSet::<G::NodeId>::new(graph.node_bound());
     for _ in 1..graph.node_count() {
-        if let Some(((s, t), cut_w)) = stoer_wagner_phase(&graph) {
+        if let Some(((s, t), cut_w)) =
+            stoer_wagner_phase(graph, &mut edge_cost, &clusters)
+        {
             if min_cut_val.is_none() || Some(cut_w) < min_cut_val {
-                min_cut = graph.node_weight(t).cloned();
+                min_cut = Some(clusters.set(t));
                 min_cut_val = Some(cut_w);
             }
             // now merge nodes ``s`` and  ``t``.
-            let edges = graph
-                .edges(t)
-                .map(|edge| (s, edge.target(), *edge.weight()))
-                .collect::<Vec<(NodeIndex, NodeIndex, E)>>();
-            for (source, target, weight) in edges {
-                graph.add_edge(source, target, weight);
-            }
-            let mut cluster_t = graph.remove_node(t).unwrap();
-            graph.node_weight_mut(s).unwrap().append(&mut cluster_t);
+            clusters.union(s, t);
         }
     }
 
