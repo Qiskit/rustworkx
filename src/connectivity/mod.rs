@@ -12,7 +12,6 @@
 
 #![allow(clippy::float_cmp)]
 
-mod chain;
 mod core_number;
 
 use super::{
@@ -35,6 +34,7 @@ use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
 use crate::iterators::EdgeList;
+use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -701,8 +701,10 @@ pub fn chain_decomposition(
     graph: graph::PyGraph,
     source: Option<usize>,
 ) -> Vec<EdgeList> {
-    let chains =
-        chain::chain_decomposition(&graph.graph, source.map(NodeIndex::new));
+    let chains = connectivity::chain_decomposition(
+        &graph.graph,
+        source.map(NodeIndex::new),
+    );
     chains
         .into_iter()
         .map(|chain| EdgeList {

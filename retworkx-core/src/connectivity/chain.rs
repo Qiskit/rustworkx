@@ -44,6 +44,71 @@ where
     chain
 }
 
+/// Returns the chain decomposition of a graph.
+///
+/// The *chain decomposition* of a graph with respect to a depth-first
+/// search tree is a set of cycles or paths derived from the set of
+/// fundamental cycles of the tree in the following manner. Consider
+/// each fundamental cycle with respect to the given tree, represented
+/// as a list of edges beginning with the nontree edge oriented away
+/// from the root of the tree. For each fundamental cycle, if it
+/// overlaps with any previous fundamental cycle, just take the initial
+/// non-overlapping segment, which is a path instead of a cycle. Each
+/// cycle or path is called a *chain*. For more information,
+/// see [`Jens`](https://doi.org/10.1016/j.ipl.2013.01.016).
+///
+/// The graph should be undirected. If `source` is specified only the chain
+/// decomposition for the connected component containing this node will be returned.
+/// This node indicates the root of the depth-first search tree. If it's not
+/// specified, a source will be chosen arbitrarly and repeated until all components
+/// of the graph are searched.
+///
+/// Returns a list of list of edges where each inner list is a chain.
+///
+/// # Note
+/// The function implicitly assumes that there are no parallel edges
+/// or self loops. It may produce incorrect/unexpected results if the
+/// input graph has self loops or parallel edges.
+///
+/// # Example
+/// ```rust
+/// use retworkx_core::connectivity::chain_decomposition;
+/// use retworkx_core::petgraph::graph::{NodeIndex, UnGraph};
+///
+/// let mut graph : UnGraph<(), ()> = UnGraph::new_undirected();
+/// let a = graph.add_node(()); // node with no weight
+/// let b = graph.add_node(());
+/// let c = graph.add_node(());
+/// let d = graph.add_node(());
+/// let e = graph.add_node(());
+/// let f = graph.add_node(());
+/// let g = graph.add_node(());
+/// let h = graph.add_node(());
+///
+/// graph.extend_with_edges(&[
+///     (a, b),
+///     (b, c),
+///     (c, d),
+///     (d, a),
+///     (e, f),
+///     (b, e),
+///     (f, g),
+///     (g, h),
+///     (h, e)
+/// ]);
+/// // a ---- b ---- e ---- f
+/// // |      |      |      |
+/// // d ---- c      h ---- g
+///
+/// let chains = chain_decomposition(&graph, None);
+/// assert_eq!(
+///     chains,
+///     vec![
+///         vec![(a, d), (d, c), (c, b), (b, a)],
+///         vec![(e, h), (h, g), (g, f), (f, e)]
+///     ]
+/// );
+/// ```
 pub fn chain_decomposition<G>(
     graph: G,
     source: Option<G::NodeId>,
