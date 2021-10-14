@@ -55,7 +55,7 @@ where
 /// overlaps with any previous fundamental cycle, just take the initial
 /// non-overlapping segment, which is a path instead of a cycle. Each
 /// cycle or path is called a *chain*. For more information,
-/// see [`Jens`](https://doi.org/10.1016/j.ipl.2013.01.016).
+/// see [`Schmidt`](https://doi.org/10.1016/j.ipl.2013.01.016).
 ///
 /// The graph should be undirected. If `source` is specified only the chain
 /// decomposition for the connected component containing this node will be returned.
