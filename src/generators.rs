@@ -17,7 +17,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
-use pyo3::exceptions::PyIndexError;
+use pyo3::exceptions::{PyIndexError, PyOverflowError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
@@ -854,9 +854,19 @@ pub fn directed_grid_graph(
     })
 }
 
+// MAX_ORDER is determined based on the pointer width of the target platform
+#[cfg(target_pointer_width = "64")]
+const MAX_ORDER: u32 = 60;
+#[cfg(not(target_pointer_width = "64"))]
+const MAX_ORDER: u32 = 29;
+
 /// Generate an undirected binomial tree of order n recursively.
 ///
-/// :param int order: Order of the binomial tree.
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
+///     depends
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
@@ -866,7 +876,9 @@ pub fn directed_grid_graph(
 ///
 /// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises IndexError: If the length of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
 ///
 /// .. jupyter-execute::
 ///
@@ -884,59 +896,51 @@ pub fn binomial_tree_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
-
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
     let num_nodes = usize::pow(2, order);
-
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-
-            let mut node_count = num_nodes;
-
-            if weights.len() > num_nodes {
-                return Err(PyIndexError::new_err(
-                    "weights should be <= 2**order",
-                ));
+    let num_edges = usize::pow(2, order) - 1;
+    let mut graph = StableUnGraph::<PyObject, PyObject>::with_capacity(
+        num_nodes, num_edges,
+    );
+    for i in 0..num_nodes {
+        match weights {
+            Some(ref weights) => {
+                if weights.len() > num_nodes {
+                    return Err(PyIndexError::new_err(
+                        "weights should be <= 2**order",
+                    ));
+                }
+                if i < weights.len() {
+                    graph.add_node(weights[i].clone_ref(py))
+                } else {
+                    graph.add_node(py.None())
+                }
             }
-
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-                node_count -= 1;
-            }
-
-            for _i in 0..node_count {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
-            }
-
-            node_list
-        }
-
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
-    };
+            None => graph.add_node(py.None()),
+        };
+    }
 
     let mut n = 1;
+    let zero_index = NodeIndex::new(0);
 
     for _ in 0..order {
         let edges: Vec<(NodeIndex, NodeIndex)> = graph
             .edge_references()
             .map(|e| (e.source(), e.target()))
             .collect();
-
         for (source, target) in edges {
-            let source_index = source.index();
-            let target_index = target.index();
+            let source_index = NodeIndex::new(source.index() + n);
+            let target_index = NodeIndex::new(target.index() + n);
 
-            graph.add_edge(
-                nodes[source_index + n],
-                nodes[target_index + n],
-                py.None(),
-            );
+            graph.add_edge(source_index, target_index, py.None());
         }
 
-        graph.add_edge(nodes[0], nodes[n], py.None());
+        graph.add_edge(zero_index, NodeIndex::new(n), py.None());
 
         n *= 2;
     }
@@ -1042,7 +1046,10 @@ pub fn full_rary_tree(
 /// Generate an undirected binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
 ///
-/// :param int order: Order of the binomial tree.
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with None will be appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
@@ -1055,6 +1062,8 @@ pub fn full_rary_tree(
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyDiGraph
 /// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
 ///
 /// .. jupyter-execute::
 ///
@@ -1075,39 +1084,38 @@ pub fn directed_binomial_tree_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
-
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
     let num_nodes = usize::pow(2, order);
+    let num_edges = usize::pow(2, order) - 1;
+    let mut graph = StableDiGraph::<PyObject, PyObject>::with_capacity(
+        num_nodes, num_edges,
+    );
 
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            let mut node_count = num_nodes;
-
-            if weights.len() > num_nodes {
-                return Err(PyIndexError::new_err(
-                    "weights should be <= 2**order",
-                ));
+    for i in 0..num_nodes {
+        match weights {
+            Some(ref weights) => {
+                if weights.len() > num_nodes {
+                    return Err(PyIndexError::new_err(
+                        "weights should be <= 2**order",
+                    ));
+                }
+                if i < weights.len() {
+                    graph.add_node(weights[i].clone_ref(py))
+                } else {
+                    graph.add_node(py.None())
+                }
             }
-
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-                node_count -= 1;
-            }
-
-            for _i in 0..node_count {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
-            }
-
-            node_list
-        }
-
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
-    };
+            None => graph.add_node(py.None()),
+        };
+    }
 
     let mut n = 1;
+    let zero_index = NodeIndex::new(0);
 
     for _ in 0..order {
         let edges: Vec<(NodeIndex, NodeIndex)> = graph
@@ -1116,39 +1124,27 @@ pub fn directed_binomial_tree_graph(
             .collect();
 
         for (source, target) in edges {
-            let source_index = source.index();
-            let target_index = target.index();
+            let source_index = NodeIndex::new(source.index() + n);
+            let target_index = NodeIndex::new(target.index() + n);
 
-            if graph
-                .find_edge(nodes[source_index + n], nodes[target_index + n])
-                .is_none()
-            {
-                graph.add_edge(
-                    nodes[source_index + n],
-                    nodes[target_index + n],
-                    py.None(),
-                );
+            if graph.find_edge(source_index, target_index).is_none() {
+                graph.add_edge(source_index, target_index, py.None());
             }
 
             if bidirectional
-                && graph
-                    .find_edge(nodes[target_index + n], nodes[source_index + n])
-                    .is_none()
+                && graph.find_edge(target_index, source_index).is_none()
             {
-                graph.add_edge(
-                    nodes[target_index + n],
-                    nodes[source_index + n],
-                    py.None(),
-                );
+                graph.add_edge(target_index, source_index, py.None());
             }
         }
+        let n_index = NodeIndex::new(n);
 
-        if graph.find_edge(nodes[0], nodes[n]).is_none() {
-            graph.add_edge(nodes[0], nodes[n], py.None());
+        if graph.find_edge(zero_index, n_index).is_none() {
+            graph.add_edge(zero_index, n_index, py.None());
         }
 
-        if bidirectional && graph.find_edge(nodes[n], nodes[0]).is_none() {
-            graph.add_edge(nodes[n], nodes[0], py.None());
+        if bidirectional && graph.find_edge(n_index, zero_index).is_none() {
+            graph.add_edge(n_index, zero_index, py.None());
         }
 
         n *= 2;
@@ -1189,7 +1185,11 @@ pub fn directed_binomial_tree_graph(
 /// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// :param int d: distance of the code.
+/// Note that if ``d`` is set to ``1`` a :class:`~retworkx.PyGraph` with a
+/// single node will be returned.
+///
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1233,6 +1233,15 @@ pub fn heavy_square_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -1346,7 +1355,8 @@ pub fn heavy_square_graph(
 /// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1391,6 +1401,17 @@ pub fn directed_heavy_square_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -1565,7 +1586,8 @@ pub fn directed_heavy_square_graph(
 ///     ... D   D-S-D ...
 ///
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1609,6 +1631,15 @@ pub fn heavy_hex_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -1733,7 +1764,8 @@ pub fn heavy_hex_graph(
 ///     ... D   D-S-D ...
 ///
 ///
-/// :param int d: distance of the code.
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -1778,6 +1810,17 @@ pub fn directed_heavy_hex_graph(
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        });
     }
 
     let num_data = d * d;
@@ -2181,6 +2224,89 @@ pub fn directed_hexagonal_lattice_graph(
     }
 }
 
+/// Generate an undirected lollipop graph where a mesh graph is connected to a
+/// path.
+///
+/// If neither ``num_path_nodes`` nor ``path_weights`` (both described
+/// below) are specified then this is equivalent to
+/// :func:`~retworkx.generators.mesh_graph`
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+///     be ignored and ``mesh_weights`` will be used.
+/// :param list path_weights: A list of node weights for the path. If both
+///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+///     be ignored and ``path_weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated lollipop graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_mesh_nodes`` or ``mesh_weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.lollipop_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=True)"
+)]
+pub fn lollipop_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    mesh_weights: Option<Vec<PyObject>>,
+    path_weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = mesh_graph(py, num_mesh_nodes, mesh_weights, multigraph)?;
+    if num_path_nodes.is_none() && path_weights.is_none() {
+        return Ok(graph);
+    }
+    let meshlen = graph.num_nodes();
+
+    let path_nodes: Vec<NodeIndex> = match path_weights {
+        Some(path_weights) => path_weights
+            .into_iter()
+            .map(|node| graph.graph.add_node(node))
+            .collect(),
+        None => (0..num_path_nodes.unwrap())
+            .map(|_| graph.graph.add_node(py.None()))
+            .collect(),
+    };
+
+    let pathlen = path_nodes.len();
+    if pathlen > 0 {
+        graph.graph.add_edge(
+            NodeIndex::new(meshlen - 1),
+            NodeIndex::new(meshlen),
+            py.None(),
+        );
+        for (node_a, node_b) in pairwise(path_nodes) {
+            match node_a {
+                Some(node_a) => graph.graph.add_edge(node_a, node_b, py.None()),
+                None => continue,
+            };
+        }
+    }
+    Ok(graph)
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2201,6 +2327,7 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
+    m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
     m.add_wrapped(wrap_pyfunction!(full_rary_tree))?;
     Ok(())
 }

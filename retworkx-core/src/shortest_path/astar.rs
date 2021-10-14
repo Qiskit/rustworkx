@@ -18,70 +18,20 @@
 // to be use for the input functions for is_goal, edge_cost, estimate_cost
 // and return any exceptions raised in Python instead of panicking
 
-use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
 use hashbrown::hash_map::Entry::{Occupied, Vacant};
 use hashbrown::HashMap;
 
+use petgraph::algo::Measure;
 use petgraph::visit::{EdgeRef, GraphBase, IntoEdges, VisitMap, Visitable};
 
-use petgraph::algo::Measure;
-use pyo3::prelude::*;
+use crate::min_scored::MinScored;
 
-/// `MinScored<K, T>` holds a score `K` and a scored object `T` in
-/// a pair for use with a `BinaryHeap`.
-///
-/// `MinScored` compares in reverse order by the score, so that we can
-/// use `BinaryHeap` as a min-heap to extract the score-value pair with the
-/// least score.
-///
-/// **Note:** `MinScored` implements a total order (`Ord`), so that it is
-/// possible to use float types as scores.
-#[derive(Copy, Clone, Debug)]
-pub struct MinScored<K, T>(pub K, pub T);
+type AstarOutput<K, N> = Option<(K, Vec<N>)>;
 
-impl<K: PartialOrd, T> PartialEq for MinScored<K, T> {
-    #[inline]
-    fn eq(&self, other: &MinScored<K, T>) -> bool {
-        self.cmp(other) == Ordering::Equal
-    }
-}
-
-impl<K: PartialOrd, T> Eq for MinScored<K, T> {}
-
-impl<K: PartialOrd, T> PartialOrd for MinScored<K, T> {
-    #[inline]
-    fn partial_cmp(&self, other: &MinScored<K, T>) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl<K: PartialOrd, T> Ord for MinScored<K, T> {
-    #[inline]
-    fn cmp(&self, other: &MinScored<K, T>) -> Ordering {
-        let a = &self.0;
-        let b = &other.0;
-        if a == b {
-            Ordering::Equal
-        } else if a < b {
-            Ordering::Greater
-        } else if a > b {
-            Ordering::Less
-        } else if a.ne(a) && b.ne(b) {
-            // these are the NaN cases
-            Ordering::Equal
-        } else if a.ne(a) {
-            // Order NaN less, so that it is last in the MinScore order
-            Ordering::Less
-        } else {
-            Ordering::Greater
-        }
-    }
-}
-
-/// \[Generic\] A* shortest path algorithm.
+/// A* shortest path algorithm.
 ///
 /// Computes the shortest path from `start` to `finish`, including the total path cost.
 ///
@@ -96,12 +46,14 @@ impl<K: PartialOrd, T> Ord for MinScored<K, T> {
 /// it should never overestimate the actual cost to get to the nearest goal node. Estimate costs
 /// must also be non-negative.
 ///
-/// The graph should be `Visitable` and implement `IntoEdges`.
+/// The graph should be [`Visitable`] and implement [`IntoEdges`].
 ///
 /// # Example
 /// ```
-/// use petgraph::Graph;
-/// use petgraph::algo::astar;
+/// use retworkx_core::petgraph::graph::NodeIndex;
+/// use retworkx_core::petgraph::Graph;
+/// use retworkx_core::shortest_path::astar;
+/// use retworkx_core::Result;
 ///
 /// let mut g = Graph::new();
 /// let a = g.add_node((0., 0.));
@@ -130,25 +82,28 @@ impl<K: PartialOrd, T> Ord for MinScored<K, T> {
 /// // | 1*    | 1*    |
 /// // \------ e ------/
 ///
-/// let path = astar(&g, a, |finish| finish == f, |e| *e.weight(), |_| 0);
+/// let res: Result<Option<(u64, Vec<NodeIndex>)>> = astar(
+///     &g, a, |finish| Ok(finish == f), |e| Ok(*e.weight()), |_| Ok(0)
+/// );
+/// let path = res.unwrap();
 /// assert_eq!(path, Some((6, vec![a, d, e, f])));
 /// ```
 ///
 /// Returns the total cost + the path of subsequent `NodeId` from start to finish, if one was
 /// found.
-pub fn astar<G, F, H, K, IsGoal>(
+pub fn astar<G, F, H, K, IsGoal, E>(
     graph: G,
     start: G::NodeId,
     mut is_goal: IsGoal,
     mut edge_cost: F,
     mut estimate_cost: H,
-) -> PyResult<Option<(K, Vec<G::NodeId>)>>
+) -> Result<AstarOutput<K, G::NodeId>, E>
 where
     G: IntoEdges + Visitable,
-    IsGoal: FnMut(G::NodeId) -> PyResult<bool>,
+    IsGoal: FnMut(G::NodeId) -> Result<bool, E>,
     G::NodeId: Eq + Hash,
-    F: FnMut(G::EdgeRef) -> PyResult<K>,
-    H: FnMut(G::NodeId) -> PyResult<K>,
+    F: FnMut(G::EdgeRef) -> Result<K, E>,
+    H: FnMut(G::NodeId) -> Result<K, E>,
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();
