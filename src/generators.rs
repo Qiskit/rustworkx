@@ -965,7 +965,7 @@ pub fn binomial_tree_graph(
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :returns: A r-ary tree.
 /// :rtype: PyGraph
 /// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
 ///
@@ -978,11 +978,11 @@ pub fn binomial_tree_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(branching_factor num_nodes, /, weights=None, multigraph=True)")]
+#[pyo3(text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)")]
 pub fn full_rary_tree(
     py: Python,
     branching_factor: u32,
-    num_nodes: Option<usize>,
+    num_nodes: usize,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
@@ -992,8 +992,8 @@ pub fn full_rary_tree(
         
         Some(weights) => {
             let mut node_list: Vec<NodeIndex> = Vec::new();
-            let mut node_count = num_nodes.unwrap();
-            if weights.len() > num_nodes.unwrap() {
+            let mut node_count = num_nodes;
+            if weights.len() > num_nodes {
                 return Err(PyIndexError::new_err(
                     "weights can't be greater than nodes",
                 ));
@@ -1010,19 +1010,19 @@ pub fn full_rary_tree(
             }
             node_list
         }
-        None => (0..num_nodes.unwrap())
+        None => (0..num_nodes)
             .map(|_| graph.add_node(py.None()))
             .collect(),
     };
 
-    if num_nodes.unwrap() > 0 {
+    if num_nodes > 0 {
         let mut parents: Vec<usize> = vec![nodes[0].index()];
         let mut nod_it: usize = 1;
         
         while !parents.is_empty() {
             let source: usize = parents.remove(0);
             for _ in 0..branching_factor {
-                if nod_it < num_nodes.unwrap() {
+                if nod_it < num_nodes {
                     let target: usize = nodes[nod_it].index();
                     parents.push(target);
                     nod_it += 1;
