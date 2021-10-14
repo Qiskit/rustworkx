@@ -31,22 +31,43 @@ class TestFullRaryTreeTreeGraph(unittest.TestCase):
         expected_edges = {
             0: [],
             1: [(0, 1), (0, 2), (1, 3)],
-            2: [(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6), (3, 7),
-                (3, 8), (4, 9)],
-            3: [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (1, 6), (1, 7),
-                (1, 8), (1, 9), (1, 10), (2, 11), (2, 12), (2, 13), (2, 14)]
+            2: [
+                (0, 1),
+                (0, 2),
+                (1, 3),
+                (1, 4),
+                (2, 5),
+                (2, 6),
+                (3, 7),
+                (3, 8),
+                (4, 9),
+            ],
+            3: [
+                (0, 1),
+                (0, 2),
+                (0, 3),
+                (0, 4),
+                (0, 5),
+                (1, 6),
+                (1, 7),
+                (1, 8),
+                (1, 9),
+                (1, 10),
+                (2, 11),
+                (2, 12),
+                (2, 13),
+                (2, 14),
+            ],
         }
         for n in range(4):
             with self.subTest(n=n):
                 graph = retworkx.generators.full_rary_tree(
-                            b_factors[n],
-                            num_nodes[n])
+                    b_factors[n], num_nodes[n]
+                )
                 self.assertEqual(list(graph.edge_list()), expected_edges[n])
 
     def test_full_rary_tree_graph_weights(self):
-        graph = retworkx.generators.full_rary_tree(
-            2, 4, weights=list(range(4))
-        )
+        graph = retworkx.generators.full_rary_tree(2, 4, weights=list(range(4)))
         expected_edges = [(0, 1), (0, 2), (1, 3)]
         self.assertEqual(len(graph), 4)
         self.assertEqual([x for x in range(4)], graph.nodes())
@@ -54,14 +75,12 @@ class TestFullRaryTreeTreeGraph(unittest.TestCase):
         self.assertEqual(list(graph.edge_list()), expected_edges)
 
     def test_full_rary_tree_graph_weight_less_nodes(self):
-        graph = retworkx.generators.full_rary_tree(
-            2, 2, weights=list(range(4))
-        )
-        self.assertEqual(len(graph), 4)
+        graph = retworkx.generators.full_rary_tree(2, 6, weights=list(range(4)))
+        self.assertEqual(len(graph), 6)
         expected_weights = [x for x in range(4)]
         expected_weights.extend([None, None])
         self.assertEqual(expected_weights, graph.nodes())
-        self.assertEqual(len(graph.edges()), 3)
+        self.assertEqual(len(graph.edges()), 5)
 
     def test_full_rary_tree_graph_weights_greater_nodes(self):
         with self.assertRaises(IndexError):
