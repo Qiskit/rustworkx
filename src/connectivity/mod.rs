@@ -705,14 +705,15 @@ pub fn chain_decomposition(
         &graph.graph,
         source.map(NodeIndex::new),
     );
-    Chains {chains: chains
-        .into_iter()
-        .map(|chain| EdgeList {
-            edges: chain
-                .into_iter()
-                .map(|(a, b)| (a.index(), b.index()))
-                .collect(),
-        })
-        .collect()
+    Chains {
+        chains: chains
+            .into_iter()
+            .map(|chain| EdgeList {
+                edges: chain
+                    .into_iter()
+                    .map(|(a, b)| (a.index(), b.index()))
+                    .collect(),
+            })
+            .collect(),
     }
 }
