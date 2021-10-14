@@ -305,6 +305,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
+    m.add_class::<iterators::Chains>()?;
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;

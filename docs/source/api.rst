@@ -329,3 +329,4 @@ Custom Return Types
    retworkx.AllPairsPathMapping
    retworkx.AllPairsPathLengthMapping
    retworkx.CentralityMapping
+   retworkx.Chains

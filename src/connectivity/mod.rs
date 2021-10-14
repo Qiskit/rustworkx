@@ -33,7 +33,7 @@ use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable};
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::EdgeList;
+use crate::iterators::{Chains, EdgeList};
 use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -700,12 +700,12 @@ pub fn digraph_core_number(
 pub fn chain_decomposition(
     graph: graph::PyGraph,
     source: Option<usize>,
-) -> Vec<EdgeList> {
+) -> Chains {
     let chains = connectivity::chain_decomposition(
         &graph.graph,
         source.map(NodeIndex::new),
     );
-    chains
+    Chains {chains: chains
         .into_iter()
         .map(|chain| EdgeList {
             edges: chain
@@ -714,4 +714,5 @@ pub fn chain_decomposition(
                 .collect(),
         })
         .collect()
+    }
 }
