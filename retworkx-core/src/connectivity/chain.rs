@@ -157,16 +157,16 @@ where
     });
 
     let visited = &mut graph.visit_map();
-    let mut chains = Vec::new();
-
-    for u in nodes {
-        visited.visit(u);
-        if let Some(vs) = back_edges.get(&u) {
-            for v in vs {
-                let chain = _build_chain(graph, &parent, u, *v, visited);
-                chains.push(chain);
-            }
-        }
-    }
-    chains
+    nodes
+        .into_iter()
+        .filter_map(|u| {
+            visited.visit(u);
+            back_edges.get(&u).map(|vs| {
+                vs.iter()
+                    .map(|v| _build_chain(graph, &parent, u, *v, visited))
+                    .collect::<Vec<Vec<(G::NodeId, G::NodeId)>>>()
+            })
+        })
+        .flatten()
+        .collect()
 }
