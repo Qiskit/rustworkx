@@ -10,11 +10,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 use hashbrown::HashMap;
 
-use super::dijkstra;
+use retworkx_core::dictmap::*;
+use retworkx_core::shortest_path::dijkstra;
 
 use std::sync::RwLock;
 
@@ -33,15 +32,16 @@ use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, PathLengthMapping,
     PathMapping,
 };
+use crate::StablePyGraph;
 
 pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
-            path_lengths: HashMap::new(),
+            path_lengths: DictMap::new(),
         });
     } else if graph.edge_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
@@ -51,7 +51,7 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
                     (
                         i.index(),
                         PathLengthMapping {
-                            path_lengths: HashMap::new(),
+                            path_lengths: DictMap::new(),
                         },
                     )
                 })
@@ -81,11 +81,11 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    let out_map: HashMap<usize, PathLengthMapping> = node_indices
+    let out_map: DictMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
             let out_map = PathLengthMapping {
-                path_lengths: dijkstra::dijkstra(
+                path_lengths: dijkstra(
                     graph,
                     x,
                     None,
@@ -113,13 +113,13 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
 
 pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     edge_cost_fn: PyObject,
-    distances: Option<&mut HashMap<usize, HashMap<NodeIndex, f64>>>,
+    distances: Option<&mut HashMap<usize, DictMap<NodeIndex, f64>>>,
 ) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathMapping {
-            paths: HashMap::new(),
+            paths: DictMap::new(),
         });
     } else if graph.edge_count() == 0 {
         return Ok(AllPairsPathMapping {
@@ -129,7 +129,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                     (
                         i.index(),
                         PathMapping {
-                            paths: HashMap::new(),
+                            paths: DictMap::new(),
                         },
                     )
                 })
@@ -159,7 +159,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    let temp_distances: RwLock<HashMap<usize, HashMap<NodeIndex, f64>>> =
+    let temp_distances: RwLock<HashMap<usize, DictMap<NodeIndex, f64>>> =
         if distances.is_some() {
             RwLock::new(HashMap::with_capacity(graph.node_count()))
         } else {
@@ -170,9 +170,9 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         paths: node_indices
             .into_par_iter()
             .map(|x| {
-                let mut paths: HashMap<NodeIndex, Vec<NodeIndex>> =
-                    HashMap::with_capacity(graph.node_count());
-                let distance = dijkstra::dijkstra(
+                let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
+                    DictMap::with_capacity(graph.node_count());
+                let distance = dijkstra(
                     graph,
                     x,
                     None,

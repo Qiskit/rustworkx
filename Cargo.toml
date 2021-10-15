@@ -9,15 +9,17 @@ repository = "https://github.com/Qiskit/retworkx"
 keywords = ["python", "graph"]
 edition = "2018"
 
-[badges]
-travis-ci = {repository = "Qiskit/retworkx"}
+[workspace]
+members = [
+    "retworkx-core",
+]
 
 [lib]
 name = "retworkx"
 crate-type = ["cdylib"]
 
 [dependencies]
-ahash = { version = "0.7.4", default-features = false }
+ahash = { version = "0.7.6", default-features = false }
 petgraph = "0.6.0"
 fixedbitset = "0.4.0"
 numpy = "0.14.1"
@@ -26,11 +28,12 @@ rand_pcg = "0.3"
 rayon = "1.5"
 num-traits = "0.2"
 num-bigint = "0.4"
-indexmap = "1.6.2"
+num-complex = "0.4"
+retworkx-core = { path = "./retworkx-core" }
 
 [dependencies.pyo3]
 version = "0.14.5"
-features = ["extension-module", "hashbrown", "num-bigint"]
+features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.hashbrown]
 version = "0.11"
@@ -38,6 +41,10 @@ features = ["rayon"]
 
 [dependencies.ndarray]
 version = "^0.13.1"
+features = ["rayon"]
+
+[dependencies.indexmap]
+version = "1.7"
 features = ["rayon"]
 
 [profile.release]

@@ -10,13 +10,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 use crate::graph;
+use retworkx_core::dictmap::*;
 
-use ahash::RandomState;
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexMap;
 use std::cmp::Reverse;
 
 use pyo3::prelude::*;
@@ -42,8 +39,7 @@ fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
 ) -> PyResult<PyObject> {
-    let mut colors: IndexMap<usize, usize, RandomState> =
-        IndexMap::with_hasher(RandomState::default());
+    let mut colors: DictMap<usize, usize> = DictMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let mut sort_map: HashMap<NodeIndex, usize> =
         HashMap::with_capacity(graph.node_count());

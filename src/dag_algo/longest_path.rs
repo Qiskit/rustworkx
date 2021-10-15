@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 use crate::{digraph, DAGHasCycle};
 
 use hashbrown::HashMap;
@@ -34,7 +32,7 @@ where
 {
     let dag = &graph.graph;
     let mut path: Vec<usize> = Vec::new();
-    let nodes = match algo::toposort(graph, None) {
+    let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))

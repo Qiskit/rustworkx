@@ -40,6 +40,14 @@ jobs:
         run: black --check --diff retworkx tests
       - name: Python Lint
         run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests
+      - name: retworkx-core Rust Tests
+        run: pushd retworkx-core && cargo test && popd
+      - name: retworkx-core Docs
+        run: pushd retworkx-core && cargo doc && popd
+      - uses: actions/upload-artifact@v2
+        with:
+          name: retworkx_core_docs
+          path: target/doc/retworkx_core
   tests:
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
@@ -47,12 +55,11 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.6, 3.7, 3.8, 3.9, 3.10-dev]
         platform: [
           { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
           { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
-          { os: "windows-latest", python-architecture: "x86", rust-target: "i686-pc-windows-msvc" },
         ]
         include:
           # Test minimal supported Rust version
