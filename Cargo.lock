@@ -564,6 +564,7 @@ dependencies = [
  "num-traits",
  "petgraph",
  "priority-queue",
+ "rand",
  "rayon",
 ]
 

@@ -24,3 +24,6 @@ features = ["rayon"]
 [dependencies.indexmap]
 version = "1.7"
 features = ["rayon"]
+
+[dev-dependencies]
+rand = "0.8"
