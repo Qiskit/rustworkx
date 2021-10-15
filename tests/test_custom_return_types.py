@@ -1458,3 +1458,59 @@ class TestNodeMap(unittest.TestCase):
         third_iter = list(iter(res))
         self.assertEqual(first_iter, second_iter)
         self.assertEqual(first_iter, third_iter)
+
+
+class TestChainsComparisons(unittest.TestCase):
+    def setUp(self):
+        self.graph = retworkx.generators.cycle_graph(3)
+        self.chains = retworkx.chain_decomposition(self.graph)
+
+    def test__eq__match(self):
+        self.assertTrue(self.chains == [[(0, 2), (2, 1), (1, 0)]])
+
+    def test__eq__not_match(self):
+        self.assertFalse(self.chains == [[(0, 2), (2, 1), (2, 0)]])
+
+    def test__eq__different_length(self):
+        self.assertFalse(self.chains == [[(0, 2)]])
+
+    def test__eq__invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.chains == [0]
+
+    def test__ne__match(self):
+        self.assertFalse(self.chains != [[(0, 2), (2, 1), (1, 0)]])
+
+    def test__ne__not_match(self):
+        self.assertTrue(self.chains != [[(0, 2), (2, 1), (2, 0)]])
+
+    def test__ne__different_length(self):
+        self.assertTrue(self.chains != [[(0, 2)]])
+
+    def test__ne__invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.chains != [0]
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.chains > [[(0, 2)]]
+
+    def test_deepcopy(self):
+        chains_copy = copy.deepcopy(self.chains)
+        self.assertEqual(self.chains, chains_copy)
+
+    def test_pickle(self):
+        chains_pickle = pickle.dumps(self.chains)
+        chains_copy = pickle.loads(chains_pickle)
+        self.assertEqual(self.chains, chains_copy)
+
+    def test_str(self):
+        self.assertEqual(
+            "Chains[EdgeList[(0, 2), (2, 1), (1, 0)]]", str(self.chains)
+        )
+
+    def test_hash(self):
+        hash_res = hash(self.chains)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(self.chains))
