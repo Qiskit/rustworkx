@@ -698,6 +698,56 @@ custom_vec_iter_impl!(
 );
 default_pygc_protocol_impl!(EdgeIndices);
 
+impl PyHash for EdgeList {
+    fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
+        PyHash::hash(&self.edges, py, state)?;
+        Ok(())
+    }
+}
+
+impl PyEq<PyAny> for EdgeList {
+    #[inline]
+    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+        PyEq::eq(&self.edges, other.downcast::<PySequence>()?, py)
+    }
+}
+
+impl PyDisplay for EdgeList {
+    fn str(&self, py: Python) -> PyResult<String> {
+        Ok(format!("EdgeList{}", self.edges.str(py)?))
+    }
+}
+
+custom_vec_iter_impl!(
+    Chains,
+    chains,
+    EdgeList,
+    "A custom class for the return of a list of list of edges.
+
+    This class is a container class for the results of functions that
+    return a list of list of edges. It implements the Python sequence
+    protocol. So you can treat the return as a read-only sequence/list
+    that is integer indexed. If you want to use it as an iterator you
+    can by wrapping it in an ``iter()`` that will yield the results in
+    order.
+
+    For example::
+
+        import retworkx
+
+        graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
+        chains = retworkx.chain_decomposition(graph)
+        # Index based access
+        third_chain = chains[2]
+        # Use as iterator
+        chains_iter = iter(chains)
+        first_chain = next(chains_iter)
+        second_chain = next(chains_iter)
+
+    "
+);
+default_pygc_protocol_impl!(Chains);
+
 macro_rules! py_object_protocol_impl {
     ($name:ident, $data:ident) => {
         #[pyproto]
