@@ -674,7 +674,7 @@ pub fn digraph_core_number(
 /// from the root of the tree. For each fundamental cycle, if it
 /// overlaps with any previous fundamental cycle, just take the initial
 /// non-overlapping segment, which is a path instead of a cycle. Each
-/// cycle or path is called a *chain*. For more information, see [Jens]_.
+/// cycle or path is called a *chain*. For more information, see [Schmidt]_.
 ///
 /// .. note::
 ///
@@ -692,7 +692,7 @@ pub fn digraph_core_number(
 /// :returns: A list of list of edges where each inner list is a chain.
 /// :rtype: list of EdgeList
 ///
-/// .. [Jens] Jens M. Schmidt (2013). "A simple test on 2-vertex-
+/// .. [Schmidt] Jens M. Schmidt (2013). "A simple test on 2-vertex-
 ///       and 2-edge-connectivity." *Information Processing Letters*,
 ///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
 #[pyfunction]
