@@ -47,6 +47,7 @@
 //! The crate is organized into
 //!
 //! * [`centrality`](./centrality/index.html)
+//! * [`connectivity`](./connectivity/index.html)
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
 //!

@@ -12,6 +12,8 @@
 
 //! Module for connectivity and cut algorithms.
 
+mod chain;
 mod min_cut;
 
+pub use chain::chain_decomposition;
 pub use min_cut::stoer_wagner_min_cut;
