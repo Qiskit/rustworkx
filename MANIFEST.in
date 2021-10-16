@@ -3,4 +3,4 @@ include Cargo.toml
 include Cargo.lock
 recursive-include src *
 recursive-include retworkx-core *
-recursive-include retworkx-stub *
+recursive-include retworkx *.pyi *.typed
