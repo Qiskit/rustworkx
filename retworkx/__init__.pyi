@@ -1,110 +1,15 @@
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+# This file contains only type annotations for PyO3 functions and classes
+# For implementation details, see __init__.py and lib.rs
+
 from .retworkx import *
 from typing import Any
 
 class PyDAG(PyDiGraph): ...
-
-def distance_matrix(graph, parallel_threshold: int = ...) -> None: ...
-def adjacency_matrix(
-    graph, weight_fn: Any | None = ..., default_weight: float = ...
-) -> None: ...
-def all_simple_paths(
-    graph, from_, to, min_depth: Any | None = ..., cutoff: Any | None = ...
-) -> None: ...
-def floyd_warshall(
-    graph,
-    weight_fn: Any | None = ...,
-    default_weight: float = ...,
-    parallel_threshold: int = ...,
-) -> None: ...
-def floyd_warshall_numpy(
-    graph,
-    weight_fn: Any | None = ...,
-    default_weight: float = ...,
-    parallel_threshold: int = ...,
-) -> None: ...
-def astar_shortest_path(
-    graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-) -> None: ...
-def dijkstra_shortest_paths(
-    graph,
-    source,
-    target: Any | None = ...,
-    weight_fn: Any | None = ...,
-    default_weight: float = ...,
-    as_undirected: bool = ...,
-) -> None: ...
-def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn) -> None: ...
-def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn) -> None: ...
-def dijkstra_shortest_path_lengths(
-    graph, node, edge_cost_fn, goal: Any | None = ...
-) -> None: ...
-def k_shortest_path_lengths(
-    graph, start, k, edge_cost, goal: Any | None = ...
-) -> None: ...
-def dfs_edges(graph, source) -> None: ...
-def is_isomorphic(
-    first,
-    second,
-    node_matcher: Any | None = ...,
-    edge_matcher: Any | None = ...,
-    id_order: bool = ...,
-) -> None: ...
-def is_isomorphic_node_match(
-    first, second, matcher, id_order: bool = ...
-) -> None: ...
-def is_subgraph_isomorphic(
-    first,
-    second,
-    node_matcher: Any | None = ...,
-    edge_matcher: Any | None = ...,
-    id_order: bool = ...,
-    induced: bool = ...,
-) -> None: ...
-def transitivity(graph) -> None: ...
-def core_number(graph) -> None: ...
-def complement(graph) -> None: ...
-def random_layout(
-    graph, center: Any | None = ..., seed: Any | None = ...
-) -> None: ...
-def spring_layout(
-    graph,
-    pos: Any | None = ...,
-    fixed: Any | None = ...,
-    k: Any | None = ...,
-    repulsive_exponent: int = ...,
-    adaptive_cooling: bool = ...,
-    num_iter: int = ...,
-    tol: float = ...,
-    weight_fn: Any | None = ...,
-    default_weight: int = ...,
-    scale: int = ...,
-    center: Any | None = ...,
-    seed: Any | None = ...,
-) -> None: ...
-def networkx_converter(graph): ...
-def bipartite_layout(
-    graph,
-    first_nodes,
-    horizontal: bool = ...,
-    scale: int = ...,
-    center: Any | None = ...,
-    aspect_ratio=...,
-) -> None: ...
-def circular_layout(
-    graph, scale: int = ..., center: Any | None = ...
-) -> None: ...
-def shell_layout(
-    graph,
-    nlist: Any | None = ...,
-    rotate: Any | None = ...,
-    scale: int = ...,
-    center: Any | None = ...,
-) -> None: ...
-def spiral_layout(
-    graph,
-    scale: int = ...,
-    center: Any | None = ...,
-    resolution: float = ...,
-    equidistant: bool = ...,
-) -> None: ...
-def num_shortest_paths_unweighted(graph, source) -> None: ...
