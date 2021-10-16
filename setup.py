@@ -5,8 +5,6 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-import pathlib
-import shutil
 
 from setuptools import setup
 try:
@@ -24,8 +22,10 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+
 mpl_extras = ['matplotlib>=3.0']
 graphviz_extras = ['pydot>=1.4', 'pillow>=5.4']
+
 
 setup(
     name="retworkx",
