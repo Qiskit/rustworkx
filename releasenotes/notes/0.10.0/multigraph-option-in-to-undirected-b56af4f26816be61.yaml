@@ -1,0 +1,33 @@
+---
+features:
+  - |
+    Two new kwargs, ``multigraph`` and ``weight_combo_fn``, were added to
+    :meth:`retworkx.PyDiGraph.to_undirected` method. These two options can be
+    used to condense parallel edges into a single edge in the output graph. By
+    setting ``multigraph`` to ``True`` any parallel edges will be condensed
+    into a single edge in the output :class:`~retworkx.PyGraph`. The
+    ``weight_combo_fn`` kwarg is used to control how the parallel edges are
+    condensed. If it's not specified the weight/data payload of the edge with
+    the largest edge index will be used. If ``weight_combo_fn`` is specified
+    it will be passed the weight objects for any parallel edges in the graph
+    and the returned object will be used as the weight for the condensed edge.
+    For example:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.PyDiGraph()
+      graph.extend_from_weighted_edge_list([
+        (0, 1, 25),
+        (1, 0, 10),
+        (1, 2, 10),
+        (2, 1, 100),
+        (2, 3, 50),
+        (3, 2, 40),
+      ])
+      undirected_graph = graph.to_undirected(
+          multigraph=False, weight_combo_fn=max
+      )
+      mpl_draw(undirected_graph, with_labels=True, edge_labels=str)

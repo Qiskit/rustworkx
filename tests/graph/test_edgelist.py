@@ -115,6 +115,36 @@ class TestEdgeList(unittest.TestCase):
         self.assertFalse(graph.has_edge(0, 2))
         self.assertEqual(graph.edges(), ["0", "1"])
 
+    def test_labels_graph(self):
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("a|b|0// test a comment\n")
+            fd.write("b|c|1\n")
+            fd.write("//c|d\n")
+            fd.flush()
+            graph = retworkx.PyGraph.read_edge_list(
+                fd.name, comment="//", deliminator="|", labels=True
+            )
+        self.assertEqual(graph.node_indexes(), [0, 1, 2])
+        self.assertTrue(graph.has_edge(0, 1))
+        self.assertTrue(graph.has_edge(1, 2))
+        self.assertFalse(graph.has_edge(0, 2))
+        self.assertEqual(graph.edges(), ["0", "1"])
+
+    def test_labels_graph_target_existing(self):
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("a|b|0// test a comment\n")
+            fd.write("b|c|1\n")
+            fd.write("a|c\n")
+            fd.flush()
+            graph = retworkx.PyGraph.read_edge_list(
+                fd.name, comment="//", deliminator="|", labels=True
+            )
+        self.assertEqual(graph.node_indexes(), [0, 1, 2])
+        self.assertTrue(graph.has_edge(0, 1))
+        self.assertTrue(graph.has_edge(1, 2))
+        self.assertTrue(graph.has_edge(0, 2))
+        self.assertEqual(graph.edges(), ["0", "1", None])
+
     def test_write_edge_list_empty_digraph(self):
         path = os.path.join(tempfile.gettempdir(), "empty.txt")
         graph = retworkx.PyGraph()
@@ -158,7 +188,7 @@ class TestEdgeList(unittest.TestCase):
     def test_invalid_return_type_weight_fn(self):
         path = os.path.join(tempfile.gettempdir(), "fail.txt")
         graph = retworkx.undirected_gnm_random_graph(5, 4)
-        self.addCleanup(os.remove, path)
+        self.addCleanup(cleanup_file, path)
         with self.assertRaises(TypeError):
             graph.write_edge_list(path, weight_fn=lambda _: 4.5)
 
@@ -169,6 +199,13 @@ class TestEdgeList(unittest.TestCase):
         def weight_fn(edge):
             raise KeyError
 
-        self.addCleanup(os.remove, path)
+        self.addCleanup(cleanup_file, path)
         with self.assertRaises(KeyError):
             graph.write_edge_list(path, weight_fn=weight_fn)
+
+
+def cleanup_file(path):
+    try:
+        os.remove(path)
+    except Exception:
+        pass

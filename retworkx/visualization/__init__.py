@@ -10,6 +10,8 @@
 
 __all__ = [
     "mpl_draw",
+    "graphviz_draw",
 ]
 
 from .matplotlib import mpl_draw
+from .graphviz import graphviz_draw

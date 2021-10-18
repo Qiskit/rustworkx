@@ -1,0 +1,41 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.betweenness_centrality` to compute
+    betweenness centrality of all nodes in a :class:`~retworkx.PyGraph` or
+    :class:`~retworkx.PyDiGraph` object. The algorithm used in this function is
+    based on:
+
+    Ulrik Brandes, "A Faster Algorithm for Betweenness Centrality".
+    Journal of Mathematical Sociology 25(2):163-177, 2001.
+    DOI: `10.1080/0022250X.2001.9990249 <https://doi.org/10.1080/0022250X.2001.9990249>`__
+
+
+    The betweenness centrality of a node :math:`v` is the sum of the fraction
+    of all-pairs shortest paths that pass through :math:`v`
+
+    .. math::
+
+       c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
+
+    where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
+    shortest :math:`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+    those paths  passing through some  node :math:`v` other than :math:`s, t`.
+    If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
+    :math:`\sigma(s, t|v) = 0`
+
+    For example, computing the betweenness centrality for all nodes in a 5x5
+    grid graph and using that to color the nodes in a graph visualization:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.generators.grid_graph(5, 5)
+      btw = retworkx.betweenness_centrality(graph)
+      # Color nodes in graph visualization with betweenness centrality
+      colors = []
+      for i in range(len(graph)):
+          colors.append(btw[i])
+      mpl_draw(graph, node_color=colors)

@@ -17,7 +17,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
-use pyo3::exceptions::PyIndexError;
+use pyo3::exceptions::{PyIndexError, PyOverflowError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
@@ -25,7 +25,7 @@ use pyo3::Python;
 use super::digraph;
 use super::graph;
 
-fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
+pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
 where
     I: IntoIterator + Clone,
 {
@@ -43,6 +43,10 @@ where
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated cycle graph
 /// :rtype: PyDiGraph
@@ -50,34 +54,22 @@ where
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_cycle_graph(5)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -125,7 +117,7 @@ pub fn directed_cycle_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -148,29 +140,14 @@ pub fn directed_cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.cycle_graph(5)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -227,6 +204,10 @@ pub fn cycle_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated path graph
 /// :rtype: PyDiGraph
@@ -234,34 +215,22 @@ pub fn cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_path_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -298,7 +267,7 @@ pub fn directed_path_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -321,29 +290,14 @@ pub fn directed_path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.path_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn path_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -395,6 +349,10 @@ pub fn path_graph(
 /// :param bool inward: If set ``True`` the nodes will be directed towards the
 ///     center node. This parameter is ignored if ``bidirectional`` is set to
 ///     ``True``.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated star graph
 /// :rtype: PyDiGraph
@@ -402,58 +360,31 @@ pub fn path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_star_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_star_graph(10, inward=True)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(inward = "false", bidirectional = "false")]
-#[text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False)"]
+#[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
+#[pyo3(
+    text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
     inward: bool,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -490,7 +421,7 @@ pub fn directed_star_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -513,29 +444,14 @@ pub fn directed_star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.star_graph(10)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn star_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -589,29 +505,14 @@ pub fn star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.mesh_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -658,6 +559,10 @@ pub fn mesh_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param list weights: A list of node weights. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated mesh graph
 /// :rtype: PyDiGraph
@@ -665,33 +570,19 @@ pub fn mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_mesh_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction]
-#[text_signature = "(/, num_nodes=None, weights=None)"]
+#[pyfunction(multigraph = "true")]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn directed_mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && num_nodes.is_none() {
@@ -724,7 +615,7 @@ pub fn directed_mesh_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
@@ -754,29 +645,16 @@ pub fn directed_mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.grid_graph(2, 3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"]
+#[pyo3(
+    text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"
+)]
 pub fn grid_graph(
     py: Python,
     rows: Option<usize>,
@@ -865,6 +743,10 @@ pub fn grid_graph(
 ///     weights list, extra nodes with None weight are appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated grid graph
 /// :rtype: PyDiGraph
@@ -873,35 +755,23 @@ pub fn grid_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_grid_graph(2, 3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[pyo3(
+    text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_grid_graph(
     py: Python,
     rows: Option<usize>,
     cols: Option<usize>,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
@@ -980,13 +850,23 @@ pub fn directed_grid_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
+// MAX_ORDER is determined based on the pointer width of the target platform
+#[cfg(target_pointer_width = "64")]
+const MAX_ORDER: u32 = 60;
+#[cfg(not(target_pointer_width = "64"))]
+const MAX_ORDER: u32 = 29;
+
 /// Generate an undirected binomial tree of order n recursively.
 ///
-/// :param int order: Order of the binomial tree.
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
+///     depends
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
@@ -996,92 +876,71 @@ pub fn directed_grid_graph(
 ///
 /// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises IndexError: If the length of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.binomial_tree_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
+///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(order, /, weights=None, multigraph=True)"]
+#[pyo3(text_signature = "(order, /, weights=None, multigraph=True)")]
 pub fn binomial_tree_graph(
     py: Python,
     order: u32,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
-
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
     let num_nodes = usize::pow(2, order);
-
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-
-            let mut node_count = num_nodes;
-
-            if weights.len() > num_nodes {
-                return Err(PyIndexError::new_err(
-                    "weights should be <= 2**order",
-                ));
+    let num_edges = usize::pow(2, order) - 1;
+    let mut graph = StableUnGraph::<PyObject, PyObject>::with_capacity(
+        num_nodes, num_edges,
+    );
+    for i in 0..num_nodes {
+        match weights {
+            Some(ref weights) => {
+                if weights.len() > num_nodes {
+                    return Err(PyIndexError::new_err(
+                        "weights should be <= 2**order",
+                    ));
+                }
+                if i < weights.len() {
+                    graph.add_node(weights[i].clone_ref(py))
+                } else {
+                    graph.add_node(py.None())
+                }
             }
-
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-                node_count -= 1;
-            }
-
-            for _i in 0..node_count {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
-            }
-
-            node_list
-        }
-
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
-    };
+            None => graph.add_node(py.None()),
+        };
+    }
 
     let mut n = 1;
+    let zero_index = NodeIndex::new(0);
 
     for _ in 0..order {
         let edges: Vec<(NodeIndex, NodeIndex)> = graph
             .edge_references()
             .map(|e| (e.source(), e.target()))
             .collect();
-
         for (source, target) in edges {
-            let source_index = source.index();
-            let target_index = target.index();
+            let source_index = NodeIndex::new(source.index() + n);
+            let target_index = NodeIndex::new(target.index() + n);
 
-            graph.add_edge(
-                nodes[source_index + n],
-                nodes[target_index + n],
-                py.None(),
-            );
+            graph.add_edge(source_index, target_index, py.None());
         }
 
-        graph.add_edge(nodes[0], nodes[n], py.None());
+        graph.add_edge(zero_index, NodeIndex::new(n), py.None());
 
         n *= 2;
     }
@@ -1096,80 +955,76 @@ pub fn binomial_tree_graph(
 /// Generate an undirected binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
 ///
-/// :param int order: Order of the binomial tree.
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with None will be appended.
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyDiGraph
 /// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
 ///
 ///   graph = retworkx.generators.directed_binomial_tree_graph(4)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
-///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///   mpl_draw(graph)
 ///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
-///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(order, /,  weights=None, bidirectional=False)"]
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[pyo3(
+    text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
     weights: Option<Vec<PyObject>>,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
-
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
     let num_nodes = usize::pow(2, order);
+    let num_edges = usize::pow(2, order) - 1;
+    let mut graph = StableDiGraph::<PyObject, PyObject>::with_capacity(
+        num_nodes, num_edges,
+    );
 
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            let mut node_count = num_nodes;
-
-            if weights.len() > num_nodes {
-                return Err(PyIndexError::new_err(
-                    "weights should be <= 2**order",
-                ));
+    for i in 0..num_nodes {
+        match weights {
+            Some(ref weights) => {
+                if weights.len() > num_nodes {
+                    return Err(PyIndexError::new_err(
+                        "weights should be <= 2**order",
+                    ));
+                }
+                if i < weights.len() {
+                    graph.add_node(weights[i].clone_ref(py))
+                } else {
+                    graph.add_node(py.None())
+                }
             }
-
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-                node_count -= 1;
-            }
-
-            for _i in 0..node_count {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
-            }
-
-            node_list
-        }
-
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
-    };
+            None => graph.add_node(py.None()),
+        };
+    }
 
     let mut n = 1;
+    let zero_index = NodeIndex::new(0);
 
     for _ in 0..order {
         let edges: Vec<(NodeIndex, NodeIndex)> = graph
@@ -1178,39 +1033,27 @@ pub fn directed_binomial_tree_graph(
             .collect();
 
         for (source, target) in edges {
-            let source_index = source.index();
-            let target_index = target.index();
+            let source_index = NodeIndex::new(source.index() + n);
+            let target_index = NodeIndex::new(target.index() + n);
 
-            if graph
-                .find_edge(nodes[source_index + n], nodes[target_index + n])
-                .is_none()
-            {
-                graph.add_edge(
-                    nodes[source_index + n],
-                    nodes[target_index + n],
-                    py.None(),
-                );
+            if graph.find_edge(source_index, target_index).is_none() {
+                graph.add_edge(source_index, target_index, py.None());
             }
 
             if bidirectional
-                && graph
-                    .find_edge(nodes[target_index + n], nodes[source_index + n])
-                    .is_none()
+                && graph.find_edge(target_index, source_index).is_none()
             {
-                graph.add_edge(
-                    nodes[target_index + n],
-                    nodes[source_index + n],
-                    py.None(),
-                );
+                graph.add_edge(target_index, source_index, py.None());
             }
         }
+        let n_index = NodeIndex::new(n);
 
-        if graph.find_edge(nodes[0], nodes[n]).is_none() {
-            graph.add_edge(nodes[0], nodes[n], py.None());
+        if graph.find_edge(zero_index, n_index).is_none() {
+            graph.add_edge(zero_index, n_index, py.None());
         }
 
-        if bidirectional && graph.find_edge(nodes[n], nodes[0]).is_none() {
-            graph.add_edge(nodes[n], nodes[0], py.None());
+        if bidirectional && graph.find_edge(n_index, zero_index).is_none() {
+            graph.add_edge(n_index, zero_index, py.None());
         }
 
         n *= 2;
@@ -1221,26 +1064,49 @@ pub fn directed_binomial_tree_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
 }
 
-/// Generate an undirected hexagonal lattice graph.
+/// Generate an undirected heavy square graph. Fig. 6 of
+/// https://arxiv.org/abs/1907.09528.
+/// An ASCII diagram of the graph is given by:
 ///
-/// :param int rows: The number of rows to generate the graph with.
-/// :param int cols: The number of columns to generate the graph with.
+/// .. code-block:: console
+///
+///     ...       S   ...
+///        \     / \
+///        ... D   D   D ...
+///            |   |   |
+///        ... F-S-F-S-F-...
+///            |   |   |
+///        ... D   D   D ...
+///            |   |   |
+///        ... F-S-F-S-F-...
+///            |   |   |
+///            .........
+///            |   |   |
+///        ... D   D   D ...
+///             \ /     \
+///        ...   S       ...
+///
+/// NOTE: This function generates the four-frequency variant of the heavy square code.
+/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function doesn't support the variant Fig 10.b right.
+///
+/// Note that if ``d`` is set to ``1`` a :class:`~retworkx.PyGraph` with a
+/// single node will be returned.
+///
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: The generated hexagonal lattice graph with the following nodes deleted:
-///           ```2*row + 1``` and
-///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
-///
+/// :returns: The generated heavy square graph
 /// :rtype: PyGraph
-/// :raises IndexError: If neither ``rows`` or ``cols`` are
-///      specified
+/// :raises IndexError: If d is even.
 ///
 /// .. jupyter-execute::
 ///
@@ -1252,7 +1118,7 @@ pub fn directed_binomial_tree_graph(
 ///
 ///   import retworkx.generators
 ///
-///   graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
+///   graph = retworkx.generators.heavy_square_graph(3)
 ///   dot_str = graph.to_dot(
 ///       lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
@@ -1266,78 +1132,148 @@ pub fn directed_binomial_tree_graph(
 ///   image
 ///
 #[pyfunction(multigraph = true)]
-#[text_signature = "(/, rows=None, cols=None, multigraph=True)"]
-pub fn hexagonal_lattice_graph(
+#[pyo3(text_signature = "(d, /, multigraph=True)")]
+pub fn heavy_square_graph(
     py: Python,
-    rows: usize,
-    cols: usize,
+    d: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
 
-    let mut rowlen = rows;
-    let mut collen = cols;
+    if d % 2 == 0 {
+        return Err(PyIndexError::new_err("d must be odd"));
+    }
 
-    // Needs two times the number of nodes vertically
-    rowlen = 2 * rowlen + 2;
-    collen += 1;
-    let num_nodes = rowlen * collen;
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        });
+    }
 
-    let nodes: Vec<NodeIndex> =
-        (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
+    let num_data = d * d;
+    let num_syndrome = d * (d - 1);
+    let num_flag = d * (d - 1);
 
-    // Add column edges
-    for i in 0..collen {
-        for j in 0..(rowlen - 1) {
+    let nodes_data: Vec<NodeIndex> =
+        (0..num_data).map(|_| graph.add_node(py.None())).collect();
+    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
+        .map(|_| graph.add_node(py.None()))
+        .collect();
+    let nodes_flag: Vec<NodeIndex> =
+        (0..num_flag).map(|_| graph.add_node(py.None())).collect();
+
+    // connect data and flags
+    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
+        for (j, flag) in flag_chunk.iter().enumerate() {
+            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
+            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
+        }
+    }
+
+    // connect data and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
+        if i % 2 == 0 {
             graph.add_edge(
-                nodes[i * rowlen + j],
-                nodes[i * rowlen + (j + 1)],
+                nodes_data[i * d + (d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            graph.add_edge(
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                nodes_data[i * d + (2 * d - 1)],
+                py.None(),
+            );
+        } else if i % 2 == 1 {
+            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
+            graph.add_edge(
+                syndrome_chunk[0],
+                nodes_data[(i + 1) * d],
                 py.None(),
             );
         }
     }
 
-    // Add row edges
-    for i in 0..(collen - 1) {
-        for j in 0..rowlen {
-            if i % 2 == j % 2 {
-                graph.add_edge(
-                    nodes[i * rowlen + j],
-                    nodes[(i + 1) * rowlen + j],
-                    py.None(),
-                );
+    // connect flag and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
+        if i % 2 == 0 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != syndrome_chunk.len() - 1 {
+                    graph.add_edge(
+                        nodes_flag[i * (d - 1) + j],
+                        *syndrome,
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j],
+                        py.None(),
+                    );
+                }
+            }
+        } else if i % 2 == 1 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != 0 {
+                    graph.add_edge(
+                        nodes_flag[i * (d - 1) + j - 1],
+                        *syndrome,
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j - 1],
+                        py.None(),
+                    );
+                }
             }
         }
     }
 
-    // Remove corner nodes
-    graph.remove_node(nodes[rowlen - 1]);
-    graph.remove_node(
-        nodes[(collen - 1) * rowlen + (rowlen - 1) * ((collen - 1) % 2)],
-    );
-
     Ok(graph::PyGraph {
         graph,
-        node_removed: true,
+        node_removed: false,
         multigraph,
     })
 }
 
-/// Generate a directed hexagonal lattice graph. The edges propagate towards  
-///     right and bottom direction if ``bidirectional`` is ``false``
+/// Generate an directed heavy square graph. Fig. 6 of
+/// https://arxiv.org/abs/1907.09528.
+/// An ASCII diagram of the graph is given by:
 ///
-/// :param int rows: The number of rows to generate the graph with.
-/// :param int cols: The number of rows to generate the graph with.
-/// :param bidirectional: A parameter to indicate if edges should exist in
-///     both directions between nodes
+/// .. code-block:: console
 ///
-/// :returns: The generated directed hexagonal lattice graph with the following nodes deleted:
-///           ```2*row + 1``` and
-///           ```(col) * (2*row + 2) + (2*row + 1) * ((col) % 2)```
+///     ...       S   ...
+///        \     / \
+///        ... D   D   D ...
+///            |   |   |
+///        ... F-S-F-S-F-...
+///            |   |   |
+///        ... D   D   D ...
+///            |   |   |
+///        ... F-S-F-S-F-...
+///            |   |   |
+///            .........
+///            |   |   |
+///        ... D   D   D ...
+///             \ /     \
+///        ...   S       ...
 ///
+/// NOTE: This function generates the four-frequency variant of the heavy square code.
+/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function doesn't support the variant Fig 10.b right.
+///
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated directed heavy square graph
 /// :rtype: PyDiGraph
-/// :raises IndexError: If neither ``rows`` or ``cols`` are
-///      specified
+/// :raises IndexError: If d is even.
 ///
 /// .. jupyter-execute::
 ///
@@ -1349,7 +1285,7 @@ pub fn hexagonal_lattice_graph(
 ///
 ///   import retworkx.generators
 ///
-///   graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 3)
+///   graph = retworkx.generators.heavy_square_graph(3)
 ///   dot_str = graph.to_dot(
 ///       lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
@@ -1362,57 +1298,330 @@ pub fn hexagonal_lattice_graph(
 ///       os.remove(tmp_path)
 ///   image
 ///
-#[pyfunction(bidirectional = "false")]
-#[text_signature = "(/, rows=None, cols=None, bidirectional=False)"]
-pub fn directed_hexagonal_lattice_graph(
+#[pyfunction(bidirectional = false, multigraph = true)]
+#[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
+pub fn directed_heavy_square_graph(
     py: Python,
-    rows: usize,
-    cols: usize,
+    d: usize,
     bidirectional: bool,
+    multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let mut graph = StableDiGraph::<PyObject, PyObject>::default();
 
-    let mut rowlen = rows;
-    let mut collen = cols;
-    // Needs two times the number of nodes vertically
-    rowlen = 2 * rowlen + 2;
-    collen += 1;
-    let num_nodes = rowlen * collen;
+    if d % 2 == 0 {
+        return Err(PyIndexError::new_err("d must be odd"));
+    }
 
-    let nodes: Vec<NodeIndex> =
-        (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        });
+    }
 
-    // Add column edges
-    for i in 0..collen {
-        for j in 0..(rowlen - 1) {
+    let num_data = d * d;
+    let num_syndrome = d * (d - 1);
+    let num_flag = d * (d - 1);
+
+    let nodes_data: Vec<NodeIndex> =
+        (0..num_data).map(|_| graph.add_node(py.None())).collect();
+    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
+        .map(|_| graph.add_node(py.None()))
+        .collect();
+    let nodes_flag: Vec<NodeIndex> =
+        (0..num_flag).map(|_| graph.add_node(py.None())).collect();
+
+    // connect data and flags
+    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
+        for (j, flag) in flag_chunk.iter().enumerate() {
+            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
+            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
+            if bidirectional {
+                graph.add_edge(*flag, nodes_data[i * d + j], py.None());
+                graph.add_edge(nodes_data[i * d + j + 1], *flag, py.None());
+            }
+        }
+    }
+
+    // connect data and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
+        if i % 2 == 0 {
             graph.add_edge(
-                nodes[i * rowlen + j],
-                nodes[i * rowlen + (j + 1)],
+                nodes_data[i * d + (d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            graph.add_edge(
+                nodes_data[i * d + (2 * d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
                 py.None(),
             );
             if bidirectional {
                 graph.add_edge(
-                    nodes[i * rowlen + (j + 1)],
-                    nodes[i * rowlen + j],
+                    syndrome_chunk[syndrome_chunk.len() - 1],
+                    nodes_data[i * d + (d - 1)],
+                    py.None(),
+                );
+                graph.add_edge(
+                    syndrome_chunk[syndrome_chunk.len() - 1],
+                    nodes_data[i * d + (2 * d - 1)],
+                    py.None(),
+                );
+            }
+        } else if i % 2 == 1 {
+            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
+            graph.add_edge(
+                nodes_data[(i + 1) * d],
+                syndrome_chunk[0],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(syndrome_chunk[0], nodes_data[i * d], py.None());
+                graph.add_edge(
+                    syndrome_chunk[0],
+                    nodes_data[(i + 1) * d],
                     py.None(),
                 );
             }
         }
     }
 
-    // Add row edges
-    for i in 0..(collen - 1) {
-        for j in 0..rowlen {
-            if i % 2 == j % 2 {
-                graph.add_edge(
-                    nodes[i * rowlen + j],
-                    nodes[(i + 1) * rowlen + j],
-                    py.None(),
-                );
-                if bidirectional {
+    // connect flag and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
+        if i % 2 == 0 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != syndrome_chunk.len() - 1 {
                     graph.add_edge(
-                        nodes[(i + 1) * rowlen + j],
-                        nodes[i * rowlen + j],
+                        *syndrome,
+                        nodes_flag[i * (d - 1) + j],
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j],
+                        py.None(),
+                    );
+                    if bidirectional {
+                        graph.add_edge(
+                            nodes_flag[i * (d - 1) + j],
+                            *syndrome,
+                            py.None(),
+                        );
+                        graph.add_edge(
+                            nodes_flag[(i + 1) * (d - 1) + j],
+                            *syndrome,
+                            py.None(),
+                        );
+                    }
+                }
+            }
+        } else if i % 2 == 1 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != 0 {
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[i * (d - 1) + j - 1],
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j - 1],
+                        py.None(),
+                    );
+                    if bidirectional {
+                        graph.add_edge(
+                            nodes_flag[i * (d - 1) + j - 1],
+                            *syndrome,
+                            py.None(),
+                        );
+                        graph.add_edge(
+                            nodes_flag[(i + 1) * (d - 1) + j - 1],
+                            *syndrome,
+                            py.None(),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph,
+    })
+}
+
+/// Generate an undirected heavy hex graph. Fig. 2 of
+/// https://arxiv.org/abs/1907.09528
+/// An ASCII diagram of the graph is given by:
+///
+/// .. code-block:: text
+///
+///     ... D-S-D   D ...
+///         |   |   |
+///     ...-F   F-S-F ...
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ... F-S-F   F-...
+///         |   |   |
+///         .........
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ...-F   F-S-F ...
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ... F-S-F   F-...
+///         |   |   |
+///         .........
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ...-F   F-S-F ...
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ... F-S-F   F-...
+///         |   |   |
+///     ... D   D-S-D ...
+///
+///
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyGraph` with a single node will be returned.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated heavy hex graph
+/// :rtype: PyGraph
+/// :raises IndexError: If d is even.
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.heavy_hex_graph(3)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(d, /, multigraph=True)")]
+pub fn heavy_hex_graph(
+    py: Python,
+    d: usize,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    if d % 2 == 0 {
+        return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        });
+    }
+
+    let num_data = d * d;
+    let num_syndrome = (d - 1) * (d + 1) / 2;
+    let num_flag = d * (d - 1);
+
+    let nodes_data: Vec<NodeIndex> =
+        (0..num_data).map(|_| graph.add_node(py.None())).collect();
+    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
+        .map(|_| graph.add_node(py.None()))
+        .collect();
+    let nodes_flag: Vec<NodeIndex> =
+        (0..num_flag).map(|_| graph.add_node(py.None())).collect();
+
+    // connect data and flags
+    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
+        for (j, flag) in flag_chunk.iter().enumerate() {
+            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
+            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
+        }
+    }
+
+    // connect data and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
+        if i % 2 == 0 {
+            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
+            graph.add_edge(
+                syndrome_chunk[0],
+                nodes_data[(i + 1) * d],
+                py.None(),
+            );
+        } else if i % 2 == 1 {
+            graph.add_edge(
+                nodes_data[i * d + (d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            graph.add_edge(
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                nodes_data[i * d + (2 * d - 1)],
+                py.None(),
+            );
+        }
+    }
+
+    // connect flag and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
+        if i % 2 == 0 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != 0 {
+                    graph.add_edge(
+                        nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
+                        *syndrome,
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + 2 * (j - 1) + 1],
+                        py.None(),
+                    );
+                }
+            }
+        } else if i % 2 == 1 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != syndrome_chunk.len() - 1 {
+                    graph.add_edge(
+                        nodes_flag[i * (d - 1) + 2 * j],
+                        *syndrome,
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + 2 * j],
                         py.None(),
                     );
                 }
@@ -1420,19 +1629,591 @@ pub fn directed_hexagonal_lattice_graph(
         }
     }
 
-    // Remove corner nodes
-    graph.remove_node(nodes[rowlen - 1]);
-    graph.remove_node(
-        nodes[(collen - 1) * rowlen + (rowlen - 1) * ((collen - 1) % 2)],
-    );
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
+/// Generate a directed heavy hex graph. Fig. 2 of
+/// https://arxiv.org/abs/1907.09528
+/// An ASCII diagram of the graph is given by:
+///
+/// .. code-block:: text
+///
+///     ... D-S-D   D ...
+///         |   |   |
+///     ...-F   F-S-F ...
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ... F-S-F   F-...
+///         |   |   |
+///         .........
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ...-F   F-S-F ...
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ... F-S-F   F-...
+///         |   |   |
+///         .........
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ...-F   F-S-F ...
+///         |   |   |
+///     ... D   D   D ...
+///         |   |   |
+///     ... F-S-F   F-...
+///         |   |   |
+///     ... D   D-S-D ...
+///
+///
+/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated heavy hex directed graph
+/// :rtype: PyDiGraph
+/// :raises IndexError: If d is even.
+///
+/// .. jupyter-execute::
+///
+///   import os
+///   import tempfile
+///
+///   import pydot
+///   from PIL import Image
+///
+///   import retworkx.generators
+///
+///   graph = retworkx.generators.heavy_hex_graph(3)
+///   dot_str = graph.to_dot(
+///       lambda node: dict(
+///           color='black', fillcolor='lightblue', style='filled'))
+///   dot = pydot.graph_from_dot_data(dot_str)[0]
+///
+///   with tempfile.TemporaryDirectory() as tmpdirname:
+///       tmp_path = os.path.join(tmpdirname, 'dag.png')
+///       dot.write_png(tmp_path)
+///       image = Image.open(tmp_path)
+///       os.remove(tmp_path)
+///   image
+///
+#[pyfunction(bidirectional = false, multigraph = true)]
+#[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
+pub fn directed_heavy_hex_graph(
+    py: Python,
+    d: usize,
+    bidirectional: bool,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+
+    if d % 2 == 0 {
+        return Err(PyIndexError::new_err("d must be odd"));
+    }
+
+    if d == 1 {
+        graph.add_node(py.None());
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        });
+    }
+
+    let num_data = d * d;
+    let num_syndrome = (d - 1) * (d + 1) / 2;
+    let num_flag = d * (d - 1);
+
+    let nodes_data: Vec<NodeIndex> =
+        (0..num_data).map(|_| graph.add_node(py.None())).collect();
+    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
+        .map(|_| graph.add_node(py.None()))
+        .collect();
+    let nodes_flag: Vec<NodeIndex> =
+        (0..num_flag).map(|_| graph.add_node(py.None())).collect();
+
+    // connect data and flags
+    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
+        for (j, flag) in flag_chunk.iter().enumerate() {
+            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
+            graph.add_edge(nodes_data[i * d + j + 1], *flag, py.None());
+            if bidirectional {
+                graph.add_edge(*flag, nodes_data[i * d + j], py.None());
+                graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
+            }
+        }
+    }
+
+    // connect data and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
+        if i % 2 == 0 {
+            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
+            graph.add_edge(
+                nodes_data[(i + 1) * d],
+                syndrome_chunk[0],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(syndrome_chunk[0], nodes_data[i * d], py.None());
+                graph.add_edge(
+                    syndrome_chunk[0],
+                    nodes_data[(i + 1) * d],
+                    py.None(),
+                );
+            }
+        } else if i % 2 == 1 {
+            graph.add_edge(
+                nodes_data[i * d + (d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            graph.add_edge(
+                nodes_data[i * d + (2 * d - 1)],
+                syndrome_chunk[syndrome_chunk.len() - 1],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(
+                    syndrome_chunk[syndrome_chunk.len() - 1],
+                    nodes_data[i * d + (d - 1)],
+                    py.None(),
+                );
+                graph.add_edge(
+                    syndrome_chunk[syndrome_chunk.len() - 1],
+                    nodes_data[i * d + (2 * d - 1)],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    // connect flag and syndromes
+    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
+        if i % 2 == 0 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != 0 {
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + 2 * (j - 1) + 1],
+                        py.None(),
+                    );
+                    if bidirectional {
+                        graph.add_edge(
+                            nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
+                            *syndrome,
+                            py.None(),
+                        );
+                        graph.add_edge(
+                            nodes_flag[(i + 1) * (d - 1) + 2 * (j - 1) + 1],
+                            *syndrome,
+                            py.None(),
+                        );
+                    }
+                }
+            }
+        } else if i % 2 == 1 {
+            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
+                if j != syndrome_chunk.len() - 1 {
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[i * (d - 1) + 2 * j],
+                        py.None(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + 2 * j],
+                        py.None(),
+                    );
+                    if bidirectional {
+                        graph.add_edge(
+                            nodes_flag[i * (d - 1) + 2 * j],
+                            *syndrome,
+                            py.None(),
+                        );
+                        graph.add_edge(
+                            nodes_flag[(i + 1) * (d - 1) + 2 * j],
+                            *syndrome,
+                            py.None(),
+                        );
+                    }
+                }
+            }
+        }
+    }
 
     Ok(digraph::PyDiGraph {
         graph,
-        node_removed: true,
+        node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph: true,
+        multigraph,
     })
+}
+
+/// Generate an undirected hexagonal lattice graph.
+///
+/// :param int rows: The number of rows to generate the graph with.
+/// :param int cols: The number of columns to generate the graph with.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated hexagonal lattice graph.
+///
+/// :rtype: PyGraph
+/// :raises TypeError: If either ``rows`` or ``cols`` are
+///      not specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(rows, cols, /, multigraph=True)")]
+pub fn hexagonal_lattice_graph(
+    py: Python,
+    rows: usize,
+    cols: usize,
+    multigraph: bool,
+) -> graph::PyGraph {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+
+    if rows == 0 || cols == 0 {
+        return graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+        };
+    }
+
+    let mut rowlen = rows;
+    let mut collen = cols;
+
+    // Needs two times the number of nodes vertically
+    rowlen = 2 * rowlen + 2;
+    collen += 1;
+    let num_nodes = rowlen * collen - 2;
+
+    let nodes: Vec<NodeIndex> =
+        (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
+
+    // Add column edges
+    // first column
+    for j in 0..(rowlen - 2) {
+        graph.add_edge(nodes[j], nodes[j + 1], py.None());
+    }
+
+    for i in 1..(collen - 1) {
+        for j in 0..(rowlen - 1) {
+            graph.add_edge(
+                nodes[i * rowlen + j - 1],
+                nodes[i * rowlen + j],
+                py.None(),
+            );
+        }
+    }
+
+    // last column
+    for j in 0..(rowlen - 2) {
+        graph.add_edge(
+            nodes[(collen - 1) * rowlen + j - 1],
+            nodes[(collen - 1) * rowlen + j],
+            py.None(),
+        );
+    }
+
+    // Add row edges
+    for j in (0..(rowlen - 1)).step_by(2) {
+        graph.add_edge(nodes[j], nodes[j + rowlen - 1], py.None());
+    }
+
+    for i in 1..(collen - 2) {
+        for j in 0..rowlen {
+            if i % 2 == j % 2 {
+                graph.add_edge(
+                    nodes[i * rowlen + j - 1],
+                    nodes[(i + 1) * rowlen + j - 1],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    if collen > 2 {
+        for j in ((collen % 2)..rowlen).step_by(2) {
+            graph.add_edge(
+                nodes[(collen - 2) * rowlen + j - 1],
+                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
+                py.None(),
+            );
+        }
+    }
+
+    graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    }
+}
+
+/// Generate a directed hexagonal lattice graph. The edges propagate towards  
+///     right and bottom direction if ``bidirectional`` is ``false``
+///
+/// :param int rows: The number of rows to generate the graph with.
+/// :param int cols: The number of rows to generate the graph with.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated directed hexagonal lattice graph.
+///
+/// :rtype: PyDiGraph
+/// :raises TypeError: If either ``rows`` or ``cols`` are
+///      not specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 3)
+///   mpl_draw(graph)
+///
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[pyo3(
+    text_signature = "(rows, cols, /, bidirectional=False, multigraph=True)"
+)]
+pub fn directed_hexagonal_lattice_graph(
+    py: Python,
+    rows: usize,
+    cols: usize,
+    bidirectional: bool,
+    multigraph: bool,
+) -> digraph::PyDiGraph {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+
+    if rows == 0 || cols == 0 {
+        return digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+        };
+    }
+
+    let mut rowlen = rows;
+    let mut collen = cols;
+
+    // Needs two times the number of nodes vertically
+    rowlen = 2 * rowlen + 2;
+    collen += 1;
+    let num_nodes = rowlen * collen - 2;
+
+    let nodes: Vec<NodeIndex> =
+        (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
+
+    // Add column edges
+    // first column
+    for j in 0..(rowlen - 2) {
+        graph.add_edge(nodes[j], nodes[j + 1], py.None());
+        if bidirectional {
+            graph.add_edge(nodes[j + 1], nodes[j], py.None());
+        }
+    }
+
+    for i in 1..(collen - 1) {
+        for j in 0..(rowlen - 1) {
+            graph.add_edge(
+                nodes[i * rowlen + j - 1],
+                nodes[i * rowlen + j],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(
+                    nodes[i * rowlen + j],
+                    nodes[i * rowlen + j - 1],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    // last column
+    for j in 0..(rowlen - 2) {
+        graph.add_edge(
+            nodes[(collen - 1) * rowlen + j - 1],
+            nodes[(collen - 1) * rowlen + j],
+            py.None(),
+        );
+        if bidirectional {
+            graph.add_edge(
+                nodes[(collen - 1) * rowlen + j],
+                nodes[(collen - 1) * rowlen + j - 1],
+                py.None(),
+            );
+        }
+    }
+
+    // Add row edges
+    for j in (0..(rowlen - 1)).step_by(2) {
+        graph.add_edge(nodes[j], nodes[j + rowlen - 1], py.None());
+        if bidirectional {
+            graph.add_edge(nodes[j + rowlen - 1], nodes[j], py.None());
+        }
+    }
+
+    for i in 1..(collen - 2) {
+        for j in 0..rowlen {
+            if i % 2 == j % 2 {
+                graph.add_edge(
+                    nodes[i * rowlen + j - 1],
+                    nodes[(i + 1) * rowlen + j - 1],
+                    py.None(),
+                );
+                if bidirectional {
+                    graph.add_edge(
+                        nodes[(i + 1) * rowlen + j - 1],
+                        nodes[i * rowlen + j - 1],
+                        py.None(),
+                    );
+                }
+            }
+        }
+    }
+
+    if collen > 2 {
+        for j in ((collen % 2)..rowlen).step_by(2) {
+            graph.add_edge(
+                nodes[(collen - 2) * rowlen + j - 1],
+                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
+                py.None(),
+            );
+            if bidirectional {
+                graph.add_edge(
+                    nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
+                    nodes[(collen - 2) * rowlen + j - 1],
+                    py.None(),
+                );
+            }
+        }
+    }
+
+    digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph,
+    }
+}
+
+/// Generate an undirected lollipop graph where a mesh graph is connected to a
+/// path.
+///
+/// If neither ``num_path_nodes`` nor ``path_weights`` (both described
+/// below) are specified then this is equivalent to
+/// :func:`~retworkx.generators.mesh_graph`
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+///     be ignored and ``mesh_weights`` will be used.
+/// :param list path_weights: A list of node weights for the path. If both
+///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+///     be ignored and ``path_weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated lollipop graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_mesh_nodes`` or ``mesh_weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.lollipop_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=True)"
+)]
+pub fn lollipop_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    mesh_weights: Option<Vec<PyObject>>,
+    path_weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = mesh_graph(py, num_mesh_nodes, mesh_weights, multigraph)?;
+    if num_path_nodes.is_none() && path_weights.is_none() {
+        return Ok(graph);
+    }
+    let meshlen = graph.num_nodes();
+
+    let path_nodes: Vec<NodeIndex> = match path_weights {
+        Some(path_weights) => path_weights
+            .into_iter()
+            .map(|node| graph.graph.add_node(node))
+            .collect(),
+        None => (0..num_path_nodes.unwrap())
+            .map(|_| graph.graph.add_node(py.None()))
+            .collect(),
+    };
+
+    let pathlen = path_nodes.len();
+    if pathlen > 0 {
+        graph.graph.add_edge(
+            NodeIndex::new(meshlen - 1),
+            NodeIndex::new(meshlen),
+            py.None(),
+        );
+        for (node_a, node_b) in pairwise(path_nodes) {
+            match node_a {
+                Some(node_a) => graph.graph.add_edge(node_a, node_b, py.None()),
+                None => continue,
+            };
+        }
+    }
+    Ok(graph)
 }
 
 #[pymodule]
@@ -1447,9 +2228,14 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(heavy_square_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_heavy_square_graph))?;
+    m.add_wrapped(wrap_pyfunction!(heavy_hex_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_heavy_hex_graph))?;
     m.add_wrapped(wrap_pyfunction!(binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
+    m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
     Ok(())
 }

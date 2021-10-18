@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.num_shortest_paths_unweighted`
+    (and it's per type variants
+    :func:`~retworkx.digraph_num_shortest_paths_unweighted` and
+    :func:`~retworkx.graph_num_shortest_paths_unweighted`), which is used to
+    get a count of unweighted shortest paths from a given node to all other
+    nodes (where path exists) in the graph.

@@ -47,6 +47,10 @@ class TestDispatchPyGraph(unittest.TestCase):
         res = retworkx.all_simple_paths(self.graph, 0, 1)
         self.assertIsInstance(res, list)
 
+    def test_floyd_warshall(self):
+        res = retworkx.floyd_warshall(self.graph)
+        self.assertIsInstance(res, retworkx.AllPairsPathLengthMapping)
+
     def test_floyd_warshall_numpy(self):
         res = retworkx.floyd_warshall_numpy(self.graph)
         self.assertIsInstance(res, numpy.ndarray)
@@ -82,12 +86,26 @@ class TestDispatchPyGraph(unittest.TestCase):
         res = retworkx.dfs_edges(self.graph, 0)
         self.assertIsInstance(list(res), list)
 
+    def test_all_pairs_dijkstra_shortest_paths(self):
+        res = retworkx.all_pairs_dijkstra_shortest_paths(
+            self.graph, lambda _: 1
+        )
+        self.assertIsInstance(res, retworkx.AllPairsPathMapping)
+
+    def test_all_pairs_dijkstra_path_lengthss(self):
+        res = retworkx.all_pairs_dijkstra_path_lengths(self.graph, lambda _: 1)
+        self.assertIsInstance(res, retworkx.AllPairsPathLengthMapping)
+
     def test_is_isomorphic_nodes_incompatible_raises(self):
         with self.assertRaises(TypeError):
             if self.class_type == "PyGraph":
                 retworkx.is_isomorphic(self.graph, retworkx.PyDiGraph())
             else:
                 retworkx.is_isomorphic(self.graph, retworkx.PyGraph())
+
+    def test_betweenness_centrality(self):
+        res = retworkx.betweenness_centrality(self.graph)
+        self.assertIsInstance(res, retworkx.CentralityMapping)
 
 
 class TestDispatchPyDiGraph(TestDispatchPyGraph):
