@@ -47,6 +47,7 @@
 //! The crate is organized into
 //!
 //! * [`centrality`](./centrality/index.html)
+//! * [`connectivity`](./connectivity/index.html)
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
 //!
@@ -68,6 +69,7 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 
 /// Module for centrality algorithms
 pub mod centrality;
+pub mod connectivity;
 /// Module for maximum weight matching algorithmss
 pub mod max_weight_matching;
 pub mod shortest_path;

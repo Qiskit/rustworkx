@@ -37,7 +37,10 @@ use super::dot_utils::build_dot;
 use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList,
 };
-use super::{find_node_by_weight, IsNan, NoEdgeBetweenNodes, NodesRemoved};
+use super::{
+    find_node_by_weight, weight_callable, IsNan, NoEdgeBetweenNodes,
+    NodesRemoved,
+};
 
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -1259,17 +1262,6 @@ impl PyGraph {
             None => " ".to_string(),
         };
 
-        let weight_callable = |value: &PyObject,
-                               weight_fn: &Option<PyObject>|
-         -> PyResult<Option<String>> {
-            match weight_fn {
-                Some(weight_fn) => {
-                    let res = weight_fn.call1(py, (value,))?;
-                    Ok(Some(res.extract(py)?))
-                }
-                None => Ok(None),
-            }
-        };
         for edge in self.graph.edge_references() {
             buf_writer.write_all(
                 format!(
@@ -1280,7 +1272,12 @@ impl PyGraph {
                 )
                 .as_bytes(),
             )?;
-            match weight_callable(edge.weight(), &weight_fn)? {
+            match weight_callable(
+                py,
+                &weight_fn,
+                edge.weight(),
+                None as Option<String>,
+            )? {
                 Some(weight) => buf_writer
                     .write_all(format!("{}{}\n", delim, weight).as_bytes()),
                 None => buf_writer.write_all(b"\n"),
