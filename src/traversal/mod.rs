@@ -219,7 +219,7 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///        graph = retworkx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        retworkx.dfs_search(graph, 0, vis)
+///        retworkx.dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
@@ -303,7 +303,7 @@ pub fn digraph_dfs_search(
 ///        graph = retworkx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        retworkx.dfs_search(graph, 0, vis)
+///        retworkx.dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
