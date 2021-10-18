@@ -15,7 +15,7 @@
 // https://github.com/petgraph/petgraph/blob/0.6.0/src/visit/dfsvisit.rs
 
 use petgraph::visit::{
-    ControlFlow, DfsEvent, IntoNeighbors, Time, VisitMap, Visitable,
+    ControlFlow, EdgeRef, IntoEdges, Time, VisitMap, Visitable,
 };
 
 /// Return if the expression is a break value, execute the provided statement
@@ -38,6 +38,23 @@ macro_rules! try_control {
             }
         }
     };
+}
+
+/// A depth first search (DFS) visitor event.
+#[derive(Copy, Clone, Debug)]
+pub enum DfsEvent<N, E> {
+    Discover(N, Time),
+    /// An edge of the tree formed by the traversal.
+    TreeEdge(N, N, E),
+    /// An edge to an already visited node.
+    BackEdge(N, N, E),
+    /// A cross or forward edge.
+    ///
+    /// For an edge *(u, v)*, if the discover time of *v* is greater than *u*,
+    /// then it is a forward edge, else a cross edge.
+    CrossForwardEdge(N, N, E),
+    /// All edges from a node have been reported.
+    Finish(N, Time),
 }
 
 /// An iterative depth first search.
@@ -74,8 +91,9 @@ macro_rules! try_control {
 /// ```
 /// use retworkx_core::petgraph::prelude::*;
 /// use retworkx_core::petgraph::graph::node_index as n;
-/// use retworkx_core::petgraph::visit::depth_first_search;
-/// use retworkx_core::petgraph::visit::{DfsEvent, Control};
+/// use retworkx_core::petgraph::visit::Control;
+///
+/// use retworkx_core::traversal::{DfsEvent, depth_first_search};
 ///
 /// let gr: Graph<(), ()> = Graph::from_edges(&[
 ///     (0, 1), (0, 2), (0, 3),
@@ -89,7 +107,7 @@ macro_rules! try_control {
 /// let start = n(0);
 /// let goal = n(5);
 /// depth_first_search(&gr, Some(start), |event| {
-///     if let DfsEvent::TreeEdge(u, v) = event {
+///     if let DfsEvent::TreeEdge(u, v, _) = event {
 ///         predecessor[v.index()] = u;
 ///         if v == goal {
 ///             return Control::Break(v);
@@ -113,13 +131,21 @@ macro_rules! try_control {
 /// ```
 /// use retworkx_core::petgraph::graph::node_index as n;
 /// use retworkx_core::petgraph::prelude::*;
-/// use retworkx_core::petgraph::visit::depth_first_search;
-/// use retworkx_core::petgraph::visit::{DfsEvent, Time};
+/// use retworkx_core::petgraph::visit::Time;
+///
+/// use retworkx_core::traversal::{DfsEvent, depth_first_search};
 ///
 /// let gr: Graph<(), ()> = Graph::from_edges(&[(0, 1), (1, 2), (1, 1), (2, 1)]);
 /// let start = n(0);
 /// let mut back_edges = 0;
 /// let mut discover_time = 0;
+///
+/// #[derive(Debug)]
+/// struct BackEdgeFound {
+///     source: NodeIndex,
+///     target: NodeIndex,
+/// }
+///
 /// // Stop the search, the first time a BackEdge is encountered.
 /// let result = depth_first_search(&gr, Some(start), |event| {
 ///     match event {
@@ -131,11 +157,11 @@ macro_rules! try_control {
 ///             discover_time = t;
 ///             Ok(())
 ///         }
-///         DfsEvent::BackEdge(_, _) => {
+///         DfsEvent::BackEdge(u, v, _) => {
 ///             back_edges += 1;
 ///             // the implementation of ControlFlow for Result,
 ///             // treats this Err value as Continue::Break
-///             Err(event)
+///             Err(BackEdgeFound {source: u, target: v})
 ///         }
 ///         _ => Ok(()),
 ///     }
@@ -146,13 +172,13 @@ macro_rules! try_control {
 /// assert_eq!(back_edges, 1);
 /// println!("discover time:{:?}", discover_time);
 /// println!("number of backedges encountered: {}", back_edges);
-/// println!("back edge: {:?}", result);
+/// println!("back edge: ({:?})", result.unwrap_err());
 /// ```
 pub fn depth_first_search<G, I, F, C>(graph: G, starts: I, mut visitor: F) -> C
 where
-    G: IntoNeighbors + Visitable,
+    G: IntoEdges + Visitable,
     I: IntoIterator<Item = G::NodeId>,
-    F: FnMut(DfsEvent<G::NodeId>) -> C,
+    F: FnMut(DfsEvent<G::NodeId, &G::EdgeWeight>) -> C,
     C: ControlFlow,
 {
     let time = &mut Time(0);
@@ -177,8 +203,8 @@ fn dfs_visitor<G, F, C>(
     time: &mut Time,
 ) -> C
 where
-    G: IntoNeighbors + Visitable,
-    F: FnMut(DfsEvent<G::NodeId>) -> C,
+    G: IntoEdges + Visitable,
+    F: FnMut(DfsEvent<G::NodeId, &G::EdgeWeight>) -> C,
     C: ControlFlow,
 {
     if !discovered.visit(u) {
@@ -186,18 +212,21 @@ where
     }
 
     try_control!(visitor(DfsEvent::Discover(u, time_post_inc(time))), {}, {
-        let mut stack: Vec<(G::NodeId, <G as IntoNeighbors>::Neighbors)> =
-            Vec::new();
-        stack.push((u, graph.neighbors(u)));
+        let mut stack: Vec<(G::NodeId, <G as IntoEdges>::Edges)> = Vec::new();
+        stack.push((u, graph.edges(u)));
 
         while let Some(elem) = stack.last_mut() {
             let u = elem.0;
-            let neighbors = &mut elem.1;
+            let adjacent_edges = &mut elem.1;
             let mut next = None;
 
-            for v in neighbors {
+            for edge in adjacent_edges {
+                let v = edge.target();
                 if !discovered.is_visited(&v) {
-                    try_control!(visitor(DfsEvent::TreeEdge(u, v)), continue);
+                    try_control!(
+                        visitor(DfsEvent::TreeEdge(u, v, edge.weight())),
+                        continue
+                    );
                     discovered.visit(v);
                     try_control!(
                         visitor(DfsEvent::Discover(v, time_post_inc(time))),
@@ -206,17 +235,24 @@ where
                     next = Some(v);
                     break;
                 } else if !finished.is_visited(&v) {
-                    try_control!(visitor(DfsEvent::BackEdge(u, v)), continue);
+                    try_control!(
+                        visitor(DfsEvent::BackEdge(u, v, edge.weight())),
+                        continue
+                    );
                 } else {
                     try_control!(
-                        visitor(DfsEvent::CrossForwardEdge(u, v)),
+                        visitor(DfsEvent::CrossForwardEdge(
+                            u,
+                            v,
+                            edge.weight()
+                        )),
                         continue
                     );
                 }
             }
 
             match next {
-                Some(v) => stack.push((v, graph.neighbors(v))),
+                Some(v) => stack.push((v, graph.edges(v))),
                 None => {
                     let first_finish = finished.visit(u);
                     debug_assert!(first_finish);

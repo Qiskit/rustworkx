@@ -17,9 +17,10 @@
 use pyo3::prelude::*;
 
 use petgraph::stable_graph::NodeIndex;
-use petgraph::visit::{Control, DfsEvent, Time};
+use petgraph::visit::{Control, Time};
 
 use crate::PruneSearch;
+use retworkx_core::traversal::DfsEvent;
 
 #[derive(FromPyObject)]
 pub struct PyDfsVisitor {
@@ -33,22 +34,22 @@ pub struct PyDfsVisitor {
 pub fn handler(
     py: Python,
     vis: &PyDfsVisitor,
-    event: DfsEvent<NodeIndex>,
+    event: DfsEvent<NodeIndex, &PyObject>,
 ) -> PyResult<Control<()>> {
     let res = match event {
         DfsEvent::Discover(u, Time(t)) => {
             vis.discover_vertex.call1(py, (u.index(), t))
         }
-        DfsEvent::TreeEdge(u, v) => {
-            let edge = (u.index(), v.index());
+        DfsEvent::TreeEdge(u, v, weight) => {
+            let edge = (u.index(), v.index(), weight);
             vis.tree_edge.call1(py, (edge,))
         }
-        DfsEvent::BackEdge(u, v) => {
-            let edge = (u.index(), v.index());
+        DfsEvent::BackEdge(u, v, weight) => {
+            let edge = (u.index(), v.index(), weight);
             vis.back_edge.call1(py, (edge,))
         }
-        DfsEvent::CrossForwardEdge(u, v) => {
-            let edge = (u.index(), v.index());
+        DfsEvent::CrossForwardEdge(u, v, weight) => {
+            let edge = (u.index(), v.index(), weight);
             vis.forward_or_cross_edge.call1(py, (edge,))
         }
         DfsEvent::Finish(u, Time(t)) => {

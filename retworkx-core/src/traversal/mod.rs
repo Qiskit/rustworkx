@@ -16,4 +16,4 @@ mod dfs_edges;
 mod dfs_visit;
 
 pub use dfs_edges::dfs_edges;
-pub use dfs_visit::depth_first_search;
+pub use dfs_visit::{depth_first_search, DfsEvent};

@@ -227,7 +227,7 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///     Graph can *not* be mutated while traversing.
 ///
 /// :param PyDiGraph graph: The graph to be used.
-/// :param int source: An optional node index to use as the starting node
+/// :param List[int] source: An optional list of node indices to use as the starting nodes
 ///     for the depth-first search. If this is not specified then a source
 ///     will be chosen arbitrarly and repeated until all components of the
 ///     graph are searched.
@@ -238,11 +238,11 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 pub fn digraph_dfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
-    source: Option<usize>,
+    source: Option<Vec<usize>>,
     visitor: PyDfsVisitor,
 ) -> PyResult<()> {
-    let starts = match source {
-        Some(nx) => vec![NodeIndex::new(nx)],
+    let starts: Vec<_> = match source {
+        Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
 
@@ -311,7 +311,7 @@ pub fn digraph_dfs_search(
 ///     Graph can *not* be mutated while traversing.
 ///
 /// :param PyGraph graph: The graph to be used.
-/// :param int source: An optional node index to use as the starting node
+/// :param List[int] source: An optional list of node indices to use as the starting nodes
 ///     for the depth-first search. If this is not specified then a source
 ///     will be chosen arbitrarly and repeated until all components of the
 ///     graph are searched.
@@ -322,11 +322,11 @@ pub fn digraph_dfs_search(
 pub fn graph_dfs_search(
     py: Python,
     graph: &graph::PyGraph,
-    source: Option<usize>,
+    source: Option<Vec<usize>>,
     visitor: PyDfsVisitor,
 ) -> PyResult<()> {
-    let starts = match source {
-        Some(nx) => vec![NodeIndex::new(nx)],
+    let starts: Vec<_> = match source {
+        Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
 

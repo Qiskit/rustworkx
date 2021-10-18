@@ -37,10 +37,10 @@ class TestDfsSearch(unittest.TestCase):
                 self.edges = []
 
             def tree_edge(self, edge):
-                self.edges.append(edge)
+                self.edges.append((edge[0], edge[1]))
 
         vis = TreeEdgesRecorder()
-        retworkx.digraph_dfs_search(self.graph, 0, vis)
+        retworkx.digraph_dfs_search(self.graph, [0], vis)
         self.assertEqual(vis.edges, [(0, 2), (2, 6), (2, 5), (5, 3), (2, 1)])
 
     def test_digraph_dfs_tree_edges_no_starting_point(self):
@@ -49,7 +49,7 @@ class TestDfsSearch(unittest.TestCase):
                 self.edges = []
 
             def tree_edge(self, edge):
-                self.edges.append(edge)
+                self.edges.append((edge[0], edge[1]))
 
         vis = TreeEdgesRecorder()
         retworkx.digraph_dfs_search(self.graph, None, vis)
@@ -66,12 +66,13 @@ class TestDfsSearch(unittest.TestCase):
                 self.edges = []
 
             def tree_edge(self, edge):
+                edge = (edge[0], edge[1])
                 if edge in self.prohibited:
                     raise retworkx.visit.PruneSearch
                 self.edges.append(edge)
 
         vis = TreeEdgesRecorderRestricted()
-        retworkx.digraph_dfs_search(self.graph, 0, vis)
+        retworkx.digraph_dfs_search(self.graph, [0], vis)
         self.assertEqual(vis.edges, [(0, 2), (2, 6), (2, 5), (2, 1), (1, 3)])
 
     def test_digraph_dfs_goal_search(self):
@@ -83,7 +84,7 @@ class TestDfsSearch(unittest.TestCase):
                 self.parents = {}
 
             def tree_edge(self, edge):
-                u, v = edge
+                u, v, _ = edge
                 self.parents[v] = u
 
                 if v == self.goal:
@@ -101,7 +102,7 @@ class TestDfsSearch(unittest.TestCase):
 
         vis = GoalSearch()
         try:
-            retworkx.digraph_dfs_search(self.graph, 0, vis)
+            retworkx.digraph_dfs_search(self.graph, [0], vis)
         except retworkx.visit.StopSearch:
             pass
         self.assertEqual(vis.reconstruct_path(), [0, 2, 5, 3])
