@@ -9,7 +9,7 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and lib.rs
 
-from typing import Any, Dict, Generic, List, Iterable, TypeVar, Tuple
+from typing import Any, Generic, List, Iterable, TypeVar, Tuple
 from collections.abc import Sequence
 
 T = TypeVar("T")

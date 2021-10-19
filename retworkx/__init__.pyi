@@ -10,6 +10,5 @@
 # For implementation details, see __init__.py and lib.rs
 
 from .retworkx import *
-from typing import Any
 
 class PyDAG(PyDiGraph): ...

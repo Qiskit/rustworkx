@@ -28,7 +28,7 @@ T = TypeVar("T")
 
 class PyGraph(Generic[S, T]):
     multigraph: bool = ...
-    def __init__(self, /, multigraph: bool = True) -> None: ...
+    def __init__(self, /, multigraph: bool = ...) -> None: ...
     def add_edge(self, node_a: int, node_b: int, edge: T, /) -> int: ...
     def add_edges_from(
         self, obj_list: List[Tuple[int, int, T]]
@@ -44,8 +44,8 @@ class PyGraph(Generic[S, T]):
         other: PyGraph[S, T],
         node_map: Dict[int, Tuple[int, T]],
         /,
-        node_map_func: Optional[Callable[[S], int]] = None,
-        edge_map_func: Optional[Callable[[T], int]] = None,
+        node_map_func: Optional[Callable[[S], int]] = ...,
+        edge_map_func: Optional[Callable[[T], int]] = ...,
     ) -> Dict[int, int]: ...
     def copy(self) -> PyGraph[S, T]: ...
     def degree(self, node: int, /) -> int: ...
@@ -76,8 +76,8 @@ class PyGraph(Generic[S, T]):
     def read_edge_list(
         path: str,
         /,
-        comment: Optional[str] = None,
-        deliminator: Optional[str] = None,
+        comment: Optional[str] = ...,
+        deliminator: Optional[str] = ...,
     ) -> PyGraph: ...
     def remove_edge(self, node_a: int, node_b: int, /) -> None: ...
     def remove_edge_from_index(self, edge: int, /) -> None: ...
@@ -90,10 +90,10 @@ class PyGraph(Generic[S, T]):
     def to_dot(
         self,
         /,
-        node_attr: Optional[Callable[[S], Dict[str, str]]] = None,
-        edge_attr: Optional[Callable[[T], Dict[str, str]]] = None,
-        graph_attr: Optional[Dict[str, str]] = None,
-        filename: Optional[str] = None,
+        node_attr: Optional[Callable[[S], Dict[str, str]]] = ...,
+        edge_attr: Optional[Callable[[T], Dict[str, str]]] = ...,
+        graph_attr: Optional[Dict[str, str]] = ...,
+        filename: Optional[str] = ...,
     ) -> Optional[str]: ...
     def update_edge(self, source: int, target: int, edge: T, /) -> None: ...
     def update_edge_by_index(self, edge_index: int, edge: T, /) -> None: ...
@@ -102,8 +102,8 @@ class PyGraph(Generic[S, T]):
         self,
         path: str,
         /,
-        deliminator: Optional[str] = None,
-        weight_fn: Optional[Callable[[T], str]] = None,
+        deliminator: Optional[str] = ...,
+        weight_fn: Optional[Callable[[T], str]] = ...,
     ) -> None: ...
     def __delitem__(self, idx: int, /) -> None: ...
     def __getitem__(self, idx: int, /) -> S: ...

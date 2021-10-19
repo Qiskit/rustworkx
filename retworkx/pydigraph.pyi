@@ -33,8 +33,8 @@ class PyDiGraph(Generic[S, T]):
     def __init__(
         self,
         /,
-        check_cycle: bool = False,
-        multigraph: bool = True,
+        check_cycle: bool = ...,
+        multigraph: bool = ...,
     ) -> None: ...
     def add_child(self, parent: int, obj: S, edge: T, /) -> int: ...
     def add_edge(self, parent: int, child: int, edge: T, /) -> int: ...
@@ -56,8 +56,8 @@ class PyDiGraph(Generic[S, T]):
         other: PyDiGraph[S, T],
         node_map: Dict[int, Tuple[int, T]],
         /,
-        node_map_func: Optional[Callable[[S], int]] = None,
-        edge_map_func: Optional[Callable[[T], int]] = None,
+        node_map_func: Optional[Callable[[S], int]] = ...,
+        edge_map_func: Optional[Callable[[T], int]] = ...,
     ) -> Dict[int, int]: ...
     def copy(self) -> PyDiGraph[S, T]: ...
     def edge_index_map(self) -> EdgeIndexMap: ...
@@ -115,8 +115,8 @@ class PyDiGraph(Generic[S, T]):
     def read_edge_list(
         path: str,
         /,
-        comment: Optional[str] = None,
-        deliminator: Optional[str] = None,
+        comment: Optional[str] = ...,
+        deliminator: Optional[str] = ...,
     ) -> PyDiGraph: ...
     def remove_edge(self, parent: int, child: int, /) -> None: ...
     def remove_edge_from_index(self, edge: int, /) -> None: ...
@@ -128,8 +128,8 @@ class PyDiGraph(Generic[S, T]):
         self,
         node: int,
         /,
-        use_outgoing: Optional[bool] = None,
-        condition: Optional[Callable[[S, S], bool]] = None,
+        use_outgoing: Optional[bool] = ...,
+        condition: Optional[Callable[[S, S], bool]] = ...,
     ) -> None: ...
     def remove_nodes_from(self, index_list: List[int], /) -> None: ...
     def subgraph(self, nodes: List[int], /) -> PyDiGraph[S, T]: ...
@@ -139,24 +139,24 @@ class PyDiGraph(Generic[S, T]):
         other: PyDiGraph[S, T],
         edge_map_fn: Callable[[int, int, T], Optional[int]],
         /,
-        node_filter: Optional[Callable[[S], bool]] = None,
-        edge_weight_map: Optional[Callable[[T], T]] = None,
+        node_filter: Optional[Callable[[S], bool]] = ...,
+        edge_weight_map: Optional[Callable[[T], T]] = ...,
     ) -> NodeMap: ...
     def successor_indices(self, node: int, /) -> NodeIndices: ...
     def successors(self, node: int, /) -> List[S]: ...
     def to_dot(
         self,
         /,
-        node_attr: Optional[Callable[[S], Dict[str, str]]] = None,
-        edge_attr: Optional[Callable[[T], Dict[str, str]]] = None,
-        graph_attr: Optional[Dict[str, str]] = None,
-        filename: Optional[str] = None,
+        node_attr: Optional[Callable[[S], Dict[str, str]]] = ...,
+        edge_attr: Optional[Callable[[T], Dict[str, str]]] = ...,
+        graph_attr: Optional[Dict[str, str]] = ...,
+        filename: Optional[str] = ...,
     ) -> Optional[str]: ...
     def to_undirected(
         self,
         /,
-        multigraph: bool = True,
-        weight_combo_fn: Optional[Callable[[T, T], T]] = None,
+        multigraph: bool = ...,
+        weight_combo_fn: Optional[Callable[[T, T], T]] = ...,
     ) -> PyGraph[S, T]: ...
     def update_edge(self, source: int, target: int, edge: T, /) -> None: ...
     def update_edge_by_index(self, edge_index: int, edge: T, /) -> None: ...
@@ -165,8 +165,8 @@ class PyDiGraph(Generic[S, T]):
         self,
         path: str,
         /,
-        deliminator: Optional[str] = None,
-        weight_fn: Optional[Callable[[T], str]] = None,
+        deliminator: Optional[str] = ...,
+        weight_fn: Optional[Callable[[T], str]] = ...,
     ) -> None: ...
     def __delitem__(self, idx: int, /) -> None: ...
     def __getitem__(self, idx: int, /) -> S: ...

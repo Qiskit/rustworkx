@@ -9,24 +9,9 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and lib.rs
 
-import numpy as np
 from .custom_return_types import *
 from .pygraph import PyGraph as PyGraph
 from .pydigraph import PyDiGraph as PyDiGraph
-
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    TypeVar,
-    Optional,
-    List,
-    Tuple,
-)
-
-S = TypeVar("S")
-T = TypeVar("T")
 
 class DAGHasCycle(Exception): ...
 class DAGWouldCycle(Exception): ...
