@@ -11,6 +11,8 @@ import sys
 import functools
 
 from .retworkx import *
+
+# flake8: noqa
 import retworkx.visit
 
 sys.modules["retworkx.generators"] = generators
