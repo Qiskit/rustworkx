@@ -1748,19 +1748,19 @@ def dfs_search(graph, source, visitor):
               color[u] := WHITE                 initialize vertex u
           end for
           time := 0
-          call DFS-VISIT(G, source)           start vertex s
+          call DFS-VISIT(G, source)             start vertex s
 
         DFS-VISIT(G, u)
-          color[u] := GRAY                    discover vertex u
-          for each v in Adj[u]                examine edge (u,v)
+          color[u] := GRAY                      discover vertex u
+          for each v in Adj[u]                  examine edge (u,v)
               if (color[v] = WHITE)             (u,v) is a tree edge
                   all DFS-VISIT(G, v)
               else if (color[v] = GRAY)         (u,v) is a back edge
               ...
-             else if (color[v] = BLACK)        (u,v) is a cross or forward edge
+             else if (color[v] = BLACK)         (u,v) is a cross or forward edge
              ...
           end for
-          color[u] := BLACK                   finish vertex u
+          color[u] := BLACK                     finish vertex u
 
     If an exception is raised inside the callback function, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a

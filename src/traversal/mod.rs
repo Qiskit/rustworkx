@@ -15,7 +15,7 @@ pub mod dfs_visit;
 use retworkx_core::traversal::{depth_first_search, dfs_edges};
 
 use super::{digraph, graph, iterators};
-use dfs_visit::{handler, PyDfsVisitor};
+use dfs_visit::{dfs_handler, PyDfsVisitor};
 
 use hashbrown::HashSet;
 
@@ -182,11 +182,11 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///           color[u] := WHITE                 initialize vertex u
 ///       end for
 ///       time := 0
-///       call DFS-VISIT(G, source)           start vertex s
+///       call DFS-VISIT(G, source)             start vertex s
 ///
 ///     DFS-VISIT(G, u)
-///       color[u] := GRAY                    discover vertex u
-///       for each v in Adj[u]                examine edge (u,v)
+///       color[u] := GRAY                      discover vertex u
+///       for each v in Adj[u]                  examine edge (u,v)
 ///           if (color[v] = WHITE)             (u,v) is a tree edge
 ///               all DFS-VISIT(G, v)
 ///           else if (color[v] = GRAY)         (u,v) is a back edge
@@ -194,7 +194,7 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///           else if (color[v] = BLACK)        (u,v) is a cross or forward edge
 ///           ...
 ///       end for
-///       color[u] := BLACK                   finish vertex u
+///       color[u] := BLACK                     finish vertex u
 ///
 /// If an exception is raised inside the callback function, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
@@ -247,7 +247,7 @@ pub fn digraph_dfs_search(
     };
 
     depth_first_search(&graph.graph, starts, |event| {
-        handler(py, &visitor, event)
+        dfs_handler(py, &visitor, event)
     })?;
 
     Ok(())
@@ -266,11 +266,11 @@ pub fn digraph_dfs_search(
 ///           color[u] := WHITE                 initialize vertex u
 ///       end for
 ///       time := 0
-///       call DFS-VISIT(G, source)           start vertex s
+///       call DFS-VISIT(G, source)             start vertex s
 ///
 ///     DFS-VISIT(G, u)
-///       color[u] := GRAY                    discover vertex u
-///       for each v in Adj[u]                examine edge (u,v)
+///       color[u] := GRAY                      discover vertex u
+///       for each v in Adj[u]                  examine edge (u,v)
 ///           if (color[v] = WHITE)             (u,v) is a tree edge
 ///               all DFS-VISIT(G, v)
 ///           else if (color[v] = GRAY)         (u,v) is a back edge
@@ -278,7 +278,7 @@ pub fn digraph_dfs_search(
 ///           else if (color[v] = BLACK)        (u,v) is a cross or forward edge
 ///           ...
 ///       end for
-///       color[u] := BLACK                   finish vertex u
+///       color[u] := BLACK                     finish vertex u
 ///
 /// If an exception is raised inside the callback function, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
@@ -331,7 +331,7 @@ pub fn graph_dfs_search(
     };
 
     depth_first_search(&graph.graph, starts, |event| {
-        handler(py, &visitor, event)
+        dfs_handler(py, &visitor, event)
     })?;
 
     Ok(())

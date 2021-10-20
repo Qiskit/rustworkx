@@ -10,10 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// This module is an iterative implementation of the upstream petgraph
-// ``depth_first_search`` function.
-// https://github.com/petgraph/petgraph/blob/0.6.0/src/visit/dfsvisit.rs
-
 use pyo3::prelude::*;
 
 use petgraph::stable_graph::NodeIndex;
@@ -31,7 +27,7 @@ pub struct PyDfsVisitor {
     forward_or_cross_edge: PyObject,
 }
 
-pub fn handler(
+pub fn dfs_handler(
     py: Python,
     vis: &PyDfsVisitor,
     event: DfsEvent<NodeIndex, &PyObject>,
