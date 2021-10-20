@@ -50,6 +50,7 @@ use num_complex::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
+use pyo3::import_exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
@@ -199,16 +200,9 @@ create_exception!(retworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, PyException);
 // Prune part of the search tree while traversing a graph.
-create_exception!(retworkx, PruneSearch, PyException);
+import_exception!(retworkx.visit, PruneSearch);
 // Stop graph traversal.
-create_exception!(retworkx, StopSearch, PyException);
-
-#[pymodule]
-fn visit(py: Python, m: &PyModule) -> PyResult<()> {
-    m.add("StopSearch", py.get_type::<StopSearch>())?;
-    m.add("PruneSearch", py.get_type::<PruneSearch>())?;
-    Ok(())
-}
+import_exception!(retworkx.visit, StopSearch);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -333,6 +327,5 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodesCountMapping>()?;
     m.add_class::<iterators::NodeMap>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
-    m.add_wrapped(wrap_pymodule!(visit))?;
     Ok(())
 }

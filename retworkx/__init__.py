@@ -11,12 +11,9 @@ import sys
 import functools
 
 from .retworkx import *
-from .visitor import DFSVisitor
-
-visit.DFSVisitor = DFSVisitor
+import retworkx.visit
 
 sys.modules["retworkx.generators"] = generators
-sys.modules["retworkx.visit"] = visit
 
 
 class PyDAG(PyDiGraph):
