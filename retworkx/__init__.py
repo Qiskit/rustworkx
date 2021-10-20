@@ -12,6 +12,9 @@ import functools
 
 from .retworkx import *
 
+# flake8: noqa
+import retworkx.visit
+
 sys.modules["retworkx.generators"] = generators
 
 
@@ -1730,3 +1733,65 @@ def _graph_union(
     merge_edges=False,
 ):
     return graph_union(first, second, merge_nodes=False, merge_edges=False)
+
+
+@functools.singledispatch
+def bfs_search(graph, source, visitor):
+    """Breadth-first traversal of a directed/undirected graph.
+
+    The pseudo-code for the BFS algorithm is listed below, with the annotated
+    event points, for which the given visitor object will be called with the
+    appropriate method.
+
+    ::
+
+        BFS(G, s)
+          for each vertex u in V
+              color[u] := WHITE
+          end for
+          color[s] := GRAY
+          EQUEUE(Q, s)                             discover vertex s
+          while (Q != Ø)
+              u := DEQUEUE(Q)
+              for each vertex v in Adj[u]          (u,v) is a tree edge
+                  if (color[v] = WHITE)
+                      color[v] = GRAY
+                  else                             (u,v) is a non - tree edge
+                      if (color[v] = GRAY)         (u,v) has a gray target
+                          ...
+                      else if (color[v] = BLACK)   (u,v) has a black target
+                          ...
+              end for
+              color[u] := BLACK                    finish vertex u
+          end while
+
+    If an exception is raised inside the callback function, the graph traversal
+    will be stopped immediately. You can exploit this to exit early by raising a
+    :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
+    search tree by raising :class:`~retworkx.visit.PruneSearch`.
+
+    In the following example we keep track of the tree edges:
+
+    .. note::
+
+        Graph can *not* be mutated while traversing.
+
+    :param PyGraph graph: The graph to be used.
+    :param List[int] source: An optional list of node indices to use as the starting
+        nodes for the breadth-first search. If this is not specified then a source
+        will be chosen arbitrarly and repeated until all components of the
+        graph are searched.
+    :param visitor: A visitor object that is invoked at the event points inside the
+        algorithm. This should be a subclass of :class:`~retworkx.visit.BFSVisitor`.
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bfs_search.register(PyDiGraph)
+def _digraph_bfs_search(graph, source, visitor):
+    return digraph_bfs_search(graph, source, visitor)
+
+
+@bfs_search.register(PyGraph)
+def _graph_bfs_search(graph, source, visitor):
+    return graph_bfs_search(graph, source, visitor)
