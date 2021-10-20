@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::{digraph, graph};
+use crate::{digraph, graph, StablePyGraph};
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -71,7 +71,7 @@ pub fn directed_gnp_random_graph(
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut inner_graph = StableDiGraph::<PyObject, PyObject>::new();
+    let mut inner_graph = StablePyGraph::<Directed>::new();
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
@@ -179,7 +179,7 @@ pub fn undirected_gnp_random_graph(
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut inner_graph = StablePyGraph::<Undirected>::default();
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
@@ -267,7 +267,7 @@ pub fn directed_gnm_random_graph(
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut inner_graph = StableDiGraph::<PyObject, PyObject>::new();
+    let mut inner_graph = StablePyGraph::<Directed>::new();
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
@@ -347,7 +347,7 @@ pub fn undirected_gnm_random_graph(
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut inner_graph = StablePyGraph::<Undirected>::default();
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
@@ -445,7 +445,7 @@ pub fn random_geometric_graph(
         return Err(PyValueError::new_err("num_nodes must be > 0"));
     }
 
-    let mut inner_graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut inner_graph = StablePyGraph::<Undirected>::default();
 
     let radius_p = pnorm(radius, p);
     let mut rng: Pcg64 = match seed {
