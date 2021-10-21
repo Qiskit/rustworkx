@@ -37,7 +37,9 @@ fn cartesian_product<Ty: EdgeType>(
         nodes_first.flat_map(|x| nodes_second.clone().map(move |y| (x, y)));
 
     for (x, y) in cross {
-        let n0 = final_graph.add_node(py.None()); //TODO: How can we handle weights?
+        let weight_x = &first[x];
+        let weight_y = &second[y];
+        let n0 = final_graph.add_node((weight_x, weight_y).into_py(py));
         hash_nodes.insert((x, y), n0);
     }
 
@@ -48,8 +50,7 @@ fn cartesian_product<Ty: EdgeType>(
             let target =
                 hash_nodes.get(&(edge_first.target(), node_second)).unwrap();
 
-            final_graph.add_edge(*source, *target, py.None());
-            //TODO: How can we handle weights?
+            final_graph.add_edge(*source, *target, edge_first.weight().clone_ref(py));
         }
     }
 

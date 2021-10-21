@@ -20,21 +20,41 @@ class TestCartesianProduct(unittest.TestCase):
         graph_2 = retworkx.PyGraph()
 
         graph_product = retworkx.graph_cartesian_product(graph_1, graph_2)
-        self.assertEqual(len(graph_product.nodes()), 0)
-        self.assertEqual(len(graph_product.edge_list()), 0)
+        self.assertEqual(graph_product.num_nodes(), 0)
+        self.assertEqual(graph_product.num_edges(), 0)
 
     def test_path_2_cartesian_path_2(self):
         graph_1 = retworkx.generators.path_graph(2)
         graph_2 = retworkx.generators.path_graph(2)
 
         graph_product = retworkx.graph_cartesian_product(graph_1, graph_2)
-        self.assertEqual(len(graph_product.nodes()), 4)
-        self.assertEqual(len(graph_product.edge_list()), 4)
+        self.assertEqual(graph_product.num_nodes(), 4)
+        self.assertEqual(graph_product.num_edges(), 4)
 
     def test_path_2_cartesian_path_3(self):
         graph_1 = retworkx.generators.path_graph(2)
         graph_2 = retworkx.generators.path_graph(3)
 
         graph_product = retworkx.graph_cartesian_product(graph_1, graph_2)
-        self.assertEqual(len(graph_product.nodes()), 6)
-        self.assertEqual(len(graph_product.edge_list()), 7)
+        self.assertEqual(graph_product.num_nodes(), 6)
+        self.assertEqual(graph_product.num_edges(), 7)
+
+    def test_node_weights_cartesian(self):
+        graph_1 = retworkx.PyGraph()
+        graph_1.add_node("a_1")
+        graph_2 = retworkx.PyGraph()
+        graph_2.add_node(0)
+        
+        graph_product = retworkx.graph_cartesian_product(graph_1, graph_2)
+        self.assertEqual([("a_1", 0)], graph_product.nodes())
+    
+    def test_edge_weights_cartesian(self):
+        graph_1 = retworkx.PyGraph()
+        graph_1.add_nodes_from([0, 1])
+        graph_1.add_edge(0, 1, "w_1")
+        graph_2 = retworkx.PyGraph()
+        graph_2.add_nodes_from([0,1])
+        graph_1.add_edge(0, 1, "w_2")
+        
+        graph_product = retworkx.graph_cartesian_product(graph_1, graph_2)
+        self.assertEqual(["w_1", "w_1", "w_2", "w_2"], graph_product.edges())
