@@ -60,8 +60,11 @@ fn cartesian_product<Ty: EdgeType>(
             let target =
                 hash_nodes.get(&(node_first, edge_second.target())).unwrap();
 
-            final_graph.add_edge(*source, *target, py.None());
-            //TODO: How can we handle weights?
+            final_graph.add_edge(
+                *source,
+                *target,
+                edge_second.weight().clone_ref(py),
+            );
         }
     }
 
