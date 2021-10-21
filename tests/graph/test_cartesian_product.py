@@ -44,17 +44,17 @@ class TestCartesianProduct(unittest.TestCase):
         graph_1.add_node("a_1")
         graph_2 = retworkx.PyGraph()
         graph_2.add_node(0)
-        
+
         graph_product = retworkx.graph_cartesian_product(graph_1, graph_2)
         self.assertEqual([("a_1", 0)], graph_product.nodes())
-    
+
     def test_edge_weights_cartesian(self):
         graph_1 = retworkx.PyGraph()
         graph_1.add_nodes_from([0, 1])
         graph_1.add_edge(0, 1, "w_1")
         graph_2 = retworkx.PyGraph()
-        graph_2.add_nodes_from([0,1])
+        graph_2.add_nodes_from([0, 1])
         graph_1.add_edge(0, 1, "w_2")
-        
+
         graph_product = retworkx.graph_cartesian_product(graph_1, graph_2)
         self.assertEqual(["w_1", "w_1", "w_2", "w_2"], graph_product.edges())
