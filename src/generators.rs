@@ -2304,6 +2304,111 @@ pub fn generalized_petersen_graph(
     })
 }
 
+/// Generate an undirected barbell graph where two identical mesh graphs are
+/// connected by a path.
+///
+/// If neither ``num_path_nodes`` nor ``path_weights`` (both described
+/// below) are specified then this is equivalent to two mesh graphs joined
+/// together.
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graphs
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+///     be ignored and ``mesh_weights`` will be used.
+/// :param list path_weights: A list of node weights for the path. If both
+///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+///     be ignored and ``path_weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated barbell graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_mesh_nodes`` or ``mesh_weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.barbell_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=True)"
+)]
+pub fn barbell_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    mesh_weights: Option<Vec<PyObject>>,
+    path_weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut left_mesh =
+        mesh_graph(py, num_mesh_nodes, mesh_weights, multigraph)?;
+    let right_mesh = left_mesh.clone();
+    let meshlen = left_mesh.num_nodes();
+
+    if !num_path_nodes.is_none() || !path_weights.is_none() {
+        let path_nodes: Vec<NodeIndex> = match path_weights {
+            Some(path_weights) => path_weights
+                .into_iter()
+                .map(|node| left_mesh.graph.add_node(node))
+                .collect(),
+            None => (0..num_path_nodes.unwrap())
+                .map(|_| left_mesh.graph.add_node(py.None()))
+                .collect(),
+        };
+
+        let pathlen = path_nodes.len();
+        if pathlen > 0 {
+            left_mesh.graph.add_edge(
+                NodeIndex::new(meshlen - 1),
+                NodeIndex::new(meshlen),
+                py.None(),
+            );
+            for (node_a, node_b) in pairwise(path_nodes) {
+                match node_a {
+                    Some(node_a) => {
+                        left_mesh.graph.add_edge(node_a, node_b, py.None())
+                    }
+                    None => continue,
+                };
+            }
+        }
+    }
+
+    let lollipoplen = left_mesh.num_nodes();
+    for node in right_mesh.graph.node_indices() {
+        let new_node = &right_mesh.graph[node];
+        left_mesh.graph.add_node(new_node.clone_ref(py));
+    }
+    left_mesh.graph.add_edge(
+        NodeIndex::new(lollipoplen - 1),
+        NodeIndex::new(lollipoplen),
+        py.None(),
+    );
+    for edge in right_mesh.graph.edge_references() {
+        let new_source = NodeIndex::new(lollipoplen + &edge.source().index());
+        let new_target = NodeIndex::new(lollipoplen + &edge.target().index());
+        let weight = edge.weight();
+        left_mesh
+            .graph
+            .add_edge(new_source, new_target, weight.clone_ref(py));
+    }
+    Ok(left_mesh)
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2326,5 +2431,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
     m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
+    m.add_wrapped(wrap_pyfunction!(barbell_graph))?;
     Ok(())
 }

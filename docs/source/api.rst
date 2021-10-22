@@ -177,6 +177,7 @@ Generators
     retworkx.generators.directed_heavy_hex_graph
     retworkx.generators.lollipop_graph
     retworkx.generators.generalized_petersen_graph
+    retworkx.generators.barbell_graph
 
 Random Circuit Functions
 ========================
