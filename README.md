@@ -72,6 +72,29 @@ with `pip install pydot pillow` or when installing retworkx with
 If you would like to install all the optional Python dependencies when you
 install retworkx you can use `pip install 'retworkx[all]'` to do this.
 
+## Using retworkx
+
+Once you have retworkx installed you can use it by importing retworkx.
+All the functions and graph classes are off the root of the package.
+For example, calculating the shortest path between A and C would be:
+
+```python3
+import retworkx
+
+graph = retworkx.PyGraph()
+
+# Each time add node is called, it returns a new node index
+a = graph.add_node("A")
+b = graph.add_node("B")
+c = graph.add_node("C")
+
+# add_edges_from takes tuples of node indices and weights, and returns edge indices
+graph.add_edges_from([(a, b, 1.5), (a, c, 5.0), (b, c, 2.5)])
+
+# Returns the path A -> B -> C
+retworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
+```
+
 ## Building from source
 
 The first step for building retworkx from source is to clone it locally
@@ -124,21 +147,3 @@ It's worth noting that `pip install -e` does not work, as it will link the pytho
 packaging shim to your python environment but not build the retworkx binary. If
 you want to build retworkx in debug mode you have to use
 `python setup.py develop`.
-
-## Using retworkx
-
-Once you have retworkx installed you can use it by importing retworkx.
-All the functions and graph classes are off the root of the package.
-For example, building a DAG and adding 2 nodes with an edge between them
-would be:
-
-```python3
-import retworkx
-
-my_dag = retworkx.PyDAG(cycle_check=True)
-# add_node(), add_child(), and add_parent() return the node index
-# The sole argument here can be any python object
-root_node = my_dag.add_node("MyRoot")
-# The second and third arguments can be any python object
-my_dag.add_child(root_node, "AChild", ["EdgeData"])
-```
