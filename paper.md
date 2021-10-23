@@ -59,25 +59,6 @@ _retworkx_ operates on weights with callbacks. Callbacks are functions that take
 
 A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges during the graph object's lifetime. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with weights. We illustrate indices and callbacks usage with an example.
 
-## Example
-
-```python
-import retworkx
-
-graph = retworkx.PyGraph()
-
-a = graph.add_node("A")
-b = graph.add_node("B")
-c = graph.add_node("C")
-
-graph.add_edges_from([(a, b, 1.5), (a, c, 5.0), (b, c, 2.5)])
-retworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
-```
-
-In the provided example, we find the shortest path from $A$ to $C$ using Dijkstra's algorithm [@Dijkstra1959ANO]. Firstly, we create the graph and add three nodes labeled A, B, and C. Each time **`add_node`** is called, the method returns the node index associated with the newly added node. Secondly, we add three edges connecting the nodes with **`add_edges_from`**.
-
-Lastly, we compute the shortest path from $A$ to $C$. We provide the graph, the source node, and the target node to **`dijkstra_shortest_paths`**. In addition, we also provide a callback to **`weight_fn`**, which is the built-in **`float`** function for this case. The algorithm returns a mapping containing the shortest path, $A \rightarrow B \rightarrow C$.
-
 # Use Cases
 
 _retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms, such as Qiskit. In those applications, the performance of _retworkx_ makes the difference because it reduces computation time considerably.
