@@ -2359,7 +2359,7 @@ pub fn barbell_graph(
     let right_mesh = left_mesh.clone();
     let meshlen = left_mesh.num_nodes();
 
-    if !num_path_nodes.is_none() || !path_weights.is_none() {
+    if num_path_nodes.is_some() || path_weights.is_some() {
         let path_nodes: Vec<NodeIndex> = match path_weights {
             Some(path_weights) => path_weights
                 .into_iter()
@@ -2399,8 +2399,8 @@ pub fn barbell_graph(
         py.None(),
     );
     for edge in right_mesh.graph.edge_references() {
-        let new_source = NodeIndex::new(lollipoplen + &edge.source().index());
-        let new_target = NodeIndex::new(lollipoplen + &edge.target().index());
+        let new_source = NodeIndex::new(lollipoplen + edge.source().index());
+        let new_target = NodeIndex::new(lollipoplen + edge.target().index());
         let weight = edge.weight();
         left_mesh
             .graph
