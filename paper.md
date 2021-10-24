@@ -81,7 +81,7 @@ The results show that _retworkx_ is 3.1x faster than the second best library in 
 
 ## Shortest Path
 
-The second use case is to calculate the distance among nodes in a graph using shortest-path algorithms. We compare two scenarios. In the first scenario, we calculate the distance between two nodes in the USA road network. In the second scenario, we calculate the distance among all nodes in the City of Rome road network, with the dataset also coming from the 9th DIMACS challenge. The City of Rome network has $\lvert V \rvert = 3,353$ nodes and $\lvert E \rvert = 8,870$ weighted edges.
+The second use case is to calculate the distance among nodes in a graph using Dijkstra's algorithm [@Dijkstra1959ANO]^[_igraph_ and _graphtool_ use Johnson's algorithm [@Johnson1977] for all-pairs shortest paths, which contains Dijkstra's as a subroutine]. We compare two scenarios. In the first scenario, we calculate the distance between two nodes in the USA road network. In the second scenario, we calculate the distance among all nodes in the City of Rome road network, with the dataset also coming from the 9th DIMACS challenge. The City of Rome network has $\lvert V \rvert = 3,353$ nodes and $\lvert E \rvert = 8,870$ weighted edges.
 
 \begin{multicols}{2}
 \begin{figure}
@@ -97,13 +97,13 @@ The second use case is to calculate the distance among nodes in a graph using sh
 \end{figure}
 \end{multicols}
 
-All libraries use Dijkstra's algorithm [@Dijkstra1959ANO] for the first scenario. For the all-pairs scenario, _igraph_ and _graphtool_ use Johnson's algorithm [@Johnson1977] while _retworkx_ and _NetworkX_ execute multiple instances of Dijkstra's algorithm for each source. TODO.
+TODO discuss results.
 
 ## Graph Isomorphism
 
-The third use case is TODO [@Raymond2002]. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic [@DeSanto2003]. The graphs are unlabeled, bounded-valence graphs ranging from $20$ to $1000$ nodes with $\upsilon \in \{3, 6, 9 \}$. They are organized in pairs such that the subgraph size is either $20 \%$, $40 \%$ or $60 \%$ of the full graph.
+The third use case is TODO [@Raymond2002]. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic [@DeSanto2003]. The graphs are unlabeled, bounded-valence graphs ranging from $20$ to $1000$ nodes with valence $\upsilon \in \{3, 6, 9 \}$. They are organized in pairs such that the subgraph size is either $20 \%$, $40 \%$ or $60 \%$ of the full graph.
 
-All libraries implements the VF2 algorithm [@Cordella2004] for checking subgraph isomorphism. _retworkx_ also implements the VF2++ [@Juttner2018] heuristic to improve the runtime, but we report only the VF2 numbers because VF2++ did not have a significant impact. TODO.
+All libraries implements the VF2 algorithm [@Cordella2004] for checking subgraph isomorphism. _retworkx_ also implements the VF2++ heuristic [@Juttner2018] to improve the runtime, but we report only the VF2 numbers because VF2++ did not have a significant impact. TODO.
 
 
 
