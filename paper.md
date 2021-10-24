@@ -26,7 +26,7 @@ affiliations:
    index: 3
  - name: "Centro Brasileiro de Pesquisas Físicas, Rio de Janeiro, Brazil"
    index: 4
-date: 10 September 2021
+date: 24 October 2021
 bibliography: paper.bib
 header-includes:
   - \usepackage{multicol}
@@ -97,13 +97,15 @@ The second use case is to calculate the distance among nodes in a graph using sh
 \end{figure}
 \end{multicols}
 
-TODO. Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977].
+TODO. Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977] and [@Dijkstra1959ANO].
 
 ## Graph Isomorphism
 
-Talk about definition [@Cordella2001], applications [@Raymond2002] and VF2++ [@Juttner2018]. TODO: benchmark on ARG Database from MIVIA group [@DeSanto2003].
+The third use case is TODO [@Raymond2002]. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic [@DeSanto2003]. The graphs are unlabeled, bounded-valence graphs ranging from $20$ to $1000$ nodes with $\upsilon \in \{3, 6, 9 \}$. They are organized in pairs such that the subgraph size is either $20 \%$, $40 \%$ or $60 \%$ of the full graph.
 
-![TODO.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=90% height=90% }
+Talk about definition [@Cordella2004], applications and VF2++ [@Juttner2018].
+
+![Average time to verify subgraph isomorphism versus number of graph nodes, grouped by valence number and subgraph size.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=90% height=90% }
 
 # Acknowledgements
 
