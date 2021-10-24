@@ -104,7 +104,7 @@ TODO. Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977].
 
 Talk about definition [@Cordella2001], applications [@Raymond2002] and VF2++ [@Juttner2018]. TODO: benchmark on ARG Database from MIVIA group [@DeSanto2003].
 
-![TODO.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=50% height=50% }
+![TODO.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=90% height=90% }
 
 # Acknowledgements
 
