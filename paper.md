@@ -4,7 +4,6 @@ tags:
   - graph theory
   - Python
   - Rust
-  - quantum computing
 authors:
   - name: Matthew Treinish
     orcid: 0000-0001-9713-2875
