@@ -107,7 +107,7 @@ All libraries implements the VF2 algorithm [@Cordella2004] for checking subgraph
 
 
 
-![Average time to verify subgraph isomorphism versus number of graph nodes, grouped by valence number and subgraph size.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=90% height=90% }
+![Average time to verify subgraph isomorphism versus number of graph nodes, grouped by valence number and subgraph size.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=90% height=100% }
 
 # Acknowledgements
 
