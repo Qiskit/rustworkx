@@ -57,14 +57,22 @@ fn tensor_product<Ty: EdgeType>(
             final_graph.add_edge(
                 *source,
                 *target,
-                (edge_first.weight().clone_ref(py), edge_second.weight().clone_ref(py)).into_py(py),
+                (
+                    edge_first.weight().clone_ref(py),
+                    edge_second.weight().clone_ref(py),
+                )
+                    .into_py(py),
             );
 
             if undirected {
                 final_graph.add_edge(
                     *target,
                     *source,
-                    (edge_second.weight().clone_ref(py), edge_first.weight().clone_ref(py)).into_py(py),
+                    (
+                        edge_second.weight().clone_ref(py),
+                        edge_first.weight().clone_ref(py),
+                    )
+                        .into_py(py),
                 );
             }
         }

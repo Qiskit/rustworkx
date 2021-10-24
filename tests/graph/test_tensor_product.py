@@ -57,4 +57,6 @@ class TestTensorProduct(unittest.TestCase):
         graph_2.add_edge(0, 1, "w_2")
 
         graph_product = retworkx.graph_tensor_product(graph_1, graph_2)
-        self.assertEqual([("w_1", "w_2"), ("w_2", "w_1")], graph_product.edges())
+        self.assertEqual(
+            [("w_1", "w_2"), ("w_2", "w_1")], graph_product.edges()
+        )
