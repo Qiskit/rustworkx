@@ -97,13 +97,15 @@ The second use case is to calculate the distance among nodes in a graph using sh
 \end{figure}
 \end{multicols}
 
-TODO. Also talk that _igraph_/_graphtool_ use another algorithm [@Johnson1977] and [@Dijkstra1959ANO].
+All libraries use Dijkstra's algorithm [@Dijkstra1959ANO] for the first scenario. For the all-pairs scenario, _igraph_ and _graphtool_ use Johnson's algorithm [@Johnson1977] while _retworkx_ and _NetworkX_ execute multiple instances of Dijkstra's algorithm for each source. TODO.
 
 ## Graph Isomorphism
 
 The third use case is TODO [@Raymond2002]. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic [@DeSanto2003]. The graphs are unlabeled, bounded-valence graphs ranging from $20$ to $1000$ nodes with $\upsilon \in \{3, 6, 9 \}$. They are organized in pairs such that the subgraph size is either $20 \%$, $40 \%$ or $60 \%$ of the full graph.
 
-Talk about definition [@Cordella2004], applications and VF2++ [@Juttner2018].
+All libraries implements the VF2 algorithm [@Cordella2004] for checking subgraph isomorphism. _retworkx_ also implements the VF2++ [@Juttner2018] heuristic to improve the runtime, but in this dataset VF2++ did not have a significant impact hence we report numbers using VF2. TODO.
+
+
 
 ![Average time to verify subgraph isomorphism versus number of graph nodes, grouped by valence number and subgraph size.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=90% height=90% }
 
