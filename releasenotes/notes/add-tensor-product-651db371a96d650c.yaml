@@ -11,4 +11,4 @@ features:
       graph_2 = retworkx.generators.path_graph(3)
       graph_product = retworkx.graph_tensor_product(graph_1, graph_2)
       
-      mpl_draw(graph_product) 
+      mpl_draw(graph_product)
