@@ -97,15 +97,15 @@ The second use case is to calculate the distance among nodes in a graph using Di
 \end{figure}
 \end{multicols}
 
-_retworkx_ is 6x faster than _NetworkX_ on the single-source scenario, and 104x faster on the all-pairs scenario as shown in Figures \ref{fig:sssp} and \ref{fig:allpairs}. We hilight that _NetworkX_ is the slowest library among all in the benchmark because it was designed with different goals in mind, such as readibility and ease of distribution. If performance is important, we recommend switching to a library like _retworkx_ or _graph-tool_ because _NetworkX_ shows performance concerns that can significantly increase the runtime. 
+_retworkx_ is 6x faster than _NetworkX_ on the single-source scenario, and 104x faster on the all-pairs scenario as shown in Figures \ref{fig:sssp} and \ref{fig:allpairs}. We highlight that _NetworkX_ is the slowest library among all in the benchmark because it was designed with different goals in mind, such as readibility and ease of distribution. If performance is important, we recommend switching to a library such as _retworkx_ or _graph-tool_. _NetworkX_ shows performance concerns that can significantly increase the runtime. 
 
-Compared to other libraries in the benchmark, _retworkx_ is still competitive. _retworkx_ comes second in the single-source scenario and is beaten by _graph-tool_, but we interpret the result as a trade-off between graph creation time and algorithm execution time. _graph-tool_ is 1.6-1.8x faster than _retworkx_ on the shortest-path calculation, but that advantage vanishes when we consider that _graph-tool_ also takes 5x longer to create the graph. In the all-pairs scenario, _retworkx_ is the fastest with a 5.6x speedup compared to _graph-tool_ in the second place.
+Compared to other libraries in the benchmark, _retworkx_ is still competitive. _retworkx_ comes second in the single-source scenario after _graph-tool_, but we interpret the result as a trade-off between graph creation time and algorithm execution time. _graph-tool_ is 1.6-1.8x faster than _retworkx_ on the single-source shortest-path calculation, but that advantage vanishes when we consider that _graph-tool_ also takes 5x longer to create the graph. In the all-pairs scenario, _retworkx_ is the fastest with a 5.6x speedup compared to _graph-tool_ in the second place.
 
 ## Subgraph Isomorphism
 
 The third use case is to detect a pattern graph within a larger graph using the VF2 or VF2++ algorithms [@Cordella2004;@Juttner2018]. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic [@DeSanto2003]. The graphs are unlabeled, bounded-valence graphs ranging from $20$ to $1000$ nodes with valence $\upsilon \in \{3, 6, 9 \}$. They are organized in pairs such that the subgraph size is either $20 \%$, $40 \%$ or $60 \%$ of the full graph.
 
-TODO.
+The results in Figure \label{fig:subgraphisomorphism} show that _retworkx_ consistently outperforms _NetworkX_ by two orders of magnitude. For $n = 1000$ nodes, _retworkx_ has averages around the order of $10^{-1}$ seconds while _NetworkX_ is closer to the order of $10^{1}$ seconds. Compared to other libraries, _retworkx_ leads the benchmark together with _graph-tool_, albeit _retworkx_ performs slightly better as the number of nodes grows larger. _NetworkX_ is again the slowest library in the benchmark, and we reiterate our recommendation to switch libraries if performance is important.
 
 
 ![Average time to verify subgraph isomorphism versus number of graph nodes, grouped by valence number and subgraph size.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=90% height=100% }
