@@ -11,11 +11,13 @@
 // under the License.
 
 use std::iter;
+use std::collections::VecDeque;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
+use petgraph::Undirected;
 
 use pyo3::exceptions::{PyIndexError, PyOverflowError};
 use pyo3::prelude::*;
@@ -24,6 +26,7 @@ use pyo3::Python;
 
 use super::digraph;
 use super::graph;
+use crate::StablePyGraph;
 
 pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
 where
@@ -986,25 +989,25 @@ pub fn full_rary_tree(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
 
     let nodes: Vec<NodeIndex> = match weights {
         
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            let mut node_count = num_nodes;
+            let mut node_list: Vec<NodeIndex> = Vec::with_capacity(num_nodes);
+            //let mut node_count = num_nodes;
             if weights.len() > num_nodes {
                 return Err(PyIndexError::new_err(
                     "weights can't be greater than nodes",
                 ));
             }
-
+            let node_count = num_nodes - weights.len();
             for weight in weights {
                 let index = graph.add_node(weight);
                 node_list.push(index);
-                node_count -= 1;
+                //node_count -= 1;
             }
-            for _i in 0..node_count {
+            for _ in 0..node_count {
                 let index = graph.add_node(py.None());
                 node_list.push(index);
             }
@@ -1016,15 +1019,15 @@ pub fn full_rary_tree(
     };
 
     if num_nodes > 0 {
-        let mut parents: Vec<usize> = vec![nodes[0].index()];
+        let mut parents = VecDeque::from(vec![nodes[0].index()]);
         let mut nod_it: usize = 1;
         
         while !parents.is_empty() {
-            let source: usize = parents.remove(0);
+            let source: usize = parents.pop_front().unwrap(); //If is empty it will never try to pop
             for _ in 0..branching_factor {
                 if nod_it < num_nodes {
                     let target: usize = nodes[nod_it].index();
-                    parents.push(target);
+                    parents.push_back(target);
                     nod_it += 1;
                     graph.add_edge(nodes[source], nodes[target], py.None());                
                 }
