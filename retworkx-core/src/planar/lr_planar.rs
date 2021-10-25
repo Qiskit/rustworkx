@@ -191,10 +191,10 @@ where
     {
         match (self.left.low(), self.right.low()) {
             (Some(l_low), Some(r_low)) => {
-                lr_state.lowpt[&l_low].min(lr_state.lowpt[&r_low])
+                lr_state.lowpt[l_low].min(lr_state.lowpt[r_low])
             }
-            (Some(l_low), None) => lr_state.lowpt[&l_low],
-            (None, Some(r_low)) => lr_state.lowpt[&r_low],
+            (Some(l_low), None) => lr_state.lowpt[l_low],
+            (None, Some(r_low)) => lr_state.lowpt[r_low],
             (None, None) => std::usize::MAX,
         }
     }
@@ -505,10 +505,10 @@ where
         // merge conflicting return edges of e1, . . . , ei−1 into ``c_pair.left``.
         while let Some(mut q_pair) = self.until_top_of_stack_is_conflicting(ei)
         {
-            if q_pair.right.conflict(&self, ei) {
+            if q_pair.right.conflict(self, ei) {
                 q_pair.swap();
 
-                if q_pair.right.conflict(&self, ei) {
+                if q_pair.right.conflict(self, ei) {
                     return Err(NonPlanar {});
                 }
             }
@@ -535,7 +535,7 @@ where
         v: G::NodeId,
     ) -> Option<ConflictPair<Edge<G>>> {
         if let Some(c_pair) = self.stack.last() {
-            if c_pair.lowest(&self) == self.height[&v] {
+            if c_pair.lowest(self) == self.height[&v] {
                 return self.stack.pop();
             }
         }
