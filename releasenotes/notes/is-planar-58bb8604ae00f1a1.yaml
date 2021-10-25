@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Implements a new function :func:`~retworkx.is_planar` that
+    checks whether an undirected :class:`~retworkx.PyGraph` is planar.
+
+    .. jupyter-execute::
+
+      import retworkx
+
+      graph = retworkx.generators.mesh_graph(5)
+      print('Is K_5 graph planar?', retworkx.is_planar(graph))

@@ -56,6 +56,7 @@ Traversal
    :toctree: stubs
 
    retworkx.dfs_edges
+   retworkx.dfs_search
    retworkx.bfs_successors
    retworkx.topological_sort
    retworkx.lexicographical_topological_sort
@@ -63,6 +64,7 @@ Traversal
    retworkx.ancestors
    retworkx.collect_runs
    retworkx.collect_bicolor_runs
+   retworkx.visit.DFSVisitor
 
 .. _dag-algorithms:
 
@@ -148,6 +150,7 @@ Other Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.union
    retworkx.metric_closure
+   retworkx.is_planar
 
 Generators
 ==========
@@ -240,6 +243,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_all_pairs_dijkstra_path_lengths
    retworkx.digraph_k_shortest_path_lengths
    retworkx.digraph_dfs_edges
+   retworkx.digraph_dfs_search
    retworkx.digraph_find_cycle
    retworkx.digraph_transitivity
    retworkx.digraph_core_number
@@ -283,6 +287,7 @@ typed API based on the data type.
    retworkx.graph_k_shortest_path_lengths
    retworkx.graph_all_pairs_dijkstra_path_lengths
    retworkx.graph_dfs_edges
+   retworkx.graph_dfs_search
    retworkx.graph_transitivity
    retworkx.graph_core_number
    retworkx.graph_complement
@@ -310,6 +315,8 @@ Exceptions
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph
+   retworkx.visit.StopSearch
+   retworkx.visit.PruneSearch
 
 Custom Return Types
 ===================

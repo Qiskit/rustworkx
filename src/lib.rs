@@ -22,6 +22,7 @@ mod isomorphism;
 mod iterators;
 mod layout;
 mod matching;
+mod planar;
 mod random_graph;
 mod shortest_path;
 mod steiner_tree;
@@ -37,6 +38,7 @@ use dag_algo::*;
 use isomorphism::*;
 use layout::*;
 use matching::*;
+use planar::*;
 use random_graph::*;
 use shortest_path::*;
 use steiner_tree::*;
@@ -50,6 +52,7 @@ use num_complex::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
+use pyo3::import_exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
@@ -198,6 +201,10 @@ create_exception!(retworkx, NoSuitableNeighbors, PyException);
 create_exception!(retworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, PyException);
+// Prune part of the search tree while traversing a graph.
+import_exception!(retworkx.visit, PruneSearch);
+// Stop graph traversal.
+import_exception!(retworkx.visit, StopSearch);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -301,7 +308,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
     m.add_wrapped(wrap_pyfunction!(steiner_tree))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
+    m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
