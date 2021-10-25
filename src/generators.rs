@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::iter;
 use std::collections::VecDeque;
+use std::iter;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
@@ -981,7 +981,9 @@ pub fn binomial_tree_graph(
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)")]
+#[pyo3(
+    text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)"
+)]
 pub fn full_rary_tree(
     py: Python,
     branching_factor: u32,
@@ -992,7 +994,6 @@ pub fn full_rary_tree(
     let mut graph = StablePyGraph::<Undirected>::default();
 
     let nodes: Vec<NodeIndex> = match weights {
-        
         Some(weights) => {
             let mut node_list: Vec<NodeIndex> = Vec::with_capacity(num_nodes);
             //let mut node_count = num_nodes;
@@ -1013,15 +1014,13 @@ pub fn full_rary_tree(
             }
             node_list
         }
-        None => (0..num_nodes)
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
     };
 
     if num_nodes > 0 {
         let mut parents = VecDeque::from(vec![nodes[0].index()]);
         let mut nod_it: usize = 1;
-        
+
         while !parents.is_empty() {
             let source: usize = parents.pop_front().unwrap(); //If is empty it will never try to pop
             for _ in 0..branching_factor {
@@ -1029,7 +1028,7 @@ pub fn full_rary_tree(
                     let target: usize = nodes[nod_it].index();
                     parents.push_back(target);
                     nod_it += 1;
-                    graph.add_edge(nodes[source], nodes[target], py.None());                
+                    graph.add_edge(nodes[source], nodes[target], py.None());
                 }
             }
         }
@@ -1042,9 +1041,7 @@ pub fn full_rary_tree(
     })
 }
 
-
 ///--------------------
-
 
 /// Generate an undirected binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
