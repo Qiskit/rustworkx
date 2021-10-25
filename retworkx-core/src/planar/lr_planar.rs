@@ -135,7 +135,7 @@ impl<T> Interval<T> {
 
 impl<T> Interval<(T, T)>
 where
-    T: Hash + Eq,
+    T: Copy + Hash + Eq,
 {
     /// Returns ``true`` if the interval conflicts with ``edge``.
     fn conflict<G>(&self, lr_state: &LRState<G>, edge: Edge<G>) -> bool
@@ -182,7 +182,7 @@ impl<T> ConflictPair<T> {
 
 impl<T> ConflictPair<(T, T)>
 where
-    T: Hash + Eq,
+    T: Copy + Hash + Eq,
 {
     /// Returns the lowest low point of a conflict pair.
     fn lowest<G>(&self, lr_state: &LRState<G>) -> usize
