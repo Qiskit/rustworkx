@@ -74,7 +74,7 @@ The benchmark is [available on Github](https://github.com/mtreinish/retworkx-com
 
 The first use case is to represent real-world networks by creating graphs with their respective nodes and edges. We compare the time to create graphs representing the USA road network from the 9th DIMACS challenge dataset [@Demetrescu2016]. Each graph contains $\lvert V \rvert = 23,947,347$ nodes and $\lvert E \rvert = 58,333,344$ weighted edges.
 
-![Time to create the USA road network graph with 23,947,347 nodes and 58,333,344 edges.\label{fig:creation}](paper_img/creation.png){ width=38% height=50% }
+![Time to create the USA road network graph with 23,947,347 nodes and 58,333,344 edges.\label{fig:creation}](paper_img/creation.png){ width=90% height=90% }
 
 The results show that _retworkx_ is 3.1x faster than the second best library in the benchmark, _NetworkX_. The performance gap is even wider compared with _igraph_ and _graphtool_, which are at least 5x slower than _retworkx_.
 
@@ -86,7 +86,7 @@ The second use case is to calculate the distance among nodes in a graph using Di
 \begin{multicols}{2}
 \begin{figure}
 \centering
-\includegraphics[width=0.38\textwidth,height=0.5\textheight]{paper_img/single_source_shortest_path.png}
+\includegraphics[width=0.9\textwidth,height=0.9\textheight]{paper_img/single_source_shortest_path.png}
 \caption{Time to find the shortest path between two nodes in the USA road network.\label{fig:sssp}}
 \end{figure}
 
