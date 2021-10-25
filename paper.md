@@ -101,9 +101,9 @@ TODO discuss results.
 
 ## Graph Isomorphism
 
-The third use case is TODO [@Raymond2002]. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic [@DeSanto2003]. The graphs are unlabeled, bounded-valence graphs ranging from $20$ to $1000$ nodes with valence $\upsilon \in \{3, 6, 9 \}$. They are organized in pairs such that the subgraph size is either $20 \%$, $40 \%$ or $60 \%$ of the full graph.
+The third use case is to detect a pattern graph within a larger graph using the VF2 algorithm [@Cordella2004]^[_retworkx_ also implements the VF2++ heuristic [@Juttner2018], but we report only the VF2 numbers because VF2++ did not have a significant impact]. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic [@DeSanto2003]. The graphs are unlabeled, bounded-valence graphs ranging from $20$ to $1000$ nodes with valence $\upsilon \in \{3, 6, 9 \}$. They are organized in pairs such that the subgraph size is either $20 \%$, $40 \%$ or $60 \%$ of the full graph.
 
-All libraries implements the VF2 algorithm [@Cordella2004] for checking subgraph isomorphism. _retworkx_ also implements the VF2++ heuristic [@Juttner2018] to improve the runtime, but we report only the VF2 numbers because VF2++ did not have a significant impact. TODO.
+TODO.
 
 
 
