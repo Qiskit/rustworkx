@@ -44,7 +44,7 @@ _retworkx_ originated from the performance demands of the Qiskit compiler [@Qisk
 
 # Related work
 
-To address the performance issues in Qiskit, we explored several graph library alternatives. _igraph_ [@Csardi2006], _graphtool_ [@Peixoto2014], and _SNAP_ [@Leskovec2016] are stable Python libraries written in C or C++ that can replace _NetworkX_.
+To address the performance issues in Qiskit, we explored several graph library alternatives. _igraph_ [@Csardi2006], _graph-tool_ [@Peixoto2014], and _SNAP_ [@Leskovec2016] are stable Python libraries written in C or C++ that can replace _NetworkX_.
 
 However, there was a strong desire to keep the flexibility that _NetworkX_ provided for exploring and interacting with the graphs, which precluded custom data structures. The investigated graph libraries either had issues integrating with Qiskit or APIs that were too rigid, such that the migration of existing code was more complex than desired. Thus, the main contribution of _retworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
 
@@ -64,7 +64,7 @@ _retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up t
 
 We demonstrate the library's performance and use cases comparing _retworkx_ to other popular graph libraries^[_SNAP_ was dropped from the benchmarks because its Python wrapper did not contain the required functions] on a benchmark:
 
-| Library   | _retworkx_| _NetworkX_ | _python-igraph_ | _graphtool_ |
+| Library   | _retworkx_| _NetworkX_ | _python-igraph_ | _graph-tool_ |
 |-----------|-----------|------------|-----------------|-------------|
 | Version   | 0.10.2    | 2.6.3      | 0.9.6           | 2.43        |
 
@@ -76,12 +76,12 @@ The first use case is to represent real-world networks by creating graphs with t
 
 ![Time to create the USA road network graph with 23,947,347 nodes and 58,333,344 edges.\label{fig:creation}](paper_img/creation.png){ width=90% height=90% }
 
-The results show that _retworkx_ is 3.1x faster than the second best library in the benchmark, _NetworkX_. The performance gap is even wider compared with _igraph_ and _graphtool_, which are at least 5x slower than _retworkx_.
+The results in Figure \ref{fig:creation} show that _retworkx_ is on average 3x faster than _NetworkX_ on the benchmark. _retworkx_ is also the fastest among all libraries, being 5x faster than _igraph_ and _graph-tool_.
 
 
 ## Shortest Path
 
-The second use case is to calculate the distance among nodes in a graph using Dijkstra's algorithm [@Dijkstra1959ANO]^[_igraph_ and _graphtool_ use Johnson's algorithm [@Johnson1977] for all-pairs shortest paths, which contains Dijkstra's as a subroutine]. We compare two scenarios. In the first scenario, we calculate the distance between two nodes in the USA road network. In the second scenario, we calculate the distance among all nodes in the City of Rome road network, with the dataset also coming from the 9th DIMACS challenge. The City of Rome network has $\lvert V \rvert = 3,353$ nodes and $\lvert E \rvert = 8,870$ weighted edges.
+The second use case is to calculate the distance among nodes in a graph using Dijkstra's algorithm [@Dijkstra1959ANO]^[_igraph_ and _graph-tool_ use Johnson's algorithm [@Johnson1977] for all-pairs shortest paths, which contains Dijkstra's as a subroutine]. We compare two scenarios. In the first scenario, we calculate the distance between two nodes in the USA road network. In the second scenario, we calculate the distance among all nodes in the City of Rome road network, with the dataset also coming from the 9th DIMACS challenge. The City of Rome network has $\lvert V \rvert = 3,353$ nodes and $\lvert E \rvert = 8,870$ weighted edges.
 
 \begin{multicols}{2}
 \begin{figure}
@@ -97,7 +97,9 @@ The second use case is to calculate the distance among nodes in a graph using Di
 \end{figure}
 \end{multicols}
 
-TODO discuss results.
+_retworkx_ is 6x faster than _NetworkX_ on the single-source scenario, and 104x faster on the all-pairs scenario as shown in Figures \ref{fig:sssp} and \ref{fig:allpairs}. We hilight that _NetworkX_ is the slowest library among all in the benchmark because it was designed with different goals in mind, such as readibility and ease of distribution. If performance is important, we recommend switching to a library like _retworkx_ or _graph-tool_ because _NetworkX_ shows performance concerns that can significantly increase the runtime. 
+
+Compared to other libraries in the benchmark, _retworkx_ is still competitive. _retworkx_ comes second in the single-source scenario and is beaten by _graph-tool_, but we interpret the result as a trade-off between graph creation time and algorithm execution time. _graph-tool_ is 1.6-1.8x faster than _retworkx_ on the shortest-path calculation, but that advantage vanishes when we consider that _graph-tool_ also takes 5x longer to create the graph. In the all-pairs scenario, _retworkx_ is the fastest with a 5.6x speedup compared to _graph-tool_ in the second place.
 
 ## Subgraph Isomorphism
 
