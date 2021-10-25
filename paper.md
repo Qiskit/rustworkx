@@ -86,13 +86,13 @@ The second use case is to calculate the distance among nodes in a graph using Di
 \begin{multicols}{2}
 \begin{figure}
 \centering
-\includegraphics[width=0.9\textwidth,height=0.9\textheight]{paper_img/single_source_shortest_path.png}
+\includegraphics[width=0.7\textwidth,height=0.8\textheight]{paper_img/single_source_shortest_path.png}
 \caption{Time to find the shortest path between two nodes in the USA road network.\label{fig:sssp}}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth,height=0.5\textheight]{paper_img/all_pairs.png}
+\includegraphics[width=0.3\textwidth,height=0.8\textheight]{paper_img/all_pairs.png}
 \caption{Time to find the shortest path among all nodes in the City of Rome road network.\label{fig:allpairs}}
 \end{figure}
 \end{multicols}
