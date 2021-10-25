@@ -112,6 +112,6 @@ The results in Figure \label{fig:subgraphisomorphism} show that _retworkx_ consi
 
 # Acknowledgements
 
-We thank Kevin Krsulich for his help in getting _retworkx_ ready for use by Qiskit; Lauren Capelluto and Itoko Toshinari for their continued support and help with code review; and all of the retworkx contributors who have helped the library improve over time.
+We thank Kevin Krsulich for his help in getting _retworkx_ ready for use by Qiskit; Lauren Capelluto and Itoko Toshinari for their continued support and help with code review; and all of the _retworkx_ contributors who have helped the library improve over time.
 
 # References
