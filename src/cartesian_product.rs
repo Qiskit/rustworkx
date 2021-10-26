@@ -118,7 +118,7 @@ fn graph_cartesian_product(
 }
 
 /// Return a new PyDiGraph by forming the cartesian product from two input
-/// PyGraph objects
+/// PyDiGraph objects
 ///
 /// :param PyDiGraph first: The first undirected graph object
 /// :param PyDiGraph second: The second undirected graph object
