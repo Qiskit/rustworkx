@@ -76,7 +76,7 @@ The first use case is to represent real-world networks by creating graphs with t
 
 ![Time to create the USA road network graph with 23,947,347 nodes and 58,333,344 edges.\label{fig:creation}](paper_img/creation.png){ width=90% height=90% }
 
-The results in Figure \ref{fig:creation} show that _retworkx_ is on average 3x faster than _NetworkX_ on the benchmark. _retworkx_ is also the fastest among all libraries, being 5x faster than _igraph_ and _graph-tool_.
+The results in Figure \ref{fig:creation} show that _retworkx_ is on average 3x faster than _NetworkX_ on the benchmark. _retworkx_ is also the fastest among all libraries, being at least 5x faster than _igraph_ and _graph-tool_.
 
 
 ## Shortest Path
