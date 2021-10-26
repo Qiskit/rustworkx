@@ -70,7 +70,7 @@ We demonstrate the library's performance and use cases comparing _retworkx_ to o
 
 The benchmark is [available on Github](https://github.com/mtreinish/retworkx-comparison-benchmarks)^[https://github.com/mtreinish/retworkx-comparison-benchmarks] for reproducibility. We present results conducted on the same machine running Python 3.9.7, with 128GB of DDR4 RAM @ 3200MHz and Intel(R) Core i7-6900K CPU @ 3.20GHz with eight cores and 16 threads. 
 
-_retworkx_, _NetworkX_, and _igraph_ were installed from the Python Package Index with the **`pip`** command. _graph-tool_ had to be compiled and installed manually because it did not support **`pip`**. We point that _NetworkX_ was the easiest package to install because it only contains Python code. _retworkx_ and _igraph_ were also simple to install because pre-compiled binaries were available.
+_retworkx_, _NetworkX_, and _igraph_ were installed from the Python Package Index with the **`pip`** command. _graph-tool_ had to be compiled and installed manually because it did not support **`pip`**. We point that _NetworkX_ was the easiest package to install because it only contained Python code. _retworkx_ and _igraph_ were also simple to install because pre-compiled binaries were available.
 
 ## Graph Creation
 
