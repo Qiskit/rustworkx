@@ -68,16 +68,17 @@ We demonstrate the library's performance and use cases comparing _retworkx_ to o
 |-----------|-----------|------------|-----------------|-------------|
 | Version   | 0.10.2    | 2.6.3      | 0.9.6           | 2.43        |
 
-The benchmark is [available on Github](https://github.com/mtreinish/retworkx-comparison-benchmarks)^[https://github.com/mtreinish/retworkx-comparison-benchmarks] for reproducibility. We present results conducted on the same machine running Python 3.9.7, with 128GB of DDR4 RAM @ 3200MHz and Intel(R) Core i7-6900K CPU @ 3.20GHz with eight cores and 16 threads. _retworkx_, _NetworkX_, and _igraph_ were installed from the Python Package Index with the **`pip`** command. _graph-tool_ had to be compiled and installed manually because it did not support **`pip`**. We point that _NetworkX_ was the easiest package to install because it only contains Python code. _retworkx_ and _igraph_ were also simple to install because pre-compiled binaries are available.
+The benchmark is [available on Github](https://github.com/mtreinish/retworkx-comparison-benchmarks)^[https://github.com/mtreinish/retworkx-comparison-benchmarks] for reproducibility. We present results conducted on the same machine running Python 3.9.7, with 128GB of DDR4 RAM @ 3200MHz and Intel(R) Core i7-6900K CPU @ 3.20GHz with eight cores and 16 threads. 
+
+_retworkx_, _NetworkX_, and _igraph_ were installed from the Python Package Index with the **`pip`** command. _graph-tool_ had to be compiled and installed manually because it did not support **`pip`**. We point that _NetworkX_ was the easiest package to install because it only contains Python code. _retworkx_ and _igraph_ were also simple to install because pre-compiled binaries were available.
 
 ## Graph Creation
 
 The first use case is to represent real-world networks by creating graphs with their respective nodes and edges. We compare the time to create graphs representing the USA road network from the 9th DIMACS challenge dataset [@Demetrescu2009]. Each graph contains $\lvert V \rvert = 23,947,347$ nodes and $\lvert E \rvert = 58,333,344$ weighted edges.
 
-![Time to create the USA road network graph with 23,947,347 nodes and 58,333,344 edges.\label{fig:creation}](paper_img/creation.png){ width=90% height=90% }
-
 The results in Figure \ref{fig:creation} shows that _retworkx_ is on average 3x faster than _NetworkX_ on this benchmark. _retworkx_ is also the fastest among all libraries, being at least 5x faster than _igraph_ and _graph-tool_.
 
+![Time to create the USA road network graph with 23,947,347 nodes and 58,333,344 edges.\label{fig:creation}](paper_img/creation.png){ width=90% height=90% }
 
 ## Shortest Path
 
