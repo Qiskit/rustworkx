@@ -25,7 +25,11 @@ fn cartesian_product<Ty: EdgeType>(
     first: &StablePyGraph<Ty>,
     second: &StablePyGraph<Ty>,
 ) -> PyResult<StablePyGraph<Ty>> {
-    let mut final_graph = StablePyGraph::<Ty>::default();
+    let mut final_graph = StablePyGraph::<Ty>::with_capacity(
+        first.node_count() * second.node_count(),
+        first.node_count() * second.edge_count()
+            + first.edge_count() * second.node_count(),
+    );
 
     let mut hash_nodes =
         HashMap::with_capacity(first.node_count() * second.node_count());
