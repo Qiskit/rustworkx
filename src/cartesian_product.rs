@@ -14,7 +14,7 @@ use crate::{digraph, graph, StablePyGraph};
 
 use hashbrown::HashMap;
 
-use petgraph::visit::{EdgeRef, IntoEdgeReferences};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences};
 use petgraph::{algo, EdgeType};
 
 use pyo3::prelude::*;
@@ -34,17 +34,11 @@ fn cartesian_product<Ty: EdgeType>(
     let mut hash_nodes =
         HashMap::with_capacity(first.node_count() * second.node_count());
 
-    let nodes_first = first.node_indices();
-    let nodes_second = second.node_indices();
-
-    let cross =
-        nodes_first.flat_map(|x| nodes_second.clone().map(move |y| (x, y)));
-
-    for (x, y) in cross {
-        let weight_x = &first[x];
-        let weight_y = &second[y];
-        let n0 = final_graph.add_node((weight_x, weight_y).into_py(py));
-        hash_nodes.insert((x, y), n0);
+    for (x, weight_x) in first.node_references() {
+        for (y, weight_y) in second.node_references() {
+            let n0 = final_graph.add_node((weight_x, weight_y).into_py(py));
+            hash_nodes.insert((x, y), n0);
+        }
     }
 
     for edge_first in first.edge_references() {
