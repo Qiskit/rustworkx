@@ -58,6 +58,8 @@ _retworkx_ operates on weights with callbacks. Callbacks are functions that take
 
 A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges in the graph. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with weights.
 
+![Visualization of a binomial tree graph made with the retworkx.visualization module.\label{fig:graphexample}](paper_img/example_graph.png){ width=90% height=90% }
+
 # Use Cases
 
 _retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms, such as Qiskit. In those applications, the performance of _retworkx_ considerably reduces computation time.
