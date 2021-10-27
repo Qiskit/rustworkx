@@ -34,7 +34,7 @@ header-includes:
 
 &nbsp;
 
->> Network and graph analysis is a widely applicable field of research, and Python is a popular language. In _[retworkx](https://github.com/Qiskit/retworkx)_, we provide a high-performance, flexible graph and network analysis library for Python. _retworkx_ is inspired by _NetworkX_ [@SciPyProceedings_11] but addresses many performance concerns of the latter. _retworkx_ is particularly suited for performance-sensitive applications that use graph representations.
+>> Network and graph analysis is a widely applicable field of research, and Python is a popular programming language. In _[retworkx](https://github.com/Qiskit/retworkx)_, we provide a high-performance, flexible graph and network analysis library for Python. _retworkx_ is inspired by _NetworkX_ [@SciPyProceedings_11] but addresses many performance concerns of the latter. _retworkx_ is particularly suited for performance-sensitive applications that use graph representations.
 
 # Statement of need
 
@@ -46,7 +46,7 @@ _retworkx_ originated from the performance demands of the Qiskit compiler [@Qisk
 
 To address the performance issues in Qiskit, we explored several graph library alternatives. _igraph_ [@Csardi2006], _graph-tool_ [@Peixoto2014], and _SNAP_ [@Leskovec2016] are Python libraries written in C or C++ that can replace _NetworkX_.
 
-However, there was a strong desire to keep the flexibility that _NetworkX_ provided for exploring and interacting with the graphs, which precluded custom data structures. The graph libraries mentioned above either had issues integrating with Qiskit or APIs that were too rigid, such that the migration of existing code was more complex than desired. Thus, the main contribution of _retworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
+However, there was a strong desire to keep the flexibility that _NetworkX_ provided for exploring and interacting with the graphs, which precluded custom application specific graph data structures. The graph libraries mentioned above either had issues integrating with Qiskit or APIs that were too rigid, such that the migration of existing code was more complex than desired. Thus, the main contribution of _retworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
 
 # Graph data structures
 
@@ -100,13 +100,13 @@ The second use case is to calculate the distance among nodes in a graph using Di
 
 _retworkx_ is 6x faster than _NetworkX_ on the single-source scenario, and 104x faster on the all-pairs scenario as shown in Figures \ref{fig:sssp} and \ref{fig:allpairs}. We highlight that _NetworkX_ is the slowest library among all in the benchmark because it was designed with different goals in mind, such as readability and ease of distribution.
 
-Compared to other libraries in the benchmark, _retworkx_ is still competitive. _retworkx_ comes second in the single-source scenario after _graph-tool_, but we interpret the result as a trade-off. _graph-tool_ is 1.6-1.8x faster than _retworkx_ on the single-source shortest-path calculation but takes 5x longer to create the graph, as shown in the other benchmark. _retworkx_ creates graphs faster and trades some of the shortest-path calculation performance to accept Python callbacks that work with arbitrary data types. In the all-pairs scenario, _retworkx_ is the fastest with a 5.6x speedup compared to _graph-tool_ in the second place.
+_retworkx_ is the second fastest in the single-source scenario after _graph-tool_, but we interpret the result as a trade-off. _graph-tool_ is 1.6-1.8x faster than _retworkx_ on the single-source shortest-path calculation but takes 5x longer to create the graph, as shown in the other benchmark. _retworkx_ creates graphs faster and trades some of the shortest-path calculation performance to accept Python callbacks that work with arbitrary data types. In the all-pairs scenario, _retworkx_ is the fastest with a 5.6x speedup compared to _graph-tool_ which is the the second fastest.
 
 ## Subgraph Isomorphism
 
 The third use case is to detect a pattern graph within a larger graph using the VF2 or VF2++ algorithms [@Cordella2004;@Juttner2018]. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic [@DeSanto2003]. The graphs are unlabeled, bounded-valence graphs ranging from $20$ to $1000$ nodes with valence $\upsilon \in \{3, 6, 9 \}$. They are organized in pairs such that the subgraph size is either $20 \%$, $40 \%$ or $60 \%$ of the full graph.
 
-The results in Figure \ref{fig:subgraphisomorphism} show that _retworkx_ consistently outperforms _NetworkX_ by two orders of magnitude. For $n = 1000$ nodes, _retworkx_ has averaged around the order of $10^{-1}$ seconds while _NetworkX_ is closer to the order of $10^{1}$ seconds. Compared to other libraries, _retworkx_ leads the benchmark together with _igraph_, albeit _retworkx_ performs slightly better as the number of nodes grows larger. _NetworkX_ is again the slowest library in the benchmark.
+The results in Figure \ref{fig:subgraphisomorphism} show that _retworkx_ consistently outperforms _NetworkX_ by two orders of magnitude. For $n = 1000$ nodes, _retworkx_ has averaged around the order of $10^{-1}$ seconds while _NetworkX_ is closer to the order of $10^{1}$ seconds. Compared to other libraries, _retworkx_ leads the benchmark together with _igraph_, albeit _retworkx_ performs slightly better as the number of nodes grows larger.
 
 
 ![Average time to verify subgraph isomorphism versus the number of graph nodes, grouped by valence number and subgraph size.\label{fig:subgraphisomorphism}](paper_img/subgraph_isomorphism.png){ width=90% height=100% }
