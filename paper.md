@@ -100,7 +100,7 @@ The second use case is to calculate the distance among nodes in a graph using Di
 
 _retworkx_ is 6x faster than _NetworkX_ on the single-source scenario, and 104x faster on the all-pairs scenario as shown in Figures \ref{fig:sssp} and \ref{fig:allpairs}. We highlight that _NetworkX_ is the slowest library among all in the benchmark because it was designed with different goals in mind, such as readability and ease of distribution.
 
-Compared to other libraries in the benchmark, _retworkx_ is still competitive. _retworkx_ comes second in the single-source scenario after _graph-tool_, but we interpret the result as a trade-off. _graph-tool_ is 1.6-1.8x faster than _retworkx_ on the single-source shortest-path calculation, but takes 5x longer to create the graph as shown in the other benchmark. _retworkx_ creates graphs faster and trades some of the shortest-path calculation performance to accept Python callbacks that work with arbitrary data types. In the all-pairs scenario, _retworkx_ is the fastest with a 5.6x speedup compared to _graph-tool_ in the second place.
+Compared to other libraries in the benchmark, _retworkx_ is still competitive. _retworkx_ comes second in the single-source scenario after _graph-tool_, but we interpret the result as a trade-off. _graph-tool_ is 1.6-1.8x faster than _retworkx_ on the single-source shortest-path calculation but takes 5x longer to create the graph, as shown in the other benchmark. _retworkx_ creates graphs faster and trades some of the shortest-path calculation performance to accept Python callbacks that work with arbitrary data types. In the all-pairs scenario, _retworkx_ is the fastest with a 5.6x speedup compared to _graph-tool_ in the second place.
 
 ## Subgraph Isomorphism
 
