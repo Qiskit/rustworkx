@@ -64,7 +64,7 @@ A defining characteristic of _retworkx_ graphs is that each node maps to a non-n
 
 _retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms, such as Qiskit. In those applications, the performance of _retworkx_ considerably reduces computation time.
 
-We demonstrate the library's performance and use cases comparing _retworkx_ to other popular graph libraries^[_SNAP_ was dropped from the benchmarks because its Python wrapper did not contain the required functions] on a benchmark:
+We demonstrate the library's performance and use cases comparing _retworkx_ to other popular graph libraries^[_SNAP_ was not included in the benchmarks because its Python wrapper did not contain the required functions] on a benchmark:
 
 | Library   | _retworkx_| _NetworkX_ | _python-igraph_ | _graph-tool_ |
 |-----------|-----------|------------|-----------------|-------------|
@@ -115,6 +115,6 @@ The results in Figure \ref{fig:subgraphisomorphism} show that _retworkx_ consist
 
 # Acknowledgements
 
-We thank Kevin Krsulich for his help in getting _retworkx_ ready for use by Qiskit; Lauren Capelluto and Itoko Toshinari for their continued support and help with code review; and all of the _retworkx_ contributors who have helped the library improve over time.
+We thank Kevin Krsulich for his help in getting _retworkx_ ready for use by Qiskit; Lauren Capelluto and Toshinari Itoko for their continued support and help with code review; and all of the _retworkx_ contributors who have helped the library improve over time.
 
 # References
