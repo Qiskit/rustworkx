@@ -97,7 +97,11 @@ where
     let mut points = HashSet::new();
 
     let mut edge_stack = Vec::new();
-    let mut tmp_components = HashMap::with_capacity(graph.edge_count());
+    let mut tmp_components = if components.is_some() {
+        HashMap::with_capacity(graph.edge_count())
+    } else {
+        HashMap::new()
+    };
     let mut num_components: usize = 0;
 
     depth_first_search(graph, graph.node_identifiers(), |event| match event {

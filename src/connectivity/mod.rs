@@ -714,10 +714,12 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn biconnected_components(graph: &graph::PyGraph) -> HashMap<(usize, usize), usize> {
+pub fn biconnected_components(
+    graph: &graph::PyGraph,
+) -> HashMap<(usize, usize), usize> {
     let mut bicomp = HashMap::new();
     connectivity::articulation_points(&graph.graph, Some(&mut bicomp));
-    bicomp 
+    bicomp
         .into_iter()
         .map(|((v, w), comp)| ((v.index(), w.index()), comp))
         .collect()
