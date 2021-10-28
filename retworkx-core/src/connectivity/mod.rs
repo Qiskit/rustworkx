@@ -12,6 +12,8 @@
 
 //! Module for connectivity and cut algorithms.
 
+mod biconnected;
 mod chain;
 
+pub use biconnected::articulation_points;
 pub use chain::chain_decomposition;

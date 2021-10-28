@@ -13,9 +13,12 @@
 use hashbrown::HashSet;
 use std::hash::Hash;
 
-use petgraph::visit::{
-    depth_first_search, DfsEvent, IntoNeighbors, IntoNodeIdentifiers,
-    NodeIndexable, Time, Visitable,
+use petgraph::{
+    visit::{
+        depth_first_search, DfsEvent, GraphProp, IntoNeighbors,
+        IntoNodeIdentifiers, NodeIndexable, Time, Visitable,
+    },
+    Undirected,
 };
 
 const NULL: usize = std::usize::MAX;
@@ -35,12 +38,34 @@ fn is_root(parent: &[usize], u: usize) -> bool {
     parent[u] == NULL
 }
 
+/// Return the articulation points of an undirected graph.
+///
+/// An articulation point or cut vertex is any node whose removal (along with
+/// all its incident edges) increases the number of connected components of
+/// a graph. An undirected connected graph without articulation points is
+/// biconnected.
+///
+/// At the same time, you can record the biconnected components in `components`.
+///
+/// Biconnected components are maximal subgraphs such that the removal
+/// of a node (and all edges incident on that node) will not disconnect
+/// the subgraph. Note that nodes may be part of more than one biconnected
+/// component. Those nodes are articulation points, or cut vertices.
+///
+/// # Note
+/// The function implicitly assumes that there are no parallel edges
+/// or self loops. It may produce incorrect/unexpected results if the
+/// input graph has self loops or parallel edges.
 pub fn articulation_points<G>(
     graph: G,
     components: Option<&mut Vec<HashSet<G::NodeId>>>,
 ) -> HashSet<G::NodeId>
 where
-    G: IntoNeighbors + Visitable + NodeIndexable + IntoNodeIdentifiers,
+    G: GraphProp<EdgeType = Undirected>
+        + IntoNeighbors
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
     let num_nodes = graph.node_bound();

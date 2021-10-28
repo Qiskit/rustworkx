@@ -12,7 +12,6 @@
 
 #![allow(clippy::float_cmp)]
 
-mod biconnected;
 mod core_number;
 
 use super::{
@@ -686,7 +685,7 @@ pub fn digraph_core_number(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
-    biconnected::articulation_points(&graph.graph, None)
+    connectivity::articulation_points(&graph.graph, None)
         .into_iter()
         .map(|nx| nx.index())
         .collect()
@@ -697,7 +696,7 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 /// Biconnected components are maximal subgraphs such that the removal
 /// of a node (and all edges incident on that node) will not disconnect
 /// the subgraph. Note that nodes may be part of more than one biconnected
-// component. Those nodes are articulation points, or cut vertices.
+/// component. Those nodes are articulation points, or cut vertices.
 ///
 /// .. note::
 ///
@@ -715,7 +714,7 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 #[pyo3(text_signature = "(graph, /)")]
 pub fn biconnected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
     let mut out_vec = Vec::new();
-    biconnected::articulation_points(&graph.graph, Some(&mut out_vec));
+    connectivity::articulation_points(&graph.graph, Some(&mut out_vec));
     out_vec
         .into_iter()
         .map(|component| component.into_iter().map(|nx| nx.index()).collect())
