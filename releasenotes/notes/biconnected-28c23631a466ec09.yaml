@@ -39,20 +39,14 @@ features:
       ])
       components = retworkx.biconnected_components(graph)
 
-      def color_edges(graph, components):
-          COLORS = ['blue', 'red', 'orange']
-
-          def find(u, v):
-              for idx, subset in enumerate(components):
-                  if u in subset and v in subset:
-                      return COLORS[idx]
-                    
-              return 'black'
-
-          edge_colors = [
-              find(u, v) for u, v in graph.edge_list()
-          ]
-          return edge_colors
+      COLORS = ["blue", "red", "orange"]
+      edge_colors = []
+      for (u, v) in graph.edge_list():
+        if (u, v) in components:
+            comp = components[(u, v)]
+        else:
+            comp = components[(v, u)]
+        edge_colors += [COLORS[comp]] 
 
       mpl_draw(graph, node_color='black', node_size=150,
-              edge_color=color_edges(graph, components))
+              edge_color=edge_colors)

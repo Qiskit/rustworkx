@@ -696,7 +696,9 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 /// Biconnected components are maximal subgraphs such that the removal
 /// of a node (and all edges incident on that node) will not disconnect
 /// the subgraph. Note that nodes may be part of more than one biconnected
-/// component. Those nodes are articulation points, or cut vertices.
+/// component. Those nodes are articulation points, or cut vertices. The
+/// algorithm computes how many biconnected components are in the graph,
+/// and assigning each component an integer label.
 ///
 /// .. note::
 ///
@@ -707,17 +709,17 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 ///
 /// :param PyGraph: The undirected graph to be used.
 ///
-/// :returns: A list of sets where each set is a biconnected component of
-///     the graph
-/// :rtype: list
+/// :returns: A dictionary with keys the edge endpoints and value the biconnected
+///     component number that the edge belongs.
+/// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn biconnected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
-    let mut out_vec = Vec::new();
-    connectivity::articulation_points(&graph.graph, Some(&mut out_vec));
-    out_vec
+pub fn biconnected_components(graph: &graph::PyGraph) -> HashMap<(usize, usize), usize> {
+    let mut bicomp = HashMap::new();
+    connectivity::articulation_points(&graph.graph, Some(&mut bicomp));
+    bicomp 
         .into_iter()
-        .map(|component| component.into_iter().map(|nx| nx.index()).collect())
+        .map(|((v, w), comp)| ((v.index(), w.index()), comp))
         .collect()
 }
 

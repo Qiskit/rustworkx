@@ -10,28 +10,20 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use hashbrown::HashSet;
+use hashbrown::{HashMap, HashSet};
 use std::hash::Hash;
 
 use petgraph::{
     visit::{
-        depth_first_search, DfsEvent, GraphProp, IntoNeighbors,
-        IntoNodeIdentifiers, NodeIndexable, Time, Visitable,
+        depth_first_search, DfsEvent, EdgeCount, GraphBase, GraphProp,
+        IntoNeighbors, IntoNodeIdentifiers, NodeIndexable, Time, Visitable,
     },
     Undirected,
 };
 
 const NULL: usize = std::usize::MAX;
 
-/// Returns the unique elements of type ``T`` contained
-/// in a vector that holds pairs of ``T`` values.
-#[inline]
-fn flattened<T>(xs: &[[T; 2]]) -> HashSet<T>
-where
-    T: Eq + Hash + Copy,
-{
-    xs.iter().flatten().copied().collect()
-}
+type Edge<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
 
 #[inline]
 fn is_root(parent: &[usize], u: usize) -> bool {
@@ -50,18 +42,45 @@ fn is_root(parent: &[usize], u: usize) -> bool {
 /// Biconnected components are maximal subgraphs such that the removal
 /// of a node (and all edges incident on that node) will not disconnect
 /// the subgraph. Note that nodes may be part of more than one biconnected
-/// component. Those nodes are articulation points, or cut vertices.
+/// component. Those nodes are articulation points, or cut vertices. The
+/// algorithm computes how many biconnected components are in the graph,
+/// and assigning each component an integer label.
 ///
 /// # Note
 /// The function implicitly assumes that there are no parallel edges
 /// or self loops. It may produce incorrect/unexpected results if the
 /// input graph has self loops or parallel edges.
+///
+///
+/// # Example:
+/// ```rust
+/// use std::iter::FromIterator;
+/// use hashbrown::{HashMap, HashSet};
+///
+/// use retworkx_core::connectivity::articulation_points;
+/// use retworkx_core::petgraph::graph::UnGraph;
+/// use retworkx_core::petgraph::graph::node_index as nx;
+///
+/// let graph = UnGraph::<(), ()>::from_edges(&[
+///    (0, 1), (0, 2), (1, 2), (1, 3),
+/// ]);
+///
+/// let mut bicomp = HashMap::new();
+/// let a_points = articulation_points(&graph, Some(&mut bicomp));
+///
+/// assert_eq!(a_points, HashSet::from_iter([nx(1)]));
+/// assert_eq!(bicomp, HashMap::from_iter([
+///     ((nx(0), nx(2)), 1), ((nx(2), nx(1)), 1), ((nx(1), nx(0)), 1),
+///     ((nx(1), nx(3)), 0)
+/// ]));
+/// ```
 pub fn articulation_points<G>(
     graph: G,
-    components: Option<&mut Vec<HashSet<G::NodeId>>>,
+    components: Option<&mut HashMap<Edge<G>, usize>>,
 ) -> HashSet<G::NodeId>
 where
     G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
         + IntoNeighbors
         + Visitable
         + NodeIndexable
@@ -78,7 +97,8 @@ where
     let mut points = HashSet::new();
 
     let mut edge_stack = Vec::new();
-    let mut tmp_components = Vec::new();
+    let mut tmp_components = HashMap::with_capacity(graph.edge_count());
+    let mut num_components: usize = 0;
 
     depth_first_search(graph, graph.node_identifiers(), |event| match event {
         DfsEvent::Discover(u_id, Time(t)) => {
@@ -94,7 +114,7 @@ where
                 root_children += 1;
             }
             if components.is_some() {
-                edge_stack.push([u_id, v_id]);
+                edge_stack.push((u_id, v_id));
             }
         }
         DfsEvent::BackEdge(u_id, v_id) => {
@@ -105,7 +125,7 @@ where
             if v != parent[u] {
                 low[u] = low[u].min(disc[v]);
                 if components.is_some() {
-                    edge_stack.push([u_id, v_id]);
+                    edge_stack.push((u_id, v_id));
                 }
             }
         }
@@ -128,20 +148,30 @@ where
                     // current articulation point belongs.
                     if components.is_some() {
                         if let Some(at) =
-                            edge_stack.iter().rposition(|&x| x == [pu_id, u_id])
+                            edge_stack.iter().rposition(|&x| x == (pu_id, u_id))
                         {
-                            tmp_components.push(flattened(&edge_stack[at..]));
+                            tmp_components.extend(
+                                edge_stack[at..]
+                                    .iter()
+                                    .map(|edge| (*edge, num_components)),
+                            );
                             edge_stack.truncate(at);
+                            num_components += 1;
                         }
                     }
                 }
 
                 if is_root(&parent, pu) && components.is_some() {
                     if let Some(at) =
-                        edge_stack.iter().position(|&x| x == [pu_id, u_id])
+                        edge_stack.iter().position(|&x| x == (pu_id, u_id))
                     {
-                        tmp_components.push(flattened(&edge_stack[at..]));
+                        tmp_components.extend(
+                            edge_stack[at..]
+                                .iter()
+                                .map(|edge| (*edge, num_components)),
+                        );
                         edge_stack.truncate(at);
+                        num_components += 1;
                     }
                 }
             }
@@ -150,7 +180,7 @@ where
     });
 
     if let Some(x) = components {
-        x.append(&mut tmp_components);
+        *x = tmp_components;
     }
 
     points

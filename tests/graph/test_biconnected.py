@@ -56,26 +56,40 @@ class TestBiconnected(unittest.TestCase):
     def test_null_graph(self):
         graph = retworkx.PyGraph()
         self.assertEqual(retworkx.articulation_points(graph), set())
-        self.assertEqual(retworkx.biconnected_components(graph), [])
+        self.assertEqual(retworkx.biconnected_components(graph), {})
 
     def test_graph(self):
-        components = [
-            {8, 9, 4},
-            {5, 6, 7},
-            {4, 5},
-            {0, 1, 2, 3, 4},
-        ]
+        components = {
+            (4, 8): 0,
+            (8, 9): 0,
+            (9, 4): 0,
+            (5, 6): 1,
+            (6, 7): 1,
+            (7, 5): 1,
+            (4, 5): 2,
+            (0, 1): 3,
+            (1, 2): 3,
+            (2, 3): 3,
+            (2, 4): 3,
+            (2, 0): 3,
+            (3, 0): 3,
+            (4, 1): 3,
+        }
         self.assertEqual(
             retworkx.biconnected_components(self.graph), components
         )
         self.assertEqual(retworkx.articulation_points(self.graph), {4, 5})
 
     def test_barbell_graph(self):
-        components = [
-            {3, 4, 5},
-            {2, 3},
-            {0, 1, 2},
-        ]
+        components = {
+            (0, 2): 2,
+            (2, 1): 2,
+            (1, 0): 2,
+            (3, 5): 0,
+            (5, 4): 0,
+            (4, 3): 0,
+            (2, 3): 1,
+        }
         self.assertEqual(
             retworkx.biconnected_components(self.barbell_graph), components
         )
@@ -85,14 +99,24 @@ class TestBiconnected(unittest.TestCase):
 
     def test_disconnected_graph(self):
         graph = retworkx.union(self.barbell_graph, self.barbell_graph)
-        components = [
-            {3, 4, 5},
-            {2, 3},
-            {0, 1, 2},
-            {9, 10, 11},
-            {8, 9},
-            {8, 6, 7},
-        ]
+        components = {
+            # first copy
+            (0, 2): 2,
+            (2, 1): 2,
+            (1, 0): 2,
+            (3, 5): 0,
+            (5, 4): 0,
+            (4, 3): 0,
+            (2, 3): 1,
+            # second copy
+            (6, 8): 5,
+            (8, 7): 5,
+            (7, 6): 5,
+            (9, 11): 3,
+            (11, 10): 3,
+            (10, 9): 3,
+            (8, 9): 4,
+        }
         self.assertEqual(retworkx.biconnected_components(graph), components)
         self.assertEqual(retworkx.articulation_points(graph), {2, 3, 8, 9})
 
@@ -113,6 +137,8 @@ class TestBiconnected(unittest.TestCase):
                 (4, 6),
             ]
         )
+        num_edges = len(graph.edge_list())
         self.assertEqual(retworkx.articulation_points(graph), set())
-        nodes = set(graph.node_indexes())
-        self.assertEqual(retworkx.biconnected_components(graph), [nodes])
+        bicomp = retworkx.biconnected_components(graph)
+        self.assertEqual(len(bicomp), num_edges)
+        self.assertEqual(list(bicomp.values()), [0] * num_edges)
