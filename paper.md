@@ -68,7 +68,7 @@ We demonstrate the library's performance and use cases comparing _retworkx_ to o
 
 | Library   | _retworkx_| _NetworkX_ | _python-igraph_ | _graph-tool_ |
 |-----------|-----------|------------|-----------------|-------------|
-| Version   | 0.10.2    | 2.6.3      | 0.9.6           | 2.43        |
+| Version ^[_retworkx_, _NetworkX_, and _igraph_ were installed from PyPI (Python Package Index) with the **`pip`** command]\textsuperscript{,}  ^[_graph-tool_ does not publish packages on PyPI and had to be compiled and installed manually]\textsuperscript{,} ^[_retworkx_ and _igraph_ provide precompiled wheel binaries [@pep427], hence no Rust or C compilers were required. _graph-tool_ required a C++ compiler and all of the C++ library dependencies]   | 0.10.2    | 2.6.3      | 0.9.6           | 2.43        |
 
 The benchmark is [available on Github](https://github.com/mtreinish/retworkx-comparison-benchmarks)^[https://github.com/mtreinish/retworkx-comparison-benchmarks] for reproducibility. We present results conducted on the same machine running Python 3.9.7, with 128GB of DDR4 RAM @ 3200MHz and Intel(R) Core i7-6900K CPU @ 3.20GHz with eight cores and 16 threads. 
 
