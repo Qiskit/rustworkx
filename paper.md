@@ -32,8 +32,6 @@ header-includes:
   - \usepackage{multicol}
 ---
 
-&nbsp;
-
 >> Network and graph analysis is a widely applicable field of research, and Python is a popular programming language. In _[retworkx](https://github.com/Qiskit/retworkx)_, we provide a high-performance, flexible graph and network analysis library for Python. _retworkx_ is inspired by _NetworkX_ [@SciPyProceedings_11] but addresses many performance concerns of the latter. _retworkx_ is particularly suited for performance-sensitive applications that use graph representations.
 
 # Statement of need
@@ -58,7 +56,7 @@ _retworkx_ operates on weights with callbacks. Callbacks are functions that take
 
 A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges in the graph. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with weights.
 
-![Visualization of a graph data structure made with the **`retworkx.visualization`** module.\label{fig:graphexample}](paper_img/example_graph.png){ width=50% height==50% }
+![Visualization of a graph data structure made with the **`retworkx.visualization`** module.\label{fig:graphexample}](paper_img/example_graph.png){ width=40% height=40% }
 
 # Use Cases
 
@@ -87,14 +85,14 @@ The second use case is to calculate the distance among nodes in a graph using Di
 \begin{multicols}{2}
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth,height=0.5\textheight]{paper_img/single_source_shortest_path.png}
+\includegraphics[width=0.45\textwidth,height=0.45\textheight]{paper_img/single_source_shortest_path.png}
 \caption{Time to find the shortest path between two nodes in the USA road network.}
 \label{fig:sssp}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth,height=0.5\textheight]{paper_img/all_pairs.png}
+\includegraphics[width=0.45\textwidth,height=0.45\textheight]{paper_img/all_pairs.png}
 \caption{Time to find the shortest path among all nodes in the City of Rome road network.}
 \label{fig:allpairs}
 \end{figure}
