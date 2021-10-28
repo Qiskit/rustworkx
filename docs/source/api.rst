@@ -132,6 +132,7 @@ Connectivity and Cycles
    retworkx.digraph_find_cycle
    retworkx.articulation_points
    retworkx.biconnected_components
+   retworkx.chain_decomposition
 
 .. _other-algorithms:
 
@@ -173,6 +174,7 @@ Generators
     retworkx.generators.directed_heavy_square_graph
     retworkx.generators.heavy_hex_graph
     retworkx.generators.directed_heavy_hex_graph
+    retworkx.generators.lollipop_graph
 
 Random Circuit Functions
 ========================
@@ -329,3 +331,4 @@ Custom Return Types
    retworkx.AllPairsPathMapping
    retworkx.AllPairsPathLengthMapping
    retworkx.CentralityMapping
+   retworkx.Chains

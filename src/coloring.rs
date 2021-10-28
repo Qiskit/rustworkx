@@ -10,10 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
-use crate::dictmap::*;
 use crate::graph;
+use retworkx_core::dictmap::*;
 
 use hashbrown::{HashMap, HashSet};
 use std::cmp::Reverse;

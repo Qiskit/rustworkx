@@ -1,0 +1,40 @@
+---
+features:
+  - |
+    Added a new function :func:`~retworkx.chain_decomposition` that finds
+    a chain decomposition of an undirected :class:`~retworkx.PyGraph`.
+    A chain decomposition is a set of cycles or paths derived from the
+    set of fundamental cycles of a depth-first tree. It's defined in
+    https://doi.org/10.1016/j.ipl.2013.01.016
+    For example:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.PyGraph()
+      graph.extend_from_edge_list([
+          (0, 1), (0, 2), (1, 2), (2, 3),
+          (3, 4), (3, 5), (4, 5),
+      ])
+      chains = retworkx.chain_decomposition(graph)
+
+      def color_edges(graph, chains): 
+          COLORS = ['blue', 'red']
+
+          edges_in_chain = {}
+          for idx, chain in enumerate(chains):
+              for edge in chain:
+                  edge = tuple(sorted(edge))
+                  edges_in_chain[edge] = COLORS[idx]
+              
+          edge_colors = []
+          for edge in graph.edge_list():
+              edge = tuple(sorted(edge))
+              edge_colors += [edges_in_chain.get(edge, 'black')]
+
+          return edge_colors
+
+      mpl_draw(graph, node_color='black', node_size=150,
+              edge_color=color_edges(graph, chains))

@@ -10,9 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
-mod dfs_edges;
+use retworkx_core::dfs_edges;
 
 use super::{digraph, graph, iterators};
 
@@ -46,7 +44,7 @@ fn digraph_dfs_edges(
     source: Option<usize>,
 ) -> EdgeList {
     EdgeList {
-        edges: dfs_edges::dfs_edges(graph, source, graph.graph.edge_count()),
+        edges: dfs_edges::dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
 }
 
@@ -66,7 +64,7 @@ fn digraph_dfs_edges(
 #[pyo3(text_signature = "(graph, /, source=None)")]
 fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
-        edges: dfs_edges::dfs_edges(graph, source, graph.graph.edge_count()),
+        edges: dfs_edges::dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
 }
 
@@ -91,10 +89,10 @@ fn bfs_successors(
     node: usize,
 ) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
-    let mut bfs = Bfs::new(graph, index);
+    let mut bfs = Bfs::new(&graph.graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> =
         Vec::with_capacity(graph.node_count());
-    while let Some(nx) = bfs.next(graph) {
+    while let Some(nx) = bfs.next(&graph.graph) {
         let children = graph
             .graph
             .neighbors_directed(nx, petgraph::Direction::Outgoing);
@@ -132,7 +130,7 @@ fn bfs_successors(
 fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
-    let reverse_graph = Reversed(graph);
+    let reverse_graph = Reversed(&graph.graph);
     let res = algo::dijkstra(reverse_graph, index, None, |_| 1);
     for n in res.keys() {
         let n_int = n.index();
@@ -159,7 +157,7 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
-    let res = algo::dijkstra(graph, index, None, |_| 1);
+    let res = algo::dijkstra(&graph.graph, index, None, |_| 1);
     for n in res.keys() {
         let n_int = n.index();
         out_set.insert(n_int);

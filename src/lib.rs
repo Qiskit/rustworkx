@@ -10,13 +10,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 mod centrality;
 mod coloring;
 mod connectivity;
 mod dag_algo;
-mod dictmap;
 mod digraph;
 mod dot_utils;
 mod generators;
@@ -88,13 +85,13 @@ impl IsNan for Complex64 {
         self.re.is_nan() || self.im.is_nan()
     }
 }
-type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
-impl<'a, Ty> NodesRemoved for &'a StableGraph<PyObject, PyObject, Ty>
+impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
@@ -149,16 +146,19 @@ where
     })
 }
 
-fn weight_callable(
-    py: Python,
-    weight_fn: &Option<PyObject>,
+fn weight_callable<'p, T>(
+    py: Python<'p>,
+    weight_fn: &'p Option<PyObject>,
     weight: &PyObject,
-    default: f64,
-) -> PyResult<f64> {
+    default: T,
+) -> PyResult<T>
+where
+    T: FromPyObject<'p>,
+{
     match weight_fn {
         Some(weight_fn) => {
-            let res = weight_fn.call1(py, (weight,))?;
-            res.extract(py)
+            let res = weight_fn.as_ref(py).call1((weight,))?;
+            res.extract()
         }
         None => Ok(default),
     }
@@ -303,9 +303,11 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
+    m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
+    m.add_class::<iterators::Chains>()?;
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeIndices>()?;
     m.add_class::<iterators::EdgeList>()?;

@@ -34,7 +34,8 @@ use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable};
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::EdgeList;
+use crate::iterators::{Chains, EdgeList};
+use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -140,7 +141,7 @@ pub fn cycle_basis(
 pub fn strongly_connected_components(
     graph: &digraph::PyDiGraph,
 ) -> Vec<Vec<usize>> {
-    algo::kosaraju_scc(graph)
+    algo::kosaraju_scc(&graph.graph)
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
         .collect()
@@ -238,7 +239,7 @@ pub fn digraph_find_cycle(
 #[pyo3(text_signature = "(graph, /)")]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     let mut weak_components = graph.node_count();
-    let mut vertex_sets = UnionFind::new(graph.node_bound());
+    let mut vertex_sets = UnionFind::new(graph.graph.node_bound());
     for edge in graph.graph.edge_references() {
         let (a, b) = (edge.source(), edge.target());
         // union the two vertices of the edge
@@ -354,7 +355,7 @@ pub fn digraph_adjacency_matrix(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
-    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value
@@ -410,7 +411,7 @@ pub fn graph_adjacency_matrix(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
-    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value
@@ -552,7 +553,7 @@ fn graph_all_simple_paths(
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
-        graph,
+        &graph.graph,
         from_index,
         to_index,
         min_intermediate_nodes,
@@ -606,7 +607,7 @@ fn digraph_all_simple_paths(
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
-        graph,
+        &graph.graph,
         from_index,
         to_index,
         min_intermediate_nodes,
@@ -719,4 +720,51 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
         .into_iter()
         .map(|component| component.into_iter().map(|nx| nx.index()).collect())
         .collect()
+}
+
+/// Returns the chain decomposition of a graph.
+///
+/// The *chain decomposition* of a graph with respect to a depth-first
+/// search tree is a set of cycles or paths derived from the set of
+/// fundamental cycles of the tree in the following manner. Consider
+/// each fundamental cycle with respect to the given tree, represented
+/// as a list of edges beginning with the nontree edge oriented away
+/// from the root of the tree. For each fundamental cycle, if it
+/// overlaps with any previous fundamental cycle, just take the initial
+/// non-overlapping segment, which is a path instead of a cycle. Each
+/// cycle or path is called a *chain*. For more information, see [Schmidt]_.
+///
+/// :param PyGraph: The undirected graph to be used
+/// :param int source: An optional node index in the graph. If specified,
+///     only the chain decomposition for the connected component containing
+///     this node will be returned. This node indicates the root of the depth-first
+///     search tree. If this is not specified then a source will be chosen
+///     arbitrarly and repeated until all components of the graph are searched.
+/// :returns: A list of list of edges where each inner list is a chain.
+/// :rtype: list of EdgeList
+///
+/// .. [Schmidt] Jens M. Schmidt (2013). "A simple test on 2-vertex-
+///       and 2-edge-connectivity." *Information Processing Letters*,
+///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, source=None)")]
+pub fn chain_decomposition(
+    graph: graph::PyGraph,
+    source: Option<usize>,
+) -> Chains {
+    let chains = connectivity::chain_decomposition(
+        &graph.graph,
+        source.map(NodeIndex::new),
+    );
+    Chains {
+        chains: chains
+            .into_iter()
+            .map(|chain| EdgeList {
+                edges: chain
+                    .into_iter()
+                    .map(|(a, b)| (a.index(), b.index()))
+                    .collect(),
+            })
+            .collect(),
+    }
 }
