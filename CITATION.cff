@@ -32,6 +32,4 @@ preferred-citation:
     orcid: "https://orcid.org/0000-0002-3234-8154"
   title: "retworkx: A High-Performance Graph Library for Python"
   year: 2021
-  eprint: "2110.15221"
-  archivePrefix: "arXiv"
-  primaryClass: "cs.DS"
+  url: "https://arxiv.org/abs/2110.15221"
