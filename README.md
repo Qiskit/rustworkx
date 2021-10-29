@@ -154,15 +154,4 @@ you want to build retworkx in debug mode you have to use
 
 retworkx is the work of [many people](https://github.com/Qiskit/retworkx/graphs/contributors) who contribute 
 to the project at different levels. If you use retworkx in your research, please cite our 
-[paper](https://arxiv.org/abs/2110.15221):
-
-```
-@misc{treinish2021retworkx,
-      title={retworkx: A High-Performance Graph Library for Python}, 
-      author={Matthew Treinish and Ivan Carvalho and Georgios Tsilimigkounakis and Nahum Sá},
-      year={2021},
-      eprint={2110.15221},
-      archivePrefix={arXiv},
-      primaryClass={cs.DS}
-}
-```
+[paper](https://arxiv.org/abs/2110.15221) as per the included [BibTeX file](CITATION.bib).
