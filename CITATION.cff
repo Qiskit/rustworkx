@@ -16,7 +16,7 @@ authors:
 title: "retworkx: A High-Performance Graph Library for Python"
 url: "https://github.com/qiskit/retworkx"
 preferred-citation:
-  type: misc
+  type: other
   authors:
   - family-names: "Treinish"
     given-names: "Matthew"
