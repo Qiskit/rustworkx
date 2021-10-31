@@ -14,7 +14,7 @@ use std::iter;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
-use petgraph::stable_graph::{StableDiGraph, StableUnGraph};
+use petgraph::prelude::*;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
 use pyo3::exceptions::{PyIndexError, PyOverflowError};
@@ -22,8 +22,7 @@ use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
-use super::digraph;
-use super::graph;
+use super::{digraph, graph, StablePyGraph};
 
 pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
 where
@@ -71,7 +70,7 @@ pub fn directed_cycle_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
@@ -154,7 +153,7 @@ pub fn cycle_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
@@ -232,7 +231,7 @@ pub fn directed_path_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
@@ -304,7 +303,7 @@ pub fn path_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
@@ -386,7 +385,7 @@ pub fn directed_star_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
@@ -458,7 +457,7 @@ pub fn star_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
@@ -519,7 +518,7 @@ pub fn mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
@@ -584,7 +583,7 @@ pub fn directed_mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
@@ -662,7 +661,7 @@ pub fn grid_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -773,7 +772,7 @@ pub fn directed_grid_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -904,9 +903,8 @@ pub fn binomial_tree_graph(
     }
     let num_nodes = usize::pow(2, order);
     let num_edges = usize::pow(2, order) - 1;
-    let mut graph = StableUnGraph::<PyObject, PyObject>::with_capacity(
-        num_nodes, num_edges,
-    );
+    let mut graph =
+        StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
     for i in 0..num_nodes {
         match weights {
             Some(ref weights) => {
@@ -1001,9 +999,8 @@ pub fn directed_binomial_tree_graph(
     }
     let num_nodes = usize::pow(2, order);
     let num_edges = usize::pow(2, order) - 1;
-    let mut graph = StableDiGraph::<PyObject, PyObject>::with_capacity(
-        num_nodes, num_edges,
-    );
+    let mut graph =
+        StablePyGraph::<Directed>::with_capacity(num_nodes, num_edges);
 
     for i in 0..num_nodes {
         match weights {
@@ -1138,7 +1135,7 @@ pub fn heavy_square_graph(
     d: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
@@ -1306,7 +1303,7 @@ pub fn directed_heavy_square_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Directed>::default();
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
@@ -1536,7 +1533,7 @@ pub fn heavy_hex_graph(
     d: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
@@ -1715,7 +1712,7 @@ pub fn directed_heavy_hex_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Directed>::default();
 
     if d % 2 == 0 {
         return Err(PyIndexError::new_err("d must be odd"));
@@ -1898,7 +1895,7 @@ pub fn hexagonal_lattice_graph(
     cols: usize,
     multigraph: bool,
 ) -> graph::PyGraph {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Undirected>::default();
 
     if rows == 0 || cols == 0 {
         return graph::PyGraph {
@@ -2015,7 +2012,7 @@ pub fn directed_hexagonal_lattice_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> digraph::PyDiGraph {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StablePyGraph::<Directed>::default();
 
     if rows == 0 || cols == 0 {
         return digraph::PyDiGraph {
