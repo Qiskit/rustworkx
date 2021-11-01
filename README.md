@@ -7,6 +7,7 @@
 [![](https://img.shields.io/pypi/dm/retworkx.svg?style=popout-square)](https://pypi.org/project/retworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/retworkx?branch=main)
 [![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
 
   - You can see the full rendered docs at:
     <https://qiskit.org/documentation/retworkx>
@@ -148,3 +149,9 @@ It's worth noting that `pip install -e` does not work, as it will link the pytho
 packaging shim to your python environment but not build the retworkx binary. If
 you want to build retworkx in debug mode you have to use
 `python setup.py develop`.
+
+## Authors and Citation
+
+retworkx is the work of [many people](https://github.com/Qiskit/retworkx/graphs/contributors) who contribute 
+to the project at different levels. If you use retworkx in your research, please cite our 
+[paper](https://arxiv.org/abs/2110.15221) as per the included [BibTeX file](CITATION.bib).
