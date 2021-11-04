@@ -32,7 +32,7 @@ num-complex = "0.4"
 retworkx-core = { path = "./retworkx-core" }
 
 [dependencies.pyo3]
-version = "0.14.5"
+version = "0.15.0"
 features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.hashbrown]
