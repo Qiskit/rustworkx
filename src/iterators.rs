@@ -305,7 +305,7 @@ where
         }
 
         for (i, item) in self.iter().enumerate() {
-            let other_raw = other.get_item(i.try_into().unwrap())?;
+            let other_raw = other.get_item(i)?;
             if !PyEq::eq(item, other_raw, py)? {
                 return Ok(false);
             }
