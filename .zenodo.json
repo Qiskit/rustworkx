@@ -27,5 +27,8 @@
        "graph-theory",
        "rust",
        "python"
+    ],
+    "communities": [
+        {"identifier": "qiskit"}
     ]
  }
