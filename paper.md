@@ -56,7 +56,7 @@ _retworkx_ operates on weights with callbacks. Callbacks are functions that take
 
 A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges in the graph. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with weights.
 
-![Visualization of a graph data structure made with the **`retworkx.visualization`** module.\label{fig:graphexample}](paper_img/example_graph.png){ width=40% height=40% }
+![Examples of graphs with visualizations made with the **`retworkx.visualization`** module.\label{fig:graphexample}](paper_img/example_graph.png){ width=100% height==100% }
 
 # Use Cases
 
