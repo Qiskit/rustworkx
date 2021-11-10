@@ -1,0 +1,31 @@
+{
+    "title":"retworkx",
+    "description":"retworkx is a general-purpose graph theory library focused on performance. It wraps low-level Rust code into a flexible Python API, providing fast implementations for popular graph algorithms.",
+    "license":"Apache-2.0",
+    "upload_type":"software",
+    "access_right":"open",
+    "creators":[
+       {
+          "name":"Matthew Treinish",
+          "orcid":"0000-0001-9713-2875"
+       },
+       {
+          "name":"Ivan Carvalho",
+          "orcid":"0000-0002-8257-2103"
+       },
+       {
+          "name":"Georgios Tsilimigkounakis",
+          "orcid":"0000-0001-6174-0801"
+       },
+       {
+          "name":"Nahum Sá",
+          "orcid":"0000-0002-3234-8154"
+       }
+    ],
+    "notes":"retworkx is the work of many people who contribute to the project at different levels. See the full list of contributors on Github: https://github.com/Qiskit/retworkx/graphs/contributors",
+    "keywords":[
+       "graph-theory",
+       "rust",
+       "python"
+    ]
+ }
