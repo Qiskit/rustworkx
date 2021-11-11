@@ -22,7 +22,7 @@ use hashbrown::{HashMap, HashSet};
 use retworkx_core::dictmap::*;
 
 use pyo3::class::PyMappingProtocol;
-use pyo3::exceptions::PyIndexError;
+use pyo3::exceptions::{PyIndexError, PyValueError};
 use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
@@ -2263,6 +2263,58 @@ impl PyDiGraph {
         // Remove node
         self.graph.remove_node(node_index);
         Ok(NodeMap { node_map: out_map })
+    }
+
+    /// Substitute a set of nodes with a single node.
+    ///
+    /// :param set nodes: A set of dag nodes that represents the
+    ///     node block to be replaced
+    /// :param int node: An existing node to use as the replacement
+    #[pyo3(text_signature = "(self, block_nodes, node, /)")]
+    fn substitute_with_node(
+        &mut self,
+        py: Python,
+        to_replace: HashSet<usize>,
+        node: usize
+    ) -> PyResult<()> {
+        // TODO: check if replacement was made instead to account for
+        // nodes not in graph. Unless those would just error on index...
+        if to_replace.is_empty() {
+            return Err(PyValueError::new_err("block_nodes must not be empty."));
+        }
+
+        let mut block_preds: HashMap<usize, Vec<PyObject>> = HashMap::new();
+        let mut block_succs: HashMap<usize, Vec<PyObject>> = HashMap::new();
+
+        for node in &to_replace {
+            for (parent, _, edge) in self.in_edges(py, *node).edges {
+                if !to_replace.contains(&parent) {
+                    let edge_list = block_preds.entry(parent).or_insert(Vec::new());
+                    edge_list.push(edge);
+                }
+            }
+
+            for (_, child, edge) in self.out_edges(py, *node).edges {
+                if !to_replace.contains(&child) {
+                    let edge_list = block_succs.entry(child).or_insert(Vec::new());
+                    edge_list.push(edge);
+                }
+            }
+        }
+
+        for (pred, edges) in block_preds {
+            for edge in edges {
+                self.add_edge(pred, node, edge);
+            }
+        }
+
+        // for node_id, edges in block_succs.items():
+        //     for edge in edges:
+        //         self._multi_graph.add_edge(new_index, node_id, edge)
+        // for nd in node_block:
+        //     self._multi_graph.remove_node(nd._node_id)
+
+        Ok(())
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph
