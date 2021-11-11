@@ -2284,38 +2284,48 @@ impl PyDiGraph {
             return Err(PyValueError::new_err("block_nodes must not be empty."));
         }
 
-        let index = NodeIndex::new(node);
-        let mut block_preds: HashMap<usize, Vec<EdgeReference<Py<PyAny>>>> = HashMap::new();
-        let mut block_succs: HashMap<usize, Vec<PyObject>> = HashMap::new();
+        let indices_to_remove: HashSet<NodeIndex> = to_replace.iter()
+            .map(|&n| NodeIndex::new(n)).collect();
 
-        for node in &to_replace {
-            for edge_ref in self.graph.edges_directed(index, Direction::Incoming) {
-                let parent_index = edge_ref.source().index();
-                if !to_replace.contains(&parent_index) {
-                    let edge_list = block_preds.entry(parent_index).or_insert(Vec::new());
-                    edge_list.push(edge_ref);
+        let mut pred_to_weights: HashMap<usize, Vec<PyObject>> = HashMap::new();
+        let mut succ_to_weights: HashMap<usize, Vec<PyObject>> = HashMap::new();
+
+        for index in &indices_to_remove {
+            for edge in self.graph.edges_directed(*index, Direction::Incoming) {
+                let pred = edge.source().index();
+                if !to_replace.contains(&pred) {
+                    let weights = pred_to_weights.entry(pred).or_insert(Vec::new());
+                    weights.push(edge.weight().clone_ref(py));
                 }
             }
 
-            for (_, child, edge) in self.out_edges(py, *node).edges {
-                if !to_replace.contains(&child) {
-                    let edge_list = block_succs.entry(child).or_insert(Vec::new());
-                    edge_list.push(edge);
+            for edge in self.graph.edges_directed(*index, Direction::Outgoing) {
+                let succ = edge.target().index();
+                if !to_replace.contains(&succ) {
+                    let weights = succ_to_weights.entry(succ).or_insert(Vec::new());
+                    weights.push(edge.weight().clone_ref(py));
                 }
             }
         }
 
-        for (pred, edges) in block_preds {
-            for edge in edges {
-                self.add_edge(pred, node, edge);
+        let node_index = NodeIndex::new(node);
+        for (pred, weights) in pred_to_weights {
+            let pred_index = NodeIndex::new(pred);
+            for weight in weights {
+                self._add_edge(pred_index, node_index, weight)?;
             }
         }
 
-        // for node_id, edges in block_succs.items():
-        //     for edge in edges:
-        //         self._multi_graph.add_edge(new_index, node_id, edge)
-        // for nd in node_block:
-        //     self._multi_graph.remove_node(nd._node_id)
+        for (succ, weights) in succ_to_weights {
+            let succ_index = NodeIndex::new(succ);
+            for weight in weights {
+                self._add_edge(node_index, succ_index, weight)?;
+            }
+        }
+
+        for index in indices_to_remove {
+            self.graph.remove_node(index);
+        }
 
         Ok(())
     }
