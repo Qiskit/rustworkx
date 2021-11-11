@@ -36,6 +36,7 @@ use numpy::PyReadonlyArray2;
 
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
+use petgraph::stable_graph::EdgeReference;
 use petgraph::prelude::*;
 
 use petgraph::visit::{
@@ -2283,14 +2284,16 @@ impl PyDiGraph {
             return Err(PyValueError::new_err("block_nodes must not be empty."));
         }
 
-        let mut block_preds: HashMap<usize, Vec<PyObject>> = HashMap::new();
+        let index = NodeIndex::new(node);
+        let mut block_preds: HashMap<usize, Vec<EdgeReference<Py<PyAny>>>> = HashMap::new();
         let mut block_succs: HashMap<usize, Vec<PyObject>> = HashMap::new();
 
         for node in &to_replace {
-            for (parent, _, edge) in self.in_edges(py, *node).edges {
-                if !to_replace.contains(&parent) {
-                    let edge_list = block_preds.entry(parent).or_insert(Vec::new());
-                    edge_list.push(edge);
+            for edge_ref in self.graph.edges_directed(index, Direction::Incoming) {
+                let parent_index = edge_ref.source().index();
+                if !to_replace.contains(&parent_index) {
+                    let edge_list = block_preds.entry(parent_index).or_insert(Vec::new());
+                    edge_list.push(edge_ref);
                 }
             }
 
