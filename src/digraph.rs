@@ -2308,6 +2308,12 @@ impl PyDiGraph {
             }
         }
 
+        // remove all old nodes in case the new node already has edges,
+        // which could cause _add_edge to fail if self.check_cycles is true
+        for index in indices_to_remove {
+            self.graph.remove_node(index);
+        }
+
         let node_index = NodeIndex::new(node);
         for (pred, weights) in pred_to_weights {
             let pred_index = NodeIndex::new(pred);
@@ -2321,10 +2327,6 @@ impl PyDiGraph {
             for weight in weights {
                 self._add_edge(node_index, succ_index, weight)?;
             }
-        }
-
-        for index in indices_to_remove {
-            self.graph.remove_node(index);
         }
 
         Ok(())
