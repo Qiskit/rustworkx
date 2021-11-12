@@ -2319,6 +2319,12 @@ impl PyDiGraph {
             return Err(PyValueError::new_err("block_nodes must not be empty."));
         }
 
+        if self.check_cycle {
+            if !can_contract(&self.graph, &to_replace) {
+                return Err(DAGWouldCycle::new_err("Substitution would create cycle(s)."))
+            }
+        }
+
         let indices_to_remove: HashSet<NodeIndex> = to_replace.iter()
             .map(|&n| NodeIndex::new(n)).collect();
 
