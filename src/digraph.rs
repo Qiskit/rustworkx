@@ -12,7 +12,7 @@
 
 use std::cmp;
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
@@ -36,8 +36,8 @@ use numpy::PyReadonlyArray2;
 
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
-use petgraph::stable_graph::EdgeReference;
 use petgraph::prelude::*;
+use petgraph::visit::VisitMap;
 
 use petgraph::visit::{
     GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
@@ -2278,6 +2278,41 @@ impl PyDiGraph {
         to_replace: HashSet<usize>,
         node: usize
     ) -> PyResult<()> {
+        fn can_contract(graph: &StablePyGraph<Directed>, nodes: &HashSet<usize>) -> bool {
+            let mut visited = graph.visit_map();
+            let mut visit_next = VecDeque::new();
+
+            // Start with successors of nodes that aren't in nodes itself.
+            for node in nodes {
+                for edge in graph.edges(NodeIndex::new(*node)) {
+                    if !nodes.contains(&edge.target().index()) {
+                        visit_next.push_back(edge.target());
+                    }
+                }
+            }
+
+            // DFS. If we encounter any of nodes, there exists a path from nodes
+            // back to nodes of length > 1, meaning contraction is disallowed.
+            while let Some(decendant) = visit_next.pop_back() {
+                if visited.is_visited(&decendant) {
+                    continue;
+                }
+
+                for edge in graph.edges(decendant) {
+                    if nodes.contains(&edge.target().index()) {
+                        // we found a path back to nodes
+                        return false;
+                    }
+
+                    visit_next.push_back(edge.target());
+                }
+                
+                visited.visit(decendant);
+            }
+            
+            return true;
+        }
+
         // TODO: check if replacement was made instead to account for
         // nodes not in graph. Unless those would just error on index...
         if to_replace.is_empty() {
@@ -2307,6 +2342,11 @@ impl PyDiGraph {
                 }
             }
         }
+
+        // For all of the ins, there can be no path to an out that is of length
+        // greater than 1 and not along a removed edge.
+        // Find the shortest path from each in to each out, ignoring any paths
+        // that go through removed verticies. Fail if greater than 1.
 
         // remove all old nodes in case the new node already has edges,
         // which could cause _add_edge to fail if self.check_cycles is true
