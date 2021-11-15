@@ -80,25 +80,27 @@ pub enum BfsEvent<N, E> {
 /// event points, for which the given visitor object will be called with the
 /// appropriate method.
 ///
-///     BFS(G, s)
-///       for each vertex u in V
-///           color[u] := WHITE
+/// ```norust
+/// BFS(G, s)
+///   for each vertex u in V
+///       color[u] := WHITE
+///   end for
+///   color[s] := GRAY
+///   EQUEUE(Q, s)                             discover vertex s
+///   while (Q != Ø)
+///       u := DEQUEUE(Q)
+///       for each vertex v in Adj[u]          (u,v) is a tree edge
+///           if (color[v] = WHITE)
+///               color[v] = GRAY
+///           else                             (u,v) is a non - tree edge
+///               if (color[v] = GRAY)         (u,v) has a gray target
+///                   ...
+///               else if (color[v] = BLACK)   (u,v) has a black target
+///                   ...
 ///       end for
-///       color[s] := GRAY
-///       EQUEUE(Q, s)                             discover vertex s
-///       while (Q != Ø)
-///           u := DEQUEUE(Q)
-///           for each vertex v in Adj[u]          (u,v) is a tree edge
-///               if (color[v] = WHITE)
-///                   color[v] = GRAY
-///               else                             (u,v) is a non - tree edge
-///                   if (color[v] = GRAY)         (u,v) has a gray target
-///                       ...
-///                   else if (color[v] = BLACK)   (u,v) has a black target
-///                       ...
-///           end for
-///           color[u] := BLACK                    finish vertex u
-///       end while
+///       color[u] := BLACK                    finish vertex u
+///   end while
+/// ```
 ///
 /// # Example returning [`Control`](petgraph::visit::Control).
 ///
