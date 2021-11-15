@@ -16,6 +16,16 @@ import retworkx
 
 class TestSubstituteNodes(unittest.TestCase):
     def setUp(self) -> None:
+        """    ┌─┐     ┌─┐
+             ┌─┤a├─┐   │m│
+             │ └─┘ │   └─┘
+            ┌▼┐    │
+            │b│    │
+            └┬┘    │
+             │    ┌▼┐
+             └────┤c│
+                  └─┘
+        """
         super().setUp()
         self.dag = retworkx.PyDAG()
         self.node_a = self.dag.add_node("a")
@@ -24,6 +34,23 @@ class TestSubstituteNodes(unittest.TestCase):
 
         self.node_m = self.dag.add_node("m")
 
+    def do_removal(self, **kwargs):
+        """
+           ┌─┐     ┌─┐                 ┌─┐
+         ┌─┤a├─┐   │m│       ┌─────────┤m│
+         │ └─┘ │   └─┘       │         └▲┘
+        ┌▼┐    │            ┌▼┐         │
+        │b│    │     ───►   │b├─────────┘
+        └┬┘    │            └─┘
+         │    ┌▼┐
+         └────┤c│
+              └─┘
+        """
+        self.dag.substitute_nodes_with_node(
+            {self.node_a, self.node_c},
+            self.node_m,
+            **kwargs)
+
     def test_cycle_check_enable_local(self):
         # Disable at class level.
         self.dag.check_cycle = False
@@ -31,9 +58,7 @@ class TestSubstituteNodes(unittest.TestCase):
         # Check removal is not allowed with explicit force_check_cycle=True.
         self.assertRaises(
             retworkx.DAGWouldCycle,
-            self.dag.substitute_nodes_with_node,
-            {self.node_a, self.node_c},
-            self.node_m,
+            self.do_removal,
             force_check_cycle=True
         )
 
@@ -45,9 +70,7 @@ class TestSubstituteNodes(unittest.TestCase):
         # since disabling cycle checking just for this method is not allowed.
         self.assertRaises(
             retworkx.DAGWouldCycle,
-            self.dag.substitute_nodes_with_node,
-            {self.node_a, self.node_c},
-            self.node_m,
+            self.do_removal,
             force_check_cycle=False
         )
 
@@ -58,9 +81,7 @@ class TestSubstituteNodes(unittest.TestCase):
         # Check removal is not allowed.
         self.assertRaises(
             retworkx.DAGWouldCycle,
-            self.dag.substitute_nodes_with_node,
-            {self.node_a, self.node_c},
-            self.node_m
+            self.do_removal
         )
     
     def test_cycle_check_inherit_class_disable(self):
@@ -68,5 +89,5 @@ class TestSubstituteNodes(unittest.TestCase):
         self.dag.check_cycle = False
 
         # Check removal is allowed.
-        self.dag.substitute_nodes_with_node({self.node_a, self.node_c}, self.node_m)
+        self.do_removal()
         self.assertSetEqual(set(self.dag.node_indexes()), {self.node_b, self.node_m})
