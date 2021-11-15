@@ -39,14 +39,12 @@ use super::iterators::{
 };
 use super::{
     find_node_by_weight, weight_callable, IsNan, NoEdgeBetweenNodes,
-    NodesRemoved,
+    NodesRemoved, StablePyGraph,
 };
 
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
-use petgraph::stable_graph::StableDiGraph;
-use petgraph::stable_graph::StableUnGraph;
 use petgraph::visit::{
     GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
     NodeIndexable,
@@ -122,7 +120,7 @@ use petgraph::visit::{
 #[pyo3(text_signature = "(/, multigraph=True)")]
 #[derive(Clone)]
 pub struct PyGraph {
-    pub graph: StableUnGraph<PyObject, PyObject>,
+    pub graph: StablePyGraph<Undirected>,
     pub node_removed: bool,
     pub multigraph: bool,
 }
@@ -150,7 +148,7 @@ impl PyGraph {
     #[args(multigraph = "true")]
     fn new(multigraph: bool) -> Self {
         PyGraph {
-            graph: StableUnGraph::<PyObject, PyObject>::default(),
+            graph: StablePyGraph::<Undirected>::default(),
             node_removed: false,
             multigraph,
         }
@@ -182,7 +180,7 @@ impl PyGraph {
     }
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
-        self.graph = StableUnGraph::<PyObject, PyObject>::default();
+        self.graph = StablePyGraph::<Undirected>::default();
         let dict_state = state.cast_as::<PyDict>(py)?;
         let nodes_dict =
             dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
@@ -227,13 +225,13 @@ impl PyGraph {
         }
         for raw_edge in edges_list.iter() {
             let edge = raw_edge.downcast::<PyTuple>()?;
-            let raw_p_index = edge.get_item(0).downcast::<PyLong>()?;
+            let raw_p_index = edge.get_item(0)?.downcast::<PyLong>()?;
             let parent: usize = raw_p_index.extract()?;
             let p_index = NodeIndex::new(parent);
-            let raw_c_index = edge.get_item(1).downcast::<PyLong>()?;
+            let raw_c_index = edge.get_item(1)?.downcast::<PyLong>()?;
             let child: usize = raw_c_index.extract()?;
             let c_index = NodeIndex::new(child);
-            let edge_data = edge.get_item(2);
+            let edge_data = edge.get_item(2)?;
 
             self.graph.add_edge(p_index, c_index, edge_data.into());
         }
@@ -968,7 +966,7 @@ impl PyGraph {
     /// :rtype: PyDiGraph
     pub fn to_directed(&self, py: Python) -> crate::digraph::PyDiGraph {
         let node_count = self.node_count();
-        let mut new_graph = StableDiGraph::<PyObject, PyObject>::with_capacity(
+        let mut new_graph = StablePyGraph::<Directed>::with_capacity(
             node_count,
             2 * self.graph.edge_count(),
         );
@@ -1138,7 +1136,7 @@ impl PyGraph {
     ) -> PyResult<PyGraph> {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
-        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let mut out_graph = StablePyGraph::<Undirected>::default();
         let mut label_map: HashMap<String, usize> = HashMap::new();
         for line_raw in buf_reader.lines() {
             let line = line_raw?;
@@ -1497,7 +1495,7 @@ impl PyGraph {
             HashMap::with_capacity(nodes.len());
         let node_filter =
             |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
-        let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+        let mut out_graph = StablePyGraph::<Undirected>::default();
         let filtered = NodeFiltered(&self.graph, node_filter);
         for node in filtered.node_references() {
             let new_node = out_graph.add_node(node.1.clone_ref(py));
@@ -1652,7 +1650,7 @@ impl PyGCProtocol for PyGraph {
     // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
     // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
     fn __clear__(&mut self) {
-        self.graph = StableUnGraph::<PyObject, PyObject>::default();
+        self.graph = StablePyGraph::<Undirected>::default();
         self.node_removed = false;
     }
 }
@@ -1681,7 +1679,7 @@ where
 {
     let array = matrix.as_array();
     let shape = array.shape();
-    let mut out_graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut out_graph = StablePyGraph::<Undirected>::default();
     let _node_indices: Vec<NodeIndex> = (0..shape[0])
         .map(|node| out_graph.add_node(node.to_object(py)))
         .collect();

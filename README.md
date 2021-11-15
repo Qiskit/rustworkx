@@ -7,6 +7,7 @@
 [![](https://img.shields.io/pypi/dm/retworkx.svg?style=popout-square)](https://pypi.org/project/retworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/retworkx?branch=main)
 [![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
 
   - You can see the full rendered docs at:
     <https://qiskit.org/documentation/retworkx>
@@ -72,6 +73,30 @@ with `pip install pydot pillow` or when installing retworkx with
 If you would like to install all the optional Python dependencies when you
 install retworkx you can use `pip install 'retworkx[all]'` to do this.
 
+## Using retworkx
+
+Once you have retworkx installed you can use it by importing retworkx.
+All the functions and graph classes are off the root of the package.
+For example, calculating the shortest path between A and C would be:
+
+```python3
+import retworkx
+
+graph = retworkx.PyGraph()
+
+# Each time add node is called, it returns a new node index
+a = graph.add_node("A")
+b = graph.add_node("B")
+c = graph.add_node("C")
+
+# add_edges_from takes tuples of node indices and weights,
+# and returns edge indices
+graph.add_edges_from([(a, b, 1.5), (a, c, 5.0), (b, c, 2.5)])
+
+# Returns the path A -> B -> C
+retworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
+```
+
 ## Building from source
 
 The first step for building retworkx from source is to clone it locally
@@ -125,20 +150,8 @@ packaging shim to your python environment but not build the retworkx binary. If
 you want to build retworkx in debug mode you have to use
 `python setup.py develop`.
 
-## Using retworkx
+## Authors and Citation
 
-Once you have retworkx installed you can use it by importing retworkx.
-All the functions and graph classes are off the root of the package.
-For example, building a DAG and adding 2 nodes with an edge between them
-would be:
-
-```python3
-import retworkx
-
-my_dag = retworkx.PyDAG(cycle_check=True)
-# add_node(), add_child(), and add_parent() return the node index
-# The sole argument here can be any python object
-root_node = my_dag.add_node("MyRoot")
-# The second and third arguments can be any python object
-my_dag.add_child(root_node, "AChild", ["EdgeData"])
-```
+retworkx is the work of [many people](https://github.com/Qiskit/retworkx/graphs/contributors) who contribute 
+to the project at different levels. If you use retworkx in your research, please cite our 
+[paper](https://arxiv.org/abs/2110.15221) as per the included [BibTeX file](CITATION.bib).
