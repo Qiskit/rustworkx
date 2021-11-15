@@ -41,7 +41,7 @@ pub enum BfsEvent<N, E> {
     Discover(N),
     /// An edge of the tree formed by the traversal.
     TreeEdge(N, N, E),
-    /// An tree that does not belong to the tree.
+    /// An edge that does not belong to the tree.
     NonTreeEdge(N, N, E),
     /// For an edge *(u, v)*, if node *v* is currently in the queue
     /// at the time of examination, then it is a gray-target edge.
@@ -75,6 +75,30 @@ pub enum BfsEvent<N, E> {
 /// For [`Result`], upon encountering an `E` it will break, otherwise acting the same as `C`.
 ///
 /// ***Panics** if you attempt to prune a node from its `Finish` event.
+///
+/// The pseudo-code for the BFS algorithm is listed below, with the annotated
+/// event points, for which the given visitor object will be called with the
+/// appropriate method.
+///
+///     BFS(G, s)
+///       for each vertex u in V
+///           color[u] := WHITE
+///       end for
+///       color[s] := GRAY
+///       EQUEUE(Q, s)                             discover vertex s
+///       while (Q != Ø)
+///           u := DEQUEUE(Q)
+///           for each vertex v in Adj[u]          (u,v) is a tree edge
+///               if (color[v] = WHITE)
+///                   color[v] = GRAY
+///               else                             (u,v) is a non - tree edge
+///                   if (color[v] = GRAY)         (u,v) has a gray target
+///                       ...
+///                   else if (color[v] = BLACK)   (u,v) has a black target
+///                       ...
+///           end for
+///           color[u] := BLACK                    finish vertex u
+///       end while
 ///
 /// # Example returning [`Control`](petgraph::visit::Control).
 ///
@@ -173,6 +197,8 @@ where
     let finished = &mut graph.visit_map();
 
     for start in starts {
+        // `bfs_visitor` returns a "signal" to either continue or exit early
+        // but it never "prunes", so we use `unreachable`.
         try_control!(
             bfs_visitor(graph, start, &mut visitor, discovered, finished),
             unreachable!()
