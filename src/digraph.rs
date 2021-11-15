@@ -2268,21 +2268,31 @@ impl PyDiGraph {
 
     /// Substitute a set of nodes with a single node.
     ///
-    /// :param set nodes: A set of dag nodes that represents the
-    ///     node block to be replaced
-    /// :param int node: An existing node to use as the replacement
-    #[pyo3(text_signature = "(self, block_nodes, node, /)")]
-    fn substitute_with_node(
+    /// :param set to_replace: A set of nodes to be removed and replaced
+    ///     by the specified node.
+    /// :param int node: An existing node to use as the replacement.
+    /// :param bool force_check_cycle: If set to ``True``, validates
+    ///     that the substitution will not introduce cycles before
+    ///     modifying the graph, even if cycle check is disabled for
+    ///     this instance of :class:`retworkx.PyDiGraph`. Otherwise,
+    ///     the value of member ``check_cycle`` is inherited.
+    /// :raises DAGWouldCycle: The cycle check is enabled and the
+    ///     substitution would introduce cycle(s).
+    /// :raises ValueError: ``to_replace`` is empty or ``node``
+    ///     has existing connections.
+    #[pyo3(text_signature = "(self, to_replace, node, /, force_check_cycle=None)")]
+    fn substitute_nodes_with_node(
         &mut self,
         py: Python,
         to_replace: HashSet<usize>,
-        node: usize
+        node: usize,
+        force_check_cycle: Option<bool>
     ) -> PyResult<()> {
         fn can_contract(graph: &StablePyGraph<Directed>, nodes: &HashSet<NodeIndex>) -> bool {
             let mut visited = graph.visit_map();
             let mut visit_next = VecDeque::new();
 
-            // Start with successors of nodes that aren't in nodes itself.
+            // Start with successors of `nodes` that aren't in `nodes` itself.
             for node in nodes {
                 for edge in graph.edges(*node) {
                     if !nodes.contains(&edge.target()) {
@@ -2291,8 +2301,8 @@ impl PyDiGraph {
                 }
             }
 
-            // DFS. If we encounter any of nodes, there exists a path from nodes
-            // back to nodes of length > 1, meaning contraction is disallowed.
+            // DFS. If we encounter any of `nodes`, there exists a path from `nodes`
+            // back to `nodes` of length > 1, meaning contraction is disallowed.
             while let Some(decendant) = visit_next.pop_back() {
                 if visited.is_visited(&decendant) {
                     continue;
@@ -2300,7 +2310,7 @@ impl PyDiGraph {
 
                 for edge in graph.edges(decendant) {
                     if nodes.contains(&edge.target()) {
-                        // we found a path back to nodes
+                        // we found a path back to `nodes`
                         return false;
                     }
 
@@ -2314,7 +2324,12 @@ impl PyDiGraph {
         }
 
         if to_replace.is_empty() {
-            return Err(PyValueError::new_err("block_nodes must not be empty."));
+            return Err(PyValueError::new_err("to_replace must not be empty."));
+        }
+
+        let node_index = NodeIndex::new(node);
+        if self.graph.neighbors_undirected(node_index).next().is_some() {
+            return Err(PyValueError::new_err("replacement node must not have connections."));
         }
 
         let mut indices_to_remove: HashSet<NodeIndex> = HashSet::with_capacity(to_replace.capacity());
@@ -2330,7 +2345,7 @@ impl PyDiGraph {
             indices_to_remove.insert(index);
         }
 
-        if self.check_cycle {
+        if force_check_cycle == Some(true) || self.check_cycle {
             if !can_contract(&self.graph, &indices_to_remove) {
                 return Err(DAGWouldCycle::new_err("Substitution would create cycle(s)."))
             }
@@ -2357,14 +2372,10 @@ impl PyDiGraph {
             }
         }
 
-        // remove all old nodes before adding edges to new node,
-        // in case self.check_cycles is true and there would be a
-        // temporary cycle detected by _add_edge.
         for index in indices_to_remove {
             self.graph.remove_node(index);
         }
 
-        let node_index = NodeIndex::new(node);
         for (pred, weights) in pred_to_weights {
             for weight in weights {
                 self._add_edge(pred, node_index, weight)?;
