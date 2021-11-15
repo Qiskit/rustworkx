@@ -41,7 +41,7 @@ pub enum BfsEvent<N, E> {
     Discover(N),
     /// An edge of the tree formed by the traversal.
     TreeEdge(N, N, E),
-    /// An tree that does not belong to th tree.
+    /// An tree that does not belong to the tree.
     NonTreeEdge(N, N, E),
     /// For an edge *(u, v)*, if node *v* is currently in the queue
     /// at the time of examination, then it is a gray-target edge.
