@@ -1774,9 +1774,10 @@ def bfs_search(graph, source, visitor):
 
     .. note::
 
-        Graph can *not* be mutated while traversing.
+        Graph can **not** be mutated while traversing.
 
-    :param PyGraph graph: The graph to be used.
+    :param graph: The graph to be used. This can be a :class:`~retworkx.PyGraph`
+        or a :class:`~retworkx.PyDiGraph`
     :param List[int] source: An optional list of node indices to use as the starting
         nodes for the breadth-first search. If this is not specified then a source
         will be chosen arbitrarly and repeated until all components of the
