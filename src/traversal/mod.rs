@@ -225,7 +225,7 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///
 /// .. note::
 ///
-///     Graph can **not*s* be mutated while traversing.
+///     Graph can **not** be mutated while traversing.
 ///
 /// :param PyDiGraph graph: The graph to be used.
 /// :param List[int] source: An optional list of node indices to use as the starting nodes
