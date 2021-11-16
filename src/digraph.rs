@@ -2353,7 +2353,7 @@ impl PyDiGraph {
         }
 
         let mut indices_to_remove: HashSet<NodeIndex> =
-            HashSet::with_capacity(to_replace.capacity());
+            HashSet::with_capacity(to_replace.len());
 
         for node in to_replace {
             let index = NodeIndex::new(node);
