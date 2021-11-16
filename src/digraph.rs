@@ -2295,16 +2295,19 @@ impl PyDiGraph {
             nodes: &HashSet<NodeIndex>,
         ) -> bool {
             let mut visited = graph.visit_map();
-            let mut visit_next = VecDeque::new();
-
-            // Start with successors of `nodes` that aren't in `nodes` itself.
-            for node in nodes {
-                for edge in graph.edges(*node) {
-                    if !nodes.contains(&edge.target()) {
-                        visit_next.push_back(edge.target());
+            let mut visit_next: VecDeque<NodeIndex> = nodes
+                .iter()
+                .map(|n| graph.edges(*n))
+                .flatten()
+                .filter_map(|edge| {
+                    let target_node = edge.target();
+                    if !nodes.contains(&target_node) {
+                        Some(target_node)
+                    } else {
+                        None
                     }
-                }
-            }
+                })
+                .collect();
 
             // DFS. If we encounter any of `nodes`, there exists a path from `nodes`
             // back to `nodes` of length > 1, meaning contraction is disallowed.
