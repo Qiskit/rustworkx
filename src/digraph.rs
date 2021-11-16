@@ -2323,31 +2323,38 @@ impl PyDiGraph {
             return true;
         }
 
+        macro_rules! assert_node_exists {
+            ($node_index:ident) => {
+                if self.graph.node_weight($node_index).is_none() {
+                    return Err(PyIndexError::new_err(format!(
+                        "Specified node {} is not in this graph",
+                        $node_index.index()
+                    )))
+                }
+            };
+        }
+
         if to_replace.is_empty() {
-            return Err(PyValueError::new_err("to_replace must not be empty."));
+            return Err(PyValueError::new_err("to_replace must not be empty"));
         }
 
         let node_index = NodeIndex::new(node);
+        assert_node_exists!(node_index);
+
         if self.graph.neighbors_undirected(node_index).next().is_some() {
-            return Err(PyValueError::new_err("replacement node must not have connections."));
+            return Err(PyValueError::new_err("replacement node must not have connections"));
         }
 
         let mut indices_to_remove: HashSet<NodeIndex> = HashSet::with_capacity(to_replace.capacity());
         for node in to_replace {
             let index = NodeIndex::new(node);
-            if self.graph.node_weight(index).is_none() {
-                return Err(PyIndexError::new_err(format!(
-                    "Specified node {} is not in this graph",
-                    node
-                )));
-            }
-
+            assert_node_exists!(index);
             indices_to_remove.insert(index);
         }
 
         if force_check_cycle == Some(true) || self.check_cycle {
             if !can_contract(&self.graph, &indices_to_remove) {
-                return Err(DAGWouldCycle::new_err("Substitution would create cycle(s)."))
+                return Err(DAGWouldCycle::new_err("Substitution would create cycle(s)"))
             }
         }
 
