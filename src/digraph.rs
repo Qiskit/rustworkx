@@ -2361,12 +2361,12 @@ impl PyDiGraph {
             indices_to_remove.insert(index);
         }
 
-        if force_check_cycle == Some(true) || self.check_cycle {
-            if !can_contract(&self.graph, &indices_to_remove) {
-                return Err(DAGWouldCycle::new_err(
-                    "Substitution would create cycle(s)",
-                ));
-            }
+        if (force_check_cycle == Some(true) || self.check_cycle)
+            && !can_contract(&self.graph, &indices_to_remove)
+        {
+            return Err(DAGWouldCycle::new_err(
+                "Substitution would create cycle(s)",
+            ));
         }
 
         let mut pred_to_weights = HashMap::new();
