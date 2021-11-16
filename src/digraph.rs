@@ -2280,15 +2280,20 @@ impl PyDiGraph {
     ///     substitution would introduce cycle(s).
     /// :raises ValueError: ``to_replace`` is empty or ``node``
     ///     has existing connections.
-    #[pyo3(text_signature = "(self, to_replace, node, /, force_check_cycle=None)")]
+    #[pyo3(
+        text_signature = "(self, to_replace, node, /, force_check_cycle=None)"
+    )]
     fn substitute_nodes_with_node(
         &mut self,
         py: Python,
         to_replace: HashSet<usize>,
         node: usize,
-        force_check_cycle: Option<bool>
+        force_check_cycle: Option<bool>,
     ) -> PyResult<()> {
-        fn can_contract(graph: &StablePyGraph<Directed>, nodes: &HashSet<NodeIndex>) -> bool {
+        fn can_contract(
+            graph: &StablePyGraph<Directed>,
+            nodes: &HashSet<NodeIndex>,
+        ) -> bool {
             let mut visited = graph.visit_map();
             let mut visit_next = VecDeque::new();
 
@@ -2316,10 +2321,10 @@ impl PyDiGraph {
 
                     visit_next.push_back(edge.target());
                 }
-                
+
                 visited.visit(decendant);
             }
-            
+
             return true;
         }
 
@@ -2329,7 +2334,7 @@ impl PyDiGraph {
                     return Err(PyIndexError::new_err(format!(
                         "Specified node {} is not in this graph",
                         $node_index.index()
-                    )))
+                    )));
                 }
             };
         }
@@ -2342,10 +2347,14 @@ impl PyDiGraph {
         assert_node_exists!(node_index);
 
         if self.graph.neighbors_undirected(node_index).next().is_some() {
-            return Err(PyValueError::new_err("replacement node must not have connections"));
+            return Err(PyValueError::new_err(
+                "replacement node must not have connections",
+            ));
         }
 
-        let mut indices_to_remove: HashSet<NodeIndex> = HashSet::with_capacity(to_replace.capacity());
+        let mut indices_to_remove: HashSet<NodeIndex> =
+            HashSet::with_capacity(to_replace.capacity());
+
         for node in to_replace {
             let index = NodeIndex::new(node);
             assert_node_exists!(index);
@@ -2354,18 +2363,20 @@ impl PyDiGraph {
 
         if force_check_cycle == Some(true) || self.check_cycle {
             if !can_contract(&self.graph, &indices_to_remove) {
-                return Err(DAGWouldCycle::new_err("Substitution would create cycle(s)"))
+                return Err(DAGWouldCycle::new_err(
+                    "Substitution would create cycle(s)",
+                ));
             }
         }
 
-        let mut pred_to_weights: HashMap<NodeIndex, Vec<PyObject>> = HashMap::new();
-        let mut succ_to_weights: HashMap<NodeIndex, Vec<PyObject>> = HashMap::new();
-
+        let mut pred_to_weights = HashMap::new();
+        let mut succ_to_weights = HashMap::new();
         for index in &indices_to_remove {
             for edge in self.graph.edges_directed(*index, Direction::Incoming) {
                 let pred = edge.source();
                 if !indices_to_remove.contains(&pred) {
-                    let weights = pred_to_weights.entry(pred).or_insert(Vec::new());
+                    let weights =
+                        pred_to_weights.entry(pred).or_insert(Vec::new());
                     weights.push(edge.weight().clone_ref(py));
                 }
             }
@@ -2373,7 +2384,8 @@ impl PyDiGraph {
             for edge in self.graph.edges_directed(*index, Direction::Outgoing) {
                 let succ = edge.target();
                 if !indices_to_remove.contains(&succ) {
-                    let weights = succ_to_weights.entry(succ).or_insert(Vec::new());
+                    let weights =
+                        succ_to_weights.entry(succ).or_insert(Vec::new());
                     weights.push(edge.weight().clone_ref(py));
                 }
             }
