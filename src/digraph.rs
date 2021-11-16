@@ -2325,7 +2325,7 @@ impl PyDiGraph {
                 visited.visit(decendant);
             }
 
-            return true;
+            true
         }
 
         macro_rules! assert_node_exists {
