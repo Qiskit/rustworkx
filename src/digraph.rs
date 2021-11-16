@@ -2290,15 +2290,11 @@ impl PyDiGraph {
         node: usize,
         force_check_cycle: Option<bool>,
     ) -> PyResult<()> {
-        fn can_contract(
-            graph: &StablePyGraph<Directed>,
-            nodes: &HashSet<NodeIndex>,
-        ) -> bool {
-            let mut visited = graph.visit_map();
-            let mut visit_next: VecDeque<NodeIndex> = nodes
+        let can_contract = |nodes: &HashSet<NodeIndex>| {
+            // Start with successors of `nodes` that aren't in `nodes` itself.
+            let visit_next: Vec<NodeIndex> = nodes
                 .iter()
-                .map(|n| graph.edges(*n))
-                .flatten()
+                .flat_map(|n| self.graph.edges(*n))
                 .filter_map(|edge| {
                     let target_node = edge.target();
                     if !nodes.contains(&target_node) {
@@ -2309,10 +2305,10 @@ impl PyDiGraph {
                 })
                 .collect();
 
-            // DFS. If we encounter any of `nodes`, there exists a path from `nodes`
+            // Now, if we can reach any of `nodes`, there exists a path from `nodes`
             // back to `nodes` of length > 1, meaning contraction is disallowed.
-            let mut dfs = Dfs::from_parts(visit_next, visited);
-            while let Some(node) = dfs.next(graph) {
+            let mut dfs = Dfs::from_parts(visit_next, self.graph.visit_map());
+            while let Some(node) = dfs.next(&self.graph) {
                 if nodes.contains(&node) {
                     // we found a path back to `nodes`
                     return false;
@@ -2320,7 +2316,7 @@ impl PyDiGraph {
             }
 
             true
-        }
+        };
 
         macro_rules! assert_node_exists {
             ($node_index:ident) => {
@@ -2356,7 +2352,7 @@ impl PyDiGraph {
         }
 
         if (force_check_cycle == Some(true) || self.check_cycle)
-            && !can_contract(&self.graph, &indices_to_remove)
+            && !can_contract(&indices_to_remove)
         {
             return Err(DAGWouldCycle::new_err(
                 "Substitution would create cycle(s)",
