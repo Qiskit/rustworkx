@@ -15,7 +15,7 @@ use pyo3::prelude::*;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::Control;
 
-use crate::PruneSearch;
+use crate::{PruneSearch, StopSearch};
 use retworkx_core::traversal::BfsEvent;
 
 #[derive(FromPyObject)]
@@ -58,6 +58,8 @@ pub fn bfs_handler(
         Err(e) => {
             if e.is_instance::<PruneSearch>(py) {
                 Ok(Control::Prune)
+            } else if e.is_instance::<StopSearch>(py) {
+                Ok(Control::Break(()))
             } else {
                 Err(e)
             }

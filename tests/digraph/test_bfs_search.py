@@ -75,7 +75,7 @@ class TestBfsSearch(unittest.TestCase):
         retworkx.digraph_bfs_search(self.graph, [0], vis)
         self.assertEqual(vis.edges, [(0, 1), (1, 3)])
 
-    def test_digraph_bfs_goal_search(self):
+    def test_digraph_bfs_goal_search_with_stop_search_exception(self):
         class GoalSearch(retworkx.visit.BFSVisitor):
 
             goal = 3
@@ -101,8 +101,40 @@ class TestBfsSearch(unittest.TestCase):
                 return path
 
         vis = GoalSearch()
+        retworkx.digraph_bfs_search(self.graph, [0], vis)
+        self.assertEqual(vis.reconstruct_path(), [0, 1, 3])
+
+    def test_digraph_bfs_goal_search_with_custom_exception(self):
+        class StopIfGoalFound(Exception):
+            pass
+
+        class GoalSearch(retworkx.visit.BFSVisitor):
+
+            goal = 3
+
+            def __init__(self):
+                self.parents = {}
+
+            def tree_edge(self, edge):
+                u, v, _ = edge
+                self.parents[v] = u
+
+                if v == self.goal:
+                    raise StopIfGoalFound
+
+            def reconstruct_path(self):
+                v = self.goal
+                path = [v]
+                while v in self.parents:
+                    v = self.parents[v]
+                    path.append(v)
+
+                path.reverse()
+                return path
+
+        vis = GoalSearch()
         try:
             retworkx.digraph_bfs_search(self.graph, [0], vis)
-        except retworkx.visit.StopSearch:
+        except StopIfGoalFound:
             pass
         self.assertEqual(vis.reconstruct_path(), [0, 1, 3])

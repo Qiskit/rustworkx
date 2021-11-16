@@ -1767,8 +1767,9 @@ def bfs_search(graph, source, visitor):
 
     If an exception is raised inside the callback function, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
-    :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
-    search tree by raising :class:`~retworkx.visit.PruneSearch`.
+    :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+    will return but without raising back the exception. You can also prune part of
+    the search tree by raising :class:`~retworkx.visit.PruneSearch`.
 
     In the following example we keep track of the tree edges:
 
