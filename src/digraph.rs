@@ -2311,21 +2311,12 @@ impl PyDiGraph {
 
             // DFS. If we encounter any of `nodes`, there exists a path from `nodes`
             // back to `nodes` of length > 1, meaning contraction is disallowed.
-            while let Some(decendant) = visit_next.pop_back() {
-                if visited.is_visited(&decendant) {
-                    continue;
+            let mut dfs = Dfs::from_parts(visit_next, visited);
+            while let Some(node) = dfs.next(graph) {
+                if nodes.contains(&node) {
+                    // we found a path back to `nodes`
+                    return false;
                 }
-
-                for edge in graph.edges(decendant) {
-                    if nodes.contains(&edge.target()) {
-                        // we found a path back to `nodes`
-                        return false;
-                    }
-
-                    visit_next.push_back(edge.target());
-                }
-
-                visited.visit(decendant);
             }
 
             true
