@@ -179,6 +179,24 @@ impl NodeCount for PyDiGraph {
 
 // Rust side only PyDiGraph methods
 impl PyDiGraph {
+    fn _add_edge_no_checks(
+        &mut self,
+        p_index: NodeIndex,
+        c_index: NodeIndex,
+        edge: PyObject,
+    ) -> PyResult<usize> {
+        if !self.multigraph {
+            let exists = self.graph.find_edge(p_index, c_index);
+            if let Some(index) = exists {
+                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
+                *edge_weight = edge;
+                return Ok(index.index());
+            }
+        }
+        let edge = self.graph.add_edge(p_index, c_index, edge);
+        Ok(edge.index())
+    }
+
     fn _add_edge(
         &mut self,
         p_index: NodeIndex,
@@ -205,16 +223,7 @@ impl PyDiGraph {
                 ));
             }
         }
-        if !self.multigraph {
-            let exists = self.graph.find_edge(p_index, c_index);
-            if let Some(index) = exists {
-                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
-                *edge_weight = edge;
-                return Ok(index.index());
-            }
-        }
-        let edge = self.graph.add_edge(p_index, c_index, edge);
-        Ok(edge.index())
+        self._add_edge_no_checks(p_index, c_index, edge)
     }
 
     fn insert_between(
@@ -2269,14 +2278,15 @@ impl PyDiGraph {
     ///
     /// :param list to_replace: A set of nodes to be removed and replaced
     ///     by the new node. Any nodes not in the graph are ignored.
-    ///     If empty, this method behaves like :meth:`PyDiGraph.add_edge`,
-    ///     but slower.
+    ///     If empty, this method behaves like :meth:`PyDiGraph.add_edge`
+    ///     (but slower).
     /// :param object obj: The data/weight to associate with the new node.
-    /// :param bool force_check_cycle: If set to ``True``, validates
+    /// :param bool check_cycle: If set to ``True``, validates
     ///     that the substitution will not introduce cycles before
-    ///     modifying the graph, even if cycle check is disabled for
-    ///     this instance of :class:`retworkx.PyDiGraph`. Otherwise,
-    ///     the value of member ``check_cycle`` is inherited.
+    ///     modifying the graph. If set to ``False``, validation is
+    ///     skipped. If not provided, inherits the value
+    ///     of ``check_cycle`` from this instance of
+    ///     :class:`retworkx.PyDiGraph`.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
     #[pyo3(
@@ -2287,7 +2297,7 @@ impl PyDiGraph {
         py: Python,
         to_replace: Vec<usize>,
         obj: PyObject,
-        force_check_cycle: Option<bool>,
+        check_cycle: Option<bool>,
     ) -> PyResult<()> {
         let can_contract = |nodes: &HashSet<NodeIndex>| {
             // Start with successors of `nodes` that aren't in `nodes` itself.
@@ -2320,8 +2330,7 @@ impl PyDiGraph {
         let indices_to_remove: HashSet<NodeIndex> =
             to_replace.iter().map(|&n| NodeIndex::new(n)).collect();
 
-        if (force_check_cycle == Some(true) || self.check_cycle)
-            && !can_contract(&indices_to_remove)
+        if check_cycle.unwrap_or(self.check_cycle) && !can_contract(&indices_to_remove)
         {
             return Err(DAGWouldCycle::new_err(
                 "Substitution would create cycle(s)",
@@ -2369,7 +2378,7 @@ impl PyDiGraph {
         }
 
         for (start, end, weight) in edges {
-            self._add_edge(start, end, weight)?;
+            self._add_edge_no_checks(start, end, weight)?;
         }
 
         Ok(())
