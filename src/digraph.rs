@@ -2291,7 +2291,7 @@ impl PyDiGraph {
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
     #[pyo3(
-        text_signature = "(self, to_replace, obj, /, force_check_cycle=None)"
+        text_signature = "(self, to_replace, obj, /, check_cycle=None)"
     )]
     fn substitute_nodes_with_node(
         &mut self,
