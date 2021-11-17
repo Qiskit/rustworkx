@@ -2265,12 +2265,12 @@ impl PyDiGraph {
         Ok(NodeMap { node_map: out_map })
     }
 
-    /// Substitute a set of nodes with a single node.
+    /// Substitute a set of nodes with a single new node.
     ///
-    /// :param set to_replace: A set of nodes to be removed and replaced
-    ///     by the specified node. Any nodes not in the graph are ignored.
+    /// :param list to_replace: A set of nodes to be removed and replaced
+    ///     by the new node. Any nodes not in the graph are ignored.
     ///     If empty, this method is a no-op.
-    /// :param int node: An existing node to use as the replacement.
+    /// :param object obj: The data/weight to associate with the new node.
     /// :param bool force_check_cycle: If set to ``True``, validates
     ///     that the substitution will not introduce cycles before
     ///     modifying the graph, even if cycle check is disabled for
@@ -2278,16 +2278,14 @@ impl PyDiGraph {
     ///     the value of member ``check_cycle`` is inherited.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
-    /// :raises ValueError: ``to_replace`` is empty or ``node``
-    ///     has existing connections.
     #[pyo3(
-        text_signature = "(self, to_replace, node, /, force_check_cycle=None)"
+        text_signature = "(self, to_replace, obj, /, force_check_cycle=None)"
     )]
     fn substitute_nodes_with_node(
         &mut self,
         py: Python,
-        to_replace: HashSet<usize>,
-        node: usize,
+        to_replace: Vec<usize>,
+        obj: PyObject,
         force_check_cycle: Option<bool>,
     ) -> PyResult<()> {
         let can_contract = |nodes: &HashSet<NodeIndex>| {
@@ -2318,14 +2316,6 @@ impl PyDiGraph {
             true
         };
 
-        // TODO: requires new node exists. Change to weight and create.
-        let node_index = NodeIndex::new(node);
-        if self.graph.neighbors_undirected(node_index).next().is_some() {
-            return Err(PyValueError::new_err(
-                "replacement node must not have connections",
-            ));
-        }
-
         let indices_to_remove: HashSet<NodeIndex> = to_replace
             .iter()
             .map(|&n| NodeIndex::new(n))
@@ -2339,6 +2329,10 @@ impl PyDiGraph {
             ));
         }
 
+        // Create new node.
+        let node_index = self.graph.add_node(obj);
+
+        // Determine edges for new node.
         let edges: Vec<(NodeIndex, NodeIndex, PyObject)> = {
             let incoming_edges = indices_to_remove
                 .iter()
