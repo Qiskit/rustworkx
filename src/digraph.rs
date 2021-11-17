@@ -223,7 +223,7 @@ impl PyDiGraph {
                 ));
             }
         }
-        self._add_edge_no_checks(p_index, c_index, edge)
+        Ok(self.add_edge_no_cycle_check(p_index, c_index, edge))
     }
 
     fn insert_between(
@@ -2383,7 +2383,7 @@ impl PyDiGraph {
         }
 
         for (start, end, weight) in edges {
-            self._add_edge_no_checks(start, end, weight)?;
+            self.add_edge_no_cycle_check(start, end, weight);
         }
 
         Ok(node_index.index())
