@@ -2269,7 +2269,8 @@ impl PyDiGraph {
     ///
     /// :param list to_replace: A set of nodes to be removed and replaced
     ///     by the new node. Any nodes not in the graph are ignored.
-    ///     If empty, this method is a no-op.
+    ///     If empty, this method behaves like :meth:`PyDiGraph.add_edge`,
+    ///     but slower.
     /// :param object obj: The data/weight to associate with the new node.
     /// :param bool force_check_cycle: If set to ``True``, validates
     ///     that the substitution will not introduce cycles before
