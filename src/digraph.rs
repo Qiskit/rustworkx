@@ -22,7 +22,7 @@ use hashbrown::{HashMap, HashSet};
 use retworkx_core::dictmap::*;
 
 use pyo3::class::PyMappingProtocol;
-use pyo3::exceptions::{PyIndexError, PyValueError};
+use pyo3::exceptions::PyIndexError;
 use pyo3::gc::{PyGCProtocol, PyVisit};
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
