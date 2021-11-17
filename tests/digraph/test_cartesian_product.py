@@ -19,7 +19,7 @@ class TestCartesianProduct(unittest.TestCase):
         graph_1 = retworkx.PyDiGraph()
         graph_2 = retworkx.PyDiGraph()
 
-        graph_product = retworkx.digraph_cartesian_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_cartesian_product(graph_1, graph_2)
         self.assertEqual(len(graph_product.nodes()), 0)
         self.assertEqual(len(graph_product.edge_list()), 0)
 
@@ -27,7 +27,7 @@ class TestCartesianProduct(unittest.TestCase):
         graph_1 = retworkx.generators.directed_path_graph(2)
         graph_2 = retworkx.generators.directed_path_graph(2)
 
-        graph_product = retworkx.digraph_cartesian_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_cartesian_product(graph_1, graph_2)
         self.assertEqual(len(graph_product.nodes()), 4)
         self.assertEqual(len(graph_product.edge_list()), 4)
 
@@ -35,7 +35,7 @@ class TestCartesianProduct(unittest.TestCase):
         graph_1 = retworkx.generators.directed_path_graph(2)
         graph_2 = retworkx.generators.directed_path_graph(3)
 
-        graph_product = retworkx.digraph_cartesian_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_cartesian_product(graph_1, graph_2)
         self.assertEqual(len(graph_product.nodes()), 6)
         self.assertEqual(len(graph_product.edge_list()), 7)
 
@@ -45,7 +45,7 @@ class TestCartesianProduct(unittest.TestCase):
         graph_2 = retworkx.PyDiGraph()
         graph_2.add_node(0)
 
-        graph_product = retworkx.digraph_cartesian_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_cartesian_product(graph_1, graph_2)
         self.assertEqual([("a_1", 0)], graph_product.nodes())
 
     def test_directed_edge_weights_cartesian(self):
@@ -56,5 +56,5 @@ class TestCartesianProduct(unittest.TestCase):
         graph_2.add_nodes_from([0, 1])
         graph_1.add_edge(0, 1, "w_2")
 
-        graph_product = retworkx.digraph_cartesian_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_cartesian_product(graph_1, graph_2)
         self.assertEqual(["w_1", "w_1", "w_2", "w_2"], graph_product.edges())

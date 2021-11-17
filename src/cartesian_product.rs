@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use crate::iterators::ProductNodeMap;
 use crate::{digraph, graph, StablePyGraph};
 
 use hashbrown::HashMap;
@@ -24,7 +25,7 @@ fn cartesian_product<Ty: EdgeType>(
     py: Python,
     first: &StablePyGraph<Ty>,
     second: &StablePyGraph<Ty>,
-) -> PyResult<StablePyGraph<Ty>> {
+) -> (StablePyGraph<Ty>, ProductNodeMap) {
     let mut final_graph = StablePyGraph::<Ty>::with_capacity(
         first.node_count() * second.node_count(),
         first.node_count() * second.edge_count()
@@ -69,7 +70,14 @@ fn cartesian_product<Ty: EdgeType>(
         }
     }
 
-    Ok(final_graph)
+    let out_node_map = ProductNodeMap {
+        node_map: hash_nodes
+            .into_iter()
+            .map(|((x, y), n)| ((x.index(), y.index()), n.index()))
+            .collect(),
+    };
+
+    (final_graph, out_node_map)
 }
 
 /// Return a new PyGraph by forming the cartesian product from two input
@@ -91,7 +99,7 @@ fn cartesian_product<Ty: EdgeType>(
 ///
 ///   graph_1 = retworkx.generators.path_graph(2)
 ///   graph_2 = retworkx.generators.path_graph(3)
-///   graph_product = retworkx.graph_cartesian_product(graph_1, graph_2)
+///   graph_product, _ = retworkx.graph_cartesian_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
@@ -99,14 +107,18 @@ fn graph_cartesian_product(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
-) -> PyResult<graph::PyGraph> {
-    let out_graph = cartesian_product(py, &first.graph, &second.graph)?;
+) -> (graph::PyGraph, ProductNodeMap) {
+    let (out_graph, out_node_map) =
+        cartesian_product(py, &first.graph, &second.graph);
 
-    Ok(graph::PyGraph {
-        graph: out_graph,
-        multigraph: true,
-        node_removed: false,
-    })
+    (
+        graph::PyGraph {
+            graph: out_graph,
+            multigraph: true,
+            node_removed: false,
+        },
+        out_node_map,
+    )
 }
 
 /// Return a new PyDiGraph by forming the cartesian product from two input
@@ -128,7 +140,7 @@ fn graph_cartesian_product(
 ///
 ///   graph_1 = retworkx.generators.directed_path_graph(2)
 ///   graph_2 = retworkx.generators.directed_path_graph(3)
-///   graph_product = retworkx.digraph_cartesian_product(graph_1, graph_2)
+///   graph_product, _ = retworkx.digraph_cartesian_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
@@ -136,14 +148,18 @@ fn digraph_cartesian_product(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-) -> PyResult<digraph::PyDiGraph> {
-    let out_graph = cartesian_product(py, &first.graph, &second.graph)?;
+) -> (digraph::PyDiGraph, ProductNodeMap) {
+    let (out_graph, out_node_map) =
+        cartesian_product(py, &first.graph, &second.graph);
 
-    Ok(digraph::PyDiGraph {
-        graph: out_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
-        node_removed: false,
-        multigraph: true,
-    })
+    (
+        digraph::PyDiGraph {
+            graph: out_graph,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
+            node_removed: false,
+            multigraph: true,
+        },
+        out_node_map,
+    )
 }

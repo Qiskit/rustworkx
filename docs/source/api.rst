@@ -332,3 +332,5 @@ Custom Return Types
    retworkx.AllPairsPathLengthMapping
    retworkx.CentralityMapping
    retworkx.Chains
+   retworkx.NodeMap
+   retworkx.ProductNodeMap
