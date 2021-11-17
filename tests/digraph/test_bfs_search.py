@@ -138,3 +138,30 @@ class TestBfsSearch(unittest.TestCase):
         except StopIfGoalFound:
             pass
         self.assertEqual(vis.reconstruct_path(), [0, 1, 3])
+
+    def test_graph_prune_non_tree_edge(self):
+        class PruneNonTreeEdge(retworkx.visit.BFSVisitor):
+
+            def non_tree_edge(self, _):
+                raise retworkx.visit.PruneSearch
+
+        vis = PruneNonTreeEdge()
+        retworkx.digraph_bfs_search(self.graph, [0], vis)
+
+    def test_graph_prune_black_target_edge(self):
+        class PruneBlackTargetEdge(retworkx.visit.BFSVisitor):
+
+            def black_target_edge(self, _):
+                raise retworkx.visit.PruneSearch
+
+        vis = PruneBlackTargetEdge()
+        retworkx.digraph_bfs_search(self.graph, [0], vis)
+
+    def test_graph_prune_gray_target_edge(self):
+        class PruneGrayTargetEdge(retworkx.visit.BFSVisitor):
+
+            def gray_target_edge(self, _):
+                raise retworkx.visit.PruneSearch
+
+        vis = PruneGrayTargetEdge()
+        retworkx.digraph_bfs_search(self.graph, [0], vis)
