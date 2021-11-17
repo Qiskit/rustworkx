@@ -32,7 +32,7 @@ use petgraph::visit::{
 /// # Example
 /// ```rust
 /// use retworkx_core::petgraph;
-/// use retworkx_core::dfs_edges::dfs_edges;
+/// use retworkx_core::traversal::dfs_edges;
 ///
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 1), (1, 2), (1, 3), (2, 4), (3, 4)
