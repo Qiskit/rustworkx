@@ -179,22 +179,22 @@ impl NodeCount for PyDiGraph {
 
 // Rust side only PyDiGraph methods
 impl PyDiGraph {
-    fn _add_edge_no_checks(
+    fn add_edge_no_cycle_check(
         &mut self,
         p_index: NodeIndex,
         c_index: NodeIndex,
         edge: PyObject,
-    ) -> PyResult<usize> {
+    ) -> usize {
         if !self.multigraph {
             let exists = self.graph.find_edge(p_index, c_index);
             if let Some(index) = exists {
                 let edge_weight = self.graph.edge_weight_mut(index).unwrap();
                 *edge_weight = edge;
-                return Ok(index.index());
+                return index.index();
             }
         }
         let edge = self.graph.add_edge(p_index, c_index, edge);
-        Ok(edge.index())
+        edge.index()
     }
 
     fn _add_edge(
