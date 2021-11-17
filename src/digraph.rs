@@ -37,7 +37,6 @@ use numpy::PyReadonlyArray2;
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
-use petgraph::visit::VisitMap;
 
 use petgraph::visit::{
     GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
@@ -2269,7 +2268,8 @@ impl PyDiGraph {
     /// Substitute a set of nodes with a single node.
     ///
     /// :param set to_replace: A set of nodes to be removed and replaced
-    ///     by the specified node.
+    ///     by the specified node. Any nodes not in the graph are ignored.
+    ///     If empty, this method is a no-op.
     /// :param int node: An existing node to use as the replacement.
     /// :param bool force_check_cycle: If set to ``True``, validates
     ///     that the substitution will not introduce cycles before
@@ -2318,38 +2318,18 @@ impl PyDiGraph {
             true
         };
 
-        macro_rules! assert_node_exists {
-            ($node_index:ident) => {
-                if self.graph.node_weight($node_index).is_none() {
-                    return Err(PyIndexError::new_err(format!(
-                        "Specified node {} is not in this graph",
-                        $node_index.index()
-                    )));
-                }
-            };
-        }
-
-        if to_replace.is_empty() {
-            return Err(PyValueError::new_err("to_replace must not be empty"));
-        }
-
+        // TODO: requires new node exists. Change to weight and create.
         let node_index = NodeIndex::new(node);
-        assert_node_exists!(node_index);
-
         if self.graph.neighbors_undirected(node_index).next().is_some() {
             return Err(PyValueError::new_err(
                 "replacement node must not have connections",
             ));
         }
 
-        let mut indices_to_remove: HashSet<NodeIndex> =
-            HashSet::with_capacity(to_replace.len());
-
-        for node in to_replace {
-            let index = NodeIndex::new(node);
-            assert_node_exists!(index);
-            indices_to_remove.insert(index);
-        }
+        let indices_to_remove: HashSet<NodeIndex> = to_replace
+            .iter()
+            .map(|&n| NodeIndex::new(n))
+            .collect();
 
         if (force_check_cycle == Some(true) || self.check_cycle)
             && !can_contract(&indices_to_remove)
@@ -2359,42 +2339,40 @@ impl PyDiGraph {
             ));
         }
 
-        let mut pred_to_weights = HashMap::new();
-        let mut succ_to_weights = HashMap::new();
-        for index in &indices_to_remove {
-            for edge in self.graph.edges_directed(*index, Direction::Incoming) {
-                let pred = edge.source();
-                if !indices_to_remove.contains(&pred) {
-                    let weights =
-                        pred_to_weights.entry(pred).or_insert(Vec::new());
-                    weights.push(edge.weight().clone_ref(py));
-                }
-            }
+        let edges: Vec<(NodeIndex, NodeIndex, PyObject)> = {
+            let incoming_edges = indices_to_remove
+                .iter()
+                .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
+                .filter_map(|edge| {
+                    let pred = edge.source();
+                    if !indices_to_remove.contains(&pred) {
+                        Some((pred, node_index, edge.weight().clone_ref(py)))
+                    } else {
+                        None
+                    }
+                });
 
-            for edge in self.graph.edges_directed(*index, Direction::Outgoing) {
-                let succ = edge.target();
-                if !indices_to_remove.contains(&succ) {
-                    let weights =
-                        succ_to_weights.entry(succ).or_insert(Vec::new());
-                    weights.push(edge.weight().clone_ref(py));
-                }
-            }
-        }
+            let outgoing_edges = indices_to_remove
+                .iter()
+                .flat_map(|&i| self.graph.edges_directed(i, Direction::Outgoing))
+                .filter_map(|edge| {
+                    let succ = edge.target();
+                    if !indices_to_remove.contains(&succ) {
+                        Some((node_index, succ, edge.weight().clone_ref(py)))
+                    } else {
+                        None
+                    }
+                });
+
+            incoming_edges.chain(outgoing_edges).collect()
+        };
 
         for index in indices_to_remove {
             self.graph.remove_node(index);
         }
 
-        for (pred, weights) in pred_to_weights {
-            for weight in weights {
-                self._add_edge(pred, node_index, weight)?;
-            }
-        }
-
-        for (succ, weights) in succ_to_weights {
-            for weight in weights {
-                self._add_edge(node_index, succ, weight)?;
-            }
+        for (start, end, weight) in edges {
+            self._add_edge(start, end, weight)?;
         }
 
         Ok(())
