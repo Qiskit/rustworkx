@@ -2287,6 +2287,7 @@ impl PyDiGraph {
     ///     skipped. If not provided, inherits the value
     ///     of ``check_cycle`` from this instance of
     ///     :class:`retworkx.PyDiGraph`.
+    /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
     #[pyo3(
@@ -2298,7 +2299,7 @@ impl PyDiGraph {
         to_replace: Vec<usize>,
         obj: PyObject,
         check_cycle: Option<bool>,
-    ) -> PyResult<()> {
+    ) -> PyResult<usize> {
         let can_contract = |nodes: &HashSet<NodeIndex>| {
             // Start with successors of `nodes` that aren't in `nodes` itself.
             let visit_next: Vec<NodeIndex> = nodes
@@ -2385,7 +2386,7 @@ impl PyDiGraph {
             self._add_edge_no_checks(start, end, weight)?;
         }
 
-        Ok(())
+        Ok(node_index.index())
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph
