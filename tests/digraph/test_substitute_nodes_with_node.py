@@ -17,9 +17,9 @@ import retworkx
 
 class TestSubstituteNodesCheckCycle(unittest.TestCase):
     def setUp(self) -> None:
-        """┌─┐     ┌─┐
-         ┌─┤a├─┐   │m│
-         │ └─┘ │   └─┘
+        """┌─┐
+         ┌─┤a├─┐
+         │ └─┘ │
         ┌▼┐    │
         │b│    │
         └┬┘    │
@@ -33,12 +33,12 @@ class TestSubstituteNodesCheckCycle(unittest.TestCase):
         self.node_b = self.dag.add_child(self.node_a, "b", "b")
         self.node_c = self.dag.add_child(self.node_b, "c", "c")
 
-        self.node_m = self.dag.add_node("m")
+        self.new_weight = "m"
 
     def do_substitution(self, **kwargs):
-        """┌─┐     ┌─┐                 ┌─┐
-         ┌─┤a├─┐   │m│       ┌─────────┤m│
-         │ └─┘ │   └─┘       │         └▲┘
+        """┌─┐                         ┌─┐
+         ┌─┤a├─┐             ┌─────────┤m│
+         │ └─┘ │             │         └▲┘
         ┌▼┐    │            ┌▼┐         │
         │b│    │     ───►   │b├─────────┘
         └┬┘    │            └─┘
@@ -47,7 +47,7 @@ class TestSubstituteNodesCheckCycle(unittest.TestCase):
               └─┘
         """
         self.dag.substitute_nodes_with_node(
-            {self.node_a, self.node_c}, self.node_m, **kwargs
+            [self.node_a, self.node_c], self.new_weight, **kwargs
         )
 
     def test_cycle_check_enable_local(self):
@@ -85,28 +85,5 @@ class TestSubstituteNodesCheckCycle(unittest.TestCase):
         # Check removal is allowed.
         self.do_substitution()
         self.assertSetEqual(
-            set(self.dag.node_indexes()), {self.node_b, self.node_m}
+            set(self.dag.nodes()), {"b", "m"}
         )
-
-
-class TestSubstituteNodes(unittest.TestCase):
-    def test_empty_nodes(self):
-        self.dag = retworkx.PyDAG()
-        node_m = self.dag.add_node("m")
-
-        with self.assertRaises(ValueError):
-            self.dag.substitute_nodes_with_node(set(), node_m)
-
-    def test_unknown_nodes(self):
-        self.dag = retworkx.PyDAG()
-        node_m = self.dag.add_node("m")
-
-        with self.assertRaises(IndexError):
-            self.dag.substitute_nodes_with_node({0, 1, 2}, node_m)
-
-    def test_unknown_node(self):
-        self.dag = retworkx.PyDAG()
-        node_a = self.dag.add_node("a")
-
-        with self.assertRaises(IndexError):
-            self.dag.substitute_nodes_with_node({node_a}, node_a + 1)
