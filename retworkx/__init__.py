@@ -1777,7 +1777,8 @@ def bfs_search(graph, source, visitor):
 
         import retworkx
         from retworkx.visit import BFSVisitor
-  
+
+
         class TreeEdgesRecorder(BFSVisitor):
 
             def __init__(self):
