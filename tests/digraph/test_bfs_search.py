@@ -141,7 +141,6 @@ class TestBfsSearch(unittest.TestCase):
 
     def test_graph_prune_non_tree_edge(self):
         class PruneNonTreeEdge(retworkx.visit.BFSVisitor):
-
             def non_tree_edge(self, _):
                 raise retworkx.visit.PruneSearch
 
@@ -150,7 +149,6 @@ class TestBfsSearch(unittest.TestCase):
 
     def test_graph_prune_black_target_edge(self):
         class PruneBlackTargetEdge(retworkx.visit.BFSVisitor):
-
             def black_target_edge(self, _):
                 raise retworkx.visit.PruneSearch
 
@@ -159,7 +157,6 @@ class TestBfsSearch(unittest.TestCase):
 
     def test_graph_prune_gray_target_edge(self):
         class PruneGrayTargetEdge(retworkx.visit.BFSVisitor):
-
             def gray_target_edge(self, _):
                 raise retworkx.visit.PruneSearch
 
