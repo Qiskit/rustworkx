@@ -2327,7 +2327,7 @@ impl PyDiGraph {
             true
         };
 
-        let indices_to_remove: HashSet<NodeIndex> =
+        let mut indices_to_remove: HashSet<NodeIndex> =
             to_replace.iter().map(|&n| NodeIndex::new(n)).collect();
 
         if check_cycle.unwrap_or(self.check_cycle)
@@ -2340,6 +2340,9 @@ impl PyDiGraph {
 
         // Create new node.
         let node_index = self.graph.add_node(obj);
+
+        // Sanitize new node index from user input.
+        indices_to_remove.remove(&node_index);
 
         // Determine edges for new node.
         let edges: Vec<(NodeIndex, NodeIndex, PyObject)> = {

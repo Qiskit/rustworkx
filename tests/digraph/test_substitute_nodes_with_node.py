@@ -54,21 +54,19 @@ class TestSubstituteNodesCheckCycle(unittest.TestCase):
         # Disable at class level.
         self.dag.check_cycle = False
 
-        # Check removal is not allowed with explicit force_check_cycle=True.
+        # Check removal is not allowed with explicit check_cycle=True.
         self.assertRaises(
-            retworkx.DAGWouldCycle, self.do_substitution, force_check_cycle=True
+            retworkx.DAGWouldCycle, self.do_substitution, check_cycle=True
         )
 
     def test_cycle_check_disable_local(self):
         # Enable at class level.
         self.dag.check_cycle = True
 
-        # Check removal is still not allowed for force_check_cycle=False,
-        # since disabling cycle checking just for this method is not allowed.
-        self.assertRaises(
-            retworkx.DAGWouldCycle,
-            self.do_substitution,
-            force_check_cycle=False,
+        # Check removal is allowed for check_cycle=False
+        self.do_substitution(check_cycle=False)
+        self.assertSetEqual(
+            set(self.dag.nodes()), {"b", "m"}
         )
 
     def test_cycle_check_inherit_class_enable(self):
@@ -87,3 +85,21 @@ class TestSubstituteNodesCheckCycle(unittest.TestCase):
         self.assertSetEqual(
             set(self.dag.nodes()), {"b", "m"}
         )
+
+class TestSubstituteNodes(unittest.TestCase):
+    def test_empty_nodes(self):
+        """Replacing empty nodes is functionally equivalent to add_node."""
+        self.dag = retworkx.PyDAG()
+        self.dag.substitute_nodes_with_node([], "m")
+
+        self.assertSetEqual(set(self.dag.nodes()), {"m"})
+
+    def test_unknown_nodes(self):
+        """
+        Replacing all unknown nodes is functionally equivalent to add_node,
+        since unknown nodes should be ignored.
+        """
+        self.dag = retworkx.PyDAG()
+        self.dag.substitute_nodes_with_node([0, 1, 2], "m")
+
+        self.assertSetEqual(set(self.dag.nodes()), {"m"})
