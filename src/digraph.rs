@@ -2316,10 +2316,8 @@ impl PyDiGraph {
             true
         };
 
-        let indices_to_remove: HashSet<NodeIndex> = to_replace
-            .iter()
-            .map(|&n| NodeIndex::new(n))
-            .collect();
+        let indices_to_remove: HashSet<NodeIndex> =
+            to_replace.iter().map(|&n| NodeIndex::new(n)).collect();
 
         if (force_check_cycle == Some(true) || self.check_cycle)
             && !can_contract(&indices_to_remove)
@@ -2336,7 +2334,9 @@ impl PyDiGraph {
         let edges: Vec<(NodeIndex, NodeIndex, PyObject)> = {
             let incoming_edges = indices_to_remove
                 .iter()
-                .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
+                .flat_map(|&i| {
+                    self.graph.edges_directed(i, Direction::Incoming)
+                })
                 .filter_map(|edge| {
                     let pred = edge.source();
                     if !indices_to_remove.contains(&pred) {
@@ -2348,7 +2348,9 @@ impl PyDiGraph {
 
             let outgoing_edges = indices_to_remove
                 .iter()
-                .flat_map(|&i| self.graph.edges_directed(i, Direction::Outgoing))
+                .flat_map(|&i| {
+                    self.graph.edges_directed(i, Direction::Outgoing)
+                })
                 .filter_map(|edge| {
                     let succ = edge.target();
                     if !indices_to_remove.contains(&succ) {
