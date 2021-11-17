@@ -1773,6 +1773,25 @@ def bfs_search(graph, source, visitor):
 
     In the following example we keep track of the tree edges:
 
+    .. jupyter-execute::
+
+        import retworkx
+        from retworkx.visit import BFSVisitor
+  
+        class TreeEdgesRecorder(BFSVisitor):
+
+            def __init__(self):
+                self.edges = []
+
+            def tree_edge(self, edge):
+                self.edges.append(edge)
+
+        graph = retworkx.PyDiGraph()
+        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
+        vis = TreeEdgesRecorder()
+        retworkx.bfs_search(graph, [0], vis)
+        print('Tree edges:', vis.edges)
+
     .. note::
 
         Graph can **not** be mutated while traversing.
