@@ -2330,7 +2330,8 @@ impl PyDiGraph {
         let indices_to_remove: HashSet<NodeIndex> =
             to_replace.iter().map(|&n| NodeIndex::new(n)).collect();
 
-        if check_cycle.unwrap_or(self.check_cycle) && !can_contract(&indices_to_remove)
+        if check_cycle.unwrap_or(self.check_cycle)
+            && !can_contract(&indices_to_remove)
         {
             return Err(DAGWouldCycle::new_err(
                 "Substitution would create cycle(s)",
