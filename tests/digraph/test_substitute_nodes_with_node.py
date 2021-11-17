@@ -65,9 +65,7 @@ class TestSubstituteNodesCheckCycle(unittest.TestCase):
 
         # Check removal is allowed for check_cycle=False
         self.do_substitution(check_cycle=False)
-        self.assertSetEqual(
-            set(self.dag.nodes()), {"b", "m"}
-        )
+        self.assertSetEqual(set(self.dag.nodes()), {"b", "m"})
 
     def test_cycle_check_inherit_class_enable(self):
         # Enable at class level.
@@ -82,9 +80,8 @@ class TestSubstituteNodesCheckCycle(unittest.TestCase):
 
         # Check removal is allowed.
         self.do_substitution()
-        self.assertSetEqual(
-            set(self.dag.nodes()), {"b", "m"}
-        )
+        self.assertSetEqual(set(self.dag.nodes()), {"b", "m"})
+
 
 class TestSubstituteNodes(unittest.TestCase):
     def test_empty_nodes(self):
