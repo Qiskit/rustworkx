@@ -90,7 +90,18 @@ fn cartesian_product<Ty: EdgeType>(
 ///     and ``second``.
 ///     It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
+///     And a Read-Only dictionary of the product of nodes. The keys are a tuple where
+///     the first element is the node of the first graph and the second element is the
+///     node of the second graph, and the values are the map of those elements in the
+///     product graph. For example:
+///     
+///     {
+///         (0, 0): 0,
+///         (0, 1): 1,
+///     }
+///
 /// :rtype: PyGraph
+/// :rtype: ProductNodeMap
 ///
 /// .. jupyter-execute::
 ///
@@ -131,7 +142,18 @@ fn graph_cartesian_product(
 ///     and ``second``.
 ///     It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
+///     And a Read-Only dictionary of the product of nodes. The keys are a tuple where
+///     the first element is the node of the first graph and the second element is the
+///     node of the second graph, and the values are the map of those elements in the
+///     product graph. For example:
+///     
+///     {
+///         (0, 0): 0,
+///         (0, 1): 1,
+///     }
+///
 /// :rtype: PyDiGraph
+/// :rtype: ProductNodeMap
 ///
 /// .. jupyter-execute::
 ///
