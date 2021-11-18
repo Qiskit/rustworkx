@@ -57,14 +57,12 @@ fn cartesian_product<Ty: EdgeType>(
 
     for node_first in first.node_indices() {
         for edge_second in second.edge_references() {
-            let source =
-                hash_nodes.get(&(node_first, edge_second.source())).unwrap();
-            let target =
-                hash_nodes.get(&(node_first, edge_second.target())).unwrap();
+            let source = hash_nodes[&(node_first, edge_second.source())];
+            let target = hash_nodes[&(node_first, edge_second.target())];
 
             final_graph.add_edge(
-                *source,
-                *target,
+                source,
+                target,
                 edge_second.weight().clone_ref(py),
             );
         }
