@@ -1764,7 +1764,7 @@ def cartesian_product(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@union.register(PyDiGraph)
+@cartesian_product.register(PyDiGraph)
 def _digraph_cartesian_product(
     first,
     second,
@@ -1772,7 +1772,7 @@ def _digraph_cartesian_product(
     return digraph_cartesian_product(first, second)
 
 
-@union.register(PyGraph)
+@cartesian_product.register(PyGraph)
 def _graph_cartesian_product(
     first,
     second,
