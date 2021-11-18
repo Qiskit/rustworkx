@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use petgraph::stable_graph::EdgeReference;
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -2290,13 +2291,14 @@ impl PyDiGraph {
     /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
-    #[pyo3(text_signature = "(self, to_replace, obj, /, check_cycle=None)")]
+    #[pyo3(text_signature = "(self, to_replace, obj, /, check_cycle=None, weight_combo_fn=None)")]
     fn substitute_nodes_with_node(
         &mut self,
         py: Python,
         to_replace: Vec<usize>,
         obj: PyObject,
         check_cycle: Option<bool>,
+        weight_combo_fn: Option<PyObject>,
     ) -> PyResult<usize> {
         let can_contract = |nodes: &HashSet<NodeIndex>| {
             // Start with successors of `nodes` that aren't in `nodes` itself.
@@ -2344,8 +2346,8 @@ impl PyDiGraph {
         indices_to_remove.remove(&node_index);
 
         // Determine edges for new node.
-        let edges: Vec<(NodeIndex, NodeIndex, PyObject)> = {
-            let incoming_edges = indices_to_remove
+        let edges: Vec<(NodeIndex, NodeIndex, PyResult<PyObject>)> = {
+            let incomming_edges = indices_to_remove
                 .iter()
                 .flat_map(|&i| {
                     self.graph.edges_directed(i, Direction::Incoming)
@@ -2353,27 +2355,75 @@ impl PyDiGraph {
                 .filter_map(|edge| {
                     let pred = edge.source();
                     if !indices_to_remove.contains(&pred) {
-                        Some((pred, node_index, edge.weight().clone_ref(py)))
+                        Some((pred, node_index, Ok(edge.weight().clone_ref(py))))
                     } else {
                         None
                     }
                 });
 
-            let outgoing_edges = indices_to_remove
-                .iter()
-                .flat_map(|&i| {
-                    self.graph.edges_directed(i, Direction::Outgoing)
+            let outgoing_edgerefs = || {
+                indices_to_remove
+                    .iter()
+                    .flat_map(|&i| {
+                        self.graph.edges_directed(i, Direction::Outgoing)
+                    })
+                    .filter_map(|edge| {
+                        let succ = edge.target();
+                        if !indices_to_remove.contains(&succ) {
+                            Some(edge)
+                        } else {
+                            None
+                        }})
+            };
+
+            let mut outgoing_edges_multigraph = outgoing_edgerefs()
+                .map(|edge| (node_index, edge.target(), Ok(edge.weight().clone_ref(py))));
+
+            let target_to_weights: HashMap<NodeIndex, (NodeIndex, PyResult<PyObject>)> = HashMap::new();
+            let mut outgoing_edges_simplegraph = outgoing_edgerefs()
+                .fold(target_to_weights, |mut acc, edge| {
+                    acc
+                        .entry(edge.target())
+                        .and_modify(|value| {
+                            match value {
+                                (source, Ok(weight)) => match &weight_combo_fn {
+                                    Some(func) => {
+                                        // update weight using user function.
+                                        value.1 = func.call1(py, (weight.clone_ref(py), edge.weight()))
+                                    },
+                                    None => {
+                                        // update weight based on old edge index.
+                                        let cur_index = self.graph.find_edge(edge.source(), edge.target());
+                                        let old_index = self.graph.find_edge(*source, edge.target());
+
+                                        if cur_index > old_index {
+                                            // current edge has greater index, so overwrite source and
+                                            // weight.
+                                            *value = (edge.source(), Ok(edge.weight().clone_ref(py)));
+                                        }
+                                    }
+                                },
+                                // user function failed previously for this target,
+                                // error will be emitted later.
+                                _ => ()
+                            };
+                        })
+                        .or_insert((edge.source(), Ok(edge.weight().clone_ref(py))));
+                    acc
                 })
-                .filter_map(|edge| {
-                    let succ = edge.target();
-                    if !indices_to_remove.contains(&succ) {
-                        Some((node_index, succ, edge.weight().clone_ref(py)))
-                    } else {
-                        None
-                    }
-                });
+                .into_iter()
+                .map(|(target, (_, weight))| (node_index, target, weight));
 
-            incoming_edges.chain(outgoing_edges).collect()
+            // Select edge transformation based on multigraph.
+            let outgoing_edges: &mut dyn Iterator<Item = _> = {
+                if self.multigraph() {
+                    &mut outgoing_edges_multigraph
+                } else {
+                    &mut outgoing_edges_simplegraph
+                }
+            };
+
+            incomming_edges.chain(outgoing_edges).collect()
         };
 
         for index in indices_to_remove {
@@ -2381,7 +2431,7 @@ impl PyDiGraph {
         }
 
         for (start, end, weight) in edges {
-            self.add_edge_no_cycle_check(start, end, weight);
+            self.add_edge_no_cycle_check(start, end, weight?);
         }
 
         Ok(node_index.index())
