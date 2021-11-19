@@ -10,7 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use petgraph::stable_graph::EdgeReference;
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -2291,7 +2290,9 @@ impl PyDiGraph {
     /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
-    #[pyo3(text_signature = "(self, to_replace, obj, /, check_cycle=None, weight_combo_fn=None)")]
+    #[pyo3(
+        text_signature = "(self, to_replace, obj, /, check_cycle=None, weight_combo_fn=None)"
+    )]
     fn substitute_nodes_with_node(
         &mut self,
         py: Python,
@@ -2346,90 +2347,73 @@ impl PyDiGraph {
         indices_to_remove.remove(&node_index);
 
         // Determine edges for new node.
-        let edges: Vec<(NodeIndex, NodeIndex, PyObject)> = {
-            let incoming_edges = indices_to_remove
-                .iter()
-                .flat_map(|&i| {
-                    self.graph.edges_directed(i, Direction::Incoming)
-                })
-                .filter_map(|edge| {
-                    let pred = edge.source();
-                    if !indices_to_remove.contains(&pred) {
-                        Some((pred, node_index, edge.weight().clone_ref(py)))
-                    } else {
-                        None
-                    }
-                });
+        let incoming_edges: Vec<_> = indices_to_remove
+            .iter()
+            .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
+            .filter_map(|edge| {
+                let pred = edge.source();
+                if !indices_to_remove.contains(&pred) {
+                    Some((edge.source(), edge.weight().clone_ref(py)))
+                } else {
+                    None
+                }
+            })
+            .collect();
 
-            let outgoing_edges = indices_to_remove
-                .iter()
-                .flat_map(|&i| {
-                    self.graph.edges_directed(i, Direction::Outgoing)
-                })
-                .filter_map(|edge| {
-                    let succ = edge.target();
-                    if !indices_to_remove.contains(&succ) {
-                        Some((node_index, succ, edge.weight().clone_ref(py)))
-                    } else {
-                        None
-                    }
-                });
+        let outgoing_edges: Vec<_> = indices_to_remove
+            .iter()
+            .flat_map(|&i| self.graph.edges_directed(i, Direction::Outgoing))
+            .filter_map(|edge| {
+                let succ = edge.target();
+                if !indices_to_remove.contains(&succ) {
+                    Some((edge.target(), edge.weight().clone_ref(py)))
+                } else {
+                    None
+                }
+            })
+            .collect();
 
-            incoming_edges.chain(outgoing_edges).collect()
-        };
-
+        // Remove nodes that will be replaced.
         for index in indices_to_remove {
             self.graph.remove_node(index);
         }
 
+        // Add new edges.
+        for (source, weight) in incoming_edges {
+            self.add_edge_no_cycle_check(source, node_index, weight);
+        }
+
         if self.multigraph() {
-            for (start, end, weight) in edges {
-                self.add_edge_no_cycle_check(start, end, weight);
+            for (target, weight) in outgoing_edges {
+                self.add_edge_no_cycle_check(node_index, target, weight);
             }
         } else {
-            let mut target_to_weight: HashMap<NodeIndex, PyResult<PyObject>> = HashMap::new();
-            for (start, end, weight) in edges {
-                if start == node_index {
-                    target_to_weight
-                        .entry(end)
-                        .and_modify(|w| {
-                            match w {
-                                Ok(prev_weight) => {
-                                    *w = match &weight_combo_fn {
-                                        Some(func) => func.call1(py, (&weight, prev_weight.clone_ref(py))),
-                                        None => Ok(weight.clone_ref(py))
-                                    }
-                                },
-                                _ => ()
+            // Merge parallel outgoing edges (same target),
+            // using weight_combo_fn if provided, or last
+            // weight in traversal.
+            let mut target_to_weight = HashMap::new();
+            for (target, weight) in outgoing_edges {
+                match target_to_weight.remove(&target) {
+                    Some(existing_weight) => {
+                        let combined_weight = match &weight_combo_fn {
+                            Some(func) => {
+                                func.call1(py, (weight, existing_weight))?
                             }
-                            
-                        })
-                        .or_insert(Ok(weight.clone_ref(py)));
-                } else {
-                    self.add_edge_no_cycle_check(start, end, weight);
+                            None => weight,
+                        };
+                        target_to_weight.insert(target, combined_weight);
+                    }
+                    None => {
+                        target_to_weight.insert(target, weight);
+                    }
                 }
             }
 
-            for (end, weight) in target_to_weight {
-                self.add_edge_no_cycle_check(node_index, end, weight?);
+            for (target, weight) in target_to_weight {
+                self.add_edge_no_cycle_check(node_index, target, weight);
             }
         }
 
-        // let target_to_weight: HashMap<NodeIndex, PyObject> = HashMap::new();
-        // for (start, end, weight) in edges {
-        //     if !self.multigraph() && start == node_index {
-        //         target_to_weight.entry(end).and_modify(f: F) match {
-        //             Some(existing_weight) => weight_combo_fn.call1(py, (weight, existing_weight))?
-        //         }
-        //         if !target_to_weight.contains(end) {
-        //             self.add_edge_no_cycle_check(start, end, weight);
-        //             target_to_weight.insert(end);
-        //         }
-        //         continue;
-        //     }
-        //     self.add_edge_no_cycle_check(start, end, weight);
-        // }
-        
         Ok(node_index.index())
     }
 
