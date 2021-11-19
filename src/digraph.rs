@@ -2346,8 +2346,8 @@ impl PyDiGraph {
         indices_to_remove.remove(&node_index);
 
         // Determine edges for new node.
-        let edges: Vec<(NodeIndex, NodeIndex, PyResult<PyObject>)> = {
-            let incomming_edges = indices_to_remove
+        let edges: Vec<(NodeIndex, NodeIndex, PyObject)> = {
+            let incoming_edges = indices_to_remove
                 .iter()
                 .flat_map(|&i| {
                     self.graph.edges_directed(i, Direction::Incoming)
@@ -2355,85 +2355,81 @@ impl PyDiGraph {
                 .filter_map(|edge| {
                     let pred = edge.source();
                     if !indices_to_remove.contains(&pred) {
-                        Some((pred, node_index, Ok(edge.weight().clone_ref(py))))
+                        Some((pred, node_index, edge.weight().clone_ref(py)))
                     } else {
                         None
                     }
                 });
 
-            let outgoing_edgerefs = || {
-                indices_to_remove
-                    .iter()
-                    .flat_map(|&i| {
-                        self.graph.edges_directed(i, Direction::Outgoing)
-                    })
-                    .filter_map(|edge| {
-                        let succ = edge.target();
-                        if !indices_to_remove.contains(&succ) {
-                            Some(edge)
-                        } else {
-                            None
-                        }})
-            };
-
-            let mut outgoing_edges_multigraph = outgoing_edgerefs()
-                .map(|edge| (node_index, edge.target(), Ok(edge.weight().clone_ref(py))));
-
-            let target_to_weights: HashMap<NodeIndex, (NodeIndex, PyResult<PyObject>)> = HashMap::new();
-            let mut outgoing_edges_simplegraph = outgoing_edgerefs()
-                .fold(target_to_weights, |mut acc, edge| {
-                    acc
-                        .entry(edge.target())
-                        .and_modify(|value| {
-                            match value {
-                                (source, Ok(weight)) => match &weight_combo_fn {
-                                    Some(func) => {
-                                        // update weight using user function.
-                                        value.1 = func.call1(py, (weight.clone_ref(py), edge.weight()))
-                                    },
-                                    None => {
-                                        // update weight based on old edge index.
-                                        let cur_index = self.graph.find_edge(edge.source(), edge.target());
-                                        let old_index = self.graph.find_edge(*source, edge.target());
-
-                                        if cur_index > old_index {
-                                            // current edge has greater index, so overwrite source and
-                                            // weight.
-                                            *value = (edge.source(), Ok(edge.weight().clone_ref(py)));
-                                        }
-                                    }
-                                },
-                                // user function failed previously for this target,
-                                // error will be emitted later.
-                                _ => ()
-                            };
-                        })
-                        .or_insert((edge.source(), Ok(edge.weight().clone_ref(py))));
-                    acc
+            let outgoing_edges = indices_to_remove
+                .iter()
+                .flat_map(|&i| {
+                    self.graph.edges_directed(i, Direction::Outgoing)
                 })
-                .into_iter()
-                .map(|(target, (_, weight))| (node_index, target, weight));
+                .filter_map(|edge| {
+                    let succ = edge.target();
+                    if !indices_to_remove.contains(&succ) {
+                        Some((node_index, succ, edge.weight().clone_ref(py)))
+                    } else {
+                        None
+                    }
+                });
 
-            // Select edge transformation based on multigraph.
-            let outgoing_edges: &mut dyn Iterator<Item = _> = {
-                if self.multigraph() {
-                    &mut outgoing_edges_multigraph
-                } else {
-                    &mut outgoing_edges_simplegraph
-                }
-            };
-
-            incomming_edges.chain(outgoing_edges).collect()
+            incoming_edges.chain(outgoing_edges).collect()
         };
 
         for index in indices_to_remove {
             self.graph.remove_node(index);
         }
 
-        for (start, end, weight) in edges {
-            self.add_edge_no_cycle_check(start, end, weight?);
+        if self.multigraph() {
+            for (start, end, weight) in edges {
+                self.add_edge_no_cycle_check(start, end, weight);
+            }
+        } else {
+            let mut target_to_weight: HashMap<NodeIndex, PyResult<PyObject>> = HashMap::new();
+            for (start, end, weight) in edges {
+                if start == node_index {
+                    target_to_weight
+                        .entry(end)
+                        .and_modify(|w| {
+                            match w {
+                                Ok(prev_weight) => {
+                                    *w = match &weight_combo_fn {
+                                        Some(func) => func.call1(py, (&weight, prev_weight.clone_ref(py))),
+                                        None => Ok(weight.clone_ref(py))
+                                    }
+                                },
+                                _ => ()
+                            }
+                            
+                        })
+                        .or_insert(Ok(weight.clone_ref(py)));
+                } else {
+                    self.add_edge_no_cycle_check(start, end, weight);
+                }
+            }
+
+            for (end, weight) in target_to_weight {
+                self.add_edge_no_cycle_check(node_index, end, weight?);
+            }
         }
 
+        // let target_to_weight: HashMap<NodeIndex, PyObject> = HashMap::new();
+        // for (start, end, weight) in edges {
+        //     if !self.multigraph() && start == node_index {
+        //         target_to_weight.entry(end).and_modify(f: F) match {
+        //             Some(existing_weight) => weight_combo_fn.call1(py, (weight, existing_weight))?
+        //         }
+        //         if !target_to_weight.contains(end) {
+        //             self.add_edge_no_cycle_check(start, end, weight);
+        //             target_to_weight.insert(end);
+        //         }
+        //         continue;
+        //     }
+        //     self.add_edge_no_cycle_check(start, end, weight);
+        // }
+        
         Ok(node_index.index())
     }
 
