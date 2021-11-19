@@ -2296,8 +2296,8 @@ impl PyDiGraph {
     ///     If this instance of :class:`retworkx.PyDiGraph` is a multigraph,
     ///     leave this unspecified to preserve parallel edges. If unspecified
     ///     when not a multigraph, parallel edges and their weights will be
-    ///     combined by one of the edge's weights arbitrarily based on an
-    ///     internal iteration order, subject to change.
+    ///     combined by choosing one of the edge's weights arbitrarily based
+    ///     on an internal iteration order, subject to change.
     /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
