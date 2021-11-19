@@ -2389,31 +2389,31 @@ impl PyDiGraph {
             self.graph.remove_node(index);
         }
 
-        macro_rules! merge_parallel_edges {
-            ($edges:ident, $merge_fn:ident) => {{
-                let mut node_to_weight = HashMap::new();
-                for (node, weight) in $edges {
-                    match node_to_weight.remove(&node) {
-                        Some(existing_weight) => {
-                            let combined_weight = $merge_fn
-                                .call1(py, (weight, existing_weight))?;
-                            node_to_weight.insert(node, combined_weight);
-                        }
-                        None => {
-                            node_to_weight.insert(node, weight);
-                        }
-                    }
-                }
-                node_to_weight.into_iter().collect::<Vec<_>>()
-            }};
-        }
-
         // If `weight_combo_fn` was specified, merge edges according
         // to that function, even if this is a multigraph. If unspecified,
         // defer parallel edge handling to `add_edge_no_cycle_check`.
         if let Some(merge_fn) = weight_combo_fn {
-            incoming_edges = merge_parallel_edges!(incoming_edges, merge_fn);
-            outgoing_edges = merge_parallel_edges!(outgoing_edges, merge_fn);
+            macro_rules! merge_parallel_edges {
+                ($edges:ident) => {{
+                    let mut node_to_weight = HashMap::new();
+                    for (node, weight) in $edges {
+                        match node_to_weight.remove(&node) {
+                            Some(existing_weight) => {
+                                let combined_weight = merge_fn
+                                    .call1(py, (weight, existing_weight))?;
+                                node_to_weight.insert(node, combined_weight);
+                            }
+                            None => {
+                                node_to_weight.insert(node, weight);
+                            }
+                        }
+                    }
+                    node_to_weight.into_iter().collect::<Vec<_>>()
+                }};
+            }
+
+            incoming_edges = merge_parallel_edges!(incoming_edges);
+            outgoing_edges = merge_parallel_edges!(outgoing_edges);
         }
 
         for (source, weight) in incoming_edges {
