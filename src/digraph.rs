@@ -2287,6 +2287,14 @@ impl PyDiGraph {
     ///     skipped. If not provided, inherits the value
     ///     of ``check_cycle`` from this instance of
     ///     :class:`retworkx.PyDiGraph`.
+    /// :param weight_combo_fn: An optional python callable used to merge
+    ///     parallel edges if ``multigraph`` is ``False`` for this instance
+    ///     of :class:`retworkx.PyDiGraph` and parallel edges are introduced
+    ///     by the substitution, which will occur when multiple nodes in
+    ///     ``to_replace`` have an edge to the same target node.
+    ///     The callable takes in two edge weight/data objects and returns
+    ///     a single edge weight/data object to be used as the combined
+    ///     edge's weight/data.
     /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
