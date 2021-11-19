@@ -2287,15 +2287,17 @@ impl PyDiGraph {
     ///     skipped. If not provided, inherits the value
     ///     of ``check_cycle`` from this instance of
     ///     :class:`retworkx.PyDiGraph`.
-    /// :param weight_combo_fn: An optional python callable used to merge
-    ///     parallel edges if ``multigraph`` is ``False`` for this instance
-    ///     of :class:`retworkx.PyDiGraph` and parallel edges are introduced
-    ///     by the substitution, which will occur when multiple nodes in
-    ///     ``to_replace`` have an edge to the same target node.
-    ///     The callable takes in two edge weight/data objects and returns
-    ///     a single edge weight/data object to be used as the combined
-    ///     edge's weight/data. If not provided, one of the weights is
-    ///     chosen arbitrarily based on internal iteration order.
+    /// :param weight_combo_fn: An optional python callable that, when
+    ///     specified, is used to merge parallel edges introduced by the
+    ///     substitution, which will occur when multiple nodes in
+    ///     ``to_replace`` have an incoming edge
+    ///     from the same source node or when multiple nodes in
+    ///     ``to_replace`` have an outgoing edge to the same target node.
+    ///     If this instance of :class:`retworkx.PyDiGraph` is a multigraph,
+    ///     leave this unspecified to preserve parallel edges. If unspecified
+    ///     when not a multigraph, parallel edges and their weights will be
+    ///     combined by one of the edge's weights arbitrarily based on an
+    ///     internal iteration order, subject to change.
     /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
@@ -2356,7 +2358,7 @@ impl PyDiGraph {
         indices_to_remove.remove(&node_index);
 
         // Determine edges for new node.
-        let incoming_edges: Vec<_> = indices_to_remove
+        let mut incoming_edges: Vec<_> = indices_to_remove
             .iter()
             .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
             .filter_map(|edge| {
@@ -2369,7 +2371,7 @@ impl PyDiGraph {
             })
             .collect();
 
-        let outgoing_edges: Vec<_> = indices_to_remove
+        let mut outgoing_edges: Vec<_> = indices_to_remove
             .iter()
             .flat_map(|&i| self.graph.edges_directed(i, Direction::Outgoing))
             .filter_map(|edge| {
@@ -2387,40 +2389,39 @@ impl PyDiGraph {
             self.graph.remove_node(index);
         }
 
-        // Add new edges.
+        macro_rules! merge_parallel_edges {
+            ($edges:ident, $merge_fn:ident) => {{
+                let mut node_to_weight = HashMap::new();
+                for (node, weight) in $edges {
+                    match node_to_weight.remove(&node) {
+                        Some(existing_weight) => {
+                            let combined_weight = $merge_fn
+                                .call1(py, (weight, existing_weight))?;
+                            node_to_weight.insert(node, combined_weight);
+                        }
+                        None => {
+                            node_to_weight.insert(node, weight);
+                        }
+                    }
+                }
+                node_to_weight.into_iter().collect::<Vec<_>>()
+            }};
+        }
+
+        // If `weight_combo_fn` was specified, merge edges according
+        // to that function, even if this is a multigraph. If unspecified,
+        // defer parallel edge handling to `add_edge_no_cycle_check`.
+        if let Some(merge_fn) = weight_combo_fn {
+            incoming_edges = merge_parallel_edges!(incoming_edges, merge_fn);
+            outgoing_edges = merge_parallel_edges!(outgoing_edges, merge_fn);
+        }
+
         for (source, weight) in incoming_edges {
             self.add_edge_no_cycle_check(source, node_index, weight);
         }
 
-        if self.multigraph() {
-            for (target, weight) in outgoing_edges {
-                self.add_edge_no_cycle_check(node_index, target, weight);
-            }
-        } else {
-            // Merge parallel outgoing edges (same target),
-            // using weight_combo_fn if provided, or last
-            // weight in traversal.
-            let mut target_to_weight = HashMap::new();
-            for (target, weight) in outgoing_edges {
-                match target_to_weight.remove(&target) {
-                    Some(existing_weight) => {
-                        let combined_weight = match &weight_combo_fn {
-                            Some(func) => {
-                                func.call1(py, (weight, existing_weight))?
-                            }
-                            None => weight,
-                        };
-                        target_to_weight.insert(target, combined_weight);
-                    }
-                    None => {
-                        target_to_weight.insert(target, weight);
-                    }
-                }
-            }
-
-            for (target, weight) in target_to_weight {
-                self.add_edge_no_cycle_check(node_index, target, weight);
-            }
+        for (target, weight) in outgoing_edges {
+            self.add_edge_no_cycle_check(node_index, target, weight);
         }
 
         Ok(node_index.index())
