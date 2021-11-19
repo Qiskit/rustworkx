@@ -2294,7 +2294,8 @@ impl PyDiGraph {
     ///     ``to_replace`` have an edge to the same target node.
     ///     The callable takes in two edge weight/data objects and returns
     ///     a single edge weight/data object to be used as the combined
-    ///     edge's weight/data.
+    ///     edge's weight/data. If not provided, one of the weights is
+    ///     chosen arbitrarily based on internal iteration order.
     /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     substitution would introduce cycle(s).
