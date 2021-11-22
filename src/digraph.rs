@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-
-
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -22,8 +20,8 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexSet;
 use indexmap::map::Entry::{Occupied, Vacant};
+use indexmap::IndexSet;
 
 use retworkx_core::dictmap::*;
 
@@ -55,8 +53,8 @@ use super::iterators::{
 };
 use super::{
     find_node_by_weight, merge_duplicates, weight_callable, DAGHasCycle,
-    DAGWouldCycle, IsNan, NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved,
-    StablePyGraph,
+    DAGWouldCycle, IsNan, NoEdgeBetweenNodes, NoSuitableNeighbors,
+    NodesRemoved, StablePyGraph,
 };
 
 use super::dag_algo::is_directed_acyclic_graph;
@@ -2400,8 +2398,7 @@ impl PyDiGraph {
         // to that function, even if this is a multigraph. If unspecified,
         // defer parallel edge handling to `add_edge_no_cycle_check`.
         if let Some(merge_fn) = weight_combo_fn {
-            let f = |w1 :&Py<_>, w2: &Py<_>|
-                merge_fn.call1(py, (w1, w2));
+            let f = |w1: &Py<_>, w2: &Py<_>| merge_fn.call1(py, (w1, w2));
 
             incoming_edges = merge_duplicates(incoming_edges, f)?;
             outgoing_edges = merge_duplicates(outgoing_edges, f)?;
