@@ -2316,7 +2316,7 @@ impl PyDiGraph {
         check_cycle: Option<bool>,
         weight_combo_fn: Option<PyObject>,
     ) -> PyResult<usize> {
-        let can_contract = |nodes: &IndexSet<NodeIndex>| {
+        let can_contract = |nodes: &IndexSet<NodeIndex, ahash::RandomState>| {
             // Start with successors of `nodes` that aren't in `nodes` itself.
             let visit_next: Vec<NodeIndex> = nodes
                 .iter()
@@ -2344,7 +2344,7 @@ impl PyDiGraph {
             true
         };
 
-        let mut indices_to_remove: IndexSet<NodeIndex> =
+        let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
             to_replace.into_iter().map(NodeIndex::new).collect();
 
         if check_cycle.unwrap_or(self.check_cycle)
