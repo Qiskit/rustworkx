@@ -54,8 +54,9 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    find_node_by_weight, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan,
-    NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved, StablePyGraph,
+    find_node_by_weight, merge_duplicates, weight_callable, DAGHasCycle,
+    DAGWouldCycle, IsNan, NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved,
+    StablePyGraph,
 };
 
 use super::dag_algo::is_directed_acyclic_graph;
@@ -2399,24 +2400,11 @@ impl PyDiGraph {
         // to that function, even if this is a multigraph. If unspecified,
         // defer parallel edge handling to `add_edge_no_cycle_check`.
         if let Some(merge_fn) = weight_combo_fn {
-            let merge_parallel_edges = |edges| -> PyResult<_> {
-                let mut node_to_weight = DictMap::new();
-                for (node, weight) in edges {
-                    match node_to_weight.entry(node) {
-                        Occupied(entry) => {
-                            *entry.into_mut() = merge_fn
-                                .call1(py, (weight, entry.get()))?;
-                        }
-                        Vacant(entry) => {
-                            entry.insert(weight);
-                        }
-                    }
-                }
-                Ok(node_to_weight.into_iter().collect::<Vec<_>>())
-            };
+            let f = |w1 :&Py<_>, w2: &Py<_>|
+                merge_fn.call1(py, (w1, w2));
 
-            incoming_edges = merge_parallel_edges(incoming_edges)?;
-            outgoing_edges = merge_parallel_edges(outgoing_edges)?;
+            incoming_edges = merge_duplicates(incoming_edges, f)?;
+            outgoing_edges = merge_duplicates(outgoing_edges, f)?;
         }
 
         for (source, weight) in incoming_edges {
