@@ -58,6 +58,7 @@ Traversal
    retworkx.dfs_edges
    retworkx.bfs_successors
    retworkx.bfs_search
+   retworkx.dijkstra_search
    retworkx.topological_sort
    retworkx.lexicographical_topological_sort
    retworkx.descendants
@@ -65,6 +66,7 @@ Traversal
    retworkx.collect_runs
    retworkx.collect_bicolor_runs
    retworkx.visit.BFSVisitor
+   retworkx.visit.DijkstraVisitor
 
 .. _dag-algorithms:
 
@@ -257,6 +259,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_betweenness_centrality
    retworkx.digraph_unweighted_average_shortest_path_length
    retworkx.digraph_bfs_search
+   retworkx.digraph_dijkstra_search
 
 .. _api-functions-pygraph:
 
@@ -300,6 +303,7 @@ typed API based on the data type.
    retworkx.graph_betweenness_centrality
    retworkx.graph_unweighted_average_shortest_path_length
    retworkx.graph_bfs_search
+   retworkx.graph_dijkstra_search
 
 Exceptions
 ==========

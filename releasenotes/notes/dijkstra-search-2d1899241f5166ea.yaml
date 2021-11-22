@@ -1,0 +1,36 @@
+---
+features:
+  - |
+    Added a new :func:`~retworkx.dijkstra_search` (and it's per type variants
+    :func:`~retworkx.graph_dijkstra_search` and :func:`~retworkx.digraph_dijkstra_search`)
+    that traverses the graph using dijkstra algorithm and emits events at specified
+    points. The events are handled by a visitor object that subclasses
+    :class:`~retworkx.visit.DijkstraVisitor` through the appropriate callback functions.
+    For example:
+
+    .. jupyter-execute::
+  
+      import retworkx
+      from retworkx.visit import DijkstraVisitor
+
+
+      class DijkstraTreeEdgesRecorder(retworkx.visit.DijkstraVisitor):
+
+          def __init__(self):
+              self.edges = []
+              self.parents = dict()
+
+          def discover_vertex(self, v, _):
+              u = self.parents.get(v, None)
+              if u is not None:
+                  self.edges.append((u, v))
+
+          def edge_relaxed(self, edge):
+              u, v, _ = edge
+              self.parents[v] = u
+
+      graph = retworkx.PyGraph()
+      graph.extend_from_weighted_edge_list([(1, 3, 1), (0, 1, 10), (2, 1, 1), (0, 2, 1)])
+      vis = DijkstraTreeEdgesRecorder()
+      retworkx.graph_dijkstra_search(self.graph, [0], float, vis)
+      print('Tree edges:', vis.edges)

@@ -14,6 +14,8 @@
 
 mod bfs_visit;
 mod dfs_edges;
+mod dijkstra_visit;
 
 pub use bfs_visit::{breadth_first_search, BfsEvent};
 pub use dfs_edges::dfs_edges;
+pub use dijkstra_visit::{dijkstra_search, DijkstraEvent};
