@@ -10,9 +10,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+
+
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::collections::btree_map::Entry::{Occupied,Vacant};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
@@ -2312,7 +2316,7 @@ impl PyDiGraph {
         check_cycle: Option<bool>,
         weight_combo_fn: Option<PyObject>,
     ) -> PyResult<usize> {
-        let can_contract = |nodes: &HashSet<NodeIndex>| {
+        let can_contract = |nodes: &BTreeSet<NodeIndex>| {
             // Start with successors of `nodes` that aren't in `nodes` itself.
             let visit_next: Vec<NodeIndex> = nodes
                 .iter()
@@ -2340,8 +2344,8 @@ impl PyDiGraph {
             true
         };
 
-        let mut indices_to_remove: HashSet<NodeIndex> =
-            to_replace.iter().map(|&n| NodeIndex::new(n)).collect();
+        let mut indices_to_remove: BTreeSet<NodeIndex> =
+            to_replace.into_iter().map(|n| NodeIndex::new(n)).collect();
 
         if check_cycle.unwrap_or(self.check_cycle)
             && !can_contract(&indices_to_remove)
@@ -2393,27 +2397,24 @@ impl PyDiGraph {
         // to that function, even if this is a multigraph. If unspecified,
         // defer parallel edge handling to `add_edge_no_cycle_check`.
         if let Some(merge_fn) = weight_combo_fn {
-            macro_rules! merge_parallel_edges {
-                ($edges:ident) => {{
-                    let mut node_to_weight = HashMap::new();
-                    for (node, weight) in $edges {
-                        match node_to_weight.remove(&node) {
-                            Some(existing_weight) => {
-                                let combined_weight = merge_fn
-                                    .call1(py, (weight, existing_weight))?;
-                                node_to_weight.insert(node, combined_weight);
-                            }
-                            None => {
-                                node_to_weight.insert(node, weight);
-                            }
+            let merge_parallel_edges = |edges| -> PyResult<_> {
+                let mut node_to_weight = BTreeMap::new();
+                for (node, weight) in edges {
+                    match node_to_weight.entry(node) {
+                        Occupied(entry) => {
+                            *entry.into_mut() = merge_fn
+                                .call1(py, (weight, entry.get()))?;
+                        }
+                        Vacant(entry) => {
+                            entry.insert(weight);
                         }
                     }
-                    node_to_weight.into_iter().collect::<Vec<_>>()
-                }};
-            }
+                }
+                Ok(node_to_weight.into_iter().collect::<Vec<_>>())
+            };
 
-            incoming_edges = merge_parallel_edges!(incoming_edges);
-            outgoing_edges = merge_parallel_edges!(outgoing_edges);
+            incoming_edges = merge_parallel_edges(incoming_edges)?;
+            outgoing_edges = merge_parallel_edges(outgoing_edges)?;
         }
 
         for (source, weight) in incoming_edges {
