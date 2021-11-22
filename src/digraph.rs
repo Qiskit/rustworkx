@@ -2345,7 +2345,7 @@ impl PyDiGraph {
         };
 
         let mut indices_to_remove: IndexSet<NodeIndex> =
-            to_replace.into_iter().map(|n| NodeIndex::new(n)).collect();
+            to_replace.into_iter().map(NodeIndex::new).collect();
 
         if check_cycle.unwrap_or(self.check_cycle)
             && !can_contract(&indices_to_remove)
