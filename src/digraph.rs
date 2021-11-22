@@ -15,14 +15,16 @@
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
-use std::collections::BTreeSet;
-use std::collections::btree_map::Entry::{Occupied,Vacant};
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
+use indexmap::map::Entry::{Occupied, Vacant};
+
 use retworkx_core::dictmap::*;
 
 use pyo3::class::PyMappingProtocol;
@@ -2316,7 +2318,7 @@ impl PyDiGraph {
         check_cycle: Option<bool>,
         weight_combo_fn: Option<PyObject>,
     ) -> PyResult<usize> {
-        let can_contract = |nodes: &BTreeSet<NodeIndex>| {
+        let can_contract = |nodes: &IndexSet<NodeIndex>| {
             // Start with successors of `nodes` that aren't in `nodes` itself.
             let visit_next: Vec<NodeIndex> = nodes
                 .iter()
@@ -2344,7 +2346,7 @@ impl PyDiGraph {
             true
         };
 
-        let mut indices_to_remove: BTreeSet<NodeIndex> =
+        let mut indices_to_remove: IndexSet<NodeIndex> =
             to_replace.into_iter().map(|n| NodeIndex::new(n)).collect();
 
         if check_cycle.unwrap_or(self.check_cycle)
@@ -2398,7 +2400,7 @@ impl PyDiGraph {
         // defer parallel edge handling to `add_edge_no_cycle_check`.
         if let Some(merge_fn) = weight_combo_fn {
             let merge_parallel_edges = |edges| -> PyResult<_> {
-                let mut node_to_weight = BTreeMap::new();
+                let mut node_to_weight = DictMap::new();
                 for (node, weight) in edges {
                     match node_to_weight.entry(node) {
                         Occupied(entry) => {
