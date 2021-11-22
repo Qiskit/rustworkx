@@ -1757,7 +1757,6 @@ def cartesian_product(
             (0, 0): 0,
             (0, 1): 1,
         }
-
     :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :rtype: :class:`~retworkx.ProductNodeMap`
     """
