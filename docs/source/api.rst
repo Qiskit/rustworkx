@@ -57,12 +57,14 @@ Traversal
 
    retworkx.dfs_edges
    retworkx.bfs_successors
+   retworkx.bfs_search
    retworkx.topological_sort
    retworkx.lexicographical_topological_sort
    retworkx.descendants
    retworkx.ancestors
    retworkx.collect_runs
    retworkx.collect_bicolor_runs
+   retworkx.visit.BFSVisitor
 
 .. _dag-algorithms:
 
@@ -254,6 +256,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_num_shortest_paths_unweighted
    retworkx.digraph_betweenness_centrality
    retworkx.digraph_unweighted_average_shortest_path_length
+   retworkx.digraph_bfs_search
 
 .. _api-functions-pygraph:
 
@@ -296,6 +299,7 @@ typed API based on the data type.
    retworkx.graph_num_shortest_paths_unweighted
    retworkx.graph_betweenness_centrality
    retworkx.graph_unweighted_average_shortest_path_length
+   retworkx.graph_bfs_search
 
 Exceptions
 ==========
@@ -310,6 +314,8 @@ Exceptions
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph
+   retworkx.visit.StopSearch
+   retworkx.visit.PruneSearch
 
 Custom Return Types
 ===================
