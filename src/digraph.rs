@@ -20,7 +20,6 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::map::Entry::{Occupied, Vacant};
 use indexmap::IndexSet;
 
 use retworkx_core::dictmap::*;
