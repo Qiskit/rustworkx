@@ -2308,7 +2308,7 @@ impl PyDiGraph {
     #[pyo3(
         text_signature = "(self, to_replace, obj, /, check_cycle=None, weight_combo_fn=None)"
     )]
-    fn substitute_nodes_with_node(
+    pub fn substitute_nodes_with_node(
         &mut self,
         py: Python,
         to_replace: Vec<usize>,
