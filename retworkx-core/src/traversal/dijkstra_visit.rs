@@ -162,8 +162,8 @@ pub enum DijkstraEvent<N, E, K> {
 /// dijkstra_search(
 ///     &gr,
 ///     Some(start),
-///     |edge| -> Result<usize, ()> { 
-///         Ok(1) 
+///     |edge| -> Result<usize, ()> {
+///         Ok(1)
 ///     },
 ///     |event| {
 ///         match event {
