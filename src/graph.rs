@@ -1503,7 +1503,7 @@ impl PyGraph {
         obj: PyObject,
         weight_combo_fn: Option<PyObject>,
     ) -> PyResult<usize> {
-        let mut indices_to_remove: IndexSet<NodeIndex> =
+        let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
             to_replace.into_iter().map(NodeIndex::new).collect();
 
         // Create new node.
