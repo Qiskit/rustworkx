@@ -17,13 +17,16 @@
 // to be use for the input functions for edge_cost and return any exceptions
 // raised in Python instead of panicking
 
+use std::collections::BinaryHeap;
 use std::hash::Hash;
 
+use indexmap::map::Entry::{Occupied, Vacant};
+
 use petgraph::algo::Measure;
-use petgraph::visit::{Control, IntoEdges, Visitable};
+use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
 
 use crate::dictmap::*;
-use crate::traversal::{dijkstra_search, DijkstraEvent};
+use crate::min_scored::MinScored;
 
 /// Dijkstra's shortest path algorithm.
 ///
@@ -99,7 +102,7 @@ pub fn dijkstra<G, F, K, E>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
-    edge_cost: F,
+    mut edge_cost: F,
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
 ) -> Result<DictMap<G::NodeId, K>, E>
 where
@@ -108,31 +111,63 @@ where
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
+    let mut visited = graph.visit_map();
     let mut scores = DictMap::new();
-    if let Some(ref mut path) = path {
-        path.insert(start, vec![start]);
+    let mut visit_next = BinaryHeap::new();
+    let zero_score = K::default();
+    scores.insert(start, zero_score);
+    visit_next.push(MinScored(zero_score, start));
+    if path.is_some() {
+        path.as_mut().unwrap().insert(start, vec![start]);
     }
-
-    dijkstra_search(graph, Some(start), edge_cost, |event| {
-        match event {
-            DijkstraEvent::Discover(node, score) => {
-                scores.insert(node, score);
-                if goal.as_ref() == Some(&node) {
-                    return Control::Break(());
-                }
-            }
-            DijkstraEvent::EdgeRelaxed(node, next, _) => {
-                if let Some(ref mut path) = path {
-                    let mut node_path = path[&node].clone();
-                    node_path.push(next);
-                    path.insert(next, node_path);
-                }
-            }
-            _ => {}
+    while let Some(MinScored(node_score, node)) = visit_next.pop() {
+        if visited.is_visited(&node) {
+            continue;
         }
-
-        Control::Continue
-    })?;
-
+        if goal.as_ref() == Some(&node) {
+            break;
+        }
+        for edge in graph.edges(node) {
+            let next = edge.target();
+            if visited.is_visited(&next) {
+                continue;
+            }
+            let cost = edge_cost(edge)?;
+            let next_score = node_score + cost;
+            match scores.entry(next) {
+                Occupied(ent) => {
+                    if next_score < *ent.get() {
+                        *ent.into_mut() = next_score;
+                        visit_next.push(MinScored(next_score, next));
+                        if path.is_some() {
+                            let mut node_path = path
+                                .as_mut()
+                                .unwrap()
+                                .get(&node)
+                                .unwrap()
+                                .clone();
+                            node_path.push(next);
+                            path.as_mut().unwrap().entry(next).and_modify(
+                                |new_vec| {
+                                    *new_vec = node_path;
+                                },
+                            );
+                        }
+                    }
+                }
+                Vacant(ent) => {
+                    ent.insert(next_score);
+                    visit_next.push(MinScored(next_score, next));
+                    if path.is_some() {
+                        let mut node_path =
+                            path.as_mut().unwrap().get(&node).unwrap().clone();
+                        node_path.push(next);
+                        path.as_mut().unwrap().entry(next).or_insert(node_path);
+                    }
+                }
+            }
+        }
+        visited.visit(node);
+    }
     Ok(scores)
 }
