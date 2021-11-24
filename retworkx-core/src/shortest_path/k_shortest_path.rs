@@ -119,10 +119,11 @@ where
         }
     }
 
-    Ok(graph
-        .node_identifiers()
-        .filter_map(|node_id| {
-            scores[graph.to_index(node_id)].map(|score| (node_id, score))
+    Ok(scores
+        .into_iter()
+        .enumerate()
+        .filter_map(|(node, score)| {
+            score.map(|val| (graph.from_index(node), val))
         })
         .collect())
 }
