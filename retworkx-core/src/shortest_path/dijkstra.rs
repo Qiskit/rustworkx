@@ -24,7 +24,9 @@ use hashbrown::hash_map::Entry::{Occupied, Vacant};
 use hashbrown::HashMap;
 
 use petgraph::algo::Measure;
-use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
+use petgraph::visit::{
+    EdgeRef, IntoEdges, IntoNodeIdentifiers, VisitMap, Visitable,
+};
 
 use crate::dictmap::*;
 use crate::min_scored::MinScored;
@@ -107,7 +109,7 @@ pub fn dijkstra<G, F, K, E>(
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
 ) -> Result<DictMap<G::NodeId, K>, E>
 where
-    G: IntoEdges + Visitable,
+    G: IntoEdges + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash + Ord,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
@@ -171,10 +173,22 @@ where
         visited.visit(node);
     }
 
-    let mut sorted_scores: DictMap<G::NodeId, K> =
-        scores.iter().map(|(key, val)| (*key, *val)).collect();
-
-    sorted_scores.sort_keys();
+    let sorted_scores: DictMap<G::NodeId, K> = match goal {
+        Some(_) => {
+            // If there is no goal, the output may not be dense so we manually sort it
+            let mut temp: DictMap<G::NodeId, K> =
+                scores.iter().map(|(key, val)| (*key, *val)).collect();
+            temp.sort_keys();
+            temp
+        }
+        None => graph
+            .node_identifiers()
+            .filter_map(|node_id| match scores.entry(node_id) {
+                Occupied(ent) => Some((node_id, *ent.get())),
+                _ => None,
+            })
+            .collect(),
+    };
 
     Ok(sorted_scores)
 }
