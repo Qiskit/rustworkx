@@ -85,21 +85,19 @@ fn cartesian_product<Ty: EdgeType>(
 /// :param PyGraph second: The second undirected graph object
 ///
 /// :returns: A new PyGraph object that is the cartesian product of ``first``
-///     and ``second``.
-///     It's worth noting the weight/data payload objects are
+///     and ``second``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
-///     And a Read-Only dictionary of the product of nodes. The keys are a tuple where
-///     the first element is the node of the first graph and the second element is the
-///     node of the second graph, and the values are the map of those elements in the
-///     product graph. For example:
+///     A read-only dictionary of the product of nodes is also returned. The keys
+///     are a tuple where the first element is a node of the first graph and the
+///     second element is a node of the second graph, and the values are the map
+///     of those elements to node indices in the product graph. For example::
 ///     
-///     {
-///         (0, 0): 0,
-///         (0, 1): 1,
-///     }
+///         {
+///             (0, 0): 0,
+///             (0, 1): 1,
+///         }
 ///
-/// :rtype: PyGraph
-/// :rtype: ProductNodeMap
+/// :rtype: Tuple[:class:`~retworkx.PyGraph`, :class:`~retworkx.ProductNodeMap`]
 ///
 /// .. jupyter-execute::
 ///
@@ -137,21 +135,19 @@ fn graph_cartesian_product(
 /// :param PyDiGraph second: The second undirected graph object
 ///
 /// :returns: A new PyDiGraph object that is the cartesian product of ``first``
-///     and ``second``.
-///     It's worth noting the weight/data payload objects are
+///     and ``second``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
-///     And a Read-Only dictionary of the product of nodes. The keys are a tuple where
-///     the first element is the node of the first graph and the second element is the
-///     node of the second graph, and the values are the map of those elements in the
-///     product graph. For example:
+///     A read-only dictionary of the product of nodes is also returned. The keys
+///     are a tuple where the first element is a node of the first graph and the
+///     second element is a node of the second graph, and the values are the map
+///     of those elements to node indices in the product graph. For example::
 ///     
-///     {
-///         (0, 0): 0,
-///         (0, 1): 1,
-///     }
+///         {
+///             (0, 0): 0,
+///             (0, 1): 1,
+///         }
 ///
-/// :rtype: PyDiGraph
-/// :rtype: ProductNodeMap
+/// :rtype: Tuple[:class:`~retworkx.PyDiGraph`, :class:`~retworkx.ProductNodeMap`]
 ///
 /// .. jupyter-execute::
 ///

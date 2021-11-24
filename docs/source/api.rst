@@ -150,6 +150,7 @@ Other Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.union
    retworkx.metric_closure
+   retworkx.cartesian_product
 
 Generators
 ==========

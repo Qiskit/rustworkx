@@ -1749,17 +1749,18 @@ def cartesian_product(
     :returns: A new graph object that is the union of ``second`` and
         ``first``. It's worth noting the weight/data payload objects are
         passed by reference from ``first`` and ``second`` to this new object.
-        And a Read-Only dictionary of the product of nodes. The keys are a tuple where
-        the first element is the node of the first graph and the second element is the
-        node of the second graph, and the values are the map of those elements in the
-        product graph. For example::
+        A read-only dictionary of the product of nodes is also returned. The keys
+        are a tuple where the first element is a node of the first graph and the
+        second element is a node of the second graph, and the values are the map
+        of those elements to node indices in the product graph. For example::
 
-        {
-            (0, 0): 0,
-            (0, 1): 1,
-        }
-    :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :rtype: :class:`~retworkx.ProductNodeMap`
+            {
+                (0, 0): 0,
+                (0, 1): 1,
+            }
+
+    :rtype: Tuple[:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`,
+        :class:`~retworkx.ProductNodeMap`]
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
