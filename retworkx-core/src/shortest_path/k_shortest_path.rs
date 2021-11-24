@@ -88,7 +88,7 @@ pub fn k_shortest_path<G, F, E, K>(
 ) -> Result<DictMap<G::NodeId, K>, E>
 where
     G: IntoEdges + Visitable + NodeCount + NodeIndexable + IntoNodeIdentifiers,
-    G::NodeId: Eq + Hash + Ord,
+    G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
