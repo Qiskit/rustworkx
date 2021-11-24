@@ -20,7 +20,8 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use indexmap::map::Entry::{Occupied, Vacant};
+use hashbrown::hash_map::Entry::{Occupied, Vacant};
+use hashbrown::HashMap;
 
 use petgraph::algo::Measure;
 use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
@@ -107,12 +108,12 @@ pub fn dijkstra<G, F, K, E>(
 ) -> Result<DictMap<G::NodeId, K>, E>
 where
     G: IntoEdges + Visitable,
-    G::NodeId: Eq + Hash,
+    G::NodeId: Eq + Hash + Ord,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();
-    let mut scores = DictMap::new();
+    let mut scores = HashMap::new();
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
     scores.insert(start, zero_score);
@@ -169,5 +170,11 @@ where
         }
         visited.visit(node);
     }
-    Ok(scores)
+
+    let mut sorted_scores: DictMap<G::NodeId, K> =
+        scores.iter().map(|(key, val)| (*key, *val)).collect();
+
+    sorted_scores.sort_keys();
+
+    Ok(sorted_scores)
 }

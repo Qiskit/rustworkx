@@ -20,6 +20,8 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
+use hashbrown::HashMap;
+
 use petgraph::algo::Measure;
 use petgraph::visit::{
     EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
@@ -84,12 +86,12 @@ pub fn k_shortest_path<G, F, E, K>(
 ) -> Result<DictMap<G::NodeId, K>, E>
 where
     G: IntoEdges + Visitable + NodeCount + NodeIndexable,
-    G::NodeId: Eq + Hash,
+    G::NodeId: Eq + Hash + Ord,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_bound()];
-    let mut scores = DictMap::with_capacity(graph.node_count());
+    let mut scores = HashMap::with_capacity(graph.node_count());
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
 
@@ -117,5 +119,11 @@ where
                 .push(MinScored(node_score + edge_cost(edge)?, edge.target()));
         }
     }
-    Ok(scores)
+
+    let mut sorted_scores: DictMap<G::NodeId, K> =
+        scores.iter().map(|(key, val)| (*key, *val)).collect();
+
+    sorted_scores.sort_keys();
+
+    Ok(sorted_scores)
 }
