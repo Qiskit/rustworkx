@@ -121,9 +121,8 @@ where
 
     Ok(graph
         .node_identifiers()
-        .filter_map(|node_id| match scores[graph.to_index(node_id)] {
-            Some(score) => Some((node_id, score)),
-            None => None,
+        .filter_map(|node_id| {
+            scores[graph.to_index(node_id)].map(|score| (node_id, score))
         })
         .collect())
 }
