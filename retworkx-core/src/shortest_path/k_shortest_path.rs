@@ -22,7 +22,8 @@ use std::hash::Hash;
 
 use petgraph::algo::Measure;
 use petgraph::visit::{
-    EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
+    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable,
+    Visitable,
 };
 
 use crate::dictmap::*;
@@ -83,13 +84,13 @@ pub fn k_shortest_path<G, F, E, K>(
     mut edge_cost: F,
 ) -> Result<DictMap<G::NodeId, K>, E>
 where
-    G: IntoEdges + Visitable + NodeCount + NodeIndexable,
+    G: IntoEdges + Visitable + NodeCount + NodeIndexable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_bound()];
-    let mut scores = DictMap::with_capacity(graph.node_count());
+    let mut scores: Vec<Option<K>> = vec![None; graph.node_bound()];
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
 
@@ -104,7 +105,7 @@ where
         }
 
         if current_counter == k {
-            scores.insert(node, node_score);
+            scores[graph.to_index(node)] = Some(node_score);
         }
 
         //Already reached goal k times
@@ -117,5 +118,12 @@ where
                 .push(MinScored(node_score + edge_cost(edge)?, edge.target()));
         }
     }
-    Ok(scores)
+
+    Ok(graph
+        .node_identifiers()
+        .filter_map(|node_id| match scores[graph.to_index(node_id)] {
+            Some(score) => Some((node_id, score)),
+            None => None,
+        })
+        .collect())
 }
