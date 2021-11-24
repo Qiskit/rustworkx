@@ -20,13 +20,9 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use hashbrown::hash_map::Entry::Occupied;
-use hashbrown::HashMap;
-
 use petgraph::algo::Measure;
 use petgraph::visit::{
-    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable,
-    Visitable,
+    EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
 };
 
 use crate::dictmap::*;
@@ -87,13 +83,13 @@ pub fn k_shortest_path<G, F, E, K>(
     mut edge_cost: F,
 ) -> Result<DictMap<G::NodeId, K>, E>
 where
-    G: IntoEdges + Visitable + NodeCount + NodeIndexable + IntoNodeIdentifiers,
+    G: IntoEdges + Visitable + NodeCount + NodeIndexable,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_bound()];
-    let mut scores = HashMap::with_capacity(graph.node_count());
+    let mut scores = DictMap::with_capacity(graph.node_count());
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
 
@@ -121,14 +117,5 @@ where
                 .push(MinScored(node_score + edge_cost(edge)?, edge.target()));
         }
     }
-
-    let sorted_scores: DictMap<G::NodeId, K> = graph
-        .node_identifiers()
-        .filter_map(|node_id| match scores.entry(node_id) {
-            Occupied(ent) => Some((node_id, *ent.get())),
-            _ => None,
-        })
-        .collect();
-
-    Ok(sorted_scores)
+    Ok(scores)
 }

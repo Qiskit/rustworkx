@@ -20,12 +20,9 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use hashbrown::hash_map::Entry::{Occupied, Vacant};
-use hashbrown::HashMap;
-
 use petgraph::algo::Measure;
 use petgraph::visit::{
-    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount, VisitMap, Visitable,
+    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeIndexable, VisitMap, Visitable,
 };
 
 use crate::dictmap::*;
@@ -109,16 +106,16 @@ pub fn dijkstra<G, F, K, E>(
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
 ) -> Result<DictMap<G::NodeId, K>, E>
 where
-    G: IntoEdges + Visitable + IntoNodeIdentifiers + NodeCount,
-    G::NodeId: Eq + Hash + Ord,
+    G: IntoEdges + Visitable + NodeIndexable + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
     let mut visited = graph.visit_map();
-    let mut scores = HashMap::new();
+    let mut scores: Vec<Option<K>> = vec![None; graph.node_bound()];
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
-    scores.insert(start, zero_score);
+    scores[graph.to_index(start)] = Some(zero_score);
     visit_next.push(MinScored(zero_score, start));
     if path.is_some() {
         path.as_mut().unwrap().insert(start, vec![start]);
@@ -137,10 +134,11 @@ where
             }
             let cost = edge_cost(edge)?;
             let next_score = node_score + cost;
-            match scores.entry(next) {
-                Occupied(ent) => {
-                    if next_score < *ent.get() {
-                        *ent.into_mut() = next_score;
+            let node_index = graph.to_index(node);
+            match scores[node_index] {
+                Some(current_score) => {
+                    if next_score < current_score {
+                        scores[node_index] = Some(next_score);
                         visit_next.push(MinScored(next_score, next));
                         if path.is_some() {
                             let mut node_path = path
@@ -158,8 +156,8 @@ where
                         }
                     }
                 }
-                Vacant(ent) => {
-                    ent.insert(next_score);
+                None => {
+                    scores[node_index] = Some(next_score);
                     visit_next.push(MinScored(next_score, next));
                     if path.is_some() {
                         let mut node_path =
@@ -173,23 +171,11 @@ where
         visited.visit(node);
     }
 
-    let sorted_scores: DictMap<G::NodeId, K> =
-        match scores.len() < graph.node_count() / 10 {
-            true => {
-                // If the output is not dense, we manually sort it
-                let mut temp: DictMap<G::NodeId, K> =
-                    scores.iter().map(|(key, val)| (*key, *val)).collect();
-                temp.sort_keys();
-                temp
-            }
-            false => graph
-                .node_identifiers()
-                .filter_map(|node_id| match scores.entry(node_id) {
-                    Occupied(ent) => Some((node_id, *ent.get())),
-                    _ => None,
-                })
-                .collect(),
-        };
-
-    Ok(sorted_scores)
+    Ok(graph
+        .node_identifiers()
+        .filter_map(|node_id| match scores[graph.to_index(node_id)] {
+            Some(score) => Some((node_id, score)),
+            None => None,
+        })
+        .collect())
 }
