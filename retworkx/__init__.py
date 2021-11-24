@@ -1740,7 +1740,8 @@ def cartesian_product(
     first,
     second,
 ):
-    """
+    """Return a new graph by forming the cartesian product
+    from two input graph objects
 
     :param first: The first graph object
     :param second: The second graph object
