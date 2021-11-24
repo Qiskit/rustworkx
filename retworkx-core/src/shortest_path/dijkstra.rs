@@ -134,11 +134,11 @@ where
             }
             let cost = edge_cost(edge)?;
             let next_score = node_score + cost;
-            let node_index = graph.to_index(node);
-            match scores[node_index] {
+            let next_index = graph.to_index(next);
+            match scores[next_index] {
                 Some(current_score) => {
                     if next_score < current_score {
-                        scores[node_index] = Some(next_score);
+                        scores[next_index] = Some(next_score);
                         visit_next.push(MinScored(next_score, next));
                         if path.is_some() {
                             let mut node_path = path
@@ -157,7 +157,7 @@ where
                     }
                 }
                 None => {
-                    scores[node_index] = Some(next_score);
+                    scores[next_index] = Some(next_score);
                     visit_next.push(MinScored(next_score, next));
                     if path.is_some() {
                         let mut node_path =
