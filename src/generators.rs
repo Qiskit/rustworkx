@@ -2213,6 +2213,45 @@ pub fn lollipop_graph(
     Ok(graph)
 }
 
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, multigraph=True)"
+)]
+pub fn generalized_petersen_graph(
+    py: Python,
+    n: usize,
+    k: usize,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StablePyGraph::<Undirected>::default();
+
+    let star_nodes: Vec<NodeIndex> =
+        (0..n).map(|_| graph.add_node(py.None())).collect();
+
+    let polygon_nodes: Vec<NodeIndex> =
+        (0..n).map(|_| graph.add_node(py.None())).collect();
+        
+    for i in 0..n {
+        graph.add_edge(star_nodes[i], star_nodes[(i + k) % n], py.None());
+    }
+
+    for i in 0..n {
+        graph.add_edge(polygon_nodes[i], polygon_nodes[(i + 1) % n], py.None());
+    }
+
+    for i in 0..n {
+        graph.add_edge(polygon_nodes[i], star_nodes[i], py.None());
+    }    
+
+    Ok(
+        graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph
+        }
+    )
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2234,5 +2273,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
+    m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
     Ok(())
 }
