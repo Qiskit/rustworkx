@@ -2267,7 +2267,7 @@ pub fn generalized_petersen_graph(
         return Err(PyIndexError::new_err("n must be at least 3"));
     }
 
-    if k <= 0 || 2 * k >= n {
+    if k == 0 || 2 * k >= n {
         return Err(PyIndexError::new_err(
             "k is invalid: it must be positive and less than n/2",
         ));
