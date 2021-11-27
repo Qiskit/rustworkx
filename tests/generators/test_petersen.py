@@ -49,9 +49,9 @@ class TestPetersenGraph(unittest.TestCase):
     def test_petersen_invalid_n_k(self):
         with self.assertRaises(IndexError):
             retworkx.generators.generalized_petersen_graph(2, 1)
-        
+
         with self.assertRaises(IndexError):
             retworkx.generators.generalized_petersen_graph(5, 0)
-        
+
         with self.assertRaises(IndexError):
             retworkx.generators.generalized_petersen_graph(5, 4)
