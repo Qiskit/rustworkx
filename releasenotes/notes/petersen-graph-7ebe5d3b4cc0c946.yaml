@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.generators.generalized_petersen_graph` that
+    adds support for generating generalized Petersen graphs. For example ::
+
+      import retworkx.generators
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.generators.generalized_petersen_graph(5, 2)
+      layout = retworkx.shell_layout(graph, nlist=[[5, 6, 7, 8, 9], [1, 2, 3, 4, 0]])
+      mpl_draw(graph, pos=layout)
