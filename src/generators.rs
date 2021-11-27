@@ -2214,7 +2214,7 @@ pub fn lollipop_graph(
 }
 
 /// Generate a generalized Petersen graph :math:`G(n, k)` with :math:`2n`
-/// nodes and :math:`3n` edges.
+/// nodes and :math:`3n` edges. See Watkins [1]_ for more details.
 ///
 /// .. note::
 ///   
@@ -2239,12 +2239,21 @@ pub fn lollipop_graph(
 ///   from retworkx.visualization import mpl_draw
 ///   
 ///   # Petersen Graph is G(5, 2)
-///   petersen_graph = retworkx.generators.generalized_petersen_graph(5, 2)
-///   mpl_draw(petersen_graph)
+///   graph = retworkx.generators.generalized_petersen_graph(5, 2)
+///   layout = retworkx.shell_layout(graph, nlist=[[5, 6, 7, 8, 9], [1, 2, 3, 4, 0]])
+///   mpl_draw(graph, pos=layout)
 ///   
 ///   # Möbius–Kantor Graph is G(8, 3)
-///   mk_graph = retworkx.generators.generalized_petersen_graph(8, 3)
-///   mpl_draw(mk_graph)
+///   graph = retworkx.generators.generalized_petersen_graph(8, 3)
+///   layout = retworkx.shell_layout(
+///     graph, nlist=[[8, 9, 10, 11, 12, 13, 14, 15], [1, 2, 3, 4, 5, 6, 7, 0]]
+///   )
+///   mpl_draw(graph, pos=layout)
+///
+/// .. [1] Watkins, Mark E.
+///    "A theorem on tait colorings with an application to the generalized Petersen graphs"
+///    Journal of Combinatorial Theory 6 (2), 152–164 (1969).
+///    https://doi.org/10.1016/S0021-9800(69)80116-X
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(/, multigraph=True)")]
