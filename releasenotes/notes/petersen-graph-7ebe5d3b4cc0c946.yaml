@@ -2,7 +2,9 @@
 features:
   - |
     Added a new function, :func:`~retworkx.generators.generalized_petersen_graph` that
-    adds support for generating generalized Petersen graphs. For example ::
+    adds support for generating generalized Petersen graphs. For example:
+
+    .. jupyter-execute::
 
       import retworkx.generators
       from retworkx.visualization import mpl_draw
