@@ -2213,6 +2213,34 @@ pub fn lollipop_graph(
     Ok(graph)
 }
 
+/// Generate a generalized Petersen graph
+///
+/// :param int n: TODO.
+/// :param int k: TODO.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated generalized Petersen graph.
+///
+/// :rtype: PyGraph
+/// :raises TypeError: If either ``n`` or ``k`` are
+///      not valid
+///
+/// .. jupyter-execute::
+///   
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///   
+///   # Petersen Graph is G(5, 2)
+///   petersen_graph = retworkx.generators.generalized_petersen_graph(5, 2)
+///   mpl_draw(petersen_graph)
+///   
+///   # Möbius–Kantor Graph is G(8, 3)
+///   mk_graph = retworkx.generators.generalized_petersen_graph(8, 3)
+///   mpl_draw(mk_graph)
+///
 #[pyfunction(multigraph = true)]
 #[pyo3(
     text_signature = "(/, multigraph=True)"
@@ -2223,6 +2251,15 @@ pub fn generalized_petersen_graph(
     k: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
+
+    if n < 3 {
+        return Err(PyIndexError::new_err("n must be at least 3"));
+    }
+
+    if k <= 0 || 2*k >= n  {
+        return Err(PyIndexError::new_err("k is invalid: it must be positive and less than n/2"));
+    }
+
     let mut graph = StablePyGraph::<Undirected>::default();
 
     let star_nodes: Vec<NodeIndex> =
