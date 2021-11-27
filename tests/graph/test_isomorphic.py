@@ -273,16 +273,23 @@ class TestIsomorphic(unittest.TestCase):
         k ≡ -l (mod n) or kl ≡ ±1 (mod n)
         """
         n = 23
-        upper_bound_k = (n - 1)//2
+        upper_bound_k = (n - 1) // 2
         for k in range(1, upper_bound_k + 1):
             for l in range(k, upper_bound_k + 1):
                 with self.subTest(k=k, l=l):
                     self.assertEqual(
                         retworkx.is_isomorphic(
-                            retworkx.generators.generalized_petersen_graph(n, k),
-                            retworkx.generators.generalized_petersen_graph(n, l),
+                            retworkx.generators.generalized_petersen_graph(
+                                n, k
+                            ),
+                            retworkx.generators.generalized_petersen_graph(
+                                n, l
+                            ),
                         ),
-                        (k == l) or (k == n - l) or (k * l % n == 1) or (k * l % n == n - 1)
+                        (k == l)
+                        or (k == n - l)
+                        or (k * l % n == 1)
+                        or (k * l % n == n - 1),
                     )
 
     def test_isomorphic_parallel_edges(self):

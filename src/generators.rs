@@ -2242,22 +2242,21 @@ pub fn lollipop_graph(
 ///   mpl_draw(mk_graph)
 ///
 #[pyfunction(multigraph = true)]
-#[pyo3(
-    text_signature = "(/, multigraph=True)"
-)]
+#[pyo3(text_signature = "(/, multigraph=True)")]
 pub fn generalized_petersen_graph(
     py: Python,
     n: usize,
     k: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-
     if n < 3 {
         return Err(PyIndexError::new_err("n must be at least 3"));
     }
 
-    if k <= 0 || 2*k >= n  {
-        return Err(PyIndexError::new_err("k is invalid: it must be positive and less than n/2"));
+    if k <= 0 || 2 * k >= n {
+        return Err(PyIndexError::new_err(
+            "k is invalid: it must be positive and less than n/2",
+        ));
     }
 
     let mut graph = StablePyGraph::<Undirected>::default();
@@ -2267,7 +2266,7 @@ pub fn generalized_petersen_graph(
 
     let polygon_nodes: Vec<NodeIndex> =
         (0..n).map(|_| graph.add_node(py.None())).collect();
-        
+
     for i in 0..n {
         graph.add_edge(star_nodes[i], star_nodes[(i + k) % n], py.None());
     }
@@ -2278,15 +2277,13 @@ pub fn generalized_petersen_graph(
 
     for i in 0..n {
         graph.add_edge(polygon_nodes[i], star_nodes[i], py.None());
-    }    
+    }
 
-    Ok(
-        graph::PyGraph {
-            graph,
-            node_removed: false,
-            multigraph
-        }
-    )
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
 }
 
 #[pymodule]
