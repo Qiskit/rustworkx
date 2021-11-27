@@ -2213,10 +2213,15 @@ pub fn lollipop_graph(
     Ok(graph)
 }
 
-/// Generate a generalized Petersen graph
+/// Generate a generalized Petersen graph :math:`G(n, k)` with :math:`2n`
+/// nodes and :math:`3n` edges.
 ///
-/// :param int n: TODO.
-/// :param int k: TODO.
+/// .. note::
+///   
+///   The Petersen graph itself is denoted :math:`G(5, 2)`
+///
+/// :param int n: number of nodes in the internal star and external regular polygon.
+/// :param int k: shift that changes the internal star graph.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
