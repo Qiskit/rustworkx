@@ -2258,7 +2258,7 @@ pub fn lollipop_graph(
 ///    https://doi.org/10.1016/S0021-9800(69)80116-X
 ///
 #[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, multigraph=True)")]
+#[pyo3(text_signature = "(n, k, /, multigraph=True)")]
 pub fn generalized_petersen_graph(
     py: Python,
     n: usize,
