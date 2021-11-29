@@ -17,7 +17,7 @@
 // to allow python callables to be use for the input functions for edge_cost
 // and return any exceptions raised in Python instead of panicking
 
-use std::collections::BinaryHeap;
+use dary_heap::QuaternaryHeap;
 use std::hash::Hash;
 
 use petgraph::algo::Measure;
@@ -91,7 +91,7 @@ where
 {
     let mut counter: Vec<usize> = vec![0; graph.node_bound()];
     let mut scores: Vec<Option<K>> = vec![None; graph.node_bound()];
-    let mut visit_next = BinaryHeap::new();
+    let mut visit_next = QuaternaryHeap::new();
     let zero_score = K::default();
 
     visit_next.push(MinScored(zero_score, start));
