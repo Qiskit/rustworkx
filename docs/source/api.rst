@@ -65,6 +65,7 @@ Traversal
    retworkx.collect_runs
    retworkx.collect_bicolor_runs
    retworkx.visit.BFSVisitor
+   retworkx.TopologicalSorter
 
 .. _dag-algorithms:
 
