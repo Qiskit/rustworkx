@@ -2230,8 +2230,10 @@ pub fn lollipop_graph(
 /// :returns: The generated generalized Petersen graph.
 ///
 /// :rtype: PyGraph
-/// :raises TypeError: If either ``n`` or ``k`` are
+/// :raises IndexError: If either ``n`` or ``k`` are
 ///      not valid
+/// :raises TypeError: If either ``n`` or ``k`` are
+///      not non-negative integers
 ///
 /// .. jupyter-execute::
 ///   
@@ -2275,7 +2277,7 @@ pub fn generalized_petersen_graph(
         ));
     }
 
-    let mut graph = StablePyGraph::<Undirected>::default();
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(2 * n, 3 * n);
 
     let star_nodes: Vec<NodeIndex> =
         (0..n).map(|_| graph.add_node(py.None())).collect();

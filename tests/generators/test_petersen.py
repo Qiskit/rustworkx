@@ -26,7 +26,6 @@ class TestPetersenGraph(unittest.TestCase):
     def test_petersen_graph_edge(self):
         graph = retworkx.generators.generalized_petersen_graph(5, 2)
         edge_list = graph.edge_list()
-        print(edge_list)
         expected_edge_list = [
             (0, 2),
             (1, 3),
