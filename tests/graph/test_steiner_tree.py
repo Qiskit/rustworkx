@@ -180,7 +180,7 @@ class TestSteinerTree(unittest.TestCase):
         self.assertEqual(retworkx.cycle_basis(tree), [])
         expected_edges = [
             (3, 4, 0.5),
-            (4, 5, 0.5),
+            (3, 5, 0.5),
             (3, 6, 0.5),
             (4, 7, 0.5),
             (0, 5, 2),
