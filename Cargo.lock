@@ -82,15 +82,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dary_heap"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "968171662f5edf98e7feae0f809afa446357f4ca514fda80d641ba658da01bf3"
-dependencies = [
- "autocfg",
-]
-
-[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -558,7 +549,6 @@ name = "retworkx-core"
 version = "0.11.0"
 dependencies = [
  "ahash",
- "dary_heap",
  "hashbrown",
  "indexmap",
  "petgraph",

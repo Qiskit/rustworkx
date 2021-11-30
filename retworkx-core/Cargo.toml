@@ -14,7 +14,6 @@ keywords = ["graph"]
 ahash = { version = "0.7.6", default-features = false }
 petgraph = "0.6.0"
 rayon = "1.5"
-dary_heap = "0.2.5"
 
 [dependencies.hashbrown]
 version = "0.11"
