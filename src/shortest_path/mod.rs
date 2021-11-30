@@ -28,7 +28,9 @@ use petgraph::visit::NodeCount;
 use numpy::IntoPyArray;
 
 use retworkx_core::dictmap::*;
-use retworkx_core::shortest_path::{astar, dijkstra, k_shortest_path};
+use retworkx_core::shortest_path::{
+    astar, dijkstra, dijkstra_vector, k_shortest_path,
+};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
@@ -210,22 +212,36 @@ pub fn graph_dijkstra_shortest_path_lengths(
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
-    let res = dijkstra(
+    let res = dijkstra_vector(
         &graph.graph,
         start,
         goal_index,
         |e| edge_cost_callable(e.weight()),
         None,
     )?;
+
+    if let Some(goal_usize) = goal {
+        return Ok(PathLengthMapping {
+            path_lengths: match res[goal_usize] {
+                Some(goal_length) => {
+                    let mut ans = DictMap::new();
+                    ans.insert(goal_usize, goal_length);
+                    ans
+                }
+                None => DictMap::new(),
+            },
+        });
+    }
+
     Ok(PathLengthMapping {
         path_lengths: res
-            .iter()
-            .filter_map(|(k, v)| {
-                let k_int = k.index();
-                if k_int == node || goal.is_some() && goal.unwrap() != k_int {
-                    None
+            .into_iter()
+            .enumerate()
+            .filter_map(|(k_int, opt_v)| {
+                if k_int != node {
+                    opt_v.map(|v| (k_int, v))
                 } else {
-                    Some((k_int, *v))
+                    None
                 }
             })
             .collect(),
@@ -268,22 +284,36 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
-    let res = dijkstra(
+    let res = dijkstra_vector(
         &graph.graph,
         start,
         goal_index,
         |e| edge_cost_callable(e.weight()),
         None,
     )?;
+
+    if let Some(goal_usize) = goal {
+        return Ok(PathLengthMapping {
+            path_lengths: match res[goal_usize] {
+                Some(goal_length) => {
+                    let mut ans = DictMap::new();
+                    ans.insert(goal_usize, goal_length);
+                    ans
+                }
+                None => DictMap::new(),
+            },
+        });
+    }
+
     Ok(PathLengthMapping {
         path_lengths: res
-            .iter()
-            .filter_map(|(k, v)| {
-                let k_int = k.index();
-                if k_int == node || goal.is_some() && goal.unwrap() != k_int {
-                    None
+            .into_iter()
+            .enumerate()
+            .filter_map(|(k_int, opt_v)| {
+                if k_int != node {
+                    opt_v.map(|v| (k_int, v))
                 } else {
-                    Some((k_int, *v))
+                    None
                 }
             })
             .collect(),

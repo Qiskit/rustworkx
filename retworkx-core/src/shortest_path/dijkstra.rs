@@ -102,9 +102,34 @@ pub fn dijkstra<G, F, K, E>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
+    edge_cost: F,
+    path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
+) -> Result<DictMap<G::NodeId, K>, E>
+where
+    G: IntoEdges + Visitable + NodeIndexable + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+    F: FnMut(G::EdgeRef) -> Result<K, E>,
+    K: Measure + Copy,
+{
+    let scores: Vec<Option<K>> =
+        dijkstra_vector(graph, start, goal, edge_cost, path)?;
+
+    Ok(scores
+        .into_iter()
+        .enumerate()
+        .filter_map(|(node, score)| {
+            score.map(|val| (graph.from_index(node), val))
+        })
+        .collect())
+}
+
+pub fn dijkstra_vector<G, F, K, E>(
+    graph: G,
+    start: G::NodeId,
+    goal: Option<G::NodeId>,
     mut edge_cost: F,
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
-) -> Result<DictMap<G::NodeId, K>, E>
+) -> Result<Vec<Option<K>>, E>
 where
     G: IntoEdges + Visitable + NodeIndexable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
@@ -171,11 +196,5 @@ where
         visited.visit(node);
     }
 
-    Ok(scores
-        .into_iter()
-        .enumerate()
-        .filter_map(|(node, score)| {
-            score.map(|val| (graph.from_index(node), val))
-        })
-        .collect())
+    Ok(scores)
 }
