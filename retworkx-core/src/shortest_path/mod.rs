@@ -20,6 +20,5 @@ mod dijkstra;
 mod k_shortest_path;
 
 pub use astar::astar;
-pub use dijkstra::dijkstra;
-pub use dijkstra::dijkstra_vector;
+pub use dijkstra::{dijkstra, dijkstra_vector};
 pub use k_shortest_path::k_shortest_path;
