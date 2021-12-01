@@ -28,9 +28,7 @@ use petgraph::visit::NodeCount;
 use numpy::IntoPyArray;
 
 use retworkx_core::dictmap::*;
-use retworkx_core::shortest_path::{
-    astar, dijkstra, dijkstra_vector, k_shortest_path,
-};
+use retworkx_core::shortest_path::{astar, dijkstra, k_shortest_path};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
@@ -72,13 +70,13 @@ pub fn graph_dijkstra_shortest_paths(
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
         DictMap::with_capacity(graph.node_count());
-    dijkstra(
+    (dijkstra(
         &graph.graph,
         start,
         goal_index,
         |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
         Some(&mut paths),
-    )?;
+    ) as PyResult<DictMap<NodeIndex, f64>>)?;
 
     Ok(PathMapping {
         paths: paths
@@ -137,7 +135,7 @@ pub fn digraph_dijkstra_shortest_paths(
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
         DictMap::with_capacity(graph.node_count());
     if as_undirected {
-        dijkstra(
+        (dijkstra(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
@@ -146,15 +144,15 @@ pub fn digraph_dijkstra_shortest_paths(
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
             Some(&mut paths),
-        )?;
+        ) as PyResult<DictMap<NodeIndex, f64>>)?;
     } else {
-        dijkstra(
+        (dijkstra(
             &graph.graph,
             start,
             goal_index,
             |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
             Some(&mut paths),
-        )?;
+        ) as PyResult<DictMap<NodeIndex, f64>>)?;
     }
     Ok(PathMapping {
         paths: paths
@@ -212,7 +210,7 @@ pub fn graph_dijkstra_shortest_path_lengths(
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
-    let res = dijkstra_vector(
+    let res: Vec<Option<f64>> = dijkstra(
         &graph.graph,
         start,
         goal_index,
@@ -284,7 +282,7 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
-    let res = dijkstra_vector(
+    let res: Vec<Option<f64>> = dijkstra(
         &graph.graph,
         start,
         goal_index,

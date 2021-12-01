@@ -21,12 +21,52 @@ use std::collections::BinaryHeap;
 use std::hash::Hash;
 
 use petgraph::algo::Measure;
-use petgraph::visit::{
-    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeIndexable, VisitMap, Visitable,
-};
+use petgraph::graph::IndexType;
+use petgraph::visit::{EdgeRef, IntoEdges, NodeIndexable, VisitMap, Visitable};
 
 use crate::dictmap::*;
 use crate::min_scored::MinScored;
+
+// Trait for supporting storing
+pub trait DistanceMap<K, V> {
+    fn new_distancemap(num_elements: usize) -> Self;
+    fn get_item(&self, pos: K) -> Option<&V>;
+    fn put_item(&mut self, pos: K, val: V);
+}
+
+impl<K: IndexType, V: Clone> DistanceMap<K, V> for Vec<Option<V>> {
+    #[inline]
+    fn new_distancemap(num_elements: usize) -> Self {
+        vec![None; num_elements]
+    }
+
+    #[inline]
+    fn get_item(&self, pos: K) -> Option<&V> {
+        self[pos.index()].as_ref()
+    }
+
+    #[inline]
+    fn put_item(&mut self, pos: K, val: V) {
+        self[pos.index()] = Some(val);
+    }
+}
+
+impl<K: Eq + Hash, V: Clone> DistanceMap<K, V> for DictMap<K, V> {
+    #[inline]
+    fn new_distancemap(_num_elements: usize) -> Self {
+        DictMap::<K, V>::default()
+    }
+
+    #[inline]
+    fn get_item(&self, pos: K) -> Option<&V> {
+        self.get(&pos)
+    }
+
+    #[inline]
+    fn put_item(&mut self, pos: K, val: V) {
+        self.insert(pos, val);
+    }
+}
 
 /// Dijkstra's shortest path algorithm.
 ///
@@ -98,124 +138,25 @@ use crate::min_scored::MinScored;
 /// assert_eq!(res.unwrap(), expected_res);
 /// // z is not inside res because there is not path from b to z.
 /// ```
-pub fn dijkstra<G, F, K, E>(
-    graph: G,
-    start: G::NodeId,
-    goal: Option<G::NodeId>,
-    edge_cost: F,
-    path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
-) -> Result<DictMap<G::NodeId, K>, E>
-where
-    G: IntoEdges + Visitable + NodeIndexable + IntoNodeIdentifiers,
-    G::NodeId: Eq + Hash,
-    F: FnMut(G::EdgeRef) -> Result<K, E>,
-    K: Measure + Copy,
-{
-    let scores: Vec<Option<K>> =
-        dijkstra_vector(graph, start, goal, edge_cost, path)?;
-
-    Ok(scores
-        .into_iter()
-        .enumerate()
-        .filter_map(|(node, score)| {
-            score.map(|val| (graph.from_index(node), val))
-        })
-        .collect())
-}
-
-/// Dijkstra's shortest path algorithm.
-///
-/// Compute the length of the shortest path from `start` to every reachable
-/// node. This method differs from `dijkstra` because it returns a `Vec`
-/// instead of a DictMap.
-///
-/// The graph should be [`Visitable`] and implement [`IntoEdges`]. The function
-/// `edge_cost` should return the cost for a particular edge, which is used
-/// to compute path costs. Edge costs must be non-negative.
-///
-/// If `goal` is not [`None`], then the algorithm terminates once the `goal` node's
-/// cost is calculated.
-///
-/// If `path` is not [`None`], then the algorithm will mutate the input
-/// [`DictMap`] to insert an entry where the index is the dest node index
-/// the value is a Vec of node indices of the path starting with `start` and
-/// ending at the index.
-///
-/// Returns a [`Vec`] where `Vec[i]` contains `Option<K>`, the value of the shortest path
-/// if it exists.
-///
-/// # Example
-/// ```rust
-/// use retworkx_core::petgraph::Graph;
-/// use retworkx_core::petgraph::prelude::*;
-/// use retworkx_core::dictmap::DictMap;
-/// use retworkx_core::shortest_path::dijkstra_vector;
-/// use retworkx_core::Result;
-/// use std::vec::Vec;
-///
-/// let mut graph : Graph<(),(),Directed> = Graph::new();
-/// let a = graph.add_node(()); // node with no weight
-/// let b = graph.add_node(());
-/// let c = graph.add_node(());
-/// let d = graph.add_node(());
-/// let e = graph.add_node(());
-/// let f = graph.add_node(());
-/// let g = graph.add_node(());
-/// let h = graph.add_node(());
-/// // z will be in another connected component
-/// let z = graph.add_node(());
-///
-/// graph.extend_with_edges(&[
-///     (a, b),
-///     (b, c),
-///     (c, d),
-///     (d, a),
-///     (e, f),
-///     (b, e),
-///     (f, g),
-///     (g, h),
-///     (h, e)
-/// ]);
-/// // a ----> b ----> e ----> f
-/// // ^       |       ^       |
-/// // |       v       |       v
-/// // d <---- c       h <---- g
-///
-/// let expected_res: Vec<Option<usize>> = [
-///      Some(3),
-///      Some(0),
-///      Some(1),
-///      Some(2),
-///      Some(1),
-///      Some(2),
-///      Some(3),
-///      Some(4),
-///      None
-///     ].iter().cloned().collect();
-/// let res: Result<Vec<Option<usize>>> = dijkstra_vector(
-///     &graph, b, None, |_| Ok(1), None
-/// );
-/// assert_eq!(res.unwrap(), expected_res);
-/// // z has path lenght as None because there is not path from b to z.
-/// ```
-pub fn dijkstra_vector<G, F, K, E>(
+pub fn dijkstra<G, F, K, E, S>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
     mut edge_cost: F,
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
-) -> Result<Vec<Option<K>>, E>
+) -> Result<S, E>
 where
-    G: IntoEdges + Visitable + NodeIndexable + IntoNodeIdentifiers,
-    G::NodeId: Eq + Hash,
+    G: IntoEdges + Visitable + NodeIndexable,
+    G::NodeId: Eq + Hash + IndexType,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
+    S: DistanceMap<G::NodeId, K>,
 {
     let mut visited = graph.visit_map();
-    let mut scores: Vec<Option<K>> = vec![None; graph.node_bound()];
+    let mut scores: S = S::new_distancemap(graph.node_bound());
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
-    scores[graph.to_index(start)] = Some(zero_score);
+    scores.put_item(start, zero_score);
     visit_next.push(MinScored(zero_score, start));
     if path.is_some() {
         path.as_mut().unwrap().insert(start, vec![start]);
@@ -234,11 +175,10 @@ where
             }
             let cost = edge_cost(edge)?;
             let next_score = node_score + cost;
-            let next_index = graph.to_index(next);
-            match scores[next_index] {
+            match scores.get_item(next) {
                 Some(current_score) => {
-                    if next_score < current_score {
-                        scores[next_index] = Some(next_score);
+                    if next_score < *current_score {
+                        scores.put_item(next, next_score);
                         visit_next.push(MinScored(next_score, next));
                         if path.is_some() {
                             let mut node_path = path
@@ -257,7 +197,7 @@ where
                     }
                 }
                 None => {
-                    scores[next_index] = Some(next_score);
+                    scores.put_item(next, next_score);
                     visit_next.push(MinScored(next_score, next));
                     if path.is_some() {
                         let mut node_path =
