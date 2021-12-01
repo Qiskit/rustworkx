@@ -176,6 +176,7 @@ Generators
     retworkx.generators.heavy_hex_graph
     retworkx.generators.directed_heavy_hex_graph
     retworkx.generators.lollipop_graph
+    retworkx.generators.generalized_petersen_graph
 
 Random Circuit Functions
 ========================
