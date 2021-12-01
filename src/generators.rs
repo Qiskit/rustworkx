@@ -2213,6 +2213,97 @@ pub fn lollipop_graph(
     Ok(graph)
 }
 
+/// Generate a generalized Petersen graph :math:`G(n, k)` with :math:`2n`
+/// nodes and :math:`3n` edges. See Watkins [1]_ for more details.
+///
+/// .. note::
+///   
+///   The Petersen graph itself is denoted :math:`G(5, 2)`
+///
+/// :param int n: number of nodes in the internal star and external regular polygon.
+/// :param int k: shift that changes the internal star graph.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated generalized Petersen graph.
+///
+/// :rtype: PyGraph
+/// :raises IndexError: If either ``n`` or ``k`` are
+///      not valid
+/// :raises TypeError: If either ``n`` or ``k`` are
+///      not non-negative integers
+///
+/// .. jupyter-execute::
+///   
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///   
+///   # Petersen Graph is G(5, 2)
+///   graph = retworkx.generators.generalized_petersen_graph(5, 2)
+///   layout = retworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
+///   mpl_draw(graph, pos=layout)
+///   
+/// .. jupyter-execute::
+///   
+///   # Möbius–Kantor Graph is G(8, 3)
+///   graph = retworkx.generators.generalized_petersen_graph(8, 3)
+///   layout = retworkx.shell_layout(
+///     graph, nlist=[[0, 1, 2, 3, 4, 5, 6, 7], [10, 11, 12, 13, 14, 15, 8, 9]]
+///   )
+///   mpl_draw(graph, pos=layout)
+///
+/// .. [1] Watkins, Mark E.
+///    "A theorem on tait colorings with an application to the generalized Petersen graphs"
+///    Journal of Combinatorial Theory 6 (2), 152–164 (1969).
+///    https://doi.org/10.1016/S0021-9800(69)80116-X
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(n, k, /, multigraph=True)")]
+pub fn generalized_petersen_graph(
+    py: Python,
+    n: usize,
+    k: usize,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    if n < 3 {
+        return Err(PyIndexError::new_err("n must be at least 3"));
+    }
+
+    if k == 0 || 2 * k >= n {
+        return Err(PyIndexError::new_err(
+            "k is invalid: it must be positive and less than n/2",
+        ));
+    }
+
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(2 * n, 3 * n);
+
+    let star_nodes: Vec<NodeIndex> =
+        (0..n).map(|_| graph.add_node(py.None())).collect();
+
+    let polygon_nodes: Vec<NodeIndex> =
+        (0..n).map(|_| graph.add_node(py.None())).collect();
+
+    for i in 0..n {
+        graph.add_edge(star_nodes[i], star_nodes[(i + k) % n], py.None());
+    }
+
+    for i in 0..n {
+        graph.add_edge(polygon_nodes[i], polygon_nodes[(i + 1) % n], py.None());
+    }
+
+    for i in 0..n {
+        graph.add_edge(polygon_nodes[i], star_nodes[i], py.None());
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2234,5 +2325,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
+    m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
     Ok(())
 }
