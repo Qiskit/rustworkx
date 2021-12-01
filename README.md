@@ -155,3 +155,12 @@ you want to build retworkx in debug mode you have to use
 retworkx is the work of [many people](https://github.com/Qiskit/retworkx/graphs/contributors) who contribute 
 to the project at different levels. If you use retworkx in your research, please cite our 
 [paper](https://arxiv.org/abs/2110.15221) as per the included [BibTeX file](CITATION.bib).
+
+## Community
+
+Besides Github interactions (such as opening issues) there are two locations
+available to talk to other retworkx users and developers. The first is a
+public Slack channel in the Qiskit workspace,
+[#retworkx](https://qiskit.slack.com/messages/retworkx/). You can join the
+Qiskit Slack workspace [here](http://ibm.co/joinqiskitslack). Additionally,
+there is an IRC channel `#retworkx` on the [OFTC IRC network](https://www.oftc.net/)
