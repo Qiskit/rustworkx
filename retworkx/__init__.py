@@ -1736,6 +1736,52 @@ def _graph_union(
 
 
 @functools.singledispatch
+def cartesian_product(
+    first,
+    second,
+):
+    """Return a new graph by forming the cartesian product
+    from two input graph objects
+
+    :param first: The first graph object
+    :param second: The second graph object
+
+    :returns: A new graph object that is the union of ``second`` and
+        ``first``. It's worth noting the weight/data payload objects are
+        passed by reference from ``first`` and ``second`` to this new object.
+        A read-only dictionary of the product of nodes is also returned. The keys
+        are a tuple where the first element is a node of the first graph and the
+        second element is a node of the second graph, and the values are the map
+        of those elements to node indices in the product graph. For example::
+
+            {
+                (0, 0): 0,
+                (0, 1): 1,
+            }
+
+    :rtype: Tuple[:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`,
+        :class:`~retworkx.ProductNodeMap`]
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@cartesian_product.register(PyDiGraph)
+def _digraph_cartesian_product(
+    first,
+    second,
+):
+    return digraph_cartesian_product(first, second)
+
+
+@cartesian_product.register(PyGraph)
+def _graph_cartesian_product(
+    first,
+    second,
+):
+    return graph_cartesian_product(first, second)
+
+
+@functools.singledispatch
 def bfs_search(graph, source, visitor):
     """Breadth-first traversal of a directed/undirected graph.
 
