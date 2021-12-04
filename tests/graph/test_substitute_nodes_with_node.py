@@ -15,69 +15,10 @@ import unittest
 import retworkx
 
 
-class TestSubstituteNodesCheckCycleSwitch(unittest.TestCase):
-    def setUp(self):
-        super().setUp()
-        self.dag = retworkx.PyDAG()
-        self.node_a = self.dag.add_node("a")
-        self.node_b = self.dag.add_child(self.node_a, "b", "b")
-        self.node_c = self.dag.add_child(self.node_b, "c", "c")
-
-        self.new_weight = "m"
-
-    def do_substitution(self, **kwargs):
-        """
-           ┌─┐                         ┌─┐
-         ┌─┤a│               ┌─────────┤m│
-         │ └─┘               │         └▲┘
-        ┌▼┐                 ┌▼┐         │
-        │b│          ───►   │b├─────────┘
-        └┬┘                 └─┘
-         │  ┌─┐
-         └─►┤c│
-            └─┘
-        """
-        self.dag.substitute_nodes_with_node(
-            [self.node_a, self.node_c], self.new_weight, **kwargs
-        )
-
-    def test_cycle_check_enable_local(self):
-        # Disable at class level.
-        self.dag.check_cycle = False
-
-        # Check removal is not allowed with explicit check_cycle=True.
-        self.assertRaises(
-            retworkx.DAGWouldCycle, self.do_substitution, check_cycle=True
-        )
-
-    def test_cycle_check_disable_local(self):
-        # Enable at class level.
-        self.dag.check_cycle = True
-
-        # Check removal is allowed for check_cycle=False
-        self.do_substitution(check_cycle=False)
-        self.assertEqual(set(self.dag.nodes()), {"b", "m"})
-
-    def test_cycle_check_inherit_class_enable(self):
-        # Enable at class level.
-        self.dag.check_cycle = True
-
-        # Check removal is not allowed.
-        self.assertRaises(retworkx.DAGWouldCycle, self.do_substitution)
-
-    def test_cycle_check_inherit_class_disable(self):
-        # Disable at class level.
-        self.dag.check_cycle = False
-
-        # Check removal is allowed.
-        self.do_substitution()
-        self.assertEqual(set(self.dag.nodes()), {"b", "m"})
-
-
 class TestSubstituteNodes(unittest.TestCase):
     def test_empty_nodes(self):
         """Replacing empty nodes is functionally equivalent to add_node."""
-        dag = retworkx.PyDAG()
+        dag = retworkx.PyGraph()
         dag.substitute_nodes_with_node([], "m")
 
         self.assertEqual(set(dag.nodes()), {"m"})
@@ -87,7 +28,7 @@ class TestSubstituteNodes(unittest.TestCase):
         Replacing all unknown nodes is functionally equivalent to add_node,
         since unknown nodes should be ignored.
         """
-        dag = retworkx.PyDAG()
+        dag = retworkx.PyGraph()
         dag.substitute_nodes_with_node([0, 1, 2], "m")
 
         self.assertEqual(set(dag.nodes()), {"m"})
@@ -96,32 +37,30 @@ class TestSubstituteNodes(unittest.TestCase):
         """
             ┌─┐              ┌─┐
          ┌4─┤a├─1┐           │m├──1───┐
-         │  └─┘  │           └▲┘      │
-        ┌▼┐     ┌▼┐           │      ┌▼┐
+         │  └─┘  │           └┬┘      │
+        ┌┴┐     ┌┴┐           │      ┌┴┐
         │d│     │b│   ───►    │      │b│
-        └▲┘     └┬┘           │      └┬┘
+        └┬┘     └┬┘           │      └┬┘
          │  ┌─┐  2            │  ┌─┐  2
-         └3─┤c│◄─┘            └3─┤c│◄─┘
+         └3─┤c├──┘            └3─┤c├──┘
             └─┘                  └─┘
         """
-        dag = retworkx.PyDAG()
+        dag = retworkx.PyGraph()
         node_a = dag.add_node("a")
-        node_b = dag.add_child(node_a, "b", 1)
-        node_c = dag.add_child(node_b, "c", 2)
-        node_d = dag.add_child(node_c, "c", 3)
+        node_b = dag.add_node("b")
+        node_c = dag.add_node("c")
+        node_d = dag.add_node("d")
+
+        dag.add_edge(node_a, node_b, 1)
+        dag.add_edge(node_b, node_c, 2)
+        dag.add_edge(node_c, node_d, 3)
         dag.add_edge(node_a, node_d, 4)
 
-        with self.assertRaises(retworkx.DAGWouldCycle):
-            dag.substitute_nodes_with_node(
-                [node_a, node_d], "m", check_cycle=True
-            )
-
-        # Proceed, ignoring cycles.
         node_m = dag.substitute_nodes_with_node([node_a, node_d], "m")
 
         self.assertEqual([node_b, node_c, node_m], dag.node_indexes())
         self.assertEqual(
-            {(node_b, node_c), (node_c, node_m), (node_m, node_b)},
+            {(node_b, node_c), (node_c, node_m), (node_b, node_m)},
             set(dag.edge_list()),
         )
 
@@ -129,61 +68,63 @@ class TestSubstituteNodes(unittest.TestCase):
         """
             ┌─┐     ┌─┐                  ┌─┐     ┌─┐
          ┌3─┤c│     │e├─5┐            ┌──┤c│     │e├──┐
-         │  └▲┘     └▲┘  │            │  └▲┘     └▲┘  │
-        ┌▼┐  2  ┌─┐  4  ┌▼┐           │   2  ┌─┐  4   │
+         │  └┬┘     └┬┘  │            │  └┬┘     └┬┘  │
+        ┌┴┐  2  ┌─┐  4  ┌┴┐           │   2  ┌─┐  4   │
         │d│  └──┤b├──┘  │f│   ───►    │   └──┤b├──┘   │
-        └─┘     └▲┘     └─┘           3      └▲┘      5
+        └─┘     └┬┘     └─┘           3      └┬┘      5
                  1                    │       1       │
                 ┌┴┐                   │      ┌┴┐      │
-                │a│                   └─────►│m│◄─────┘
+                │a│                   └──────┤m├──────┘
                 └─┘                          └─┘
         """
-        dag = retworkx.PyDAG()
+        dag = retworkx.PyGraph()
         node_a = dag.add_node("a")
-        node_b = dag.add_child(node_a, "b", 1)
-        node_c = dag.add_child(node_b, "c", 2)
-        node_d = dag.add_child(node_c, "d", 3)
-        node_e = dag.add_child(node_b, "e", 4)
-        node_f = dag.add_child(node_e, "f", 5)
+        node_b = dag.add_node("b")
+        node_c = dag.add_node("c")
+        node_d = dag.add_node("d")
+        node_e = dag.add_node("e")
+        node_f = dag.add_node("f")
 
-        with self.assertRaises(retworkx.DAGWouldCycle):
-            dag.substitute_nodes_with_node(
-                [node_a, node_d, node_f], "m", check_cycle=True
-            )
+        dag.add_edge(node_a, node_b, 1)
+        dag.add_edge(node_b, node_c, 2)
+        dag.add_edge(node_c, node_d, 3)
+        dag.add_edge(node_b, node_e, 4)
+        dag.add_edge(node_e, node_f, 5)
 
-        # Proceed, ignoring cycles.
         node_m = dag.substitute_nodes_with_node([node_a, node_d, node_f], "m")
 
-        self.assertEqual([node_b, node_c, node_e, node_m], dag.node_indexes())
+        self.assertEqual(
+            [node_b, node_c, node_e, node_m], list(dag.node_indexes())
+        )
         self.assertEqual(
             {
                 (node_b, node_c),
                 (node_c, node_m),
                 (node_e, node_m),
                 (node_b, node_e),
-                (node_m, node_b),
+                (node_b, node_m),
             },
             set(dag.edge_list()),
         )
 
     def test_replace_node_no_neighbors(self):
-        dag = retworkx.PyDAG()
+        dag = retworkx.PyGraph()
         node_a = dag.add_node("a")
-        node_m = dag.substitute_nodes_with_node([node_a], "m", check_cycle=True)
+        node_m = dag.substitute_nodes_with_node([node_a], "m")
         self.assertEqual([node_m], dag.node_indexes())
         self.assertEqual(set(), set(dag.edge_list()))
 
     def test_keep_edges_multigraph(self):
         """
            ┌─┐            ┌─┐
-         ┌─┤a│◄┐        ┌─┤a│◄┐
+         ┌─┤a├─┐        ┌─┤a├─┐
          │ └─┘ │        │ └─┘ │
          1     2   ──►  1     2
-        ┌▼┐   ┌┴┐       │ ┌─┐ │
-        │b│   │c│       └►│m├─┘
+        ┌┴┐   ┌┴┐       │ ┌─┐ │
+        │b│   │c│       └─┤m├─┘
         └─┘   └─┘         └─┘
         """
-        dag = retworkx.PyDiGraph()
+        dag = retworkx.PyGraph()
         node_a = dag.add_node("a")
         node_b = dag.add_node("b")
         node_c = dag.add_node("c")
@@ -191,16 +132,12 @@ class TestSubstituteNodes(unittest.TestCase):
         dag.add_edge(node_a, node_b, 1)
         dag.add_edge(node_c, node_a, 2)
 
-        with self.assertRaises(retworkx.DAGWouldCycle):
-            dag.substitute_nodes_with_node(
-                [node_b, node_c], "m", check_cycle=True
-            )
-
-        # Proceed, ignoring cycles.
         node_m = dag.substitute_nodes_with_node([node_b, node_c], "m")
         self.assertEqual([node_a, node_m], dag.node_indexes())
+
+        # Note that target is *always* the new node (m).
         self.assertEqual(
-            {(node_a, node_m, 1), (node_m, node_a, 2)},
+            {(node_a, node_m, 1), (node_a, node_m, 2)},
             set(dag.weighted_edge_list()),
         )
 
@@ -208,12 +145,16 @@ class TestSubstituteNodes(unittest.TestCase):
 class TestSubstituteNodesSimpleGraph(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.dag = retworkx.PyDAG(multigraph=False)
+        self.dag = retworkx.PyGraph(multigraph=False)
         self.node_a = self.dag.add_node("a")
-        self.node_b = self.dag.add_child(self.node_a, "b", 1)
-        self.node_c = self.dag.add_child(self.node_a, "c", 2)
-        self.node_d = self.dag.add_child(self.node_a, "d", 3)
+        self.node_b = self.dag.add_node("b")
+        self.node_c = self.dag.add_node("c")
+        self.node_d = self.dag.add_node("d")
         self.node_e = self.dag.add_node("e")
+
+        self.dag.add_edge(self.node_a, self.node_b, 1)
+        self.dag.add_edge(self.node_a, self.node_c, 2)
+        self.dag.add_edge(self.node_a, self.node_d, 3)
         self.dag.add_edge(self.node_b, self.node_e, 4)
         self.dag.add_edge(self.node_c, self.node_e, 5)
         self.dag.add_edge(self.node_d, self.node_e, 6)
@@ -225,11 +166,11 @@ class TestSubstituteNodesSimpleGraph(unittest.TestCase):
             │a│               │a│
          ┌──┴┬┴──┐            └┬┘
          1   2   3        1 or 2 or 3
-        ┌▼┐ ┌▼┐ ┌▼┐           ┌▼┐
+        ┌┴┐ ┌┴┐ ┌┴┐           ┌┴┐
         │b│ │c│ │d│   ──►     │m│
         └┬┘ └┬┘ └┬┘           └┬┘
          4   5   6        4 or 5 or 6
-         └──►▼◄──┘            ┌▼┐
+         └──┬┴┬──┘            ┌┴┐
             │e│               │e│
             └─┘               └─┘
         """
@@ -251,11 +192,11 @@ class TestSubstituteNodesSimpleGraph(unittest.TestCase):
             │a│               │a│
          ┌──┴┬┴──┐            └┬┘
          1   2   3             6
-        ┌▼┐ ┌▼┐ ┌▼┐           ┌▼┐
+        ┌┴┐ ┌┴┐ ┌┴┐           ┌┴┐
         │b│ │c│ │d│   ──►     │m│
         └┬┘ └┬┘ └┬┘           └┬┘
          4   5   6             15
-         └──►▼◄──┘            ┌▼┐
+         └──┬┴┬──┘            ┌┴┐
             │e│               │e│
             └─┘               └─┘
         """

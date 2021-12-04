@@ -484,7 +484,7 @@ impl PyGraph {
     /// Returns a list of tuples of the form ``(source, target)`` where
     /// ``source`` and ``target`` are the node indices.
     ///
-    /// :returns: An edge list with weights
+    /// :returns: An edge list without weights
     /// :rtype: EdgeList
     #[pyo3(text_signature = "(self)")]
     pub fn edge_list(&self) -> EdgeList {
@@ -1478,6 +1478,12 @@ impl PyGraph {
 
     /// Substitute a set of nodes with a single new node.
     ///
+    /// .. note::
+    ///     The new node is always made to be the target in any edge
+    ///     representation that includes it. For example, the new node
+    ///     will always appear as the target of its edges as returned by
+    ///     :meth:`~retworkx.PyGraph.edge_list`.
+    ///
     /// :param list to_replace: A set of nodes to be removed and replaced
     ///     by the new node. Any nodes not in the graph are ignored.
     ///     If empty, this method behaves like :meth:`PyDiGraph.add_node`
@@ -1513,26 +1519,16 @@ impl PyGraph {
         indices_to_remove.remove(&node_index);
 
         // Determine edges for new node.
-        let mut incoming_edges: Vec<_> = indices_to_remove
+        // note: `edges_directed` returns all edges with `i` as
+        // an endpoint. `Direction::Incoming` configures `edge.target()`
+        // to return `i` and `edge.source()` to return the other node.
+        let mut edges: Vec<_> = indices_to_remove
             .iter()
             .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
             .filter_map(|edge| {
                 let pred = edge.source();
                 if !indices_to_remove.contains(&pred) {
-                    Some((edge.source(), edge.weight().clone_ref(py)))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        let mut outgoing_edges: Vec<_> = indices_to_remove
-            .iter()
-            .flat_map(|&i| self.graph.edges_directed(i, Direction::Outgoing))
-            .filter_map(|edge| {
-                let succ = edge.target();
-                if !indices_to_remove.contains(&succ) {
-                    Some((edge.target(), edge.weight().clone_ref(py)))
+                    Some((pred, edge.weight().clone_ref(py)))
                 } else {
                     None
                 }
@@ -1548,18 +1544,12 @@ impl PyGraph {
         // to that function, even if this is a multigraph. If unspecified,
         // defer parallel edge handling to `add_edge`.
         if let Some(merge_fn) = weight_combo_fn {
-            let f = |w1: &Py<_>, w2: &Py<_>| merge_fn.call1(py, (w1, w2));
-
-            incoming_edges = merge_duplicates(incoming_edges, f)?;
-            outgoing_edges = merge_duplicates(outgoing_edges, f)?;
+            edges =
+                merge_duplicates(edges, |w1, w2| merge_fn.call1(py, (w1, w2)))?;
         }
 
-        for (source, weight) in incoming_edges {
+        for (source, weight) in edges {
             self.add_edge(source.index(), node_index.index(), weight)?;
-        }
-
-        for (target, weight) in outgoing_edges {
-            self.add_edge(node_index.index(), target.index(), weight)?;
         }
 
         Ok(node_index.index())

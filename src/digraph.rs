@@ -773,7 +773,7 @@ impl PyDiGraph {
     /// Returns a list of tuples of the form ``(source, target)`` where
     /// ``source`` and ``target`` are the node indices.
     ///
-    /// :returns: An edge list with weights
+    /// :returns: An edge list without weights
     /// :rtype: EdgeList
     pub fn edge_list(&self) -> EdgeList {
         EdgeList {
@@ -2368,7 +2368,7 @@ impl PyDiGraph {
             .filter_map(|edge| {
                 let pred = edge.source();
                 if !indices_to_remove.contains(&pred) {
-                    Some((edge.source(), edge.weight().clone_ref(py)))
+                    Some((pred, edge.weight().clone_ref(py)))
                 } else {
                     None
                 }
@@ -2381,7 +2381,7 @@ impl PyDiGraph {
             .filter_map(|edge| {
                 let succ = edge.target();
                 if !indices_to_remove.contains(&succ) {
-                    Some((edge.target(), edge.weight().clone_ref(py)))
+                    Some((succ, edge.weight().clone_ref(py)))
                 } else {
                     None
                 }
