@@ -311,7 +311,7 @@ pub fn layers(
 /// This function returns a list of nodes data in a graph lexicographically
 /// topologically sorted using the provided key function. A topological sort
 /// is a linear ordering of vertices such that for every directed edge from
-/// node :math:`u` to node :math:`v` that :math:`u` comes before :math:`v`
+/// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
 /// in the ordering.
 ///
 /// This function differs from :func:`~retworkx.topological_sort` because
