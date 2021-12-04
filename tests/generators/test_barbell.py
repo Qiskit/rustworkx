@@ -21,17 +21,6 @@ class TestBarbellGraph(unittest.TestCase):
         self.assertEqual(len(graph), 37)
         self.assertEqual(len(graph.edges()), 276)
 
-    def test_barbell_graph_weights_count(self):
-        graph = retworkx.generators.barbell_graph(
-            mesh_weights=list(range(17)), path_weights=list(range(17, 20))
-        )
-        self.assertEqual(len(graph), 37)
-        self.assertEqual(
-            list(range(17)) + list(range(17, 20)) + list(range(17)),
-            graph.nodes(),
-        )
-        self.assertEqual(len(graph.edges()), 276)
-
     def test_barbell_graph_edge(self):
         graph = retworkx.generators.barbell_graph(4, 3)
         edge_list = graph.edge_list()
@@ -57,50 +46,12 @@ class TestBarbellGraph(unittest.TestCase):
         )
         self.assertEqual(set(edge_list), set(expected_edge_list))
 
-    def test_barbell_graph_weights_edge(self):
-        graph = retworkx.generators.barbell_graph(
-            mesh_weights=list(range(4)), path_weights=list(range(3))
-        )
-        weighted_edge_list = graph.weighted_edge_list()
-        expected_weighted_edge_list = set(
-            [
-                (0, 1, None),
-                (0, 2, None),
-                (0, 3, None),
-                (1, 2, None),
-                (1, 3, None),
-                (2, 3, None),
-                (3, 4, None),
-                (4, 5, None),
-                (5, 6, None),
-                (6, 7, None),
-                (7, 8, None),
-                (7, 9, None),
-                (7, 10, None),
-                (8, 9, None),
-                (8, 10, None),
-                (9, 10, None),
-            ]
-        )
-        self.assertEqual(
-            set(weighted_edge_list), set(expected_weighted_edge_list)
-        )
-        self.assertEqual(graph.nodes(), [0, 1, 2, 3, 0, 1, 2, 0, 1, 2, 3])
-
-    def test_barbell_graph_no_path_weights_or_num(self):
-        graph = retworkx.generators.barbell_graph(mesh_weights=list(range(4)))
-        mesh = retworkx.generators.mesh_graph(weights=list(range(4)))
-        mesh.compose(mesh.copy(), {3: (0, None)})
-        self.assertEqual(graph.nodes(), mesh.nodes())
-        self.assertEqual(
-            set(graph.weighted_edge_list()), set(mesh.weighted_edge_list())
-        )
-
+    def test_barbell_graph_no_path_num(self):
         graph = retworkx.generators.barbell_graph(4)
         mesh = retworkx.generators.mesh_graph(4)
         mesh.compose(mesh.copy(), {3: (0, None)})
         self.assertEqual(set(graph.edge_list()), set(mesh.edge_list()))
 
-    def test_barbell_graph_no_mesh_weights_or_num(self):
+    def test_barbell_graph_no_mesh_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.barbell_graph()
