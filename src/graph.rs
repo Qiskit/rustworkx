@@ -945,7 +945,12 @@ impl PyGraph {
     pub fn degree(&self, node: usize) -> usize {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.edges(index);
-        neighbors.count()
+        neighbors.fold(0, |count, edge| {
+            if edge.source() == edge.target() {
+                return count + 2;
+            }
+            count + 1
+        })
     }
 
     /// Generate a new :class:`~retworkx.PyDiGraph` object from this graph
