@@ -768,7 +768,7 @@ def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 
 
 @functools.singledispatch
-def dfs_edges(graph, source):
+def dfs_edges(graph, source=None):
     """Get edge list in depth first order
 
     :param PyGraph graph: The graph to get the DFS edge list from
@@ -787,13 +787,13 @@ def dfs_edges(graph, source):
 
 
 @dfs_edges.register(PyDiGraph)
-def _digraph_dfs_edges(graph, source):
-    return digraph_dfs_edges(graph, source)
+def _digraph_dfs_edges(graph, source=None):
+    return digraph_dfs_edges(graph, source=source)
 
 
 @dfs_edges.register(PyGraph)
-def _graph_dfs_edges(graph, source):
-    return graph_dfs_edges(graph, source)
+def _graph_dfs_edges(graph, source=None):
+    return graph_dfs_edges(graph, source=source)
 
 
 @functools.singledispatch
@@ -1722,7 +1722,9 @@ def _digraph_union(
     merge_nodes=False,
     merge_edges=False,
 ):
-    return digraph_union(first, second, merge_nodes=False, merge_edges=False)
+    return digraph_union(
+        first, second, merge_nodes=merge_nodes, merge_edges=merge_edges
+    )
 
 
 @union.register(PyGraph)
@@ -1732,7 +1734,9 @@ def _graph_union(
     merge_nodes=False,
     merge_edges=False,
 ):
-    return graph_union(first, second, merge_nodes=False, merge_edges=False)
+    return graph_union(
+        first, second, merge_nodes=merge_nodes, merge_edges=merge_edges
+    )
 
 
 @functools.singledispatch
