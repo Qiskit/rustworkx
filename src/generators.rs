@@ -2362,8 +2362,8 @@ pub fn barbell_graph(
 
     let right_mesh = left_mesh.clone();
 
-    if num_path_nodes.is_some() {
-        let path_nodes: Vec<NodeIndex> = (0..num_path_nodes.unwrap())
+    if let Some(num_nodes) = num_path_nodes {
+        let path_nodes: Vec<NodeIndex> = (0..num_nodes)
             .map(|_| left_mesh.add_node(py.None()))
             .collect();
         left_mesh.add_edge(
