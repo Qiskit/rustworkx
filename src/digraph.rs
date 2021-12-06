@@ -2282,7 +2282,7 @@ impl PyDiGraph {
     ///
     /// :param list nodes: A set of nodes to be removed and replaced
     ///     by the new node. Any nodes not in the graph are ignored.
-    ///     If empty, this method behaves like :meth:`PyDiGraph.add_node`
+    ///     If empty, this method behaves like :meth:`~PyDiGraph.add_node`
     ///     (but slower).
     /// :param object obj: The data/weight to associate with the new node.
     /// :param bool check_cycle: If set to ``True``, validates
@@ -2290,14 +2290,14 @@ impl PyDiGraph {
     ///     modifying the graph. If set to ``False``, validation is
     ///     skipped. If not provided, inherits the value
     ///     of ``check_cycle`` from this instance of
-    ///     :class:`retworkx.PyDiGraph`.
+    ///     :class:`~retworkx.PyDiGraph`.
     /// :param weight_combo_fn: An optional python callable that, when
     ///     specified, is used to merge parallel edges introduced by the
     ///     contraction, which will occur when multiple nodes in
     ///     ``nodes`` have an incoming edge
     ///     from the same source node or when multiple nodes in
     ///     ``nodes`` have an outgoing edge to the same target node.
-    ///     If this instance of :class:`retworkx.PyDiGraph` is a multigraph,
+    ///     If this instance of :class:`~retworkx.PyDiGraph` is a multigraph,
     ///     leave this unspecified to preserve parallel edges. If unspecified
     ///     when not a multigraph, parallel edges and their weights will be
     ///     combined by choosing one of the edge's weights arbitrarily based

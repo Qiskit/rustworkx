@@ -86,7 +86,7 @@ use petgraph::visit::{
 ///     print("Node Index: %s" % node_index)
 ///     print(graph[node_index])
 ///
-/// The PyDiGraph implements the Python mapping protocol for nodes so in
+/// The PyGraph implements the Python mapping protocol for nodes so in
 /// addition to access you can also update the data payload with:
 ///
 /// .. jupyter-execute::
@@ -1486,7 +1486,7 @@ impl PyGraph {
     ///
     /// :param list nodes: A set of nodes to be removed and replaced
     ///     by the new node. Any nodes not in the graph are ignored.
-    ///     If empty, this method behaves like :meth:`PyDiGraph.add_node`
+    ///     If empty, this method behaves like :meth:`~PyGraph.add_node`
     ///     (but slower).
     /// :param object obj: The data/weight to associate with the new node.
     /// :param weight_combo_fn: An optional python callable that, when
@@ -1495,7 +1495,7 @@ impl PyGraph {
     ///     ``nodes`` have an incoming edge
     ///     from the same source node or when multiple nodes in
     ///     ``nodes`` have an outgoing edge to the same target node.
-    ///     If this instance of :class:`retworkx.PyDiGraph` is a multigraph,
+    ///     If this instance of :class:`~retworkx.PyGraph` is a multigraph,
     ///     leave this unspecified to preserve parallel edges. If unspecified
     ///     when not a multigraph, parallel edges and their weights will be
     ///     combined by choosing one of the edge's weights arbitrarily based
@@ -1597,7 +1597,7 @@ impl PyGraph {
         }
     }
 
-    /// Return a new PyGraph object for an edge induced subgrapph of this graph
+    /// Return a new PyGraph object for an edge induced subgraph of this graph
     ///
     /// The induced subgraph contains each edge in `edges` and each node
     /// incident to any of those edges.
@@ -1609,7 +1609,7 @@ impl PyGraph {
     ///     silently ignored.
     ///
     /// :returns: The edge subgraph
-    /// :rtype: PyDiGraph
+    /// :rtype: PyGraph
     ///
     #[pyo3(text_signature = "(self, edges, /)")]
     pub fn edge_subgraph(&self, edge_list: Vec<[usize; 2]>) -> PyGraph {
