@@ -1491,10 +1491,8 @@ impl PyGraph {
     /// :param object obj: The data/weight to associate with the new node.
     /// :param weight_combo_fn: An optional python callable that, when
     ///     specified, is used to merge parallel edges introduced by the
-    ///     contraction, which will occur when multiple nodes in
-    ///     ``nodes`` have an incoming edge
-    ///     from the same source node or when multiple nodes in
-    ///     ``nodes`` have an outgoing edge to the same target node.
+    ///     contraction, which will occur if any two edges between ``nodes``
+    ///     and the rest of the graph share an endpoint.
     ///     If this instance of :class:`~retworkx.PyGraph` is a multigraph,
     ///     leave this unspecified to preserve parallel edges. If unspecified
     ///     when not a multigraph, parallel edges and their weights will be
