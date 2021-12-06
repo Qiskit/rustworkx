@@ -2280,23 +2280,23 @@ impl PyDiGraph {
 
     /// Substitute a set of nodes with a single new node.
     ///
-    /// :param list to_replace: A set of nodes to be removed and replaced
+    /// :param list nodes: A set of nodes to be removed and replaced
     ///     by the new node. Any nodes not in the graph are ignored.
     ///     If empty, this method behaves like :meth:`PyDiGraph.add_node`
     ///     (but slower).
     /// :param object obj: The data/weight to associate with the new node.
     /// :param bool check_cycle: If set to ``True``, validates
-    ///     that the substitution will not introduce cycles before
+    ///     that the contraction will not introduce cycles before
     ///     modifying the graph. If set to ``False``, validation is
     ///     skipped. If not provided, inherits the value
     ///     of ``check_cycle`` from this instance of
     ///     :class:`retworkx.PyDiGraph`.
     /// :param weight_combo_fn: An optional python callable that, when
     ///     specified, is used to merge parallel edges introduced by the
-    ///     substitution, which will occur when multiple nodes in
-    ///     ``to_replace`` have an incoming edge
+    ///     contraction, which will occur when multiple nodes in
+    ///     ``nodes`` have an incoming edge
     ///     from the same source node or when multiple nodes in
-    ///     ``to_replace`` have an outgoing edge to the same target node.
+    ///     ``nodes`` have an outgoing edge to the same target node.
     ///     If this instance of :class:`retworkx.PyDiGraph` is a multigraph,
     ///     leave this unspecified to preserve parallel edges. If unspecified
     ///     when not a multigraph, parallel edges and their weights will be
@@ -2304,14 +2304,14 @@ impl PyDiGraph {
     ///     on an internal iteration order, subject to change.
     /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
-    ///     substitution would introduce cycle(s).
+    ///     contraction would introduce cycle(s).
     #[pyo3(
-        text_signature = "(self, to_replace, obj, /, check_cycle=None, weight_combo_fn=None)"
+        text_signature = "(self, nodes, obj, /, check_cycle=None, weight_combo_fn=None)"
     )]
-    pub fn substitute_nodes_with_node(
+    pub fn contract_nodes(
         &mut self,
         py: Python,
-        to_replace: Vec<usize>,
+        nodes: Vec<usize>,
         obj: PyObject,
         check_cycle: Option<bool>,
         weight_combo_fn: Option<PyObject>,
@@ -2340,18 +2340,17 @@ impl PyDiGraph {
                     return false;
                 }
             }
-
             true
         };
 
         let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
-            to_replace.into_iter().map(NodeIndex::new).collect();
+            nodes.into_iter().map(NodeIndex::new).collect();
 
         if check_cycle.unwrap_or(self.check_cycle)
             && !can_contract(&indices_to_remove)
         {
             return Err(DAGWouldCycle::new_err(
-                "Substitution would create cycle(s)",
+                "Contraction would create cycle(s)",
             ));
         }
 
