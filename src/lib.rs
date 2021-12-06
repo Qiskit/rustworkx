@@ -223,6 +223,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
+    m.add_wrapped(wrap_pyfunction!(number_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_connected))?;
+    m.add_wrapped(wrap_pyfunction!(node_connected_component))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;

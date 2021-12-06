@@ -126,6 +126,10 @@ Connectivity and Cycles
 .. autosummary::
    :toctree: stubs
 
+   retworkx.number_connected_components
+   retworkx.connected_components
+   retworkx.node_connected_component
+   retworkx.is_connected
    retworkx.strongly_connected_components
    retworkx.number_weakly_connected_components
    retworkx.weakly_connected_components
