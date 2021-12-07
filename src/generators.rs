@@ -2304,6 +2304,107 @@ pub fn generalized_petersen_graph(
     })
 }
 
+/// Generate an undirected barbell graph where two identical mesh graphs are
+/// connected by a path.
+///
+/// If ``num_path_nodes`` (described below) is not specified then this is
+/// equivalent to two mesh graphs joined together.
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graphs
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated barbell graph
+/// :rtype: PyGraph
+/// :raises IndexError: If ``num_mesh_nodes`` is not specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.barbell_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, multigraph=True)"
+)]
+pub fn barbell_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    if num_mesh_nodes.is_none() {
+        return Err(PyIndexError::new_err("num_mesh_nodes not specified"));
+    }
+
+    let mut left_mesh = StableUnGraph::<PyObject, PyObject>::default();
+    let mesh_nodes: Vec<NodeIndex> = (0..num_mesh_nodes.unwrap())
+        .map(|_| left_mesh.add_node(py.None()))
+        .collect();
+    let mut nodelen = mesh_nodes.len();
+    for i in 0..nodelen - 1 {
+        for j in i + 1..nodelen {
+            left_mesh.add_edge(mesh_nodes[i], mesh_nodes[j], py.None());
+        }
+    }
+
+    let right_mesh = left_mesh.clone();
+
+    if let Some(num_nodes) = num_path_nodes {
+        let path_nodes: Vec<NodeIndex> = (0..num_nodes)
+            .map(|_| left_mesh.add_node(py.None()))
+            .collect();
+        left_mesh.add_edge(
+            NodeIndex::new(nodelen - 1),
+            NodeIndex::new(nodelen),
+            py.None(),
+        );
+
+        nodelen += path_nodes.len();
+
+        for (node_a, node_b) in pairwise(path_nodes) {
+            match node_a {
+                Some(node_a) => left_mesh.add_edge(node_a, node_b, py.None()),
+                None => continue,
+            };
+        }
+    }
+
+    for node in right_mesh.node_indices() {
+        let new_node = &right_mesh[node];
+        left_mesh.add_node(new_node.clone_ref(py));
+    }
+    left_mesh.add_edge(
+        NodeIndex::new(nodelen - 1),
+        NodeIndex::new(nodelen),
+        py.None(),
+    );
+    for edge in right_mesh.edge_references() {
+        let new_source = NodeIndex::new(nodelen + edge.source().index());
+        let new_target = NodeIndex::new(nodelen + edge.target().index());
+        let weight = edge.weight();
+        left_mesh.add_edge(new_source, new_target, weight.clone_ref(py));
+    }
+
+    Ok(graph::PyGraph {
+        graph: left_mesh,
+        node_removed: false,
+        multigraph,
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2326,5 +2427,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
     m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
+    m.add_wrapped(wrap_pyfunction!(barbell_graph))?;
     Ok(())
 }

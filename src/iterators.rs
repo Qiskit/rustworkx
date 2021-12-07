@@ -881,8 +881,8 @@ macro_rules! custom_hash_map_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __contains__(&self, index: usize) -> PyResult<bool> {
-                Ok(self.$data.contains_key(&index))
+            fn __contains__(&self, key: $K) -> PyResult<bool> {
+                Ok(self.$data.contains_key(&key))
             }
         }
 
@@ -892,8 +892,8 @@ macro_rules! custom_hash_map_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __getitem__(&'p self, idx: usize) -> PyResult<$V> {
-                match self.$data.get(&idx) {
+            fn __getitem__(&'p self, key: $K) -> PyResult<$V> {
+                match self.$data.get(&key) {
                     Some(data) => Ok(data.clone()),
                     None => {
                         Err(PyIndexError::new_err("No node found for index"))
@@ -1325,3 +1325,25 @@ custom_hash_map_iter_impl!(
     "
 );
 default_pygc_protocol_impl!(NodeMap);
+
+custom_hash_map_iter_impl!(
+    ProductNodeMap,
+    ProductNodeMapKeys,
+    ProductNodeMapValues,
+    ProductNodeMapItems,
+    node_map,
+    node_map_keys,
+    node_map_values,
+    node_map_items,
+    (usize, usize),
+    usize,
+    "A class representing a mapping of tuple of node indices to node indices.
+
+    This implements the Python mapping protocol, so you can treat the return as
+    a read-only mapping/dict of the form::
+
+        {(0, 0): 0, (0, 1): 1}
+
+    "
+);
+default_pygc_protocol_impl!(ProductNodeMap);

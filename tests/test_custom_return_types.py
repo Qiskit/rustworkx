@@ -1514,3 +1514,100 @@ class TestChainsComparisons(unittest.TestCase):
         self.assertIsInstance(hash_res, int)
         # Assert hash is stable
         self.assertEqual(hash_res, hash(self.chains))
+
+
+class TestProductNodeMap(unittest.TestCase):
+    def setUp(self):
+        self.first = retworkx.PyGraph()
+        self.first.add_node("a0")
+        self.first.add_node("a1")
+
+        self.second = retworkx.PyGraph()
+        self.second.add_node("b")
+        _, self.node_map = retworkx.graph_cartesian_product(
+            self.first, self.second
+        )
+
+    def test__eq__match(self):
+        self.assertTrue(self.node_map == {(0, 0): 0, (1, 0): 1})
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(self.node_map == {(0, 0): 0, (2, 0): 1})
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(self.node_map == {(0, 0): 0, (1, 0): 2})
+
+    def test__eq__different_length(self):
+        self.assertFalse(self.node_map == {(0, 0): 0})
+
+    def test_eq__same_type(self):
+        _, res = retworkx.graph_cartesian_product(self.first, self.second)
+        self.assertEqual(self.node_map, res)
+
+    def test__ne__match(self):
+        self.assertFalse(self.node_map != {(0, 0): 0, (1, 0): 1})
+
+    def test__ne__not_match(self):
+        self.assertTrue(self.node_map != {(0, 0): 0, (2, 0): 1})
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(self.node_map != {(0, 0): 0, (1, 0): 2})
+
+    def test__ne__different_length(self):
+        self.assertTrue(self.node_map != {(0, 0): 0})
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.node_map > {1: 2}
+
+    def test__len__(self):
+        self.assertEqual(2, len(self.node_map))
+
+    def test_deepcopy(self):
+        node_map_copy = copy.deepcopy(self.node_map)
+        self.assertEqual(self.node_map, node_map_copy)
+
+    def test_pickle(self):
+        node_map_pickle = pickle.dumps(self.node_map)
+        node_map_copy = pickle.loads(node_map_pickle)
+        self.assertEqual(self.node_map, node_map_copy)
+
+    def test_str(self):
+        valid_str_output = [
+            "ProductNodeMap{(0, 0): 0, (1, 0): 1}",
+            "ProductNodeMap{(1, 0): 1, (0, 0): 0}",
+        ]
+        self.assertTrue(str(self.node_map) in valid_str_output)
+
+    def test_hash(self):
+        hash_res = hash(self.node_map)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(self.node_map))
+
+    def test_index_error(self):
+        with self.assertRaises(IndexError):
+            self.node_map[(1, 1)]
+
+    def test_keys(self):
+        keys = self.node_map.keys()
+        self.assertEqual(set([(0, 0), (1, 0)]), set(keys))
+
+    def test_values(self):
+        values = self.node_map.values()
+        self.assertEqual(set([0, 1]), set(values))
+
+    def test_items(self):
+        items = self.node_map.items()
+        self.assertEqual(set([((0, 0), 0), ((1, 0), 1)]), set(items))
+
+    def test_iter(self):
+        mapping_iter = iter(self.node_map)
+        output = set(mapping_iter)
+        self.assertEqual(output, set([(0, 0), (1, 0)]))
+
+    def test_contains(self):
+        self.assertIn((0, 0), self.node_map)
+
+    def test_not_contains(self):
+        self.assertNotIn((1, 1), self.node_map)
