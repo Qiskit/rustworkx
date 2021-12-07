@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+mod cartesian_product;
 mod centrality;
 mod coloring;
 mod connectivity;
@@ -30,6 +31,7 @@ mod traversal;
 mod tree;
 mod union;
 
+use cartesian_product::*;
 use centrality::*;
 use coloring::*;
 use connectivity::*;
@@ -51,6 +53,7 @@ use num_complex::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
+use pyo3::import_exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
@@ -224,6 +227,10 @@ create_exception!(retworkx, NoSuitableNeighbors, PyException);
 create_exception!(retworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, PyException);
+// Prune part of the search tree while traversing a graph.
+import_exception!(retworkx.visit, PruneSearch);
+// Stop graph traversal.
+import_exception!(retworkx.visit, StopSearch);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -236,6 +243,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
@@ -252,6 +261,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(graph_union))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
+    m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
@@ -345,6 +356,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_class::<iterators::NodesCountMapping>()?;
     m.add_class::<iterators::NodeMap>()?;
+    m.add_class::<iterators::ProductNodeMap>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
