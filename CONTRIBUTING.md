@@ -278,8 +278,8 @@ If you have added new methods or changed method signatures, we encourage you to 
 those methods in stub files. The stub files are in the `retworkx` directory and have a `.pyi` file extension.
 They contain annotated signatures for Python functions, stripped of their implementation.
 
-Albeit this step is optional, it is very helpful for end-users. Adding annotations let users type check
-their code with [mypy](http://mypy-lang.org/), which can helpful to finding bugs.
+While this step is optional, it is very helpful for end-users. Adding annotations lets users type check
+their code with [mypy](http://mypy-lang.org/), which can be helpful for finding bugs.
 
 Just like with tests for the code, annotations are also tested via tox. On Linux and Mac OS
 machines, the tests can be executed via:
@@ -288,7 +288,7 @@ machines, the tests can be executed via:
 tox -estubs
 ```
 
-which will execute the annotation tests. We also encourage type annotation contributions
+We also encourage type annotation contributions
 to add tests in the `stubs-tests` directory to verify the correctness of the annotations.
 
 ### Release Notes
