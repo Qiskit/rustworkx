@@ -11,7 +11,6 @@
 # under the License.
 
 import unittest
-import numpy
 
 import retworkx
 
@@ -210,7 +209,7 @@ class TestDijkstraGraph(unittest.TestCase):
 
     def dijkstra_with_invalid_weights(self):
         graph = retworkx.generators.path_graph(2)
-        for invalid_weight in [numpy.nan, -1]:
+        for invalid_weight in [float("nan"), -1]:
             for as_undirected in [False, True]:
                 with self.subTest(
                     invalid_weight=invalid_weight, as_undirected=as_undirected
@@ -225,7 +224,7 @@ class TestDijkstraGraph(unittest.TestCase):
 
     def dijkstra_lengths_with_invalid_weights(self):
         graph = retworkx.generators.path_graph(2)
-        for invalid_weight in [numpy.nan, -1]:
+        for invalid_weight in [float("nan"), -1]:
             with self.subTest(invalid_weight=invalid_weight):
                 with self.assertRaises(ValueError):
                     retworkx.graph_dijkstra_shortest_path_lengths(
@@ -234,7 +233,7 @@ class TestDijkstraGraph(unittest.TestCase):
 
     def all_pairs_dijkstra_with_invalid_weights(self):
         graph = retworkx.generators.path_graph(2)
-        for invalid_weight in [numpy.nan, -1]:
+        for invalid_weight in [float("nan"), -1]:
             with self.subTest(invalid_weight=invalid_weight):
                 with self.assertRaises(ValueError):
                     retworkx.graph_all_pairs_dijkstra_shortest_paths(
@@ -243,7 +242,7 @@ class TestDijkstraGraph(unittest.TestCase):
 
     def all_pairs_dijkstra_lenghts_with_invalid_weights(self):
         graph = retworkx.generators.path_graph(2)
-        for invalid_weight in [numpy.nan, -1]:
+        for invalid_weight in [float("nan"), -1]:
             with self.subTest(invalid_weight=invalid_weight):
                 with self.assertRaises(ValueError):
                     retworkx.graph_all_pairs_dijkstra_path_lengths(

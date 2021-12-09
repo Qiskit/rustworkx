@@ -11,7 +11,6 @@
 # under the License.
 
 import unittest
-import numpy
 
 import retworkx
 
@@ -105,7 +104,7 @@ class TestAstarDigraph(unittest.TestCase):
         a = g.add_node("A")
         b = g.add_node("B")
         g.add_edge(a, b, 7)
-        for invalid_weight in [numpy.nan, -1]:
+        for invalid_weight in [float("nan"), -1]:
             with self.subTest(invalid_weight=invalid_weight):
                 with self.assertRaises(ValueError):
                     retworkx.digraph_astar_shortest_path(
