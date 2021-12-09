@@ -52,6 +52,7 @@ use num_complex::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
+use pyo3::exceptions::PyValueError;
 use pyo3::import_exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
@@ -65,6 +66,8 @@ use petgraph::visit::{
     NodeCount, NodeIndexable,
 };
 use petgraph::EdgeType;
+
+use std::convert::TryFrom;
 
 use crate::generators::PyInit_generators;
 
@@ -164,6 +167,66 @@ where
             res.extract()
         }
         None => Ok(default),
+    }
+}
+
+#[inline]
+fn is_valid_weight(val: f64) -> PyResult<f64> {
+    if val.is_sign_negative() {
+        return Err(PyValueError::new_err("Negative weights not supported."));
+    }
+
+    if val.is_nan() {
+        return Err(PyValueError::new_err("NaN weights not supported."));
+    }
+
+    Ok(val)
+}
+
+pub enum CostFn {
+    Default(f64),
+    PyFunction(PyObject),
+}
+
+impl From<PyObject> for CostFn {
+    fn from(obj: PyObject) -> Self {
+        CostFn::PyFunction(obj)
+    }
+}
+
+impl TryFrom<f64> for CostFn {
+    type Error = PyErr;
+
+    fn try_from(val: f64) -> Result<Self, Self::Error> {
+        let val = is_valid_weight(val)?;
+        Ok(CostFn::Default(val))
+    }
+}
+
+impl TryFrom<(Option<PyObject>, f64)> for CostFn {
+    type Error = PyErr;
+
+    fn try_from(
+        func_or_default: (Option<PyObject>, f64),
+    ) -> Result<Self, Self::Error> {
+        let (obj, val) = func_or_default;
+        match obj {
+            Some(obj) => Ok(CostFn::PyFunction(obj)),
+            None => CostFn::try_from(val),
+        }
+    }
+}
+
+impl CostFn {
+    fn call(&self, py: Python, arg: &PyObject) -> PyResult<f64> {
+        match self {
+            CostFn::Default(val) => Ok(*val),
+            CostFn::PyFunction(obj) => {
+                let raw = obj.call1(py, (arg,))?;
+                let val: f64 = raw.extract(py)?;
+                is_valid_weight(val)
+            }
+        }
     }
 }
 

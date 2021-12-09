@@ -99,14 +99,14 @@ class TestDijkstraGraph(unittest.TestCase):
         self.assertEqual(expected, path)
 
     def test_dijkstra_with_disconnected_nodes(self):
-        g = retworkx.PyDiGraph()
+        g = retworkx.PyGraph()
         a = g.add_node("A")
         b = g.add_node("B")
         g.add_edge(a, b, 1.2)
         g.add_node("C")
         d = g.add_node("D")
         g.add_edge(b, d, 2.4)
-        path = retworkx.digraph_dijkstra_shortest_path_lengths(
+        path = retworkx.graph_dijkstra_shortest_path_lengths(
             g, a, lambda x: round(x, 1)
         )
         # Computers never work:
@@ -216,3 +216,45 @@ class TestDijkstraGraph(unittest.TestCase):
             expected,
             retworkx.graph_all_pairs_dijkstra_shortest_paths(graph, float),
         )
+
+    def dijkstra_with_invalid_weights(self):
+        graph = retworkx.generators.path_graph(2)
+        for invalid_weight in [float("nan"), -1]:
+            for as_undirected in [False, True]:
+                with self.subTest(
+                    invalid_weight=invalid_weight, as_undirected=as_undirected
+                ):
+                    with self.assertRaises(ValueError):
+                        retworkx.graph_dijkstra_shortest_paths(
+                            graph,
+                            source=0,
+                            weight_fn=lambda _: invalid_weight,
+                            as_undirected=as_undirected,
+                        )
+
+    def dijkstra_lengths_with_invalid_weights(self):
+        graph = retworkx.generators.path_graph(2)
+        for invalid_weight in [float("nan"), -1]:
+            with self.subTest(invalid_weight=invalid_weight):
+                with self.assertRaises(ValueError):
+                    retworkx.graph_dijkstra_shortest_path_lengths(
+                        graph, node=0, edge_cost_fn=lambda _: invalid_weight
+                    )
+
+    def all_pairs_dijkstra_with_invalid_weights(self):
+        graph = retworkx.generators.path_graph(2)
+        for invalid_weight in [float("nan"), -1]:
+            with self.subTest(invalid_weight=invalid_weight):
+                with self.assertRaises(ValueError):
+                    retworkx.graph_all_pairs_dijkstra_shortest_paths(
+                        graph, edge_cost_fn=lambda _: invalid_weight
+                    )
+
+    def all_pairs_dijkstra_lenghts_with_invalid_weights(self):
+        graph = retworkx.generators.path_graph(2)
+        for invalid_weight in [float("nan"), -1]:
+            with self.subTest(invalid_weight=invalid_weight):
+                with self.assertRaises(ValueError):
+                    retworkx.graph_all_pairs_dijkstra_path_lengths(
+                        graph, edge_cost_fn=lambda _: invalid_weight
+                    )
