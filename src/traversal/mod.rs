@@ -10,7 +10,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use retworkx_core::dfs_edges;
+mod bfs_visit;
+
+use bfs_visit::{bfs_handler, PyBfsVisitor};
+use retworkx_core::traversal::{breadth_first_search, dfs_edges};
 
 use super::{digraph, graph, iterators};
 
@@ -44,7 +47,7 @@ fn digraph_dfs_edges(
     source: Option<usize>,
 ) -> EdgeList {
     EdgeList {
-        edges: dfs_edges::dfs_edges(&graph.graph, source.map(NodeIndex::new)),
+        edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
 }
 
@@ -64,7 +67,7 @@ fn digraph_dfs_edges(
 #[pyo3(text_signature = "(graph, /, source=None)")]
 fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
-        edges: dfs_edges::dfs_edges(&graph.graph, source.map(NodeIndex::new)),
+        edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
 }
 
@@ -164,4 +167,176 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     }
     out_set.remove(&node);
     out_set
+}
+
+/// Breadth-first traversal of a directed graph.
+///
+/// The pseudo-code for the BFS algorithm is listed below, with the annotated
+/// event points, for which the given visitor object will be called with the
+/// appropriate method.
+///
+/// ::
+///
+///     BFS(G, s)
+///       for each vertex u in V
+///           color[u] := WHITE
+///       end for
+///       color[s] := GRAY
+///       EQUEUE(Q, s)                             discover vertex s
+///       while (Q != Ø)
+///           u := DEQUEUE(Q)
+///           for each vertex v in Adj[u]          (u,v) is a tree edge
+///               if (color[v] = WHITE)
+///                   color[v] = GRAY
+///               else                             (u,v) is a non - tree edge
+///                   if (color[v] = GRAY)         (u,v) has a gray target
+///                       ...
+///                   else if (color[v] = BLACK)   (u,v) has a black target
+///                       ...
+///           end for
+///           color[u] := BLACK                    finish vertex u
+///       end while
+///
+/// If an exception is raised inside the callback function, the graph traversal
+/// will be stopped immediately. You can exploit this to exit early by raising a
+/// :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+/// will return but without raising back the exception. You can also prune part of the
+/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+///
+/// In the following example we keep track of the tree edges:
+///
+/// .. jupyter-execute::
+///
+///        import retworkx
+///        from retworkx.visit import BFSVisitor
+///   
+///        class TreeEdgesRecorder(BFSVisitor):
+///
+///            def __init__(self):
+///                self.edges = []
+///
+///            def tree_edge(self, edge):
+///                self.edges.append(edge)
+///
+///        graph = retworkx.PyDiGraph()
+///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
+///        vis = TreeEdgesRecorder()
+///        retworkx.bfs_search(graph, [0], vis)
+///        print('Tree edges:', vis.edges)
+///
+/// .. note::
+///
+///     Graph can **not** be mutated while traversing.
+///
+/// :param PyDiGraph graph: The graph to be used.
+/// :param List[int] source: An optional list of node indices to use as the starting nodes
+///     for the breadth-first search. If this is not specified then a source
+///     will be chosen arbitrarly and repeated until all components of the
+///     graph are searched.
+/// :param visitor: A visitor object that is invoked at the event points inside the
+///     algorithm. This should be a subclass of :class:`~retworkx.visit.BFSVisitor`.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, source, visitor)")]
+pub fn digraph_bfs_search(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: Option<Vec<usize>>,
+    visitor: PyBfsVisitor,
+) -> PyResult<()> {
+    let starts: Vec<_> = match source {
+        Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
+        None => graph.graph.node_indices().collect(),
+    };
+
+    breadth_first_search(&graph.graph, starts, |event| {
+        bfs_handler(py, &visitor, event)
+    })?;
+
+    Ok(())
+}
+
+/// Breadth-first traversal of an undirected graph.
+///
+/// The pseudo-code for the BFS algorithm is listed below, with the annotated
+/// event points, for which the given visitor object will be called with the
+/// appropriate method.
+///
+/// ::
+///
+///     BFS(G, s)
+///       for each vertex u in V
+///           color[u] := WHITE
+///       end for
+///       color[s] := GRAY
+///       EQUEUE(Q, s)                             discover vertex s
+///       while (Q != Ø)
+///           u := DEQUEUE(Q)
+///           for each vertex v in Adj[u]          (u,v) is a tree edge
+///               if (color[v] = WHITE)
+///                   color[v] = GRAY
+///               else                             (u,v) is a non - tree edge
+///                   if (color[v] = GRAY)         (u,v) has a gray target
+///                       ...
+///                   else if (color[v] = BLACK)   (u,v) has a black target
+///                       ...
+///           end for
+///           color[u] := BLACK                    finish vertex u
+///       end while
+///
+/// If an exception is raised inside the callback function, the graph traversal
+/// will be stopped immediately. You can exploit this to exit early by raising a
+/// :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+/// will return but without raising back the exception. You can also prune part of the
+/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+///
+/// In the following example we keep track of the tree edges:
+///
+/// .. jupyter-execute::
+///
+///        import retworkx
+///        from retworkx.visit import BFSVisitor
+///   
+///        class TreeEdgesRecorder(BFSVisitor):
+///
+///            def __init__(self):
+///                self.edges = []
+///
+///            def tree_edge(self, edge):
+///                self.edges.append(edge)
+///
+///        graph = retworkx.PyGraph()
+///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
+///        vis = TreeEdgesRecorder()
+///        retworkx.bfs_search(graph, [0], vis)
+///        print('Tree edges:', vis.edges)
+///
+/// .. note::
+///
+///     Graph can **not** be mutated while traversing.
+///
+/// :param PyGraph graph: The graph to be used.
+/// :param List[int] source: An optional list of node indices to use as the starting nodes
+///     for the breadth-first search. If this is not specified then a source
+///     will be chosen arbitrarly and repeated until all components of the
+///     graph are searched.
+/// :param visitor: A visitor object that is invoked at the event points inside the
+///     algorithm. This should be a subclass of :class:`~retworkx.visit.BFSVisitor`.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, source, visitor)")]
+pub fn graph_bfs_search(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: Option<Vec<usize>>,
+    visitor: PyBfsVisitor,
+) -> PyResult<()> {
+    let starts: Vec<_> = match source {
+        Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
+        None => graph.graph.node_indices().collect(),
+    };
+
+    breadth_first_search(&graph.graph, starts, |event| {
+        bfs_handler(py, &visitor, event)
+    })?;
+
+    Ok(())
 }

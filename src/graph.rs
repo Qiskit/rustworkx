@@ -225,13 +225,13 @@ impl PyGraph {
         }
         for raw_edge in edges_list.iter() {
             let edge = raw_edge.downcast::<PyTuple>()?;
-            let raw_p_index = edge.get_item(0).downcast::<PyLong>()?;
+            let raw_p_index = edge.get_item(0)?.downcast::<PyLong>()?;
             let parent: usize = raw_p_index.extract()?;
             let p_index = NodeIndex::new(parent);
-            let raw_c_index = edge.get_item(1).downcast::<PyLong>()?;
+            let raw_c_index = edge.get_item(1)?.downcast::<PyLong>()?;
             let child: usize = raw_c_index.extract()?;
             let c_index = NodeIndex::new(child);
-            let edge_data = edge.get_item(2);
+            let edge_data = edge.get_item(2)?;
 
             self.graph.add_edge(p_index, c_index, edge_data.into());
         }
@@ -945,7 +945,12 @@ impl PyGraph {
     pub fn degree(&self, node: usize) -> usize {
         let index = NodeIndex::new(node);
         let neighbors = self.graph.edges(index);
-        neighbors.count()
+        neighbors.fold(0, |count, edge| {
+            if edge.source() == edge.target() {
+                return count + 2;
+            }
+            count + 1
+        })
     }
 
     /// Generate a new :class:`~retworkx.PyDiGraph` object from this graph
