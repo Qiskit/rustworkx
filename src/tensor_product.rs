@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use crate::iterators::ProductNodeMap;
 use crate::{digraph, graph, StablePyGraph};
 
 use hashbrown::HashMap;
@@ -25,7 +26,7 @@ fn tensor_product<Ty: EdgeType>(
     first: &StablePyGraph<Ty>,
     second: &StablePyGraph<Ty>,
     undirected: bool,
-) -> PyResult<StablePyGraph<Ty>> {
+) -> (StablePyGraph<Ty>, ProductNodeMap) {
     let mut final_graph = StablePyGraph::<Ty>::default();
 
     let mut hash_nodes =
@@ -78,7 +79,14 @@ fn tensor_product<Ty: EdgeType>(
         }
     }
 
-    Ok(final_graph)
+    let out_node_map = ProductNodeMap {
+        node_map: hash_nodes
+            .into_iter()
+            .map(|((x, y), n)| ((x.index(), y.index()), n.index()))
+            .collect(),
+    };
+
+    (final_graph, out_node_map)
 }
 
 /// Return a new PyGraph by forming the tensor product from two input
@@ -89,7 +97,17 @@ fn tensor_product<Ty: EdgeType>(
 ///
 /// :returns: A new PyGraph object that is the tensor product of ``first``
 ///     and ``second``.
-/// :rtype: PyGraph
+///     A read-only dictionary of the product of nodes is also returned. The keys
+///     are a tuple where the first element is a node of the first graph and the
+///     second element is a node of the second graph, and the values are the map
+///     of those elements to node indices in the product graph. For example::
+///     
+///         {
+///             (0, 0): 0,
+///             (0, 1): 1,
+///         }
+///
+/// :rtype: Tuple[:class:`~retworkx.PyGraph`, :class:`~retworkx.ProductNodeMap`]
 ///
 /// .. jupyter-execute::
 ///
@@ -98,7 +116,7 @@ fn tensor_product<Ty: EdgeType>(
 ///
 ///   graph_1 = retworkx.generators.path_graph(2)
 ///   graph_2 = retworkx.generators.path_graph(3)
-///   graph_product = retworkx.graph_tensor_product(graph_1, graph_2)
+///   graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
@@ -106,14 +124,18 @@ fn graph_tensor_product(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
-) -> PyResult<graph::PyGraph> {
-    let out_graph = tensor_product(py, &first.graph, &second.graph, true)?;
+) -> (graph::PyGraph, ProductNodeMap) {
+    let (out_graph, out_node_map) =
+        tensor_product(py, &first.graph, &second.graph, true);
 
-    Ok(graph::PyGraph {
-        graph: out_graph,
-        multigraph: true,
-        node_removed: false,
-    })
+    (
+        graph::PyGraph {
+            graph: out_graph,
+            multigraph: true,
+            node_removed: false,
+        },
+        out_node_map,
+    )
 }
 
 /// Return a new PyDiGraph by forming the tensor product from two input
@@ -124,7 +146,17 @@ fn graph_tensor_product(
 ///
 /// :returns: A new PyDiGraph object that is the tensor product of ``first``
 ///     and ``second``.
-/// :rtype: PyDiGraph
+///     A read-only dictionary of the product of nodes is also returned. The keys
+///     are a tuple where the first element is a node of the first graph and the
+///     second element is a node of the second graph, and the values are the map
+///     of those elements to node indices in the product graph. For example::
+///     
+///         {
+///             (0, 0): 0,
+///             (0, 1): 1,
+///         }
+///
+/// :rtype: Tuple[:class:`~retworkx.PyDiGraph`, :class:`~retworkx.ProductNodeMap`]
 ///
 /// .. jupyter-execute::
 ///
@@ -133,7 +165,7 @@ fn graph_tensor_product(
 ///
 ///   graph_1 = retworkx.generators.directed_path_graph(2)
 ///   graph_2 = retworkx.generators.directed_path_graph(3)
-///   graph_product = retworkx.digraph_tensor_product(graph_1, graph_2)
+///   graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
@@ -141,14 +173,18 @@ fn digraph_tensor_product(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-) -> PyResult<digraph::PyDiGraph> {
-    let out_graph = tensor_product(py, &first.graph, &second.graph, false)?;
+) -> (digraph::PyDiGraph, ProductNodeMap) {
+    let (out_graph, out_node_map) =
+        tensor_product(py, &first.graph, &second.graph, false);
 
-    Ok(digraph::PyDiGraph {
-        graph: out_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
-        node_removed: false,
-        multigraph: true,
-    })
+    (
+        digraph::PyDiGraph {
+            graph: out_graph,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
+            node_removed: false,
+            multigraph: true,
+        },
+        out_node_map,
+    )
 }

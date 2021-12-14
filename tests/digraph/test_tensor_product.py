@@ -19,7 +19,7 @@ class TestTensorProduct(unittest.TestCase):
         graph_1 = retworkx.PyDiGraph()
         graph_2 = retworkx.PyDiGraph()
 
-        graph_product = retworkx.digraph_tensor_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
         self.assertEqual(graph_product.num_nodes(), 0)
         self.assertEqual(graph_product.num_edges(), 0)
 
@@ -27,7 +27,7 @@ class TestTensorProduct(unittest.TestCase):
         graph_1 = retworkx.generators.directed_path_graph(2)
         graph_2 = retworkx.generators.directed_path_graph(2)
 
-        graph_product = retworkx.digraph_tensor_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
         self.assertEqual(graph_product.num_nodes(), 4)
         self.assertEqual(graph_product.num_edges(), 1)
 
@@ -35,7 +35,7 @@ class TestTensorProduct(unittest.TestCase):
         graph_1 = retworkx.generators.directed_path_graph(2)
         graph_2 = retworkx.generators.directed_path_graph(3)
 
-        graph_product = retworkx.digraph_tensor_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
         self.assertEqual(graph_product.num_nodes(), 6)
         self.assertEqual(graph_product.num_edges(), 2)
 
@@ -45,7 +45,7 @@ class TestTensorProduct(unittest.TestCase):
         graph_2 = retworkx.PyDiGraph()
         graph_2.add_node(0)
 
-        graph_product = retworkx.digraph_tensor_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
         self.assertEqual([("a_1", 0)], graph_product.nodes())
 
     def test_directed_edge_weights_tensor(self):
@@ -56,5 +56,5 @@ class TestTensorProduct(unittest.TestCase):
         graph_2.add_nodes_from([0, 1])
         graph_2.add_edge(0, 1, "w_2")
 
-        graph_product = retworkx.digraph_tensor_product(graph_1, graph_2)
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
         self.assertEqual([("w_1", "w_2")], graph_product.edges())
