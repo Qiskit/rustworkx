@@ -98,3 +98,19 @@ class TestAstarDigraph(unittest.TestCase):
             retworkx.digraph_astar_shortest_path(
                 g, 0, lambda x: x, lambda y: 1, lambda z: 0
             )
+
+    def test_astar_with_invalid_weights(self):
+        g = retworkx.PyDAG()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        g.add_edge(a, b, 7)
+        for invalid_weight in [float("nan"), -1]:
+            with self.subTest(invalid_weight=invalid_weight):
+                with self.assertRaises(ValueError):
+                    retworkx.digraph_astar_shortest_path(
+                        g,
+                        a,
+                        goal_fn=lambda goal: goal == "B",
+                        edge_cost_fn=lambda _: invalid_weight,
+                        estimate_cost_fn=lambda _: 0,
+                    )

@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.generators.barbell_graph` that adds
+    support for generating lollipop graphs. For example::
+
+      import retworkx.generators
+      from retworkx.visualization import mpl_draw()
+
+      graph = retworkx.generators.barbell_graph(4, 3)
+      mpl_draw(graph)
