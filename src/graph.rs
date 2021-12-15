@@ -1479,10 +1479,9 @@ impl PyGraph {
     /// Substitute a set of nodes with a single new node.
     ///
     /// .. note::
-    ///     The new node is always made to be the target in any edge
-    ///     representation that includes it. For example, the new node
-    ///     will always appear as the target of its edges as returned by
-    ///     :meth:`~retworkx.PyGraph.edge_list`.
+    ///     This method does not preserve the ordering of endpoints in
+    ///     edge tuple representations (e.g. the tuples returned from
+    ///     :meth:`~retworkx.PyGraph.edge_list`).
     ///
     /// :param list nodes: A set of nodes to be removed and replaced
     ///     by the new node. Any nodes not in the graph are ignored.
