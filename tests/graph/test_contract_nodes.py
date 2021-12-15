@@ -17,8 +17,8 @@ import retworkx
 
 class UE(tuple):
     """An edge tuple wrapper for comparing expected edges with actual graph
-    edge lists where endpoint order doesn't matter (undirected). Supports
-    both edges and weighted edges.
+    edges where endpoint order doesn't matter (undirected). Supports both
+    edges and weighted edges.
 
     For example, the following become true:
     ``UE((2, 3)) == UE((3, 2))``
