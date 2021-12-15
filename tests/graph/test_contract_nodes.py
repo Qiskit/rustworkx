@@ -14,18 +14,23 @@ import unittest
 
 import retworkx
 
+
 class UE(tuple):
     """An edge tuple wrapper for comparing expected edges with actual graph
     edge lists where endpoint order doesn't matter (undirected). Supports
     both edges and weighted edges.
 
     For example, the following become true:
-    ``UE((2, 3)) == UE((3, 2))`` 
+    ``UE((2, 3)) == UE((3, 2))``
     ``UE((4, 5, "a")) == UE((5, 4, "a"))``
-    
+
     """
+
     def __eq__(self, o: object) -> bool:
-        return (frozenset(self[:2]), tuple(self[2:])) == (frozenset(o[:2]), tuple(o[2:]))
+        return (frozenset(self[:2]), tuple(self[2:])) == (
+            frozenset(o[:2]),
+            tuple(o[2:]),
+        )
 
     def __hash__(self) -> int:
         return hash((frozenset(self[:2]), tuple(self[2:])))
