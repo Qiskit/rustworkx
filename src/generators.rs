@@ -952,7 +952,6 @@ pub fn binomial_tree_graph(
     })
 }
 
-///--------------------
 
 /// Creates a full r-ary tree of `n` nodes.
 /// Sometimes called a k-ary, n-ary, or m-ary tree.
@@ -993,7 +992,6 @@ pub fn full_rary_tree(
     let nodes: Vec<NodeIndex> = match weights {
         Some(weights) => {
             let mut node_list: Vec<NodeIndex> = Vec::with_capacity(num_nodes);
-            //let mut node_count = num_nodes;
             if weights.len() > num_nodes {
                 return Err(PyIndexError::new_err(
                     "weights can't be greater than nodes",
@@ -1003,7 +1001,6 @@ pub fn full_rary_tree(
             for weight in weights {
                 let index = graph.add_node(weight);
                 node_list.push(index);
-                //node_count -= 1;
             }
             for _ in 0..node_count {
                 let index = graph.add_node(py.None());
@@ -1038,7 +1035,6 @@ pub fn full_rary_tree(
     })
 }
 
-///--------------------
 
 /// Generate an undirected binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
