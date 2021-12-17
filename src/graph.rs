@@ -18,6 +18,7 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
 use retworkx_core::dictmap::*;
 
 use pyo3::class::PyMappingProtocol;
@@ -38,8 +39,8 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList,
 };
 use super::{
-    find_node_by_weight, weight_callable, IsNan, NoEdgeBetweenNodes,
-    NodesRemoved, StablePyGraph,
+    find_node_by_weight, merge_duplicates, weight_callable, IsNan,
+    NoEdgeBetweenNodes, NodesRemoved, StablePyGraph,
 };
 
 use petgraph::algo;
@@ -85,7 +86,7 @@ use petgraph::visit::{
 ///     print("Node Index: %s" % node_index)
 ///     print(graph[node_index])
 ///
-/// The PyDiGraph implements the Python mapping protocol for nodes so in
+/// The PyGraph implements the Python mapping protocol for nodes so in
 /// addition to access you can also update the data payload with:
 ///
 /// .. jupyter-execute::
@@ -483,7 +484,7 @@ impl PyGraph {
     /// Returns a list of tuples of the form ``(source, target)`` where
     /// ``source`` and ``target`` are the node indices.
     ///
-    /// :returns: An edge list with weights
+    /// :returns: An edge list without weights
     /// :rtype: EdgeList
     #[pyo3(text_signature = "(self)")]
     pub fn edge_list(&self) -> EdgeList {
@@ -1480,6 +1481,82 @@ impl PyGraph {
         Ok(out_dict.into())
     }
 
+    /// Substitute a set of nodes with a single new node.
+    ///
+    /// .. note::
+    ///     This method does not preserve the ordering of endpoints in
+    ///     edge tuple representations (e.g. the tuples returned from
+    ///     :meth:`~retworkx.PyGraph.edge_list`).
+    ///
+    /// :param list nodes: A set of nodes to be removed and replaced
+    ///     by the new node. Any nodes not in the graph are ignored.
+    ///     If empty, this method behaves like :meth:`~PyGraph.add_node`
+    ///     (but slower).
+    /// :param object obj: The data/weight to associate with the new node.
+    /// :param weight_combo_fn: An optional python callable that, when
+    ///     specified, is used to merge parallel edges introduced by the
+    ///     contraction, which will occur if any two edges between ``nodes``
+    ///     and the rest of the graph share an endpoint.
+    ///     If this instance of :class:`~retworkx.PyGraph` is a multigraph,
+    ///     leave this unspecified to preserve parallel edges. If unspecified
+    ///     when not a multigraph, parallel edges and their weights will be
+    ///     combined by choosing one of the edge's weights arbitrarily based
+    ///     on an internal iteration order, subject to change.
+    /// :returns: The index of the newly created node.
+    #[pyo3(text_signature = "(self, nodes, obj, /, weight_combo_fn=None)")]
+    pub fn contract_nodes(
+        &mut self,
+        py: Python,
+        nodes: Vec<usize>,
+        obj: PyObject,
+        weight_combo_fn: Option<PyObject>,
+    ) -> PyResult<usize> {
+        let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
+            nodes.into_iter().map(NodeIndex::new).collect();
+
+        // Create new node.
+        let node_index = self.graph.add_node(obj);
+
+        // Sanitize new node index from user input.
+        indices_to_remove.remove(&node_index);
+
+        // Determine edges for new node.
+        // note: `edges_directed` returns all edges with `i` as
+        // an endpoint. `Direction::Incoming` configures `edge.target()`
+        // to return `i` and `edge.source()` to return the other node.
+        let mut edges: Vec<_> = indices_to_remove
+            .iter()
+            .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
+            .filter_map(|edge| {
+                let pred = edge.source();
+                if !indices_to_remove.contains(&pred) {
+                    Some((pred, edge.weight().clone_ref(py)))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Remove nodes that will be replaced.
+        for index in indices_to_remove {
+            self.graph.remove_node(index);
+        }
+
+        // If `weight_combo_fn` was specified, merge edges according
+        // to that function, even if this is a multigraph. If unspecified,
+        // defer parallel edge handling to `add_edge`.
+        if let Some(merge_fn) = weight_combo_fn {
+            edges =
+                merge_duplicates(edges, |w1, w2| merge_fn.call1(py, (w1, w2)))?;
+        }
+
+        for (source, weight) in edges {
+            self.add_edge(source.index(), node_index.index(), weight)?;
+        }
+
+        Ok(node_index.index())
+    }
+
     /// Return a new PyGraph object for a subgraph of this graph
     ///
     /// :param list nodes: A list of node indices to generate the subgraph
@@ -1522,7 +1599,7 @@ impl PyGraph {
         }
     }
 
-    /// Return a new PyGraph object for an edge induced subgrapph of this graph
+    /// Return a new PyGraph object for an edge induced subgraph of this graph
     ///
     /// The induced subgraph contains each edge in `edges` and each node
     /// incident to any of those edges.
@@ -1534,7 +1611,7 @@ impl PyGraph {
     ///     silently ignored.
     ///
     /// :returns: The edge subgraph
-    /// :rtype: PyDiGraph
+    /// :rtype: PyGraph
     ///
     #[pyo3(text_signature = "(self, edges, /)")]
     pub fn edge_subgraph(&self, edge_list: Vec<[usize; 2]>) -> PyGraph {
