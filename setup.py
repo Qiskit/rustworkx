@@ -24,7 +24,7 @@ def readme():
 
 
 mpl_extras = ['matplotlib>=3.0']
-graphviz_extras = ['pydot>=1.4', 'pillow>=5.4']
+graphviz_extras = ['pillow>=5.4']
 
 
 setup(

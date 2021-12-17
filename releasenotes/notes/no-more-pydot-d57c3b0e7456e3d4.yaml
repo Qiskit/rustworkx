@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    The optional dependencies for :func:`~retworkx.visualization.graphviz_draw`
+    (as documented by the ``graphviz`` optional extra, which can be installed
+    via ``pip install retworkx[graphviz]``) no longer requires the ``pydot``
+    library. Only the ``pillow`` library is needed now to generate visualizations
+    using graphviz.

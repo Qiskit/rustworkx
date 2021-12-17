@@ -122,11 +122,21 @@ class TestGraphvizDraw(unittest.TestCase):
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_draw_image_type.jpg")
 
+    def test_image_type_invalid_type(self):
+        graph = retworkx.directed_gnp_random_graph(50, 0.8)
+        with self.assertRaises(ValueError):
+            graphviz_draw(graph, image_type="raw")
+
     def test_method(self):
         graph = retworkx.directed_gnp_random_graph(50, 0.8)
         image = graphviz_draw(graph, method="sfdp")
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_method.png")
+
+    def test_method_invalid_method(self):
+        graph = retworkx.directed_gnp_random_graph(50, 0.8)
+        with self.assertRaises(ValueError):
+            graphviz_draw(graph, method="special")
 
     def test_filename(self):
         graph = retworkx.generators.grid_graph(20, 20)
