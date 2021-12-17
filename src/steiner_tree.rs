@@ -25,6 +25,7 @@ use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 
 use crate::generators::pairwise;
 use crate::graph;
+use crate::is_valid_weight;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
 
 use retworkx_core::dictmap::*;
@@ -49,6 +50,8 @@ struct MetricClosureEdge {
 ///
 /// :return: A metric closure graph from the input graph
 /// :rtype: PyGraph
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, weight_fn, /)")]
 pub fn metric_closure(
@@ -152,11 +155,7 @@ fn fast_metric_edges(
         if edge.source() != dummy && edge.target() != dummy {
             let weight: f64 =
                 weight_fn.call1(py, (edge.weight(),))?.extract(py)?;
-            if weight.is_nan() {
-                Err(PyValueError::new_err("NaN found as an edge weight"))
-            } else {
-                Ok(weight)
-            }
+            is_valid_weight(weight)
         } else {
             Ok(0.0)
         }
@@ -261,6 +260,8 @@ fn fast_metric_edges(
 /// :returns: An approximation to the minimal steiner tree of ``graph`` induced
 ///     by ``terminal_nodes``.
 /// :rtype: PyGraph
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 ///
 /// .. [1] Kou, Markowsky & Berman,
 ///    "A fast algorithm for Steiner trees"
