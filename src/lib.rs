@@ -48,6 +48,7 @@ use tree::*;
 use union::*;
 
 use hashbrown::HashMap;
+use indexmap::map::Entry::{Occupied, Vacant};
 use num_complex::Complex64;
 
 use pyo3::create_exception;
@@ -68,6 +69,9 @@ use petgraph::visit::{
 use petgraph::EdgeType;
 
 use std::convert::TryFrom;
+use std::hash::Hash;
+
+use retworkx_core::dictmap::*;
 
 use crate::generators::PyInit_generators;
 
@@ -248,6 +252,28 @@ fn find_node_by_weight<Ty: EdgeType>(
         }
     }
     Ok(index)
+}
+
+fn merge_duplicates<K, V, F, E>(
+    xs: Vec<(K, V)>,
+    mut merge_fn: F,
+) -> Result<Vec<(K, V)>, E>
+where
+    K: Hash + Eq,
+    F: FnMut(&V, &V) -> Result<V, E>,
+{
+    let mut kvs = DictMap::with_capacity(xs.len());
+    for (k, v) in xs {
+        match kvs.entry(k) {
+            Occupied(entry) => {
+                *entry.into_mut() = merge_fn(&v, entry.get())?;
+            }
+            Vacant(entry) => {
+                entry.insert(v);
+            }
+        }
+    }
+    Ok(kvs.into_iter().collect::<Vec<_>>())
 }
 
 // The provided node is invalid.
