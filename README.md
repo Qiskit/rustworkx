@@ -54,6 +54,13 @@ pip install retworkx
 will build retworkx for your local system from the source package and install
 it just as it would if there was a prebuilt binary available.
 
+Note: To build from source you will need to ensure you have pip >=19.0.0
+installed, which supports PEP-517, or that you have manually installed
+`setuptools-rust` prior to running `pip install retworkx`. If you recieve an
+error about `setuptools-rust` not being found you should upgrade pip with
+`pip install -U pip` or manually install `setuptools-rust` with
+`pip install setuptools-rust` and try again.
+
 ### Optional dependencies
 
 If you're planning to use the `retworkx.visualization` module you will need to
