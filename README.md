@@ -65,10 +65,9 @@ installed with `pip install matplotlib` or when you're installing retworkx with
 function `retworkx.visualization.graphviz_drawer` first you will need to install
 graphviz, instructions for this can be found here:
 https://graphviz.org/download/#executable-packages. Then you
-will need to install the [pydot](https://pypi.org/project/pydot/) and
-[pillow](https://python-pillow.org/) Python libraries. This can be done either
-with `pip install pydot pillow` or when installing retworkx with
-`pip install 'retworkx[graphviz]'`.
+will need to install the [pillow](https://python-pillow.org/) Python library.
+This can be done either with `pip install pillow` or when installing retworkx
+with `pip install 'retworkx[graphviz]'`.
 
 If you would like to install all the optional Python dependencies when you
 install retworkx you can use `pip install 'retworkx[all]'` to do this.
