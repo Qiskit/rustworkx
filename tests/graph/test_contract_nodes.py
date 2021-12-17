@@ -15,14 +15,14 @@ import unittest
 import retworkx
 
 
-class UE(tuple):
+class UndirectedEdge(tuple):
     """An edge tuple wrapper for comparing expected edges with actual graph
     edges where endpoint order doesn't matter (undirected). Supports both
     edges and weighted edges.
 
     For example, the following become true:
-    ``UE((2, 3)) == UE((3, 2))``
-    ``UE((4, 5, "a")) == UE((5, 4, "a"))``
+    ``UndirectedEdge((2, 3)) == UndirectedEdge((3, 2))``
+    ``UndirectedEdge((4, 5, "a")) == UndirectedEdge((5, 4, "a"))``
 
     """
 
@@ -81,8 +81,12 @@ class TestContractNodes(unittest.TestCase):
 
         self.assertEqual([node_b, node_c, node_m], dag.node_indexes())
         self.assertEqual(
-            {UE((node_b, node_c)), UE((node_c, node_m)), UE((node_b, node_m))},
-            set(UE(e) for e in dag.edge_list()),
+            {
+                UndirectedEdge((node_b, node_c)),
+                UndirectedEdge((node_c, node_m)),
+                UndirectedEdge((node_b, node_m)),
+            },
+            set(UndirectedEdge(e) for e in dag.edge_list()),
         )
 
     def test_multiple_paths_would_cycle(self):
@@ -119,13 +123,13 @@ class TestContractNodes(unittest.TestCase):
         )
         self.assertEqual(
             {
-                UE((node_b, node_c)),
-                UE((node_c, node_m)),
-                UE((node_e, node_m)),
-                UE((node_b, node_e)),
-                UE((node_b, node_m)),
+                UndirectedEdge((node_b, node_c)),
+                UndirectedEdge((node_c, node_m)),
+                UndirectedEdge((node_e, node_m)),
+                UndirectedEdge((node_b, node_e)),
+                UndirectedEdge((node_b, node_m)),
             },
-            set(UE(e) for e in dag.edge_list()),
+            set(UndirectedEdge(e) for e in dag.edge_list()),
         )
 
     def test_replace_node_no_neighbors(self):
@@ -158,8 +162,11 @@ class TestContractNodes(unittest.TestCase):
 
         # Note that target is *always* the new node (m).
         self.assertEqual(
-            {UE((node_a, node_m, 1)), UE((node_a, node_m, 2))},
-            set(UE(e) for e in dag.weighted_edge_list()),
+            {
+                UndirectedEdge((node_a, node_m, 1)),
+                UndirectedEdge((node_a, node_m, 2)),
+            },
+            set(UndirectedEdge(e) for e in dag.weighted_edge_list()),
         )
 
 
