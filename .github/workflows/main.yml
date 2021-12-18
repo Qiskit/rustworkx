@@ -33,7 +33,7 @@ jobs:
       - name: Test Build
         run: cargo build
       - name: Rust Format
-        run: cargo fmt -- --check
+        run: cargo fmt --all -- --check
       - name: Clippy
         run: cargo clippy -- -D warnings
       - name: Black Codestyle Format

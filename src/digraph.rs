@@ -13,12 +13,15 @@
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
+
 use retworkx_core::dictmap::*;
 
 use pyo3::class::PyMappingProtocol;
@@ -48,8 +51,9 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    find_node_by_weight, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan,
-    NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved, StablePyGraph,
+    find_node_by_weight, merge_duplicates, weight_callable, DAGHasCycle,
+    DAGWouldCycle, IsNan, NoEdgeBetweenNodes, NoSuitableNeighbors,
+    NodesRemoved, StablePyGraph,
 };
 
 use super::dag_algo::is_directed_acyclic_graph;
@@ -179,6 +183,24 @@ impl NodeCount for PyDiGraph {
 
 // Rust side only PyDiGraph methods
 impl PyDiGraph {
+    fn add_edge_no_cycle_check(
+        &mut self,
+        p_index: NodeIndex,
+        c_index: NodeIndex,
+        edge: PyObject,
+    ) -> usize {
+        if !self.multigraph {
+            let exists = self.graph.find_edge(p_index, c_index);
+            if let Some(index) = exists {
+                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
+                *edge_weight = edge;
+                return index.index();
+            }
+        }
+        let edge = self.graph.add_edge(p_index, c_index, edge);
+        edge.index()
+    }
+
     fn _add_edge(
         &mut self,
         p_index: NodeIndex,
@@ -205,16 +227,7 @@ impl PyDiGraph {
                 ));
             }
         }
-        if !self.multigraph {
-            let exists = self.graph.find_edge(p_index, c_index);
-            if let Some(index) = exists {
-                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
-                *edge_weight = edge;
-                return Ok(index.index());
-            }
-        }
-        let edge = self.graph.add_edge(p_index, c_index, edge);
-        Ok(edge.index())
+        Ok(self.add_edge_no_cycle_check(p_index, c_index, edge))
     }
 
     fn insert_between(
@@ -760,7 +773,7 @@ impl PyDiGraph {
     /// Returns a list of tuples of the form ``(source, target)`` where
     /// ``source`` and ``target`` are the node indices.
     ///
-    /// :returns: An edge list with weights
+    /// :returns: An edge list without weights
     /// :rtype: EdgeList
     pub fn edge_list(&self) -> EdgeList {
         EdgeList {
@@ -2263,6 +2276,141 @@ impl PyDiGraph {
         // Remove node
         self.graph.remove_node(node_index);
         Ok(NodeMap { node_map: out_map })
+    }
+
+    /// Substitute a set of nodes with a single new node.
+    ///
+    /// :param list nodes: A set of nodes to be removed and replaced
+    ///     by the new node. Any nodes not in the graph are ignored.
+    ///     If empty, this method behaves like :meth:`~PyDiGraph.add_node`
+    ///     (but slower).
+    /// :param object obj: The data/weight to associate with the new node.
+    /// :param bool check_cycle: If set to ``True``, validates
+    ///     that the contraction will not introduce cycles before
+    ///     modifying the graph. If set to ``False``, validation is
+    ///     skipped. If not provided, inherits the value
+    ///     of ``check_cycle`` from this instance of
+    ///     :class:`~retworkx.PyDiGraph`.
+    /// :param weight_combo_fn: An optional python callable that, when
+    ///     specified, is used to merge parallel edges introduced by the
+    ///     contraction, which will occur when multiple nodes in
+    ///     ``nodes`` have an incoming edge
+    ///     from the same source node or when multiple nodes in
+    ///     ``nodes`` have an outgoing edge to the same target node.
+    ///     If this instance of :class:`~retworkx.PyDiGraph` is a multigraph,
+    ///     leave this unspecified to preserve parallel edges. If unspecified
+    ///     when not a multigraph, parallel edges and their weights will be
+    ///     combined by choosing one of the edge's weights arbitrarily based
+    ///     on an internal iteration order, subject to change.
+    /// :returns: The index of the newly created node.
+    /// :raises DAGWouldCycle: The cycle check is enabled and the
+    ///     contraction would introduce cycle(s).
+    #[pyo3(
+        text_signature = "(self, nodes, obj, /, check_cycle=None, weight_combo_fn=None)"
+    )]
+    pub fn contract_nodes(
+        &mut self,
+        py: Python,
+        nodes: Vec<usize>,
+        obj: PyObject,
+        check_cycle: Option<bool>,
+        weight_combo_fn: Option<PyObject>,
+    ) -> PyResult<usize> {
+        let can_contract = |nodes: &IndexSet<NodeIndex, ahash::RandomState>| {
+            // Start with successors of `nodes` that aren't in `nodes` itself.
+            let visit_next: Vec<NodeIndex> = nodes
+                .iter()
+                .flat_map(|n| self.graph.edges(*n))
+                .filter_map(|edge| {
+                    let target_node = edge.target();
+                    if !nodes.contains(&target_node) {
+                        Some(target_node)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            // Now, if we can reach any of `nodes`, there exists a path from `nodes`
+            // back to `nodes` of length > 1, meaning contraction is disallowed.
+            let mut dfs = Dfs::from_parts(visit_next, self.graph.visit_map());
+            while let Some(node) = dfs.next(&self.graph) {
+                if nodes.contains(&node) {
+                    // we found a path back to `nodes`
+                    return false;
+                }
+            }
+            true
+        };
+
+        let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
+            nodes.into_iter().map(NodeIndex::new).collect();
+
+        if check_cycle.unwrap_or(self.check_cycle)
+            && !can_contract(&indices_to_remove)
+        {
+            return Err(DAGWouldCycle::new_err(
+                "Contraction would create cycle(s)",
+            ));
+        }
+
+        // Create new node.
+        let node_index = self.graph.add_node(obj);
+
+        // Sanitize new node index from user input.
+        indices_to_remove.remove(&node_index);
+
+        // Determine edges for new node.
+        let mut incoming_edges: Vec<_> = indices_to_remove
+            .iter()
+            .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
+            .filter_map(|edge| {
+                let pred = edge.source();
+                if !indices_to_remove.contains(&pred) {
+                    Some((pred, edge.weight().clone_ref(py)))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let mut outgoing_edges: Vec<_> = indices_to_remove
+            .iter()
+            .flat_map(|&i| self.graph.edges_directed(i, Direction::Outgoing))
+            .filter_map(|edge| {
+                let succ = edge.target();
+                if !indices_to_remove.contains(&succ) {
+                    Some((succ, edge.weight().clone_ref(py)))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Remove nodes that will be replaced.
+        for index in indices_to_remove {
+            self.graph.remove_node(index);
+        }
+
+        // If `weight_combo_fn` was specified, merge edges according
+        // to that function, even if this is a multigraph. If unspecified,
+        // defer parallel edge handling to `add_edge_no_cycle_check`.
+        if let Some(merge_fn) = weight_combo_fn {
+            let f = |w1: &Py<_>, w2: &Py<_>| merge_fn.call1(py, (w1, w2));
+
+            incoming_edges = merge_duplicates(incoming_edges, f)?;
+            outgoing_edges = merge_duplicates(outgoing_edges, f)?;
+        }
+
+        for (source, weight) in incoming_edges {
+            self.add_edge_no_cycle_check(source, node_index, weight);
+        }
+
+        for (target, weight) in outgoing_edges {
+            self.add_edge_no_cycle_check(node_index, target, weight);
+        }
+
+        Ok(node_index.index())
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph
