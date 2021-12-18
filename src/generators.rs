@@ -952,7 +952,6 @@ pub fn binomial_tree_graph(
     })
 }
 
-
 /// Creates a full r-ary tree of `n` nodes.
 /// Sometimes called a k-ary, n-ary, or m-ary tree.
 ///
@@ -1034,7 +1033,6 @@ pub fn full_rary_tree(
         multigraph,
     })
 }
-
 
 /// Generate an undirected binomial tree of order n recursively.
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
@@ -2299,6 +2297,198 @@ pub fn lollipop_graph(
     Ok(graph)
 }
 
+/// Generate a generalized Petersen graph :math:`G(n, k)` with :math:`2n`
+/// nodes and :math:`3n` edges. See Watkins [1]_ for more details.
+///
+/// .. note::
+///   
+///   The Petersen graph itself is denoted :math:`G(5, 2)`
+///
+/// :param int n: number of nodes in the internal star and external regular polygon.
+/// :param int k: shift that changes the internal star graph.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated generalized Petersen graph.
+///
+/// :rtype: PyGraph
+/// :raises IndexError: If either ``n`` or ``k`` are
+///      not valid
+/// :raises TypeError: If either ``n`` or ``k`` are
+///      not non-negative integers
+///
+/// .. jupyter-execute::
+///   
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///   
+///   # Petersen Graph is G(5, 2)
+///   graph = retworkx.generators.generalized_petersen_graph(5, 2)
+///   layout = retworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
+///   mpl_draw(graph, pos=layout)
+///   
+/// .. jupyter-execute::
+///   
+///   # Möbius–Kantor Graph is G(8, 3)
+///   graph = retworkx.generators.generalized_petersen_graph(8, 3)
+///   layout = retworkx.shell_layout(
+///     graph, nlist=[[0, 1, 2, 3, 4, 5, 6, 7], [10, 11, 12, 13, 14, 15, 8, 9]]
+///   )
+///   mpl_draw(graph, pos=layout)
+///
+/// .. [1] Watkins, Mark E.
+///    "A theorem on tait colorings with an application to the generalized Petersen graphs"
+///    Journal of Combinatorial Theory 6 (2), 152–164 (1969).
+///    https://doi.org/10.1016/S0021-9800(69)80116-X
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(n, k, /, multigraph=True)")]
+pub fn generalized_petersen_graph(
+    py: Python,
+    n: usize,
+    k: usize,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    if n < 3 {
+        return Err(PyIndexError::new_err("n must be at least 3"));
+    }
+
+    if k == 0 || 2 * k >= n {
+        return Err(PyIndexError::new_err(
+            "k is invalid: it must be positive and less than n/2",
+        ));
+    }
+
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(2 * n, 3 * n);
+
+    let star_nodes: Vec<NodeIndex> =
+        (0..n).map(|_| graph.add_node(py.None())).collect();
+
+    let polygon_nodes: Vec<NodeIndex> =
+        (0..n).map(|_| graph.add_node(py.None())).collect();
+
+    for i in 0..n {
+        graph.add_edge(star_nodes[i], star_nodes[(i + k) % n], py.None());
+    }
+
+    for i in 0..n {
+        graph.add_edge(polygon_nodes[i], polygon_nodes[(i + 1) % n], py.None());
+    }
+
+    for i in 0..n {
+        graph.add_edge(polygon_nodes[i], star_nodes[i], py.None());
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
+/// Generate an undirected barbell graph where two identical mesh graphs are
+/// connected by a path.
+///
+/// If ``num_path_nodes`` (described below) is not specified then this is
+/// equivalent to two mesh graphs joined together.
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graphs
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated barbell graph
+/// :rtype: PyGraph
+/// :raises IndexError: If ``num_mesh_nodes`` is not specified
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.barbell_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, multigraph=True)"
+)]
+pub fn barbell_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    if num_mesh_nodes.is_none() {
+        return Err(PyIndexError::new_err("num_mesh_nodes not specified"));
+    }
+
+    let mut left_mesh = StableUnGraph::<PyObject, PyObject>::default();
+    let mesh_nodes: Vec<NodeIndex> = (0..num_mesh_nodes.unwrap())
+        .map(|_| left_mesh.add_node(py.None()))
+        .collect();
+    let mut nodelen = mesh_nodes.len();
+    for i in 0..nodelen - 1 {
+        for j in i + 1..nodelen {
+            left_mesh.add_edge(mesh_nodes[i], mesh_nodes[j], py.None());
+        }
+    }
+
+    let right_mesh = left_mesh.clone();
+
+    if let Some(num_nodes) = num_path_nodes {
+        let path_nodes: Vec<NodeIndex> = (0..num_nodes)
+            .map(|_| left_mesh.add_node(py.None()))
+            .collect();
+        left_mesh.add_edge(
+            NodeIndex::new(nodelen - 1),
+            NodeIndex::new(nodelen),
+            py.None(),
+        );
+
+        nodelen += path_nodes.len();
+
+        for (node_a, node_b) in pairwise(path_nodes) {
+            match node_a {
+                Some(node_a) => left_mesh.add_edge(node_a, node_b, py.None()),
+                None => continue,
+            };
+        }
+    }
+
+    for node in right_mesh.node_indices() {
+        let new_node = &right_mesh[node];
+        left_mesh.add_node(new_node.clone_ref(py));
+    }
+    left_mesh.add_edge(
+        NodeIndex::new(nodelen - 1),
+        NodeIndex::new(nodelen),
+        py.None(),
+    );
+    for edge in right_mesh.edge_references() {
+        let new_source = NodeIndex::new(nodelen + edge.source().index());
+        let new_target = NodeIndex::new(nodelen + edge.target().index());
+        let weight = edge.weight();
+        left_mesh.add_edge(new_source, new_target, weight.clone_ref(py));
+    }
+
+    Ok(graph::PyGraph {
+        graph: left_mesh,
+        node_removed: false,
+        multigraph,
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2321,5 +2511,7 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
     m.add_wrapped(wrap_pyfunction!(full_rary_tree))?;
+    m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
+    m.add_wrapped(wrap_pyfunction!(barbell_graph))?;
     Ok(())
 }

@@ -352,11 +352,11 @@ impl PyDiGraph {
         }
         for raw_edge in edges_list.iter() {
             let edge = raw_edge.downcast::<PyTuple>()?;
-            let raw_p_index = edge.get_item(0).downcast::<PyLong>()?;
+            let raw_p_index = edge.get_item(0)?.downcast::<PyLong>()?;
             let p_index: usize = raw_p_index.extract()?;
-            let raw_c_index = edge.get_item(1).downcast::<PyLong>()?;
+            let raw_c_index = edge.get_item(1)?.downcast::<PyLong>()?;
             let c_index: usize = raw_c_index.extract()?;
-            let edge_data = edge.get_item(2);
+            let edge_data = edge.get_item(2)?;
             self.graph.add_edge(
                 NodeIndex::new(p_index),
                 NodeIndex::new(c_index),

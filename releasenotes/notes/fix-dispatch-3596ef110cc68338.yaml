@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Updates :func:`~retworkx.dfs_edges` to set `source` argument to `None`
+    by default, as already stated in the documentation.
+  - |
+    Fixes an oversight in :func:`~retworkx.union` where user-defined values
+    of `merge_nodes` and `merge_edges` arguments were being ingored.
