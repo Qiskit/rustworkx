@@ -972,7 +972,7 @@ pub fn binomial_tree_graph(
 ///   import retworkx.generators
 ///   from retworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.full_rary_tree(4)
+///   graph = retworkx.generators.full_rary_tree(5, 15)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
