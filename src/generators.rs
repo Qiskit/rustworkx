@@ -957,7 +957,7 @@ pub fn binomial_tree_graph(
 ///
 /// :param int order: Order of the tree.
 /// :param list weights: A list of node weights. If the number of weights is
-///     less than 2**order extra nodes with with None will be appended.
+///     less than n, extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -965,7 +965,7 @@ pub fn binomial_tree_graph(
 ///
 /// :returns: A r-ary tree.
 /// :rtype: PyGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises IndexError: If the lenght of ``weights`` is greater that n
 ///
 /// .. jupyter-execute::
 ///
