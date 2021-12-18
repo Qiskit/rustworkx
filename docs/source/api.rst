@@ -178,6 +178,7 @@ Generators
     retworkx.generators.lollipop_graph
     retworkx.generators.generalized_petersen_graph
     retworkx.generators.barbell_graph
+    retworkx.generators.full_rary_tree
 
 Random Circuit Functions
 ========================
