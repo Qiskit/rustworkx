@@ -475,15 +475,30 @@ impl PyDiGraph {
             .collect()
     }
 
-    /// Return a list of all node indexes.
+    /// Return a list of all node indices.
+    ///
+    /// :returns: A list of all the node indexes in the graph
+    /// :rtype: NodeIndices
+    #[pyo3(text_signature = "(self)")]
+    pub fn node_indices(&self) -> NodeIndices {
+        NodeIndices {
+            nodes: self.graph.node_indices().map(|node| node.index()).collect(),
+        }
+    }
+
+    /// Return a list of all node indices.
+    ///
+    /// .. note::
+    ///
+    ///     This is identical to :meth:`.node_indices()`, which is the
+    ///     preferred method to get the node indices in the graph. This
+    ///     exists for backwards compatibility with earlier releases.
     ///
     /// :returns: A list of all the node indexes in the graph
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self)")]
     pub fn node_indexes(&self) -> NodeIndices {
-        NodeIndices {
-            nodes: self.graph.node_indices().map(|node| node.index()).collect(),
-        }
+        self.node_indices()
     }
 
     /// Return True if there is an edge from node_a to node_b.
@@ -664,6 +679,55 @@ impl PyDiGraph {
 
         let data = self.graph.edge_weight(edge_index).unwrap();
         Ok(data)
+    }
+
+    /// Return the edge data for the edge by it's given index
+    ///
+    /// :param int edge_index: The edge index to get the data for
+    ///
+    /// :returns: The data object set for the edge
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
+    #[pyo3(text_signature = "(self, edge_index, /)")]
+    pub fn get_edge_data_by_index(
+        &self,
+        edge_index: usize,
+    ) -> PyResult<&PyObject> {
+        let data = match self.graph.edge_weight(EdgeIndex::new(edge_index)) {
+            Some(data) => data,
+            None => {
+                return Err(PyIndexError::new_err(format!(
+                    "Provided edge index {} is not present in the graph",
+                    edge_index
+                )));
+            }
+        };
+        Ok(data)
+    }
+
+    /// Return the edge endpoints for the edge by it's given index
+    ///
+    /// :param int edge_index: The edge index to get the endpoints for
+    ///
+    /// :returns: The data object set for the edge
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
+    #[pyo3(text_signature = "(self, edge_index, /)")]
+    pub fn get_edge_endpoints_by_index(
+        &self,
+        edge_index: usize,
+    ) -> PyResult<(usize, usize)> {
+        let endpoints =
+            match self.graph.edge_endpoints(EdgeIndex::new(edge_index)) {
+                Some(endpoints) => (endpoints.0.index(), endpoints.1.index()),
+                None => {
+                    return Err(PyIndexError::new_err(format!(
+                        "Provided edge index {} is not present in the graph",
+                        edge_index
+                    )));
+                }
+            };
+        Ok(endpoints)
     }
 
     /// Update an edge's weight/payload inplace

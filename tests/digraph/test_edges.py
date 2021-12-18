@@ -649,6 +649,46 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         self.assertFalse(graph.has_parallel_edges())
 
+    def test_get_edge_data_by_index(self):
+        graph = retworkx.PyDiGraph()
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.extend_from_weighted_edge_list(edge_list)
+        res = graph.get_edge_data_by_index(2)
+        self.assertEqual("c", res)
+
+    def test_get_edge_data_by_index_invalid_index(self):
+        graph = retworkx.PyDiGraph()
+        with self.assertRaisesRegex(
+            IndexError, "Provided edge index 2 is not present in the graph"
+        ):
+            graph.get_edge_data_by_index(2)
+
+    def test_get_edge_endpoints_by_index(self):
+        graph = retworkx.PyGraph()
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.extend_from_weighted_edge_list(edge_list)
+        res = graph.get_edge_endpoints_by_index(2)
+        self.assertEqual((0, 2), res)
+
+    def test_get_edge_endpoints_by_index_invalid_index(self):
+        graph = retworkx.PyDiGraph()
+        with self.assertRaisesRegex(
+            IndexError, "Provided edge index 2 is not present in the graph"
+        ):
+            graph.get_edge_endpoints_by_index(2)
+
 
 class TestEdgesMultigraphFalse(unittest.TestCase):
     def test_multigraph_attr(self):

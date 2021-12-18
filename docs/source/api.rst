@@ -14,6 +14,8 @@ Graph Classes
     retworkx.PyDiGraph
     retworkx.PyDAG
 
+.. _algorithm_api:
+
 Algorithm Functions
 ===================
 

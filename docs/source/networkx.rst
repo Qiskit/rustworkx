@@ -1,11 +1,12 @@
 .. _networkx:
 
 ###########################
-retworkx for networkx users
+retworkx for NetworkX users
 ###########################
 
-This is an introductory guide for existing networkx users on how to use
-retworkx, how it differs from networkx, and key differences to keep in mind.
+This is an introductory guide for existing `NetworkX <https://networkx.org>`__
+users on how to use retworkx, how it differs from NetworkX, and key
+differences to keep in mind.
 
 Some Key Differences
 ====================

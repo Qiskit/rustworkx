@@ -440,9 +440,66 @@ class TestEdges(unittest.TestCase):
             graph.edge_index_map(),
         )
 
+    def test_incident_edges(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_c, node_d, "edge c")
+        res = graph.incident_edges(node_d)
+        self.assertEqual({1, 2}, set(res))
+
+    def test_incident_edges_invalid_node(self):
+        graph = retworkx.PyGraph()
+        res = graph.incident_edges(42)
+        self.assertEqual([], res)
+
     def test_edge_index_map_empty(self):
         graph = retworkx.PyDiGraph()
         self.assertEqual({}, graph.edge_index_map())
+
+    def test_get_edge_data_by_index(self):
+        graph = retworkx.PyGraph()
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.extend_from_weighted_edge_list(edge_list)
+        res = graph.get_edge_data_by_index(2)
+        self.assertEqual("c", res)
+
+    def test_get_edge_data_by_index_invalid_index(self):
+        graph = retworkx.PyGraph()
+        with self.assertRaisesRegex(
+            IndexError, "Provided edge index 2 is not present in the graph"
+        ):
+            graph.get_edge_data_by_index(2)
+
+    def test_get_edge_endpoints_by_index(self):
+        graph = retworkx.PyGraph()
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.extend_from_weighted_edge_list(edge_list)
+        res = graph.get_edge_endpoints_by_index(2)
+        self.assertEqual((0, 2), res)
+
+    def test_get_edge_endpoints_by_index_invalid_index(self):
+        graph = retworkx.PyGraph()
+        with self.assertRaisesRegex(
+            IndexError, "Provided edge index 2 is not present in the graph"
+        ):
+            graph.get_edge_endpoints_by_index(2)
 
 
 class TestEdgesMultigraphFalse(unittest.TestCase):
