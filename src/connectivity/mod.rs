@@ -21,7 +21,6 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
-use std::collections::BTreeSet;
 
 use pyo3::prelude::*;
 use pyo3::Python;

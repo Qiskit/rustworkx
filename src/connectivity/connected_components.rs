@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::collections::VecDeque;
 use hashbrown::HashSet;
+use std::collections::VecDeque;
 
 use petgraph::visit::{GraphBase, VisitMap, Visitable};
 use petgraph::EdgeType;
