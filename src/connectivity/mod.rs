@@ -340,7 +340,7 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(
     graph: &digraph::PyDiGraph,
-) -> Vec<BTreeSet<usize>> {
+) -> Vec<HashSet<usize>> {
     connected_components::connected_components(&graph.graph)
 }
 
