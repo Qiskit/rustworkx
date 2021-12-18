@@ -252,7 +252,7 @@ fn number_connected_components(graph: &graph::PyGraph) -> usize {
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn connected_components(graph: &graph::PyGraph) -> Vec<BTreeSet<usize>> {
+pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
     connected_components::connected_components(&graph.graph)
 }
 
@@ -270,7 +270,7 @@ pub fn connected_components(graph: &graph::PyGraph) -> Vec<BTreeSet<usize>> {
 pub fn node_connected_component(
     graph: &graph::PyGraph,
     node: usize,
-) -> PyResult<BTreeSet<usize>> {
+) -> PyResult<HashSet<usize>> {
     let node = NodeIndex::new(node);
 
     if !graph.graph.contains_node(node) {

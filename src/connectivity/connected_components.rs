@@ -10,7 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::collections::{BTreeSet, VecDeque};
+use std::collections::VecDeque;
+use hashbrown::HashSet;
 
 use petgraph::visit::{GraphBase, VisitMap, Visitable};
 use petgraph::EdgeType;
@@ -21,8 +22,8 @@ pub fn bfs_undirected<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
     start: <StablePyGraph<Ty> as GraphBase>::NodeId,
     discovered: &mut <StablePyGraph<Ty> as Visitable>::Map,
-) -> BTreeSet<usize> {
-    let mut component = BTreeSet::new();
+) -> HashSet<usize> {
+    let mut component = HashSet::new();
     component.insert(start.index());
     let mut stack = VecDeque::new();
     stack.push_front(start);
@@ -41,7 +42,7 @@ pub fn bfs_undirected<Ty: EdgeType>(
 
 pub fn connected_components<Ty>(
     graph: &StablePyGraph<Ty>,
-) -> Vec<BTreeSet<usize>>
+) -> Vec<HashSet<usize>>
 where
     Ty: EdgeType,
 {
