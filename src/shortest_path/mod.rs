@@ -650,26 +650,37 @@ fn digraph_k_shortest_path_lengths(
     let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = CostFn::from(edge_cost);
 
-    let out_map = k_shortest_path(
+    let out_map: Vec<Option<f64>> = k_shortest_path(
         &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,
         |e| edge_cost_callable.call(py, e.weight()),
     )?;
+
+    if let Some(goal_usize) = goal {
+        return Ok(PathLengthMapping {
+            path_lengths: match out_map[goal_usize] {
+                Some(goal_length) => {
+                    let mut ans = DictMap::new();
+                    ans.insert(goal_usize, goal_length);
+                    ans
+                }
+                None => DictMap::new(),
+            },
+        });
+    }
+
     Ok(PathLengthMapping {
         path_lengths: out_map
-            .iter()
-            .filter_map(|(k, v)| {
-                let k_int = k.index();
-                if goal.is_some() && goal.unwrap() != k_int {
-                    None
-                } else {
-                    Some((k_int, *v))
-                }
+            .into_iter()
+            .enumerate()
+            .filter_map(|(k_int, opt_v)| {
+                opt_v.map(|v| (k_int, v))
             })
             .collect(),
     })
+
 }
 
 /// Compute the length of the kth shortest path
@@ -705,23 +716,33 @@ pub fn graph_k_shortest_path_lengths(
     let out_goal = goal.map(NodeIndex::new);
     let edge_cost_callable = CostFn::from(edge_cost);
 
-    let out_map = k_shortest_path(
+    let out_map: Vec<Option<f64>> = k_shortest_path(
         &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,
         |e| edge_cost_callable.call(py, e.weight()),
     )?;
+
+    if let Some(goal_usize) = goal {
+        return Ok(PathLengthMapping {
+            path_lengths: match out_map[goal_usize] {
+                Some(goal_length) => {
+                    let mut ans = DictMap::new();
+                    ans.insert(goal_usize, goal_length);
+                    ans
+                }
+                None => DictMap::new(),
+            },
+        });
+    }
+
     Ok(PathLengthMapping {
         path_lengths: out_map
-            .iter()
-            .filter_map(|(k, v)| {
-                let k_int = k.index();
-                if goal.is_some() && goal.unwrap() != k_int {
-                    None
-                } else {
-                    Some((k_int, *v))
-                }
+            .into_iter()
+            .enumerate()
+            .filter_map(|(k_int, opt_v)| {
+                opt_v.map(|v| (k_int, v))
             })
             .collect(),
     })

@@ -26,7 +26,7 @@ use petgraph::visit::{
     Visitable,
 };
 
-use crate::dictmap::*;
+use crate::distancemap::DistanceMap;
 use crate::min_scored::MinScored;
 
 /// k'th shortest path algorithm.
@@ -43,7 +43,7 @@ use crate::min_scored::MinScored;
 ///
 /// Computes in **O(k * (|E| + |V|*log(|V|)))** time (average).
 ///
-/// Returns a [`DictMap`] that maps `NodeId` to path cost as the value.
+/// Returns a [`DistanceMap`] that maps `NodeId` to path cost as the value.
 ///
 /// # Example:
 /// ```rust
@@ -76,21 +76,22 @@ use crate::min_scored::MinScored;
 /// ].iter().cloned().collect();
 /// assert_eq!(expected, output);
 /// ```
-pub fn k_shortest_path<G, F, E, K>(
+pub fn k_shortest_path<G, F, E, K, S>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
     k: usize,
     mut edge_cost: F,
-) -> Result<DictMap<G::NodeId, K>, E>
+) -> Result<S, E>
 where
     G: IntoEdges + Visitable + NodeCount + NodeIndexable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
+    S: DistanceMap<G::NodeId, K>,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_bound()];
-    let mut scores: Vec<Option<K>> = vec![None; graph.node_bound()];
+    let mut scores: S = S::build(graph.node_bound());
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
 
@@ -105,7 +106,7 @@ where
         }
 
         if current_counter == k {
-            scores[graph.to_index(node)] = Some(node_score);
+            scores.put_item(node, node_score);
         }
 
         //Already reached goal k times
@@ -119,11 +120,5 @@ where
         }
     }
 
-    Ok(scores
-        .into_iter()
-        .enumerate()
-        .filter_map(|(node, score)| {
-            score.map(|val| (graph.from_index(node), val))
-        })
-        .collect())
+    Ok(scores)
 }
