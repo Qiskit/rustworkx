@@ -2,16 +2,22 @@
 features:
   - |
     Added a new method, :meth:`~retworkx.PyGraph.incident_edges`, to the
-    :class:`~retworkx.PyGraph` class. This method returns a list of edge
-    indices for edges incident to a provided node.
+    :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` class. This
+    method returns a list of edge indices for edges incident to a provided node.
   - |
     Added a new method, :meth:`~retworkx.PyGraph.get_edge_data_by_index`,
-    to the :class:`~retworkx.PyGraph` and :class:`~retworkx.PyGraph` classes.
+    to the :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` classes.
     This method returns the data payload for an edge in the graph from its
     index.
   - |
     Added a new method, :meth:`~retworkx.PyGraph.get_edge_endpoints_by_index`,
-    to the :class:`~retworkx.PyGraph` and :class:`~retworkx.PyGraph` classes.
+    to the :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` classes.
     This method returns the edge's endpoint tuple for an edge in the graph from
     its index.
+  - |
+    Added two new methods, :meth:`~retworkx.PyGraph.out_edges` and
+    :meth:`~retworkx.PyGraph.in_edges`. These methods are the dual of the
+    :class:`~retworkx.PyDiGraph` methods, :meth:`~retworkx.PyDiGraph.out_edges`
+    and :meth:`~retworkx.PyDiGraph.in_edges` and return a
+    :class:`~retworkx.WeightedEdgeList` of the incident edges for a node.
 

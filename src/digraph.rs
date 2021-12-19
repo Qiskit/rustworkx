@@ -1552,6 +1552,25 @@ impl PyDiGraph {
                 .collect(),
         }
     }
+
+    /// Return the list of edge indices incent to a provided node
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    ///
+    /// :returns: A list of the edge indices incident to a node in the graph
+    /// :rtype: EdgeIndices
+    pub fn incident_edges(&self, node: usize) -> EdgeIndices {
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges(NodeIndex::new(node))
+                .map(|e| e.id().index())
+                .collect(),
+        }
+    }
+
     /// Get the index and edge data for all parents of a node.
     ///
     /// This will return a list of tuples with the parent index the node index

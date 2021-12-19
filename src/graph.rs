@@ -396,6 +396,52 @@ impl PyGraph {
         }
     }
 
+    /// Get the endpoint indices and edge data for all edges of a node.
+    ///
+    /// This will return a list of tuples with the parent index the node index
+    /// and the edge data. This can be used to recreate add_edge() calls. As
+    /// :class:`~retworkx.PyGraph` is undirected this will return all edges
+    /// with the second endpoint node index always being ``node``.
+    ///
+    /// :param int node: The index of the node to get the edges for
+    ///
+    /// :returns: A list of tuples of the form:
+    ///     ``(parent_index, node_index, edge_data)```
+    /// :rtype: WeightedEdgeList
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn in_edges(&self, py: Python, node: usize) -> WeightedEdgeList {
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Incoming;
+        let raw_edges = self.graph.edges_directed(index, dir);
+        let out_list: Vec<(usize, usize, PyObject)> = raw_edges
+            .map(|x| (x.source().index(), node, x.weight().clone_ref(py)))
+            .collect();
+        WeightedEdgeList { edges: out_list }
+    }
+
+    /// Get the endpoint indices and edge data for all edges of a node.
+    ///
+    /// This will return a list of tuples with the child index the node index
+    /// and the edge data. This can be used to recreate add_edge() calls. As
+    /// :class:`~retworkx.PyGraph` is undirected this will return all edges
+    /// with the first endpoint node index always being ``node``.
+    ///
+    /// :param int node: The index of the node to get the edges for
+    ///
+    /// :returns out_edges: A list of tuples of the form:
+    ///     ```(node_index, child_index, edge_data)```
+    /// :rtype: WeightedEdgeList
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn out_edges(&self, py: Python, node: usize) -> WeightedEdgeList {
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Outgoing;
+        let raw_edges = self.graph.edges_directed(index, dir);
+        let out_list: Vec<(usize, usize, PyObject)> = raw_edges
+            .map(|x| (node, x.target().index(), x.weight().clone_ref(py)))
+            .collect();
+        WeightedEdgeList { edges: out_list }
+    }
+
     /// Return the edge data for the edge by it's given index
     ///
     /// :param int edge_index: The edge index to get the data for
