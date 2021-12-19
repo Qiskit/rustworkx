@@ -18,7 +18,7 @@ use petgraph::visit::{
     NodeIndexable, VisitMap, Visitable,
 };
 
-/// Return an edge list of the tree edges from a depth-first traversal.__rust_force_expr!
+/// Return an edge list of the tree edges from a depth-first traversal.
 ///
 /// The pseudo-code for the DFS algorithm is listed below. The output
 /// contains the tree edges found by the procedure.
