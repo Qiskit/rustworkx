@@ -28,6 +28,7 @@ use std::hash::Hash;
 use petgraph::graph::IndexType;
 
 use crate::dictmap::*;
+use hashbrown::HashMap;
 
 pub trait DistanceMap<K, V> {
     fn build(num_elements: usize) -> Self;
@@ -56,6 +57,23 @@ impl<K: Eq + Hash, V: Clone> DistanceMap<K, V> for DictMap<K, V> {
     #[inline]
     fn build(_num_elements: usize) -> Self {
         DictMap::<K, V>::default()
+    }
+
+    #[inline]
+    fn get_item(&self, pos: K) -> Option<&V> {
+        self.get(&pos)
+    }
+
+    #[inline]
+    fn put_item(&mut self, pos: K, val: V) {
+        self.insert(pos, val);
+    }
+}
+
+impl<K: Eq + Hash, V: Clone> DistanceMap<K, V> for HashMap<K, V> {
+    #[inline]
+    fn build(_num_elements: usize) -> Self {
+        HashMap::<K, V>::default()
     }
 
     #[inline]

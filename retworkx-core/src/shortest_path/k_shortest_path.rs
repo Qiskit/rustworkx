@@ -51,20 +51,20 @@ use crate::min_scored::MinScored;
 /// use retworkx_core::petgraph;
 /// use retworkx_core::petgraph::graph::NodeIndex;
 /// use retworkx_core::shortest_path::k_shortest_path;
-/// use retworkx_core::dictmap::DictMap;
+/// use hashbrown::HashMap;
 /// use retworkx_core::Result;
 ///
 /// let g = petgraph::graph::UnGraph::<i32, _>::from_edges(&[
 ///     (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (1, 4), (5, 6), (6, 7), (7, 5)
 /// ]);
 ///
-/// let res: Result<DictMap<NodeIndex, f64>> = k_shortest_path(
+/// let res: Result<HashMap<NodeIndex, f64>> = k_shortest_path(
 ///     &g, NodeIndex::new(1), None, 2,
 ///     |e: retworkx_core::petgraph::graph::EdgeReference<&'static str>| Ok(1.0),
 /// );
 ///
 /// let output = res.unwrap();
-/// let expected: DictMap<NodeIndex, f64> = [
+/// let expected: HashMap<NodeIndex, f64> = [
 ///     (NodeIndex::new(0), 3.0),
 ///     (NodeIndex::new(1), 2.0),
 ///     (NodeIndex::new(2), 3.0),
