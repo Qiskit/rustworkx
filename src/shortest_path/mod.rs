@@ -675,12 +675,9 @@ fn digraph_k_shortest_path_lengths(
         path_lengths: out_map
             .into_iter()
             .enumerate()
-            .filter_map(|(k_int, opt_v)| {
-                opt_v.map(|v| (k_int, v))
-            })
+            .filter_map(|(k_int, opt_v)| opt_v.map(|v| (k_int, v)))
             .collect(),
     })
-
 }
 
 /// Compute the length of the kth shortest path
@@ -741,9 +738,7 @@ pub fn graph_k_shortest_path_lengths(
         path_lengths: out_map
             .into_iter()
             .enumerate()
-            .filter_map(|(k_int, opt_v)| {
-                opt_v.map(|v| (k_int, v))
-            })
+            .filter_map(|(k_int, opt_v)| opt_v.map(|v| (k_int, v)))
             .collect(),
     })
 }
