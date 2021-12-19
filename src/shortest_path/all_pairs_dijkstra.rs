@@ -80,15 +80,10 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     let out_map: DictMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
+            let path_lenghts: PyResult<DictMap<NodeIndex, f64>> =
+                dijkstra(graph, x, None, |e| edge_cost(e.id()), None);
             let out_map = PathLengthMapping {
-                path_lengths: (dijkstra(
-                    graph,
-                    x,
-                    None,
-                    |e| edge_cost(e.id()),
-                    None,
-                )
-                    as PyResult<DictMap<NodeIndex, f64>>)
+                path_lengths: path_lenghts
                     .unwrap()
                     .iter()
                     .filter_map(|(index, cost)| {
