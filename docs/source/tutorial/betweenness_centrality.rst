@@ -110,7 +110,8 @@ You can also use :func:`~retworkx.visualization.graphviz_draw` too:
             "color": f"\"{rgba}\"",
             "fillcolor": f"\"{rgba}\"",
             "style": "filled",
-            "shape": "circle"
+            "shape": "circle",
+            "label": "%.2f" % node,
         }
 
     graphviz_draw(graph, node_attr_fn=color_node, method="neato")
