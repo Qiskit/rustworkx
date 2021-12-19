@@ -48,6 +48,7 @@ use tree::*;
 use union::*;
 
 use hashbrown::HashMap;
+use indexmap::map::Entry::{Occupied, Vacant};
 use num_complex::Complex64;
 
 use pyo3::create_exception;
@@ -68,6 +69,9 @@ use petgraph::visit::{
 use petgraph::EdgeType;
 
 use std::convert::TryFrom;
+use std::hash::Hash;
+
+use retworkx_core::dictmap::*;
 
 use crate::generators::PyInit_generators;
 
@@ -250,6 +254,28 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
+fn merge_duplicates<K, V, F, E>(
+    xs: Vec<(K, V)>,
+    mut merge_fn: F,
+) -> Result<Vec<(K, V)>, E>
+where
+    K: Hash + Eq,
+    F: FnMut(&V, &V) -> Result<V, E>,
+{
+    let mut kvs = DictMap::with_capacity(xs.len());
+    for (k, v) in xs {
+        match kvs.entry(k) {
+            Occupied(entry) => {
+                *entry.into_mut() = merge_fn(&v, entry.get())?;
+            }
+            Vacant(entry) => {
+                entry.insert(v);
+            }
+        }
+    }
+    Ok(kvs.into_iter().collect::<Vec<_>>())
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -286,6 +312,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
+    m.add_wrapped(wrap_pyfunction!(number_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_connected))?;
+    m.add_wrapped(wrap_pyfunction!(node_connected_component))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;

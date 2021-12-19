@@ -7,15 +7,7 @@
 # that they have been altered from the originals.
 
 from setuptools import setup
-try:
-    from setuptools_rust import Binding, RustExtension
-except ImportError:
-    import sys
-    import subprocess
-
-    subprocess.call([sys.executable, '-m', 'pip', 'install',
-                     'setuptools-rust'])
-    from setuptools_rust import Binding, RustExtension
+from setuptools_rust import Binding, RustExtension
 
 
 def readme():
