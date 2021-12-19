@@ -18,7 +18,29 @@ use petgraph::visit::{
     NodeIndexable, VisitMap, Visitable,
 };
 
-/// Return an edge list in depth first order.
+/// Return an edge list of the tree edges from a depth-first traversal.__rust_force_expr!
+///
+/// The pseudo-code for the DFS algorithm is listed below. The output
+/// contains the tree edges found by the procedure.
+///
+/// ```norust
+/// DFS(G, s)
+///   for each vertex u in V
+///       color[u] := WHITE
+///   end for
+///   color[s] := GRAY
+///   STACK := Ø
+///   PUSH(STACK, s)                           start at vertex s
+///   while (STACK != Ø)
+///       u := POP(STACK)
+///       for each vertex v in Adj[u]          (u,v) is a tree edge
+///           if (color[v] = WHITE)
+///               color[v] = GRAY
+///               PUSH(STACK, v)
+///       end for
+///       color[u] := BLACK                    finish vertex u
+///   end while
+/// ```
 ///
 /// Arguments:
 ///

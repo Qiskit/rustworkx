@@ -769,7 +769,33 @@ def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 
 @functools.singledispatch
 def dfs_edges(graph, source=None):
-    """Get edge list in depth first order
+    """Get an edge list of the tree edges from a depth-first traversal
+
+    The pseudo-code for the DFS algorithm is listed below. The output
+    contains the tree edges found by the procedure.
+
+    ::
+        DFS(G, s)
+          for each vertex u in V
+              color[u] := WHITE
+          end for
+          STACK := Ø
+          color[s] := GRAY
+          PUSH(STACK, s)                           start at vertex s
+          while (STACK != Ø)
+              u := POP(STACK)
+              for each vertex v in Adj[u]          (u,v) is a tree edge
+                  if (color[v] = WHITE)
+                      color[v] = GRAY
+                      PUSH(STACK, v)
+              end for
+              color[u] := BLACK                    finish vertex u
+          end while
+
+    .. note::
+
+        If the input is an undirected graph with a single connected component,
+        the output of this function is a spanning tree.
 
     :param PyGraph graph: The graph to get the DFS edge list from
     :param int source: An optional node index to use as the starting node
