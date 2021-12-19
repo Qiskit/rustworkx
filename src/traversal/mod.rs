@@ -34,6 +34,7 @@ use crate::iterators::EdgeList;
 /// contains the tree edges found by the procedure.
 ///
 /// ::
+///
 ///     DFS(G, s)
 ///       for each vertex u in V
 ///           color[u] := WHITE
@@ -78,6 +79,7 @@ fn digraph_dfs_edges(
 /// contains the tree edges found by the procedure.
 ///
 /// ::
+///
 ///     DFS(G, s)
 ///       for each vertex u in V
 ///           color[u] := WHITE

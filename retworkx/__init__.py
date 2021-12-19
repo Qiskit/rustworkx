@@ -775,6 +775,7 @@ def dfs_edges(graph, source=None):
     contains the tree edges found by the procedure.
 
     ::
+
         DFS(G, s)
           for each vertex u in V
               color[u] := WHITE
