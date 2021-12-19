@@ -808,7 +808,6 @@ def dfs_edges(graph, source=None):
     :returns: A list of edges as a tuple of the form ``(source, target)`` in
         depth-first order
     :rtype: EdgeList
-        raise TypeError("Invalid Input Type %s for graph" % type(graph))
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
