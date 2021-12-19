@@ -7,17 +7,57 @@
 # that they have been altered from the originals.
 
 import os
+import subprocess
 import tempfile
+import uuid
 
 try:
-    import pydot
     from PIL import Image
 
-    HAS_PYDOT = True
+    HAS_PILLOW = True
 except ImportError:
-    HAS_PYDOT = False
+    HAS_PILLOW = False
 
 __all__ = ["graphviz_draw"]
+
+METHODS = {"twopi", "neato", "circo", "fdp", "sfdp", "dot"}
+IMAGE_TYPES = {
+    "canon",
+    "cmap",
+    "cmapx",
+    "cmapx_np",
+    "dia",
+    "dot",
+    "fig",
+    "gd",
+    "gd2",
+    "gif",
+    "hpgl",
+    "imap",
+    "imap_np",
+    "ismap",
+    "jpe",
+    "jpeg",
+    "jpg",
+    "mif",
+    "mp",
+    "pcl",
+    "pdf",
+    "pic",
+    "plain",
+    "plain-ext",
+    "png",
+    "ps",
+    "ps2",
+    "svg",
+    "svgz",
+    "vml",
+    "vmlz" "vrml",
+    "vtx",
+    "wbmp",
+    "xdor",
+    "xlib",
+}
 
 
 def graphviz_draw(
@@ -102,13 +142,18 @@ def graphviz_draw(
         graphviz_draw(graph, node_attr_fn=node_attr, method='sfdp')
 
     """
-    if not HAS_PYDOT:
+    if not HAS_PILLOW:
         raise ImportError(
-            "Pydot and Pillow are necessary to use graphviz_draw() "
+            "Pillow is necessary to use graphviz_draw() "
             "it can be installed with 'pip install pydot pillow'"
         )
     try:
-        pydot.call_graphviz("dot", ["--version"], tempfile.gettempdir())
+        subprocess.run(
+            ["dot", "-V"],
+            cwd=tempfile.gettempdir(),
+            check=True,
+            capture_output=True,
+        )
     except Exception:
         raise RuntimeError(
             "Graphviz could not be found or run. This function requires that "
@@ -118,25 +163,48 @@ def graphviz_draw(
         )
 
     dot_str = graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr)
-    dot = pydot.graph_from_dot_data(dot_str)[0]
     if image_type is None:
         output_format = "png"
     else:
+        if image_type not in IMAGE_TYPES:
+            raise ValueError(
+                "The specified value for the image_type argument, "
+                f"'{image_type}' is not a valid choice. It must be one of: "
+                f"{IMAGE_TYPES}"
+            )
         output_format = image_type
 
     if method is None:
         prog = "dot"
     else:
+        if method not in METHODS:
+            raise ValueError(
+                f"The specified value for the method argument, '{method}' is "
+                f"not a valid choice. It must be one of: {METHODS}"
+            )
         prog = method
 
     if not filename:
         with tempfile.TemporaryDirectory() as tmpdirname:
-            tmp_path = os.path.join(tmpdirname, "dag.png")
-            dot.write(tmp_path, format=output_format, prog=prog)
+            filename = f"graphviz_draw_{str(uuid.uuid4())}.{output_format}"
+            tmp_path = os.path.join(tmpdirname, filename)
+            subprocess.run(
+                [prog, "-T", output_format, "-o", tmp_path],
+                input=dot_str,
+                check=True,
+                encoding="utf8",
+                text=True,
+            )
             with Image.open(tmp_path) as temp_image:
                 image = temp_image.copy()
             os.remove(tmp_path)
             return image
     else:
-        dot.write(filename, format=output_format, prog=prog)
+        subprocess.run(
+            [prog, "-T", output_format, "-o", filename],
+            input=dot_str,
+            check=True,
+            encoding="utf8",
+            text=True,
+        )
         return None
