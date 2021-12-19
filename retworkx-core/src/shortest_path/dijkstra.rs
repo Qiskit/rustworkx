@@ -21,7 +21,6 @@ use std::collections::BinaryHeap;
 use std::hash::Hash;
 
 use petgraph::algo::Measure;
-use petgraph::graph::IndexType;
 use petgraph::visit::{EdgeRef, IntoEdges, NodeIndexable, VisitMap, Visitable};
 
 use crate::dictmap::*;
@@ -107,7 +106,7 @@ pub fn dijkstra<G, F, K, E, S>(
 ) -> Result<S, E>
 where
     G: IntoEdges + Visitable + NodeIndexable,
-    G::NodeId: Eq + Hash + IndexType,
+    G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
     S: DistanceMap<G::NodeId, K>,
