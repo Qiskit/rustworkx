@@ -784,7 +784,7 @@ def dfs_edges(graph, source=None):
             if hasNext(iterator) then
                 w := next(iterator)
                 if w is not labeled as discovered then
-                    label w as discovered                   # (u, w) is a tree edge
+                    label w as discovered                   # (v, w) is a tree edge
                     PUSH(S, (w, iterator of G.edges(w)))
             else
                 POP(S)
