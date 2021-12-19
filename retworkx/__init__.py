@@ -776,22 +776,18 @@ def dfs_edges(graph, source=None):
 
     ::
 
-        DFS(G, s)
-          for each vertex u in V
-              color[u] := WHITE
-          end for
-          STACK := Ø
-          color[s] := GRAY
-          PUSH(STACK, s)                           start at vertex s
-          while (STACK != Ø)
-              u := POP(STACK)
-              for each vertex v in Adj[u]          (u,v) is a tree edge
-                  if (color[v] = WHITE)
-                      color[v] = GRAY
-                      PUSH(STACK, v)
-              end for
-              color[u] := BLACK                    finish vertex u
-          end while
+        DFS(G, v) is
+        let S be a stack
+        PUSH(S, (v, iterator of G.edges(v)))
+        while (S != Ø)
+            let (v, iterator) := LAST(S)
+            if hasNext(iterator) then
+                w := next(iterator)
+                if w is not labeled as discovered then
+                    label w as discovered                   # (u, w) is a tree edge
+                    PUSH(S, (w, iterator of G.edges(w)))
+            else
+                POP(S)
 
     .. note::
 
