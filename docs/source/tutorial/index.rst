@@ -1,6 +1,6 @@
-##################
-retworkx Tutorials
-##################
+#############################
+retworkx Tutorials and Guides
+#############################
 
 This section contains tutorials on using retworkx.
 

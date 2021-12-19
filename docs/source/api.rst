@@ -140,6 +140,18 @@ Connectivity and Cycles
    retworkx.digraph_find_cycle
    retworkx.chain_decomposition
 
+.. _graph-ops:
+
+Graph Operations
+----------------
+
+.. autosummary::
+   :toctree: stubs
+
+   retworkx.complement
+   retworkx.union
+   retworkx.cartesian_product
+
 .. _other-algorithms:
 
 Other Algorithm Functions
@@ -148,15 +160,14 @@ Other Algorithm Functions
 .. autosummary::
    :toctree: stubs
 
-   retworkx.complement
    retworkx.adjacency_matrix
    retworkx.all_simple_paths
    retworkx.transitivity
    retworkx.core_number
    retworkx.graph_greedy_color
-   retworkx.union
    retworkx.metric_closure
-   retworkx.cartesian_product
+
+.. _generator_funcs:
 
 Generators
 ==========
@@ -185,6 +196,8 @@ Generators
     retworkx.generators.generalized_petersen_graph
     retworkx.generators.barbell_graph
     retworkx.generators.full_rary_tree
+
+.. _random_generators:
 
 Random Circuit Functions
 ========================

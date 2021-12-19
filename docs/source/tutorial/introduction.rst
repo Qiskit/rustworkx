@@ -253,6 +253,23 @@ above example you can update the index references all at once after creation:
 Accessing edges and neighbors
 =============================
 
+You can access edges from a node using the :meth:`~rx.PyGraph.incident_edges`
+method:
+
+.. jupyter-execute::
+
+    print(G.incident_edges(2))
+
+which will return the edge indices of the edges incident a given node. You
+can also find the neighbor nodes using the :meth:`~rx.PyGraph.neighbors`
+method:
+
+.. jupyter-execute::
+
+    print(G.neighbors(2))
+
+which returns the node indices of any neighbors of a given node.
+
 Directed Graphs
 ===============
 
@@ -298,15 +315,62 @@ and ``1`` the edge data payload is updated from ``'A'`` to ``'B'``.
 Graph Generators and operations
 ===============================
 
+In addition to constructing graphs one node and edge at a time, you can also
+create graphs using the :ref:`generator_funcs`, :ref:`random_generators`,
+and :ref:`graph-ops` to quickly generate graphs and/or apply different
+operations on the graph. For example:
+
+.. jupyter-execute::
+
+    lolipop_graph = rx.generators.lollipop_graph(4, 3)
+    mesh_graph = rx.generators.mesh_graph(4)
+    combined_graph = rx.cartesian_product(lolipop_graph, mesh_graph)[0]
+    mpl_draw(combined_graph)
+
+Additionally there are alternate constructors such as
+:meth:`~retworkx.read_edge_list` or :meth:`~retworkx.from_adjacency_matrix`
+for building graphs from files or other inputs. For example:
+
+.. jupyter-execute::
+
+    import tempfile
+
+    with tempfile.NamedTemporaryFile('wt') as fd:
+        path = fd.name
+        fd.write('0 1\n')
+        fd.write('0 2\n')
+        fd.write('0 3\n')
+        fd.write('1 2\n')
+        fd.write('2 3\n')
+        fd.flush()
+        graph = rx.PyGraph.read_edge_list(path)
+    mpl_draw(graph)
+
 Analyzing graphs
 ================
 
 The structure of a graph :math:`G` can be analyzed using the graph algorithm
-functions
+functions. For example:
+
+.. jupyter-execute::
+
+    G = rx.PyGraph()
+    G.extend_from_edge_list([(0, 1), (0, 2)])
+    new_node = G.add_node("spam")
+    print(rx.connected_components(G))
+    degrees = []
+    for node in G.node_indices():
+        degrees.append(G.degree(node))
+    print(degrees)
+
+.. jupyter-execute::
+
+    G.remove_node(new_node)
+    G.extend_from_edge_list([(0, 3), (0, 4), (1, 2)])
+    rx.transitivity(G)
 
 See the :ref:`algorithm_api` API documentation section for a list of example
 functions and how to use them.
-
 
 Drawing graphs
 ==============
@@ -317,11 +381,54 @@ graphs. First there is :func:`~retworkx.visualization.mpl_draw` which uses the
 visualization of the graph. The :func:`~retworkx.visualization.mpl_draw`
 function relies on the :ref:`layout-functions` provided with retworkx to
 generate a layout (the coordinates to draw the nodes of the graph) for the
-graph.
+graph (by default :func:`~retworkx.spring_layout` is used). For example:
 
+.. jupyter-execute::
+
+    import matplotlib.pyplot as plt
+
+    G = rx.generators.generalized_petersen_graph(5, 2)
+    subax1 = plt.subplot(121)
+    mpl_draw(G, with_labels=True, ax=subax1)
+    subax2 = plt.subplot(122)
+    layout = rx.shell_layout(G, nlist=[range(5, 10), range(5)])
+    mpl_draw(G, pos=layout, with_labels=True, ax=subax2)
 
 The second function is :func:`~retworkx.visualization.graphviz_draw` which
-uses `Graphviz <https://graphviz.org/>`__ to generate visualizations
+uses `Graphviz <https://graphviz.org/>`__ to generate visualizations. For
+example:
+
+.. jupyter-execute::
+
+    from retworkx.visualization import graphviz_draw
+
+    G = rx.generators.heavy_hex_graph(13)
+    # set data payload to index
+    for node in G.node_indices():
+        G[node] = node
+
+    def node_attr_fn(node):
+        attr_dict = {
+            "style": "filled",
+            "shape": "circle",
+            "label": str(node)
+        }
+        # Data nodes are yellow
+        if node < 13 * 13:
+            attr_dict["color"] = "yellow"
+            attr_dict["fill_color"] = "yellow"
+        # Syndrome nodes are black
+        elif node >= 13 * 13 and node < (13 * 13) + ((13 - 1) * (13 + 1) / 2):
+            attr_dict["color"] = "black"
+            attr_dict["fill_color"] = "black"
+            attr_dict["label_font_color"] = "white"
+        # Flag quits are blue
+        else:
+            attr_dict["color"] = "blue"
+            attr_dict["fill_color"] = "blue"
+        return attr_dict
+
+    graphviz_draw(G, node_attr_fn=node_attr_fn, method="neato")
 
 Generally when deciding which visualization function to use there are a few
 considerations to make. :func:`~retworkx.visualization.mpl_draw` is a better

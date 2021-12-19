@@ -43,7 +43,7 @@ Contents:
    :maxdepth: 2
 
    Overview and Installation <README>
-   Retworkx Tutorial and Guides <tutorial/index>
+   Retworkx Tutorials and Guides <tutorial/index>
    Retworkx API <api>
    Visualization <visualization>
    Release Notes <release_notes>
