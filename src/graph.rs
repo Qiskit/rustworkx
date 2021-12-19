@@ -1740,8 +1740,7 @@ impl PyGraph {
 
         let nodes: HashSet<NodeIndex> = edges
             .iter()
-            .map(|x| x.iter())
-            .flatten()
+            .flat_map(|x| x.iter())
             .copied()
             .map(NodeIndex::new)
             .collect();
