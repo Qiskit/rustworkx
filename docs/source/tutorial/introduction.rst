@@ -402,7 +402,7 @@ example:
 
     from retworkx.visualization import graphviz_draw
 
-    G = rx.generators.heavy_hex_graph(13)
+    G = rx.generators.heavy_hex_graph(7)
     # set data payload to index
     for node in G.node_indices():
         G[node] = node
@@ -414,14 +414,14 @@ example:
             "label": str(node)
         }
         # Data nodes are yellow
-        if node < 13 * 13:
+        if node < 7 * 7:
             attr_dict["color"] = "yellow"
             attr_dict["fill_color"] = "yellow"
         # Syndrome nodes are black
-        elif node >= 13 * 13 and node < (13 * 13) + ((13 - 1) * (13 + 1) / 2):
+        elif node >= 7 * 7 and node < (7 * 7) + ((7 - 1) * (7 + 1) / 2):
             attr_dict["color"] = "black"
             attr_dict["fill_color"] = "black"
-            attr_dict["label_font_color"] = "white"
+            attr_dict["fontcolor"] = "white"
         # Flag quits are blue
         else:
             attr_dict["color"] = "blue"
