@@ -25,48 +25,8 @@ use petgraph::graph::IndexType;
 use petgraph::visit::{EdgeRef, IntoEdges, NodeIndexable, VisitMap, Visitable};
 
 use crate::dictmap::*;
+use crate::distancemap::DistanceMap;
 use crate::min_scored::MinScored;
-
-// Trait for supporting storing
-pub trait DistanceMap<K, V> {
-    fn new_distancemap(num_elements: usize) -> Self;
-    fn get_item(&self, pos: K) -> Option<&V>;
-    fn put_item(&mut self, pos: K, val: V);
-}
-
-impl<K: IndexType, V: Clone> DistanceMap<K, V> for Vec<Option<V>> {
-    #[inline]
-    fn new_distancemap(num_elements: usize) -> Self {
-        vec![None; num_elements]
-    }
-
-    #[inline]
-    fn get_item(&self, pos: K) -> Option<&V> {
-        self[pos.index()].as_ref()
-    }
-
-    #[inline]
-    fn put_item(&mut self, pos: K, val: V) {
-        self[pos.index()] = Some(val);
-    }
-}
-
-impl<K: Eq + Hash, V: Clone> DistanceMap<K, V> for DictMap<K, V> {
-    #[inline]
-    fn new_distancemap(_num_elements: usize) -> Self {
-        DictMap::<K, V>::default()
-    }
-
-    #[inline]
-    fn get_item(&self, pos: K) -> Option<&V> {
-        self.get(&pos)
-    }
-
-    #[inline]
-    fn put_item(&mut self, pos: K, val: V) {
-        self.insert(pos, val);
-    }
-}
 
 /// Dijkstra's shortest path algorithm.
 ///
@@ -85,7 +45,7 @@ impl<K: Eq + Hash, V: Clone> DistanceMap<K, V> for DictMap<K, V> {
 /// the value is a Vec of node indices of the path starting with `start` and
 /// ending at the index.
 ///
-/// Returns a [`DictMap`] that maps `NodeId` to path cost.
+/// Returns a [`DistanceMap`] that maps `NodeId` to path cost.
 /// # Example
 /// ```rust
 /// use retworkx_core::petgraph::Graph;
@@ -153,7 +113,7 @@ where
     S: DistanceMap<G::NodeId, K>,
 {
     let mut visited = graph.visit_map();
-    let mut scores: S = S::new_distancemap(graph.node_bound());
+    let mut scores: S = S::build(graph.node_bound());
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
     scores.put_item(start, zero_score);
