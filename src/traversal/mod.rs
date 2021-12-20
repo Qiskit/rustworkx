@@ -28,7 +28,26 @@ use petgraph::visit::{Bfs, NodeCount, Reversed};
 
 use crate::iterators::EdgeList;
 
-/// Get edge list in depth first order
+/// Get an edge list of the tree edges from a depth-first traversal
+///
+/// The pseudo-code for the DFS algorithm is listed below. The output
+/// contains the tree edges found by the procedure.
+///
+/// ::
+///
+///     DFS(G, v)
+///       let S be a stack
+///       PUSH(S, (v, iterator of G.edges(v)))
+///       while (S != Ø)
+///           let (v, iterator) := LAST(S)
+///           if hasNext(iterator) then
+///               w := next(iterator)
+///               if w is not labeled as discovered then
+///                   label w as discovered                   # (v, w) is a tree edge
+///                   PUSH(S, (w, iterator of G.edges(w)))
+///           else
+///               POP(S)
+///       end while
 ///
 /// :param PyDiGraph graph: The graph to get the DFS edge list from
 /// :param int source: An optional node index to use as the starting node
@@ -51,7 +70,31 @@ fn digraph_dfs_edges(
     }
 }
 
-/// Get edge list in depth first order
+/// Get an edge list of the tree edges from a depth-first traversal
+///
+/// The pseudo-code for the DFS algorithm is listed below. The output
+/// contains the tree edges found by the procedure.
+///
+/// ::
+///
+///     DFS(G, v)
+///       let S be a stack
+///       PUSH(S, (v, iterator of G.edges(v)))
+///       while (S != Ø)
+///           let (v, iterator) := LAST(S)
+///           if hasNext(iterator) then
+///               w := next(iterator)
+///               if w is not labeled as discovered then
+///                   label w as discovered                   # (v, w) is a tree edge
+///                   PUSH(S, (w, iterator of G.edges(w)))
+///           else
+///               POP(S)
+///       end while
+///
+/// .. note::
+///
+///    If the input is an undirected graph with a single connected component,
+///    the output of this function is a spanning tree.
 ///
 /// :param PyGraph graph: The graph to get the DFS edge list from
 /// :param int source: An optional node index to use as the starting node
