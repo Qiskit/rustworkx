@@ -442,7 +442,7 @@ impl PyGraph {
         WeightedEdgeList { edges: out_list }
     }
 
-    /// Return the edge data for the edge by it's given index
+    /// Return the edge data for the edge by its given index
     ///
     /// :param int edge_index: The edge index to get the data for
     ///
@@ -466,7 +466,7 @@ impl PyGraph {
         Ok(data)
     }
 
-    /// Return the edge endpoints for the edge by it's given index
+    /// Return the edge endpoints for the edge by its given index
     ///
     /// :param int edge_index: The edge index to get the endpoints for
     ///
