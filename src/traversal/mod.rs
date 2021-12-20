@@ -35,18 +35,19 @@ use crate::iterators::EdgeList;
 ///
 /// ::
 ///
-///     DFS(G, v) is
-///         let S be a stack
-///         PUSH(S, (v, iterator of G.edges(v)))
-///         while (S != Ø)
-///             let (v, iterator) := LAST(S)
-///             if hasNext(iterator) then
-///                 w := next(iterator)
-///                 if w is not labeled as discovered then
-///                     label w as discovered                   # (v, w) is a tree edge
-///                     PUSH(S, (w, iterator of G.edges(w)))
-///             else
-///                 POP(S)
+///     DFS(G, v)
+///       let S be a stack
+///       PUSH(S, (v, iterator of G.edges(v)))
+///       while (S != Ø)
+///           let (v, iterator) := LAST(S)
+///           if hasNext(iterator) then
+///               w := next(iterator)
+///               if w is not labeled as discovered then
+///                   label w as discovered                   # (v, w) is a tree edge
+///                   PUSH(S, (w, iterator of G.edges(w)))
+///           else
+///               POP(S)
+///       end while
 ///
 /// :param PyDiGraph graph: The graph to get the DFS edge list from
 /// :param int source: An optional node index to use as the starting node
@@ -76,18 +77,19 @@ fn digraph_dfs_edges(
 ///
 /// ::
 ///
-///     DFS(G, v) is
-///         let S be a stack
-///         PUSH(S, (v, iterator of G.edges(v)))
-///         while (S != Ø)
-///             let (v, iterator) := LAST(S)
-///             if hasNext(iterator) then
-///                 w := next(iterator)
-///                 if w is not labeled as discovered then
-///                     label w as discovered                   # (v, w) is a tree edge
-///                     PUSH(S, (w, iterator of G.edges(w)))
-///             else
-///                 POP(S)
+///     DFS(G, v)
+///       let S be a stack
+///       PUSH(S, (v, iterator of G.edges(v)))
+///       while (S != Ø)
+///           let (v, iterator) := LAST(S)
+///           if hasNext(iterator) then
+///               w := next(iterator)
+///               if w is not labeled as discovered then
+///                   label w as discovered                   # (v, w) is a tree edge
+///                   PUSH(S, (w, iterator of G.edges(w)))
+///           else
+///               POP(S)
+///       end while
 ///
 /// .. note::
 ///

@@ -776,25 +776,27 @@ def dfs_edges(graph, source=None):
 
     ::
 
-        DFS(G, v) is
-        let S be a stack
-        PUSH(S, (v, iterator of G.edges(v)))
-        while (S != Ø)
-            let (v, iterator) := LAST(S)
-            if hasNext(iterator) then
-                w := next(iterator)
-                if w is not labeled as discovered then
-                    label w as discovered                   # (v, w) is a tree edge
-                    PUSH(S, (w, iterator of G.edges(w)))
-            else
-                POP(S)
+        DFS(G, v)
+          let S be a stack
+          PUSH(S, (v, iterator of G.edges(v)))
+          while (S != Ø)
+              let (v, iterator) := LAST(S)
+              if hasNext(iterator) then
+                  w := next(iterator)
+                  if w is not labeled as discovered then
+                      label w as discovered                   # (v, w) is a tree edge
+                      PUSH(S, (w, iterator of G.edges(w)))
+              else
+                  POP(S)
+          end while
 
     .. note::
 
         If the input is an undirected graph with a single connected component,
         the output of this function is a spanning tree.
 
-    :param PyGraph graph: The graph to get the DFS edge list from
+    :param graph: The graph to get the DFS edge list from. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :param int source: An optional node index to use as the starting node
         for the depth-first search. The edge list will only return edges in
         the components reachable from this index. If this is not specified

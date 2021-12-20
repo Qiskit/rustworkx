@@ -24,18 +24,19 @@ use petgraph::visit::{
 /// contains the tree edges found by the procedure.
 ///
 /// ```norust
-/// DFS(G, v) is
-///     let S be a stack
-///     PUSH(S, (v, iterator of G.edges(v)))
-///     while (S != Ø)
-///         let (v, iterator) := LAST(S)
-///         if hasNext(iterator) then
-///             w := next(iterator)
-///             if w is not labeled as discovered then
-///                 label w as discovered                   # (v, w) is a tree edge
-///                 PUSH(S, (w, iterator of G.edges(w)))
-///         else
-///             POP(S)
+/// DFS(G, v)
+///   let S be a stack
+///   PUSH(S, (v, iterator of G.edges(v)))
+///   while (S != Ø)
+///       let (v, iterator) := LAST(S)
+///       if hasNext(iterator) then
+///           w := next(iterator)
+///           if w is not labeled as discovered then
+///               label w as discovered                   # (v, w) is a tree edge
+///               PUSH(S, (w, iterator of G.edges(w)))
+///       else
+///           POP(S)
+///   end while
 /// ```
 ///
 /// Arguments:
