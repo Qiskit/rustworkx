@@ -37,14 +37,15 @@ use crate::iterators::EdgeList;
 ///
 ///     DFS(G, v)
 ///       let S be a stack
-///       PUSH(S, (v, iterator of G.edges(v)))
+///       label v as discovered
+///       PUSH(S, (v, iterator of G.neighbors(v)))
 ///       while (S != Ø)
 ///           let (v, iterator) := LAST(S)
 ///           if hasNext(iterator) then
 ///               w := next(iterator)
 ///               if w is not labeled as discovered then
 ///                   label w as discovered                   # (v, w) is a tree edge
-///                   PUSH(S, (w, iterator of G.edges(w)))
+///                   PUSH(S, (w, iterator of G.neighbors(w)))
 ///           else
 ///               POP(S)
 ///       end while
@@ -79,14 +80,15 @@ fn digraph_dfs_edges(
 ///
 ///     DFS(G, v)
 ///       let S be a stack
-///       PUSH(S, (v, iterator of G.edges(v)))
+///       label v as discovered
+///       PUSH(S, (v, iterator of G.neighbors(v)))
 ///       while (S != Ø)
 ///           let (v, iterator) := LAST(S)
 ///           if hasNext(iterator) then
 ///               w := next(iterator)
 ///               if w is not labeled as discovered then
 ///                   label w as discovered                   # (v, w) is a tree edge
-///                   PUSH(S, (w, iterator of G.edges(w)))
+///                   PUSH(S, (w, iterator of G.neighbors(w)))
 ///           else
 ///               POP(S)
 ///       end while
