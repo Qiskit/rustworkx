@@ -670,7 +670,7 @@ impl PyDiGraph {
     ///
     /// :param int edge_index: The edge index to get the data for
     ///
-    /// :returns: The data object set for the edge
+    /// :returns: The data object for the edge
     /// :raises IndexError: when there is no edge present with the provided
     ///     index
     #[pyo3(text_signature = "(self, edge_index, /)")]
@@ -694,7 +694,8 @@ impl PyDiGraph {
     ///
     /// :param int edge_index: The edge index to get the endpoints for
     ///
-    /// :returns: The data object set for the edge
+    /// :returns: The endpoint tuple for the edge
+    /// :rtype: tuple
     /// :raises IndexError: when there is no edge present with the provided
     ///     index
     #[pyo3(text_signature = "(self, edge_index, /)")]
