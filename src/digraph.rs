@@ -1562,6 +1562,7 @@ impl PyDiGraph {
     ///
     /// :returns: A list of the edge indices incident to a node in the graph
     /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, node, /)")]
     pub fn incident_edges(&self, node: usize) -> EdgeIndices {
         EdgeIndices {
             edges: self

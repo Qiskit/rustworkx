@@ -386,6 +386,7 @@ impl PyGraph {
     ///
     /// :returns: A list of the edge indices incident to a node in the graph
     /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, node, /)")]
     pub fn incident_edges(&self, node: usize) -> EdgeIndices {
         EdgeIndices {
             edges: self
@@ -398,7 +399,7 @@ impl PyGraph {
 
     /// Get the endpoint indices and edge data for all edges of a node.
     ///
-    /// This will return a list of tuples with the parent index the node index
+    /// This will return a list of tuples with the parent index, the node index
     /// and the edge data. This can be used to recreate add_edge() calls. As
     /// :class:`~retworkx.PyGraph` is undirected this will return all edges
     /// with the second endpoint node index always being ``node``.
@@ -421,7 +422,7 @@ impl PyGraph {
 
     /// Get the endpoint indices and edge data for all edges of a node.
     ///
-    /// This will return a list of tuples with the child index the node index
+    /// This will return a list of tuples with the child index, the node index
     /// and the edge data. This can be used to recreate add_edge() calls. As
     /// :class:`~retworkx.PyGraph` is undirected this will return all edges
     /// with the first endpoint node index always being ``node``.
