@@ -1556,20 +1556,43 @@ impl PyDiGraph {
 
     /// Return the list of edge indices incent to a provided node
     ///
+    /// By default this method will only return the outgoing edges of
+    /// the provided ``node``. If you would like to access both the
+    /// incoming and outgoing edges you can set the ``all_edges``
+    /// kwarg to ``True``.
+    ///
     /// :param int node: The node index to get incident edges from. If
     ///     this node index is not present in the graph this method will
     ///     return an empty list and not error.
+    /// :param bool all_edges: If set to ``True`` both incoming and outgoing
+    ///     edges to ``node`` will be returned.
     ///
     /// :returns: A list of the edge indices incident to a node in the graph
     /// :rtype: EdgeIndices
-    #[pyo3(text_signature = "(self, node, /)")]
-    pub fn incident_edges(&self, node: usize) -> EdgeIndices {
-        EdgeIndices {
-            edges: self
-                .graph
-                .edges(NodeIndex::new(node))
-                .map(|e| e.id().index())
-                .collect(),
+    #[pyo3(text_signature = "(self, node, /, all_edges=False)")]
+    #[args(all_edges = "false")]
+    pub fn incident_edges(&self, node: usize, all_edges: bool) -> EdgeIndices {
+        let node_index = NodeIndex::new(node);
+        if all_edges {
+            EdgeIndices {
+                edges: self
+                    .graph
+                    .edges_directed(node_index, petgraph::Direction::Outgoing)
+                    .chain(self.graph.edges_directed(
+                        node_index,
+                        petgraph::Direction::Incoming,
+                    ))
+                    .map(|e| e.id().index())
+                    .collect(),
+            }
+        } else {
+            EdgeIndices {
+                edges: self
+                    .graph
+                    .edges(node_index)
+                    .map(|e| e.id().index())
+                    .collect(),
+            }
         }
     }
 
