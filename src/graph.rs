@@ -401,6 +401,40 @@ impl PyGraph {
         }
     }
 
+    /// Return the index map of edges incident to a provided node
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty mapping and not error.
+    ///
+    /// :returns: A mapping of incident edge indices to the tuple
+    ///     ``(source, target, data)``
+    /// :rtype: EdgeIndexMap
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn incident_edge_index_map(
+        &self,
+        py: Python,
+        node: usize,
+    ) -> EdgeIndexMap {
+        let node_index = NodeIndex::new(node);
+        EdgeIndexMap {
+            edge_map: self
+                .graph
+                .edges(node_index)
+                .map(|edge| {
+                    (
+                        edge.id().index(),
+                        (
+                            edge.source().index(),
+                            edge.target().index(),
+                            edge.weight().clone_ref(py),
+                        ),
+                    )
+                })
+                .collect(),
+        }
+    }
+
     /// Get the endpoint indices and edge data for all edges of a node.
     ///
     /// This will return a list of tuples with the parent index, the node index

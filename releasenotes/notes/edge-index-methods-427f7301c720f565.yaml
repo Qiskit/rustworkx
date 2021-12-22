@@ -5,6 +5,19 @@ features:
     :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` class. This
     method returns a list of edge indices for edges incident to a provided node.
   - |
+    Added a new method, :meth:`~retworkx.PyGraph.incident_edge_index_map`, to the
+    :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` class. This
+    method returns a mapping of edge indices for edges incident to a provided node
+    to the endoint and weight tuple for that edge index. For example:
+
+    .. jupyter-execute::
+
+        import retworkx
+        graph = retworkx.PyGraph()
+        graph.extend_from_weighted_edge_list([(0, 1, "A"), (0, 2, "B")])
+        print(graph.incident_edge_index_map(0))
+
+  - |
     Added a new method, :meth:`~retworkx.PyGraph.get_edge_data_by_index`,
     to the :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` classes.
     This method returns the data payload for an edge in the graph from its
