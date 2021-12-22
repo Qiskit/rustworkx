@@ -378,7 +378,11 @@ impl PyGraph {
         Ok(data)
     }
 
-    /// Return the list of edge indices incent to a provided node
+    /// Return the list of edge indices incident to a provided node
+    ///
+    /// You can later retrieve the data payload of this edge with
+    /// :meth:`~retworkx.PyGraph.get_edge_data_by_index` or its
+    /// endpoints with :meth:`~retworkx.PyGraph.get_edge_endpoints_by_index`.
     ///
     /// :param int node: The node index to get incident edges from. If
     ///     this node index is not present in the graph this method will

@@ -1554,7 +1554,11 @@ impl PyDiGraph {
         }
     }
 
-    /// Return the list of edge indices incent to a provided node
+    /// Return the list of edge indices incident to a provided node
+    ///
+    /// You can later retrieve the data payload of this edge with
+    /// :meth:`~retworkx.PyDiGraph.get_edge_data_by_index` or its
+    /// endpoints with :meth:`~retworkx.PyDiGraph.get_edge_endpoints_by_index`.
     ///
     /// By default this method will only return the outgoing edges of
     /// the provided ``node``. If you would like to access both the
