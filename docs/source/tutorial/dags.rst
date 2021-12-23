@@ -76,13 +76,13 @@ Applications of DAGs
 Topological Sorting
 -------------------
 
-A toplogical sort of a directed acyclic graph defined as :math:`G = (V,E)` is
+A topological sort of a directed acyclic graph defined as :math:`G = (V,E)` is
 a linear ordering of all its nodes such that if :math:`G` contains an edge
 :math:`(u, v)` then :math:`u` appears before `v`. This only works with dags
 because if there was a cycle in the graph :math:`G` then it's not possible
 to find such a linear ordering.
 
-A common application of dags is to use a toplogical sort is to schedule a
+A common application of dags is to use a topological sort is to schedule a
 sequence of jobs or tasks based on their dependencies. These jobs are
 represented by nodes and if there is an edge from :math:`u` to :math:`v` if
 job :math:`u` must be completed before job :math:`v`. A topological sort
@@ -90,6 +90,8 @@ of a directed acyclic graph will give an order in which to perform these
 jobs. For example:
 
 .. jupyter-execute::
+
+    from retworkx.visualization import graphviz_draw
 
     # Create a job dag
     dependency_dag = rx.PyDiGraph(check_cycle=True)
@@ -101,13 +103,8 @@ jobs. For example:
     job_f = dependency_dag.add_child(job_e, "Job F", None)
     dependency_dag.add_edge(job_a, job_f, None)
     dependency_dag.add_edge(job_c, job_d, None)
-    mpl_draw(
-        dependency_dag,
-        with_labels=True,
-        node_size=800,
-        node_color="yellow",
-        labels=str,
-    )
+
+    graphviz_draw(dependency_dag, node_attr_fn=lambda node: {"label": str(node)})
 
 Above we define a dag with 6 jobs and dependency relationship between these
 jobs. Now if we run the :func:`~retworkx.topological_sort` function on the
@@ -180,8 +177,6 @@ does internally with:
     dag.add_edge(meas_q1, out_nodes[1], "q_1")
     dag.add_edge(in_nodes[3], meas_q1, "c_1")
     dag.add_edge(meas_q1, out_nodes[3], "c_1")
-
-    from retworkx.visualization import graphviz_draw
 
     graphviz_draw(
         dag,

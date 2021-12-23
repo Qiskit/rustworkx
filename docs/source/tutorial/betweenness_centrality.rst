@@ -2,7 +2,7 @@
 Working with Betweenness Centrality
 ===================================
 
-Betweenness centrality is the measure of centrality in a graph based on shortest
+Betweenness centrality is a measure of centrality in a graph based on shortest
 paths. For every pair of nodes in a connected graph there is at least a single
 shortest path between the nodes such that the number of edges the path passes
 through is minimized. The betweenness centrality for each node is the number

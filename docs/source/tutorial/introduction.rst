@@ -18,15 +18,16 @@ can run the following code:
     import retworkx as rx
     G = rx.PyGraph()
 
-A :class:`~retworkx.PyGraph` is an undirected collection of nodes (vertices)
-along with pairs of nodes (called edges, links, etc). Nodes and edges in
-retworkx are assigned any Python object (e.g. a numeric value, a string, an
-image, an xml object, another graph, a custom node object, etc) for a data
-payload (also referred to as a weight in the API and documentation). Nodes
-and edges are uniquely identified an integer ``index`` which is stable for
-the lifetime of that node or edge in the graph. These indices are not
-guaranteed to be a contiguous sequence as removed nodes or edges will leave
-holes in the set of indices and an index can be reused after a removal.
+A :class:`~retworkx.PyGraph` is an collection of nodes (vertices)
+along with unordered pairs of nodes (called edges, links, etc). Nodes and
+edges in retworkx are assigned any Python object (e.g. a numeric value, a
+string, an image, an xml object, another graph, a custom node object, etc)
+for a data payload (also referred to as a weight in the API and
+documentation). Nodes and edges are uniquely identified by an integer ``index``
+which is stable for the lifetime of that node or edge in the graph. These
+indices are not guaranteed to be a contiguous sequence as removed nodes or
+edges will leave holes in the set of indices and an index can be reused after
+a removal.
 
 Nodes
 =====
@@ -260,7 +261,7 @@ method:
 
     print(G.incident_edges(2))
 
-which will return the edge indices of the edges incident a given node. You
+which will return the edge indices of the edges incident to node ``2``. You
 can also find the neighbor nodes using the :meth:`~rx.PyGraph.neighbors`
 method:
 
@@ -268,7 +269,7 @@ method:
 
     print(G.neighbors(2))
 
-which returns the node indices of any neighbors of a given node.
+which returns the node indices of any neighbors of node ``2``.
 
 Directed Graphs
 ===============
