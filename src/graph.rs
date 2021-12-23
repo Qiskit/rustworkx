@@ -408,7 +408,10 @@ impl PyGraph {
     ///     return an empty mapping and not error.
     ///
     /// :returns: A mapping of incident edge indices to the tuple
-    ///     ``(source, target, data)``
+    ///     ``(source, target, data)``. The source endpoint node index in
+    ///     this tuple will always be ``node`` to ensure you can easily
+    ///     identify that the neighbor node is the second element in the
+    ///     tuple for a given edge index.
     /// :rtype: EdgeIndexMap
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn incident_edge_index_map(
@@ -420,7 +423,7 @@ impl PyGraph {
         EdgeIndexMap {
             edge_map: self
                 .graph
-                .edges(node_index)
+                .edges_directed(node_index, petgraph::Direction::Outgoing)
                 .map(|edge| {
                     (
                         edge.id().index(),
