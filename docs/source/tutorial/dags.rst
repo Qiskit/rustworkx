@@ -151,7 +151,7 @@ and a series of operations on those qubits with a depedency ordering. The last
 operation on each qubit is a measurement on ``q_0`` that is stored in ``c_0``
 and ``q_1`` that is stored in ``c_1``.
 
-We can represent this quantum circuit as a directed acyclic graph like qiskit
+We can represent this quantum circuit as a directed acyclic graph like Qiskit
 does internally with:
 
 .. jupyter-execute::
@@ -258,14 +258,16 @@ into a shorter sequence of gates. A simplified example of this analysis is:
             return False
         return True
 
-    print(rx.collect_runs(dag, filter_fn))
+    runs = rx.collect_runs(dag, filter_fn)
+    print(runs)
 
 With this we have the dag nodes that make up a series of 1 qubit gates that
 we can analyze and attempt to simplify. Skipping the details of the
 internals of how the simplification works we wanted to contract these nodes
-to a single gate we could do that with :meth:`~qiskit.PyDiGraph.contract_nodes`. For example, if the 3 node sequence returned by
-:func:`~retworkx.collect_runs`, ``['rz(pi/2)', 'sx', 'rz(pi/2)']``, were to
-be simplified to a single gate ``"U"`` it could be done like:
+to a single gate we could do that with
+:meth:`~retworkx.PyDiGraph.contract_nodes`. For example, if the 3 node sequence
+returned by :func:`~retworkx.collect_runs`, ``['rz(pi/2)', 'sx', 'rz(pi/2)']``,
+were to be simplified to a single gate ``"U"`` it could be done like:
 
 .. jupyter-execute::
 
@@ -276,3 +278,8 @@ be simplified to a single gate ``"U"`` it could be done like:
         node_attr_fn=lambda node: {"label": str(node)},
         edge_attr_fn=lambda edge: {"label": str(edge)}
     )
+
+In Qiskit the node's index is stored in the node's data payload, so the
+abov code example is actually written as something like
+``dag.contract_nodes([x._node_id for x in runs[0]], "U")``. But this wouldn't
+work for the simplified example here.
