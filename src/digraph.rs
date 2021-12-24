@@ -75,9 +75,9 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///        graph.add_nodes_from(list(range(5)))
 ///        graph.add_nodes_from(list(range(2)))
 ///        graph.remove_node(2)
-///        print("After deletion:", graph.node_indexes())
+///        print("After deletion:", graph.node_indices())
 ///        res_manual = graph.add_parent(6, None, None)
-///        print("After adding a new node:", graph.node_indexes())
+///        print("After adding a new node:", graph.node_indices())
 ///
 /// Additionally, each node and edge contains an arbitrary Python object as a
 /// weight/data payload. You can use the index for access to the data payload
@@ -475,15 +475,30 @@ impl PyDiGraph {
             .collect()
     }
 
-    /// Return a list of all node indexes.
+    /// Return a list of all node indices.
     ///
-    /// :returns: A list of all the node indexes in the graph
+    /// :returns: A list of all the node indices in the graph
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self)")]
-    pub fn node_indexes(&self) -> NodeIndices {
+    pub fn node_indices(&self) -> NodeIndices {
         NodeIndices {
             nodes: self.graph.node_indices().map(|node| node.index()).collect(),
         }
+    }
+
+    /// Return a list of all node indices.
+    ///
+    /// .. note::
+    ///
+    ///     This is identical to :meth:`.node_indices()`, which is the
+    ///     preferred method to get the node indices in the graph. This
+    ///     exists for backwards compatibility with earlier releases.
+    ///
+    /// :returns: A list of all the node indices in the graph
+    /// :rtype: NodeIndices
+    #[pyo3(text_signature = "(self)")]
+    pub fn node_indexes(&self) -> NodeIndices {
+        self.node_indices()
     }
 
     /// Return True if there is an edge from node_a to node_b.
@@ -513,11 +528,11 @@ impl PyDiGraph {
             .graph
             .neighbors_directed(index, petgraph::Direction::Outgoing);
         let mut succesors: Vec<&PyObject> = Vec::new();
-        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+        let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for succ in children {
-            if !used_indexes.contains(&succ) {
+            if !used_indices.contains(&succ) {
                 succesors.push(self.graph.node_weight(succ).unwrap());
-                used_indexes.insert(succ);
+                used_indices.insert(succ);
             }
         }
         succesors
@@ -536,11 +551,11 @@ impl PyDiGraph {
             .graph
             .neighbors_directed(index, petgraph::Direction::Incoming);
         let mut predec: Vec<&PyObject> = Vec::new();
-        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+        let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for pred in parents {
-            if !used_indexes.contains(&pred) {
+            if !used_indices.contains(&pred) {
                 predec.push(self.graph.node_weight(pred).unwrap());
-                used_indexes.insert(pred);
+                used_indices.insert(pred);
             }
         }
         predec
@@ -568,7 +583,7 @@ impl PyDiGraph {
     ) -> PyResult<Vec<&PyObject>> {
         let index = NodeIndex::new(node);
         let mut succesors: Vec<&PyObject> = Vec::new();
-        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+        let mut used_indices: HashSet<NodeIndex> = HashSet::new();
 
         let filter_edge = |edge: &PyObject| -> PyResult<bool> {
             let res = filter_fn.call1(py, (edge,))?;
@@ -581,10 +596,10 @@ impl PyDiGraph {
 
         for edge in raw_edges {
             let succ = edge.target();
-            if !used_indexes.contains(&succ) {
+            if !used_indices.contains(&succ) {
                 let edge_weight = edge.weight();
                 if filter_edge(edge_weight)? {
-                    used_indexes.insert(succ);
+                    used_indices.insert(succ);
                     succesors.push(self.graph.node_weight(succ).unwrap());
                 }
             }
@@ -614,7 +629,7 @@ impl PyDiGraph {
     ) -> PyResult<Vec<&PyObject>> {
         let index = NodeIndex::new(node);
         let mut predec: Vec<&PyObject> = Vec::new();
-        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+        let mut used_indices: HashSet<NodeIndex> = HashSet::new();
 
         let filter_edge = |edge: &PyObject| -> PyResult<bool> {
             let res = filter_fn.call1(py, (edge,))?;
@@ -627,10 +642,10 @@ impl PyDiGraph {
 
         for edge in raw_edges {
             let pred = edge.source();
-            if !used_indexes.contains(&pred) {
+            if !used_indices.contains(&pred) {
                 let edge_weight = edge.weight();
                 if filter_edge(edge_weight)? {
-                    used_indexes.insert(pred);
+                    used_indices.insert(pred);
                     predec.push(self.graph.node_weight(pred).unwrap());
                 }
             }
@@ -957,7 +972,7 @@ impl PyDiGraph {
     ///
     /// :param list obj_list: A list of tuples of the form
     ///     ``(parent, child, obj)`` to attach to the graph. ``parent`` and
-    ///     ``child`` are integer indexes describing where an edge should be
+    ///     ``child`` are integer indices describing where an edge should be
     ///     added, and obj is the python object for the edge data.
     ///
     /// :returns: A list of int indices of the newly created edges
@@ -981,7 +996,7 @@ impl PyDiGraph {
     ///
     /// :param list obj_list: A list of tuples of the form
     ///     ``(parent, child)`` to attach to the graph. ``parent`` and
-    ///     ``child`` are integer indexes describing where an edge should be
+    ///     ``child`` are integer indices describing where an edge should be
     ///     added. Unlike :meth:`add_edges_from` there is no data payload and
     ///     when the edge is created None will be used.
     ///
@@ -1374,7 +1389,7 @@ impl PyDiGraph {
 
     /// Get the index and data for the neighbors of a node.
     ///
-    /// This will return a dictionary where the keys are the node indexes of
+    /// This will return a dictionary where the keys are the node indices of
     /// the adjacent nodes (inbound or outbound) and the value is the edge dat
     /// objects between that adjacent node and the provided node. Note in
     /// the case of a multigraph only one edge will be used, not all of the
@@ -1382,7 +1397,7 @@ impl PyDiGraph {
     ///
     /// :param int node: The index of the node to get the neighbors
     ///
-    /// :returns: A dictionary where the keys are node indexes and the value
+    /// :returns: A dictionary where the keys are node indices and the value
     ///     is the edge data object for all nodes that share an edge with the
     ///     specified node.
     /// :rtype: dict
@@ -1402,7 +1417,7 @@ impl PyDiGraph {
 
     /// Get the index and data for either the parent or children of a node.
     ///
-    /// This will return a dictionary where the keys are the node indexes of
+    /// This will return a dictionary where the keys are the node indices of
     /// the adjacent nodes (inbound or outbound as specified) and the value
     /// is the edge data objects for the edges between that adjacent node
     /// and the provided node. Note in the case of a multigraph only one edge
@@ -1412,7 +1427,7 @@ impl PyDiGraph {
     /// :param bool direction: The direction to use for finding nodes,
     ///     True means inbound edges and False means outbound edges.
     ///
-    /// :returns: A dictionary where the keys are node indexes and
+    /// :returns: A dictionary where the keys are node indices and
     ///     the value is the edge data object for all nodes that share an
     ///     edge with the specified node.
     /// :rtype: dict
@@ -2015,8 +2030,8 @@ impl PyDiGraph {
     ///
     /// :param PyDiGraph other: The other PyDiGraph object to add onto this
     ///     graph.
-    /// :param dict node_map: A dictionary mapping node indexes from this
-    ///     PyDiGraph object to node indexes in the other PyDiGraph object.
+    /// :param dict node_map: A dictionary mapping node indices from this
+    ///     PyDiGraph object to node indices in the other PyDiGraph object.
     ///     The keys are a node index in this graph and the value is a tuple
     ///     of the node index in the other graph to add an edge to and the
     ///     weight of that edge. For example::

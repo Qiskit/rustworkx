@@ -24,10 +24,17 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(["a", "b"], res)
         self.assertEqual([0, 1], graph.node_indexes())
 
+    def test_node_indices(self):
+        graph = retworkx.PyGraph()
+        graph.add_node("a")
+        graph.add_node("b")
+        self.assertEqual([0, 1], graph.node_indices())
+
     def test_no_nodes(self):
         graph = retworkx.PyGraph()
         self.assertEqual([], graph.nodes())
         self.assertEqual([], graph.node_indexes())
+        self.assertEqual([], graph.node_indices())
 
     def test_remove_node(self):
         graph = retworkx.PyGraph()
