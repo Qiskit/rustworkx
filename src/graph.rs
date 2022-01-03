@@ -393,6 +393,162 @@ impl PyGraph {
         Ok(data)
     }
 
+    /// Return the list of edge indices incident to a provided node
+    ///
+    /// You can later retrieve the data payload of this edge with
+    /// :meth:`~retworkx.PyGraph.get_edge_data_by_index` or its
+    /// endpoints with :meth:`~retworkx.PyGraph.get_edge_endpoints_by_index`.
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    ///
+    /// :returns: A list of the edge indices incident to a node in the graph
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn incident_edges(&self, node: usize) -> EdgeIndices {
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges(NodeIndex::new(node))
+                .map(|e| e.id().index())
+                .collect(),
+        }
+    }
+
+    /// Return the index map of edges incident to a provided node
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty mapping and not error.
+    ///
+    /// :returns: A mapping of incident edge indices to the tuple
+    ///     ``(source, target, data)``. The source endpoint node index in
+    ///     this tuple will always be ``node`` to ensure you can easily
+    ///     identify that the neighbor node is the second element in the
+    ///     tuple for a given edge index.
+    /// :rtype: EdgeIndexMap
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn incident_edge_index_map(
+        &self,
+        py: Python,
+        node: usize,
+    ) -> EdgeIndexMap {
+        let node_index = NodeIndex::new(node);
+        EdgeIndexMap {
+            edge_map: self
+                .graph
+                .edges_directed(node_index, petgraph::Direction::Outgoing)
+                .map(|edge| {
+                    (
+                        edge.id().index(),
+                        (
+                            edge.source().index(),
+                            edge.target().index(),
+                            edge.weight().clone_ref(py),
+                        ),
+                    )
+                })
+                .collect(),
+        }
+    }
+
+    /// Get the endpoint indices and edge data for all edges of a node.
+    ///
+    /// This will return a list of tuples with the parent index, the node index
+    /// and the edge data. This can be used to recreate add_edge() calls. As
+    /// :class:`~retworkx.PyGraph` is undirected this will return all edges
+    /// with the second endpoint node index always being ``node``.
+    ///
+    /// :param int node: The index of the node to get the edges for
+    ///
+    /// :returns: A list of tuples of the form:
+    ///     ``(parent_index, node_index, edge_data)```
+    /// :rtype: WeightedEdgeList
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn in_edges(&self, py: Python, node: usize) -> WeightedEdgeList {
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Incoming;
+        let raw_edges = self.graph.edges_directed(index, dir);
+        let out_list: Vec<(usize, usize, PyObject)> = raw_edges
+            .map(|x| (x.source().index(), node, x.weight().clone_ref(py)))
+            .collect();
+        WeightedEdgeList { edges: out_list }
+    }
+
+    /// Get the endpoint indices and edge data for all edges of a node.
+    ///
+    /// This will return a list of tuples with the child index, the node index
+    /// and the edge data. This can be used to recreate add_edge() calls. As
+    /// :class:`~retworkx.PyGraph` is undirected this will return all edges
+    /// with the first endpoint node index always being ``node``.
+    ///
+    /// :param int node: The index of the node to get the edges for
+    ///
+    /// :returns out_edges: A list of tuples of the form:
+    ///     ```(node_index, child_index, edge_data)```
+    /// :rtype: WeightedEdgeList
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn out_edges(&self, py: Python, node: usize) -> WeightedEdgeList {
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Outgoing;
+        let raw_edges = self.graph.edges_directed(index, dir);
+        let out_list: Vec<(usize, usize, PyObject)> = raw_edges
+            .map(|x| (node, x.target().index(), x.weight().clone_ref(py)))
+            .collect();
+        WeightedEdgeList { edges: out_list }
+    }
+
+    /// Return the edge data for the edge by its given index
+    ///
+    /// :param int edge_index: The edge index to get the data for
+    ///
+    /// :returns: The data object for the edge
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
+    #[pyo3(text_signature = "(self, edge_index, /)")]
+    pub fn get_edge_data_by_index(
+        &self,
+        edge_index: usize,
+    ) -> PyResult<&PyObject> {
+        let data = match self.graph.edge_weight(EdgeIndex::new(edge_index)) {
+            Some(data) => data,
+            None => {
+                return Err(PyIndexError::new_err(format!(
+                    "Provided edge index {} is not present in the graph",
+                    edge_index
+                )));
+            }
+        };
+        Ok(data)
+    }
+
+    /// Return the edge endpoints for the edge by its given index
+    ///
+    /// :param int edge_index: The edge index to get the endpoints for
+    ///
+    /// :returns: The endpoint tuple for the edge
+    /// :rtype: tuple
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
+    #[pyo3(text_signature = "(self, edge_index, /)")]
+    pub fn get_edge_endpoints_by_index(
+        &self,
+        edge_index: usize,
+    ) -> PyResult<(usize, usize)> {
+        let endpoints =
+            match self.graph.edge_endpoints(EdgeIndex::new(edge_index)) {
+                Some(endpoints) => (endpoints.0.index(), endpoints.1.index()),
+                None => {
+                    return Err(PyIndexError::new_err(format!(
+                        "Provided edge index {} is not present in the graph",
+                        edge_index
+                    )));
+                }
+            };
+        Ok(endpoints)
+    }
+
     /// Update an edge's weight/payload in place
     ///
     /// If there are parallel edges in the graph only one edge will be updated.
