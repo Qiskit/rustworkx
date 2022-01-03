@@ -666,6 +666,56 @@ impl PyDiGraph {
         Ok(data)
     }
 
+    /// Return the edge data for the edge by its given index
+    ///
+    /// :param int edge_index: The edge index to get the data for
+    ///
+    /// :returns: The data object for the edge
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
+    #[pyo3(text_signature = "(self, edge_index, /)")]
+    pub fn get_edge_data_by_index(
+        &self,
+        edge_index: usize,
+    ) -> PyResult<&PyObject> {
+        let data = match self.graph.edge_weight(EdgeIndex::new(edge_index)) {
+            Some(data) => data,
+            None => {
+                return Err(PyIndexError::new_err(format!(
+                    "Provided edge index {} is not present in the graph",
+                    edge_index
+                )));
+            }
+        };
+        Ok(data)
+    }
+
+    /// Return the edge endpoints for the edge by its given index
+    ///
+    /// :param int edge_index: The edge index to get the endpoints for
+    ///
+    /// :returns: The endpoint tuple for the edge
+    /// :rtype: tuple
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
+    #[pyo3(text_signature = "(self, edge_index, /)")]
+    pub fn get_edge_endpoints_by_index(
+        &self,
+        edge_index: usize,
+    ) -> PyResult<(usize, usize)> {
+        let endpoints =
+            match self.graph.edge_endpoints(EdgeIndex::new(edge_index)) {
+                Some(endpoints) => (endpoints.0.index(), endpoints.1.index()),
+                None => {
+                    return Err(PyIndexError::new_err(format!(
+                        "Provided edge index {} is not present in the graph",
+                        edge_index
+                    )));
+                }
+            };
+        Ok(endpoints)
+    }
+
     /// Update an edge's weight/payload inplace
     ///
     /// If there are parallel edges in the graph only one edge will be updated.
@@ -1503,6 +1553,119 @@ impl PyDiGraph {
                 .collect(),
         }
     }
+
+    /// Return the list of edge indices incident to a provided node
+    ///
+    /// You can later retrieve the data payload of this edge with
+    /// :meth:`~retworkx.PyDiGraph.get_edge_data_by_index` or its
+    /// endpoints with :meth:`~retworkx.PyDiGraph.get_edge_endpoints_by_index`.
+    ///
+    /// By default this method will only return the outgoing edges of
+    /// the provided ``node``. If you would like to access both the
+    /// incoming and outgoing edges you can set the ``all_edges``
+    /// kwarg to ``True``.
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    /// :param bool all_edges: If set to ``True`` both incoming and outgoing
+    ///     edges to ``node`` will be returned.
+    ///
+    /// :returns: A list of the edge indices incident to a node in the graph
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, node, /, all_edges=False)")]
+    #[args(all_edges = "false")]
+    pub fn incident_edges(&self, node: usize, all_edges: bool) -> EdgeIndices {
+        let node_index = NodeIndex::new(node);
+        if all_edges {
+            EdgeIndices {
+                edges: self
+                    .graph
+                    .edges_directed(node_index, petgraph::Direction::Outgoing)
+                    .chain(self.graph.edges_directed(
+                        node_index,
+                        petgraph::Direction::Incoming,
+                    ))
+                    .map(|e| e.id().index())
+                    .collect(),
+            }
+        } else {
+            EdgeIndices {
+                edges: self
+                    .graph
+                    .edges(node_index)
+                    .map(|e| e.id().index())
+                    .collect(),
+            }
+        }
+    }
+
+    /// Return the index map of edges incident to a provided node
+    ///
+    /// By default this method will only return the outgoing edges of
+    /// the provided ``node``. If you would like to access both the
+    /// incoming and outgoing edges you can set the ``all_edges``
+    /// kwarg to ``True``.
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    /// :param bool all_edges: If set to ``True`` both incoming and outgoing
+    ///     edges to ``node`` will be returned.
+    ///
+    /// :returns: A mapping of incident edge indices to the tuple
+    ///     ``(source, target, data)``
+    /// :rtype: EdgeIndexMap
+    #[pyo3(text_signature = "(self, node, /, all_edges=False)")]
+    #[args(all_edges = "false")]
+    pub fn incident_edge_index_map(
+        &self,
+        py: Python,
+        node: usize,
+        all_edges: bool,
+    ) -> EdgeIndexMap {
+        let node_index = NodeIndex::new(node);
+        if all_edges {
+            EdgeIndexMap {
+                edge_map: self
+                    .graph
+                    .edges_directed(node_index, petgraph::Direction::Outgoing)
+                    .chain(self.graph.edges_directed(
+                        node_index,
+                        petgraph::Direction::Incoming,
+                    ))
+                    .map(|edge| {
+                        (
+                            edge.id().index(),
+                            (
+                                edge.source().index(),
+                                edge.target().index(),
+                                edge.weight().clone_ref(py),
+                            ),
+                        )
+                    })
+                    .collect(),
+            }
+        } else {
+            EdgeIndexMap {
+                edge_map: self
+                    .graph
+                    .edges(node_index)
+                    .map(|edge| {
+                        (
+                            edge.id().index(),
+                            (
+                                edge.source().index(),
+                                edge.target().index(),
+                                edge.weight().clone_ref(py),
+                            ),
+                        )
+                    })
+                    .collect(),
+            }
+        }
+    }
+
     /// Get the index and edge data for all parents of a node.
     ///
     /// This will return a list of tuples with the parent index the node index
