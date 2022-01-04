@@ -62,6 +62,8 @@ A defining characteristic of _retworkx_ graphs is that each node maps to a non-n
 
 _retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms, such as Qiskit. In those applications, the performance of _retworkx_ considerably reduces computation time.
 
+TODO: talk about multi-threading [@Stone2021].
+
 TODO: talk about other projects [@Ullberg2021; @Jha2021; @Bergholm2020].
 
 ## Graph Creation and Manipulation
