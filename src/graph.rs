@@ -308,24 +308,6 @@ impl PyGraph {
         }
     }
 
-    /// Return the list of edge indices incent to a provided node
-    ///
-    /// :param int node: The node index to get incident edges from. If
-    ///     this node index is not present in the graph this method will
-    ///     return an empty list and not error.
-    ///
-    /// :returns: A list of the edge indices incident to a node in the graph
-    /// :rtype: EdgeIndices
-    pub fn incident_edges(&self, node: usize) -> EdgeIndices {
-        EdgeIndices {
-            edges: self
-                .graph
-                .edges(NodeIndex::new(node))
-                .map(|e| e.id().index())
-                .collect(),
-        }
-    }
-
     /// Return a list of all node data.
     ///
     /// :returns: A list of all the node data objects in the graph
@@ -425,6 +407,13 @@ impl PyGraph {
     /// :rtype: EdgeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn incident_edges(&self, node: usize) -> EdgeIndices {
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges(NodeIndex::new(node))
+                .map(|e| e.id().index())
+                .collect(),
+        }
     }
 
     /// Return the index map of edges incident to a provided node
