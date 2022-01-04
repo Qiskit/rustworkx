@@ -210,17 +210,6 @@
   url = {https://github.com/PyO3/pyo3}
 }
 
-@book{Demetrescu2009,
-  doi = {10.1090/dimacs/074},
-  url = {https://doi.org/10.1090/dimacs/074},
-  year = {2009},
-  month = {jul},
-  publisher = {American Mathematical Society},
-  address = {Providence, RI, USA},
-  editor = {Camil Demetrescu and Andrew V. Goldberg and David Johnson},
-  title = {The Shortest Path Problem: Ninth DIMACS Implementation Challenge}
-}
-
 @Article{Dijkstra1959ANO,
   title={A note on two problems in connexion with graphs},
   author={Edsger W. Dijkstra},
@@ -229,25 +218,6 @@
   volume={1},
   doi={10.1007/BF01386390},
   pages={269-271}
-}
-
-@article{DeSanto2003,
-author = {De Santo, M. and Foggia, P. and Sansone, C. and Vento, M.},
-title = {A large database of graphs and its use for benchmarking graph isomorphism algorithms},
-journal = {Pattern Recogn. Lett.},
-issue_date = {May 2003},
-volume = {24},
-number = {8},
-month = may,
-year = {2003},
-issn = {0167-8655},
-pages = {1067–1079},
-numpages = {13},
-url = {http://dx.doi.org/10.1016/S0167-8655(02)00253-2},
-doi = {10.1016/S0167-8655(02)00253-2},
-acmid = {763457},
-publisher = {Elsevier Science Inc.},
-address = {New York, NY, USA},
 }
 
 @ARTICLE{Cordella2004,
@@ -302,11 +272,46 @@ pages = {1–13},
 numpages = {13}
 }
 
-@techreport{pep427,
-  author  = {Daniel Holth},
-  title   = {The Wheel Binary Package Format 1.0},
-  year    = {2012},
-  type    = {PEP},
-  number  = {427},
-  url     = {https://www.python.org/dev/peps/pep-0427/},
+@article{Staudt2016, 
+  title={NetworKit: A tool suite for large-scale complex network analysis}, 
+  volume={4}, 
+  DOI={10.1017/nws.2016.20}, 
+  number={4}, 
+  journal={Network Science}, 
+  publisher={Cambridge University Press}, 
+  author={STAUDT, CHRISTIAN L. and SAZONOVS, ALEKSEJS and MEYERHENKE, HENNING}, 
+  year={2016}, 
+  pages={508–530}
+}
+
+@inbook{Ji2021,
+author = {Liu, Ji and Bello, Luciano and Zhou, Huiyang},
+title = {Relaxed Peephole Optimization: A Novel Compiler Optimization for Quantum Circuits},
+year = {2021},
+isbn = {9781728186139},
+publisher = {IEEE Press},
+url = {https://doi.org/10.1109/CGO51591.2021.9370310},
+abstract = {As in classical computing, compilers play an important role in quantum computing. Quantum processors typically support a limited set of primitive operations or quantum gates and have certain hardware-related limitations. A quantum compiler is responsible for adapting a quantum program to these constraint environments and decomposing quantum gates into a sequence of the primitive ones. During the compilation process, it is also critical for the compiler to optimize the quantum circuits in order to reduce the noise in the computation results. Since the noise is introduced by operations and decoherence, reducing the gate count is the key for improving performance.In this paper, we propose a novel quantum compiler optimization, named relaxed peephole optimization (RPO) for quantum computers. RPO leverages the single-qubit state information that can be determined statically by the compiler. We define that a qubit is in a basis state when, at a given point in time, its state is either in the X-, Y-, or Z-basis (|+〉 / |-〉, |L〉 / |R〉 and |0〉 / |1〉). When basis qubits are used as inputs to quantum gates, there exist opportunities for strength reduction, which replaces quantum operations with equivalent but less expensive ones. Compared to the existing peephole optimization for quantum programs, the difference is that our proposed optimization does not require an identical unitary matrix, thereby named 'relaxed' peephole optimization. We also extend our approach to optimize the quantum gates when some input qubits are in known pure states. Both optimizations, namely the Quantum Basis-state Optimization (QBO) and the Quantum Pure-state Optimization (QPO), are implemented in the IBM's Qiskit transpiler. Our experimental results show that our proposed optimization pass is fast and effective. The circuits optimized with our compiler optimizations obtain up to 18.0% (11.7% on average) fewer CNOT gates and up to 8.2% (7.1% on average) lower transpilation time than that of the most aggressive optimization level in the Qiskit compiler. When running on real quantum computers, the success rates of 3-qubit quantum phase estimation algorithm improve by 2.30X due to the reduced gate counts.},
+booktitle = {Proceedings of the 2021 IEEE/ACM International Symposium on Code Generation and Optimization},
+pages = {301–314},
+numpages = {14}
+}
+
+@manual{Sagemath2020,
+  Key          = {SageMath},
+  Author       = {{The Sage Developers}},
+  Title        = {{S}ageMath, the {S}age {M}athematics {S}oftware {S}ystem ({V}ersion 9.1)},
+  note         = {{\tt https://www.sagemath.org}},
+  Year         = {2020},
+  doi          = {10.5281/zenodo.4066866},
+  url          = {https://doi.org/10.5281/zenodo.4066866}
+}
+
+@misc{Bergholm2020,
+      title={PennyLane: Automatic differentiation of hybrid quantum-classical computations}, 
+      author={Ville Bergholm and Josh Izaac and Maria Schuld and Christian Gogolin and M. Sohaib Alam and Shahnawaz Ahmed and Juan Miguel Arrazola and Carsten Blank and Alain Delgado and Soran Jahangiri and Keri McKiernan and Johannes Jakob Meyer and Zeyue Niu and Antal Száva and Nathan Killoran},
+      year={2020},
+      eprint={1811.04968},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
 }
