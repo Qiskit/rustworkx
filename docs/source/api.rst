@@ -126,6 +126,10 @@ Connectivity and Cycles
 .. autosummary::
    :toctree: stubs
 
+   retworkx.number_connected_components
+   retworkx.connected_components
+   retworkx.node_connected_component
+   retworkx.is_connected
    retworkx.strongly_connected_components
    retworkx.number_weakly_connected_components
    retworkx.weakly_connected_components
@@ -178,6 +182,7 @@ Generators
     retworkx.generators.lollipop_graph
     retworkx.generators.generalized_petersen_graph
     retworkx.generators.barbell_graph
+    retworkx.generators.full_rary_tree
 
 Random Circuit Functions
 ========================

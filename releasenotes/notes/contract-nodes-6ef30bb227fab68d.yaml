@@ -1,0 +1,30 @@
+---
+features:
+  - |
+    New graph class methods :meth:`retworkx.PyDiGraph.contract_nodes`,
+    and :meth:`retworkx.PyGraph.contract_nodes`.
+    These methods can be used to replace a set of graph nodes with a single new
+    equivalent node. Incoming edges and outgoing edges of and to the
+    replaced set become the incoming and outgoing edges of the new node,
+    respectively. In a multi-graph, all edges are preserved by default.
+    For all graph types, parallel edges can optionally be combined via a
+    user-specified Python callable.
+    :meth:`retworkx.PyDiGraph.contract_nodes` supports cycle checking
+    / guarding to prevent the contraction from introducing cycles.
+    In the following example, two nodes are contracted to a single new node.
+    First, creating a new graph:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.generators.directed_path_graph(5)
+      mpl_draw(graph, with_labels=True)
+
+    perform the contraction:
+
+    .. jupyter-execute::
+
+      graph.contract_nodes([2, 3], "abc")
+      mpl_draw(graph, with_labels=True)
