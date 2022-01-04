@@ -5,6 +5,7 @@ features:
     for undirected graphs and :func:`~retworkx.digraph_tensor_product` for directed graphs. For example:
     
     .. jupyter-execute::
+
       import retworkx
       from retworkx.visualization import mpl_draw
       graph_1 = retworkx.generators.path_graph(2)
