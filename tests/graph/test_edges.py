@@ -457,8 +457,53 @@ class TestEdges(unittest.TestCase):
         res = graph.incident_edges(42)
         self.assertEqual([], res)
 
+    def test_incident_edge_index_map(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_c, node_d, "edge c")
+        res = graph.incident_edge_index_map(node_d)
+        self.assertEqual({2: (3, 2, "edge c"), 1: (3, 1, "edge_b")}, res)
+
+    def test_incident_edge_index_map_invalid_node(self):
+        graph = retworkx.PyGraph()
+        res = graph.incident_edge_index_map(42)
+        self.assertEqual({}, res)
+
+    def test_single_neighbor_out_edges(self):
+        g = retworkx.PyGraph()
+        node_a = g.add_node("a")
+        node_b = g.add_node("b")
+        g.add_edge(node_a, node_b, {"a": 1})
+        node_c = g.add_node("c")
+        g.add_edge(node_a, node_c, {"a": 2})
+        res = g.out_edges(node_a)
+        self.assertEqual(
+            [(node_a, node_c, {"a": 2}), (node_a, node_b, {"a": 1})], res
+        )
+
+    def test_neighbor_surrounded_in_out_edges(self):
+        g = retworkx.PyGraph()
+        node_a = g.add_node("a")
+        node_b = g.add_node("b")
+        node_c = g.add_node("c")
+        g.add_edge(node_a, node_b, {"a": 1})
+        g.add_edge(node_b, node_c, {"a": 2})
+        res = g.out_edges(node_b)
+        self.assertEqual(
+            [(node_b, node_c, {"a": 2}), (node_b, node_a, {"a": 1})], res
+        )
+        res = g.in_edges(node_b)
+        self.assertEqual(
+            [(node_c, node_b, {"a": 2}), (node_a, node_b, {"a": 1})], res
+        )
+
     def test_edge_index_map_empty(self):
-        graph = retworkx.PyDiGraph()
+        graph = retworkx.PyGraph()
         self.assertEqual({}, graph.edge_index_map())
 
     def test_get_edge_data_by_index(self):

@@ -75,9 +75,9 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///        graph.add_nodes_from(list(range(5)))
 ///        graph.add_nodes_from(list(range(2)))
 ///        graph.remove_node(2)
-///        print("After deletion:", graph.node_indexes())
+///        print("After deletion:", graph.node_indices())
 ///        res_manual = graph.add_parent(6, None, None)
-///        print("After adding a new node:", graph.node_indexes())
+///        print("After adding a new node:", graph.node_indices())
 ///
 /// Additionally, each node and edge contains an arbitrary Python object as a
 /// weight/data payload. You can use the index for access to the data payload
@@ -477,7 +477,7 @@ impl PyDiGraph {
 
     /// Return a list of all node indices.
     ///
-    /// :returns: A list of all the node indexes in the graph
+    /// :returns: A list of all the node indices in the graph
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self)")]
     pub fn node_indices(&self) -> NodeIndices {
@@ -494,7 +494,7 @@ impl PyDiGraph {
     ///     preferred method to get the node indices in the graph. This
     ///     exists for backwards compatibility with earlier releases.
     ///
-    /// :returns: A list of all the node indexes in the graph
+    /// :returns: A list of all the node indices in the graph
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self)")]
     pub fn node_indexes(&self) -> NodeIndices {
@@ -528,11 +528,11 @@ impl PyDiGraph {
             .graph
             .neighbors_directed(index, petgraph::Direction::Outgoing);
         let mut succesors: Vec<&PyObject> = Vec::new();
-        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+        let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for succ in children {
-            if !used_indexes.contains(&succ) {
+            if !used_indices.contains(&succ) {
                 succesors.push(self.graph.node_weight(succ).unwrap());
-                used_indexes.insert(succ);
+                used_indices.insert(succ);
             }
         }
         succesors
@@ -551,11 +551,11 @@ impl PyDiGraph {
             .graph
             .neighbors_directed(index, petgraph::Direction::Incoming);
         let mut predec: Vec<&PyObject> = Vec::new();
-        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+        let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for pred in parents {
-            if !used_indexes.contains(&pred) {
+            if !used_indices.contains(&pred) {
                 predec.push(self.graph.node_weight(pred).unwrap());
-                used_indexes.insert(pred);
+                used_indices.insert(pred);
             }
         }
         predec
@@ -583,7 +583,7 @@ impl PyDiGraph {
     ) -> PyResult<Vec<&PyObject>> {
         let index = NodeIndex::new(node);
         let mut succesors: Vec<&PyObject> = Vec::new();
-        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+        let mut used_indices: HashSet<NodeIndex> = HashSet::new();
 
         let filter_edge = |edge: &PyObject| -> PyResult<bool> {
             let res = filter_fn.call1(py, (edge,))?;
@@ -596,10 +596,10 @@ impl PyDiGraph {
 
         for edge in raw_edges {
             let succ = edge.target();
-            if !used_indexes.contains(&succ) {
+            if !used_indices.contains(&succ) {
                 let edge_weight = edge.weight();
                 if filter_edge(edge_weight)? {
-                    used_indexes.insert(succ);
+                    used_indices.insert(succ);
                     succesors.push(self.graph.node_weight(succ).unwrap());
                 }
             }
@@ -629,7 +629,7 @@ impl PyDiGraph {
     ) -> PyResult<Vec<&PyObject>> {
         let index = NodeIndex::new(node);
         let mut predec: Vec<&PyObject> = Vec::new();
-        let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+        let mut used_indices: HashSet<NodeIndex> = HashSet::new();
 
         let filter_edge = |edge: &PyObject| -> PyResult<bool> {
             let res = filter_fn.call1(py, (edge,))?;
@@ -642,10 +642,10 @@ impl PyDiGraph {
 
         for edge in raw_edges {
             let pred = edge.source();
-            if !used_indexes.contains(&pred) {
+            if !used_indices.contains(&pred) {
                 let edge_weight = edge.weight();
                 if filter_edge(edge_weight)? {
-                    used_indexes.insert(pred);
+                    used_indices.insert(pred);
                     predec.push(self.graph.node_weight(pred).unwrap());
                 }
             }
@@ -681,11 +681,11 @@ impl PyDiGraph {
         Ok(data)
     }
 
-    /// Return the edge data for the edge by it's given index
+    /// Return the edge data for the edge by its given index
     ///
     /// :param int edge_index: The edge index to get the data for
     ///
-    /// :returns: The data object set for the edge
+    /// :returns: The data object for the edge
     /// :raises IndexError: when there is no edge present with the provided
     ///     index
     #[pyo3(text_signature = "(self, edge_index, /)")]
@@ -705,11 +705,12 @@ impl PyDiGraph {
         Ok(data)
     }
 
-    /// Return the edge endpoints for the edge by it's given index
+    /// Return the edge endpoints for the edge by its given index
     ///
     /// :param int edge_index: The edge index to get the endpoints for
     ///
-    /// :returns: The data object set for the edge
+    /// :returns: The endpoint tuple for the edge
+    /// :rtype: tuple
     /// :raises IndexError: when there is no edge present with the provided
     ///     index
     #[pyo3(text_signature = "(self, edge_index, /)")]
@@ -1021,7 +1022,7 @@ impl PyDiGraph {
     ///
     /// :param list obj_list: A list of tuples of the form
     ///     ``(parent, child, obj)`` to attach to the graph. ``parent`` and
-    ///     ``child`` are integer indexes describing where an edge should be
+    ///     ``child`` are integer indices describing where an edge should be
     ///     added, and obj is the python object for the edge data.
     ///
     /// :returns: A list of int indices of the newly created edges
@@ -1045,7 +1046,7 @@ impl PyDiGraph {
     ///
     /// :param list obj_list: A list of tuples of the form
     ///     ``(parent, child)`` to attach to the graph. ``parent`` and
-    ///     ``child`` are integer indexes describing where an edge should be
+    ///     ``child`` are integer indices describing where an edge should be
     ///     added. Unlike :meth:`add_edges_from` there is no data payload and
     ///     when the edge is created None will be used.
     ///
@@ -1438,7 +1439,7 @@ impl PyDiGraph {
 
     /// Get the index and data for the neighbors of a node.
     ///
-    /// This will return a dictionary where the keys are the node indexes of
+    /// This will return a dictionary where the keys are the node indices of
     /// the adjacent nodes (inbound or outbound) and the value is the edge dat
     /// objects between that adjacent node and the provided node. Note in
     /// the case of a multigraph only one edge will be used, not all of the
@@ -1446,7 +1447,7 @@ impl PyDiGraph {
     ///
     /// :param int node: The index of the node to get the neighbors
     ///
-    /// :returns: A dictionary where the keys are node indexes and the value
+    /// :returns: A dictionary where the keys are node indices and the value
     ///     is the edge data object for all nodes that share an edge with the
     ///     specified node.
     /// :rtype: dict
@@ -1466,7 +1467,7 @@ impl PyDiGraph {
 
     /// Get the index and data for either the parent or children of a node.
     ///
-    /// This will return a dictionary where the keys are the node indexes of
+    /// This will return a dictionary where the keys are the node indices of
     /// the adjacent nodes (inbound or outbound as specified) and the value
     /// is the edge data objects for the edges between that adjacent node
     /// and the provided node. Note in the case of a multigraph only one edge
@@ -1476,7 +1477,7 @@ impl PyDiGraph {
     /// :param bool direction: The direction to use for finding nodes,
     ///     True means inbound edges and False means outbound edges.
     ///
-    /// :returns: A dictionary where the keys are node indexes and
+    /// :returns: A dictionary where the keys are node indices and
     ///     the value is the edge data object for all nodes that share an
     ///     edge with the specified node.
     /// :rtype: dict
@@ -1567,6 +1568,119 @@ impl PyDiGraph {
                 .collect(),
         }
     }
+
+    /// Return the list of edge indices incident to a provided node
+    ///
+    /// You can later retrieve the data payload of this edge with
+    /// :meth:`~retworkx.PyDiGraph.get_edge_data_by_index` or its
+    /// endpoints with :meth:`~retworkx.PyDiGraph.get_edge_endpoints_by_index`.
+    ///
+    /// By default this method will only return the outgoing edges of
+    /// the provided ``node``. If you would like to access both the
+    /// incoming and outgoing edges you can set the ``all_edges``
+    /// kwarg to ``True``.
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    /// :param bool all_edges: If set to ``True`` both incoming and outgoing
+    ///     edges to ``node`` will be returned.
+    ///
+    /// :returns: A list of the edge indices incident to a node in the graph
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, node, /, all_edges=False)")]
+    #[args(all_edges = "false")]
+    pub fn incident_edges(&self, node: usize, all_edges: bool) -> EdgeIndices {
+        let node_index = NodeIndex::new(node);
+        if all_edges {
+            EdgeIndices {
+                edges: self
+                    .graph
+                    .edges_directed(node_index, petgraph::Direction::Outgoing)
+                    .chain(self.graph.edges_directed(
+                        node_index,
+                        petgraph::Direction::Incoming,
+                    ))
+                    .map(|e| e.id().index())
+                    .collect(),
+            }
+        } else {
+            EdgeIndices {
+                edges: self
+                    .graph
+                    .edges(node_index)
+                    .map(|e| e.id().index())
+                    .collect(),
+            }
+        }
+    }
+
+    /// Return the index map of edges incident to a provided node
+    ///
+    /// By default this method will only return the outgoing edges of
+    /// the provided ``node``. If you would like to access both the
+    /// incoming and outgoing edges you can set the ``all_edges``
+    /// kwarg to ``True``.
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    /// :param bool all_edges: If set to ``True`` both incoming and outgoing
+    ///     edges to ``node`` will be returned.
+    ///
+    /// :returns: A mapping of incident edge indices to the tuple
+    ///     ``(source, target, data)``
+    /// :rtype: EdgeIndexMap
+    #[pyo3(text_signature = "(self, node, /, all_edges=False)")]
+    #[args(all_edges = "false")]
+    pub fn incident_edge_index_map(
+        &self,
+        py: Python,
+        node: usize,
+        all_edges: bool,
+    ) -> EdgeIndexMap {
+        let node_index = NodeIndex::new(node);
+        if all_edges {
+            EdgeIndexMap {
+                edge_map: self
+                    .graph
+                    .edges_directed(node_index, petgraph::Direction::Outgoing)
+                    .chain(self.graph.edges_directed(
+                        node_index,
+                        petgraph::Direction::Incoming,
+                    ))
+                    .map(|edge| {
+                        (
+                            edge.id().index(),
+                            (
+                                edge.source().index(),
+                                edge.target().index(),
+                                edge.weight().clone_ref(py),
+                            ),
+                        )
+                    })
+                    .collect(),
+            }
+        } else {
+            EdgeIndexMap {
+                edge_map: self
+                    .graph
+                    .edges(node_index)
+                    .map(|edge| {
+                        (
+                            edge.id().index(),
+                            (
+                                edge.source().index(),
+                                edge.target().index(),
+                                edge.weight().clone_ref(py),
+                            ),
+                        )
+                    })
+                    .collect(),
+            }
+        }
+    }
+
     /// Get the index and edge data for all parents of a node.
     ///
     /// This will return a list of tuples with the parent index the node index
@@ -2079,8 +2193,8 @@ impl PyDiGraph {
     ///
     /// :param PyDiGraph other: The other PyDiGraph object to add onto this
     ///     graph.
-    /// :param dict node_map: A dictionary mapping node indexes from this
-    ///     PyDiGraph object to node indexes in the other PyDiGraph object.
+    /// :param dict node_map: A dictionary mapping node indices from this
+    ///     PyDiGraph object to node indices in the other PyDiGraph object.
     ///     The keys are a node index in this graph and the value is a tuple
     ///     of the node index in the other graph to add an edge to and the
     ///     weight of that edge. For example::
