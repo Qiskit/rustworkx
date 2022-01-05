@@ -3,7 +3,7 @@ Directed Acyclic Graphs
 ***********************
 
 This tutorial will explore using retworkx to work with directed acyclic graphs
-(also known as a dag).
+(also known as dags).
 
 Directed Graph
 ==============
@@ -23,7 +23,7 @@ them. For example:
 
 In this example we created a 5 node directed path graph. This shows the
 directionality of the edges in the graph with the arrow head pointing to the
-target node. Each edge has a source and target
+target node. Each edge has a source and target.
 
 Directed Acyclic Graphs
 =======================
@@ -60,12 +60,12 @@ You can also check the status of cycle checking by inspecting the
 
     print(dag.check_cycle)
 
-With ``check_cycle`` set to ``True`` whenever a
+With ``check_cycle`` set to ``True`` whenever calling
 :meth:`.PyDiGraph.add_edge` or related functions that add an arbitrary edge to
 the graph an error will be raised if a cycle would be introduced. This checking
 does come with a noticeable (and potentially large) runtime overhead so it's
 best to only use it if it's strictly necessary. You can also avoid this
-overhead by using the :meth:`.PyDiGraph.add_parent` and
+overhead by using :meth:`.PyDiGraph.add_parent` and
 :meth:`.PyDiGraph.add_child` as both add a new node and edge simultaneously and
 neither can introduce a cycle.
 
