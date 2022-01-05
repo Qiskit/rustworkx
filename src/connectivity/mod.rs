@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+mod connected_components;
 mod core_number;
 
 use super::{
@@ -20,7 +21,6 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
-use std::collections::BTreeSet;
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -29,7 +29,7 @@ use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{
-    EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable,
+    EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable,
 };
 
 use ndarray::prelude::*;
@@ -229,6 +229,82 @@ pub fn digraph_find_cycle(
     EdgeList { edges: cycle }
 }
 
+/// Find the number of connected components in an undirected graph.
+///
+/// :param PyGraph graph: The graph to find the number of connected
+///     components on.
+///
+/// :returns: The number of connected components in the graph
+/// :rtype: int
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+fn number_connected_components(graph: &graph::PyGraph) -> usize {
+    connected_components::number_connected_components(&graph.graph)
+}
+
+/// Find the connected components in an undirected graph
+///
+/// :param PyGraph graph: The graph to find the connected components.
+///
+/// :returns: A list of sets where each set is a connected component of
+///     the graph
+/// :rtype: list
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
+    connected_components::connected_components(&graph.graph)
+}
+
+/// Returns the set of nodes in the component of graph containing `node`.
+///
+/// :param PyGraph graph: The graph to be used.
+/// :param int node: A node in the graph.
+///
+/// :returns: A set of nodes in the component of graph containing `node`.
+/// :rtype: set
+///
+/// :raises InvalidNode: When an invalid node index is provided.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, /)")]
+pub fn node_connected_component(
+    graph: &graph::PyGraph,
+    node: usize,
+) -> PyResult<HashSet<usize>> {
+    let node = NodeIndex::new(node);
+
+    if !graph.graph.contains_node(node) {
+        return Err(InvalidNode::new_err(
+            "The input index for 'node' is not a valid node index",
+        ));
+    }
+
+    Ok(connected_components::bfs_undirected(
+        &graph.graph,
+        node,
+        &mut graph.graph.visit_map(),
+    ))
+}
+
+/// Check if the graph is connected.
+///
+/// :param PyGraph graph: The graph to check if it is connected.
+///
+/// :returns: Whether the graph is connected or not
+/// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
+    match graph.graph.node_indices().next() {
+        Some(node) => {
+            let component = node_connected_component(graph, node.index())?;
+            Ok(component.len() == graph.graph.node_count())
+        }
+        None => Err(NullGraph::new_err("Invalid operation on a NullGraph")),
+    }
+}
+
 /// Find the number of weakly connected components in a directed graph
 ///
 /// :param PyDiGraph graph: The graph to find the number of weakly connected
@@ -256,44 +332,15 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 /// :param PyDiGraph graph: The graph to find the weakly connected components
 ///     in
 ///
-/// :returns: A list of sets where each set it a weakly connected component of
+/// :returns: A list of sets where each set is a weakly connected component of
 ///     the graph
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(
     graph: &digraph::PyDiGraph,
-) -> Vec<BTreeSet<usize>> {
-    let mut seen: HashSet<NodeIndex> =
-        HashSet::with_capacity(graph.node_count());
-    let mut out_vec: Vec<BTreeSet<usize>> = Vec::new();
-    for node in graph.graph.node_indices() {
-        if !seen.contains(&node) {
-            // BFS node generator
-            let mut component_set: BTreeSet<usize> = BTreeSet::new();
-            let mut bfs_seen: HashSet<NodeIndex> = HashSet::new();
-            let mut next_level: HashSet<NodeIndex> = HashSet::new();
-            next_level.insert(node);
-            while !next_level.is_empty() {
-                let this_level = next_level;
-                next_level = HashSet::new();
-                for bfs_node in this_level {
-                    if !bfs_seen.contains(&bfs_node) {
-                        component_set.insert(bfs_node.index());
-                        bfs_seen.insert(bfs_node);
-                        for neighbor in
-                            graph.graph.neighbors_undirected(bfs_node)
-                        {
-                            next_level.insert(neighbor);
-                        }
-                    }
-                }
-            }
-            out_vec.push(component_set);
-            seen.extend(bfs_seen);
-        }
-    }
-    out_vec
+) -> Vec<HashSet<usize>> {
+    connected_components::connected_components(&graph.graph)
 }
 
 /// Check if the graph is weakly connected

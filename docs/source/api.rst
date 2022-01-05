@@ -57,12 +57,14 @@ Traversal
 
    retworkx.dfs_edges
    retworkx.bfs_successors
+   retworkx.bfs_search
    retworkx.topological_sort
    retworkx.lexicographical_topological_sort
    retworkx.descendants
    retworkx.ancestors
    retworkx.collect_runs
    retworkx.collect_bicolor_runs
+   retworkx.visit.BFSVisitor
 
 .. _dag-algorithms:
 
@@ -124,6 +126,10 @@ Connectivity and Cycles
 .. autosummary::
    :toctree: stubs
 
+   retworkx.number_connected_components
+   retworkx.connected_components
+   retworkx.node_connected_component
+   retworkx.is_connected
    retworkx.strongly_connected_components
    retworkx.number_weakly_connected_components
    retworkx.weakly_connected_components
@@ -149,6 +155,7 @@ Other Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.union
    retworkx.metric_closure
+   retworkx.cartesian_product
 
 Generators
 ==========
@@ -174,6 +181,9 @@ Generators
     retworkx.generators.heavy_hex_graph
     retworkx.generators.directed_heavy_hex_graph
     retworkx.generators.lollipop_graph
+    retworkx.generators.generalized_petersen_graph
+    retworkx.generators.barbell_graph
+    retworkx.generators.full_rary_tree
 
 Random Circuit Functions
 ========================
@@ -246,6 +256,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_core_number
    retworkx.digraph_complement
    retworkx.digraph_union
+   retworkx.digraph_cartesian_product
    retworkx.digraph_random_layout
    retworkx.digraph_bipartite_layout
    retworkx.digraph_circular_layout
@@ -255,6 +266,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_num_shortest_paths_unweighted
    retworkx.digraph_betweenness_centrality
    retworkx.digraph_unweighted_average_shortest_path_length
+   retworkx.digraph_bfs_search
 
 .. _api-functions-pygraph:
 
@@ -288,6 +300,7 @@ typed API based on the data type.
    retworkx.graph_core_number
    retworkx.graph_complement
    retworkx.graph_union
+   retworkx.graph_cartesian_product
    retworkx.graph_random_layout
    retworkx.graph_bipartite_layout
    retworkx.graph_circular_layout
@@ -297,6 +310,7 @@ typed API based on the data type.
    retworkx.graph_num_shortest_paths_unweighted
    retworkx.graph_betweenness_centrality
    retworkx.graph_unweighted_average_shortest_path_length
+   retworkx.graph_bfs_search
 
 Exceptions
 ==========
@@ -311,6 +325,8 @@ Exceptions
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph
+   retworkx.visit.StopSearch
+   retworkx.visit.PruneSearch
 
 Custom Return Types
 ===================
@@ -331,3 +347,5 @@ Custom Return Types
    retworkx.AllPairsPathLengthMapping
    retworkx.CentralityMapping
    retworkx.Chains
+   retworkx.NodeMap
+   retworkx.ProductNodeMap

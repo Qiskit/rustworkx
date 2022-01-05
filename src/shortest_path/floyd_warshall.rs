@@ -13,8 +13,7 @@
 use hashbrown::HashMap;
 use retworkx_core::dictmap::*;
 
-use super::weight_callable;
-use crate::get_edge_iter_with_weights;
+use crate::{get_edge_iter_with_weights, weight_callable};
 
 use pyo3::prelude::*;
 use pyo3::Python;

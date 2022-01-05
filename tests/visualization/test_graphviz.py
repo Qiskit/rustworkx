@@ -11,6 +11,7 @@
 # under the License.
 
 import os
+import subprocess
 import tempfile
 import unittest
 
@@ -18,13 +19,17 @@ import retworkx
 from retworkx.visualization import graphviz_draw
 
 try:
-    import pydot
     import PIL
 
-    pydot.call_graphviz("dot", ["--version"], tempfile.gettempdir())
-    HAS_PYDOT = True
+    subprocess.run(
+        ["dot", "-V"],
+        cwd=tempfile.gettempdir(),
+        check=True,
+        capture_output=True,
+    )
+    HAS_PILLOW = True
 except Exception:
-    HAS_PYDOT = False
+    HAS_PILLOW = False
 
 SAVE_IMAGES = os.getenv("RETWORKX_TEST_PRESERVE_IMAGES", None)
 
@@ -35,7 +40,7 @@ def _save_image(image, path):
 
 
 @unittest.skipUnless(
-    HAS_PYDOT, "pydot and graphviz are required for running these tests"
+    HAS_PILLOW, "pillow and graphviz are required for running these tests"
 )
 class TestGraphvizDraw(unittest.TestCase):
     def test_draw_no_args(self):
@@ -122,11 +127,21 @@ class TestGraphvizDraw(unittest.TestCase):
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_draw_image_type.jpg")
 
+    def test_image_type_invalid_type(self):
+        graph = retworkx.directed_gnp_random_graph(50, 0.8)
+        with self.assertRaises(ValueError):
+            graphviz_draw(graph, image_type="raw")
+
     def test_method(self):
         graph = retworkx.directed_gnp_random_graph(50, 0.8)
         image = graphviz_draw(graph, method="sfdp")
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_method.png")
+
+    def test_method_invalid_method(self):
+        graph = retworkx.directed_gnp_random_graph(50, 0.8)
+        with self.assertRaises(ValueError):
+            graphviz_draw(graph, method="special")
 
     def test_filename(self):
         graph = retworkx.generators.grid_graph(20, 20)
