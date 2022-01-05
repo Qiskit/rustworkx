@@ -73,8 +73,8 @@ neither can introduce a cycle.
 Applications of DAGs
 ====================
 
-Topological Sorting
--------------------
+Task Scheduling
+---------------
 
 A topological sort of a directed acyclic graph defined as :math:`G = (V,E)` is
 a linear ordering of all its nodes such that if :math:`G` contains an edge
