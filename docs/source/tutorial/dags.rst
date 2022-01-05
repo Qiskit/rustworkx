@@ -130,10 +130,10 @@ Retworkx was originally started to accelerate the performance of the Qiskit
 compiler's use of directed acyclic graphs for the compiler.
 
 To examine how Qiskit's we first need to look at a quantum circuit. A
-quantum is a computation routine consisting of coherent quantum operations on
-quantum data. It is an ordered squence of quantum gates, measurements and
-resets which may be conditioned on real-time classical computation. A
-quantum circuit is represented graphically like:
+quantum circuit is a computation routine consisting of coherent quantum
+operations on quantum data. It is an ordered squence of quantum gates,
+measurements and resets which may be conditioned on real-time classical
+computation. A quantum circuit is represented graphically like:
 
 .. parsed-literal::
 
@@ -280,6 +280,6 @@ were to be simplified to a single gate ``"U"`` it could be done like:
     )
 
 In Qiskit the node's index is stored in the node's data payload, so the
-abov code example is actually written as something like
+above code example is actually written as something like
 ``dag.contract_nodes([x._node_id for x in runs[0]], "U")``. But this wouldn't
 work for the simplified example here.
