@@ -29,7 +29,8 @@ use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{
-    EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable,
+    EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable,
+    Visitable,
 };
 
 use ndarray::prelude::*;
