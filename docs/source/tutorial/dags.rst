@@ -3,7 +3,7 @@ Directed Acyclic Graphs
 ***********************
 
 This tutorial will explore using retworkx to work with directed acyclic graphs
-(also known as dags).
+(also known as DAGs).
 
 Directed Graph
 ==============
@@ -78,11 +78,11 @@ Topological Sorting
 
 A topological sort of a directed acyclic graph defined as :math:`G = (V,E)` is
 a linear ordering of all its nodes such that if :math:`G` contains an edge
-:math:`(u, v)` then :math:`u` appears before `v`. This only works with dags
+:math:`(u, v)` then :math:`u` appears before `v`. This only works with DAGs
 because if there was a cycle in the graph :math:`G` then it's not possible
 to find such a linear ordering.
 
-A common application of dags is to use a topological sort is to schedule a
+A common application of DAGs is to use a topological sort is to schedule a
 sequence of jobs or tasks based on their dependencies. These jobs are
 represented by nodes and if there is an edge from :math:`u` to :math:`v` if
 job :math:`u` must be completed before job :math:`v`. A topological sort
@@ -106,7 +106,7 @@ jobs. For example:
 
     graphviz_draw(dependency_dag, node_attr_fn=lambda node: {"label": str(node)})
 
-Above we define a dag with 6 jobs and dependency relationship between these
+Above we define a DAG with 6 jobs and dependency relationship between these
 jobs. Now if we run the :func:`~retworkx.topological_sort` function on the
 graph it will return a linear order to execute the jobs that will respect
 the dependency releationship.
@@ -188,7 +188,7 @@ In this representation of the circuit the flow of data through the bits is
 modeled by edges. The first set of nodes are input nodes and the last set
 are output nodes representing the beginning state and end state of each
 bit (both classical and quantum). The compiler then runs analysis and
-transformations on this dag view of a quantum circuit to optimize the
+transformations on this DAG view of a quantum circuit to optimize the
 quantum circuit so it can be executed on real hardware. For example, a
 simple transformation pass is to translate the quantum gates in the circuit
 to the set of gates allowed on a device. In the above example if we were to
@@ -237,7 +237,7 @@ performed is:
         edge_attr_fn=lambda edge: {"label": str(edge)}
     )
 
-Another example of how the compiler in Qiskit operates on a dag is to perform
+Another example of how the compiler in Qiskit operates on a DAG is to perform
 analysis to find all the instances of single qubit gates that are executed in
 series. This series of quantum gates can be analyzed and often simplified
 into a shorter sequence of gates. A simplified example of this analysis is:
@@ -261,7 +261,7 @@ into a shorter sequence of gates. A simplified example of this analysis is:
     runs = rx.collect_runs(dag, filter_fn)
     print(runs)
 
-With this we have the dag nodes that make up a series of 1 qubit gates that
+With this we have the DAG nodes that make up a series of 1 qubit gates that
 we can analyze and attempt to simplify. Skipping the details of the
 internals of how the simplification works we wanted to contract these nodes
 to a single gate we could do that with
