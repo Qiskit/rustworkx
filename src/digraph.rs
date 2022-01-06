@@ -770,7 +770,7 @@ impl PyDiGraph {
     /// :param object edge: The data payload/weight to update the edge with
     ///
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[pyo3(text_signature = "(self, source, target, edge /)")]
+    #[pyo3(text_signature = "(self, edge_index, edge, /)")]
     pub fn update_edge_by_index(
         &mut self,
         edge_index: usize,

@@ -588,7 +588,7 @@ impl PyGraph {
     /// :param object edge: The data payload/weight to update the edge with
     ///
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[pyo3(text_signature = "(self, source, target, edge /)")]
+    #[pyo3(text_signature = "(self, edge_index, edge, /)")]
     pub fn update_edge_by_index(
         &mut self,
         edge_index: usize,
@@ -1090,7 +1090,7 @@ impl PyGraph {
     ///
     /// This with return a list of neighbor node indices
     ///
-    /// :param int node: The index of the node to get the neibhors of
+    /// :param int node: The index of the node to get the neighbors of
     ///
     /// :returns: A list of the neighbor node indicies
     /// :rtype: NodeIndices

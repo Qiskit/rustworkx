@@ -297,10 +297,10 @@ pub fn digraph_dijkstra_shortest_path_lengths(
 /// Calculate the the shortest length from all nodes in a
 /// :class:`~retworkx.PyDiGraph` object
 ///
-/// This function will generate the shortest path from a source node using
-/// Dijkstra's algorithm. This function is multithreaded and will run
-/// launch a thread pool with threads equal to the number of CPUs by default.
-/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// This function will calculate the shortest path lengths from all nodes in the
+/// graph using Dijkstra's algorithm. This function is multithreaded and will
+/// run launch a thread pool with threads equal to the number of CPUs by
+/// default. You can tune the number of threads with the ``RAYON_NUM_THREADS``
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
 /// limit the thread pool to 4 threads.
 ///
@@ -337,10 +337,10 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
     )
 }
 
-/// Find the shortest path from all nodes in a :class:`~retworkx.PyDiGraph`
+/// Find the shortest paths from all nodes in a :class:`~retworkx.PyDiGraph`
 /// object
 ///
-/// This function will generate the shortest path from a source node using
+/// This function will generate the shortest paths from all nodes in the graph
 /// Dijkstra's algorithm. This function is multithreaded and will run
 /// launch a thread pool with threads equal to the number of CPUs by default.
 /// You can tune the number of threads with the ``RAYON_NUM_THREADS``

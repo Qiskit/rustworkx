@@ -8,7 +8,7 @@ Graph Classes
 =============
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
     retworkx.PyGraph
     retworkx.PyDiGraph
@@ -23,7 +23,7 @@ Shortest Paths
 --------------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.dijkstra_shortest_paths
    retworkx.dijkstra_shortest_path_lengths
@@ -43,7 +43,7 @@ Centrality
 --------------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.betweenness_centrality
 
@@ -53,7 +53,7 @@ Traversal
 ---------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.dfs_edges
    retworkx.bfs_successors
@@ -72,7 +72,7 @@ DAG Algorithms
 --------------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.dag_longest_path
    retworkx.dag_longest_path_length
@@ -87,7 +87,7 @@ Tree
 ----
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.minimum_spanning_edges
    retworkx.minimum_spanning_tree
@@ -99,7 +99,7 @@ Isomorphism
 -----------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.is_isomorphic
    retworkx.is_subgraph_isomorphic
@@ -112,7 +112,7 @@ Matching
 --------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.max_weight_matching
    retworkx.is_matching
@@ -124,7 +124,7 @@ Connectivity and Cycles
 -----------------------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.number_connected_components
    retworkx.connected_components
@@ -144,7 +144,7 @@ Other Algorithm Functions
 -------------------------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.complement
    retworkx.adjacency_matrix
@@ -160,7 +160,7 @@ Generators
 ==========
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
     retworkx.generators.cycle_graph
     retworkx.generators.directed_cycle_graph
@@ -184,11 +184,11 @@ Generators
     retworkx.generators.barbell_graph
     retworkx.generators.full_rary_tree
 
-Random Circuit Functions
-========================
+Random Graph Generator Functions
+================================
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
     retworkx.directed_gnp_random_graph
     retworkx.undirected_gnp_random_graph
@@ -202,7 +202,7 @@ Layout Functions
 ================
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.random_layout
    retworkx.spring_layout
@@ -218,7 +218,7 @@ Converters
 ==========
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.networkx_converter
 
@@ -233,7 +233,7 @@ functions from Retworkx API that work for both graph types internally call
 the functions from the explicitly typed based on the data type.
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.digraph_is_isomorphic
    retworkx.digraph_is_subgraph_isomorphic
@@ -278,7 +278,7 @@ work for both graph types internally call the functions from the explicitly
 typed API based on the data type.
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.graph_is_isomorphic
    retworkx.graph_is_subgraph_isomorphic
@@ -315,7 +315,7 @@ Exceptions
 ==========
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.InvalidNode
    retworkx.DAGWouldCycle
@@ -331,7 +331,7 @@ Custom Return Types
 ===================
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.BFSSuccessors
    retworkx.NodeIndices
