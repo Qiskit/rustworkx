@@ -557,11 +557,10 @@ where
     fn next_candidate(
         st: &mut [Vf2State<Ty>; 2],
     ) -> Option<(NodeIndex, NodeIndex, OpenList)> {
-        let mut to_index;
+        // Try the out list
+        let mut to_index = st[1].next_out_index(0);
         let mut from_index = None;
         let mut open_list = OpenList::Out;
-        // Try the out list
-        to_index = st[1].next_out_index(0);
 
         if to_index.is_some() {
             from_index = st[0].next_out_index(0);
