@@ -305,8 +305,7 @@ pub fn steiner_tree(
     // Generate the output graph from the MST
     let out_edge_list: Vec<[usize; 2]> = mst_edges
         .into_iter()
-        .map(|edge| pairwise(edge.path))
-        .flatten()
+        .flat_map(|edge| pairwise(edge.path))
         .filter_map(|x| x.0.map(|a| [a, x.1]))
         .collect();
     let out_edges: HashSet<(usize, usize)> =
@@ -314,8 +313,7 @@ pub fn steiner_tree(
     let mut out_graph = graph.clone();
     let out_nodes: HashSet<NodeIndex> = out_edge_list
         .iter()
-        .map(|x| x.iter())
-        .flatten()
+        .flat_map(|x| x.iter())
         .copied()
         .map(NodeIndex::new)
         .collect();
