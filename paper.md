@@ -4,7 +4,6 @@ tags:
   - graph theory
   - Python
   - Rust
-  - quantum computing
 authors:
   - name: Matthew Treinish
     orcid: 0000-0001-9713-2875
@@ -37,11 +36,11 @@ header-includes:
 
 # Statement of need
 
-_retworkx_ is a general-purpose graph theory library focused on performance. It wraps low-level Rust code [@Matsakis2014] into a flexible Python API, providing fast implementations for graph data structures and popular graph algorithms. _retworkx_ also has additional features such as support for multi-threading via rayon [@Stone2021], and support for plotting using the **`retworkx.visualization`** module.
+_retworkx_ is a general-purpose graph theory library focused on performance. It wraps low-level Rust code [@Matsakis2014] into a flexible Python API, providing fast implementations for graph data structures and popular graph algorithms.
 
 _retworkx_ is inspired by the _NetworkX_ library [@SciPyProceedings_11], but meets the needs of users that also need performance. Even though _NetworkX_ is the de-facto standard graph and network analysis library for Python, it shows performance concerns. _NetworkX_ is implemented purely in Python, which leads to bottlenecks in computationally intensive applications that use graph algorithms. 
 
-_retworkx_ TODO. 
+_retworkx_ addresses those performance concerns by switching to a Rust implementation. It has support for shortest paths, isomorphism, matching, multithreading via rayon [@Stone2021], and much more. The library embodies the safety and performance of Rust with the ease of use from _NetworkX_.
 
 # Related work
   
@@ -63,7 +62,7 @@ A defining characteristic of _retworkx_ graphs is that each node maps to a non-n
 
 # Use Cases
 
-_retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms, such as Qiskit. In those applications, the performance of _retworkx_ considerably reduces computation time. Examples of applications using _retworkx_ include the Qiskit compiler [@Qiskit2021], PennyLane [@Bergholm2020], atompack [@Ullberg2021], and qtcodes [@Jha2021].
+_retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms. In those applications, the performance of _retworkx_ considerably reduces computation time. Examples of applications using _retworkx_ include the Qiskit compiler [@Qiskit2021], PennyLane [@Bergholm2020], atompack [@Ullberg2021], and qtcodes [@Jha2021].
 
 For common use cases, _retworkx_ can provide speedups ranging from 3x to 100x faster compared to the same code using _NetworkX_ while staying competitive with other compiled libraries like _igraph_ and _graph-tool_. The gains in performance are application-specific, but as a general rule, the more work that is offloaded to _retworkx_ and Rust, the larger are the gains.     
 
@@ -83,7 +82,7 @@ TODO: talk about [@Cordella2004], [@Juttner2018], and coupling maps.
 
 # Limitations
 
-TODO
+_retworkx_ 
 
 # Acknowledgements
 
