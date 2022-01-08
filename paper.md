@@ -82,6 +82,8 @@ This use case highlights the flexibility of _retworkx_. TODO.
 
 ## Subgraph Isomorphism
 
+TODO: talk about qubit mapping and [@Li2021].
+
 TODO: talk about [@Cordella2004], [@Juttner2018], and coupling maps.
 
 # Limitations
