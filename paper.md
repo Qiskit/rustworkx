@@ -74,11 +74,9 @@ The first use case is based on the manipulation of directed acyclic graphs (DAGs
 
 TODO: add image.
 
-Qiskit creates a DAG whose nodes represent either OpenQASM instructions or registers [@Cross2021] and whose edges represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulates the graph by adding and removing nodes and edges.
+Qiskit creates a DAG whose nodes represent either OpenQASM instructions or registers [@Cross2021] and whose edges represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulates the graph by adding and removing nodes and edges. _retworkx_ brings the graph data structure underlying those operations.
 
-In addition, Qiskit needs to traverse the graph to calculate some of the transformations. _retworkx_ offers the methods for traversals such as breadth-first search, depth-first search, and topological sorting.
-
-This use case highlights the flexibility of _retworkx_. TODO.
+In addition, Qiskit needs to traverse the graph. Some transformations, such as greedily merging instructions to reduce circuit depth, require graph traversal. _retworkx_ offers the methods for traversals such as breadth-first search, depth-first search, and topological sorting.
 
 ## Subgraph Isomorphism
 
