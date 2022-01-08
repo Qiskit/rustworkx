@@ -90,7 +90,7 @@ _retworkx_ implements both VF2 [@Cordella2004] and VF2++ [@Juttner2018] algorith
 
 # Limitations
 
-_retworkx_ TODO.
+_retworkx_ is not a drop-in replacement for _NetworkX_. Existing code using _NetworkX_ needs to be modified to use _retworkx_. The authors are aware of the limitation and provide a _NetworkX_ to _retworkx_ conversion guide on the documentation.
 
 # Acknowledgements
 
