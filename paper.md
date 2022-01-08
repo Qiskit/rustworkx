@@ -62,21 +62,23 @@ A defining characteristic of _retworkx_ graphs is that each node maps to a non-n
 
 # Use Cases
 
-_retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms. In those applications, the performance of _retworkx_ considerably reduces computation time. Examples of applications using _retworkx_ include the Qiskit, PennyLane [@Bergholm2020], atompack [@Ullberg2021], and qtcodes [@Jha2021].
+_retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms. In those applications, the performance of _retworkx_ considerably reduces computation time. Examples of applications using _retworkx_ include the Qiskit compiler [@Qiskit2021], PennyLane [@Bergholm2020], atompack [@Ullberg2021], and qtcodes [@Jha2021].
 
 For common use cases, _retworkx_ can provide speedups ranging from 3x to 100x faster compared to the same code using _NetworkX_ while staying competitive with other compiled libraries like _igraph_ and _graph-tool_. The gains in performance are application-specific, but as a general rule, the more work that is offloaded to _retworkx_ and Rust, the larger are the gains.     
 
 We illustrate use cases with examples from the field of quantum computing that motivated the development of the library.
 
-## Graph Creation, Traversal, and Manipulation
+## Graph Creation, Manipulation, and Traversal
 
-TODO: talk about [@Ji2021].
+The first use case is based on the manipulation of directed acyclic graphs (DAGs) by Qiskit using _retworkx_. Qiskit represents quantum circuits as DAGs which the compiler operates on to perform analysis and transformations [@Childs2019].
 
-## Shortest Path
+TODO: add image.
 
-TODO: talk about [@Dijkstra1959ANO] and quantum error correction.
+Qiskit creates a DAG whose nodes represent either OpenQASM instructions or registers [@Cross2021] and whose edges represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulates the graph by adding and removing nodes and edges.
 
-TODO: talk about multi-threading [@Stone2021].
+In addition, Qiskit needs to traverse the graph to calculate some of the transformations. _retworkx_ offers the methods for traversals such as breadth-first search, depth-first search, and topological sorting.
+
+This use case highlights the flexibility of _retworkx_. TODO.
 
 ## Subgraph Isomorphism
 
@@ -84,7 +86,7 @@ TODO: talk about [@Cordella2004], [@Juttner2018], and coupling maps.
 
 # Limitations
 
-_retworkx_ 
+_retworkx_ TODO.
 
 # Acknowledgements
 
