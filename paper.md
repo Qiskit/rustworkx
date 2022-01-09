@@ -72,7 +72,7 @@ We illustrate use cases with examples from the field of quantum computing that m
 
 The first use case is based on the manipulation of directed acyclic graphs (DAGs) by Qiskit using _retworkx_. Qiskit represents quantum circuits as DAGs which the compiler operates on to perform analysis and transformations [@Childs2019].
 
-![On the left, a DAG built by Qiskit based on the instructions from a quantum circuit. On the right, the resulting DAG after Qiskit transforms it.\label{fig:dagexample}](paper_img/example_dag_circuit.png){ width=100% height==80% }
+![On the left, a DAG built by Qiskit based on the instructions from a quantum circuit. On the right, the resulting DAG after Qiskit transforms it.\label{fig:dagexample}](paper_img/example_dag_circuit.png){ width=50% height==30% }
 
 Qiskit creates a DAG whose nodes represent either OpenQASM instructions or registers [@Cross2021] and whose edges represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulates the graph by adding and removing nodes and edges. _retworkx_ brings the graph data structure underlying those operations.
 
