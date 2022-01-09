@@ -10,12 +10,14 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::collections::VecDeque;
 use std::iter;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
+use petgraph::Undirected;
 
 use pyo3::exceptions::{PyIndexError, PyOverflowError};
 use pyo3::prelude::*;
@@ -941,6 +943,88 @@ pub fn binomial_tree_graph(
         graph.add_edge(zero_index, NodeIndex::new(n), py.None());
 
         n *= 2;
+    }
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+    })
+}
+
+/// Creates a full r-ary tree of `n` nodes.
+/// Sometimes called a k-ary, n-ary, or m-ary tree.
+///
+/// :param int order: Order of the tree.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than n, extra nodes with with None will be appended.
+/// :param bool multigraph: When set to False the output
+///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A r-ary tree.
+/// :rtype: PyGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that n
+///
+/// .. jupyter-execute::
+///
+///   import retworkx.generators
+///   from retworkx.visualization import mpl_draw
+///
+///   graph = retworkx.generators.full_rary_tree(5, 15)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)"
+)]
+pub fn full_rary_tree(
+    py: Python,
+    branching_factor: u32,
+    num_nodes: usize,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let mut graph = StablePyGraph::<Undirected>::default();
+
+    let nodes: Vec<NodeIndex> = match weights {
+        Some(weights) => {
+            let mut node_list: Vec<NodeIndex> = Vec::with_capacity(num_nodes);
+            if weights.len() > num_nodes {
+                return Err(PyIndexError::new_err(
+                    "weights can't be greater than nodes",
+                ));
+            }
+            let node_count = num_nodes - weights.len();
+            for weight in weights {
+                let index = graph.add_node(weight);
+                node_list.push(index);
+            }
+            for _ in 0..node_count {
+                let index = graph.add_node(py.None());
+                node_list.push(index);
+            }
+            node_list
+        }
+        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+    };
+
+    if num_nodes > 0 {
+        let mut parents = VecDeque::from(vec![nodes[0].index()]);
+        let mut nod_it: usize = 1;
+
+        while !parents.is_empty() {
+            let source: usize = parents.pop_front().unwrap(); //If is empty it will never try to pop
+            for _ in 0..branching_factor {
+                if nod_it < num_nodes {
+                    let target: usize = nodes[nod_it].index();
+                    parents.push_back(target);
+                    nod_it += 1;
+                    graph.add_edge(nodes[source], nodes[target], py.None());
+                }
+            }
+        }
     }
 
     Ok(graph::PyGraph {
@@ -2426,6 +2510,7 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
+    m.add_wrapped(wrap_pyfunction!(full_rary_tree))?;
     m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
     m.add_wrapped(wrap_pyfunction!(barbell_graph))?;
     Ok(())

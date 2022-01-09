@@ -777,9 +777,35 @@ def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 
 @functools.singledispatch
 def dfs_edges(graph, source=None):
-    """Get edge list in depth first order
+    """Get an edge list of the tree edges from a depth-first traversal
 
-    :param PyGraph graph: The graph to get the DFS edge list from
+    The pseudo-code for the DFS algorithm is listed below. The output
+    contains the tree edges found by the procedure.
+
+    ::
+
+        DFS(G, v)
+          let S be a stack
+          label v as discovered
+          PUSH(S, (v, iterator of G.neighbors(v)))
+          while (S != Ø)
+              let (v, iterator) := LAST(S)
+              if hasNext(iterator) then
+                  w := next(iterator)
+                  if w is not labeled as discovered then
+                      label w as discovered                   # (v, w) is a tree edge
+                      PUSH(S, (w, iterator of G.neighbors(w)))
+              else
+                  POP(S)
+          end while
+
+    .. note::
+
+        If the input is an undirected graph with a single connected component,
+        the output of this function is a spanning tree.
+
+    :param graph: The graph to get the DFS edge list from. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :param int source: An optional node index to use as the starting node
         for the depth-first search. The edge list will only return edges in
         the components reachable from this index. If this is not specified
@@ -789,7 +815,6 @@ def dfs_edges(graph, source=None):
     :returns: A list of edges as a tuple of the form ``(source, target)`` in
         depth-first order
     :rtype: EdgeList
-        raise TypeError("Invalid Input Type %s for graph" % type(graph))
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
