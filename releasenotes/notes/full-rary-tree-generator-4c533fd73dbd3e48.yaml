@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.generators.full_rary_tree` that adds
+    support for generating a full r-ary tree of n nodes. For example:
+
+      import retworkx.generators
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.generators.full_rary_tree(3, 5)
+      mpl_draw(graph)

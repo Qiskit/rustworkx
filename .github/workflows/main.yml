@@ -33,7 +33,7 @@ jobs:
       - name: Test Build
         run: cargo build
       - name: Rust Format
-        run: cargo fmt -- --check
+        run: cargo fmt --all -- --check
       - name: Clippy
         run: cargo clippy -- -D warnings
       - name: Black Codestyle Format
@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10-dev]
+        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
         platform: [
           { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },

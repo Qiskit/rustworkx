@@ -12,8 +12,10 @@
 
 //! Module for graph traversal algorithms.
 
+mod bfs_visit;
 mod dfs_edges;
 mod dfs_visit;
 
+pub use bfs_visit::{breadth_first_search, BfsEvent};
 pub use dfs_edges::dfs_edges;
 pub use dfs_visit::{depth_first_search, DfsEvent};
