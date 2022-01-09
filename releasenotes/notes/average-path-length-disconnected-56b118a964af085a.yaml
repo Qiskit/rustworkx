@@ -1,7 +1,7 @@
 ---
-fixes:
+upgrade:
   - |
-    Fixes the way :func:`~unweighted_average_shortest_path_length` handles
+    Updates the way :func:`~unweighted_average_shortest_path_length` handles
     disconnected graphs. Previously, disconnected pairs of nodes was assumed
     to have zero distance and this has been changed to an infinite value.
     In addition, an extra kwarg ``disconnected`` was added where, if set to
