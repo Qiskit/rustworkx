@@ -71,7 +71,6 @@ class BFSVisitor:
         return
 
 
-
 class DFSVisitor:
     """A visitor object that is invoked at the event-points inside the
     :func:`~retworkx.dfs_search` algorithm. By default, it performs no
