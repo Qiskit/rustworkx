@@ -18,29 +18,13 @@ use petgraph::visit::{
     ControlFlow, EdgeRef, IntoEdges, Time, VisitMap, Visitable,
 };
 
-/// Return if the expression is a break value, execute the provided statement
-/// if it is a prune value.
-/// https://github.com/petgraph/petgraph/blob/0.6.0/src/visit/dfsvisit.rs#L27
-macro_rules! try_control {
-    ($e:expr, $p:stmt) => {
-        try_control!($e, $p, ());
-    };
-    ($e:expr, $p:stmt, $q:stmt) => {
-        match $e {
-            x => {
-                if x.should_break() {
-                    return x;
-                } else if x.should_prune() {
-                    $p
-                } else {
-                    $q
-                }
-            }
-        }
-    };
-}
+use super::try_control;
 
 /// A depth first search (DFS) visitor event.
+///
+/// It's similar to upstream petgraph
+/// [`DfsEvent`](https://docs.rs/petgraph/0.6.0/petgraph/visit/enum.DfsEvent.html)
+/// event.
 #[derive(Copy, Clone, Debug)]
 pub enum DfsEvent<N, E> {
     Discover(N, Time),
