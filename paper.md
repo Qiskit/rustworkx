@@ -72,7 +72,7 @@ We illustrate use cases with examples from the field of quantum computing that m
 
 The first use case is based on the manipulation of directed acyclic graphs (DAGs) by Qiskit using _retworkx_. Qiskit represents quantum circuits as DAGs which the compiler operates on to perform analysis and transformations [@Childs2019].
 
-![Quantum circuit and its equivalent representation as a DAG of instructions built by Qiskit.\label{fig:dagexample}](paper_img/example_dag_circuit.png){ width=67.5% height==67.5% }
+![Quantum circuit and its equivalent representation as a DAG of instructions built by Qiskit.\label{fig:dagexample}](paper_img/example_dag_circuit.png){ width=87.5% height==87.5% }
 
 Qiskit creates a DAG whose nodes represent either OpenQASM instructions or registers [@Cross2021] and whose edges represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulates the graph by adding and removing nodes and edges. _retworkx_ brings the graph data structure underlying those operations.
 
@@ -82,7 +82,7 @@ In addition, Qiskit needs to traverse the graph. Some transformations, such as g
 
 The second use case is based on qubit mapping problem for Noisy Intermediate-Scale Quantum (NISQ) devices [@Bharti2021]. NISQ devices do not have full connectivity among qubits, hence Qiskit needs to take into account an undirected graph representing the connectivity of the device when compiling quantum circuits. Qiskit transforms the quantum circuit such that the pairs of qubits executing two-qubit gates respect the device's architectural constraints. There are many proposed solutions to the qubit mapping problem, including algorithms based on subgraph isomorphism [@Li2021].
 
-![Graph representing the connectivity of the **`ibmq_montreal`** device. Qiskit can check if the required connectivity by a circuit is subgraph isomorphic to the device's connectivity when solving the qubit mapping problem.\label{fig:dagexample}](paper_img/example_coupling_map.png){ width=42.5% height==42.5% }
+![Graph representing the connectivity of the **`ibmq_montreal`** device. Qiskit can check if the required connectivity by a circuit is subgraph isomorphic to the device's connectivity when solving the qubit mapping problem.\label{fig:dagexample}](paper_img/example_coupling_map.png){ width=52.5% height==52.5% }
 
 _retworkx_ implements both VF2 [@Cordella2004] and VF2++ [@Juttner2018] algorithms to solve subgraph isomorphism. The implementations include both checking if a mapping exists and returning a mapping among the nodes. Qiskit leverages _retworkx_ to provide an experimental layout method based on VF2++. Qiskit checks if the graph representing the connectvity required by the circuit and the connectivity provided by the device are subgraph isomorphic. If they are, Qiskit uses VF2++ mapping to map the qubits without adding SWAP instructions to the quantum circuit. 
 
