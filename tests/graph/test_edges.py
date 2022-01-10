@@ -224,6 +224,11 @@ class TestEdges(unittest.TestCase):
         graph.add_edge(node_b, node_c, "Super edgy")
         self.assertEqual(2, graph.degree(node_b))
 
+    def test_degree_with_self_loops(self):
+        graph = retworkx.PyGraph()
+        graph.extend_from_edge_list([(0, 0), (0, 1), (0, 0)])
+        self.assertEqual(5, graph.degree(0))
+
     def test_add_edge_from(self):
         graph = retworkx.PyGraph()
         nodes = list(range(4))
@@ -435,9 +440,111 @@ class TestEdges(unittest.TestCase):
             graph.edge_index_map(),
         )
 
+    def test_incident_edges(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_c, node_d, "edge c")
+        res = graph.incident_edges(node_d)
+        self.assertEqual({1, 2}, set(res))
+
+    def test_incident_edges_invalid_node(self):
+        graph = retworkx.PyGraph()
+        res = graph.incident_edges(42)
+        self.assertEqual([], res)
+
+    def test_incident_edge_index_map(self):
+        graph = retworkx.PyGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_c, node_d, "edge c")
+        res = graph.incident_edge_index_map(node_d)
+        self.assertEqual({2: (3, 2, "edge c"), 1: (3, 1, "edge_b")}, res)
+
+    def test_incident_edge_index_map_invalid_node(self):
+        graph = retworkx.PyGraph()
+        res = graph.incident_edge_index_map(42)
+        self.assertEqual({}, res)
+
+    def test_single_neighbor_out_edges(self):
+        g = retworkx.PyGraph()
+        node_a = g.add_node("a")
+        node_b = g.add_node("b")
+        g.add_edge(node_a, node_b, {"a": 1})
+        node_c = g.add_node("c")
+        g.add_edge(node_a, node_c, {"a": 2})
+        res = g.out_edges(node_a)
+        self.assertEqual(
+            [(node_a, node_c, {"a": 2}), (node_a, node_b, {"a": 1})], res
+        )
+
+    def test_neighbor_surrounded_in_out_edges(self):
+        g = retworkx.PyGraph()
+        node_a = g.add_node("a")
+        node_b = g.add_node("b")
+        node_c = g.add_node("c")
+        g.add_edge(node_a, node_b, {"a": 1})
+        g.add_edge(node_b, node_c, {"a": 2})
+        res = g.out_edges(node_b)
+        self.assertEqual(
+            [(node_b, node_c, {"a": 2}), (node_b, node_a, {"a": 1})], res
+        )
+        res = g.in_edges(node_b)
+        self.assertEqual(
+            [(node_c, node_b, {"a": 2}), (node_a, node_b, {"a": 1})], res
+        )
+
     def test_edge_index_map_empty(self):
-        graph = retworkx.PyDiGraph()
+        graph = retworkx.PyGraph()
         self.assertEqual({}, graph.edge_index_map())
+
+    def test_get_edge_data_by_index(self):
+        graph = retworkx.PyGraph()
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.extend_from_weighted_edge_list(edge_list)
+        res = graph.get_edge_data_by_index(2)
+        self.assertEqual("c", res)
+
+    def test_get_edge_data_by_index_invalid_index(self):
+        graph = retworkx.PyGraph()
+        with self.assertRaisesRegex(
+            IndexError, "Provided edge index 2 is not present in the graph"
+        ):
+            graph.get_edge_data_by_index(2)
+
+    def test_get_edge_endpoints_by_index(self):
+        graph = retworkx.PyGraph()
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.extend_from_weighted_edge_list(edge_list)
+        res = graph.get_edge_endpoints_by_index(2)
+        self.assertEqual((0, 2), res)
+
+    def test_get_edge_endpoints_by_index_invalid_index(self):
+        graph = retworkx.PyGraph()
+        with self.assertRaisesRegex(
+            IndexError, "Provided edge index 2 is not present in the graph"
+        ):
+            graph.get_edge_endpoints_by_index(2)
 
 
 class TestEdgesMultigraphFalse(unittest.TestCase):

@@ -54,6 +54,13 @@ pip install retworkx
 will build retworkx for your local system from the source package and install
 it just as it would if there was a prebuilt binary available.
 
+Note: To build from source you will need to ensure you have pip >=19.0.0
+installed, which supports PEP-517, or that you have manually installed
+`setuptools-rust` prior to running `pip install retworkx`. If you recieve an
+error about `setuptools-rust` not being found you should upgrade pip with
+`pip install -U pip` or manually install `setuptools-rust` with
+`pip install setuptools-rust` and try again.
+
 ### Optional dependencies
 
 If you're planning to use the `retworkx.visualization` module you will need to
@@ -65,10 +72,9 @@ installed with `pip install matplotlib` or when you're installing retworkx with
 function `retworkx.visualization.graphviz_drawer` first you will need to install
 graphviz, instructions for this can be found here:
 https://graphviz.org/download/#executable-packages. Then you
-will need to install the [pydot](https://pypi.org/project/pydot/) and
-[pillow](https://python-pillow.org/) Python libraries. This can be done either
-with `pip install pydot pillow` or when installing retworkx with
-`pip install 'retworkx[graphviz]'`.
+will need to install the [pillow](https://python-pillow.org/) Python library.
+This can be done either with `pip install pillow` or when installing retworkx
+with `pip install 'retworkx[graphviz]'`.
 
 If you would like to install all the optional Python dependencies when you
 install retworkx you can use `pip install 'retworkx[all]'` to do this.
