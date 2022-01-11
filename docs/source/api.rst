@@ -56,6 +56,7 @@ Traversal
    :toctree: stubs
 
    retworkx.dfs_edges
+   retworkx.dfs_search
    retworkx.bfs_successors
    retworkx.bfs_search
    retworkx.topological_sort
@@ -64,6 +65,7 @@ Traversal
    retworkx.ancestors
    retworkx.collect_runs
    retworkx.collect_bicolor_runs
+   retworkx.visit.DFSVisitor
    retworkx.visit.BFSVisitor
    retworkx.TopologicalSorter
 
@@ -127,6 +129,10 @@ Connectivity and Cycles
 .. autosummary::
    :toctree: stubs
 
+   retworkx.number_connected_components
+   retworkx.connected_components
+   retworkx.node_connected_component
+   retworkx.is_connected
    retworkx.strongly_connected_components
    retworkx.number_weakly_connected_components
    retworkx.weakly_connected_components
@@ -151,6 +157,7 @@ Other Algorithm Functions
    retworkx.graph_greedy_color
    retworkx.union
    retworkx.metric_closure
+   retworkx.cartesian_product
 
 Generators
 ==========
@@ -176,6 +183,9 @@ Generators
     retworkx.generators.heavy_hex_graph
     retworkx.generators.directed_heavy_hex_graph
     retworkx.generators.lollipop_graph
+    retworkx.generators.generalized_petersen_graph
+    retworkx.generators.barbell_graph
+    retworkx.generators.full_rary_tree
 
 Random Circuit Functions
 ========================
@@ -243,11 +253,13 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_all_pairs_dijkstra_path_lengths
    retworkx.digraph_k_shortest_path_lengths
    retworkx.digraph_dfs_edges
+   retworkx.digraph_dfs_search
    retworkx.digraph_find_cycle
    retworkx.digraph_transitivity
    retworkx.digraph_core_number
    retworkx.digraph_complement
    retworkx.digraph_union
+   retworkx.digraph_cartesian_product
    retworkx.digraph_random_layout
    retworkx.digraph_bipartite_layout
    retworkx.digraph_circular_layout
@@ -287,10 +299,12 @@ typed API based on the data type.
    retworkx.graph_k_shortest_path_lengths
    retworkx.graph_all_pairs_dijkstra_path_lengths
    retworkx.graph_dfs_edges
+   retworkx.graph_dfs_search
    retworkx.graph_transitivity
    retworkx.graph_core_number
    retworkx.graph_complement
    retworkx.graph_union
+   retworkx.graph_cartesian_product
    retworkx.graph_random_layout
    retworkx.graph_bipartite_layout
    retworkx.graph_circular_layout
@@ -337,3 +351,5 @@ Custom Return Types
    retworkx.AllPairsPathLengthMapping
    retworkx.CentralityMapping
    retworkx.Chains
+   retworkx.NodeMap
+   retworkx.ProductNodeMap

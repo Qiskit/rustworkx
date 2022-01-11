@@ -264,6 +264,34 @@ class TestIsomorphic(unittest.TestCase):
         graph.add_edges_from_no_data([(0, 0), (0, 1)])
         self.assertTrue(retworkx.is_isomorphic(graph, graph))
 
+    def test_graph_isomorphic_petersen(self):
+        """Based on 'The isomorphism classes of the generalized Petersen graphs'
+        by Steimle and Staton: https://doi.org/10.1016/j.disc.2007.12.074
+
+        For 2 <= k <= n- 2 with gcd(n, k) = 1,
+        G(n, k) is isomorphic to G(n, l) if and only if:
+        k ≡ -l (mod n) or kl ≡ ±1 (mod n)
+        """
+        n = 23
+        upper_bound_k = (n - 1) // 2
+        for k in range(1, upper_bound_k + 1):
+            for t in range(k, upper_bound_k + 1):
+                with self.subTest(k=k, t=t):
+                    self.assertEqual(
+                        retworkx.is_isomorphic(
+                            retworkx.generators.generalized_petersen_graph(
+                                n, k
+                            ),
+                            retworkx.generators.generalized_petersen_graph(
+                                n, t
+                            ),
+                        ),
+                        (k == t)
+                        or (k == n - t)
+                        or (k * t % n == 1)
+                        or (k * t % n == n - 1),
+                    )
+
     def test_isomorphic_parallel_edges(self):
         first = retworkx.PyGraph()
         first.extend_from_edge_list([(0, 1), (0, 1), (1, 2), (2, 3)])
