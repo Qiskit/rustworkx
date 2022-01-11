@@ -1303,7 +1303,7 @@ def networkx_converter(graph, keep_attributes: bool = False):
         independently.
 
     :param networkx.Graph graph: The networkx graph to convert.
-    :param bool keep_attributes: If `True`, add networkx attributes to retworkx 
+    :param bool keep_attributes: If `True`, add networkx attributes to retworkx
         object.
 
     :returns: A retworkx graph, either a :class:`~retworkx.PyDiGraph` or a

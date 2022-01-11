@@ -19,7 +19,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_undirected_gnm_graph(self):
         g = networkx.gnm_random_graph(10, 10, seed=42)
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -30,7 +32,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_directed_gnm_graph(self):
         g = networkx.gnm_random_graph(10, 10, seed=42, directed=True)
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyDiGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -41,7 +45,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_empty_graph(self):
         g = networkx.Graph()
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -52,7 +58,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_empty_multigraph(self):
         g = networkx.MultiGraph()
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -63,7 +71,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_empty_directed_graph(self):
         g = networkx.DiGraph()
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyDiGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -74,7 +84,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_empty_directed_multigraph(self):
         g = networkx.MultiDiGraph()
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyDiGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -85,7 +97,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_cubical_graph(self):
         g = networkx.cubical_graph(networkx.Graph)
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -96,7 +110,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_cubical_multigraph(self):
         g = networkx.cubical_graph(networkx.MultiGraph)
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -107,7 +123,9 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_random_k_out_graph(self):
         g = networkx.random_k_out_graph(100, 50, 3.14159, True, 42)
         for keep_attributes in [True, False]:
-            out_graph = retworkx.networkx_converter(g, keep_attributes=keep_attributes)
+            out_graph = retworkx.networkx_converter(
+                g, keep_attributes=keep_attributes
+            )
             self.assertIsInstance(out_graph, retworkx.PyDiGraph)
             self.assertEqual(list(out_graph.node_indexes()), list(g.nodes))
             self.assertEqual(
@@ -118,7 +136,7 @@ class TestNetworkxConverter(unittest.TestCase):
     def test_networkx_graph_attributes_are_converted(self):
         g = networkx.Graph()
         for node in range(100):
-            g.add_node(str(node), test = True)
+            g.add_node(str(node), test=True)
 
         out_graph = retworkx.networkx_converter(g, keep_attributes=True)
         for node in out_graph.node_indexes():
