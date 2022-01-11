@@ -6,4 +6,14 @@ upgrade:
     to have zero distance and this has been changed to an infinite value.
     In addition, an extra kwarg ``disconnected`` was added where, if set to
     ``True``, the average is taken only over connected node pairs. By default,
-    it's set to ``False``.
+    it's set to ``False``. If the old behavior is desired, it can be reproduced
+    using the rest of retworkx API like:
+
+    .. jupyter-execute::
+
+      import retworkx
+
+      graph = retworkx.undirected_gnm_random_graph(20, 10, seed=42)
+      n = len(graph)
+      d_mat = rx.distance_matrix(graph, null_value=0.0)
+      avg_shortest_path = d_mat.sum() / (n * (n - 1.0))
