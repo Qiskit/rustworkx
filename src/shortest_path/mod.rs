@@ -82,7 +82,7 @@ pub fn graph_dijkstra_shortest_paths(
         goal_index,
         |e| cost_fn.call(py, e.weight()),
         Some(&mut paths),
-    ) as PyResult<DictMap<NodeIndex, f64>>)?;
+    ) as PyResult<Vec<Option<f64>>>)?;
 
     Ok(PathMapping {
         paths: paths
@@ -154,7 +154,7 @@ pub fn digraph_dijkstra_shortest_paths(
             goal_index,
             |e| cost_fn.call(py, e.weight()),
             Some(&mut paths),
-        ) as PyResult<DictMap<NodeIndex, f64>>)?;
+        ) as PyResult<Vec<Option<f64>>>)?;
     } else {
         (dijkstra(
             &graph.graph,
@@ -162,7 +162,7 @@ pub fn digraph_dijkstra_shortest_paths(
             goal_index,
             |e| cost_fn.call(py, e.weight()),
             Some(&mut paths),
-        ) as PyResult<DictMap<NodeIndex, f64>>)?;
+        ) as PyResult<Vec<Option<f64>>>)?;
     }
     Ok(PathMapping {
         paths: paths
