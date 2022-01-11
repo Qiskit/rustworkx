@@ -70,10 +70,12 @@ class TestTopologicalSorter(unittest.TestCase):
         with self.assertRaises(retworkx.DAGHasCycle):
             _ = retworkx.TopologicalSorter(graph)
 
-    def test_topo_sort_progress_if_graph_has_cycle_and_cycle_check_disabled(self):
+    def test_topo_sort_progress_if_graph_has_cycle_and_cycle_check_disabled(
+        self,
+    ):
         graph = retworkx.generators.directed_cycle_graph(5)
-        starting_node = graph.add_node('starting node')
-        graph.add_edge(starting_node, 0, 'starting edge')
+        starting_node = graph.add_node("starting node")
+        graph.add_edge(starting_node, 0, "starting edge")
 
         sorter = retworkx.TopologicalSorter(graph, check_cycle=False)
         nodes = sorter.get_ready()

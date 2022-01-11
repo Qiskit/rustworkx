@@ -76,10 +76,16 @@ pub struct TopologicalSorter {
 impl TopologicalSorter {
     #[new]
     #[args(check_cycle = "true")]
-    fn new(py: Python, dag: Py<PyDiGraph>, check_cycle: bool) -> PyResult<Self> {
+    fn new(
+        py: Python,
+        dag: Py<PyDiGraph>,
+        check_cycle: bool,
+    ) -> PyResult<Self> {
         {
             let dag = &dag.borrow(py);
-            if !dag.check_cycle && check_cycle && !is_directed_acyclic_graph(dag)
+            if !dag.check_cycle
+                && check_cycle
+                && !is_directed_acyclic_graph(dag)
             {
                 return Err(DAGHasCycle::new_err(
                     "PyDiGraph object has a cycle",
