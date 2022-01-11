@@ -22,6 +22,9 @@ use pyo3::Python;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::IntoNodeIdentifiers;
 
+use crate::dag_algo::is_directed_acyclic_graph;
+use crate::DAGHasCycle;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum NodeState {
     Ready,
@@ -53,7 +56,13 @@ enum NodeState {
 /// but it's not recommended doing it as it may result in a logical-error.
 ///
 /// :param PyDiGraph graph: The directed graph to be used.
+/// :param bool check_cycle: When this is set to ``True``, we search
+///     for cycles in the graph during initialization of topological sorter
+///     and raise :class:`~retworkx.DAGHasCycle` if any cycle is detected. If
+///     it's set to ``False``, topological sorter will output as many nodes
+///     as possible until cycles block more progress. By default is ``True``.
 #[pyclass(module = "retworkx")]
+#[pyo3(text_signature = "(graph, /, check_cycle=True)")]
 pub struct TopologicalSorter {
     dag: Py<PyDiGraph>,
     ready_nodes: Vec<NodeIndex>,
@@ -66,7 +75,18 @@ pub struct TopologicalSorter {
 #[pymethods]
 impl TopologicalSorter {
     #[new]
-    fn new(dag: Py<PyDiGraph>, py: Python) -> Self {
+    #[args(check_cycle = "true")]
+    fn new(py: Python, dag: Py<PyDiGraph>, check_cycle: bool) -> PyResult<Self> {
+        {
+            let dag = &dag.borrow(py);
+            if !dag.check_cycle && check_cycle && !is_directed_acyclic_graph(dag)
+            {
+                return Err(DAGHasCycle::new_err(
+                    "PyDiGraph object has a cycle",
+                ));
+            }
+        }
+
         let ready_nodes = {
             let dag = &dag.borrow(py);
 
@@ -84,14 +104,14 @@ impl TopologicalSorter {
                 .collect()
         };
 
-        TopologicalSorter {
+        Ok(TopologicalSorter {
             dag,
             ready_nodes,
             predecessor_count: HashMap::new(),
             node2state: HashMap::new(),
             num_passed_out: 0,
             num_finished: 0,
-        }
+        })
     }
 
     /// Return ``True`` if more progress can be made and ``False`` otherwise.
