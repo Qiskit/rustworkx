@@ -26,6 +26,7 @@ mod matching;
 mod random_graph;
 mod shortest_path;
 mod steiner_tree;
+mod toposort;
 mod transitivity;
 mod traversal;
 mod tree;
@@ -410,6 +411,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
+    m.add_class::<toposort::TopologicalSorter>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::Chains>()?;
     m.add_class::<iterators::NodeIndices>()?;
