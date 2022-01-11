@@ -15,5 +15,5 @@ upgrade:
 
       graph = retworkx.undirected_gnm_random_graph(20, 10, seed=42)
       n = len(graph)
-      d_mat = rx.distance_matrix(graph, null_value=0.0)
+      d_mat = retworkx.distance_matrix(graph, null_value=0.0)
       avg_shortest_path = d_mat.sum() / (n * (n - 1.0))
