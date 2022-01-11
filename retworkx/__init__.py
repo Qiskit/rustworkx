@@ -1303,6 +1303,12 @@ def networkx_converter(graph, keep_attributes: bool = False):
         independently.
 
     :param networkx.Graph graph: The networkx graph to convert.
+    :param bool keep_attributes: If ``True``, add networkx node attributes to
+        the data payload in the nodes of the output retworkx graph. When set to
+        ``True``, the node data payloads in the output retworkx graph object
+        will be dictionaries with the node attributes from the input networkx
+        graph where the ``"__networkx_node__"`` key contains the node from the
+        input networkx graph.
     :param bool keep_attributes: If `True`, add networkx attributes to retworkx
         object.
 
@@ -1327,7 +1333,7 @@ def networkx_converter(graph, keep_attributes: bool = False):
     if keep_attributes:
         for node, node_index in node_indices.items():
             attributes = graph.nodes[node]
-            attributes["__networkx_name__"] = node
+            attributes["__networkx_node__"] = node
             new_graph[node_index] = attributes
 
     return new_graph
