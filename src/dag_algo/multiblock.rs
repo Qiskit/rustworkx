@@ -33,17 +33,23 @@ fn find_set(
     groups: &mut HashMap<usize, Vec<usize>>,
     op_groups: &mut HashMap<usize, Vec<usize>>,
 ) -> usize {
-    if parent[index].is_none() {
-        parent[index] = Some(index);
-        groups.insert(index, vec![index]);
-        op_groups.insert(index, Vec::new());
+    let mut update_index: Vec<usize> = Vec::new();
+    let mut index_iter = index;
+    while parent[index_iter] != Some(index_iter) {
+        if parent[index_iter].is_none() {
+            parent[index_iter] = Some(index_iter);
+            groups.insert(index_iter, vec![index_iter]);
+            op_groups.insert(index_iter, Vec::new());
+        }
+        if parent[index_iter] != Some(index_iter) {
+            update_index.push(index_iter);
+        }
+        index_iter = parent[index_iter].unwrap();
     }
-    if parent[index] == Some(index) {
-        return index;
+    for index in update_index {
+        parent[index] = Some(index_iter);
     }
-    parent[index] =
-        Some(find_set(parent[index].unwrap(), parent, groups, op_groups));
-    parent[index].unwrap()
+    parent[index_iter].unwrap()
 }
 
 fn combine_sets(

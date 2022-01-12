@@ -121,3 +121,76 @@ class TestCollectMultiBlock(unittest.TestCase):
             graph, 2, key_fn, group_fn, filter_fn
         )
         self.assertEqual(blocks, [[4], [5, 7, 8, 9]])
+
+    def test_empty_graph(self):
+        graph = retworkx.PyDiGraph()
+        block = retworkx.collect_multi_blocks(
+            graph, 1, lambda x: x, lambda x: x, lambda x: x
+        )
+        self.assertEqual(block, [])
+
+    def test_larger_block(self):
+        graph = retworkx.PyDiGraph()
+        q0 = graph.add_node({"type": "in", "name": "q0", "groups": []})
+        q1 = graph.add_node({"type": "in", "name": "q1", "groups": []})
+        q2 = graph.add_node({"type": "in", "name": "q2", "groups": []})
+        q3 = graph.add_node({"type": "in", "name": "q3", "groups": []})
+        q4 = graph.add_node({"type": "in", "name": "q4", "groups": []})
+        cx_1 = graph.add_node({"type": "op", "name": "cx", "groups": [0, 1]})
+        cx_2 = graph.add_node({"type": "op", "name": "cx", "groups": [1, 2]})
+        cx_3 = graph.add_node({"type": "op", "name": "cx", "groups": [2, 3]})
+        ccx = graph.add_node({"type": "op", "name": "ccx", "groups": [0, 1, 2]})
+        cx_4 = graph.add_node({"type": "op", "name": "cx", "groups": [3, 4]})
+        cx_5 = graph.add_node({"type": "op", "name": "cx", "groups": [3, 4]})
+        q0_out = graph.add_node({"type": "out", "name": "q0", "groups": []})
+        q1_out = graph.add_node({"type": "out", "name": "q1", "groups": []})
+        q2_out = graph.add_node({"type": "out", "name": "q2", "groups": []})
+        q3_out = graph.add_node({"type": "out", "name": "q3", "groups": []})
+        q4_out = graph.add_node({"type": "out", "name": "q4", "groups": []})
+
+        graph.add_edges_from(
+            [
+                (q0, cx_1, "q0"),
+                (q1, cx_1, "q1"),
+                (cx_1, cx_2, "q1"),
+                (q2, cx_2, "q2"),
+                (cx_2, cx_3, "q2"),
+                (q3, cx_3, "q3"),
+                (cx_1, ccx, "q0"),
+                (cx_2, ccx, "q1"),
+                (cx_3, ccx, "q2"),
+                (cx_3, cx_4, "q3"),
+                (q4, cx_4, "q4"),
+                (cx_4, cx_5, "q3"),
+                (cx_4, cx_5, "q4"),
+                (ccx, q0_out, "q0"),
+                (ccx, q1_out, "q1"),
+                (ccx, q2_out, "q2"),
+                (cx_5, q3_out, "q3"),
+                (cx_5, q4_out, "q4"),
+            ]
+        )
+
+        def group_fn(node):
+            return set(node["groups"])
+
+        def key_fn(node):
+            if node["type"] == "in":
+                return "a"
+            if node["type"] != "op":
+                return "d"
+            if node["name"] == "measure":
+                return "d"
+            return "b" + chr(ord("a") + len(node["groups"]))
+
+        def filter_fn(node):
+            if node["type"] != "op":
+                return None
+            if node["name"] == "measure":
+                return False
+            return True
+
+        blocks = retworkx.collect_multi_blocks(
+            graph, 4, key_fn, group_fn, filter_fn
+        )
+        self.assertEqual([[cx_1, cx_2, cx_3], [ccx], [cx_4, cx_5]], blocks)
