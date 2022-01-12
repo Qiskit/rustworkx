@@ -82,6 +82,26 @@ in that file then delegate most of logic by importing and calling pure Rust code
 > __NOTE:__ Do you still have questions about making your contribution?
 > Contact us at the [\#retworkx channel in Qiskit Slack](https://qiskit.slack.com/messages/retworkx/)
 
+### retworkx-core
+
+If you're working on writing a pure rust function and it can be made generic
+such that it works for any petgraph graph (if applicable) and that it has
+no dependency on Python or pyo3, it probably makes sense in `retworkx-core`.
+`retworkx-core` is a standalone rust library that's used to provide a Rust API
+to both retworkx and other rust applications or libraries. Unlike retworkx
+it's a Rust library and not a Python library and is designed to be an add-on
+library on top of petgraph that provides additional graph algorithms and
+functionality.
+
+When contributing to retworkx-core the key differences to keep in mind are that
+the public rust interface needs to be treated as a stable interface, which is
+different from retworkx where the stable rust interface compatibility doesn't
+matter only the exported Python API. Additionally documentation and testing
+should be done via cargo doc and cargo test. It is expected that any new
+functionality or changes to retworkx-core is also being used by retworkx so
+test coverage is needed both via python in the retworkx tests and via the
+retworkx-core rust interface.
+
 ### Tests
 
 Once you've made a code change, it is important to verify that your change
@@ -163,6 +183,22 @@ RETWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
 will run the visualization tests and preserve the generated image files after
 the run finishes so you can inspect the output.
 
+#### retworkx-core tests
+
+As retworkx-core is a standalone rust crate with it's own public interface it
+needs it's own testing. These tests can be a combination of doc tests (embedded
+code examples in the docstrings in the rust code) or standalone tests. You
+can refer to the rust book on how to add tests:
+
+https://doc.rust-lang.org/book/ch11-01-writing-tests.html
+
+The retworkx-core tests can be run with:
+```
+cargo test
+```
+
+from the `retworkx-core` directory.
+
 ### Style
 
 #### Rust
@@ -183,9 +219,7 @@ what CI is checking.
 ##### Lint
 
 An additional step is to run [clippy](https://github.com/rust-lang/rust-clippy)
-on your changes. While this is not run in CI (because it's very dependent on
-the rust/cargo version) it can often catch issues in your code. You can run it
-by running:
+on your changes. You can run it by running:
 
 ```bash
 cargo clippy
@@ -218,6 +252,25 @@ tox -edocs
 ```
 which will output the html rendered documentation in `docs/build/html` which
 you can view locally in a web browser.
+
+#### retworkx-core documentation
+
+To build the retworkx-core documentation you will use rust-doc. You can do this
+by running:
+```
+cargo doc
+```
+from the `retworkx-core` directory (which is the root of the `retworkx-core`
+crate. After it's built the compiled documentation will be located in
+`target/doc/retworkx_core` (which is off the repo root not the `retworkx-core`
+dir)
+
+You can build and open the documentation directly in your configured default
+web browser by running:
+
+```
+cargo doc --open
+```
 
 ### Release Notes
 

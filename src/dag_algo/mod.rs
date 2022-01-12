@@ -309,12 +309,21 @@ pub fn layers(
 /// Get the lexicographical topological sorted nodes from the provided DAG
 ///
 /// This function returns a list of nodes data in a graph lexicographically
-/// topologically sorted using the provided key function.
+/// topologically sorted using the provided key function. A topological sort
+/// is a linear ordering of vertices such that for every directed edge from
+/// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
+/// in the ordering.
+///
+/// This function differs from :func:`~retworkx.topological_sort` because
+/// when there are ties between nodes in the sort order this function will
+/// use the string returned by the ``key`` argument to determine the output
+/// order used.
 ///
 /// :param PyDiGraph dag: The DAG to get the topological sorted nodes from
 /// :param Callable key: key is a python function or other callable that
 ///     gets passed a single argument the node data from the graph and is
-///     expected to return a string which will be used for sorting.
+///     expected to return a string which will be used for resolving ties
+///     in the sorting order.
 ///
 /// :returns: A list of node's data lexicographically topologically sorted.
 /// :rtype: list

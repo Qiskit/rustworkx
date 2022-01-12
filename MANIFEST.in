@@ -1,4 +1,6 @@
 include README.md
+include LICENSE
 include Cargo.toml
 include Cargo.lock
 recursive-include src *
+recursive-include retworkx-core *

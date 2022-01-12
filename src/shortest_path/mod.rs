@@ -11,17 +11,14 @@
 // under the License.
 
 pub mod all_pairs_dijkstra;
-mod astar;
 mod average_length;
-pub mod dijkstra;
 mod distance_matrix;
 mod floyd_warshall;
-mod k_shortest_path;
 mod num_shortest_path;
 
-use super::weight_callable;
-use crate::dictmap::*;
-use crate::{digraph, graph, NoPathFound};
+use std::convert::TryFrom;
+
+use crate::{digraph, graph, CostFn, NoPathFound};
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -30,6 +27,9 @@ use petgraph::graph::NodeIndex;
 use petgraph::visit::NodeCount;
 
 use numpy::IntoPyArray;
+
+use retworkx_core::dictmap::*;
+use retworkx_core::shortest_path::{astar, dijkstra, k_shortest_path};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices,
@@ -55,6 +55,8 @@ use crate::iterators::{
 /// :return: Dictionary of paths. The keys are destination node indices and
 ///     the dict values are lists of node indices making the path.
 /// :rtype: dict
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(
     text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0)"
@@ -71,11 +73,13 @@ pub fn graph_dijkstra_shortest_paths(
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
         DictMap::with_capacity(graph.node_count());
-    dijkstra::dijkstra(
+
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+    dijkstra(
         &graph.graph,
         start,
         goal_index,
-        |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+        |e| cost_fn.call(py, e.weight()),
         Some(&mut paths),
     )?;
 
@@ -118,6 +122,8 @@ pub fn graph_dijkstra_shortest_paths(
 /// :return: Dictionary of paths. The keys are destination node indices and
 ///     the dict values are lists of node indices making the path.
 /// :rtype: dict
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(
     text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0, as_undirected=False)"
@@ -135,23 +141,25 @@ pub fn digraph_dijkstra_shortest_paths(
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
         DictMap::with_capacity(graph.node_count());
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+
     if as_undirected {
-        dijkstra::dijkstra(
+        dijkstra(
             // TODO: Use petgraph undirected adapter after
             // https://github.com/petgraph/petgraph/pull/318 is available in
             // a petgraph release.
             &graph.to_undirected(py, true, None)?.graph,
             start,
             goal_index,
-            |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+            |e| cost_fn.call(py, e.weight()),
             Some(&mut paths),
         )?;
     } else {
-        dijkstra::dijkstra(
+        dijkstra(
             &graph.graph,
             start,
             goal_index,
-            |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
+            |e| cost_fn.call(py, e.weight()),
             Some(&mut paths),
         )?;
     }
@@ -193,6 +201,8 @@ pub fn digraph_dijkstra_shortest_paths(
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
 pub fn graph_dijkstra_shortest_path_lengths(
@@ -202,20 +212,15 @@ pub fn graph_dijkstra_shortest_path_lengths(
     edge_cost_fn: PyObject,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        raw.extract(py)
-    };
-
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
-    let res = dijkstra::dijkstra(
+    let res = dijkstra(
         &graph.graph,
         start,
         goal_index,
-        |e| edge_cost_callable(e.weight()),
+        |e| edge_cost_callable.call(py, e.weight()),
         None,
     )?;
     Ok(PathLengthMapping {
@@ -251,6 +256,8 @@ pub fn graph_dijkstra_shortest_path_lengths(
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
 pub fn digraph_dijkstra_shortest_path_lengths(
@@ -260,20 +267,16 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     edge_cost_fn: PyObject,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        raw.extract(py)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
 
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
 
-    let res = dijkstra::dijkstra(
+    let res = dijkstra(
         &graph.graph,
         start,
         goal_index,
-        |e| edge_cost_callable(e.weight()),
+        |e| edge_cost_callable.call(py, e.weight()),
         None,
     )?;
     Ok(PathLengthMapping {
@@ -318,6 +321,8 @@ pub fn digraph_dijkstra_shortest_path_lengths(
 ///         }
 ///
 /// :rtype: AllPairsPathLengthMapping
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn digraph_all_pairs_dijkstra_path_lengths(
@@ -359,6 +364,8 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
 ///         }
 ///
 /// :rtype: AllPairsPathMapping
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn digraph_all_pairs_dijkstra_shortest_paths(
@@ -397,6 +404,8 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
 ///         }
 ///
 /// :rtype: AllPairsPathLengthMapping
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn graph_all_pairs_dijkstra_path_lengths(
@@ -434,6 +443,8 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
 ///         }
 ///
 /// :rtype: AllPairsPathMapping
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn graph_all_pairs_dijkstra_shortest_paths(
@@ -469,8 +480,12 @@ pub fn graph_all_pairs_dijkstra_shortest_paths(
 /// :return: The computed shortest path between node and finish as a list
 ///     of node indices.
 /// :rtype: NodeIndices
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)")]
+#[pyo3(
+    text_signature = "(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn, /)"
+)]
 fn digraph_astar_shortest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -481,34 +496,20 @@ fn digraph_astar_shortest_path(
 ) -> PyResult<NodeIndices> {
     let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: bool = raw.extract(py)?;
+        let output: bool = res.extract(py)?;
         Ok(output)
     };
 
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: f64 = raw.extract(py)?;
-        Ok(output)
-    };
-
-    let estimate_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = estimate_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: f64 = raw.extract(py)?;
-        Ok(output)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
+    let estimate_cost_callable = CostFn::from(estimate_cost_fn);
     let start = NodeIndex::new(node);
 
-    let astar_res = astar::astar(
+    let astar_res = astar(
         &graph.graph,
         start,
         |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
-        |e| edge_cost_callable(e.weight()),
-        |estimate| {
-            estimate_cost_callable(graph.graph.node_weight(estimate).unwrap())
-        },
+        |e| edge_cost_callable.call(py, e.weight()),
+        |estimate| estimate_cost_callable.call(py, &graph.graph[estimate]),
     )?;
     let path = match astar_res {
         Some(path) => path,
@@ -543,8 +544,12 @@ fn digraph_astar_shortest_path(
 /// :returns: The computed shortest path between node and finish as a list
 ///     of node indices.
 /// :rtype: NodeIndices
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, goal_fn, edge_cost, estimate_cost, /)")]
+#[pyo3(
+    text_signature = "(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn /)"
+)]
 fn graph_astar_shortest_path(
     py: Python,
     graph: &graph::PyGraph,
@@ -555,34 +560,20 @@ fn graph_astar_shortest_path(
 ) -> PyResult<NodeIndices> {
     let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: bool = raw.extract(py)?;
+        let output: bool = res.extract(py)?;
         Ok(output)
     };
 
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: f64 = raw.extract(py)?;
-        Ok(output)
-    };
-
-    let estimate_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = estimate_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        let output: f64 = raw.extract(py)?;
-        Ok(output)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
+    let estimate_cost_callable = CostFn::from(estimate_cost_fn);
     let start = NodeIndex::new(node);
 
-    let astar_res = astar::astar(
+    let astar_res = astar(
         &graph.graph,
         start,
         |f| goal_fn_callable(graph.graph.node_weight(f).unwrap()),
-        |e| edge_cost_callable(e.weight()),
-        |estimate| {
-            estimate_cost_callable(graph.graph.node_weight(estimate).unwrap())
-        },
+        |e| edge_cost_callable.call(py, e.weight()),
+        |estimate| estimate_cost_callable.call(py, &graph.graph[estimate]),
     )?;
     let path = match astar_res {
         Some(path) => path,
@@ -615,6 +606,8 @@ fn graph_astar_shortest_path(
 /// :returns: A dict of lengths where the key is the destination node index and
 ///     the value is the length of the path.
 /// :rtype: PathLengthMapping
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)")]
 fn digraph_k_shortest_path_lengths(
@@ -626,17 +619,14 @@ fn digraph_k_shortest_path_lengths(
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let out_goal = goal.map(NodeIndex::new);
-    let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
-        let res = edge_cost.call1(py, (edge,))?;
-        res.extract(py)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost);
 
-    let out_map = k_shortest_path::k_shortest_path(
+    let out_map = k_shortest_path(
         &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,
-        edge_cost_callable,
+        |e| edge_cost_callable.call(py, e.weight()),
     )?;
     Ok(PathLengthMapping {
         path_lengths: out_map
@@ -671,6 +661,8 @@ fn digraph_k_shortest_path_lengths(
 /// :returns: A dict of lengths where the key is the destination node index and
 ///     the value is the length of the path.
 /// :rtype: PathLengthMapping
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)")]
 pub fn graph_k_shortest_path_lengths(
@@ -682,17 +674,14 @@ pub fn graph_k_shortest_path_lengths(
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let out_goal = goal.map(NodeIndex::new);
-    let edge_cost_callable = |edge: &PyObject| -> PyResult<f64> {
-        let res = edge_cost.call1(py, (edge,))?;
-        res.extract(py)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost);
 
-    let out_map = k_shortest_path::k_shortest_path(
+    let out_map = k_shortest_path(
         &graph.graph,
         NodeIndex::new(start),
         out_goal,
         k,
-        edge_cost_callable,
+        |e| edge_cost_callable.call(py, e.weight()),
     )?;
     Ok(PathLengthMapping {
         path_lengths: out_map

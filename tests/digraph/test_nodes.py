@@ -24,10 +24,17 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(["a", "b"], res)
         self.assertEqual([0, 1], dag.node_indexes())
 
+    def test_node_indices(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node("a")
+        graph.add_child(node_a, "b", "Edgy")
+        self.assertEqual([0, 1], graph.node_indices())
+
     def test_no_nodes(self):
         dag = retworkx.PyDAG()
         self.assertEqual([], dag.nodes())
         self.assertEqual([], dag.node_indexes())
+        self.assertEqual([], dag.node_indices())
 
     def test_remove_node(self):
         dag = retworkx.PyDAG()

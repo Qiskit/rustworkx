@@ -16,6 +16,18 @@ import retworkx
 
 
 class TestHeavyHexGraph(unittest.TestCase):
+    def test_directed_heavy_hex_graph_1(self):
+        d = 1
+        graph = retworkx.generators.directed_heavy_hex_graph(d)
+        self.assertEqual(1, len(graph))
+        self.assertEqual(graph.edge_list(), [])
+
+    def test_heavy_hex_graph_1(self):
+        d = 1
+        graph = retworkx.generators.heavy_hex_graph(d)
+        self.assertEqual(1, len(graph))
+        self.assertEqual(graph.edge_list(), [])
+
     def test_directed_heavy_hex_graph_3(self):
         d = 3
         graph = retworkx.generators.directed_heavy_hex_graph(d)
