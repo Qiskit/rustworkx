@@ -142,14 +142,8 @@ pub fn collect_multi_blocks(
                     groups[&group].iter().copied().collect();
                 for v in cur_set {
                     parent[v] = Some(v);
-                    groups
-                        .entry(v)
-                        .and_modify(|x| *x = vec![v])
-                        .or_insert(vec![v]);
-                    op_groups
-                        .entry(v)
-                        .and_modify(|x| *x = Vec::new())
-                        .or_insert(Vec::new());
+                    groups.insert(v, vec![v]);
+                    op_groups.insert(v, Vec::new());
                 }
             }
         }
