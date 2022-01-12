@@ -1,5 +1,5 @@
 ---
-prelude: >
+prelude: |
   This release includes many new features and bug fixes. The highlights of this
   release are more methods to improve working with edges in both a a graph
   object, several new graph generators, and a new set of interactive traversal
@@ -10,7 +10,7 @@ prelude: >
 
   This release also introduces a new separate Rust crate ``retworkx-core`` which
   is a library for use in Rust that's built on top of
-  ```petgraph`` <https://github.com/petgraph/petgraph>`__ that extends the
+  `petgraph <https://github.com/petgraph/petgraph>`__ that extends the
   functionality provided by petgraph. The functionality in this crate is generic
   and can work with any petgraph graph, not just the :class:`~retworkx.PyGraph`
   amd :class:`~retworkx.PyDiGraph`.
@@ -37,9 +37,7 @@ features:
     is set to ``True`` the node attributes from the input NetworkX graph will
     be preserved and the data payload for the output retworkx graph will be
     a dictionary containing the attributes and the ``"__networkx_node__"`` key
-    will contain the node from NetworkX. For example:
-
-    .. jupyter-execute::
+    will contain the node from NetworkX. For example::
 
         import networkx as nx
         import retworkx as rx
@@ -53,3 +51,8 @@ features:
         rx_graph = rx.networkx_converter(g, keep_attributes=True)
         print(rx_graph.nodes())
         print(rx_graph.weighted_edge_list())
+
+    will output::
+
+        [{'color': 'turquoise', 'size': 'extra large', '__networkx_node__': 'A'}, {'color': 'fuschia', 'size': 'tiny', '__networkx_node__': 'B'}]
+        WeightedEdgeList[(0, 1, {})]
