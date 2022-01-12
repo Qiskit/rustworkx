@@ -46,6 +46,16 @@ fn find_set(
     parent[index].unwrap()
 }
 
+fn combine_sets(
+    op_groups: &mut HashMap<usize, Vec<usize>>,
+    set_a: usize,
+    set_b: usize,
+) {
+    let mut other_groups = op_groups.get_mut(&set_b).unwrap().clone();
+    op_groups.get_mut(&set_a).unwrap().append(&mut other_groups);
+    op_groups.get_mut(&set_b).unwrap().clear();
+}
+
 /// DSU function for unioning two sets together
 /// Find the roots of each set. Then assign one to have the other
 /// as its parent, thus liking the sets.
@@ -67,15 +77,8 @@ fn union_set(
         mem::swap(&mut set_a, &mut set_b);
     }
     parent[set_b] = Some(set_a);
-    let mut other_op_groups = op_groups.get_mut(&set_b).unwrap().clone();
-    op_groups
-        .get_mut(&set_a)
-        .unwrap()
-        .append(&mut other_op_groups);
-    op_groups.get_mut(&set_b).unwrap().clear();
-    let mut other_groups = groups.get_mut(&set_b).unwrap().clone();
-    groups.get_mut(&set_a).unwrap().append(&mut other_groups);
-    groups.get_mut(&set_b).unwrap().clear();
+    combine_sets(op_groups, set_a, set_b);
+    combine_sets(groups, set_a, set_b)
 }
 
 pub fn collect_multi_blocks(
