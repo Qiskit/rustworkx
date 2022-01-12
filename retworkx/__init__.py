@@ -652,7 +652,7 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
 
     This function will generate the shortest path lengths from all nodes in the
     graph using Dijkstra's algorithm. This function is multithreaded and will
-    run launch a thread pool with threads equal to the number of CPUs by
+    launch a thread pool with threads equal to the number of CPUs by
     default. You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads.
