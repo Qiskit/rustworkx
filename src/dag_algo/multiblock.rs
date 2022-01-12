@@ -81,6 +81,25 @@ fn union_set(
     combine_sets(groups, set_a, set_b)
 }
 
+fn update_set(
+    group_index: usize,
+    parent: &mut Vec<Option<usize>>,
+    groups: &mut HashMap<usize, Vec<usize>>,
+    op_groups: &mut HashMap<usize, Vec<usize>>,
+    block_list: &mut Vec<Vec<usize>>,
+) {
+    if !op_groups[&group_index].is_empty() {
+        block_list.push(op_groups[&group_index].iter().copied().collect());
+    }
+    let cur_set: HashSet<usize> =
+        groups[&group_index].iter().copied().collect();
+    for v in cur_set {
+        parent[v] = Some(v);
+        groups.insert(v, vec![v]);
+        op_groups.insert(v, Vec::new());
+    }
+}
+
 pub fn collect_multi_blocks(
     py: Python,
     dag: &digraph::PyDiGraph,
@@ -137,14 +156,13 @@ pub fn collect_multi_blocks(
                 if op_groups[&group].is_empty() {
                     continue;
                 }
-                block_list.push(op_groups[&group].iter().copied().collect());
-                let cur_set: HashSet<usize> =
-                    groups[&group].iter().copied().collect();
-                for v in cur_set {
-                    parent[v] = Some(v);
-                    groups.insert(v, vec![v]);
-                    op_groups.insert(v, Vec::new());
-                }
+                update_set(
+                    group,
+                    &mut parent,
+                    &mut groups,
+                    &mut op_groups,
+                    &mut block_list,
+                );
             }
         }
         if makes_too_big {
@@ -179,24 +197,13 @@ pub fn collect_multi_blocks(
                 if savings_need > 0 {
                     savings_need -= item.0;
                     let item_index = item.1;
-                    if !op_groups[&item_index].is_empty() {
-                        block_list.push(
-                            op_groups[&item_index].iter().copied().collect(),
-                        );
-                    }
-                    let cur_set: HashSet<usize> =
-                        groups[&item_index].iter().copied().collect();
-                    for v in cur_set {
-                        parent[v] = Some(v);
-                        groups
-                            .entry(v)
-                            .and_modify(|x| *x = vec![v])
-                            .or_insert(vec![v]);
-                        op_groups
-                            .entry(v)
-                            .and_modify(|x| *x = Vec::new())
-                            .or_insert(Vec::new());
-                    }
+                    update_set(
+                        item_index,
+                        &mut parent,
+                        &mut groups,
+                        &mut op_groups,
+                        &mut block_list,
+                    );
                 }
             }
         }
