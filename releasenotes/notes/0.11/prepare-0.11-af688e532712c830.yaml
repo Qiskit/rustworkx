@@ -1,0 +1,55 @@
+---
+prelude: >
+  This release includes many new features and bug fixes. The highlights of this
+  release are more methods to improve working with edges in both a a graph
+  object, several new graph generators, and a new set of interactive traversal
+  functions :func:`~retworkx.bfs_search`, :func:`~retworkx.dfs_search`,
+  :func:`~retworkx.dijkstra_search`, and :class:`~retworkx.TopologicalSorter`
+  which enable iteratively interacting with the graph during different types
+  of traversal.
+
+  This release also introduces a new separate Rust crate ``retworkx-core`` which
+  is a library for use in Rust that's built on top of
+  ```petgraph`` <https://github.com/petgraph/petgraph>`__ that extends the
+  functionality provided by petgraph. The functionality in this crate is generic
+  and can work with any petgraph graph, not just the :class:`~retworkx.PyGraph`
+  amd :class:`~retworkx.PyDiGraph`.
+
+  The 0.11.0 release fully supports Python 3.10 and precompiled binaries
+  for Python 3.10 are published on PyPI (previous releases worked with 3.10 but
+  required compiling from source to install). This is also the last release to
+  support Python 3.6, starting in retworkx 0.12.0 Python >=3.7 will be required
+  to run retworkx. Additionally, for users compiling retworkx from source this
+  will be the last release with a minimum supported Rust version (MSRV) of 1.41,
+  in retworkx 0.12.0 the MSRV will be increased to 1.48.
+
+features:
+  - |
+    Added a new workspace crate, ``retworkx-core`` as part of retworkx. This is
+    a standalone Rust library that is built on top of petgraph that provides
+    general algorithms and graph functionality that retworkx needs.
+    This new crate only exposes a rust interface that is general for any
+    petgraph graph and can be used by any downstream rust project that wants
+    the extra functionality that retworkx exposes, but without needing Python.
+  - |
+    A new kwarg, ``keep_attributes``, has been added to the NetworkX graph
+    converter function :func:`~retworkx.networkx_converter`. When this argument
+    is set to ``True`` the node attributes from the input NetworkX graph will
+    be preserved and the data payload for the output retworkx graph will be
+    a dictionary containing the attributes and the ``"__networkx_node__"`` key
+    will contain the node from NetworkX. For example:
+
+    .. jupyter-execute::
+
+        import networkx as nx
+        import retworkx as rx
+
+        g = nx.Graph()
+        g.add_nodes_from([
+          ("A", {"color": "turquoise", "size": "extra large"}),
+          ("B", {"color": "fuschia", "size": "tiny"}),
+        ])
+        g.add_edge("A", "B")
+        rx_graph = rx.networkx_converter(g, keep_attributes=True)
+        print(rx_graph.nodes())
+        print(rx_graph.weighted_edge_list())
