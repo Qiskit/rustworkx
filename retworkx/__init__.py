@@ -1309,8 +1309,6 @@ def networkx_converter(graph, keep_attributes: bool = False):
         will be dictionaries with the node attributes from the input networkx
         graph where the ``"__networkx_node__"`` key contains the node from the
         input networkx graph.
-    :param bool keep_attributes: If `True`, add networkx attributes to retworkx
-        object.
 
     :returns: A retworkx graph, either a :class:`~retworkx.PyDiGraph` or a
         :class:`~retworkx.PyGraph` based on whether the input graph is directed
