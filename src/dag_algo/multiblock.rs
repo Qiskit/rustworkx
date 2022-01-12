@@ -213,25 +213,25 @@ pub fn collect_multi_blocks(
                 // groups in the above maxkes_to_big block
                 continue; // unable to be part of a group
             }
-        }
-        let mut prev: Option<usize> = None;
-        for group in cur_groups {
-            let index = group;
-            if let Some(value) = prev {
-                union_set(
-                    value,
-                    index,
-                    &mut parent,
-                    &mut groups,
-                    &mut op_groups,
-                );
+            let mut prev: Option<usize> = None;
+            for group in cur_groups {
+                let index = group;
+                if let Some(value) = prev {
+                    union_set(
+                        value,
+                        index,
+                        &mut parent,
+                        &mut groups,
+                        &mut op_groups,
+                    );
+                }
+                prev = Some(index);
             }
-            prev = Some(index);
-        }
-        if let Some(value) = prev {
-            let found_set =
-                find_set(value, &mut parent, &mut groups, &mut op_groups);
-            op_groups.get_mut(&found_set).unwrap().push(node.index());
+            if let Some(value) = prev {
+                let found_set =
+                    find_set(value, &mut parent, &mut groups, &mut op_groups);
+                op_groups.get_mut(&found_set).unwrap().push(node.index());
+            }
         }
     }
 
