@@ -163,7 +163,7 @@ pub fn minimum_spanning_tree(
 #[pyfunction]
 #[pyo3(text_signature = "(spanning_tree, pop, target_pop, epsilon)")]
 pub fn balanced_cut_edge(
-    _py: Python,
+    py: Python,
     spanning_tree: &graph::PyGraph,
     py_pops: &PyList,
     py_pop_target: &PyFloat,
@@ -177,75 +177,80 @@ pub fn balanced_cut_edge(
         pops.push(py_pops.get_item(i).unwrap().extract::<f64>().unwrap());
     }
 
-    let mut same_partition_tracker: Vec<Vec<usize>> =
-        vec![vec![]; spanning_tree.graph.node_count()]; // keeps track of all all the nodes on the same side of the partition
-    let mut node_queue: VecDeque<NodeIndex> = VecDeque::<NodeIndex>::new();
-    for leaf_node in spanning_tree.graph.node_indices() {
-        // todo: filter expr
-        if spanning_tree.graph.neighbors(leaf_node).count() == 1 {
-            node_queue.push_back(leaf_node);
-        }
-        same_partition_tracker[leaf_node.index()].push(leaf_node.index());
-    }
-
-    // eprintln!("leaf nodes: {}", node_queue.len());
-
-    // this process can be multithreaded, if the locking overhead isn't too high
-    // (note: locking may not even be needed given the invariants this is assumed to maintain)
-    let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
-    let mut seen_nodes: Vec<bool> =
-        vec![false; spanning_tree.graph.node_count()]; // todo: perf test this
-    while node_queue.len() > 0 {
-        let node = node_queue.pop_front().unwrap();
-        if seen_nodes[node.index()] {
-            // should not need this
-            // eprintln!("Invalid state! Double vision . . .");
-            continue;
-        }
-        let pop = pops[node.index()];
-
-        // todo: factor out expensive clones
-        // Mark as seen; push to queue if only one unseen neighbor
-        let unseen_neighbors: Vec<NodeIndex> = spanning_tree
-            .graph
-            .neighbors(node)
-            .filter(|node| !seen_nodes[node.index()])
-            .collect();
-        // eprintln!("unseen_neighbors: {}", unseen_neighbors.len());
-        if unseen_neighbors.len() == 1 {
-            // this will be false if root
-            let neighbor = unseen_neighbors[0];
-            pops[neighbor.index()] += pop.clone();
-            let mut current_partition_tracker =
-                same_partition_tracker[node.index()].clone();
-            same_partition_tracker[neighbor.index()]
-                .append(&mut current_partition_tracker);
-            // eprintln!("node pushed to queue (pop = {}, target = {}): {}", pops[neighbor.index()], pop_target, neighbor.index());
-
-            if !node_queue.contains(&neighbor) {
-                node_queue.push_back(neighbor);
+    let spanning_tree_graph = &spanning_tree.graph;
+    
+    let balanced_nodes = py.allow_threads( move || {
+        let mut same_partition_tracker: Vec<Vec<usize>> =
+            vec![vec![]; spanning_tree_graph.node_count()]; // keeps track of all all the nodes on the same side of the partition
+        let mut node_queue: VecDeque<NodeIndex> = VecDeque::<NodeIndex>::new();
+        for leaf_node in spanning_tree_graph.node_indices() {
+            // todo: filter expr
+            if spanning_tree_graph.neighbors(leaf_node).count() == 1 {
+                node_queue.push_back(leaf_node);
             }
-        } else if unseen_neighbors.len() == 0 {
-            break;
-        } else {
-            continue;
-        }
-        // pops[node.index()] = 0.0; // not needed?
-
-        // Check if balanced
-        if pop >= pop_target * (1.0 - epsilon)
-            && pop <= pop_target * (1.0 + epsilon)
-        {
-            // slightly different
-            // eprintln!("balanced node found: {}", node.index());
-            balanced_nodes.push((
-                node.index(),
-                same_partition_tracker[node.index()].clone(),
-            ));
+            same_partition_tracker[leaf_node.index()].push(leaf_node.index());
         }
 
-        seen_nodes[node.index()] = true;
-    }
+        // eprintln!("leaf nodes: {}", node_queue.len());
+
+        // this process can be multithreaded, if the locking overhead isn't too high
+        // (note: locking may not even be needed given the invariants this is assumed to maintain)
+        let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
+        let mut seen_nodes: Vec<bool> =
+            vec![false; spanning_tree_graph.node_count()]; // todo: perf test this
+        while node_queue.len() > 0 {
+            let node = node_queue.pop_front().unwrap();
+            if seen_nodes[node.index()] {
+                // should not need this
+                // eprintln!("Invalid state! Double vision . . .");
+                continue;
+            }
+            let pop = pops[node.index()];
+
+            // todo: factor out expensive clones
+            // Mark as seen; push to queue if only one unseen neighbor
+            let unseen_neighbors: Vec<NodeIndex> = spanning_tree
+                .graph
+                .neighbors(node)
+                .filter(|node| !seen_nodes[node.index()])
+                .collect();
+            // eprintln!("unseen_neighbors: {}", unseen_neighbors.len());
+            if unseen_neighbors.len() == 1 {
+                // this will be false if root
+                let neighbor = unseen_neighbors[0];
+                pops[neighbor.index()] += pop.clone();
+                let mut current_partition_tracker =
+                    same_partition_tracker[node.index()].clone();
+                same_partition_tracker[neighbor.index()]
+                    .append(&mut current_partition_tracker);
+                // eprintln!("node pushed to queue (pop = {}, target = {}): {}", pops[neighbor.index()], pop_target, neighbor.index());
+
+                if !node_queue.contains(&neighbor) {
+                    node_queue.push_back(neighbor);
+                }
+            } else if unseen_neighbors.len() == 0 {
+                break;
+            } else {
+                continue;
+            }
+            // pops[node.index()] = 0.0; // not needed?
+
+            // Check if balanced
+            if pop >= pop_target * (1.0 - epsilon)
+                && pop <= pop_target * (1.0 + epsilon)
+            {
+                // slightly different
+                // eprintln!("balanced node found: {}", node.index());
+                balanced_nodes.push((
+                    node.index(),
+                    same_partition_tracker[node.index()].clone(),
+                ));
+            }
+
+            seen_nodes[node.index()] = true;
+        }
+        balanced_nodes
+    });
 
     Ok(balanced_nodes)
 }
