@@ -47,6 +47,12 @@ use retworkx_core::connectivity;
 ///
 /// This is adapted from algorithm CACM 491 [1]_.
 ///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges.
+///     It may produce incorrect/unexpected results if the input graph has
+///     parallel edges.
+///
 /// :param PyGraph graph: The graph to find the cycle basis in
 /// :param int root: Optional index for starting node for basis
 ///
