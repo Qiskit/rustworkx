@@ -1300,7 +1300,7 @@ def _graph_spring_layout(
     )
 
 
-def networkx_converter(graph):
+def networkx_converter(graph, keep_attributes: bool = False):
     """Convert a networkx graph object into a retworkx graph object.
 
     .. note::
@@ -1311,6 +1311,12 @@ def networkx_converter(graph):
         independently.
 
     :param networkx.Graph graph: The networkx graph to convert.
+    :param bool keep_attributes: If ``True``, add networkx node attributes to
+        the data payload in the nodes of the output retworkx graph. When set to
+        ``True``, the node data payloads in the output retworkx graph object
+        will be dictionaries with the node attributes from the input networkx
+        graph where the ``"__networkx_node__"`` key contains the node from the
+        input networkx graph.
 
     :returns: A retworkx graph, either a :class:`~retworkx.PyDiGraph` or a
         :class:`~retworkx.PyGraph` based on whether the input graph is directed
@@ -1329,6 +1335,13 @@ def networkx_converter(graph):
             for x in graph.edges(data=True)
         ]
     )
+
+    if keep_attributes:
+        for node, node_index in node_indices.items():
+            attributes = graph.nodes[node]
+            attributes["__networkx_node__"] = node
+            new_graph[node_index] = attributes
+
     return new_graph
 
 
