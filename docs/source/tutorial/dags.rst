@@ -29,7 +29,7 @@ Directed Acyclic Graphs
 =======================
 
 A directed acyclic graph is a directed graph which also doesn't contain
-any cycles. A cycle is a non-empty trail in which the first and last nodes in
+any cycles. A cycle is a non-empty trail [#]_ in which the first and last nodes in
 the trail are the same. For example:
 
 .. jupyter-execute::
@@ -69,6 +69,8 @@ overhead by using :meth:`.PyDiGraph.add_parent` and
 :meth:`.PyDiGraph.add_child` as both add a new node and edge simultaneously and
 neither can introduce a cycle.
 
+.. [#] A trail is a sequence of nodes and edges on the graph were each edge
+   is distinct in the walk.
 
 Applications of DAGs
 ====================
