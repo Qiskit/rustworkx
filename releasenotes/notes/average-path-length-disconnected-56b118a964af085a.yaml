@@ -9,7 +9,7 @@ upgrade:
     it's set to ``False``. If the old behavior is desired, it can be reproduced
     using the rest of retworkx API like:
 
-    .. jupyter-execute::
+    .. code-block:: python
 
       import retworkx
 
