@@ -605,7 +605,7 @@ def _graph_dijkstra_shortest_path(
 
 @functools.singledispatch
 def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
-    """Find the shortest path from all nodes in a graph
+    """For each node in the graph, finds the shortest paths to all others.
 
     This function will generate the shortest path from all nodes in the graph
     using Dijkstra's algorithm. This function is multithreaded and will run
@@ -648,7 +648,7 @@ def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
 
 @functools.singledispatch
 def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
-    """Calculate the shortest path lengths from all nodes in a graph
+    """For each node in the graph, calculates the lengths of the shortest paths to all others.
 
     This function will generate the shortest path lengths from all nodes in the
     graph using Dijkstra's algorithm. This function is multithreaded and will
