@@ -18,7 +18,7 @@ use ndarray::prelude::*;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
 
-use rayon::prelude::*;
+// use rayon::prelude::*; Apparently not used, probably because the following is used instead
 use rayon_cond::CondIterator;
 
 use crate::NodesRemoved;
