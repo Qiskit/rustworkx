@@ -574,7 +574,7 @@ impl PyDiGraph {
     /// :returns: A list of the node data for all the child neighbor nodes
     ///           whose at least one edge matches the filter
     /// :rtype: list
-    #[pyo3(text_signature = "(self, node, filter_fn/)")]
+    #[pyo3(text_signature = "(self, node, filter_fn, /)")]
     pub fn find_successors_by_edge(
         &self,
         py: Python,
@@ -620,7 +620,7 @@ impl PyDiGraph {
     /// :returns: A list of the node data for all the parent neighbor nodes
     ///           whose at least one edge matches the filter
     /// :rtype: list
-    #[pyo3(text_signature = "(self, node, filter_fn/)")]
+    #[pyo3(text_signature = "(self, node, filter_fn, /)")]
     pub fn find_predecessors_by_edge(
         &self,
         py: Python,
@@ -769,7 +769,8 @@ impl PyDiGraph {
     /// :param int edge_index: The index for the edge
     /// :param object edge: The data payload/weight to update the edge with
     ///
-    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
     #[pyo3(text_signature = "(self, edge_index, edge, /)")]
     pub fn update_edge_by_index(
         &mut self,
@@ -1265,6 +1266,9 @@ impl PyDiGraph {
     ///
     /// :param list index_list: A list of node index pairs to remove from
     ///     the graph
+    ///
+    /// :raises NoEdgeBetweenNodes: If there are no edges between a specified
+    ///     pair of nodes.
     #[pyo3(text_signature = "(self, index_list, /)")]
     pub fn remove_edges_from(
         &mut self,
@@ -1310,6 +1314,7 @@ impl PyDiGraph {
     /// :returns: the index of the first node in the graph that is equal to the
     ///     weight. If no match is found ``None`` will be returned.
     /// :rtype: int
+    #[pyo3(text_signature = "(self, obj, /)")]
     pub fn find_node_by_weight(
         &self,
         py: Python,
@@ -2143,7 +2148,7 @@ impl PyDiGraph {
     /// :rtype: PyDiGraph
     #[staticmethod]
     #[args(null_value = "0.0")]
-    #[pyo3(text_signature = "(matrix, /)")]
+    #[pyo3(text_signature = "(matrix, /, null_value=0.0)")]
     pub fn from_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
@@ -2180,7 +2185,7 @@ impl PyDiGraph {
     /// :rtype: PyDiGraph
     #[staticmethod]
     #[args(null_value = "Complex64::zero()")]
-    #[pyo3(text_signature = "(matrix, /)")]
+    #[pyo3(text_signature = "(matrix, /, null_value=0.0+0.0j)")]
     pub fn from_complex_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, Complex64>,
@@ -2637,10 +2642,10 @@ impl PyDiGraph {
 
     /// Return a new PyDiGraph object for an edge induced subgraph of this graph
     ///
-    /// The induced subgraph contains each edge in `edges` and each node
+    /// The induced subgraph contains each edge in `edge_list` and each node
     /// incident to any of those edges.
     ///
-    /// :param list edges: A list of edge tuples (2-tuples with the source and
+    /// :param list edge_list: A list of edge tuples (2-tuples with the source and
     ///     target node) to generate the subgraph from. In cases of parallel
     ///     edges for a multigraph all edges between the specified node. In case
     ///     of an edge specified that doesn't exist in the graph it will be
@@ -2649,7 +2654,7 @@ impl PyDiGraph {
     /// :returns: The edge subgraph
     /// :rtype: PyDiGraph
     ///
-    #[pyo3(text_signature = "(self, edges, /)")]
+    #[pyo3(text_signature = "(self, edge_list, /)")]
     pub fn edge_subgraph(&self, edge_list: Vec<[usize; 2]>) -> PyDiGraph {
         // Filter non-existent edges
         let edges: Vec<[usize; 2]> = edge_list

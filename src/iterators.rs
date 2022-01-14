@@ -543,7 +543,7 @@ custom_vec_iter_impl!(
         # Use as iterator
         bfs_iter = iter(bfs_succ)
         first_element = next(bfs_iter)
-        second_element = nex(bfs_iter)
+        second_element = next(bfs_iter)
 
     "
 );
