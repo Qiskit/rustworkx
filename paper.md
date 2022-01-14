@@ -74,7 +74,7 @@ The first use case is based on the manipulation of directed acyclic graphs (DAGs
 
 ![Quantum circuit and its equivalent representation as a DAG of instructions built by Qiskit.\label{fig:dagexample}](paper_img/example_dag_circuit.png){ width=100% height==100% }
 
-Qiskit creates a DAG whose nodes represent either OpenQASM instructions or registers [@Cross2021] and whose edges represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulates the graph by adding and removing nodes and edges. _retworkx_ brings the graph data structure underlying those operations.
+Qiskit creates a DAG whose nodes represent either instructions or registers present in the quantum circuit [@Cross2021] and whose edges represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulates the graph by adding and removing nodes and edges. _retworkx_ brings the graph data structure underlying those operations.
 
 In addition, Qiskit needs to traverse the graph. Some transformations, such as greedily merging instructions to reduce circuit depth, require graph traversal. _retworkx_ offers the methods for traversals such as breadth-first search, depth-first search, and topological sorting.
 
