@@ -28,27 +28,7 @@ use petgraph::visit::{ControlFlow, EdgeRef, IntoEdges, VisitMap, Visitable};
 
 use crate::min_scored::MinScored;
 
-/// Return if the expression is a break value, execute the provided statement
-/// if it is a prune value.
-/// https://github.com/petgraph/petgraph/blob/0.6.0/src/visit/dfsvisit.rs#L27
-macro_rules! try_control {
-    ($e:expr, $p:stmt) => {
-        try_control!($e, $p, ());
-    };
-    ($e:expr, $p:stmt, $q:stmt) => {
-        match $e {
-            x => {
-                if x.should_break() {
-                    return x;
-                } else if x.should_prune() {
-                    $p
-                } else {
-                    $q
-                }
-            }
-        }
-    };
-}
+use super::try_control;
 
 macro_rules! try_control_with_result {
     ($e:expr, $p:stmt) => {
