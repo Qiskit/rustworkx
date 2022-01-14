@@ -22,7 +22,9 @@ use retworkx_core::traversal::{
     breadth_first_search, depth_first_search, dfs_edges, dijkstra_search,
 };
 
-use super::{digraph, graph, iterators, weight_callable};
+use super::{digraph, graph, iterators, CostFn};
+
+use std::convert::TryFrom;
 
 use hashbrown::HashSet;
 
@@ -625,10 +627,11 @@ pub fn digraph_dijkstra_search(
         None => graph.graph.node_indices().collect(),
     };
 
+    let edge_cost_fn = CostFn::try_from((weight_fn, 1.0))?;
     dijkstra_search(
         &graph.graph,
         starts,
-        |e| weight_callable(py, &weight_fn, e.weight(), 1.0),
+        |e| edge_cost_fn.call(py, e.weight()),
         |event| dijkstra_handler(py, &visitor, event),
     )??;
 
@@ -699,10 +702,11 @@ pub fn graph_dijkstra_search(
         None => graph.graph.node_indices().collect(),
     };
 
+    let edge_cost_fn = CostFn::try_from((weight_fn, 1.0))?;
     dijkstra_search(
         &graph.graph,
         starts,
-        |e| weight_callable(py, &weight_fn, e.weight(), 1.0),
+        |e| edge_cost_fn.call(py, e.weight()),
         |event| dijkstra_handler(py, &visitor, event),
     )??;
 
