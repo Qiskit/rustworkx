@@ -11,7 +11,7 @@
 // under the License.
 
 //! This module contains the [`DistanceMap`] trait which is used in
-//! [`shortest_path`].
+//! [`shortest_path`](crate::shortest_path).
 //!
 //! The trait allows the shortest path functions to support multiple
 //! return types.
