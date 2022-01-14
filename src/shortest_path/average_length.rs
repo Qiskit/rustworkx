@@ -67,21 +67,7 @@ pub fn compute_distance_sum<Ty: EdgeType + Sync>(
         (count, conn_pairs - 1)
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-<<<<<<< HEAD
     CondIterator::new(node_indices, n >= parallel_threshold)
         .map(bfs_traversal)
-        .sum()
-=======
-    if n < parallel_threshold {
-        node_indices
-            .iter()
-            .map(|index| bfs_traversal(*index))
-            .fold((0, 0), |a, b| (a.0 + b.0, a.1 + b.1))
-    } else {
-        node_indices
-            .par_iter()
-            .map(|index| bfs_traversal(*index))
-            .reduce(|| (0, 0), |a, b| (a.0 + b.0, a.1 + b.1))
-    }
->>>>>>> main
+        .reduce(|| (0, 0), |a, b| (a.0 + b.0, a.1 + b.1))
 }
