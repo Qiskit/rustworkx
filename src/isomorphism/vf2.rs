@@ -19,8 +19,8 @@ use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
 
-use crate::dictmap::*;
 use hashbrown::HashMap;
+use retworkx_core::dictmap::*;
 
 use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
 use pyo3::gc::{PyGCProtocol, PyVisit};
@@ -28,7 +28,6 @@ use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 
 use petgraph::stable_graph::NodeIndex;
-use petgraph::stable_graph::StableGraph;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing, Undirected};
@@ -36,8 +35,7 @@ use petgraph::{Directed, Incoming, Outgoing, Undirected};
 use rayon::slice::ParallelSliceMut;
 
 use crate::iterators::NodeMap;
-
-type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+use crate::StablePyGraph;
 
 /// Returns `true` if we can map every element of `xs` to a unique
 /// element of `ys` while using `matcher` func to compare two elements.
@@ -559,11 +557,10 @@ where
     fn next_candidate(
         st: &mut [Vf2State<Ty>; 2],
     ) -> Option<(NodeIndex, NodeIndex, OpenList)> {
-        let mut to_index;
+        // Try the out list
+        let mut to_index = st[1].next_out_index(0);
         let mut from_index = None;
         let mut open_list = OpenList::Out;
-        // Try the out list
-        to_index = st[1].next_out_index(0);
 
         if to_index.is_some() {
             from_index = st[0].next_out_index(0);

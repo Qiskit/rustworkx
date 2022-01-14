@@ -649,6 +649,104 @@ class TestEdges(unittest.TestCase):
         graph = retworkx.PyDiGraph()
         self.assertFalse(graph.has_parallel_edges())
 
+    def test_get_edge_data_by_index(self):
+        graph = retworkx.PyDiGraph()
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.extend_from_weighted_edge_list(edge_list)
+        res = graph.get_edge_data_by_index(2)
+        self.assertEqual("c", res)
+
+    def test_get_edge_data_by_index_invalid_index(self):
+        graph = retworkx.PyDiGraph()
+        with self.assertRaisesRegex(
+            IndexError, "Provided edge index 2 is not present in the graph"
+        ):
+            graph.get_edge_data_by_index(2)
+
+    def test_get_edge_endpoints_by_index(self):
+        graph = retworkx.PyDiGraph()
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.extend_from_weighted_edge_list(edge_list)
+        res = graph.get_edge_endpoints_by_index(2)
+        self.assertEqual((0, 2), res)
+
+    def test_get_edge_endpoints_by_index_invalid_index(self):
+        graph = retworkx.PyDiGraph()
+        with self.assertRaisesRegex(
+            IndexError, "Provided edge index 2 is not present in the graph"
+        ):
+            graph.get_edge_endpoints_by_index(2)
+
+    def test_incident_edges(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_d, node_c, "edge c")
+        res = graph.incident_edges(node_d)
+        self.assertEqual([2], res)
+
+    def test_incident_edges_invalid_node(self):
+        graph = retworkx.PyDiGraph()
+        res = graph.incident_edges(42)
+        self.assertEqual([], res)
+
+    def test_incident_edges_all_edges(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_d, node_c, "edge c")
+        res = graph.incident_edges(node_d, all_edges=True)
+        self.assertEqual([2, 1], res)
+
+    def test_incident_edge_index_map(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_d, node_c, "edge c")
+        res = graph.incident_edge_index_map(node_d)
+        self.assertEqual({2: (3, 2, "edge c")}, res)
+
+    def test_incident_edge_index_map_invalid_node(self):
+        graph = retworkx.PyDiGraph()
+        res = graph.incident_edge_index_map(42)
+        self.assertEqual([], res)
+
+    def test_incident_edge_index_map_all_edges(self):
+        graph = retworkx.PyDiGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_d, node_c, "edge c")
+        res = graph.incident_edge_index_map(node_d, all_edges=True)
+        self.assertEqual({2: (3, 2, "edge c"), 1: (1, 3, "edge_b")}, res)
+
 
 class TestEdgesMultigraphFalse(unittest.TestCase):
     def test_multigraph_attr(self):

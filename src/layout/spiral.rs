@@ -12,16 +12,14 @@
 
 use std::iter::Iterator;
 
-use pyo3::prelude::*;
-
-use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use super::spring::{recenter, rescale, Point};
 use crate::iterators::Pos2DMapping;
+use crate::StablePyGraph;
 
 pub fn spiral_layout<Ty: EdgeType>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     scale: Option<f64>,
     center: Option<Point>,
     resolution: Option<f64>,

@@ -10,12 +10,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
-use crate::dictmap::*;
 use hashbrown::HashMap;
 
-use super::dijkstra;
+use retworkx_core::dictmap::*;
+use retworkx_core::shortest_path::dijkstra;
 
 use std::sync::RwLock;
 
@@ -34,10 +32,11 @@ use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, PathLengthMapping,
     PathMapping,
 };
+use crate::{CostFn, StablePyGraph};
 
 pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     edge_cost_fn: PyObject,
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
@@ -59,18 +58,14 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
                 .collect(),
         });
     }
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        raw.extract(py)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
     let mut edge_weights: Vec<Option<f64>> =
         Vec::with_capacity(graph.edge_bound());
     for index in 0..=graph.edge_bound() {
         let raw_weight = graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
             Some(weight) => {
-                edge_weights.push(Some(edge_cost_callable(weight)?))
+                edge_weights.push(Some(edge_cost_callable.call(py, weight)?))
             }
             None => edge_weights.push(None),
         };
@@ -86,7 +81,7 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
         .into_par_iter()
         .map(|x| {
             let out_map = PathLengthMapping {
-                path_lengths: dijkstra::dijkstra(
+                path_lengths: dijkstra(
                     graph,
                     x,
                     None,
@@ -114,7 +109,7 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
 
 pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
     py: Python,
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     edge_cost_fn: PyObject,
     distances: Option<&mut HashMap<usize, DictMap<NodeIndex, f64>>>,
 ) -> PyResult<AllPairsPathMapping> {
@@ -137,18 +132,14 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                 .collect(),
         });
     }
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        raw.extract(py)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
     let mut edge_weights: Vec<Option<f64>> =
         Vec::with_capacity(graph.edge_bound());
     for index in 0..=graph.edge_bound() {
         let raw_weight = graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
             Some(weight) => {
-                edge_weights.push(Some(edge_cost_callable(weight)?))
+                edge_weights.push(Some(edge_cost_callable.call(py, weight)?))
             }
             None => edge_weights.push(None),
         };
@@ -173,7 +164,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
             .map(|x| {
                 let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
                     DictMap::with_capacity(graph.node_count());
-                let distance = dijkstra::dijkstra(
+                let distance = dijkstra(
                     graph,
                     x,
                     None,

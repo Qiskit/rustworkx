@@ -10,38 +10,43 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashSet;
 
 use petgraph::prelude::*;
 use petgraph::EdgeType;
-use pyo3::prelude::*;
+
+use rayon::prelude::*;
 use rayon_cond::CondIterator;
 
+use crate::StablePyGraph;
+
 pub fn compute_distance_sum<Ty: EdgeType + Sync>(
-    graph: &StableGraph<PyObject, PyObject, Ty>,
+    graph: &StablePyGraph<Ty>,
     parallel_threshold: usize,
     as_undirected: bool,
-) -> usize {
+) -> (usize, usize) {
     let n = graph.node_count();
-    let bfs_traversal = |start_index: NodeIndex| -> usize {
-        let mut seen: HashMap<NodeIndex, usize> = HashMap::with_capacity(n);
+    let bfs_traversal = |start_index: NodeIndex| -> (usize, usize) {
+        let mut seen: HashSet<NodeIndex> = HashSet::with_capacity(n);
         let mut level = 0;
         let mut next_level: HashSet<NodeIndex> = HashSet::new();
         next_level.insert(start_index);
-        let mut count = 0;
+        let mut count: usize = 0;
+        let mut conn_pairs: usize = 0;
         while !next_level.is_empty() {
             let this_level = next_level;
             next_level = HashSet::new();
             let mut found: Vec<NodeIndex> = Vec::new();
             for v in this_level {
-                if !seen.contains_key(&v) {
-                    seen.insert(v, level);
+                if seen.insert(v) {
                     found.push(v);
                     count += level;
                 }
             }
+
+            conn_pairs += found.len();
             if seen.len() == n {
-                return count;
+                break;
             }
             for node in found {
                 for v in graph
@@ -59,10 +64,24 @@ pub fn compute_distance_sum<Ty: EdgeType + Sync>(
             }
             level += 1
         }
-        count
+        (count, conn_pairs - 1)
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+<<<<<<< HEAD
     CondIterator::new(node_indices, n >= parallel_threshold)
         .map(bfs_traversal)
         .sum()
+=======
+    if n < parallel_threshold {
+        node_indices
+            .iter()
+            .map(|index| bfs_traversal(*index))
+            .fold((0, 0), |a, b| (a.0 + b.0, a.1 + b.1))
+    } else {
+        node_indices
+            .par_iter()
+            .map(|index| bfs_traversal(*index))
+            .reduce(|| (0, 0), |a, b| (a.0 + b.0, a.1 + b.1))
+    }
+>>>>>>> main
 }

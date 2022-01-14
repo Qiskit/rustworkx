@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+mod connected_components;
 mod core_number;
 
 use super::{
@@ -20,7 +21,6 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
-use std::collections::BTreeSet;
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -28,12 +28,15 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable};
+use petgraph::visit::{
+    EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable,
+};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::EdgeList;
+use crate::iterators::{Chains, EdgeList};
+use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -43,6 +46,12 @@ use crate::iterators::EdgeList;
 /// is defined as the exclusive or of the edges.
 ///
 /// This is adapted from algorithm CACM 491 [1]_.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges.
+///     It may produce incorrect/unexpected results if the input graph has
+///     parallel edges.
 ///
 /// :param PyGraph graph: The graph to find the cycle basis in
 /// :param int root: Optional index for starting node for basis
@@ -139,7 +148,7 @@ pub fn cycle_basis(
 pub fn strongly_connected_components(
     graph: &digraph::PyDiGraph,
 ) -> Vec<Vec<usize>> {
-    algo::kosaraju_scc(graph)
+    algo::kosaraju_scc(&graph.graph)
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
         .collect()
@@ -226,6 +235,82 @@ pub fn digraph_find_cycle(
     EdgeList { edges: cycle }
 }
 
+/// Find the number of connected components in an undirected graph.
+///
+/// :param PyGraph graph: The graph to find the number of connected
+///     components on.
+///
+/// :returns: The number of connected components in the graph
+/// :rtype: int
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+fn number_connected_components(graph: &graph::PyGraph) -> usize {
+    connected_components::number_connected_components(&graph.graph)
+}
+
+/// Find the connected components in an undirected graph
+///
+/// :param PyGraph graph: The graph to find the connected components.
+///
+/// :returns: A list of sets where each set is a connected component of
+///     the graph
+/// :rtype: list
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
+    connected_components::connected_components(&graph.graph)
+}
+
+/// Returns the set of nodes in the component of graph containing `node`.
+///
+/// :param PyGraph graph: The graph to be used.
+/// :param int node: A node in the graph.
+///
+/// :returns: A set of nodes in the component of graph containing `node`.
+/// :rtype: set
+///
+/// :raises InvalidNode: When an invalid node index is provided.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, /)")]
+pub fn node_connected_component(
+    graph: &graph::PyGraph,
+    node: usize,
+) -> PyResult<HashSet<usize>> {
+    let node = NodeIndex::new(node);
+
+    if !graph.graph.contains_node(node) {
+        return Err(InvalidNode::new_err(
+            "The input index for 'node' is not a valid node index",
+        ));
+    }
+
+    Ok(connected_components::bfs_undirected(
+        &graph.graph,
+        node,
+        &mut graph.graph.visit_map(),
+    ))
+}
+
+/// Check if the graph is connected.
+///
+/// :param PyGraph graph: The graph to check if it is connected.
+///
+/// :returns: Whether the graph is connected or not
+/// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
+    match graph.graph.node_indices().next() {
+        Some(node) => {
+            let component = node_connected_component(graph, node.index())?;
+            Ok(component.len() == graph.graph.node_count())
+        }
+        None => Err(NullGraph::new_err("Invalid operation on a NullGraph")),
+    }
+}
+
 /// Find the number of weakly connected components in a directed graph
 ///
 /// :param PyDiGraph graph: The graph to find the number of weakly connected
@@ -237,7 +322,7 @@ pub fn digraph_find_cycle(
 #[pyo3(text_signature = "(graph, /)")]
 fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     let mut weak_components = graph.node_count();
-    let mut vertex_sets = UnionFind::new(graph.node_bound());
+    let mut vertex_sets = UnionFind::new(graph.graph.node_bound());
     for edge in graph.graph.edge_references() {
         let (a, b) = (edge.source(), edge.target());
         // union the two vertices of the edge
@@ -253,44 +338,15 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 /// :param PyDiGraph graph: The graph to find the weakly connected components
 ///     in
 ///
-/// :returns: A list of sets where each set it a weakly connected component of
+/// :returns: A list of sets where each set is a weakly connected component of
 ///     the graph
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(
     graph: &digraph::PyDiGraph,
-) -> Vec<BTreeSet<usize>> {
-    let mut seen: HashSet<NodeIndex> =
-        HashSet::with_capacity(graph.node_count());
-    let mut out_vec: Vec<BTreeSet<usize>> = Vec::new();
-    for node in graph.graph.node_indices() {
-        if !seen.contains(&node) {
-            // BFS node generator
-            let mut component_set: BTreeSet<usize> = BTreeSet::new();
-            let mut bfs_seen: HashSet<NodeIndex> = HashSet::new();
-            let mut next_level: HashSet<NodeIndex> = HashSet::new();
-            next_level.insert(node);
-            while !next_level.is_empty() {
-                let this_level = next_level;
-                next_level = HashSet::new();
-                for bfs_node in this_level {
-                    if !bfs_seen.contains(&bfs_node) {
-                        component_set.insert(bfs_node.index());
-                        bfs_seen.insert(bfs_node);
-                        for neighbor in
-                            graph.graph.neighbors_undirected(bfs_node)
-                        {
-                            next_level.insert(neighbor);
-                        }
-                    }
-                }
-            }
-            out_vec.push(component_set);
-            seen.extend(bfs_seen);
-        }
-    }
-    out_vec
+) -> Vec<HashSet<usize>> {
+    connected_components::connected_components(&graph.graph)
 }
 
 /// Check if the graph is weakly connected
@@ -353,7 +409,7 @@ pub fn digraph_adjacency_matrix(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
-    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value
@@ -409,7 +465,7 @@ pub fn graph_adjacency_matrix(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
-    for (i, j, weight) in get_edge_iter_with_weights(graph) {
+    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight =
             weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value
@@ -551,7 +607,7 @@ fn graph_all_simple_paths(
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
-        graph,
+        &graph.graph,
         from_index,
         to_index,
         min_intermediate_nodes,
@@ -605,7 +661,7 @@ fn digraph_all_simple_paths(
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
-        graph,
+        &graph.graph,
         from_index,
         to_index,
         min_intermediate_nodes,
@@ -661,4 +717,58 @@ pub fn digraph_core_number(
     graph: &digraph::PyDiGraph,
 ) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
+}
+
+/// Returns the chain decomposition of a graph.
+///
+/// The *chain decomposition* of a graph with respect to a depth-first
+/// search tree is a set of cycles or paths derived from the set of
+/// fundamental cycles of the tree in the following manner. Consider
+/// each fundamental cycle with respect to the given tree, represented
+/// as a list of edges beginning with the nontree edge oriented away
+/// from the root of the tree. For each fundamental cycle, if it
+/// overlaps with any previous fundamental cycle, just take the initial
+/// non-overlapping segment, which is a path instead of a cycle. Each
+/// cycle or path is called a *chain*. For more information, see [Schmidt]_.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges. It's also a recursive
+///     implementation and might run out of memory in large graphs.
+///
+/// :param PyGraph: The undirected graph to be used
+/// :param int source: An optional node index in the graph. If specified,
+///     only the chain decomposition for the connected component containing
+///     this node will be returned. This node indicates the root of the depth-first
+///     search tree. If this is not specified then a source will be chosen
+///     arbitrarly and repeated until all components of the graph are searched.
+/// :returns: A list of list of edges where each inner list is a chain.
+/// :rtype: list of EdgeList
+///
+/// .. [Schmidt] Jens M. Schmidt (2013). "A simple test on 2-vertex-
+///       and 2-edge-connectivity." *Information Processing Letters*,
+///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, source=None)")]
+pub fn chain_decomposition(
+    graph: graph::PyGraph,
+    source: Option<usize>,
+) -> Chains {
+    let chains = connectivity::chain_decomposition(
+        &graph.graph,
+        source.map(NodeIndex::new),
+    );
+    Chains {
+        chains: chains
+            .into_iter()
+            .map(|chain| EdgeList {
+                edges: chain
+                    .into_iter()
+                    .map(|(a, b)| (a.index(), b.index()))
+                    .collect(),
+            })
+            .collect(),
+    }
 }

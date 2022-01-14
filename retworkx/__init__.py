@@ -12,6 +12,9 @@ import functools
 
 from .retworkx import *
 
+# flake8: noqa
+import retworkx.visit
+
 sys.modules["retworkx.generators"] = generators
 
 
@@ -177,19 +180,21 @@ def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
 
 
 @functools.singledispatch
-def unweighted_average_shortest_path_length(graph, parallel_threshold=300):
+def unweighted_average_shortest_path_length(
+    graph, parallel_threshold=300, disconnected=False
+):
     r"""Return the average shortest path length with unweighted edges.
 
     The average shortest path length is calculated as
 
     .. math::
 
-        a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
+        a =\sum_{s,t \in V, s \ne t} \frac{d(s, t)}{n(n-1)}
 
     where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
     shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
-    number of nodes in ``graph``. This also assumes that :math:`d(s, t) = 0`
-    if :math:`t` cannot be reached from :math:`s`.
+    number of nodes in ``graph``. If ``disconnected`` is set to ``True``,
+    the average will be taken only between connected nodes.
 
     This function is also multithreaded and will run in parallel if the number
     of nodes in the graph is above the value of ``parallel_threshold`` (it
@@ -198,17 +203,20 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300):
     By default it will use all available CPUs if the environment variable is
     not specified.
 
-    :param PyDiGraph graph: The graph to compute the average shortest path length
-        for
+    :param graph: The graph to compute the average shortest path length for,
+        can be either a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
     :param int parallel_threshold: The number of nodes to calculate the
         the distance matrix in parallel at. It defaults to 300, but this can
         be tuned to any number of nodes.
     :param bool as_undirected: If set to ``True`` the input directed graph
         will be treated as if each edge was bidirectional/undirected while
         finding the shortest paths. Default: ``False``.
+    :param bool disconnected: If set to ``True`` only connected vertex pairs
+        will be included in the calculation. If ``False``, infinity is returned
+        for disconnected graphs. Default: ``False``.
 
-    :returns: The average shortest path length. If the graph is empty this
-        will return NaN and if there is a single node 0 will be returned.
+    :returns: The average shortest path length. If no vertex pairs can be included
+        in the calculation this will return NaN.
 
     :rtype: float
     """
@@ -217,19 +225,22 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300):
 
 @unweighted_average_shortest_path_length.register(PyDiGraph)
 def _digraph_unweighted_average_shortest_path_length(
-    graph, parallel_threshold=300, as_undirected=False
+    graph, parallel_threshold=300, as_undirected=False, disconnected=False
 ):
     return digraph_unweighted_average_shortest_path_length(
         graph,
         parallel_threshold=parallel_threshold,
         as_undirected=as_undirected,
+        disconnected=disconnected,
     )
 
 
 @unweighted_average_shortest_path_length.register(PyGraph)
-def _graph_unweighted_shortest_path_length(graph, parallel_threshold=300):
+def _graph_unweighted_shortest_path_length(
+    graph, parallel_threshold=300, disconnected=False
+):
     return graph_unweighted_average_shortest_path_length(
-        graph, parallel_threshold=parallel_threshold
+        graph, parallel_threshold=parallel_threshold, disconnected=disconnected
     )
 
 
@@ -765,10 +776,36 @@ def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 
 
 @functools.singledispatch
-def dfs_edges(graph, source):
-    """Get edge list in depth first order
+def dfs_edges(graph, source=None):
+    """Get an edge list of the tree edges from a depth-first traversal
 
-    :param PyGraph graph: The graph to get the DFS edge list from
+    The pseudo-code for the DFS algorithm is listed below. The output
+    contains the tree edges found by the procedure.
+
+    ::
+
+        DFS(G, v)
+          let S be a stack
+          label v as discovered
+          PUSH(S, (v, iterator of G.neighbors(v)))
+          while (S != Ø)
+              let (v, iterator) := LAST(S)
+              if hasNext(iterator) then
+                  w := next(iterator)
+                  if w is not labeled as discovered then
+                      label w as discovered                   # (v, w) is a tree edge
+                      PUSH(S, (w, iterator of G.neighbors(w)))
+              else
+                  POP(S)
+          end while
+
+    .. note::
+
+        If the input is an undirected graph with a single connected component,
+        the output of this function is a spanning tree.
+
+    :param graph: The graph to get the DFS edge list from. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :param int source: An optional node index to use as the starting node
         for the depth-first search. The edge list will only return edges in
         the components reachable from this index. If this is not specified
@@ -778,19 +815,18 @@ def dfs_edges(graph, source):
     :returns: A list of edges as a tuple of the form ``(source, target)`` in
         depth-first order
     :rtype: EdgeList
-        raise TypeError("Invalid Input Type %s for graph" % type(graph))
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
 @dfs_edges.register(PyDiGraph)
-def _digraph_dfs_edges(graph, source):
-    return digraph_dfs_edges(graph, source)
+def _digraph_dfs_edges(graph, source=None):
+    return digraph_dfs_edges(graph, source=source)
 
 
 @dfs_edges.register(PyGraph)
-def _graph_dfs_edges(graph, source):
-    return graph_dfs_edges(graph, source)
+def _graph_dfs_edges(graph, source=None):
+    return graph_dfs_edges(graph, source=source)
 
 
 @functools.singledispatch
@@ -1264,7 +1300,7 @@ def _graph_spring_layout(
     )
 
 
-def networkx_converter(graph):
+def networkx_converter(graph, keep_attributes: bool = False):
     """Convert a networkx graph object into a retworkx graph object.
 
     .. note::
@@ -1275,6 +1311,12 @@ def networkx_converter(graph):
         independently.
 
     :param networkx.Graph graph: The networkx graph to convert.
+    :param bool keep_attributes: If ``True``, add networkx node attributes to
+        the data payload in the nodes of the output retworkx graph. When set to
+        ``True``, the node data payloads in the output retworkx graph object
+        will be dictionaries with the node attributes from the input networkx
+        graph where the ``"__networkx_node__"`` key contains the node from the
+        input networkx graph.
 
     :returns: A retworkx graph, either a :class:`~retworkx.PyDiGraph` or a
         :class:`~retworkx.PyGraph` based on whether the input graph is directed
@@ -1293,6 +1335,13 @@ def networkx_converter(graph):
             for x in graph.edges(data=True)
         ]
     )
+
+    if keep_attributes:
+        for node, node_index in node_indices.items():
+            attributes = graph.nodes[node]
+            attributes["__networkx_node__"] = node
+            new_graph[node_index] = attributes
+
     return new_graph
 
 
@@ -1719,7 +1768,9 @@ def _digraph_union(
     merge_nodes=False,
     merge_edges=False,
 ):
-    return digraph_union(first, second, merge_nodes=False, merge_edges=False)
+    return digraph_union(
+        first, second, merge_nodes=merge_nodes, merge_edges=merge_edges
+    )
 
 
 @union.register(PyGraph)
@@ -1729,4 +1780,216 @@ def _graph_union(
     merge_nodes=False,
     merge_edges=False,
 ):
-    return graph_union(first, second, merge_nodes=False, merge_edges=False)
+    return graph_union(
+        first, second, merge_nodes=merge_nodes, merge_edges=merge_edges
+    )
+
+
+@functools.singledispatch
+def cartesian_product(
+    first,
+    second,
+):
+    """Return a new graph by forming the cartesian product
+    from two input graph objects
+
+    :param first: The first graph object
+    :param second: The second graph object
+
+    :returns: A new graph object that is the union of ``second`` and
+        ``first``. It's worth noting the weight/data payload objects are
+        passed by reference from ``first`` and ``second`` to this new object.
+        A read-only dictionary of the product of nodes is also returned. The keys
+        are a tuple where the first element is a node of the first graph and the
+        second element is a node of the second graph, and the values are the map
+        of those elements to node indices in the product graph. For example::
+
+            {
+                (0, 0): 0,
+                (0, 1): 1,
+            }
+
+    :rtype: Tuple[:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`,
+        :class:`~retworkx.ProductNodeMap`]
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@cartesian_product.register(PyDiGraph)
+def _digraph_cartesian_product(
+    first,
+    second,
+):
+    return digraph_cartesian_product(first, second)
+
+
+@cartesian_product.register(PyGraph)
+def _graph_cartesian_product(
+    first,
+    second,
+):
+    return graph_cartesian_product(first, second)
+
+
+@functools.singledispatch
+def bfs_search(graph, source, visitor):
+    """Breadth-first traversal of a directed/undirected graph.
+
+    The pseudo-code for the BFS algorithm is listed below, with the annotated
+    event points, for which the given visitor object will be called with the
+    appropriate method.
+
+    ::
+
+        BFS(G, s)
+          for each vertex u in V
+              color[u] := WHITE
+          end for
+          color[s] := GRAY
+          EQUEUE(Q, s)                             discover vertex s
+          while (Q != Ø)
+              u := DEQUEUE(Q)
+              for each vertex v in Adj[u]          (u,v) is a tree edge
+                  if (color[v] = WHITE)
+                      color[v] = GRAY
+                  else                             (u,v) is a non - tree edge
+                      if (color[v] = GRAY)         (u,v) has a gray target
+                          ...
+                      else if (color[v] = BLACK)   (u,v) has a black target
+                          ...
+              end for
+              color[u] := BLACK                    finish vertex u
+          end while
+
+    If an exception is raised inside the callback function, the graph traversal
+    will be stopped immediately. You can exploit this to exit early by raising a
+    :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+    will return but without raising back the exception. You can also prune part of
+    the search tree by raising :class:`~retworkx.visit.PruneSearch`.
+
+    In the following example we keep track of the tree edges:
+
+    .. jupyter-execute::
+
+        import retworkx
+        from retworkx.visit import BFSVisitor
+
+
+        class TreeEdgesRecorder(BFSVisitor):
+
+            def __init__(self):
+                self.edges = []
+
+            def tree_edge(self, edge):
+                self.edges.append(edge)
+
+        graph = retworkx.PyDiGraph()
+        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
+        vis = TreeEdgesRecorder()
+        retworkx.bfs_search(graph, [0], vis)
+        print('Tree edges:', vis.edges)
+
+    .. note::
+
+        Graph can **not** be mutated while traversing.
+
+    :param graph: The graph to be used. This can be a :class:`~retworkx.PyGraph`
+        or a :class:`~retworkx.PyDiGraph`
+    :param List[int] source: An optional list of node indices to use as the starting
+        nodes for the breadth-first search. If this is not specified then a source
+        will be chosen arbitrarly and repeated until all components of the
+        graph are searched.
+    :param visitor: A visitor object that is invoked at the event points inside the
+        algorithm. This should be a subclass of :class:`~retworkx.visit.BFSVisitor`.
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bfs_search.register(PyDiGraph)
+def _digraph_bfs_search(graph, source, visitor):
+    return digraph_bfs_search(graph, source, visitor)
+
+
+@bfs_search.register(PyGraph)
+def _graph_bfs_search(graph, source, visitor):
+    return graph_bfs_search(graph, source, visitor)
+
+
+@functools.singledispatch
+def dfs_search(graph, source, visitor):
+    """Depth-first traversal of a directed/undirected graph.
+
+    The pseudo-code for the DFS algorithm is listed below, with the annotated
+    event points, for which the given visitor object will be called with the
+    appropriate method.
+
+    ::
+
+        DFS(G)
+          for each vertex u in V
+              color[u] := WHITE                 initialize vertex u
+          end for
+          time := 0
+          call DFS-VISIT(G, source)             start vertex s
+
+        DFS-VISIT(G, u)
+          color[u] := GRAY                      discover vertex u
+          for each v in Adj[u]                  examine edge (u,v)
+              if (color[v] = WHITE)             (u,v) is a tree edge
+                  all DFS-VISIT(G, v)
+              else if (color[v] = GRAY)         (u,v) is a back edge
+              ...
+             else if (color[v] = BLACK)         (u,v) is a cross or forward edge
+             ...
+          end for
+          color[u] := BLACK                     finish vertex u
+
+    If an exception is raised inside the callback function, the graph traversal
+    will be stopped immediately. You can exploit this to exit early by raising a
+    :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
+    search tree by raising :class:`~retworkx.visit.PruneSearch`.
+
+    In the following example we keep track of the tree edges:
+
+    .. jupyter-execute::
+
+           import retworkx
+           from retworkx.visit import DFSVisitor
+
+           class TreeEdgesRecorder(DFSVisitor):
+
+               def __init__(self):
+                   self.edges = []
+
+               def tree_edge(self, edge):
+                   self.edges.append(edge)
+
+           graph = retworkx.PyGraph()
+           graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
+           vis = TreeEdgesRecorder()
+           retworkx.dfs_search(graph, [0], vis)
+           print('Tree edges:', vis.edges)
+
+    .. note::
+
+        Graph can *not* be mutated while traversing.
+
+    :param PyGraph graph: The graph to be used.
+    :param List[int] source: An optional list of node indices to use as the starting
+        nodes for the depth-first search. If this is not specified then a source
+        will be chosen arbitrarly and repeated until all components of the
+        graph are searched.
+    :param visitor: A visitor object that is invoked at the event points inside the
+        algorithm. This should be a subclass of :class:`~retworkx.visit.DFSVisitor`.
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@dfs_search.register(PyDiGraph)
+def _digraph_dfs_search(graph, source, visitor):
+    return digraph_dfs_search(graph, source, visitor)
+
+
+@dfs_search.register(PyGraph)
+def _graph_dfs_search(graph, source, visitor):
+    return graph_dfs_search(graph, source, visitor)

@@ -199,3 +199,11 @@ class TestBinomialTreeGraph(unittest.TestCase):
                 self.assertEqual(len(graph), 2 ** n)
                 self.assertEqual(len(graph.edges()), 2 * (2 ** n - 1))
                 self.assertEqual(list(graph.edge_list()), expected_edges[n])
+
+    def test_overflow_binomial_tree(self):
+        with self.assertRaises(OverflowError):
+            retworkx.generators.binomial_tree_graph(75)
+
+    def test_overflow_directed_binomial_tree(self):
+        with self.assertRaises(OverflowError):
+            retworkx.generators.directed_binomial_tree_graph(75)

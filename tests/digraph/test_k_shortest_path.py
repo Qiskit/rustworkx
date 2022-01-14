@@ -65,3 +65,24 @@ class TestKShortestpath(unittest.TestCase):
             graph, 1, 2, lambda _: 1, 3
         )
         self.assertEqual(res, {3: 6})
+
+    def test_digraph_k_shortest_path_with_goal_node_hole(self):
+        graph = retworkx.generators.directed_path_graph(4)
+        graph.remove_node(0)
+        res = retworkx.digraph_k_shortest_path_lengths(
+            graph, start=1, k=1, edge_cost=lambda _: 1, goal=3
+        )
+        self.assertEqual({3: 2}, res)
+
+    def test_digraph_k_shortest_path_with_invalid_weight(self):
+        graph = retworkx.generators.directed_path_graph(4)
+        for invalid_weight in [float("nan"), -1]:
+            with self.subTest(invalid_weight=invalid_weight):
+                with self.assertRaises(ValueError):
+                    retworkx.digraph_k_shortest_path_lengths(
+                        graph,
+                        start=1,
+                        k=1,
+                        edge_cost=lambda _: invalid_weight,
+                        goal=3,
+                    )

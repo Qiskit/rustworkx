@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::float_cmp)]
-
 mod longest_path;
 
 use hashbrown::{HashMap, HashSet};
@@ -211,7 +209,7 @@ pub fn dag_weighted_longest_path_length(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
-    match algo::toposort(graph, None) {
+    match algo::toposort(&graph.graph, None) {
         Ok(_nodes) => true,
         Err(_err) => false,
     }
@@ -297,7 +295,7 @@ pub fn layers(
         }
         let mut layer_node_data: Vec<&PyObject> = Vec::new();
         for layer_node in &next_layer {
-            layer_node_data.push(&dag[*layer_node]);
+            layer_node_data.push(&dag.graph[*layer_node]);
         }
         if !layer_node_data.is_empty() {
             output.push(layer_node_data);
@@ -311,12 +309,21 @@ pub fn layers(
 /// Get the lexicographical topological sorted nodes from the provided DAG
 ///
 /// This function returns a list of nodes data in a graph lexicographically
-/// topologically sorted using the provided key function.
+/// topologically sorted using the provided key function. A topological sort
+/// is a linear ordering of vertices such that for every directed edge from
+/// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
+/// in the ordering.
+///
+/// This function differs from :func:`~retworkx.topological_sort` because
+/// when there are ties between nodes in the sort order this function will
+/// use the string returned by the ``key`` argument to determine the output
+/// order used.
 ///
 /// :param PyDiGraph dag: The DAG to get the topological sorted nodes from
 /// :param callable key: key is a python function or other callable that
 ///     gets passed a single argument the node data from the graph and is
-///     expected to return a string which will be used for sorting.
+///     expected to return a string which will be used for resolving ties
+///     in the sorting order.
 ///
 /// :returns: A list of node's data lexicographically topologically sorted.
 /// :rtype: list
@@ -407,7 +414,7 @@ fn lexicographical_topological_sort(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
-    let nodes = match algo::toposort(graph, None) {
+    let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
@@ -449,7 +456,7 @@ fn collect_runs(
         res.extract(py)
     };
 
-    let nodes = match algo::toposort(graph, None) {
+    let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
@@ -533,7 +540,7 @@ fn collect_bicolor_runs(
         res.extract(py)
     };
 
-    let nodes = match algo::toposort(graph, None) {
+    let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => {
             return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
