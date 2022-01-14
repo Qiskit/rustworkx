@@ -2,10 +2,10 @@
 Working with Betweenness Centrality
 ===================================
 
-Betweenness centrality is a measure of centrality in a graph based on shortest
-paths. For every pair of nodes in a connected graph there is at least a single
+The betweenness centrality of a graph is a measure of centrality based on shortest
+paths. For every pair of nodes in a connected graph, there is at least a single
 shortest path between the nodes such that the number of edges the path passes
-through is minimized. The betweenness centrality for each node is the number
+through is minimized. The betweenness centrality for a given graph node is the number
 of these shortest paths that pass through the node.
 
 This is defined as:
@@ -26,7 +26,7 @@ centrality of a graph and visualizing it.
 Generate a Graph
 ----------------
 
-To start we need to generate a graph to
+To start we need to generate a graph:
 
 .. jupyter-execute::
 
@@ -85,7 +85,7 @@ centrality:
     plt.title("Betweenness Centrality of a 4 x 4 Hexagonal Lattice Graph")
     mpl_draw(graph, node_color=colors, ax=ax)
 
-You can also use :func:`~retworkx.visualization.graphviz_draw` too:
+Alternatively, you can use :func:`~retworkx.visualization.graphviz_draw`:
 
 .. jupyter-execute::
 

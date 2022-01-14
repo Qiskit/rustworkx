@@ -8,10 +8,12 @@ This tutorial will explore using retworkx to work with directed acyclic graphs
 Directed Graph
 ==============
 
-A directed graph is a graph that is made up of a set of nodes connected by
-directed edges (often called arcs). Edges have a directionality which is
-different from undirected graphs where edges have no notion of a direction to
-them. For example:
+As a primer, let's first review the broader concept of a directed graph (without the acyclic restriction).
+
+A directed graph is made up of a set of nodes connected by
+directed edges (often called arcs). Directed edges can only be followed in one direction,
+which is different from the edges found in undirected graphs, which can be followed
+in either direction. For example:
 
 .. jupyter-execute::
 
@@ -21,9 +23,9 @@ them. For example:
     path_graph = rx.generators.directed_path_graph(5)
     mpl_draw(path_graph)
 
-In this example we created a 5 node directed path graph. This shows the
-directionality of the edges in the graph with the arrow head pointing to the
-target node. Each edge has a source and target.
+In this example, we've created a 5 node directed path graph. The directionality of
+each edge is denoted by the arrow head, which points to the target node. The node at
+the other end of the edge is called the source.
 
 Directed Acyclic Graphs
 =======================
@@ -60,16 +62,16 @@ You can also check the status of cycle checking by inspecting the
 
     print(dag.check_cycle)
 
-With ``check_cycle`` set to ``True`` whenever calling
-:meth:`.PyDiGraph.add_edge` or related functions that add an arbitrary edge to
-the graph an error will be raised if a cycle would be introduced. This checking
+With ``check_cycle`` set to ``True``, methods that add edges
+to the graph (e.g. :meth:`.PyDiGraph.add_edge`) will raise an error
+if a cycle would be introduced. This checking
 does come with a noticeable (and potentially large) runtime overhead so it's
 best to only use it if it's strictly necessary. You can also avoid this
 overhead by using :meth:`.PyDiGraph.add_parent` and
 :meth:`.PyDiGraph.add_child` as both add a new node and edge simultaneously and
 neither can introduce a cycle.
 
-.. [#] A trail is a sequence of nodes and edges on the graph were each edge
+.. [#] A trail is a sequence of nodes and edges on the graph where each edge
    is distinct in the walk.
 
 Applications of DAGs
@@ -81,12 +83,12 @@ Task Scheduling
 A topological sort of a directed acyclic graph defined as :math:`G = (V,E)` is
 a linear ordering of all its nodes such that if :math:`G` contains an edge
 :math:`(u, v)` then :math:`u` appears before `v`. This only works with DAGs
-because if there was a cycle in the graph :math:`G` then it's not possible
+since a cycle in the graph :math:`G` would make it impossible
 to find such a linear ordering.
 
-A common application of DAGs is to use a topological sort is to schedule a
-sequence of jobs or tasks based on their dependencies. These jobs are
-represented by nodes and if there is an edge from :math:`u` to :math:`v` if
+A common application of DAGs is to use a topological sort to schedule a
+sequence of jobs or tasks based on their dependencies. Jobs are
+represented by nodes and an edge from node :math:`u` to node :math:`v` implies that
 job :math:`u` must be completed before job :math:`v`. A topological sort
 of a directed acyclic graph will give an order in which to perform these
 jobs. For example:
@@ -129,11 +131,11 @@ quantum computing. Qiskit's
 internally represents a quantum circuit as a
 `directed acyclic graph <https://qiskit.org/documentation/stubs/qiskit.dagcircuit.DAGCircuit.html>`__.
 Retworkx was originally started to accelerate the performance of the Qiskit
-compiler's use of directed acyclic graphs for the compiler.
+compiler's use of directed acyclic graphs.
 
-To examine how Qiskit's we first need to look at a quantum circuit. A
+To examine how Qiskit uses DAGs, we first need to look at a quantum circuit. A
 quantum circuit is a computation routine consisting of coherent quantum
-operations on quantum data. It is an ordered squence of quantum gates,
+operations on quantum data. It is an ordered sequence of quantum operations including gates,
 measurements and resets which may be conditioned on real-time classical
 computation. A quantum circuit is represented graphically like:
 
@@ -186,16 +188,16 @@ does internally with:
         edge_attr_fn=lambda edge: {"label": str(edge)}
     )
 
-In this representation of the circuit the flow of data through the bits is
+In this representation of the circuit, the flow of data through the bits is
 modeled by edges. The first set of nodes are input nodes and the last set
 are output nodes representing the beginning state and end state of each
 bit (both classical and quantum). The compiler then runs analysis and
-transformations on this DAG view of a quantum circuit to optimize the
+transformations on the DAG representation of a quantum circuit to optimize the
 quantum circuit so it can be executed on real hardware. For example, a
 simple transformation pass is to translate the quantum gates in the circuit
-to the set of gates allowed on a device. In the above example if we were to
-attempt to run that on a QPU that didn't natively support the ``H`` quantum
-gate we'd have to translate that to an equivalent series of instructions
+to the set of gates allowed on a device. If we were to attempt to run
+the above circuit on a QPU that didn't natively support the ``H`` quantum
+gate, we'd first have to translate it to an equivalent series of instructions
 that the hardware actually supported. A simplified view of how this is
 performed is:
 
