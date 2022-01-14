@@ -67,3 +67,13 @@ class TestKShortestpath(unittest.TestCase):
                         edge_cost=lambda _: invalid_weight,
                         goal=3,
                     )
+
+    def test_k_shortest_path_with_no_path(self):
+        g = retworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        path_lenghts = retworkx.graph_k_shortest_path_lengths(
+            g, start=a, k=1, edge_cost=float, goal=b
+        )
+        expected = {}
+        self.assertEqual(expected, path_lenghts)
