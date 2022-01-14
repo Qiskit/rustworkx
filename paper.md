@@ -84,7 +84,7 @@ The second use case is based on qubit mapping problem for Noisy Intermediate-Sca
 
 ![Graph representing the connectivity of the **`ibmq_montreal`** device. Qiskit can check if the required connectivity by a circuit is subgraph isomorphic to the device's connectivity when solving the qubit mapping problem.\label{fig:dagexample}](paper_img/example_coupling_map.png){ width=52.5% height==52.5% }
 
-_retworkx_ implements both VF2 [@Cordella2004] and VF2++ [@Juttner2018] algorithms to solve subgraph isomorphism. The implementations include both checking if a mapping exists and returning a mapping among the nodes. Qiskit leverages _retworkx_ to provide an experimental layout method based on VF2++. Qiskit checks if the graph representing the connectvity required by the circuit and the connectivity provided by the device are subgraph isomorphic. If they are, Qiskit uses VF2++ mapping to map the qubits without adding SWAP instructions to the quantum circuit. 
+_retworkx_ implements the VF2 algorithm [@Cordella2004] and some of the VF2++ heuristics [@Juttner2018] to solve subgraph isomorphism. The implementations include both checking if a mapping exists and returning a mapping among the nodes. Qiskit leverages _retworkx_ to provide an experimental layout method based on VF2. Qiskit checks if the graph representing the connectvity required by the circuit and the connectivity provided by the device are subgraph isomorphic. If they are, Qiskit uses VF2 mapping to map the qubits without adding SWAP instructions to the quantum circuit. 
 
 # Limitations
 
