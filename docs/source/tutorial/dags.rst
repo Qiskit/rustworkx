@@ -266,12 +266,11 @@ into a shorter sequence of gates. A simplified example of this analysis is:
     print(runs)
 
 With this we have the DAG nodes that make up a series of 1 qubit gates that
-we can analyze and attempt to simplify. Skipping the details of the
-internals of how the simplification works we wanted to contract these nodes
-to a single gate we could do that with
-:meth:`~retworkx.PyDiGraph.contract_nodes`. For example, if the 3 node sequence
+we can analyze and attempt to simplify.
+
+To perform the simplification, we'll use :meth:`~retworkx.PyDiGraph.contract_nodes` to replace a series of nodes (or gates in our case) with a single equivalent node (gate). For example, if the 3 node sequence
 returned by :func:`~retworkx.collect_runs`, ``['rz(pi/2)', 'sx', 'rz(pi/2)']``,
-were to be simplified to a single gate ``"U"`` it could be done like:
+were to be simplified to a single gate ``"U"``, it could be done like:
 
 .. jupyter-execute::
 
