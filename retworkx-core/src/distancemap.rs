@@ -23,9 +23,16 @@ use petgraph::graph::IndexType;
 use crate::dictmap::*;
 use hashbrown::HashMap;
 
+/// A mapping for storing the distances of nodes for shortest path algorithms.
 pub trait DistanceMap<K, V> {
+    /// Create mapping with support for items between 0 and `num_elements - 1`.
     fn build(num_elements: usize) -> Self;
+    
+    /// Get the distance to the item at `pos`. If the distance does not exist,
+    /// the function returns `None`.
     fn get_item(&self, pos: K) -> Option<&V>;
+    
+    /// Insert item at position `pos` with distance `V`.
     fn put_item(&mut self, pos: K, val: V);
 }
 
