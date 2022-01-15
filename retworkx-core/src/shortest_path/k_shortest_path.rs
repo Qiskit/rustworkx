@@ -22,10 +22,11 @@ use std::hash::Hash;
 
 use petgraph::algo::Measure;
 use petgraph::visit::{
-    EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable,
+    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable,
+    Visitable,
 };
 
-use crate::dictmap::*;
+use crate::distancemap::DistanceMap;
 use crate::min_scored::MinScored;
 
 /// k'th shortest path algorithm.
@@ -42,7 +43,7 @@ use crate::min_scored::MinScored;
 ///
 /// Computes in **O(k * (|E| + |V|*log(|V|)))** time (average).
 ///
-/// Returns a [`DictMap`] that maps `NodeId` to path cost as the value.
+/// Returns a [`DistanceMap`] that maps `NodeId` to path cost as the value.
 ///
 /// # Example:
 /// ```rust
@@ -50,20 +51,20 @@ use crate::min_scored::MinScored;
 /// use retworkx_core::petgraph;
 /// use retworkx_core::petgraph::graph::NodeIndex;
 /// use retworkx_core::shortest_path::k_shortest_path;
-/// use retworkx_core::dictmap::DictMap;
+/// use hashbrown::HashMap;
 /// use retworkx_core::Result;
 ///
 /// let g = petgraph::graph::UnGraph::<i32, _>::from_edges(&[
 ///     (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (1, 4), (5, 6), (6, 7), (7, 5)
 /// ]);
 ///
-/// let res: Result<DictMap<NodeIndex, f64>> = k_shortest_path(
+/// let res: Result<HashMap<NodeIndex, f64>> = k_shortest_path(
 ///     &g, NodeIndex::new(1), None, 2,
 ///     |e: retworkx_core::petgraph::graph::EdgeReference<&'static str>| Ok(1.0),
 /// );
 ///
 /// let output = res.unwrap();
-/// let expected: DictMap<NodeIndex, f64> = [
+/// let expected: HashMap<NodeIndex, f64> = [
 ///     (NodeIndex::new(0), 3.0),
 ///     (NodeIndex::new(1), 2.0),
 ///     (NodeIndex::new(2), 3.0),
@@ -75,21 +76,22 @@ use crate::min_scored::MinScored;
 /// ].iter().cloned().collect();
 /// assert_eq!(expected, output);
 /// ```
-pub fn k_shortest_path<G, F, E, K>(
+pub fn k_shortest_path<G, F, E, K, S>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
     k: usize,
     mut edge_cost: F,
-) -> Result<DictMap<G::NodeId, K>, E>
+) -> Result<S, E>
 where
-    G: IntoEdges + Visitable + NodeCount + NodeIndexable,
+    G: IntoEdges + Visitable + NodeCount + NodeIndexable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
+    S: DistanceMap<G::NodeId, K>,
 {
     let mut counter: Vec<usize> = vec![0; graph.node_bound()];
-    let mut scores = DictMap::with_capacity(graph.node_count());
+    let mut scores: S = S::build(graph.node_bound());
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
 
@@ -104,7 +106,7 @@ where
         }
 
         if current_counter == k {
-            scores.insert(node, node_score);
+            scores.put_item(node, node_score);
         }
 
         //Already reached goal k times
@@ -117,5 +119,6 @@ where
                 .push(MinScored(node_score + edge_cost(edge)?, edge.target()));
         }
     }
+
     Ok(scores)
 }

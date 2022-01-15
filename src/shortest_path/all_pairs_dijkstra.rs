@@ -80,24 +80,21 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     let out_map: DictMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
+            let path_lenghts: PyResult<Vec<Option<f64>>> =
+                dijkstra(graph, x, None, |e| edge_cost(e.id()), None);
             let out_map = PathLengthMapping {
-                path_lengths: dijkstra(
-                    graph,
-                    x,
-                    None,
-                    |e| edge_cost(e.id()),
-                    None,
-                )
-                .unwrap()
-                .iter()
-                .filter_map(|(index, cost)| {
-                    if *index == x {
-                        None
-                    } else {
-                        Some((index.index(), *cost))
-                    }
-                })
-                .collect(),
+                path_lengths: path_lenghts
+                    .unwrap()
+                    .into_iter()
+                    .enumerate()
+                    .filter_map(|(index, opt_cost)| {
+                        if index != x.index() {
+                            opt_cost.map(|cost| (index, cost))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
             };
             (x.index(), out_map)
         })
