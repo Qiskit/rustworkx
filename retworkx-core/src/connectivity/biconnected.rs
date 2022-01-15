@@ -15,11 +15,13 @@ use std::hash::Hash;
 
 use petgraph::{
     visit::{
-        depth_first_search, DfsEvent, EdgeCount, GraphBase, GraphProp,
-        IntoNeighbors, IntoNodeIdentifiers, NodeIndexable, Time, Visitable,
+        EdgeCount, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers,
+        NodeIndexable, Time, Visitable,
     },
     Undirected,
 };
+
+use crate::traversal::{depth_first_search, DfsEvent};
 
 const NULL: usize = std::usize::MAX;
 
@@ -81,7 +83,7 @@ pub fn articulation_points<G>(
 where
     G: GraphProp<EdgeType = Undirected>
         + EdgeCount
-        + IntoNeighbors
+        + IntoEdges
         + Visitable
         + NodeIndexable
         + IntoNodeIdentifiers,
@@ -110,7 +112,7 @@ where
             low[u] = t;
             disc[u] = t;
         }
-        DfsEvent::TreeEdge(u_id, v_id) => {
+        DfsEvent::TreeEdge(u_id, v_id, _) => {
             let u = graph.to_index(u_id);
             let v = graph.to_index(v_id);
             parent[v] = u;
@@ -121,7 +123,7 @@ where
                 edge_stack.push((u_id, v_id));
             }
         }
-        DfsEvent::BackEdge(u_id, v_id) => {
+        DfsEvent::BackEdge(u_id, v_id, _) => {
             let u = graph.to_index(u_id);
             let v = graph.to_index(v_id);
 
