@@ -57,7 +57,7 @@ elements such as a
     print(indices)
 
 Just as with :meth:`~retworkx.PyGraph.add_node`, the
-:meth:`~retworkx.PyGraph.add_nodes` method returns the indices for the nodes
+:meth:`~retworkx.PyGraph.add_nodes_from` method returns the indices for the nodes
 added as a :class:`~retworkx.NodeIndices` object, which is a custom sequence
 type that contains the index of each node in the order it's added from the input
 sequence.
@@ -89,7 +89,7 @@ The graph :math:`G` can also be grown by adding one edge at a time
     G.add_edge(1, 2, None)
 
 This will add an edge between node index ``1`` and node index ``2`` with a
-data payload of None. Similarly to :meth:`~retworkx.PyGraph.add_node`, the
+data payload of ``None``. Similarly to :meth:`~retworkx.PyGraph.add_node`, the
 :meth:`~retworkx.PyGraph.add_edge` method returns the new edge's unique
 index.
 
@@ -123,7 +123,7 @@ index:
 
 For edges, you can use the :meth:`~retworkx.PyGraph.get_edge_data_by_index`
 method to access the data payload for a given edge and
-::meth:`~retworkx.PyGraph.get_edge_endpoints_by_index` to get the endpoints
+:meth:`~retworkx.PyGraph.get_edge_endpoints_by_index` to get the endpoints
 of a given edge from its index:
 
 .. jupyter-execute::
@@ -159,7 +159,8 @@ Removing elements from a graph
 You can remove a node or edge from a graph in a similar manner to adding
 elements to the graph. There are methods :meth:`~retworkx.PyGraph.remove_node`,
 :meth:`~retworkx.PyGraph.remove_nodes_from`,
-:meth:`~retworkx.PyGraph.remove_edge`, :meth:`~remove_edge_from_index`, and
+:meth:`~retworkx.PyGraph.remove_edge`,
+:meth:`~retworkx.PyGraph.remove_edge_from_index`, and
 :meth:`~retworkx.PyGraph.remove_edges_from` to remove nodes and edges from
 the graph. One thing to note is that removals can introduce holes in the
 lists of indices for nodes and edges in the graph. For example:
@@ -252,7 +253,7 @@ above example you can update the index references all at once after creation:
 Accessing edges and neighbors
 =============================
 
-You can access edges from a node using the :meth:`~rx.PyGraph.incident_edges`
+You can access edges from a node using the :meth:`~retworkx.PyGraph.incident_edges`
 method:
 
 .. jupyter-execute::
@@ -260,7 +261,7 @@ method:
     print(G.incident_edges(2))
 
 which will return the edge indices of the edges incident to node ``2``. You
-can also find the neighbor nodes using the :meth:`~rx.PyGraph.neighbors`
+can also find the neighbor nodes using the :meth:`~retworkx.PyGraph.neighbors`
 method:
 
 .. jupyter-execute::
@@ -286,7 +287,7 @@ directed graphs. For example:
     path_graph = rx.generators.directed_path_graph(5)
     mpl_draw(path_graph)
 
-In this example we created a 5 node directed path graph. This shows the
+In this example we created a directed path graph with 5 nodes. This shows the
 directionality of the edges in the graph visualization with the arrow head
 pointing to the target node.
 
@@ -328,7 +329,7 @@ operations on the graph. For example:
     mpl_draw(combined_graph)
 
 Additionally there are alternate constructors such as
-:meth:`~retworkx.read_edge_list` or :meth:`~retworkx.from_adjacency_matrix`
+:meth:`~retworkx.PyGraph.read_edge_list` or :meth:`~retworkx.PyGraph.from_adjacency_matrix`
 for building graphs from files or other inputs. For example:
 
 .. jupyter-execute::
@@ -358,9 +359,9 @@ functions. For example:
     G.extend_from_edge_list([(0, 1), (0, 2)])
     new_node = G.add_node("spam")
     print(rx.connected_components(G))
-    degrees = []
+    degrees = {}
     for node in G.node_indices():
-        degrees.append(G.degree(node))
+        degrees[node] = G.degree(node)
     print(degrees)
 
 .. jupyter-execute::

@@ -18,7 +18,7 @@ where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
 shortest :math:`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
 those paths passing through some  node :math:`v` other than :math:`s, t`.
 If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
-i:math:`\sigma(s, t|v) = 0`
+:math:`\sigma(s, t|v) = 0`
 
 This tutorial will take you through the process of calculating the betweenness
 centrality of a graph and visualizing it.
