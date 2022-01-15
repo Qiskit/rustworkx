@@ -289,6 +289,11 @@ pub fn bipartition_tree(
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
 
     while balanced_nodes.len() == 0 {
+        // Wee: https://pyo3.rs/v0.15.1/memory.html#gil-bound-memory
+        // (workaround to force objects to be gc'ed on each loop)
+        let pool = unsafe { py.new_pool() };
+        let py = pool.python();
+
         let mst =
             minimum_spanning_tree(py, graph, Some(weight_fn.clone()), 1.0)
                 .unwrap();
