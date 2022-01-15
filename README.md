@@ -7,6 +7,7 @@
 [![](https://img.shields.io/pypi/dm/retworkx.svg?style=popout-square)](https://pypi.org/project/retworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/retworkx?branch=main)
 [![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
 
   - You can see the full rendered docs at:
     <https://qiskit.org/documentation/retworkx>
@@ -53,6 +54,13 @@ pip install retworkx
 will build retworkx for your local system from the source package and install
 it just as it would if there was a prebuilt binary available.
 
+Note: To build from source you will need to ensure you have pip >=19.0.0
+installed, which supports PEP-517, or that you have manually installed
+`setuptools-rust` prior to running `pip install retworkx`. If you recieve an
+error about `setuptools-rust` not being found you should upgrade pip with
+`pip install -U pip` or manually install `setuptools-rust` with
+`pip install setuptools-rust` and try again.
+
 ### Optional dependencies
 
 If you're planning to use the `retworkx.visualization` module you will need to
@@ -64,10 +72,9 @@ installed with `pip install matplotlib` or when you're installing retworkx with
 function `retworkx.visualization.graphviz_drawer` first you will need to install
 graphviz, instructions for this can be found here:
 https://graphviz.org/download/#executable-packages. Then you
-will need to install the [pydot](https://pypi.org/project/pydot/) and
-[pillow](https://python-pillow.org/) Python libraries. This can be done either
-with `pip install pydot pillow` or when installing retworkx with
-`pip install 'retworkx[graphviz]'`.
+will need to install the [pillow](https://python-pillow.org/) Python library.
+This can be done either with `pip install pillow` or when installing retworkx
+with `pip install 'retworkx[graphviz]'`.
 
 If you would like to install all the optional Python dependencies when you
 install retworkx you can use `pip install 'retworkx[all]'` to do this.
@@ -148,3 +155,9 @@ It's worth noting that `pip install -e` does not work, as it will link the pytho
 packaging shim to your python environment but not build the retworkx binary. If
 you want to build retworkx in debug mode you have to use
 `python setup.py develop`.
+
+## Authors and Citation
+
+retworkx is the work of [many people](https://github.com/Qiskit/retworkx/graphs/contributors) who contribute 
+to the project at different levels. If you use retworkx in your research, please cite our 
+[paper](https://arxiv.org/abs/2110.15221) as per the included [BibTeX file](CITATION.bib).

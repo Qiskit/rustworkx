@@ -32,7 +32,7 @@ use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, PathLengthMapping,
     PathMapping,
 };
-use crate::StablePyGraph;
+use crate::{CostFn, StablePyGraph};
 
 pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     py: Python,
@@ -58,18 +58,14 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
                 .collect(),
         });
     }
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        raw.extract(py)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
     let mut edge_weights: Vec<Option<f64>> =
         Vec::with_capacity(graph.edge_bound());
     for index in 0..=graph.edge_bound() {
         let raw_weight = graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
             Some(weight) => {
-                edge_weights.push(Some(edge_cost_callable(weight)?))
+                edge_weights.push(Some(edge_cost_callable.call(py, weight)?))
             }
             None => edge_weights.push(None),
         };
@@ -84,24 +80,21 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     let out_map: DictMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
+            let path_lenghts: PyResult<Vec<Option<f64>>> =
+                dijkstra(graph, x, None, |e| edge_cost(e.id()), None);
             let out_map = PathLengthMapping {
-                path_lengths: dijkstra(
-                    graph,
-                    x,
-                    None,
-                    |e| edge_cost(e.id()),
-                    None,
-                )
-                .unwrap()
-                .iter()
-                .filter_map(|(index, cost)| {
-                    if *index == x {
-                        None
-                    } else {
-                        Some((index.index(), *cost))
-                    }
-                })
-                .collect(),
+                path_lengths: path_lenghts
+                    .unwrap()
+                    .into_iter()
+                    .enumerate()
+                    .filter_map(|(index, opt_cost)| {
+                        if index != x.index() {
+                            opt_cost.map(|cost| (index, cost))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
             };
             (x.index(), out_map)
         })
@@ -136,18 +129,14 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                 .collect(),
         });
     }
-    let edge_cost_callable = |a: &PyObject| -> PyResult<f64> {
-        let res = edge_cost_fn.call1(py, (a,))?;
-        let raw = res.to_object(py);
-        raw.extract(py)
-    };
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
     let mut edge_weights: Vec<Option<f64>> =
         Vec::with_capacity(graph.edge_bound());
     for index in 0..=graph.edge_bound() {
         let raw_weight = graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
             Some(weight) => {
-                edge_weights.push(Some(edge_cost_callable(weight)?))
+                edge_weights.push(Some(edge_cost_callable.call(py, weight)?))
             }
             None => edge_weights.push(None),
         };

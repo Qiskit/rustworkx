@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+mod cartesian_product;
 mod centrality;
 mod coloring;
 mod connectivity;
@@ -25,11 +26,13 @@ mod matching;
 mod random_graph;
 mod shortest_path;
 mod steiner_tree;
+mod toposort;
 mod transitivity;
 mod traversal;
 mod tree;
 mod union;
 
+use cartesian_product::*;
 use centrality::*;
 use coloring::*;
 use connectivity::*;
@@ -46,10 +49,13 @@ use tree::*;
 use union::*;
 
 use hashbrown::HashMap;
+use indexmap::map::Entry::{Occupied, Vacant};
 use num_complex::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
+use pyo3::exceptions::PyValueError;
+use pyo3::import_exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
@@ -62,6 +68,11 @@ use petgraph::visit::{
     NodeCount, NodeIndexable,
 };
 use petgraph::EdgeType;
+
+use std::convert::TryFrom;
+use std::hash::Hash;
+
+use retworkx_core::dictmap::*;
 
 use crate::generators::PyInit_generators;
 
@@ -164,6 +175,66 @@ where
     }
 }
 
+#[inline]
+fn is_valid_weight(val: f64) -> PyResult<f64> {
+    if val.is_sign_negative() {
+        return Err(PyValueError::new_err("Negative weights not supported."));
+    }
+
+    if val.is_nan() {
+        return Err(PyValueError::new_err("NaN weights not supported."));
+    }
+
+    Ok(val)
+}
+
+pub enum CostFn {
+    Default(f64),
+    PyFunction(PyObject),
+}
+
+impl From<PyObject> for CostFn {
+    fn from(obj: PyObject) -> Self {
+        CostFn::PyFunction(obj)
+    }
+}
+
+impl TryFrom<f64> for CostFn {
+    type Error = PyErr;
+
+    fn try_from(val: f64) -> Result<Self, Self::Error> {
+        let val = is_valid_weight(val)?;
+        Ok(CostFn::Default(val))
+    }
+}
+
+impl TryFrom<(Option<PyObject>, f64)> for CostFn {
+    type Error = PyErr;
+
+    fn try_from(
+        func_or_default: (Option<PyObject>, f64),
+    ) -> Result<Self, Self::Error> {
+        let (obj, val) = func_or_default;
+        match obj {
+            Some(obj) => Ok(CostFn::PyFunction(obj)),
+            None => CostFn::try_from(val),
+        }
+    }
+}
+
+impl CostFn {
+    fn call(&self, py: Python, arg: &PyObject) -> PyResult<f64> {
+        match self {
+            CostFn::Default(val) => Ok(*val),
+            CostFn::PyFunction(obj) => {
+                let raw = obj.call1(py, (arg,))?;
+                let val: f64 = raw.extract(py)?;
+                is_valid_weight(val)
+            }
+        }
+    }
+}
+
 fn find_node_by_weight<Ty: EdgeType>(
     py: Python,
     graph: &StablePyGraph<Ty>,
@@ -184,6 +255,28 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
+fn merge_duplicates<K, V, F, E>(
+    xs: Vec<(K, V)>,
+    mut merge_fn: F,
+) -> Result<Vec<(K, V)>, E>
+where
+    K: Hash + Eq,
+    F: FnMut(&V, &V) -> Result<V, E>,
+{
+    let mut kvs = DictMap::with_capacity(xs.len());
+    for (k, v) in xs {
+        match kvs.entry(k) {
+            Occupied(entry) => {
+                *entry.into_mut() = merge_fn(&v, entry.get())?;
+            }
+            Vacant(entry) => {
+                entry.insert(v);
+            }
+        }
+    }
+    Ok(kvs.into_iter().collect::<Vec<_>>())
+}
+
 // The provided node is invalid.
 create_exception!(retworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
@@ -198,6 +291,10 @@ create_exception!(retworkx, NoSuitableNeighbors, PyException);
 create_exception!(retworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(retworkx, NoPathFound, PyException);
+// Prune part of the search tree while traversing a graph.
+import_exception!(retworkx.visit, PruneSearch);
+// Stop graph traversal.
+import_exception!(retworkx.visit, StopSearch);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -210,10 +307,18 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dijkstra_search))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_search))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
+    m.add_wrapped(wrap_pyfunction!(number_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_connected))?;
+    m.add_wrapped(wrap_pyfunction!(node_connected_component))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
@@ -226,6 +331,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(graph_union))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
+    m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
@@ -301,11 +408,14 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
     m.add_wrapped(wrap_pyfunction!(steiner_tree))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
+    m.add_class::<toposort::TopologicalSorter>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::Chains>()?;
     m.add_class::<iterators::NodeIndices>()?;
@@ -321,6 +431,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_class::<iterators::NodesCountMapping>()?;
     m.add_class::<iterators::NodeMap>()?;
+    m.add_class::<iterators::ProductNodeMap>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }
