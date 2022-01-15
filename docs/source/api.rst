@@ -359,3 +359,4 @@ Custom Return Types
    retworkx.Chains
    retworkx.NodeMap
    retworkx.ProductNodeMap
+   retworkx.BiconnectedComponents

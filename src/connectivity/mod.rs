@@ -35,7 +35,7 @@ use petgraph::visit::{
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{Chains, EdgeList};
+use crate::iterators::{BiconnectedComponents, Chains, EdgeList};
 use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -767,15 +767,16 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn biconnected_components(
-    graph: &graph::PyGraph,
-) -> HashMap<(usize, usize), usize> {
+pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
     let mut bicomp = HashMap::new();
     connectivity::articulation_points(&graph.graph, Some(&mut bicomp));
-    bicomp
-        .into_iter()
-        .map(|((v, w), comp)| ((v.index(), w.index()), comp))
-        .collect()
+
+    BiconnectedComponents {
+        bicon_comp: bicomp
+            .into_iter()
+            .map(|((v, w), comp)| ((v.index(), w.index()), comp))
+            .collect(),
+    }
 }
 
 /// Returns the chain decomposition of a graph.
