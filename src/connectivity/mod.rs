@@ -790,6 +790,13 @@ pub fn biconnected_components(
 /// non-overlapping segment, which is a path instead of a cycle. Each
 /// cycle or path is called a *chain*. For more information, see [Schmidt]_.
 ///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges. It's also a recursive
+///     implementation and might run out of memory in large graphs.
+///
 /// :param PyGraph: The undirected graph to be used
 /// :param int source: An optional node index in the graph. If specified,
 ///     only the chain decomposition for the connected component containing
