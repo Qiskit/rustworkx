@@ -23,7 +23,7 @@ and unordered pairings of nodes (called edges, links, etc). Both nodes and
 edges in retworkx have an assigned data payload (also referred to as a weight
 in the API and documentation) which can be any Python object (e.g. a numeric
 value, a string, an image, an XML object, another graph, a custom node object,
- etc.). Nodes and edges are uniquely identified by an integer ``index``
+etc.). Nodes and edges are uniquely identified by an integer ``index``
 which is stable for the lifetime of that node or edge in the graph. These
 indices are not guaranteed to be contiguous as removed nodes or
 edges will leave holes in the sequence of assigned indices, and an index
