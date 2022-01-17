@@ -57,6 +57,16 @@ class TestDijkstraGraph(unittest.TestCase):
         expected = {1: 1.0, 2: 1.0, 3: 1.0, 4: 2.0, 5: 2.0}
         self.assertEqual(expected, path)
 
+    def test_dijkstra_length_with_no_path(self):
+        g = retworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        path_lenghts = retworkx.graph_dijkstra_shortest_path_lengths(
+            g, a, edge_cost_fn=float, goal=b
+        )
+        expected = {}
+        self.assertEqual(expected, path_lenghts)
+
     def test_dijkstra_path_with_no_goal_set(self):
         path = retworkx.graph_dijkstra_shortest_paths(self.graph, self.a)
         expected = {
