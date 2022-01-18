@@ -17,6 +17,7 @@ import retworkx
 
 class TestBiconnected(unittest.TestCase):
     def setUp(self):
+        super().setUp()
         self.graph = retworkx.PyGraph()
         self.graph.extend_from_edge_list(
             [
@@ -51,7 +52,6 @@ class TestBiconnected(unittest.TestCase):
                 (2, 3),
             ]
         )
-        return super().setUp()
 
     def test_null_graph(self):
         graph = retworkx.PyGraph()
@@ -137,7 +137,7 @@ class TestBiconnected(unittest.TestCase):
                 (4, 6),
             ]
         )
-        num_edges = len(graph.edge_list())
+        num_edges = graph.num_edges()
         self.assertEqual(retworkx.articulation_points(graph), set())
         bicomp = retworkx.biconnected_components(graph)
         self.assertEqual(len(bicomp), num_edges)
