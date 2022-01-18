@@ -394,7 +394,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
 ///
-///  :return: The adjacency matrix for the input dag as a numpy array
+///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
 #[pyfunction(default_weight = "1.0", null_value = "0.0")]
 #[pyo3(
@@ -450,7 +450,7 @@ pub fn digraph_adjacency_matrix(
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
 ///
-/// :return: The adjacency matrix for the input dag as a numpy array
+/// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
 #[pyfunction(default_weight = "1.0", null_value = "0.0")]
 #[pyo3(
@@ -481,7 +481,7 @@ pub fn graph_adjacency_matrix(
     Ok(matrix.into_pyarray(py).into())
 }
 
-/// Compute the complement of a graph.
+/// Compute the complement of an undirected graph.
 ///
 /// :param PyGraph graph: The graph to be used.
 ///
@@ -524,7 +524,7 @@ pub fn graph_complement(
     Ok(complement_graph)
 }
 
-/// Compute the complement of a graph.
+/// Compute the complement of a directed graph.
 ///
 /// :param PyDiGraph graph: The graph to be used.
 ///
@@ -581,7 +581,7 @@ pub fn digraph_complement(
 /// :returns: A list of lists where each inner list is a path of node indices
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, from, to, /, min=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
 fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     from: usize,

@@ -2,10 +2,12 @@
 features:
   - |
     Added a new function, :func:`~retworkx.generators.lollipop_graph` that adds
-    support for generating lollipop graphs. For example::
+    support for generating lollipop graphs. For example:
 
-      import retworkx.generators
-      from retworkx.visualization import mpl_draw()
+    .. jupyter-execute::
 
-      graph = retworkx.generators.lollipop_graph(4, 3)
-      mpl_draw(graph)
+        import retworkx.generators
+        from retworkx.visualization import mpl_draw
+
+        graph = retworkx.generators.lollipop_graph(4, 3)
+        mpl_draw(graph)
