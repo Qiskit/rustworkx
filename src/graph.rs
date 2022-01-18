@@ -346,10 +346,10 @@ impl PyGraph {
         self.node_indices()
     }
 
-    /// Return True if there is an edge between node_a to node_b.
+    /// Return True if there is an edge between ``node_a`` and ``node_b``.
     ///
-    /// :param int node_a: The node index to check for an edge between
-    /// :param int node_b: The node index to check for an edge between
+    /// :param int node_a: The index for the first node
+    /// :param int node_b: The index for the second node
     ///
     /// :returns: True if there is an edge false if there is no edge
     /// :rtype: bool
@@ -587,8 +587,9 @@ impl PyGraph {
     /// :param int edge_index: The index for the edge
     /// :param object edge: The data payload/weight to update the edge with
     ///
-    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[pyo3(text_signature = "(self, source, target, edge /)")]
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
+    #[pyo3(text_signature = "(self, edge_index, edge, /)")]
     pub fn update_edge_by_index(
         &mut self,
         edge_index: usize,
@@ -976,6 +977,9 @@ impl PyGraph {
     ///
     /// :param list index_list: A list of node index pairs to remove from
     ///     the graph
+    ///
+    /// :raises NoEdgeBetweenNodes: If there are no edges between a specified
+    ///     pair of nodes.
     #[pyo3(text_signature = "(self, index_list, /)")]
     pub fn remove_edges_from(
         &mut self,
@@ -1054,6 +1058,7 @@ impl PyGraph {
     /// :returns: the index of the first node in the graph that is equal to the
     ///     weight. If no match is found ``None`` will be returned.
     /// :rtype: int
+    #[pyo3(text_signature = "(self, obj, /)")]
     pub fn find_node_by_weight(
         &self,
         py: Python,
@@ -1090,7 +1095,7 @@ impl PyGraph {
     ///
     /// This with return a list of neighbor node indices
     ///
-    /// :param int node: The index of the node to get the neibhors of
+    /// :param int node: The index of the node to get the neighbors of
     ///
     /// :returns: A list of the neighbor node indicies
     /// :rtype: NodeIndices
@@ -1141,6 +1146,7 @@ impl PyGraph {
     ///     node and edge weights/data payloads are copied by reference to
     ///     the output graph
     /// :rtype: PyDiGraph
+    #[pyo3(text_signature = "(self)")]
     pub fn to_directed(&self, py: Python) -> crate::digraph::PyDiGraph {
         let node_count = self.node_count();
         let mut new_graph = StablePyGraph::<Directed>::with_capacity(
@@ -1490,7 +1496,7 @@ impl PyGraph {
     /// :rtype: PyGraph
     #[staticmethod]
     #[args(null_value = "0.0")]
-    #[pyo3(text_signature = "(matrix, /)")]
+    #[pyo3(text_signature = "(matrix, /, null_value=0.0)")]
     pub fn from_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
@@ -1772,7 +1778,7 @@ impl PyGraph {
 
     /// Return a new PyGraph object for an edge induced subgraph of this graph
     ///
-    /// The induced subgraph contains each edge in `edges` and each node
+    /// The induced subgraph contains each edge in `edge_list` and each node
     /// incident to any of those edges.
     ///
     /// :param list edge_list: A list of edge tuples (2-tuples with the source
@@ -1784,7 +1790,7 @@ impl PyGraph {
     /// :returns: The edge subgraph
     /// :rtype: PyGraph
     ///
-    #[pyo3(text_signature = "(self, edges, /)")]
+    #[pyo3(text_signature = "(self, edge_list, /)")]
     pub fn edge_subgraph(&self, edge_list: Vec<[usize; 2]>) -> PyGraph {
         // Filter non-existent edges
         let edges: Vec<[usize; 2]> = edge_list

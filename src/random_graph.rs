@@ -229,7 +229,8 @@ pub fn undirected_gnp_random_graph(
     Ok(graph)
 }
 
-/// Return a :math:`G_{nm}` of a directed graph
+/// Return a :math:`G_{nm}` directed graph, also known as an
+/// Erdős-Rényi graph.
 ///
 /// Generates a random directed graph out of all the possible graphs with :math:`n` nodes and
 /// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
@@ -250,7 +251,7 @@ pub fn undirected_gnp_random_graph(
 /// :rtype: PyDiGraph
 ///
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, num_edges, seed=None, /)")]
+#[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)")]
 pub fn directed_gnm_random_graph(
     py: Python,
     num_nodes: isize,
@@ -309,7 +310,8 @@ pub fn directed_gnm_random_graph(
     Ok(graph)
 }
 
-/// Return a :math:`G_{nm}` of an undirected graph
+/// Return a :math:`G_{nm}` undirected graph, also known as an
+/// Erdős-Rényi graph.
 ///
 /// Generates a random undirected graph out of all the possible graphs with :math:`n` nodes and
 /// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
@@ -330,7 +332,7 @@ pub fn directed_gnm_random_graph(
 /// :rtype: PyGraph
 
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, probability, seed=None, /)")]
+#[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)")]
 pub fn undirected_gnm_random_graph(
     py: Python,
     num_nodes: isize,

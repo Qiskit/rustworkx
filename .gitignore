@@ -7,6 +7,8 @@ build/
 *egg*
 docs/build/
 docs/stubs/
+docs/apiref/
+docs/source/apiref/
 docs/source/stubs/
 .tox/
 retworkx/*.so

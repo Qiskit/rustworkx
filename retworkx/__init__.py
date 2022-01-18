@@ -613,9 +613,9 @@ def _graph_dijkstra_shortest_path(
 
 @functools.singledispatch
 def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
-    """Find the shortest path from all nodes
+    """For each node in the graph, finds the shortest paths to all others.
 
-    This function will generate the shortest path from all nodes int the graph
+    This function will generate the shortest path from all nodes in the graph
     using Dijkstra's algorithm. This function is multithreaded and will run
     launch a thread pool with threads equal to the number of CPUs by default.
     You can tune the number of threads with the ``RAYON_NUM_THREADS``
@@ -629,7 +629,7 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
         object and will return a float which will be used to represent the
         weight/cost of the edge
 
-    :return: A read-only dictionary of paths. The keys are destination node
+    :return: A read-only dictionary of paths. The keys are source node
         indices and the values are a dict of target node indices and a list
         of node indices making the path. For example::
 
@@ -656,12 +656,12 @@ def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
 
 @functools.singledispatch
 def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
-    """Find the shortest path from a node
+    """For each node in the graph, calculates the lengths of the shortest paths to all others.
 
-    This function will generate the shortest path from a source node using
-    Dijkstra's algorithm. This function is multithreaded and will run
-    launch a thread pool with threads equal to the number of CPUs by default.
-    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    This function will generate the shortest path lengths from all nodes in the
+    graph using Dijkstra's algorithm. This function is multithreaded and will
+    launch a thread pool with threads equal to the number of CPUs by
+    default. You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads.
 

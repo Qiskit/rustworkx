@@ -26,7 +26,7 @@
 
    .. autosummary::
       :nosignatures:
-      :toctree: ../stubs/
+      :toctree: ../apiref/
 {% for item in wanted_methods %}
       ~{{ name }}.{{ item }}
 {%- endfor %}
