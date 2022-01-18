@@ -1,0 +1,52 @@
+---
+features:
+  - |
+    Added a new function :func:`~retworkx.articulation_points` that
+    finds the articulation points of an undirected :class:`~retworkx.PyGraph`.
+    An articulation point or cut vertex is any node whose removal increases
+    the number of connected components of a graph. For example:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.PyGraph()
+      graph.extend_from_edge_list([
+          (0, 1), (1, 2), (0, 2), (1, 3)
+      ])
+      points = retworkx.articulation_points(graph)
+
+      colors = ['black'] * len(graph)
+      for node in points:
+          colors[node] = 'blue'
+
+      mpl_draw(graph, node_color=colors)
+  - |
+    Added a new function :func:`~retworkx.biconnected_components` that
+    returns the biconnected components of an undirected :class:`~retworkx.PyGraph`.
+    A biconnected component is a maximal subgraph that remains connected
+    after removal of a node. For example:
+
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.PyGraph()
+      graph.extend_from_edge_list([
+          (0, 1), (1, 2), (0, 2), (1, 3), (2, 4)
+      ])
+      components = retworkx.biconnected_components(graph)
+
+      COLORS = ["blue", "red", "orange"]
+      edge_colors = []
+      for (u, v) in graph.edge_list():
+        if (u, v) in components:
+            comp = components[(u, v)]
+        else:
+            comp = components[(v, u)]
+        edge_colors += [COLORS[comp]] 
+
+      mpl_draw(graph, node_color='black', node_size=150,
+              edge_color=edge_colors)
