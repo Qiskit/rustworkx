@@ -59,6 +59,7 @@ Traversal
    retworkx.dfs_search
    retworkx.bfs_successors
    retworkx.bfs_search
+   retworkx.dijkstra_search
    retworkx.topological_sort
    retworkx.lexicographical_topological_sort
    retworkx.descendants
@@ -67,6 +68,7 @@ Traversal
    retworkx.collect_bicolor_runs
    retworkx.visit.DFSVisitor
    retworkx.visit.BFSVisitor
+   retworkx.visit.DijkstraVisitor
    retworkx.TopologicalSorter
 
 .. _dag-algorithms:
@@ -139,6 +141,8 @@ Connectivity and Cycles
    retworkx.is_weakly_connected
    retworkx.cycle_basis
    retworkx.digraph_find_cycle
+   retworkx.articulation_points
+   retworkx.biconnected_components
    retworkx.chain_decomposition
 
 .. _other-algorithms:
@@ -270,6 +274,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_betweenness_centrality
    retworkx.digraph_unweighted_average_shortest_path_length
    retworkx.digraph_bfs_search
+   retworkx.digraph_dijkstra_search
 
 .. _api-functions-pygraph:
 
@@ -315,6 +320,7 @@ typed API based on the data type.
    retworkx.graph_betweenness_centrality
    retworkx.graph_unweighted_average_shortest_path_length
    retworkx.graph_bfs_search
+   retworkx.graph_dijkstra_search
 
 Exceptions
 ==========
@@ -353,3 +359,4 @@ Custom Return Types
    retworkx.Chains
    retworkx.NodeMap
    retworkx.ProductNodeMap
+   retworkx.BiconnectedComponents

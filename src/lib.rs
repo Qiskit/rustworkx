@@ -309,6 +309,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dijkstra_search))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_search))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
@@ -408,6 +410,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(articulation_points))?;
+    m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
@@ -428,6 +432,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodesCountMapping>()?;
     m.add_class::<iterators::NodeMap>()?;
     m.add_class::<iterators::ProductNodeMap>()?;
+    m.add_class::<iterators::BiconnectedComponents>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }

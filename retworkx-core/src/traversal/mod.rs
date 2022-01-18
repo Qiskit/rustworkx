@@ -15,10 +15,12 @@
 mod bfs_visit;
 mod dfs_edges;
 mod dfs_visit;
+mod dijkstra_visit;
 
 pub use bfs_visit::{breadth_first_search, BfsEvent};
 pub use dfs_edges::dfs_edges;
 pub use dfs_visit::{depth_first_search, DfsEvent};
+pub use dijkstra_visit::{dijkstra_search, DijkstraEvent};
 
 /// Return if the expression is a break value, execute the provided statement
 /// if it is a prune value.

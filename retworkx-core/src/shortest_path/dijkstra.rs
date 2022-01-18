@@ -20,12 +20,11 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use indexmap::map::Entry::{Occupied, Vacant};
-
 use petgraph::algo::Measure;
-use petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
+use petgraph::visit::{EdgeRef, IntoEdges, NodeIndexable, VisitMap, Visitable};
 
 use crate::dictmap::*;
+use crate::distancemap::DistanceMap;
 use crate::min_scored::MinScored;
 
 /// Dijkstra's shortest path algorithm.
@@ -45,7 +44,7 @@ use crate::min_scored::MinScored;
 /// the value is a Vec of node indices of the path starting with `start` and
 /// ending at the index.
 ///
-/// Returns a [`DictMap`] that maps `NodeId` to path cost.
+/// Returns a [`DistanceMap`] that maps `NodeId` to path cost.
 /// # Example
 /// ```rust
 /// use retworkx_core::petgraph::Graph;
@@ -98,24 +97,25 @@ use crate::min_scored::MinScored;
 /// assert_eq!(res.unwrap(), expected_res);
 /// // z is not inside res because there is not path from b to z.
 /// ```
-pub fn dijkstra<G, F, K, E>(
+pub fn dijkstra<G, F, K, E, S>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
     mut edge_cost: F,
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
-) -> Result<DictMap<G::NodeId, K>, E>
+) -> Result<S, E>
 where
-    G: IntoEdges + Visitable,
+    G: IntoEdges + Visitable + NodeIndexable,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
+    S: DistanceMap<G::NodeId, K>,
 {
     let mut visited = graph.visit_map();
-    let mut scores = DictMap::new();
+    let mut scores: S = S::build(graph.node_bound());
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
-    scores.insert(start, zero_score);
+    scores.put_item(start, zero_score);
     visit_next.push(MinScored(zero_score, start));
     if path.is_some() {
         path.as_mut().unwrap().insert(start, vec![start]);
@@ -134,10 +134,10 @@ where
             }
             let cost = edge_cost(edge)?;
             let next_score = node_score + cost;
-            match scores.entry(next) {
-                Occupied(ent) => {
-                    if next_score < *ent.get() {
-                        *ent.into_mut() = next_score;
+            match scores.get_item(next) {
+                Some(current_score) => {
+                    if next_score < *current_score {
+                        scores.put_item(next, next_score);
                         visit_next.push(MinScored(next_score, next));
                         if path.is_some() {
                             let mut node_path = path
@@ -155,8 +155,8 @@ where
                         }
                     }
                 }
-                Vacant(ent) => {
-                    ent.insert(next_score);
+                None => {
+                    scores.put_item(next, next_score);
                     visit_next.push(MinScored(next_score, next));
                     if path.is_some() {
                         let mut node_path =
@@ -169,5 +169,6 @@ where
         }
         visited.visit(node);
     }
+
     Ok(scores)
 }
