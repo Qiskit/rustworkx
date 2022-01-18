@@ -16,10 +16,12 @@ use std::hash::Hash;
 use hashbrown::HashMap;
 
 use petgraph::visit::{
-    depth_first_search, DfsEvent, GraphProp, IntoNeighbors,
-    IntoNodeIdentifiers, NodeCount, NodeIndexable, VisitMap, Visitable,
+    GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable,
+    VisitMap, Visitable,
 };
 use petgraph::Undirected;
+
+use crate::traversal::{depth_first_search, DfsEvent};
 
 fn _build_chain<G, VM: VisitMap<G::NodeId>>(
     graph: G,
@@ -115,7 +117,7 @@ pub fn chain_decomposition<G>(
 ) -> Vec<Vec<(G::NodeId, G::NodeId)>>
 where
     G: IntoNodeIdentifiers
-        + IntoNeighbors
+        + IntoEdges
         + Visitable
         + NodeIndexable
         + NodeCount
@@ -136,12 +138,12 @@ where
         DfsEvent::Discover(u, _) => {
             nodes.push(u);
         }
-        DfsEvent::TreeEdge(u, v) => {
+        DfsEvent::TreeEdge(u, v, _) => {
             let u = graph.to_index(u);
             let v = graph.to_index(v);
             parent[v] = u;
         }
-        DfsEvent::BackEdge(u_id, v_id) => {
+        DfsEvent::BackEdge(u_id, v_id, _) => {
             let u = graph.to_index(u_id);
             let v = graph.to_index(v_id);
 

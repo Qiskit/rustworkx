@@ -1347,3 +1347,26 @@ custom_hash_map_iter_impl!(
     "
 );
 default_pygc_protocol_impl!(ProductNodeMap);
+
+custom_hash_map_iter_impl!(
+    BiconnectedComponents,
+    BiconnectedComponentsKeys,
+    BiconnectedComponentsValues,
+    BiconnectedComponentsItems,
+    bicon_comp,
+    bicon_comp_keys,
+    bicon_comp_values,
+    bicon_comp_items,
+    (usize, usize),
+    usize,
+    "A class representing a mapping of edge endpoints to biconnected
+    component number that the edge belongs.
+
+    This implements the Python mapping protocol, so you can treat the return as
+    a read-only mapping/dict of the form::
+
+        {(0, 0): 0, (0, 1): 1}
+
+    "
+);
+default_pygc_protocol_impl!(BiconnectedComponents);

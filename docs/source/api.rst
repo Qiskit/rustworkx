@@ -143,6 +143,8 @@ Connectivity and Cycles
    retworkx.is_weakly_connected
    retworkx.cycle_basis
    retworkx.digraph_find_cycle
+   retworkx.articulation_points
+   retworkx.biconnected_components
    retworkx.chain_decomposition
 
 .. _graph-ops:
@@ -372,3 +374,4 @@ Custom Return Types
    retworkx.Chains
    retworkx.NodeMap
    retworkx.ProductNodeMap
+   retworkx.BiconnectedComponents

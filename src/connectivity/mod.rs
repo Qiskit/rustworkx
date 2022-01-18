@@ -35,7 +35,7 @@ use petgraph::visit::{
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{Chains, EdgeList};
+use crate::iterators::{BiconnectedComponents, Chains, EdgeList};
 use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -719,6 +719,66 @@ pub fn digraph_core_number(
     core_number::core_number(py, &graph.graph)
 }
 
+/// Return the articulation points of an undirected graph.
+///
+/// An articulation point or cut vertex is any node whose removal (along with
+/// all its incident edges) increases the number of connected components of
+/// a graph. An undirected connected graph without articulation points is
+/// biconnected.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph: The undirected graph to be used.
+///
+/// :returns: A set with node indices of the articulation points in the graph.
+/// :rtype: set
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
+    connectivity::articulation_points(&graph.graph, None)
+        .into_iter()
+        .map(|nx| nx.index())
+        .collect()
+}
+
+/// Return the biconnected components of an undirected graph.
+///
+/// Biconnected components are maximal subgraphs such that the removal
+/// of a node (and all edges incident on that node) will not disconnect
+/// the subgraph. Note that nodes may be part of more than one biconnected
+/// component. Those nodes are articulation points, or cut vertices. The
+/// algorithm computes how many biconnected components are in the graph,
+/// and assigning each component an integer label.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph: The undirected graph to be used.
+///
+/// :returns: A dictionary with keys the edge endpoints and value the biconnected
+///     component number that the edge belongs.
+/// :rtype: dict
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
+    let mut bicomp = HashMap::new();
+    connectivity::articulation_points(&graph.graph, Some(&mut bicomp));
+
+    BiconnectedComponents {
+        bicon_comp: bicomp
+            .into_iter()
+            .map(|((v, w), comp)| ((v.index(), w.index()), comp))
+            .collect(),
+    }
+}
+
 /// Returns the chain decomposition of a graph.
 ///
 /// The *chain decomposition* of a graph with respect to a depth-first
@@ -735,8 +795,7 @@ pub fn digraph_core_number(
 ///
 ///     The function implicitly assumes that there are no parallel edges
 ///     or self loops. It may produce incorrect/unexpected results if the
-///     input graph has self loops or parallel edges. It's also a recursive
-///     implementation and might run out of memory in large graphs.
+///     input graph has self loops or parallel edges.
 ///
 /// :param PyGraph: The undirected graph to be used
 /// :param int source: An optional node index in the graph. If specified,

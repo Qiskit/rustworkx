@@ -1611,3 +1611,93 @@ class TestProductNodeMap(unittest.TestCase):
 
     def test_not_contains(self):
         self.assertNotIn((1, 1), self.node_map)
+
+
+class TestBiconnectedComponentsMap(unittest.TestCase):
+    def setUp(self):
+        self.graph = retworkx.generators.path_graph(3)
+        self.bicon_map = retworkx.biconnected_components(self.graph)
+
+    def test__eq__match(self):
+        self.assertTrue(self.bicon_map == {(0, 1): 1, (1, 2): 0})
+
+    def test__eq__not_match_keys(self):
+        self.assertFalse(self.bicon_map == {(0, 0): 1, (2, 0): 0})
+
+    def test__eq__not_match_values(self):
+        self.assertFalse(self.bicon_map == {(0, 1): 2, (1, 2): 0})
+
+    def test__eq__different_length(self):
+        self.assertFalse(self.bicon_map == {(0, 1): 1})
+
+    def test_eq__same_type(self):
+        res = retworkx.biconnected_components(self.graph)
+        self.assertEqual(self.bicon_map, res)
+
+    def test__ne__match(self):
+        self.assertFalse(self.bicon_map != {(0, 1): 1, (1, 2): 0})
+
+    def test__ne__not_match(self):
+        self.assertTrue(self.bicon_map != {(0, 2): 1, (1, 2): 0})
+
+    def test__ne__not_match_values(self):
+        self.assertTrue(self.bicon_map != {(0, 1): 0, (1, 2): 0})
+
+    def test__ne__different_length(self):
+        self.assertTrue(self.bicon_map != {(0, 1): 1})
+
+    def test__gt__not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.bicon_map > {1: 2}
+
+    def test__len__(self):
+        self.assertEqual(2, len(self.bicon_map))
+
+    def test_deepcopy(self):
+        bicon_map_copy = copy.deepcopy(self.bicon_map)
+        self.assertEqual(self.bicon_map, bicon_map_copy)
+
+    def test_pickle(self):
+        bicon_map_pickle = pickle.dumps(self.bicon_map)
+        bicon_map_copy = pickle.loads(bicon_map_pickle)
+        self.assertEqual(self.bicon_map, bicon_map_copy)
+
+    def test_str(self):
+        valid_str_output = [
+            "BiconnectedComponents{(0, 1): 1, (1, 2): 0}",
+            "BiconnectedComponents{(1, 2): 0, (0, 1): 1}",
+        ]
+        self.assertTrue(str(self.bicon_map) in valid_str_output)
+
+    def test_hash(self):
+        hash_res = hash(self.bicon_map)
+        self.assertIsInstance(hash_res, int)
+        # Assert hash is stable
+        self.assertEqual(hash_res, hash(self.bicon_map))
+
+    def test_index_error(self):
+        with self.assertRaises(IndexError):
+            self.bicon_map[(1, 1)]
+
+    def test_keys(self):
+        keys = self.bicon_map.keys()
+        self.assertEqual(set([(0, 1), (1, 2)]), set(keys))
+
+    def test_values(self):
+        values = self.bicon_map.values()
+        self.assertEqual(set([0, 1]), set(values))
+
+    def test_items(self):
+        items = self.bicon_map.items()
+        self.assertEqual(set([((0, 1), 1), ((1, 2), 0)]), set(items))
+
+    def test_iter(self):
+        mapping_iter = iter(self.bicon_map)
+        output = set(mapping_iter)
+        self.assertEqual(output, set([(0, 1), (1, 2)]))
+
+    def test_contains(self):
+        self.assertIn((0, 1), self.bicon_map)
+
+    def test_not_contains(self):
+        self.assertNotIn((0, 2), self.bicon_map)
