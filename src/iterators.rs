@@ -525,6 +525,13 @@ custom_vec_iter_impl!(
     (PyObject, Vec<PyObject>),
     "A custom class for the return from :func:`retworkx.bfs_successors`
     
+    The class can is a read-only sequence of tuples of the form::
+
+        [(node, [successor_a, successor_b])]
+
+    where ``node``, ``successor_a``, and ``successor_b`` are the data payloads
+    for the nodes in the graph.
+
     This class is a container class for the results of the
     :func:`retworkx.bfs_successors` function. It implements the Python
     sequence protocol. So you can treat the return as read-only
@@ -571,6 +578,8 @@ custom_vec_iter_impl!(
     usize,
     "A custom class for the return of node indices
 
+    This class can be treated as a read-only sequence of integer node indices.
+
     This class is a container class for the results of functions that
     return a list of node indices. It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
@@ -601,6 +610,14 @@ custom_vec_iter_impl!(
     (usize, usize),
     "A custom class for the return of edge lists
 
+    The class is a read-only sequence of tuples representing edge endpoints in
+    the form::
+
+        [(node_index_a, node_index_b)]
+
+    where ``node_index_a`` and ``node_index_b`` are the integer node indices of
+    the edge endpoints.
+
     This class is a container class for the results of functions that
     return a list of edges. It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
@@ -630,6 +647,14 @@ custom_vec_iter_impl!(
     edges,
     (usize, usize, PyObject),
     "A custom class for the return of edge lists with weights
+
+    This class is a read-only sequence of tuples representing the edge
+    endpoints with the data payload for that edge in the form::
+
+        [(node_index_a, node_index_b, weight)]
+
+    where ``node_index_a`` and ``node_index_b`` are the integer node indices of
+    the edge endpoints and ``weight`` is the data payload of that edge.
 
     This class is a container class for the results of functions that
     return a list of edges with weights. It implements the Python sequence
@@ -673,6 +698,8 @@ custom_vec_iter_impl!(
     edges,
     usize,
     "A custom class for the return of edge indices
+
+    The class is a read only sequence of integer edge indices.
     
     This class is a container class for the results of functions that
     return a list of edge indices. It implements the Python sequence
@@ -723,6 +750,8 @@ custom_vec_iter_impl!(
     chains,
     EdgeList,
     "A custom class for the return of a list of list of edges.
+
+    The class is a read-only sequence of :class:`.EdgeList` instances.
 
     This class is a container class for the results of functions that
     return a list of list of edges. It implements the Python sequence
@@ -980,6 +1009,13 @@ impl PyGCProtocol for EdgeIndexMap {
 
 /// A custom class for the return of paths to target nodes
 ///
+/// The class is a read-only mapping of node indices to a list of node indices
+/// representing a path of the form::
+///
+///     {node_c: [node_a, node_b, node_c]}
+///
+/// where ``node_a``, ``node_b``, and ``node_c`` are integer node indices.
+///
 /// This class is a container class for the results of functions that
 /// return a mapping of target nodes and paths. It implements the Python
 /// mapping protocol. So you can treat the return as a read-only
@@ -1134,6 +1170,11 @@ custom_hash_map_iter_impl!(
     f64,
     "A custom class for the return of path lengths to target nodes
 
+    This class is a read-only mapping of integer node indices to float path
+    lengths of the form::
+
+        {0: 24.5, 1: 2.1}
+
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths. It implements the Python
     mapping protocol. So you can treat the return as a read-only
@@ -1194,9 +1235,9 @@ custom_hash_map_iter_impl!(
     "A custom class for the return of centralities at target nodes
 
     This class is a container class for the results of functions that
-    return a mapping of node index to the betweenness score for that node.
-    It implements the Python mapping protocol so you can treat the return
-    as a read-only mapping/dict.
+    return a mapping of integer node indices to the float betweenness score for
+    that node. It implements the Python mapping protocol so you can treat the
+    return as a read-only mapping/dict.
     "
 );
 default_pygc_protocol_impl!(CentralityMapping);
@@ -1213,6 +1254,11 @@ custom_hash_map_iter_impl!(
     usize,
     BigUint,
     "A custom class for the return of number path lengths to target nodes
+
+    This class is a read-only mapping of integer node indices to an integer
+    count for that node of the form::
+
+        {0: 24, 4, 234}
 
     This class is a container class for the results of functions that
     return a mapping of target nodes and counts. It implements the Python
@@ -1252,6 +1298,11 @@ custom_hash_map_iter_impl!(
     PathLengthMapping,
     "A custom class for the return of path lengths to target nodes from all nodes
 
+    This class is a read-only mapping of integer node indices to a
+    :class:`.PathLengthMapping` of the form::
+
+        {0: {1: 1.234, 2: 2.34}}
+
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths from all nodes. It implements
     the Python mapping protocol. So you can treat the return as a read-only
@@ -1282,6 +1333,11 @@ custom_hash_map_iter_impl!(
     usize,
     PathMapping,
     "A custom class for the return of paths to target nodes from all nodes
+
+    This class is a read-only mapping of integer node indices to a
+    :class:`.PathMapping` of the form::
+
+        {0: {1: [0, 2, 3, 1], 2: [0, 2]}}
 
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths from all nodes. It implements
