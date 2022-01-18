@@ -51,7 +51,7 @@ the betweenness centrality for each node in the graph.
     # Print the centrality value for the first 5 nodes in the graph
     pprint.pprint({x: centrality[x] for x in range(5)})
 
-The output of the :func:`~retworkx.betweenness_centrality` is a
+The output of :func:`~retworkx.betweenness_centrality` is a
 :class:`.CentralityMapping` which is a custom
 `mapping <https://docs.python.org/3/glossary.html#term-mapping>`__ type that
 maps the node index to the centrality value as a float. This is a mapping and
