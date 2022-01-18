@@ -1,8 +1,9 @@
 ---
 prelude: |
   This release includes many new features and bug fixes. The highlights of this
-  release are more methods to improve working with edges in both a a graph
-  object, several new graph generators, and a new set of interactive traversal
+  release are more methods to improve working with edges in both the
+  :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` classes,
+  several new graph generators, and a new set of interactive traversal
   functions :func:`~retworkx.bfs_search`, :func:`~retworkx.dfs_search`,
   :func:`~retworkx.dijkstra_search`, and :class:`~retworkx.TopologicalSorter`
   which enable iteratively interacting with the graph during different types

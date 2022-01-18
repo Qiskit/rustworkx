@@ -1,8 +1,10 @@
 ---
 features:
   - |
-    Add two new functions which calculates the cartesian product of two graphs :func:`~retworkx.graph_cartesian_product`
-    for undirected graphs and :func:`~retworkx.digraph_cartesian_product` for directed graphs. For example:
+    Added a new function, :func:`~retworkx.cartesian_product` (and it's per
+    type variants func:`~retworkx.digraph_cartesian_product` and
+    :func:`~retworkx.graph_cartesian_product`), which calculates the cartesian
+    product of two graphs. For example:
     
     .. jupyter-execute::
 
@@ -12,6 +14,6 @@ features:
       graph_1 = retworkx.generators.path_graph(2)
       graph_2 = retworkx.generators.path_graph(3)
 
-      graph_product, _ = retworkx.graph_cartesian_product(graph_1, graph_2)
+      graph_product, _ = retworkx.cartesian_product(graph_1, graph_2)
       
       mpl_draw(graph_product)

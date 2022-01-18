@@ -1,8 +1,11 @@
 ---
 features:
   - |
-    Added a new function, :func:`~retworkx.generators.barbell_graph` that adds
-    support for generating lollipop graphs. For example::
+    Added a new generator function, :func:`~retworkx.generators.barbell_graph`,
+    to the :mod:`retworkx.generators` module that will generate a barbell graph.
+    For example:
+
+    .. jupyter-execute::
 
       import retworkx.generators
       from retworkx.visualization import mpl_draw()
