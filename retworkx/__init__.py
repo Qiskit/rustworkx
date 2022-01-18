@@ -629,7 +629,7 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
         object and will return a float which will be used to represent the
         weight/cost of the edge
 
-    :return: A read-only dictionary of paths. The keys are destination node
+    :return: A read-only dictionary of paths. The keys are source node
         indices and the values are a dict of target node indices and a list
         of node indices making the path. For example::
 

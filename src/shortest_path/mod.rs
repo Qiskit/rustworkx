@@ -323,8 +323,8 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     })
 }
 
-/// Calculate the the shortest length from all nodes in a
-/// :class:`~retworkx.PyDiGraph` object
+/// For each node in the graph, calculates the lengths of the shortest paths
+/// to all others in a :class:`~retworkx.PyDiGraph` object
 ///
 /// This function will calculate the shortest path lengths from all nodes in the
 /// graph using Dijkstra's algorithm. This function is multithreaded and will
@@ -366,8 +366,8 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
     )
 }
 
-/// Find the shortest paths from all nodes in a :class:`~retworkx.PyDiGraph`
-/// object
+/// For each node in the graph, finds the shortest paths to all others in a
+/// :class:`~retworkx.PyDiGraph` object
 ///
 /// This function will generate the shortest paths from all nodes in the graph
 /// Dijkstra's algorithm. This function is multithreaded and will run
@@ -410,8 +410,8 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
     )
 }
 
-/// Calculate the the shortest length from all nodes in a
-/// :class:`~retworkx.PyGraph` object
+/// For each node in the graph, calculates the lengths of the shortest paths
+/// to all others in a :class:`~retworkx.PyGraph` object
 ///
 /// This function will generate the shortest path from a source node using
 /// Dijkstra's algorithm.
@@ -449,8 +449,8 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
     )
 }
 
-/// Find the shortest path from all nodes in a :class:`~retworkx.PyGraph`
-/// object
+/// For each node in the graph, finds the shortest paths to all others in a
+/// :class:`~retworkx.PyGraph` object
 ///
 /// This function will generate the shortest path from a source node using
 /// Dijkstra's algorithm.
