@@ -9,7 +9,8 @@ prelude: |
   which enable iteratively interacting with the graph during different types
   of traversal.
 
-  This release also introduces a new separate Rust crate ``retworkx-core`` which
+  This release also introduces a new separate Rust crate
+  `retworkx-core <https://crates.io/crates/retworkx-core>`__ which
   is a library for use in Rust that's built on top of
   `petgraph <https://github.com/petgraph/petgraph>`__ that extends the
   functionality provided by petgraph. The functionality in this crate is generic
@@ -26,12 +27,14 @@ prelude: |
 
 features:
   - |
-    Added a new workspace crate, ``retworkx-core`` as part of retworkx. This is
-    a standalone Rust library that is built on top of petgraph that provides
-    general algorithms and graph functionality that retworkx needs.
-    This new crate only exposes a Rust interface that is general for any
-    petgraph graph and can be used by any downstream Rust project that wants
-    the extra functionality that retworkx exposes, but without needing Python.
+    Added a new workspace crate,
+    `retworkx-core <https://crates.io/crates/retworkx-core>`__ as part of
+    retworkx. This is a standalone Rust library that is built on top of
+    petgraph that provides general algorithms and graph functionality that
+    retworkx needs. This new crate only exposes a Rust interface that is
+    general for any petgraph graph and can be used by any downstream Rust
+    project that wants the extra functionality that retworkx exposes, but
+    without needing Python.
 
     It's also worth noting as this is the first release of ``retworkx-core``
     there may be breaking API changes in a subsequent release. While we will
