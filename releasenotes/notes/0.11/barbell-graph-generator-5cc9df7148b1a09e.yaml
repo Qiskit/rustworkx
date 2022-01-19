@@ -8,7 +8,7 @@ features:
     .. jupyter-execute::
 
       import retworkx.generators
-      from retworkx.visualization import mpl_draw()
+      from retworkx.visualization import mpl_draw
 
       graph = retworkx.generators.barbell_graph(4, 3)
       mpl_draw(graph)
