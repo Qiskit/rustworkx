@@ -2,7 +2,7 @@
 features:
   - |
     Added a new generator function, :func:`~retworkx.generators.barbell_graph`,
-    to the :mod:`retworkx.generators` module that will generate a barbell graph.
+    to the ``retworkx.generators`` module that will generate a barbell graph.
     For example:
 
     .. jupyter-execute::

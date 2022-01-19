@@ -9,4 +9,4 @@ fixes:
     :func:`~retworkx.astar_shortest_path`, and
     :func:`~retworkx.k_shortest_path_lengths` which would previously incorrectly
     accept edge weights with negative or ``NaN`` values.
-    Fixed `#525 <https://github.com/Qiskit/retworkx/issues/525>`__
+    Fixed `#525 <https://github.com/Qiskit/retworkx/issues/525>`__.

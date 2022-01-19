@@ -3,6 +3,6 @@ features:
   - |
     The algorithm used for the :func:`~retworkx.steiner_tree` implementation
     has been replaced by a faster algorithm based on:
-    https://doi.org/10.1016/0020-0190(88)90066-X This new implementation
+    https://doi.org/10.1016/0020-0190(88)90066-X. This new implementation
     achieves the same approximation ratio as the algorithm used previously,
     so there should be no change in functionality.
