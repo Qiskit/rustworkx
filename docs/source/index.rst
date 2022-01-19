@@ -48,7 +48,7 @@ Contents:
    Visualization <visualization>
    Release Notes <release_notes>
    Contributing Guide <CONTRIBUTING>
-   retworkx for networkx users <networkx>
+   retworkx for NetworkX users <networkx>
 
 .. Hiding - Indices and tables
    :ref:`genindex`
