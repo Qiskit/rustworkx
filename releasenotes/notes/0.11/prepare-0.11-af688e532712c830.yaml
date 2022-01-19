@@ -32,6 +32,13 @@ features:
     This new crate only exposes a rust interface that is general for any
     petgraph graph and can be used by any downstream rust project that wants
     the extra functionality that retworkx exposes, but without needing Python.
+
+    It's also worth noting as this is the first release of ``retworkx-core``
+    there may be breaking api changes in a subsequent release. While we will
+    attempt to follow the standard deprecation and stability policy since
+    we're not necessarily fully committed to the current API and without having
+    a user outside of retworkx there may be gaps or issues which requires a
+    breaking change.
   - |
     A new kwarg, ``keep_attributes``, has been added to the NetworkX graph
     converter function :func:`~retworkx.networkx_converter`. When this argument
