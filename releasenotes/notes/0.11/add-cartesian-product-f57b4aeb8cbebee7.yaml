@@ -2,7 +2,7 @@
 features:
   - |
     Added a new function, :func:`~retworkx.cartesian_product` (and its per
-    type variants func:`~retworkx.digraph_cartesian_product` and
+    type variants :func:`~retworkx.digraph_cartesian_product` and
     :func:`~retworkx.graph_cartesian_product`), which calculates the Cartesian
     product of two graphs. For example:
     
