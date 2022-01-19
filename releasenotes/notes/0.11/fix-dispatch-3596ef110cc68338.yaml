@@ -1,8 +1,11 @@
 ---
 fixes:
   - |
-    Updates :func:`~retworkx.dfs_edges` to set `source` argument to `None`
-    by default, as already stated in the documentation.
+    Fixed the :func:`~retworkx.dfs_edges` function to have the ``source``
+    argument default to ``None`` as was documented. Previously, the ``source``
+    argument was incorrectly required and had no default value.
+    Fixed `#515 <https://github.com/Qiskit/retworkx/issues/515>`__
   - |
-    Fixes an oversight in :func:`~retworkx.union` where user-defined values
-    of `merge_nodes` and `merge_edges` arguments were being ingored.
+    Fixed an oversight in the :func:`~retworkx.union` function where
+    user-defined values for the ``merge_nodes`` and ``merge_edges`` arguments
+    were being ingored.
