@@ -392,7 +392,7 @@ graph (by default :func:`~retworkx.spring_layout` is used). For example:
     subax1 = plt.subplot(121)
     mpl_draw(G, with_labels=True, ax=subax1)
     subax2 = plt.subplot(122)
-    layout = rx.shell_layout(G, nlist=[range(5, 10), range(5)])
+    layout = rx.shell_layout(G, nlist=[[0, 1, 2, 3, 4], [6, 7, 8, 9, 5]])
     mpl_draw(G, pos=layout, with_labels=True, ax=subax2)
 
 The second function is :func:`~retworkx.visualization.graphviz_draw`, which
