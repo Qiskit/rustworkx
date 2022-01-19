@@ -1,12 +1,12 @@
 ---
 prelude: |
-  This release includes many new features and bug fixes. The highlights of this
-  release are more methods to improve working with edges in both the
-  :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph` classes,
+  This release includes many new features and bug fixes. Highlights include
+  additional methods to improve working with edges in both 
+  :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`,
   several new graph generators, and a new set of interactive traversal
   functions: :func:`~retworkx.bfs_search`, :func:`~retworkx.dfs_search`,
   :func:`~retworkx.dijkstra_search`, and :class:`~retworkx.TopologicalSorter`,
-  which enable iteratively interacting with the graph during different types
+  which enable iterative interaction with the graph during different types
   of traversal.
 
   This release also introduces a new separate Rust crate
@@ -17,13 +17,13 @@ prelude: |
   and can work with any petgraph graph, not just the :class:`~retworkx.PyGraph`
   amd :class:`~retworkx.PyDiGraph`.
 
-  The 0.11.0 release fully supports Python 3.10 and precompiled binaries
+  The 0.11.0 release fully supports Python 3.10. Precompiled binaries
   for Python 3.10 are published on PyPI (previous releases worked with 3.10 but
   required compiling from source to install). This is also the last release to
-  support Python 3.6, starting in retworkx 0.12.0 Python >=3.7 will be required
-  to run retworkx. Additionally, for users compiling retworkx from source this
-  will be the last release with a minimum supported Rust version (MSRV) of 1.41,
-  in retworkx 0.12.0 the MSRV will be increased to 1.48.
+  support Python 3.6. Starting in retworkx 0.12.0, Python >=3.7 will be required
+  to run retworkx. Additionally, for users compiling retworkx from source, this
+  will be the last release with a minimum supported Rust version (MSRV) of 1.41.
+  In retworkx 0.12.0, the MSRV will be increased to 1.48.
 
 features:
   - |
@@ -34,7 +34,7 @@ features:
     retworkx needs. This new crate only exposes a Rust interface that is
     general for any petgraph graph and can be used by any downstream Rust
     project that wants the extra functionality that retworkx exposes, but
-    without needing Python.
+    without Python.
 
     It's also worth noting as this is the first release of ``retworkx-core``
     there may be breaking API changes in a subsequent release. While we will
