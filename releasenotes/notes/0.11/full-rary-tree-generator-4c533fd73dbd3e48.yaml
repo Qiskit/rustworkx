@@ -2,7 +2,7 @@
 features:
   - |
     Added a new function, :func:`~retworkx.generators.full_rary_tree` that adds
-    support for generating a full r-ary tree of n nodes. For example:
+    support for generating a full :math:`r`\ -ary tree of :math:`n` nodes. For example:
 
     .. jupyter-execute::
 

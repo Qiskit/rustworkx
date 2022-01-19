@@ -29,8 +29,8 @@ features:
     its index.
   - |
     Added two new methods, :meth:`~retworkx.PyGraph.out_edges` and
-    :meth:`~retworkx.PyGraph.in_edges`. These methods are the dual of the
-    :class:`~retworkx.PyDiGraph` methods, :meth:`~retworkx.PyDiGraph.out_edges`
-    and :meth:`~retworkx.PyDiGraph.in_edges` and return a
+    :meth:`~retworkx.PyGraph.in_edges` to the :class:`~retworkx.PyGraph` class.
+    These methods are the duals of the :class:`~retworkx.PyDiGraph` methods,
+    :meth:`~retworkx.PyDiGraph.out_edges` and
+    :meth:`~retworkx.PyDiGraph.in_edges` and return a
     :class:`~retworkx.WeightedEdgeList` of the incident edges for a node.
-
