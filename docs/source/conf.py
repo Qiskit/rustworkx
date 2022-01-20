@@ -38,6 +38,7 @@ extensions = ['sphinx.ext.autodoc',
               'jupyter_sphinx',
               'reno.sphinxext',
               'sphinx.ext.intersphinx',
+              'sphinx_reredirects',
              ]
 html_static_path = ['_static']
 templates_path = ['_templates']
@@ -119,6 +120,11 @@ texinfo_documents = [
    u'retworkx Contributors', 'retworkx', '',
    'Miscellaneous'),
 ]
+
+redirects = {}
+with open("sources.txt", "r") as fd:
+    for source_str in fd:
+        redirects[f"stubs/{source_str}"] = f"../apiref/{source_str}"
 
 # Version extensions
 

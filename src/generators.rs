@@ -867,7 +867,6 @@ const MAX_ORDER: u32 = 29;
 ///     for order on the platform your running on. If it's a 64bit platform
 ///     the max value is 59 and on 32bit systems the max value is 29. Any order
 ///     value above these will raise a ``OverflowError``.
-///     depends
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
