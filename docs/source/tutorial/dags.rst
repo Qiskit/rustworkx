@@ -71,8 +71,10 @@ overhead by using :meth:`.PyDiGraph.add_parent` and
 :meth:`.PyDiGraph.add_child` as both add a new node and edge simultaneously and
 neither can introduce a cycle.
 
-.. [#] A trail is a sequence of nodes and edges on the graph where each edge
-   is distinct in the walk.
+.. note::
+
+    .. [#] A trail is a sequence of nodes and edges on the graph where each edge
+       is distinct in the walk.
 
 Applications of DAGs
 ====================
