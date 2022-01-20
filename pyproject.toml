@@ -19,4 +19,4 @@ before-all = "yum install -y wget && {package}/tools/install_rust.sh"
 environment = 'PATH="$PATH:$HOME/.cargo/bin"'
 
 [tool.cibuildwheel.macos]
-environment = MACOSX_DEPLOYMENT_TARGET=10.9
+environment = "MACOSX_DEPLOYMENT_TARGET=10.9"
