@@ -499,7 +499,7 @@ pub fn graph_complement(
     py: Python,
     graph: &graph::PyGraph,
 ) -> PyResult<graph::PyGraph> {
-    let mut complement_graph = graph.clone(); // keep same node indexes
+    let mut complement_graph = graph.clone(); // keep same node indices
     complement_graph.graph.clear_edges();
 
     for node_a in graph.graph.node_indices() {
@@ -542,7 +542,7 @@ pub fn digraph_complement(
     py: Python,
     graph: &digraph::PyDiGraph,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut complement_graph = graph.clone(); // keep same node indexes
+    let mut complement_graph = graph.clone(); // keep same node indices
     complement_graph.graph.clear_edges();
 
     for node_a in graph.graph.node_indices() {
