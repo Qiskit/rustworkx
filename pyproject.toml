@@ -5,3 +5,18 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 80
 target-version = ['py36', 'py37', 'py38', 'py39']
+
+[tool.cibuildwheel]
+manylinux-x86_64-image = "quay.io/pypa/manylinux2010_x86_64:latest"
+manylinux-i686-image = "quay.io/pypa/manylinux2010_i686:latest"
+skip = "pp* *win32 *musllinux*"
+test-command = "python -m unittest discover {project}/tests"
+test-requires = "networkx testtools fixtures"
+before-build = "pip install -U setuptools-rust"
+
+[tool.cibuildwheel.linux]
+before-all = "yum install -y wget && {package}/tools/install_rust.sh"
+environment = PATH="$PATH:$HOME/.cargo/bin"
+
+[tool.cibuildwheel.macos]
+environment = MACOSX_DEPLOYMENT_TARGET=10.9
