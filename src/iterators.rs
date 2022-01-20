@@ -524,7 +524,7 @@ custom_vec_iter_impl!(
     bfs_successors,
     (PyObject, Vec<PyObject>),
     "A custom class for the return from :func:`retworkx.bfs_successors`
-    
+
     The class can is a read-only sequence of tuples of the form::
 
         [(node, [successor_a, successor_b])]
@@ -592,7 +592,7 @@ custom_vec_iter_impl!(
         import retworkx
 
         graph = retworkx.generators.directed_path_graph(5)
-        nodes = retworkx.node_indexes(0)
+        nodes = retworkx.node_indices(0)
         # Index based access
         third_element = nodes[2]
         # Use as iterator
@@ -700,7 +700,7 @@ custom_vec_iter_impl!(
     "A custom class for the return of edge indices
 
     The class is a read only sequence of integer edge indices.
-    
+
     This class is a container class for the results of functions that
     return a list of edge indices. It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
@@ -987,7 +987,7 @@ custom_hash_map_iter_impl!(
     This class is equivalent to having a read only dict of the form::
 
         {1: (0, 1, 'weight'), 3: (2, 3, 1.2)}
-    
+
     It is used to efficiently represent an edge index map for a retworkx
     graph. It behaves as a drop in replacement for a readonly ``dict``.
     "
@@ -1268,9 +1268,9 @@ custom_hash_map_iter_impl!(
     order.
 
     For example::
-    
+
         import retworkx
-    
+
         graph = retworkx.generators.directed_path_graph(5)
         edges = retworkx.num_shortest_paths_unweighted(0)
         # Target node access
