@@ -333,7 +333,7 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
 
     label_fn = kwds.pop("labels", None)
     if label_fn:
-        kwds["labels"] = {x: label_fn(graph[x]) for x in graph.node_indexes()}
+        kwds["labels"] = {x: label_fn(graph[x]) for x in graph.node_indices()}
     edge_label_fn = kwds.pop("edge_labels", None)
     if edge_label_fn:
         kwds["edge_labels"] = {
@@ -450,7 +450,7 @@ def draw_nodes(
         ax = plt.gca()
 
     if node_list is None:
-        node_list = graph.node_indexes()
+        node_list = graph.node_indices()
 
     # empty node_list, no drawing
     if len(node_list) == 0:
@@ -578,7 +578,7 @@ def draw_edges(
         Size of nodes. Though the nodes are not drawn with this function, the
         node size is used in determining edge positioning.
 
-    node_list : list, optional (default=graph.node_indexes())
+    node_list : list, optional (default=graph.node_indices())
        This provides the node order for the `node_size` array (if it is an
        array).
 
@@ -639,7 +639,7 @@ def draw_edges(
         return []
 
     if node_list is None:
-        node_list = list(graph.node_indexes())
+        node_list = list(graph.node_indices())
 
     # FancyArrowPatch handles color=None different from LineCollection
     if edge_color is None:
@@ -882,7 +882,7 @@ def draw_labels(
         ax = plt.gca()
 
     if labels is None:
-        labels = {n: n for n in graph.node_indexes()}
+        labels = {n: n for n in graph.node_indices()}
 
     text_items = {}  # there is no text collection so we'll fake one
     for n, label in labels.items():

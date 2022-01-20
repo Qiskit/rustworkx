@@ -267,13 +267,13 @@ pub fn layers(
             let children = dag
                 .graph
                 .neighbors_directed(*node, petgraph::Direction::Outgoing);
-            let mut used_indexes: HashSet<NodeIndex> = HashSet::new();
+            let mut used_indices: HashSet<NodeIndex> = HashSet::new();
             for succ in children {
                 // Skip duplicate successors
-                if used_indexes.contains(&succ) {
+                if used_indices.contains(&succ) {
                     continue;
                 }
-                used_indexes.insert(succ);
+                used_indices.insert(succ);
                 let mut multiplicity: usize = 0;
                 let raw_edges = dag
                     .graph
@@ -403,7 +403,7 @@ fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
-/// Return the topological sort of node indexes from the provided graph
+/// Return the topological sort of node indices from the provided graph
 ///
 /// :param PyDiGraph graph: The DAG to get the topological sort on
 ///

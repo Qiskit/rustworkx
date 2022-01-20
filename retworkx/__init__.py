@@ -42,9 +42,9 @@ class PyDAG(PyDiGraph):
         graph.add_nodes_from(list(range(5)))
         graph.add_nodes_from(list(range(2)))
         graph.remove_node(2)
-        print("After deletion:", graph.node_indexes())
+        print("After deletion:", graph.node_indices())
         res_manual = graph.add_parent(6, None, None)
-        print("After adding a new node:", graph.node_indexes())
+        print("After adding a new node:", graph.node_indices())
 
     Additionally, each node and edge contains an arbitrary Python object as a
     weight/data payload.
@@ -1358,7 +1358,7 @@ def bipartite_layout(
 
     :param graph: The graph to generate the layout for. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :param set first_nodes: The set of node indexes on the left (or top if
+    :param set first_nodes: The set of node indices on the left (or top if
         horitontal is true)
     :param bool horizontal: An optional bool specifying the orientation of the
         layout
@@ -1445,7 +1445,7 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
 
     :param graph: The graph to generate the layout for. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :param list nlist: The list of lists of indexes which represents each shell
+    :param list nlist: The list of lists of indices which represents each shell
     :param float rotate: Angle (in radians) by which to rotate the starting
         position of each shell relative to the starting position of the
         previous shell
