@@ -16,7 +16,7 @@ before-build = "pip install -U setuptools-rust"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"
-environment = PATH="$PATH:$HOME/.cargo/bin"
+environment = 'PATH="$PATH:$HOME/.cargo/bin"'
 
 [tool.cibuildwheel.macos]
 environment = MACOSX_DEPLOYMENT_TARGET=10.9
