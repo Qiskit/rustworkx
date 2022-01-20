@@ -100,7 +100,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: cp39-* cp310-* pp* *win32
+          CIBW_SKIP: cp39-* cp310-* pp* *win32 *musllinux*
           CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v2
         with:
@@ -130,7 +130,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: cp36-* cp37-* cp38-* pp* *win32
+          CIBW_SKIP: cp36-* cp37-* cp38-* pp* *win32 *musllinux*
           CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v2
         with:
@@ -160,7 +160,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: cp39-* cp310-* pp* *win32
+          CIBW_SKIP: cp39-* cp310-* pp* *win32 *musllinux* 
           CIBW_ARCHS_LINUX: s390x
       - uses: actions/upload-artifact@v2
         with:
@@ -190,7 +190,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: cp36-* cp37-* cp38-* pp* *win32
+          CIBW_SKIP: cp36-* cp37-* cp38-* pp* *win32 *musllinux*
           CIBW_ARCHS_LINUX: s390x
       - uses: actions/upload-artifact@v2
         with:
