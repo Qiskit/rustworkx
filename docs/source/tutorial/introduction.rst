@@ -1,4 +1,4 @@
-.. This document was adapted from and heavily based on the similar
+.. This document was adapted from and originally modeled on the similar
    introduction tutorial in  NetworkX's documentation which can be found here:
    https://networkx.org/documentation/networkx-2.6.2/tutorial.html
 
