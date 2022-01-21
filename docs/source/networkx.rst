@@ -51,7 +51,7 @@ from the above retworkx example::
     assert 'my_node_a' == graph[node_a]
     assert 'my_node_b' == graph[node_b]
 
-The use of integer indexes for everything is normally the biggest difference that
+The use of integer indices for everything is normally the biggest difference that
 existing networkx users have to adapt to when migrating to retworkx.
 
 Similarly when there are algorithm functions that operate on a node or edge
