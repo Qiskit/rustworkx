@@ -61,6 +61,81 @@ error about `setuptools-rust` not being found you should upgrade pip with
 `pip install -U pip` or manually install `setuptools-rust` with
 `pip install setuptools-rust` and try again.
 
+### Platform Support
+
+Retworkx strives to support as many platforms as possible, but due to
+limitations in available testing resources and platform availability, not all
+platforms can be supported. Platform support for retworkx is broken into 4
+tiers with different levels of support for each tier. For platforms outside
+these, retworkx is probably still installable, but it’s not tested and you will
+need a Rust compiler and have to build retworkx (and likely Numpy too) from
+source.
+
+Additionally, retworkx only supports CPython. Running with other Python
+interpreters isn’t currently supported.
+
+#### Tier 1
+
+Tier 1 supported platforms are fully tested upstream as part of the development
+processes to ensure any proposed change will function correctly. Pre-compiled
+binaries are built, tested, and published to PyPI as part of the release
+process. These platforms are expected to be installable with just a functioning
+Python environment.
+
+Tier 1 platforms are currently:
+
+- Linux x86_64 (distributions compatible with the manylinux 2010 packaging
+  specification)
+- macOS x86_64 (10.9 or newer)
+- Windows 64 bit
+
+
+#### Tier 2
+
+Tier 2 platforms are not tested upstream as part of development process.
+However, pre-compiled binaries are built, tested, and published to PyPI as part
+of the release process and these packages can be expected to be installed with
+just a functioning Python environment.
+
+Tier 2 platforms are currently:
+
+- Linux i686 (distributions compatible with the manylinux 2010 packaging
+  specification) for Python < 3.10
+- Windows 32 bit for Python < 3.10
+- Linux aarch64 (distributions compatible with the manylinux 2014 packaging
+  specification)
+
+#### Tier 3
+
+Tier 3 platforms are not tested upstream as part of the development process.
+Pre-compiled binaries are built, tested and published to PyPI as
+part of the release process. However, they may not installable with just a
+functioning Python environment and you may be required to build Numpy from
+source, which requires a C/C++ compiler, as part of the installation process.
+
+Tier 3 platforms are currently:
+
+- Linux i686 (distributions compatible with the manylinux 2010 packaging
+  specification) for Python >= 3.10
+- Windows 32bit for Python >= 3.10
+- Linux ppc64le (distributions compatible with the manylinux 2014 packaging
+  specification)
+- Linux s390x (distributions compatible with the manylinux 2014 packaging
+  specification)
+
+#### Tier 4
+
+Tier 4 platforms are not tested upstream as part of the development process.
+Pre-compiled binaries are built and published to PyPI as part of the release
+process, with no testing at all. They may not be installable with just a
+functioning Python environment and may require a C/C++ compiler or additional
+programs to build dependencies from source as part of the installation process.
+Support for these platforms are best effort only.
+
+Tier 4 platforms are currently:
+
+- macOS arm64 (10.15 or newer)
+
 ### Optional dependencies
 
 If you're planning to use the `retworkx.visualization` module you will need to
