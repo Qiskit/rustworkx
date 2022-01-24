@@ -574,6 +574,7 @@ dependencies = [
  "indexmap",
  "petgraph",
  "rayon",
+ "rayon-cond",
 ]
 
 [[package]]
