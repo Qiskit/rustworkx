@@ -15,7 +15,8 @@ use hashbrown::HashSet;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
 
-use rayon::prelude::*;
+// use rayon::prelude::*; Apparently not used, probably because the following is used instead
+use rayon_cond::CondIterator;
 
 use crate::StablePyGraph;
 
@@ -66,15 +67,7 @@ pub fn compute_distance_sum<Ty: EdgeType + Sync>(
         (count, conn_pairs - 1)
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    if n < parallel_threshold {
-        node_indices
-            .iter()
-            .map(|index| bfs_traversal(*index))
-            .fold((0, 0), |a, b| (a.0 + b.0, a.1 + b.1))
-    } else {
-        node_indices
-            .par_iter()
-            .map(|index| bfs_traversal(*index))
-            .reduce(|| (0, 0), |a, b| (a.0 + b.0, a.1 + b.1))
-    }
+    CondIterator::new(node_indices, n >= parallel_threshold)
+        .map(bfs_traversal)
+        .reduce(|| (0, 0), |a, b| (a.0 + b.0, a.1 + b.1))
 }

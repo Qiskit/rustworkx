@@ -17,7 +17,9 @@ use hashbrown::{HashMap, HashSet};
 use ndarray::prelude::*;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
-use rayon::prelude::*;
+
+// use rayon::prelude::*; Apparently not used, probably because the following is used instead
+use rayon_cond::CondIterator;
 
 use crate::NodesRemoved;
 use crate::StablePyGraph;
@@ -101,18 +103,8 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
             level += 1
         }
     };
-    if n < parallel_threshold {
-        matrix
-            .axis_iter_mut(Axis(0))
-            .enumerate()
-            .for_each(|(index, row)| bfs_traversal(index, row));
-    } else {
-        // Parallelize by row and iterate from each row index in BFS order
-        matrix
-            .axis_iter_mut(Axis(0))
-            .into_par_iter()
-            .enumerate()
-            .for_each(|(index, row)| bfs_traversal(index, row));
-    }
+    CondIterator::new(matrix.axis_iter_mut(Axis(0)), n >= parallel_threshold)
+        .enumerate()
+        .for_each(|(index, row)| bfs_traversal(index, row));
     matrix
 }
