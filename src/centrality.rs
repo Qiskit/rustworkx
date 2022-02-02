@@ -57,26 +57,16 @@ use retworkx_core::centrality;
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      betweenness score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction(
-    normalized = "true",
-    endpoints = "false",
-    parallel_threshold = "50"
-)]
-#[pyo3(
-    text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)"
-)]
+#[pyfunction(normalized = "true", endpoints = "false", parallel_threshold = "50")]
+#[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)")]
 pub fn graph_betweenness_centrality(
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
     parallel_threshold: usize,
 ) -> CentralityMapping {
-    let betweenness = centrality::betweenness_centrality(
-        &graph.graph,
-        endpoints,
-        normalized,
-        parallel_threshold,
-    );
+    let betweenness =
+        centrality::betweenness_centrality(&graph.graph, endpoints, normalized, parallel_threshold);
     CentralityMapping {
         centralities: betweenness
             .into_iter()
@@ -124,26 +114,16 @@ pub fn graph_betweenness_centrality(
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      betweenness score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction(
-    normalized = "true",
-    endpoints = "false",
-    parallel_threshold = "50"
-)]
-#[pyo3(
-    text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)"
-)]
+#[pyfunction(normalized = "true", endpoints = "false", parallel_threshold = "50")]
+#[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)")]
 pub fn digraph_betweenness_centrality(
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
     parallel_threshold: usize,
 ) -> CentralityMapping {
-    let betweenness = centrality::betweenness_centrality(
-        &graph.graph,
-        endpoints,
-        normalized,
-        parallel_threshold,
-    );
+    let betweenness =
+        centrality::betweenness_centrality(&graph.graph, endpoints, normalized, parallel_threshold);
     CentralityMapping {
         centralities: betweenness
             .into_iter()

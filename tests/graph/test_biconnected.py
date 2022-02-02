@@ -75,9 +75,7 @@ class TestBiconnected(unittest.TestCase):
             (3, 0): 3,
             (4, 1): 3,
         }
-        self.assertEqual(
-            retworkx.biconnected_components(self.graph), components
-        )
+        self.assertEqual(retworkx.biconnected_components(self.graph), components)
         self.assertEqual(retworkx.articulation_points(self.graph), {4, 5})
 
     def test_barbell_graph(self):
@@ -90,12 +88,8 @@ class TestBiconnected(unittest.TestCase):
             (4, 3): 0,
             (2, 3): 1,
         }
-        self.assertEqual(
-            retworkx.biconnected_components(self.barbell_graph), components
-        )
-        self.assertEqual(
-            retworkx.articulation_points(self.barbell_graph), {2, 3}
-        )
+        self.assertEqual(retworkx.biconnected_components(self.barbell_graph), components)
+        self.assertEqual(retworkx.articulation_points(self.barbell_graph), {2, 3})
 
     def test_disconnected_graph(self):
         graph = retworkx.union(self.barbell_graph, self.barbell_graph)

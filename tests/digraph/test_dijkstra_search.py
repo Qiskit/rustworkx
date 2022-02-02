@@ -67,9 +67,7 @@ class TestDijkstraSearch(unittest.TestCase):
 
         vis = DijkstraTreeEdgesRecorder()
         retworkx.digraph_dijkstra_search(self.graph, None, float, vis)
-        self.assertEqual(
-            vis.edges, [(0, 1), (0, 2), (2, 6), (2, 5), (5, 3), (4, 7)]
-        )
+        self.assertEqual(vis.edges, [(0, 1), (0, 2), (2, 6), (2, 5), (5, 3), (4, 7)])
 
     def test_digraph_dijkstra_goal_search_with_stop_search_exception(self):
         class GoalSearch(retworkx.visit.DijkstraVisitor):

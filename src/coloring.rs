@@ -35,14 +35,10 @@ use rayon::prelude::*;
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn graph_greedy_color(
-    py: Python,
-    graph: &graph::PyGraph,
-) -> PyResult<PyObject> {
+fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let mut colors: DictMap<usize, usize> = DictMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let mut sort_map: HashMap<NodeIndex, usize> =
-        HashMap::with_capacity(graph.node_count());
+    let mut sort_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(graph.node_count());
     for k in node_vec.iter() {
         sort_map.insert(*k, graph.graph.edges(*k).count());
     }
