@@ -61,9 +61,7 @@ class TestFullRaryTreeTreeGraph(unittest.TestCase):
         }
         for n in range(4):
             with self.subTest(n=n):
-                graph = retworkx.generators.full_rary_tree(
-                    b_factors[n], num_nodes[n]
-                )
+                graph = retworkx.generators.full_rary_tree(b_factors[n], num_nodes[n])
                 self.assertEqual(list(graph.edge_list()), expected_edges[n])
 
     def test_full_rary_tree_graph_weights(self):

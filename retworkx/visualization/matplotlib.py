@@ -214,9 +214,7 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=False, **kwds):
         else:
             ax = cf.gca()
 
-    draw_graph(
-        graph, pos=pos, ax=ax, arrows=arrows, with_labels=with_labels, **kwds
-    )
+    draw_graph(graph, pos=pos, ax=ax, arrows=arrows, with_labels=with_labels, **kwds)
     ax.set_axis_off()
     plt.draw_if_interactive()
     if not plt.isinteractive() or ax is None:
@@ -320,12 +318,7 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
         "verticalalignment",
     }
 
-    valid_kwds = (
-        valid_node_kwds
-        | valid_edge_kwds
-        | valid_label_kwds
-        | valid_edge_label_kwds
-    )
+    valid_kwds = valid_node_kwds | valid_edge_kwds | valid_label_kwds | valid_edge_label_kwds
 
     if any([k not in valid_kwds for k in kwds]):
         invalid_args = ", ".join([k for k in kwds if k not in valid_kwds])
@@ -337,8 +330,7 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
     edge_label_fn = kwds.pop("edge_labels", None)
     if edge_label_fn:
         kwds["edge_labels"] = {
-            (x[0], x[1]): edge_label_fn(x[2])
-            for x in graph.weighted_edge_list()
+            (x[0], x[1]): edge_label_fn(x[2]) for x in graph.weighted_edge_list()
         }
 
     node_kwds = {k: v for k, v in kwds.items() if k in valid_node_kwds}
@@ -346,9 +338,7 @@ def draw_graph(graph, pos=None, arrows=True, with_labels=False, **kwds):
     if isinstance(edge_kwds.get("alpha"), list):
         del edge_kwds["alpha"]
     label_kwds = {k: v for k, v in kwds.items() if k in valid_label_kwds}
-    edge_label_kwds = {
-        k: v for k, v in kwds.items() if k in valid_edge_label_kwds
-    }
+    edge_label_kwds = {k: v for k, v in kwds.items() if k in valid_edge_label_kwds}
 
     if pos is None:
         pos = retworkx.spring_layout(graph)  # default to spring layout
@@ -720,9 +710,7 @@ def draw_edges(
                 data_loc + np.asarray([0, v_shift]),
             ]
 
-            ret = mpl.path.Path(
-                ax.transData.transform(path), [1, 4, 4, 4, 4, 4, 4]
-            )
+            ret = mpl.path.Path(ax.transData.transform(path), [1, 4, 4, 4, 4, 4, 4])
         # if not, fall back to the user specified behavior
         else:
             ret = base_connectionstyle(posA, posB, *args, **kwargs)
@@ -743,9 +731,7 @@ def draw_edges(
             shrink_source = to_marker_edge(source_node_size, node_shape)
             shrink_target = to_marker_edge(target_node_size, node_shape)
         else:
-            shrink_source = shrink_target = to_marker_edge(
-                node_size, node_shape
-            )
+            shrink_source = shrink_target = to_marker_edge(node_size, node_shape)
 
         if shrink_source < min_source_margin:
             shrink_source = min_source_margin
@@ -1026,16 +1012,12 @@ def draw_edge_labels(
                 angle += 180
             # transform data coordinate angle to screen coordinate angle
             xy = np.array((x, y))
-            trans_angle = ax.transData.transform_angles(
-                np.array((angle,)), xy.reshape((1, 2))
-            )[0]
+            trans_angle = ax.transData.transform_angles(np.array((angle,)), xy.reshape((1, 2)))[0]
         else:
             trans_angle = 0.0
         # use default box of white with white border
         if bbox is None:
-            bbox = dict(
-                boxstyle="round", ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)
-            )
+            bbox = dict(boxstyle="round", ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))
         if not isinstance(label, str):
             label = str(label)  # this makes "1" and 1 labeled the same
 
@@ -1131,9 +1113,7 @@ def apply_alpha(colors, alpha, elem_list, cmap=None, vmin=None, vmax=None):
         try:
             rgba_colors = np.array([mpl.colors.colorConverter.to_rgba(colors)])
         except ValueError:
-            rgba_colors = np.array(
-                [mpl.colors.colorConverter.to_rgba(color) for color in colors]
-            )
+            rgba_colors = np.array([mpl.colors.colorConverter.to_rgba(color) for color in colors])
     # Set the final column of the rgba_colors to have the relevant alpha values
     try:
         # If alpha is longer than the number of colors, resize to the number of
