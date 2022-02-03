@@ -65,9 +65,7 @@ class TestUnweightedAvgShortestPath(unittest.TestCase):
             self.assertTrue(math.isinf(res), "Output is not infinity")
 
         with self.subTest(disconnected=True):
-            res = retworkx.unweighted_average_shortest_path_length(
-                graph, disconnected=True
-            )
+            res = retworkx.unweighted_average_shortest_path_length(graph, disconnected=True)
             self.assertTrue(math.isnan(res), "Output is not NaN")
 
     def test_partially_connected_graph(self):
@@ -80,9 +78,7 @@ class TestUnweightedAvgShortestPath(unittest.TestCase):
         with self.subTest(disconnected=True):
             s = 8192
             den = 992  # n*(n-1), n=32 (only connected pairs considered)
-            res = retworkx.unweighted_average_shortest_path_length(
-                graph, disconnected=True
-            )
+            res = retworkx.unweighted_average_shortest_path_length(graph, disconnected=True)
             self.assertAlmostEqual(s / den, res, delta=1e-7)
 
     def test_connected_cycle_graph(self):

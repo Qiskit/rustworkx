@@ -75,9 +75,7 @@ class TestUnion(unittest.TestCase):
         nodes = second.add_nodes_from([0, 1])
         second.add_edges_from([(nodes[0], nodes[1], "b")])
 
-        final = retworkx.digraph_union(
-            first, second, merge_nodes=True, merge_edges=True
-        )
+        final = retworkx.digraph_union(first, second, merge_nodes=True, merge_edges=True)
         self.assertEqual(final.weighted_edge_list(), [(0, 1, "a"), (0, 1, "b")])
 
     def test_union_node_hole(self):
@@ -91,9 +89,7 @@ class TestUnion(unittest.TestCase):
         second.add_edges_from([(nodes[0], nodes[1], "a")])
         second.remove_node(dummy)
 
-        final = retworkx.digraph_union(
-            first, second, merge_nodes=True, merge_edges=True
-        )
+        final = retworkx.digraph_union(first, second, merge_nodes=True, merge_edges=True)
         self.assertEqual(final.weighted_edge_list(), [(0, 1, "a")])
 
     def test_union_edge_between_merged_and_unmerged_nodes(self):
@@ -105,7 +101,5 @@ class TestUnion(unittest.TestCase):
         nodes = second.add_nodes_from([0, 2])
         second.add_edges_from([(nodes[0], nodes[1], "b")])
 
-        final = retworkx.digraph_union(
-            first, second, merge_nodes=True, merge_edges=True
-        )
+        final = retworkx.digraph_union(first, second, merge_nodes=True, merge_edges=True)
         self.assertEqual(final.weighted_edge_list(), [(0, 1, "a"), (0, 2, "b")])

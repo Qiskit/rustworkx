@@ -71,10 +71,7 @@ use crate::iterators::EdgeList;
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-fn digraph_dfs_edges(
-    graph: &digraph::PyDiGraph,
-    source: Option<usize>,
-) -> EdgeList {
+fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
@@ -140,23 +137,17 @@ fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
 /// :rtype: BFSSuccessors
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-fn bfs_successors(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-    node: usize,
-) -> iterators::BFSSuccessors {
+fn bfs_successors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(&graph.graph, index);
-    let mut out_list: Vec<(PyObject, Vec<PyObject>)> =
-        Vec::with_capacity(graph.node_count());
+    let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
     while let Some(nx) = bfs.next(&graph.graph) {
         let children = graph
             .graph
             .neighbors_directed(nx, petgraph::Direction::Outgoing);
         let mut succesors: Vec<PyObject> = Vec::new();
         for succ in children {
-            succesors
-                .push(graph.graph.node_weight(succ).unwrap().clone_ref(py));
+            succesors.push(graph.graph.node_weight(succ).unwrap().clone_ref(py));
         }
         if !succesors.is_empty() {
             out_list.push((

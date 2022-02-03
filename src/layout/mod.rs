@@ -355,9 +355,7 @@ pub fn digraph_circular_layout(
 /// :returns: The shell layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(
-    text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)"
-)]
+#[pyo3(text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)")]
 pub fn graph_shell_layout(
     graph: &graph::PyGraph,
     nlist: Option<Vec<Vec<usize>>>,
@@ -381,9 +379,7 @@ pub fn graph_shell_layout(
 /// :returns: The shell layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(
-    text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)"
-)]
+#[pyo3(text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)")]
 pub fn digraph_shell_layout(
     graph: &digraph::PyDiGraph,
     nlist: Option<Vec<Vec<usize>>>,

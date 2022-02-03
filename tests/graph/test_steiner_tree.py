@@ -114,9 +114,7 @@ class TestSteinerTree(unittest.TestCase):
         self.assertEqual([], closure.weighted_edge_list())
 
     def test_steiner_graph(self):
-        steiner_tree = retworkx.steiner_tree(
-            self.graph, [1, 2, 3, 4, 5], weight_fn=float
-        )
+        steiner_tree = retworkx.steiner_tree(self.graph, [1, 2, 3, 4, 5], weight_fn=float)
         expected_steiner_tree = [
             (1, 2, 10),
             (2, 3, 10),

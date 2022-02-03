@@ -95,9 +95,7 @@ class TestAstarDigraph(unittest.TestCase):
         g = retworkx.PyGraph()
         g.add_node(0)
         with self.assertRaises(TypeError):
-            retworkx.digraph_astar_shortest_path(
-                g, 0, lambda x: x, lambda y: 1, lambda z: 0
-            )
+            retworkx.digraph_astar_shortest_path(g, 0, lambda x: x, lambda y: 1, lambda z: 0)
 
     def test_astar_with_invalid_weights(self):
         g = retworkx.PyDAG()

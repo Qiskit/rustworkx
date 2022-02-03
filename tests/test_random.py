@@ -186,9 +186,7 @@ class TestGeometricRandomGraph(unittest.TestCase):
 
     def test_random_geometric_pos_inf_norm(self):
         pos = [[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]
-        graph = retworkx.random_geometric_graph(
-            3, 0.11, pos=pos, p=float("inf")
-        )
+        graph = retworkx.random_geometric_graph(3, 0.11, pos=pos, p=float("inf"))
         self.assertEqual(set(graph.edge_list()), {(0, 1), (1, 2)})
 
     def test_random_geometric_num_nodes_invalid(self):
@@ -207,9 +205,7 @@ class TestRandomSubGraphIsomorphism(unittest.TestCase):
         subgraph = graph.subgraph(nodes)
 
         self.assertTrue(
-            retworkx.is_subgraph_isomorphic(
-                graph, subgraph, id_order=True, induced=True
-            )
+            retworkx.is_subgraph_isomorphic(graph, subgraph, id_order=True, induced=True)
         )
 
     def test_random_gnm_non_induced_subgraph_isomorphism(self):
@@ -222,7 +218,5 @@ class TestRandomSubGraphIsomorphism(unittest.TestCase):
             subgraph.remove_edge_from_index(idx)
 
         self.assertTrue(
-            retworkx.is_subgraph_isomorphic(
-                graph, subgraph, id_order=True, induced=False
-            )
+            retworkx.is_subgraph_isomorphic(graph, subgraph, id_order=True, induced=False)
         )
