@@ -477,23 +477,17 @@ macro_rules! custom_vec_iter_impl {
                         Ok(res) => Ok(!res),
                         Err(err) => Err(err),
                     },
-                    _ => Err(PyNotImplementedError::new_err(
-                        "Comparison not implemented",
-                    )),
+                    _ => Err(PyNotImplementedError::new_err("Comparison not implemented")),
                 }
             }
 
             fn __str__(&self) -> PyResult<String> {
-                Python::with_gil(|py| {
-                    Ok(format!("{}{}", stringify!($name), self.$data.str(py)?))
-                })
+                Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
             }
 
             fn __hash__(&self) -> PyResult<u64> {
                 let mut hasher = DefaultHasher::new();
-                Python::with_gil(|py| {
-                    PyHash::hash(&self.$data, py, &mut hasher)
-                })?;
+                Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
 
                 Ok(hasher.finish())
             }
@@ -507,10 +501,7 @@ macro_rules! custom_vec_iter_impl {
 
             fn __getitem__(&'p self, idx: isize) -> PyResult<$T> {
                 if idx >= self.$data.len().try_into().unwrap() {
-                    Err(PyIndexError::new_err(format!(
-                        "Invalid index, {}",
-                        idx
-                    )))
+                    Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
                 } else {
                     Ok(self.$data[idx as usize].clone())
                 }
@@ -781,11 +772,7 @@ macro_rules! py_object_protocol_impl {
     ($name:ident, $data:ident) => {
         #[pyproto]
         impl<'p> PyObjectProtocol<'p> for $name {
-            fn __richcmp__(
-                &self,
-                other: PyObject,
-                op: pyo3::basic::CompareOp,
-            ) -> PyResult<bool> {
+            fn __richcmp__(&self, other: PyObject, op: pyo3::basic::CompareOp) -> PyResult<bool> {
                 let compare = |other: PyObject| -> PyResult<bool> {
                     Python::with_gil(|py| PyEq::eq(&self.$data, &other, py))
                 };
@@ -795,23 +782,17 @@ macro_rules! py_object_protocol_impl {
                         Ok(res) => Ok(!res),
                         Err(err) => Err(err),
                     },
-                    _ => Err(PyNotImplementedError::new_err(
-                        "Comparison not implemented",
-                    )),
+                    _ => Err(PyNotImplementedError::new_err("Comparison not implemented")),
                 }
             }
 
             fn __str__(&self) -> PyResult<String> {
-                Python::with_gil(|py| {
-                    Ok(format!("{}{}", stringify!($name), self.$data.str(py)?))
-                })
+                Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
             }
 
             fn __hash__(&self) -> PyResult<u64> {
                 let mut hasher = DefaultHasher::new();
-                Python::with_gil(|py| {
-                    PyHash::hash(&self.$data, py, &mut hasher)
-                })?;
+                Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
 
                 Ok(hasher.finish())
             }
@@ -832,12 +813,9 @@ macro_rules! py_iter_protocol_impl {
             fn __iter__(slf: PyRef<Self>) -> Py<$name> {
                 slf.into()
             }
-            fn __next__(
-                mut slf: PyRefMut<Self>,
-            ) -> IterNextOutput<$T, &'static str> {
+            fn __next__(mut slf: PyRefMut<Self>) -> IterNextOutput<$T, &'static str> {
                 if slf.iter_pos < slf.$data.len() {
-                    let res =
-                        IterNextOutput::Yield(slf.$data[slf.iter_pos].clone());
+                    let res = IterNextOutput::Yield(slf.$data[slf.iter_pos].clone());
                     slf.iter_pos += 1;
                     res
                 } else {
@@ -924,9 +902,7 @@ macro_rules! custom_hash_map_iter_impl {
             fn __getitem__(&'p self, key: $K) -> PyResult<$V> {
                 match self.$data.get(&key) {
                     Some(data) => Ok(data.clone()),
-                    None => {
-                        Err(PyIndexError::new_err("No node found for index"))
-                    }
+                    None => Err(PyIndexError::new_err("No node found for index")),
                 }
             }
         }

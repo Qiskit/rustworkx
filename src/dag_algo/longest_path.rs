@@ -22,10 +22,7 @@ use petgraph::prelude::*;
 
 use num_traits::{Num, Zero};
 
-pub fn longest_path<F, T>(
-    graph: &digraph::PyDiGraph,
-    mut weight_fn: F,
-) -> PyResult<(Vec<usize>, T)>
+pub fn longest_path<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<(Vec<usize>, T)>
 where
     F: FnMut(usize, usize, &PyObject) -> PyResult<T>,
     T: Num + Zero + PartialOrd + Copy,
@@ -34,9 +31,7 @@ where
     let mut path: Vec<usize> = Vec::new();
     let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
-        Err(_err) => {
-            return Err(DAGHasCycle::new_err("Sort encountered a cycle"))
-        }
+        Err(_err) => return Err(DAGHasCycle::new_err("Sort encountered a cycle")),
     };
     if nodes.is_empty() {
         return Ok((path, T::zero()));
@@ -47,11 +42,7 @@ where
         let mut us: Vec<(T, NodeIndex)> = Vec::new();
         for p_edge in parents {
             let p_node = p_edge.source();
-            let weight: T = weight_fn(
-                p_node.index(),
-                p_edge.target().index(),
-                p_edge.weight(),
-            )?;
+            let weight: T = weight_fn(p_node.index(), p_edge.target().index(), p_edge.weight())?;
             let length = dist[&p_node].0 + weight;
             us.push((length, p_node));
         }

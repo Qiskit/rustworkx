@@ -40,9 +40,7 @@ class TestCentralityGraph(unittest.TestCase):
         self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_endpoints(self):
-        betweenness = retworkx.graph_betweenness_centrality(
-            self.graph, endpoints=True
-        )
+        betweenness = retworkx.graph_betweenness_centrality(self.graph, endpoints=True)
         expected = {
             0: 0.5,
             1: 0.8333333333333333,
@@ -86,9 +84,7 @@ class TestCentralityGraphDeletedNode(unittest.TestCase):
         self.assertEqual(expected, betweenness)
 
     def test_betweenness_centrality_endpoints(self):
-        betweenness = retworkx.graph_betweenness_centrality(
-            self.graph, endpoints=True
-        )
+        betweenness = retworkx.graph_betweenness_centrality(self.graph, endpoints=True)
         expected = {
             0: 0.5,
             1: 0.8333333333333333,

@@ -119,13 +119,9 @@ class TestHeavyHexGraph(unittest.TestCase):
 
     def test_directed_heavy_square_graph_5_bidirectional(self):
         d = 5
-        graph = retworkx.generators.directed_heavy_square_graph(
-            d, bidirectional=True
-        )
+        graph = retworkx.generators.directed_heavy_square_graph(d, bidirectional=True)
         self.assertEqual(len(graph), 3 * d * d - 2 * d)
-        self.assertEqual(
-            len(graph.edges()), 2 * (2 * d * (d - 1) + 2 * d * (d - 1))
-        )
+        self.assertEqual(len(graph.edges()), 2 * (2 * d * (d - 1) + 2 * d * (d - 1)))
         expected_edges = [
             (0, 45),
             (45, 1),
@@ -414,13 +410,9 @@ class TestHeavyHexGraph(unittest.TestCase):
 
     def test_directed_heavy_square_graph_3_bidirectional(self):
         d = 3
-        graph = retworkx.generators.directed_heavy_square_graph(
-            d, bidirectional=True
-        )
+        graph = retworkx.generators.directed_heavy_square_graph(d, bidirectional=True)
         self.assertEqual(len(graph), 3 * d * d - 2 * d)
-        self.assertEqual(
-            len(graph.edges()), 2 * (2 * d * (d - 1) + 2 * d * (d - 1))
-        )
+        self.assertEqual(len(graph.edges()), 2 * (2 * d * (d - 1) + 2 * d * (d - 1)))
         expected_edges = [
             (0, 15),
             (15, 1),

@@ -118,9 +118,7 @@ class TestContractNodes(unittest.TestCase):
 
         node_m = dag.contract_nodes([node_a, node_d, node_f], "m")
 
-        self.assertEqual(
-            [node_b, node_c, node_e, node_m], list(dag.node_indexes())
-        )
+        self.assertEqual([node_b, node_c, node_e, node_m], list(dag.node_indexes()))
         self.assertEqual(
             {
                 UndirectedEdge((node_b, node_c)),

@@ -33,9 +33,7 @@ class TestBFSSuccessorsComparisons(unittest.TestCase):
         self.assertFalse(retworkx.bfs_successors(self.dag, 0) == [("a", ["c"])])
 
     def test__eq__different_length(self):
-        self.assertFalse(
-            retworkx.bfs_successors(self.dag, 0) == [("a", ["b"]), ("b", ["c"])]
-        )
+        self.assertFalse(retworkx.bfs_successors(self.dag, 0) == [("a", ["b"]), ("b", ["c"])])
 
     def test__eq__invalid_type(self):
         with self.assertRaises(TypeError):
@@ -51,9 +49,7 @@ class TestBFSSuccessorsComparisons(unittest.TestCase):
         self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [("a", ["c"])])
 
     def test__ne__different_length(self):
-        self.assertTrue(
-            retworkx.bfs_successors(self.dag, 0) != [("a", ["b"]), ("b", ["c"])]
-        )
+        self.assertTrue(retworkx.bfs_successors(self.dag, 0) != [("a", ["b"]), ("b", ["c"])])
 
     def test__ne__invalid_type(self):
         with self.assertRaises(TypeError):
@@ -158,24 +154,16 @@ class TestNodesCountMapping(unittest.TestCase):
         self.dag.add_child(node_a, "b", "Edgy")
 
     def test__eq__match(self):
-        self.assertTrue(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 1}
-        )
+        self.assertTrue(retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 1})
 
     def test__eq__not_match_keys(self):
-        self.assertFalse(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {2: 1}
-        )
+        self.assertFalse(retworkx.num_shortest_paths_unweighted(self.dag, 0) == {2: 1})
 
     def test__eq__not_match_values(self):
-        self.assertFalse(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 2}
-        )
+        self.assertFalse(retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 2})
 
     def test__eq__different_length(self):
-        self.assertFalse(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 1, 2: 2}
-        )
+        self.assertFalse(retworkx.num_shortest_paths_unweighted(self.dag, 0) == {1: 1, 2: 2})
 
     def test_eq__same_type(self):
         self.assertEqual(
@@ -184,39 +172,25 @@ class TestNodesCountMapping(unittest.TestCase):
         )
 
     def test__eq__invalid_type(self):
-        self.assertFalse(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) == ["a", None]
-        )
+        self.assertFalse(retworkx.num_shortest_paths_unweighted(self.dag, 0) == ["a", None])
 
     def test__eq__invalid_inner_type(self):
-        self.assertFalse(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) == {0: "a"}
-        )
+        self.assertFalse(retworkx.num_shortest_paths_unweighted(self.dag, 0) == {0: "a"})
 
     def test__ne__match(self):
-        self.assertFalse(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 1}
-        )
+        self.assertFalse(retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 1})
 
     def test__ne__not_match(self):
-        self.assertTrue(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) != {2: 1}
-        )
+        self.assertTrue(retworkx.num_shortest_paths_unweighted(self.dag, 0) != {2: 1})
 
     def test__ne__not_match_values(self):
-        self.assertTrue(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 2}
-        )
+        self.assertTrue(retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 2})
 
     def test__ne__different_length(self):
-        self.assertTrue(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 1, 2: 2}
-        )
+        self.assertTrue(retworkx.num_shortest_paths_unweighted(self.dag, 0) != {1: 1, 2: 2})
 
     def test__ne__invalid_type(self):
-        self.assertTrue(
-            retworkx.num_shortest_paths_unweighted(self.dag, 0) != ["a", None]
-        )
+        self.assertTrue(retworkx.num_shortest_paths_unweighted(self.dag, 0) != ["a", None])
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
@@ -405,10 +379,7 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
         self.assertFalse(self.dag.weighted_edge_list() == [(1, 2, None)])
 
     def test__eq__different_length(self):
-        self.assertFalse(
-            self.dag.weighted_edge_list()
-            == [(0, 1, "Edgy"), (2, 3, "Not Edgy")]
-        )
+        self.assertFalse(self.dag.weighted_edge_list() == [(0, 1, "Edgy"), (2, 3, "Not Edgy")])
 
     def test__eq__invalid_type(self):
         self.assertFalse(self.dag.weighted_edge_list() == ["a", None])
@@ -465,25 +436,16 @@ class TestPathMapping(unittest.TestCase):
         self.dag.add_child(node_a, "b", "Edgy")
 
     def test__eq__match(self):
-        self.assertTrue(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 1]}
-        )
+        self.assertTrue(retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 1]})
 
     def test__eq__not_match_keys(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) == {2: [0, 1]}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_paths(self.dag, 0) == {2: [0, 1]})
 
     def test__eq__not_match_values(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 2]}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 2]})
 
     def test__eq__different_length(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_paths(self.dag, 0)
-            == {1: [0, 1], 2: [0, 2]}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_paths(self.dag, 0) == {1: [0, 1], 2: [0, 2]})
 
     def test_eq__same_type(self):
         self.assertEqual(
@@ -492,40 +454,25 @@ class TestPathMapping(unittest.TestCase):
         )
 
     def test__eq__invalid_type(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) == ["a", None]
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_paths(self.dag, 0) == ["a", None])
 
     def test__eq__invalid_inner_type(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) == {0: {"a": None}}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_paths(self.dag, 0) == {0: {"a": None}})
 
     def test__ne__match(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 1]}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 1]})
 
     def test__ne__not_match(self):
-        self.assertTrue(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) != {2: [0, 1]}
-        )
+        self.assertTrue(retworkx.dijkstra_shortest_paths(self.dag, 0) != {2: [0, 1]})
 
     def test__ne__not_match_values(self):
-        self.assertTrue(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 2]}
-        )
+        self.assertTrue(retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 2]})
 
     def test__ne__different_length(self):
-        self.assertTrue(
-            retworkx.dijkstra_shortest_paths(self.dag, 0)
-            != {1: [0, 1], 2: [0, 2]}
-        )
+        self.assertTrue(retworkx.dijkstra_shortest_paths(self.dag, 0) != {1: [0, 1], 2: [0, 2]})
 
     def test__ne__invalid_type(self):
-        self.assertTrue(
-            retworkx.dijkstra_shortest_paths(self.dag, 0) != ["a", None]
-        )
+        self.assertTrue(retworkx.dijkstra_shortest_paths(self.dag, 0) != ["a", None])
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
@@ -592,27 +539,17 @@ class TestPathLengthMapping(unittest.TestCase):
         self.fn = lambda _: 1.0
 
     def test__eq__match(self):
-        self.assertTrue(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            == {1: 1.0}
-        )
+        self.assertTrue(retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) == {1: 1.0})
 
     def test__eq__not_match_keys(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            == {2: 1.0}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) == {2: 1.0})
 
     def test__eq__not_match_values(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            == {1: 2.0}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) == {1: 2.0})
 
     def test__eq__different_length(self):
         self.assertFalse(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            == {1: 1.0, 2: 2.0}
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) == {1: 1.0, 2: 2.0}
         )
 
     def test_eq__same_type(self):
@@ -623,51 +560,34 @@ class TestPathLengthMapping(unittest.TestCase):
 
     def test__eq__invalid_type(self):
         self.assertFalse(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            == ["a", None]
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) == ["a", None]
         )
 
     def test__eq__invalid_inner_type(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            == {0: "a"}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) == {0: "a"})
 
     def test__ne__match(self):
-        self.assertFalse(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            != {1: 1.0}
-        )
+        self.assertFalse(retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) != {1: 1.0})
 
     def test__ne__not_match(self):
-        self.assertTrue(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            != {2: 1.0}
-        )
+        self.assertTrue(retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) != {2: 1.0})
 
     def test__ne__not_match_values(self):
-        self.assertTrue(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            != {1: 2.0}
-        )
+        self.assertTrue(retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) != {1: 2.0})
 
     def test__ne__different_length(self):
         self.assertTrue(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            != {1: 1.0, 2: 2.0}
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) != {1: 1.0, 2: 2.0}
         )
 
     def test__ne__invalid_type(self):
         self.assertTrue(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-            != ["a", None]
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) != ["a", None]
         )
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) > {
-                1: 1.0
-            }
+            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn) > {1: 1.0}
 
     def test_deepcopy(self):
         paths = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
@@ -681,9 +601,7 @@ class TestPathLengthMapping(unittest.TestCase):
         self.assertEqual(paths, paths_copy)
 
     def test_str(self):
-        res = retworkx.dijkstra_shortest_path_lengths(
-            self.dag, 0, lambda _: 3.14
-        )
+        res = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, lambda _: 3.14)
         self.assertEqual("PathLengthMapping{1: 3.14}", str(res))
 
     def test_hash(self):
@@ -699,27 +617,19 @@ class TestPathLengthMapping(unittest.TestCase):
             res[42]
 
     def test_keys(self):
-        keys = retworkx.dijkstra_shortest_path_lengths(
-            self.dag, 0, self.fn
-        ).keys()
+        keys = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn).keys()
         self.assertEqual([1], list(keys))
 
     def test_values(self):
-        values = retworkx.dijkstra_shortest_path_lengths(
-            self.dag, 0, self.fn
-        ).values()
+        values = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn).values()
         self.assertEqual([1.0], list(values))
 
     def test_items(self):
-        items = retworkx.dijkstra_shortest_path_lengths(
-            self.dag, 0, self.fn
-        ).items()
+        items = retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn).items()
         self.assertEqual([(1, 1.0)], list(items))
 
     def test_iter(self):
-        mapping_iter = iter(
-            retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn)
-        )
+        mapping_iter = iter(retworkx.dijkstra_shortest_path_lengths(self.dag, 0, self.fn))
         output = list(mapping_iter)
         self.assertEqual(output, [1])
 
@@ -742,14 +652,10 @@ class TestPos2DMapping(unittest.TestCase):
         self.assertTrue(res == {0: (0.4883489113112722, 0.6545867364101975)})
 
     def test__eq__not_match_keys(self):
-        self.assertFalse(
-            retworkx.random_layout(self.dag, seed=10244242) == {2: 1.0}
-        )
+        self.assertFalse(retworkx.random_layout(self.dag, seed=10244242) == {2: 1.0})
 
     def test__eq__not_match_values(self):
-        self.assertFalse(
-            retworkx.random_layout(self.dag, seed=10244242) == {1: 2.0}
-        )
+        self.assertFalse(retworkx.random_layout(self.dag, seed=10244242) == {1: 2.0})
 
     def test__eq__different_length(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
@@ -762,23 +668,17 @@ class TestPos2DMapping(unittest.TestCase):
         )
 
     def test__eq__invalid_type(self):
-        self.assertFalse(
-            retworkx.random_layout(self.dag, seed=10244242) == {"a": None}
-        )
+        self.assertFalse(retworkx.random_layout(self.dag, seed=10244242) == {"a": None})
 
     def test__ne__match(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
         self.assertFalse(res != {0: (0.4883489113112722, 0.6545867364101975)})
 
     def test__ne__not_match(self):
-        self.assertTrue(
-            retworkx.random_layout(self.dag, seed=10244242) != {2: 1.0}
-        )
+        self.assertTrue(retworkx.random_layout(self.dag, seed=10244242) != {2: 1.0})
 
     def test__ne__not_match_values(self):
-        self.assertTrue(
-            retworkx.random_layout(self.dag, seed=10244242) != {1: 2.0}
-        )
+        self.assertTrue(retworkx.random_layout(self.dag, seed=10244242) != {1: 2.0})
 
     def test__ne__different_length(self):
         res = retworkx.random_layout(self.dag, seed=10244242)
@@ -786,9 +686,7 @@ class TestPos2DMapping(unittest.TestCase):
         self.assertTrue(res != {1: 1.0, 2: 2.0})
 
     def test__ne__invalid_type(self):
-        self.assertTrue(
-            retworkx.random_layout(self.dag, seed=10244242) != ["a", None]
-        )
+        self.assertTrue(retworkx.random_layout(self.dag, seed=10244242) != ["a", None])
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
@@ -835,9 +733,7 @@ class TestPos2DMapping(unittest.TestCase):
 
     def test_items(self):
         items = retworkx.random_layout(self.dag, seed=10244242).items()
-        self.assertEqual(
-            [(0, [0.4883489113112722, 0.6545867364101975])], list(items)
-        )
+        self.assertEqual([(0, [0.4883489113112722, 0.6545867364101975])], list(items))
 
     def test_iter(self):
         mapping_iter = iter(retworkx.random_layout(self.dag, seed=10244242))
@@ -973,26 +869,22 @@ class TestAllPairsPathMapping(unittest.TestCase):
 
     def test__eq__match(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {0: {1: [0, 1]}, 1: {}}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {0: {1: [0, 1]}, 1: {}}
         )
 
     def test__eq__not_match_keys(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {2: {2: [0, 1]}, 1: {}}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {2: {2: [0, 1]}, 1: {}}
         )
 
     def test__eq__not_match_values(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {0: {1: [0, 2]}, 1: {}}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {0: {1: [0, 2]}, 1: {}}
         )
 
     def test__eq__different_length(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {1: [0, 1], 2: [0, 2]}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {1: [0, 1], 2: [0, 2]}
         )
 
     def test_eq__same_type(self):
@@ -1002,52 +894,39 @@ class TestAllPairsPathMapping(unittest.TestCase):
         )
 
     def test__eq__invalid_type(self):
-        self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {"a": []}
-        )
+        self.assertFalse(retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {"a": []})
 
     def test__eq__invalid_inner_type(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {0: {1: None}}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {0: {1: None}}
         )
 
     def test__ne__match(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            != {0: {1: [0, 1]}, 1: {}}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) != {0: {1: [0, 1]}, 1: {}}
         )
 
     def test__ne__not_match(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            != {2: [0, 1]}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) != {2: [0, 1]}
         )
 
     def test__ne__not_match_values(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            != {1: [0, 2]}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) != {1: [0, 2]}
         )
 
     def test__ne__different_length(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            != {1: [0, 1], 2: [0, 2]}
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) != {1: [0, 1], 2: [0, 2]}
         )
 
     def test__ne__invalid_type(self):
-        self.assertTrue(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            != {"a": {}}
-        )
+        self.assertTrue(retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) != {"a": {}})
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) > {
-                1: [0, 2]
-            }
+            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) > {1: [0, 2]}
 
     def test_deepcopy(self):
         paths = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
@@ -1082,23 +961,17 @@ class TestAllPairsPathMapping(unittest.TestCase):
             res[42]
 
     def test_keys(self):
-        keys = retworkx.all_pairs_dijkstra_shortest_paths(
-            self.dag, self.fn
-        ).keys()
+        keys = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn).keys()
         self.assertEqual([0, 1], list(sorted(keys)))
 
     def test_values(self):
-        values = retworkx.all_pairs_dijkstra_shortest_paths(
-            self.dag, self.fn
-        ).values()
+        values = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn).values()
         # Since run in parallel the order is not deterministic
         expected_valid = [[{1: [0, 1]}, {}], [{}, {1: [0, 1]}]]
         self.assertIn(list(values), expected_valid)
 
     def test_items(self):
-        items = retworkx.all_pairs_dijkstra_shortest_paths(
-            self.dag, self.fn
-        ).items()
+        items = retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn).items()
         # Since run in parallel the order is not deterministic
         expected_valid = [
             [(0, {1: [0, 1]}), (1, {})],
@@ -1107,9 +980,7 @@ class TestAllPairsPathMapping(unittest.TestCase):
         self.assertIn(list(items), expected_valid)
 
     def test_iter(self):
-        mapping_iter = iter(
-            retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-        )
+        mapping_iter = iter(retworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn))
         output = list(sorted(mapping_iter))
         self.assertEqual(output, [0, 1])
 
@@ -1131,26 +1002,22 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
 
     def test__eq__match(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            == {0: {1: 1.0}, 1: {}}
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) == {0: {1: 1.0}, 1: {}}
         )
 
     def test__eq__not_match_keys(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            == {1: {2: 1.0}}
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) == {1: {2: 1.0}}
         )
 
     def test__eq__not_match_values(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            == {0: {2: 2.0}}
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) == {0: {2: 2.0}}
         )
 
     def test__eq__different_length(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            == {0: {1: 1.0, 2: 2.0}}
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) == {0: {1: 1.0, 2: 2.0}}
         )
 
     def test_eq__same_type(self):
@@ -1160,33 +1027,24 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
         )
 
     def test__eq__invalid_type(self):
-        self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            == {"a": 2}
-        )
+        self.assertFalse(retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) == {"a": 2})
 
     def test__eq__invalid_inner_type(self):
-        self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            == {0: "a"}
-        )
+        self.assertFalse(retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) == {0: "a"})
 
     def test__ne__match(self):
         self.assertFalse(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            != {0: {1: 1.0}, 1: {}}
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) != {0: {1: 1.0}, 1: {}}
         )
 
     def test__ne__not_match(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            != {0: {2: 1.0}}
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) != {0: {2: 1.0}}
         )
 
     def test__ne__not_match_values(self):
         self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            != {0: {1: 2.0}}
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) != {0: {1: 2.0}}
         )
 
     def test__ne__different_length(self):
@@ -1196,16 +1054,11 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
         )
 
     def test__ne__invalid_type(self):
-        self.assertTrue(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-            != {1: []}
-        )
+        self.assertTrue(retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) != {1: []})
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) > {
-                1: 1.0
-            }
+            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn) > {1: 1.0}
 
     def test_deepcopy(self):
         paths = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
@@ -1223,8 +1076,7 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
         # Since all_pairs_dijkstra_path_lengths() is parallel the order of the
         # output is non-determinisitic
         valid_values = [
-            "AllPairsPathLengthMapping{1: PathLengthMapping{}, "
-            "0: PathLengthMapping{1: 3.14}}",
+            "AllPairsPathLengthMapping{1: PathLengthMapping{}, " "0: PathLengthMapping{1: 3.14}}",
             "AllPairsPathLengthMapping{"
             "0: PathLengthMapping{1: 3.14}, "
             "1: PathLengthMapping{}}",
@@ -1244,31 +1096,23 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
             res[42]
 
     def test_keys(self):
-        keys = retworkx.all_pairs_dijkstra_path_lengths(
-            self.dag, self.fn
-        ).keys()
+        keys = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn).keys()
         self.assertEqual([0, 1], list(sorted((keys))))
 
     def test_values(self):
-        values = retworkx.all_pairs_dijkstra_path_lengths(
-            self.dag, self.fn
-        ).values()
+        values = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn).values()
         # Since run in parallel the order is not deterministic
         valid_expected = [[{}, {1: 1.0}], [{1: 1.0}, {}]]
         self.assertIn(list(values), valid_expected)
 
     def test_items(self):
-        items = retworkx.all_pairs_dijkstra_path_lengths(
-            self.dag, self.fn
-        ).items()
+        items = retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn).items()
         # Since run in parallel the order is not deterministic
         valid_expected = [[(0, {1: 1.0}), (1, {})], [(1, {}), (0, {1: 1.0})]]
         self.assertIn(list(items), valid_expected)
 
     def test_iter(self):
-        mapping_iter = iter(
-            retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn)
-        )
+        mapping_iter = iter(retworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn))
         output = list(sorted(mapping_iter))
         self.assertEqual(output, [0, 1])
 
@@ -1289,170 +1133,118 @@ class TestNodeMap(unittest.TestCase):
 
     def test__eq__match(self):
         self.assertTrue(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
-            == {0: 1}
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None) == {0: 1}
         )
 
     def test__eq__not_match_keys(self):
         self.assertFalse(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
-            == {2: 1}
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None) == {2: 1}
         )
 
     def test__eq__not_match_values(self):
         self.assertFalse(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
-            == {0: 2}
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None) == {0: 2}
         )
 
     def test__eq__different_length(self):
         self.assertFalse(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
             == {0: 1, 1: 2}
         )
 
     def test_eq__same_type(self):
-        res = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        )
+        res = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         self.assertEqual(res, res)
 
     def test__ne__match(self):
         self.assertFalse(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
-            != {0: 1}
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None) != {0: 1}
         )
 
     def test__ne__not_match(self):
         self.assertTrue(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
-            != {2: 2}
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None) != {2: 2}
         )
 
     def test__ne__not_match_values(self):
         self.assertTrue(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
-            != {0: 2}
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None) != {0: 2}
         )
 
     def test__ne__different_length(self):
         self.assertTrue(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
             != {0: 1, 1: 2}
         )
 
     def test__gt__not_implemented(self):
         with self.assertRaises(NotImplementedError):
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            ) > {1: 2}
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None) > {1: 2}
 
     def test__len__(self):
         in_dag = retworkx.generators.directed_grid_graph(5, 5)
-        node_map = self.dag.substitute_node_with_subgraph(
-            0, in_dag, lambda *args: None
-        )
+        node_map = self.dag.substitute_node_with_subgraph(0, in_dag, lambda *args: None)
         self.assertEqual(25, len(node_map))
 
     def test_deepcopy(self):
-        node_map = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        )
+        node_map = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         node_map_copy = copy.deepcopy(node_map)
         self.assertEqual(node_map, node_map_copy)
 
     def test_pickle(self):
-        node_map = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        )
+        node_map = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         node_map_pickle = pickle.dumps(node_map)
         node_map_copy = pickle.loads(node_map_pickle)
         self.assertEqual(node_map, node_map_copy)
 
     def test_str(self):
-        res = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        )
+        res = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         self.assertEqual("NodeMap{0: 1}", str(res))
 
     def test_hash(self):
-        res = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        )
+        res = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         hash_res = hash(res)
         self.assertIsInstance(hash_res, int)
         # Assert hash is stable
         self.assertEqual(hash_res, hash(res))
 
     def test_index_error(self):
-        res = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        )
+        res = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         with self.assertRaises(IndexError):
             res[42]
 
     def test_keys(self):
-        keys = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        ).keys()
+        keys = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None).keys()
         self.assertEqual([0], list(keys))
 
     def test_values(self):
-        values = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        ).values()
+        values = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None).values()
         self.assertEqual([1], list(values))
 
     def test_items(self):
-        items = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        ).items()
+        items = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None).items()
         self.assertEqual([(0, 1)], list(items))
 
     def test_iter(self):
         mapping_iter = iter(
-            self.dag.substitute_node_with_subgraph(
-                0, self.in_dag, lambda *args: None
-            )
+            self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         )
         output = list(mapping_iter)
         self.assertEqual(output, [0])
 
     def test_contains(self):
-        res = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        )
+        res = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         self.assertIn(0, res)
 
     def test_not_contains(self):
-        res = self.dag.substitute_node_with_subgraph(
-            0, self.in_dag, lambda *args: None
-        )
+        res = self.dag.substitute_node_with_subgraph(0, self.in_dag, lambda *args: None)
         self.assertNotIn(2, res)
 
     def test_iter_stable_for_same_obj(self):
         graph = retworkx.PyDiGraph()
         graph.add_node(0)
         in_graph = retworkx.generators.directed_path_graph(5)
-        res = self.dag.substitute_node_with_subgraph(
-            0, in_graph, lambda *args: None
-        )
+        res = self.dag.substitute_node_with_subgraph(0, in_graph, lambda *args: None)
         first_iter = list(iter(res))
         second_iter = list(iter(res))
         third_iter = list(iter(res))
@@ -1505,9 +1297,7 @@ class TestChainsComparisons(unittest.TestCase):
         self.assertEqual(self.chains, chains_copy)
 
     def test_str(self):
-        self.assertEqual(
-            "Chains[EdgeList[(0, 2), (2, 1), (1, 0)]]", str(self.chains)
-        )
+        self.assertEqual("Chains[EdgeList[(0, 2), (2, 1), (1, 0)]]", str(self.chains))
 
     def test_hash(self):
         hash_res = hash(self.chains)
@@ -1524,9 +1314,7 @@ class TestProductNodeMap(unittest.TestCase):
 
         self.second = retworkx.PyGraph()
         self.second.add_node("b")
-        _, self.node_map = retworkx.graph_cartesian_product(
-            self.first, self.second
-        )
+        _, self.node_map = retworkx.graph_cartesian_product(self.first, self.second)
 
     def test__eq__match(self):
         self.assertTrue(self.node_map == {(0, 0): 0, (1, 0): 1})

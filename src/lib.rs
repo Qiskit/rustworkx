@@ -64,8 +64,7 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
-    NodeCount, NodeIndexable,
+    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount, NodeIndexable,
 };
 use petgraph::EdgeType;
 
@@ -111,9 +110,7 @@ where
     }
 }
 
-pub fn get_edge_iter_with_weights<G>(
-    graph: G,
-) -> impl Iterator<Item = (usize, usize, PyObject)>
+pub fn get_edge_iter_with_weights<G>(graph: G) -> impl Iterator<Item = (usize, usize, PyObject)>
 where
     G: GraphBase
         + IntoEdgeReferences
@@ -141,10 +138,8 @@ where
         let j: usize;
         match &node_map {
             Some(map) => {
-                let source_index =
-                    NodeIndex::new(graph.to_index(edge.source()));
-                let target_index =
-                    NodeIndex::new(graph.to_index(edge.target()));
+                let source_index = NodeIndex::new(graph.to_index(edge.source()));
+                let target_index = NodeIndex::new(graph.to_index(edge.target()));
                 i = *map.get(&source_index).unwrap();
                 j = *map.get(&target_index).unwrap();
             }
@@ -211,9 +206,7 @@ impl TryFrom<f64> for CostFn {
 impl TryFrom<(Option<PyObject>, f64)> for CostFn {
     type Error = PyErr;
 
-    fn try_from(
-        func_or_default: (Option<PyObject>, f64),
-    ) -> Result<Self, Self::Error> {
+    fn try_from(func_or_default: (Option<PyObject>, f64)) -> Result<Self, Self::Error> {
         let (obj, val) = func_or_default;
         match obj {
             Some(obj) => Ok(CostFn::PyFunction(obj)),
@@ -255,10 +248,7 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
-fn merge_duplicates<K, V, F, E>(
-    xs: Vec<(K, V)>,
-    mut merge_fn: F,
-) -> Result<Vec<(K, V)>, E>
+fn merge_duplicates<K, V, F, E>(xs: Vec<(K, V)>, mut merge_fn: F) -> Result<Vec<(K, V)>, E>
 where
     K: Hash + Eq,
     F: FnMut(&V, &V) -> Result<V, E>,
