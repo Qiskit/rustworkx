@@ -46,17 +46,17 @@ _retworkx_ addresses those performance concerns by switching to a Rust implement
   
 The graph and network analysis ecosystem for Python is rich, with many libraries available. _igraph_ [@Csardi2006], _graph-tool_ [@Peixoto2014], _SNAP_ [@Leskovec2016], and _Networkit_ [@Staudt2016] are Python libraries written in C or C++ that can replace _NetworkX_ with better performance. We also highlight _SageMath_'s graph theory module [@Sagemath2020], which has a stronger focus in mathematics than _NetworkX_. 
 
-However, the authors found that no library matched the flexibility that _NetworkX_ provided for interacting with graphs. _igraph_ is efficient for static large graphs, but does not handle graph updates as efficiently. _SNAP_ and _Networkit_ do not support weights with arbitrary Python types. _graph-tool_ supports graph weights at the cost of maintaing the weights in a separate data structure. Thus, the main contribution of _retworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
+However, the authors found that no library matched the flexibility that _NetworkX_ provided for interacting with graphs. _igraph_ is efficient for static large graphs, but does not handle graph updates as efficiently. _SNAP_ and _Networkit_ do not support associated edge data with arbitrary Python types. _graph-tool_ supports associated edge data at the cost of maintaing the data in a separate data structure. Thus, the main contribution of _retworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
 
 # Graph data structures
 
 _retworkx_ provides two core data structures: `PyGraph` and `PyDiGraph`. They correspond to undirected and directed graphs, respectively. Graphs describe a set of nodes and the edges connecting pairs of those nodes. Internally, _retworkx_ leverages the _petgraph_ library [@bluss2021] to store the graphs using an adjacency list model and the _PyO3_ library [@Hewitt2021] for the Python bindings.
 
-Nodes and edges of the graph may also be associated with weights. Weights can contain arbitrary data, such as node labels or edge lengths. Any Python object can be a weight, which makes the library flexible because no assumptions are made about the weight types. 
+Nodes and edges of the graph may also be associated with data payloads. Payloads can contain arbitrary data, such as node labels or edge lengths. Common uses of data payloads include representing weighted graphs. Any Python object can be a data payload, which makes the library flexible because no assumptions are made about the payload types. 
 
-_retworkx_ operates on weights with callbacks. Callbacks are functions that take weights and return statically typed data. They resemble the named attributes in _NetworkX_. Callbacks are beneficial because they bridge the arbitrary stored data with the static types _retworkx_ expects.
+_retworkx_ operates on payloads with callbacks. Callbacks are functions that take payloads and return statically typed data. They resemble the named attributes in _NetworkX_. Callbacks are beneficial because they bridge the arbitrary stored data with the static types _retworkx_ expects.
 
-A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges in the graph. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with weights.
+A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges in the graph. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with payloads.
 
 ![A Petersen graph, a hexagonal lattice graph, and a binomial tree graph visualized with the **`retworkx.visualization`** module.\label{fig:graphexample}](paper_img/example_graph.png){ width=100% height==100% }
 
