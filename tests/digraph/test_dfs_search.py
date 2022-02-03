@@ -53,9 +53,7 @@ class TestDfsSearch(unittest.TestCase):
 
         vis = TreeEdgesRecorder()
         retworkx.digraph_dfs_search(self.graph, None, vis)
-        self.assertEqual(
-            vis.edges, [(0, 2), (2, 6), (2, 5), (5, 3), (2, 1), (4, 7)]
-        )
+        self.assertEqual(vis.edges, [(0, 2), (2, 6), (2, 5), (5, 3), (2, 1), (4, 7)])
 
     def test_digraph_dfs_tree_edges_restricted(self):
         class TreeEdgesRecorderRestricted(retworkx.visit.DFSVisitor):

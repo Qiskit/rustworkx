@@ -34,8 +34,7 @@ pub fn lexicographical_topological_sort(
     };
     // HashMap of node_index indegree
     let node_count = dag.node_count();
-    let mut in_degree_map: HashMap<NodeIndex, usize> =
-        HashMap::with_capacity(node_count);
+    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_count);
     for node in dag.graph.node_indices() {
         in_degree_map.insert(node, dag.in_degree(node.index()));
     }

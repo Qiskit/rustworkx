@@ -106,13 +106,9 @@ class TestFindPredecessorsByEdge(unittest.TestCase):
         dag.add_child(node_a, "b", {"a": 1})
         node_c = dag.add_child(node_a, "c", {"a": 2})
 
-        res_even = dag.find_predecessors_by_edge(
-            node_c, lambda x: x["a"] % 2 == 0
-        )
+        res_even = dag.find_predecessors_by_edge(node_c, lambda x: x["a"] % 2 == 0)
 
-        res_odd = dag.find_predecessors_by_edge(
-            node_c, lambda x: x["a"] % 2 != 0
-        )
+        res_odd = dag.find_predecessors_by_edge(node_c, lambda x: x["a"] % 2 != 0)
 
         self.assertEqual(["a"], res_even)
         self.assertEqual([], res_odd)
@@ -124,13 +120,9 @@ class TestFindPredecessorsByEdge(unittest.TestCase):
         node_c = dag.add_child(node_a, "c", {"a": 2})
         dag.add_edge(node_a, node_c, {"a": 3})
 
-        res_even = dag.find_predecessors_by_edge(
-            node_c, lambda x: x["a"] % 2 == 0
-        )
+        res_even = dag.find_predecessors_by_edge(node_c, lambda x: x["a"] % 2 == 0)
 
-        res_odd = dag.find_predecessors_by_edge(
-            node_c, lambda x: x["a"] % 2 == 0
-        )
+        res_odd = dag.find_predecessors_by_edge(node_c, lambda x: x["a"] % 2 == 0)
 
         self.assertEqual(["a"], res_even)
         self.assertEqual(["a"], res_odd)
@@ -141,13 +133,9 @@ class TestFindPredecessorsByEdge(unittest.TestCase):
         for i in range(10):
             dag.add_parent(node_a, {"numeral": i}, {"edge": i})
 
-        res_even = dag.find_predecessors_by_edge(
-            node_a, lambda x: x["edge"] % 2 == 0
-        )
+        res_even = dag.find_predecessors_by_edge(node_a, lambda x: x["edge"] % 2 == 0)
 
-        res_odd = dag.find_predecessors_by_edge(
-            node_a, lambda x: x["edge"] % 2 != 0
-        )
+        res_odd = dag.find_predecessors_by_edge(node_a, lambda x: x["edge"] % 2 != 0)
 
         self.assertEqual(
             [
@@ -188,9 +176,7 @@ class TestFindSuccessorsByEdge(unittest.TestCase):
         node_c = dag.add_child(node_b, "c", {"a": 2})
         dag.add_child(node_c, "d", {"a": 1})
 
-        res_even = dag.find_successors_by_edge(
-            node_b, lambda x: x["a"] % 2 == 0
-        )
+        res_even = dag.find_successors_by_edge(node_b, lambda x: x["a"] % 2 == 0)
         res_odd = dag.find_successors_by_edge(node_b, lambda x: x["a"] % 2 != 0)
 
         self.assertEqual(["c"], res_even)
@@ -204,9 +190,7 @@ class TestFindSuccessorsByEdge(unittest.TestCase):
         dag.add_child(node_c, "d", {"a": 1})
         dag.add_edge(node_b, node_c, {"a": 3})
 
-        res_even = dag.find_successors_by_edge(
-            node_b, lambda x: x["a"] % 2 == 0
-        )
+        res_even = dag.find_successors_by_edge(node_b, lambda x: x["a"] % 2 == 0)
         res_odd = dag.find_successors_by_edge(node_b, lambda x: x["a"] % 2 != 0)
 
         self.assertEqual(["c"], res_even)
@@ -218,13 +202,9 @@ class TestFindSuccessorsByEdge(unittest.TestCase):
         for i in range(10):
             dag.add_child(node_a, {"numeral": i}, {"edge": i})
 
-        res_even = dag.find_successors_by_edge(
-            node_a, lambda x: x["edge"] % 2 == 0
-        )
+        res_even = dag.find_successors_by_edge(node_a, lambda x: x["edge"] % 2 == 0)
 
-        res_odd = dag.find_successors_by_edge(
-            node_a, lambda x: x["edge"] % 2 != 0
-        )
+        res_odd = dag.find_successors_by_edge(node_a, lambda x: x["edge"] % 2 != 0)
 
         self.assertEqual(
             [

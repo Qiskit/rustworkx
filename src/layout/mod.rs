@@ -234,7 +234,7 @@ pub fn digraph_random_layout(
 /// Generate a bipartite layout of the graph
 ///
 /// :param PyGraph graph: The graph to generate the layout for
-/// :param set first_nodes: The set of node indexes on the left (or top if
+/// :param set first_nodes: The set of node indices on the left (or top if
 ///     horitontal is true)
 /// :param bool horizontal: An optional bool specifying the orientation of the
 ///     layout
@@ -270,7 +270,7 @@ pub fn graph_bipartite_layout(
 /// Generate a bipartite layout of the graph
 ///
 /// :param PyDiGraph graph: The graph to generate the layout for
-/// :param set first_nodes: The set of node indexes on the left (or top if
+/// :param set first_nodes: The set of node indices on the left (or top if
 ///     horizontal is true)
 /// :param bool horizontal: An optional bool specifying the orientation of the
 ///     layout
@@ -344,7 +344,7 @@ pub fn digraph_circular_layout(
 /// Generate a shell layout of the graph
 ///
 /// :param PyGraph graph: The graph to generate the layout for
-/// :param list nlist: The list of lists of indexes which represents each shell
+/// :param list nlist: The list of lists of indices which represents each shell
 /// :param float rotate: Angle (in radians) by which to rotate the starting
 ///     position of each shell relative to the starting position of the
 ///     previous shell
@@ -355,9 +355,7 @@ pub fn digraph_circular_layout(
 /// :returns: The shell layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(
-    text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)"
-)]
+#[pyo3(text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)")]
 pub fn graph_shell_layout(
     graph: &graph::PyGraph,
     nlist: Option<Vec<Vec<usize>>>,
@@ -371,7 +369,7 @@ pub fn graph_shell_layout(
 /// Generate a shell layout of the graph
 ///
 /// :param PyDiGraph graph: The graph to generate the layout for
-/// :param list nlist: The list of lists of indexes which represents each shell
+/// :param list nlist: The list of lists of indices which represents each shell
 /// :param float rotate: Angle by which to rotate the starting position of each shell
 ///     relative to the starting position of the previous shell (in radians)
 /// :param float scale: An optional scaling factor to scale positions
@@ -381,9 +379,7 @@ pub fn graph_shell_layout(
 /// :returns: The shell layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(
-    text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)"
-)]
+#[pyo3(text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)")]
 pub fn digraph_shell_layout(
     graph: &digraph::PyDiGraph,
     nlist: Option<Vec<Vec<usize>>>,

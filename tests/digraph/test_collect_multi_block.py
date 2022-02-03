@@ -56,9 +56,7 @@ class TestCollectMultiBlock(unittest.TestCase):
                 return None
             return True
 
-        blocks = retworkx.collect_multi_blocks(
-            graph, 2, key_fn, group_fn, filter_fn
-        )
+        blocks = retworkx.collect_multi_blocks(graph, 2, key_fn, group_fn, filter_fn)
         self.assertEqual(blocks, [[4, 5], [3, 6]])
 
     def test_blocks_unprocessed(self):
@@ -69,9 +67,7 @@ class TestCollectMultiBlock(unittest.TestCase):
         c0 = graph.add_node({"type": "in", "name": "c0", "groups": []})
         cx_1 = graph.add_node({"type": "op", "name": "cx", "groups": [0, 1]})
         cx_2 = graph.add_node({"type": "op", "name": "cx", "groups": [1, 2]})
-        measure = graph.add_node(
-            {"type": "op", "name": "measure", "groups": [0]}
-        )
+        measure = graph.add_node({"type": "op", "name": "measure", "groups": [0]})
         cx_3 = graph.add_node({"type": "op", "name": "cx", "groups": [1, 2]})
         x = graph.add_node({"type": "op", "name": "x", "groups": [1]})
         h = graph.add_node({"type": "op", "name": "h", "groups": [2]})
@@ -117,16 +113,12 @@ class TestCollectMultiBlock(unittest.TestCase):
                 return False
             return True
 
-        blocks = retworkx.collect_multi_blocks(
-            graph, 2, key_fn, group_fn, filter_fn
-        )
+        blocks = retworkx.collect_multi_blocks(graph, 2, key_fn, group_fn, filter_fn)
         self.assertEqual(blocks, [[4], [5, 7, 8, 9]])
 
     def test_empty_graph(self):
         graph = retworkx.PyDiGraph()
-        block = retworkx.collect_multi_blocks(
-            graph, 1, lambda x: x, lambda x: x, lambda x: x
-        )
+        block = retworkx.collect_multi_blocks(graph, 1, lambda x: x, lambda x: x, lambda x: x)
         self.assertEqual(block, [])
 
     def test_larger_block(self):
@@ -190,7 +182,5 @@ class TestCollectMultiBlock(unittest.TestCase):
                 return False
             return True
 
-        blocks = retworkx.collect_multi_blocks(
-            graph, 4, key_fn, group_fn, filter_fn
-        )
+        blocks = retworkx.collect_multi_blocks(graph, 4, key_fn, group_fn, filter_fn)
         self.assertEqual([[cx_1, cx_2, cx_3], [ccx], [cx_4, cx_5]], blocks)

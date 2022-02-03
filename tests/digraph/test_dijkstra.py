@@ -44,6 +44,16 @@ class TestDijkstraDiGraph(unittest.TestCase):
         expected = {4: 23.0}
         self.assertEqual(expected, path)
 
+    def test_dijkstra_length_with_no_path(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        path_lenghts = retworkx.digraph_dijkstra_shortest_path_lengths(
+            g, a, edge_cost_fn=float, goal=b
+        )
+        expected = {}
+        self.assertEqual(expected, path_lenghts)
+
     def test_dijkstra_path(self):
         paths = retworkx.digraph_dijkstra_shortest_paths(self.graph, self.a)
         expected = {
@@ -61,9 +71,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         self.assertEqual(expected, paths)
 
     def test_dijkstra_path_with_weight_fn(self):
-        paths = retworkx.digraph_dijkstra_shortest_paths(
-            self.graph, self.a, weight_fn=lambda x: x
-        )
+        paths = retworkx.digraph_dijkstra_shortest_paths(self.graph, self.a, weight_fn=lambda x: x)
         expected = {
             1: [0, 1],
             2: [0, 3, 2],
@@ -74,9 +82,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         self.assertEqual(expected, paths)
 
     def test_dijkstra_path_with_target(self):
-        paths = retworkx.digraph_dijkstra_shortest_paths(
-            self.graph, self.a, target=self.e
-        )
+        paths = retworkx.digraph_dijkstra_shortest_paths(self.graph, self.a, target=self.e)
         expected = {
             4: [0, 3, 4],
         }
@@ -92,9 +98,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         self.assertEqual(expected, paths)
 
     def test_dijkstra_path_undirected(self):
-        paths = retworkx.digraph_dijkstra_shortest_paths(
-            self.graph, self.a, as_undirected=True
-        )
+        paths = retworkx.digraph_dijkstra_shortest_paths(self.graph, self.a, as_undirected=True)
         expected = {
             1: [0, 1],
             2: [0, 2],
@@ -140,9 +144,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         self.assertEqual(expected, paths)
 
     def test_dijkstra_with_no_goal_set(self):
-        path = retworkx.digraph_dijkstra_shortest_path_lengths(
-            self.graph, self.a, lambda x: 1
-        )
+        path = retworkx.digraph_dijkstra_shortest_path_lengths(self.graph, self.a, lambda x: 1)
         expected = {1: 1.0, 2: 2.0, 3: 1.0, 4: 2.0, 5: 2.0}
         self.assertEqual(expected, path)
 
@@ -150,9 +152,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         g = retworkx.PyDiGraph()
         a = g.add_node("A")
         g.add_node("B")
-        path = retworkx.digraph_dijkstra_shortest_path_lengths(
-            g, a, lambda x: float(x)
-        )
+        path = retworkx.digraph_dijkstra_shortest_path_lengths(g, a, lambda x: float(x))
         expected = {}
         self.assertEqual(expected, path)
 
@@ -170,9 +170,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         b = g.add_child(a, "B", 1.2)
         g.add_node("C")
         g.add_parent(b, "D", 2.4)
-        path = retworkx.digraph_dijkstra_shortest_path_lengths(
-            g, a, lambda x: x
-        )
+        path = retworkx.digraph_dijkstra_shortest_path_lengths(g, a, lambda x: x)
         expected = {1: 1.2}
         self.assertEqual(expected, path)
 
@@ -183,9 +181,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
             retworkx.digraph_dijkstra_shortest_path_lengths(g, 0, lambda x: x)
 
     def test_dijkstra_all_pair_path_lengths(self):
-        lengths = retworkx.digraph_all_pairs_dijkstra_path_lengths(
-            self.graph, float
-        )
+        lengths = retworkx.digraph_all_pairs_dijkstra_path_lengths(self.graph, float)
         expected = {
             0: {1: 7.0, 2: 16.0, 3: 14.0, 4: 23.0, 5: 22.0},
             1: {0: 19.0, 2: 10.0, 3: 33.0, 4: 42.0, 5: 15.0},
@@ -197,9 +193,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         self.assertEqual(expected, lengths)
 
     def test_dijkstra_all_pair_paths(self):
-        paths = retworkx.digraph_all_pairs_dijkstra_shortest_paths(
-            self.graph, float
-        )
+        paths = retworkx.digraph_all_pairs_dijkstra_shortest_paths(self.graph, float)
         print(paths)
         expected = {
             0: {1: [0, 1], 2: [0, 3, 2], 3: [0, 3], 4: [0, 3, 4], 5: [0, 1, 5]},
@@ -231,9 +225,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
 
     def test_dijkstra_all_pair_path_lengths_with_node_removal(self):
         self.graph.remove_node(3)
-        lengths = retworkx.digraph_all_pairs_dijkstra_path_lengths(
-            self.graph, float
-        )
+        lengths = retworkx.digraph_all_pairs_dijkstra_path_lengths(self.graph, float)
         expected = {
             0: {1: 7.0, 2: 17.0, 5: 22.0},
             1: {0: 19.0, 2: 10.0, 5: 15.0},
@@ -245,9 +237,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
 
     def test_dijkstra_all_pair_paths_with_node_removal(self):
         self.graph.remove_node(3)
-        lengths = retworkx.digraph_all_pairs_dijkstra_shortest_paths(
-            self.graph, float
-        )
+        lengths = retworkx.digraph_all_pairs_dijkstra_shortest_paths(self.graph, float)
         expected = {
             0: {1: [0, 1], 2: [0, 1, 2], 5: [0, 1, 5]},
             1: {0: [1, 2, 0], 2: [1, 2], 5: [1, 5]},
@@ -259,15 +249,11 @@ class TestDijkstraDiGraph(unittest.TestCase):
 
     def test_dijkstra_all_pair_path_lengths_empty_graph(self):
         graph = retworkx.PyDiGraph()
-        self.assertEqual(
-            {}, retworkx.digraph_all_pairs_dijkstra_path_lengths(graph, float)
-        )
+        self.assertEqual({}, retworkx.digraph_all_pairs_dijkstra_path_lengths(graph, float))
 
     def test_dijkstra_all_pair_shortest_paths_empty_graph(self):
         graph = retworkx.PyDiGraph()
-        self.assertEqual(
-            {}, retworkx.digraph_all_pairs_dijkstra_shortest_paths(graph, float)
-        )
+        self.assertEqual({}, retworkx.digraph_all_pairs_dijkstra_shortest_paths(graph, float))
 
     def test_dijkstra_all_pair_path_lengths_graph_no_edges(self):
         graph = retworkx.PyDiGraph()
@@ -291,9 +277,7 @@ class TestDijkstraDiGraph(unittest.TestCase):
         graph = retworkx.generators.directed_path_graph(2)
         for invalid_weight in [float("nan"), -1]:
             for as_undirected in [False, True]:
-                with self.subTest(
-                    invalid_weight=invalid_weight, as_undirected=as_undirected
-                ):
+                with self.subTest(invalid_weight=invalid_weight, as_undirected=as_undirected):
                     with self.assertRaises(ValueError):
                         retworkx.digraph_dijkstra_shortest_paths(
                             graph,

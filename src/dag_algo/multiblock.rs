@@ -52,11 +52,7 @@ fn find_set(
     parent[index_iter].unwrap()
 }
 
-fn combine_sets(
-    op_groups: &mut HashMap<usize, Vec<usize>>,
-    set_a: usize,
-    set_b: usize,
-) {
+fn combine_sets(op_groups: &mut HashMap<usize, Vec<usize>>, set_a: usize, set_b: usize) {
     let mut other_groups = op_groups.get_mut(&set_b).unwrap().clone();
     op_groups.get_mut(&set_a).unwrap().append(&mut other_groups);
     op_groups.get_mut(&set_b).unwrap().clear();
@@ -97,8 +93,7 @@ fn update_set(
     if !op_groups[&group_index].is_empty() {
         block_list.push(op_groups[&group_index].iter().copied().collect());
     }
-    let cur_set: HashSet<usize> =
-        groups[&group_index].iter().copied().collect();
+    let cur_set: HashSet<usize> = groups[&group_index].iter().copied().collect();
     for v in cur_set {
         parent[v] = Some(v);
         groups.insert(v, vec![v]);
@@ -135,12 +130,7 @@ pub fn collect_multi_blocks(
         if can_process {
             let mut tops: HashSet<usize> = HashSet::new();
             for group in &cur_groups {
-                tops.insert(find_set(
-                    *group,
-                    &mut parent,
-                    &mut groups,
-                    &mut op_groups,
-                ));
+                tops.insert(find_set(*group, &mut parent, &mut groups, &mut op_groups));
             }
             let mut tot_size = 0;
             for group in tops {
@@ -153,12 +143,7 @@ pub fn collect_multi_blocks(
         if !can_process {
             // resolve the case where we cannot process this node
             for group_entry in &cur_groups {
-                let group = find_set(
-                    *group_entry,
-                    &mut parent,
-                    &mut groups,
-                    &mut op_groups,
-                );
+                let group = find_set(*group_entry, &mut parent, &mut groups, &mut op_groups);
                 if op_groups[&group].is_empty() {
                     continue;
                 }
@@ -178,8 +163,7 @@ pub fn collect_multi_blocks(
             let mut savings: HashMap<usize, usize> = HashMap::new();
             let mut tot_size = 0;
             for group in &cur_groups {
-                let top =
-                    find_set(*group, &mut parent, &mut groups, &mut op_groups);
+                let top = find_set(*group, &mut parent, &mut groups, &mut op_groups);
                 if !savings.contains_key(&top) {
                     savings.insert(top, groups[&top].len() - 1);
                     tot_size += groups[&top].len();
@@ -227,19 +211,12 @@ pub fn collect_multi_blocks(
             for group in cur_groups {
                 let index = group;
                 if let Some(value) = prev {
-                    union_set(
-                        value,
-                        index,
-                        &mut parent,
-                        &mut groups,
-                        &mut op_groups,
-                    );
+                    union_set(value, index, &mut parent, &mut groups, &mut op_groups);
                 }
                 prev = Some(index);
             }
             if let Some(value) = prev {
-                let found_set =
-                    find_set(value, &mut parent, &mut groups, &mut op_groups);
+                let found_set = find_set(value, &mut parent, &mut groups, &mut op_groups);
                 op_groups.get_mut(&found_set).unwrap().push(node.index());
             }
         }

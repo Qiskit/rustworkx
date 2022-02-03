@@ -61,9 +61,7 @@ class TestKShortestpath(unittest.TestCase):
                 (7, 5),
             ]
         )
-        res = retworkx.digraph_k_shortest_path_lengths(
-            graph, 1, 2, lambda _: 1, 3
-        )
+        res = retworkx.digraph_k_shortest_path_lengths(graph, 1, 2, lambda _: 1, 3)
         self.assertEqual(res, {3: 6})
 
     def test_digraph_k_shortest_path_with_goal_node_hole(self):
@@ -86,3 +84,13 @@ class TestKShortestpath(unittest.TestCase):
                         edge_cost=lambda _: invalid_weight,
                         goal=3,
                     )
+
+    def test_k_shortest_path_with_no_path(self):
+        g = retworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        path_lenghts = retworkx.digraph_k_shortest_path_lengths(
+            g, start=a, k=1, edge_cost=float, goal=b
+        )
+        expected = {}
+        self.assertEqual(expected, path_lenghts)

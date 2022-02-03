@@ -35,20 +35,17 @@ use num_traits::Zero;
 use numpy::PyReadonlyArray2;
 
 use super::dot_utils::build_dot;
-use super::iterators::{
-    EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList,
-};
+use super::iterators::{EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
-    find_node_by_weight, merge_duplicates, weight_callable, IsNan,
-    NoEdgeBetweenNodes, NodesRemoved, StablePyGraph,
+    find_node_by_weight, merge_duplicates, weight_callable, IsNan, NoEdgeBetweenNodes,
+    NodesRemoved, StablePyGraph,
 };
 
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::visit::{
-    GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
-    NodeIndexable,
+    GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered, NodeIndexable,
 };
 
 /// A class for creating undirected graphs
@@ -158,8 +155,7 @@ impl PyGraph {
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
         let out_dict = PyDict::new(py);
         let node_dict = PyDict::new(py);
-        let mut out_list: Vec<PyObject> =
-            Vec::with_capacity(self.graph.edge_count());
+        let mut out_list: Vec<PyObject> = Vec::with_capacity(self.graph.edge_count());
         out_dict.set_item("nodes", node_dict)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
         out_dict.set_item("multigraph", self.multigraph)?;
@@ -171,8 +167,7 @@ impl PyGraph {
             let edge_w = self.graph.edge_weight(edge);
             let endpoints = self.graph.edge_endpoints(edge).unwrap();
 
-            let triplet = (endpoints.0.index(), endpoints.1.index(), edge_w)
-                .to_object(py);
+            let triplet = (endpoints.0.index(), endpoints.1.index(), edge_w).to_object(py);
             out_list.push(triplet);
         }
         let py_out_list: PyObject = PyList::new(py, out_list).into();
@@ -183,10 +178,8 @@ impl PyGraph {
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
         self.graph = StablePyGraph::<Undirected>::default();
         let dict_state = state.cast_as::<PyDict>(py)?;
-        let nodes_dict =
-            dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
-        let edges_list =
-            dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
+        let nodes_dict = dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
+        let edges_list = dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
         let nodes_removed_raw = dict_state
             .get_item("nodes_removed")
             .unwrap()
@@ -346,10 +339,10 @@ impl PyGraph {
         self.node_indices()
     }
 
-    /// Return True if there is an edge between node_a to node_b.
+    /// Return True if there is an edge between ``node_a`` and ``node_b``.
     ///
-    /// :param int node_a: The node index to check for an edge between
-    /// :param int node_b: The node index to check for an edge between
+    /// :param int node_a: The index for the first node
+    /// :param int node_b: The index for the second node
     ///
     /// :returns: True if there is an edge false if there is no edge
     /// :rtype: bool
@@ -373,20 +366,12 @@ impl PyGraph {
     /// :raises NoEdgeBetweenNodes: when there is no edge between the provided
     ///     nodes
     #[pyo3(text_signature = "(self, node_a, node_b, /)")]
-    pub fn get_edge_data(
-        &self,
-        node_a: usize,
-        node_b: usize,
-    ) -> PyResult<&PyObject> {
+    pub fn get_edge_data(&self, node_a: usize, node_b: usize) -> PyResult<&PyObject> {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
         let edge_index = match self.graph.find_edge(index_a, index_b) {
             Some(edge_index) => edge_index,
-            None => {
-                return Err(NoEdgeBetweenNodes::new_err(
-                    "No edge found between nodes",
-                ))
-            }
+            None => return Err(NoEdgeBetweenNodes::new_err("No edge found between nodes")),
         };
 
         let data = self.graph.edge_weight(edge_index).unwrap();
@@ -429,11 +414,7 @@ impl PyGraph {
     ///     tuple for a given edge index.
     /// :rtype: EdgeIndexMap
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn incident_edge_index_map(
-        &self,
-        py: Python,
-        node: usize,
-    ) -> EdgeIndexMap {
+    pub fn incident_edge_index_map(&self, py: Python, node: usize) -> EdgeIndexMap {
         let node_index = NodeIndex::new(node);
         EdgeIndexMap {
             edge_map: self
@@ -507,10 +488,7 @@ impl PyGraph {
     /// :raises IndexError: when there is no edge present with the provided
     ///     index
     #[pyo3(text_signature = "(self, edge_index, /)")]
-    pub fn get_edge_data_by_index(
-        &self,
-        edge_index: usize,
-    ) -> PyResult<&PyObject> {
+    pub fn get_edge_data_by_index(&self, edge_index: usize) -> PyResult<&PyObject> {
         let data = match self.graph.edge_weight(EdgeIndex::new(edge_index)) {
             Some(data) => data,
             None => {
@@ -532,20 +510,16 @@ impl PyGraph {
     /// :raises IndexError: when there is no edge present with the provided
     ///     index
     #[pyo3(text_signature = "(self, edge_index, /)")]
-    pub fn get_edge_endpoints_by_index(
-        &self,
-        edge_index: usize,
-    ) -> PyResult<(usize, usize)> {
-        let endpoints =
-            match self.graph.edge_endpoints(EdgeIndex::new(edge_index)) {
-                Some(endpoints) => (endpoints.0.index(), endpoints.1.index()),
-                None => {
-                    return Err(PyIndexError::new_err(format!(
-                        "Provided edge index {} is not present in the graph",
-                        edge_index
-                    )));
-                }
-            };
+    pub fn get_edge_endpoints_by_index(&self, edge_index: usize) -> PyResult<(usize, usize)> {
+        let endpoints = match self.graph.edge_endpoints(EdgeIndex::new(edge_index)) {
+            Some(endpoints) => (endpoints.0.index(), endpoints.1.index()),
+            None => {
+                return Err(PyIndexError::new_err(format!(
+                    "Provided edge index {} is not present in the graph",
+                    edge_index
+                )));
+            }
+        };
         Ok(endpoints)
     }
 
@@ -561,21 +535,12 @@ impl PyGraph {
     ///
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
     #[pyo3(text_signature = "(self, source, target, edge /)")]
-    pub fn update_edge(
-        &mut self,
-        source: usize,
-        target: usize,
-        edge: PyObject,
-    ) -> PyResult<()> {
+    pub fn update_edge(&mut self, source: usize, target: usize, edge: PyObject) -> PyResult<()> {
         let index_a = NodeIndex::new(source);
         let index_b = NodeIndex::new(target);
         let edge_index = match self.graph.find_edge(index_a, index_b) {
             Some(edge_index) => edge_index,
-            None => {
-                return Err(NoEdgeBetweenNodes::new_err(
-                    "No edge found between nodes",
-                ))
-            }
+            None => return Err(NoEdgeBetweenNodes::new_err("No edge found between nodes")),
         };
         let data = self.graph.edge_weight_mut(edge_index).unwrap();
         *data = edge;
@@ -587,18 +552,13 @@ impl PyGraph {
     /// :param int edge_index: The index for the edge
     /// :param object edge: The data payload/weight to update the edge with
     ///
-    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[pyo3(text_signature = "(self, source, target, edge /)")]
-    pub fn update_edge_by_index(
-        &mut self,
-        edge_index: usize,
-        edge: PyObject,
-    ) -> PyResult<()> {
+    /// :raises IndexError: when there is no edge present with the provided
+    ///     index
+    #[pyo3(text_signature = "(self, edge_index, edge, /)")]
+    pub fn update_edge_by_index(&mut self, edge_index: usize, edge: PyObject) -> PyResult<()> {
         match self.graph.edge_weight_mut(EdgeIndex::new(edge_index)) {
             Some(data) => *data = edge,
-            None => {
-                return Err(PyIndexError::new_err("No edge found for index"))
-            }
+            None => return Err(PyIndexError::new_err("No edge found for index")),
         };
         Ok(())
     }
@@ -614,9 +574,7 @@ impl PyGraph {
         let index = NodeIndex::new(node);
         let node = match self.graph.node_weight(index) {
             Some(node) => node,
-            None => {
-                return Err(PyIndexError::new_err("No node found for index"))
-            }
+            None => return Err(PyIndexError::new_err("No node found for index")),
         };
         Ok(node)
     }
@@ -630,11 +588,7 @@ impl PyGraph {
     /// :rtype: list
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
     #[pyo3(text_signature = "(self, node_a, node_b, /)")]
-    pub fn get_all_edge_data(
-        &self,
-        node_a: usize,
-        node_b: usize,
-    ) -> PyResult<Vec<&PyObject>> {
+    pub fn get_all_edge_data(&self, node_a: usize, node_b: usize) -> PyResult<Vec<&PyObject>> {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
         let out: Vec<&PyObject> = self
@@ -749,12 +703,7 @@ impl PyGraph {
     ///     of an existing edge with ``multigraph=False``) edge.
     /// :rtype: int
     #[pyo3(text_signature = "(self, node_a, node_b, edge, /)")]
-    pub fn add_edge(
-        &mut self,
-        node_a: usize,
-        node_b: usize,
-        edge: PyObject,
-    ) -> PyResult<usize> {
+    pub fn add_edge(&mut self, node_a: usize, node_b: usize, edge: PyObject) -> PyResult<usize> {
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
         if !self.multigraph {
@@ -796,8 +745,7 @@ impl PyGraph {
             if !self.multigraph {
                 let exists = self.graph.find_edge(p_index, c_index);
                 if let Some(index) = exists {
-                    let edge_weight =
-                        self.graph.edge_weight_mut(index).unwrap();
+                    let edge_weight = self.graph.edge_weight_mut(index).unwrap();
                     *edge_weight = obj.2;
                     out_list.push(index.index());
                     continue;
@@ -836,8 +784,7 @@ impl PyGraph {
             if !self.multigraph {
                 let exists = self.graph.find_edge(p_index, c_index);
                 if let Some(index) = exists {
-                    let edge_weight =
-                        self.graph.edge_weight_mut(index).unwrap();
+                    let edge_weight = self.graph.edge_weight_mut(index).unwrap();
                     *edge_weight = py.None();
                     out_list.push(index.index());
                     continue;
@@ -863,11 +810,7 @@ impl PyGraph {
     ///     is not present in the graph, nodes will be added (with a node
     ///     weight of ``None``) to that index.
     #[pyo3(text_signature = "(self, edge_list, /)")]
-    pub fn extend_from_edge_list(
-        &mut self,
-        py: Python,
-        edge_list: Vec<(usize, usize)>,
-    ) {
+    pub fn extend_from_edge_list(&mut self, py: Python, edge_list: Vec<(usize, usize)>) {
         for (source, target) in edge_list {
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
@@ -878,8 +821,7 @@ impl PyGraph {
             if !self.multigraph {
                 let exists = self.graph.find_edge(source_index, target_index);
                 if let Some(index) = exists {
-                    let edge_weight =
-                        self.graph.edge_weight_mut(index).unwrap();
+                    let edge_weight = self.graph.edge_weight_mut(index).unwrap();
                     *edge_weight = py.None();
                     continue;
                 }
@@ -919,8 +861,7 @@ impl PyGraph {
             if !self.multigraph {
                 let exists = self.graph.find_edge(source_index, target_index);
                 if let Some(index) = exists {
-                    let edge_weight =
-                        self.graph.edge_weight_mut(index).unwrap();
+                    let edge_weight = self.graph.edge_weight_mut(index).unwrap();
                     *edge_weight = weight;
                     continue;
                 }
@@ -940,20 +881,12 @@ impl PyGraph {
     /// :raises NoEdgeBetweenNodes: If there are no edges between the nodes
     ///     specified
     #[pyo3(text_signature = "(self, node_a, node_b, /)")]
-    pub fn remove_edge(
-        &mut self,
-        node_a: usize,
-        node_b: usize,
-    ) -> PyResult<()> {
+    pub fn remove_edge(&mut self, node_a: usize, node_b: usize) -> PyResult<()> {
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
         let edge_index = match self.graph.find_edge(p_index, c_index) {
             Some(edge_index) => edge_index,
-            None => {
-                return Err(NoEdgeBetweenNodes::new_err(
-                    "No edge found between nodes",
-                ))
-            }
+            None => return Err(NoEdgeBetweenNodes::new_err("No edge found between nodes")),
         };
         self.graph.remove_edge(edge_index);
         Ok(())
@@ -976,22 +909,18 @@ impl PyGraph {
     ///
     /// :param list index_list: A list of node index pairs to remove from
     ///     the graph
+    ///
+    /// :raises NoEdgeBetweenNodes: If there are no edges between a specified
+    ///     pair of nodes.
     #[pyo3(text_signature = "(self, index_list, /)")]
-    pub fn remove_edges_from(
-        &mut self,
-        index_list: Vec<(usize, usize)>,
-    ) -> PyResult<()> {
+    pub fn remove_edges_from(&mut self, index_list: Vec<(usize, usize)>) -> PyResult<()> {
         for (p_index, c_index) in index_list
             .iter()
             .map(|(x, y)| (NodeIndex::new(*x), NodeIndex::new(*y)))
         {
             let edge_index = match self.graph.find_edge(p_index, c_index) {
                 Some(edge_index) => edge_index,
-                None => {
-                    return Err(NoEdgeBetweenNodes::new_err(
-                        "No edge found between nodes",
-                    ))
-                }
+                None => return Err(NoEdgeBetweenNodes::new_err("No edge found between nodes")),
             };
             self.graph.remove_edge(edge_index);
         }
@@ -1033,10 +962,7 @@ impl PyGraph {
     /// :param list index_list: A list of node indicies to remove from the
     ///     the graph
     #[pyo3(text_signature = "(self, index_list, /)")]
-    pub fn remove_nodes_from(
-        &mut self,
-        index_list: Vec<usize>,
-    ) -> PyResult<()> {
+    pub fn remove_nodes_from(&mut self, index_list: Vec<usize>) -> PyResult<()> {
         for node in index_list.iter().map(|x| NodeIndex::new(*x)) {
             self.graph.remove_node(node);
         }
@@ -1054,13 +980,9 @@ impl PyGraph {
     /// :returns: the index of the first node in the graph that is equal to the
     ///     weight. If no match is found ``None`` will be returned.
     /// :rtype: int
-    pub fn find_node_by_weight(
-        &self,
-        py: Python,
-        obj: PyObject,
-    ) -> PyResult<Option<usize>> {
-        find_node_by_weight(py, &self.graph, &obj)
-            .map(|node| node.map(|x| x.index()))
+    #[pyo3(text_signature = "(self, obj, /)")]
+    pub fn find_node_by_weight(&self, py: Python, obj: PyObject) -> PyResult<Option<usize>> {
+        find_node_by_weight(py, &self.graph, &obj).map(|node| node.map(|x| x.index()))
     }
 
     /// Get the index and data for the neighbors of a node.
@@ -1090,7 +1012,7 @@ impl PyGraph {
     ///
     /// This with return a list of neighbor node indices
     ///
-    /// :param int node: The index of the node to get the neibhors of
+    /// :param int node: The index of the node to get the neighbors of
     ///
     /// :returns: A list of the neighbor node indicies
     /// :rtype: NodeIndices
@@ -1141,14 +1063,12 @@ impl PyGraph {
     ///     node and edge weights/data payloads are copied by reference to
     ///     the output graph
     /// :rtype: PyDiGraph
+    #[pyo3(text_signature = "(self)")]
     pub fn to_directed(&self, py: Python) -> crate::digraph::PyDiGraph {
         let node_count = self.node_count();
-        let mut new_graph = StablePyGraph::<Directed>::with_capacity(
-            node_count,
-            2 * self.graph.edge_count(),
-        );
-        let mut node_map: HashMap<NodeIndex, NodeIndex> =
-            HashMap::with_capacity(node_count);
+        let mut new_graph =
+            StablePyGraph::<Directed>::with_capacity(node_count, 2 * self.graph.edge_count());
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(node_count);
         for node_index in self.graph.node_indices() {
             let node = self.graph[node_index].clone_ref(py);
             let new_index = new_graph.add_node(node);
@@ -1236,26 +1156,12 @@ impl PyGraph {
         match filename {
             Some(filename) => {
                 let mut file = File::create(filename)?;
-                build_dot(
-                    py,
-                    &self.graph,
-                    &mut file,
-                    graph_attr,
-                    node_attr,
-                    edge_attr,
-                )?;
+                build_dot(py, &self.graph, &mut file, graph_attr, node_attr, edge_attr)?;
                 Ok(None)
             }
             None => {
                 let mut file = Vec::<u8>::new();
-                build_dot(
-                    py,
-                    &self.graph,
-                    &mut file,
-                    graph_attr,
-                    node_attr,
-                    edge_attr,
-                )?;
+                build_dot(py, &self.graph, &mut file, graph_attr, node_attr, edge_attr)?;
                 Ok(Some(
                     PyString::new(py, str::from_utf8(&file)?).to_object(py),
                 ))
@@ -1301,9 +1207,7 @@ impl PyGraph {
     ///
     #[staticmethod]
     #[args(labels = "false")]
-    #[pyo3(
-        text_signature = "(path, /, comment=None, deliminator=None, labels=False)"
-    )]
+    #[pyo3(text_signature = "(path, /, comment=None, deliminator=None, labels=False)")]
     pub fn read_edge_list(
         py: Python,
         path: &str,
@@ -1345,8 +1249,7 @@ impl PyGraph {
                 src = match label_map.get(src_str) {
                     Some(index) => *index,
                     None => {
-                        let index =
-                            out_graph.add_node(src_str.to_object(py)).index();
+                        let index = out_graph.add_node(src_str.to_object(py)).index();
                         label_map.insert(src_str.to_string(), index);
                         index
                     }
@@ -1354,9 +1257,7 @@ impl PyGraph {
                 target = match label_map.get(target_str) {
                     Some(index) => *index,
                     None => {
-                        let index = out_graph
-                            .add_node(target_str.to_object(py))
-                            .index();
+                        let index = out_graph.add_node(target_str.to_object(py)).index();
                         label_map.insert(target_str.to_string(), index);
                         index
                     }
@@ -1380,11 +1281,7 @@ impl PyGraph {
             } else {
                 py.None()
             };
-            out_graph.add_edge(
-                NodeIndex::new(src),
-                NodeIndex::new(target),
-                weight,
-            );
+            out_graph.add_edge(NodeIndex::new(src), NodeIndex::new(target), weight);
         }
         Ok(PyGraph {
             graph: out_graph,
@@ -1420,9 +1317,7 @@ impl PyGraph {
     ///     with open(path, 'rt') as edge_file:
     ///         print(edge_file.read())
     ///
-    #[pyo3(
-        text_signature = "(self, path, /, deliminator=None, weight_fn=None)"
-    )]
+    #[pyo3(text_signature = "(self, path, /, deliminator=None, weight_fn=None)")]
     pub fn write_edge_list(
         &self,
         py: Python,
@@ -1447,14 +1342,8 @@ impl PyGraph {
                 )
                 .as_bytes(),
             )?;
-            match weight_callable(
-                py,
-                &weight_fn,
-                edge.weight(),
-                None as Option<String>,
-            )? {
-                Some(weight) => buf_writer
-                    .write_all(format!("{}{}\n", delim, weight).as_bytes()),
+            match weight_callable(py, &weight_fn, edge.weight(), None as Option<String>)? {
+                Some(weight) => buf_writer.write_all(format!("{}{}\n", delim, weight).as_bytes()),
                 None => buf_writer.write_all(b"\n"),
             }?;
         }
@@ -1490,7 +1379,7 @@ impl PyGraph {
     /// :rtype: PyGraph
     #[staticmethod]
     #[args(null_value = "0.0")]
-    #[pyo3(text_signature = "(matrix, /)")]
+    #[pyo3(text_signature = "(matrix, /, null_value=0.0)")]
     pub fn from_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
@@ -1603,9 +1492,7 @@ impl PyGraph {
     ///   graph.compose(other_graph, node_map)
     ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
-    #[pyo3(
-        text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)"
-    )]
+    #[pyo3(text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)")]
     pub fn compose(
         &mut self,
         py: Python,
@@ -1632,8 +1519,7 @@ impl PyGraph {
         for edge in other.graph.edge_references() {
             let new_p_index = new_node_map.get(&edge.source()).unwrap();
             let new_c_index = new_node_map.get(&edge.target()).unwrap();
-            let weight =
-                weight_transform_callable(py, &edge_map_func, edge.weight())?;
+            let weight = weight_transform_callable(py, &edge_map_func, edge.weight())?;
             self.graph.add_edge(*new_p_index, *new_c_index, weight);
         }
         // Add edges from map
@@ -1717,8 +1603,7 @@ impl PyGraph {
         // to that function, even if this is a multigraph. If unspecified,
         // defer parallel edge handling to `add_edge`.
         if let Some(merge_fn) = weight_combo_fn {
-            edges =
-                merge_duplicates(edges, |w1, w2| merge_fn.call1(py, (w1, w2)))?;
+            edges = merge_duplicates(edges, |w1, w2| merge_fn.call1(py, (w1, w2)))?;
         }
 
         for (source, weight) in edges {
@@ -1744,10 +1629,8 @@ impl PyGraph {
     #[pyo3(text_signature = "(self, nodes, /)")]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
-        let mut node_map: HashMap<NodeIndex, NodeIndex> =
-            HashMap::with_capacity(nodes.len());
-        let node_filter =
-            |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
+        let node_filter = |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
         let mut out_graph = StablePyGraph::<Undirected>::default();
         let filtered = NodeFiltered(&self.graph, node_filter);
         for node in filtered.node_references() {
@@ -1757,11 +1640,7 @@ impl PyGraph {
         for edge in filtered.edge_references() {
             let new_source = *node_map.get(&edge.source()).unwrap();
             let new_target = *node_map.get(&edge.target()).unwrap();
-            out_graph.add_edge(
-                new_source,
-                new_target,
-                edge.weight().clone_ref(py),
-            );
+            out_graph.add_edge(new_source, new_target, edge.weight().clone_ref(py));
         }
         PyGraph {
             graph: out_graph,
@@ -1772,7 +1651,7 @@ impl PyGraph {
 
     /// Return a new PyGraph object for an edge induced subgraph of this graph
     ///
-    /// The induced subgraph contains each edge in `edges` and each node
+    /// The induced subgraph contains each edge in `edge_list` and each node
     /// incident to any of those edges.
     ///
     /// :param list edge_list: A list of edge tuples (2-tuples with the source
@@ -1784,7 +1663,7 @@ impl PyGraph {
     /// :returns: The edge subgraph
     /// :rtype: PyGraph
     ///
-    #[pyo3(text_signature = "(self, edges, /)")]
+    #[pyo3(text_signature = "(self, edge_list, /)")]
     pub fn edge_subgraph(&self, edge_list: Vec<[usize; 2]>) -> PyGraph {
         // Filter non-existent edges
         let edges: Vec<[usize; 2]> = edge_list
@@ -1802,8 +1681,7 @@ impl PyGraph {
             .copied()
             .map(NodeIndex::new)
             .collect();
-        let mut edge_set: HashSet<[NodeIndex; 2]> =
-            HashSet::with_capacity(edges.len());
+        let mut edge_set: HashSet<[NodeIndex; 2]> = HashSet::with_capacity(edges.len());
         for edge in edges {
             let source_index = NodeIndex::new(edge[0]);
             let target_index = NodeIndex::new(edge[1]);
@@ -1853,9 +1731,7 @@ impl PyMappingProtocol for PyGraph {
     fn __setitem__(&'p mut self, idx: usize, value: PyObject) -> PyResult<()> {
         let data = match self.graph.node_weight_mut(NodeIndex::new(idx)) {
             Some(node_data) => node_data,
-            None => {
-                return Err(PyIndexError::new_err("No node found for index"))
-            }
+            None => return Err(PyIndexError::new_err("No node found for index")),
         };
         *data = value;
         Ok(())
