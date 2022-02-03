@@ -22,8 +22,7 @@ use std::hash::Hash;
 
 use petgraph::algo::Measure;
 use petgraph::visit::{
-    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable,
-    Visitable,
+    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
 };
 
 use crate::distancemap::DistanceMap;
@@ -115,8 +114,7 @@ where
         }
 
         for edge in graph.edges(node) {
-            visit_next
-                .push(MinScored(node_score + edge_cost(edge)?, edge.target()));
+            visit_next.push(MinScored(node_score + edge_cost(edge)?, edge.target()));
         }
     }
 

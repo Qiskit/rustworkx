@@ -164,11 +164,7 @@ pub enum BfsEvent<N, E> {
 /// println!("number of non-tree edges encountered: {}", non_tree_edges);
 /// println!("non-tree edge: ({:?})", result.unwrap_err());
 /// ```
-pub fn breadth_first_search<G, I, F, C>(
-    graph: G,
-    starts: I,
-    mut visitor: F,
-) -> C
+pub fn breadth_first_search<G, I, F, C>(graph: G, starts: I, mut visitor: F) -> C
 where
     G: IntoEdges + Visitable,
     I: IntoIterator<Item = G::NodeId>,
@@ -213,10 +209,7 @@ where
             for edge in graph.edges(u) {
                 let v = edge.target();
                 if !discovered.is_visited(&v) {
-                    try_control!(
-                        visitor(BfsEvent::TreeEdge(u, v, edge.weight())),
-                        continue
-                    );
+                    try_control!(visitor(BfsEvent::TreeEdge(u, v, edge.weight())), continue);
                     discovered.visit(v);
                     try_control!(visitor(BfsEvent::Discover(v)), continue);
                     stack.push_back(v);
@@ -229,20 +222,12 @@ where
 
                     if !finished.is_visited(&v) {
                         try_control!(
-                            visitor(BfsEvent::GrayTargetEdge(
-                                u,
-                                v,
-                                edge.weight()
-                            )),
+                            visitor(BfsEvent::GrayTargetEdge(u, v, edge.weight())),
                             continue
                         );
                     } else {
                         try_control!(
-                            visitor(BfsEvent::BlackTargetEdge(
-                                u,
-                                v,
-                                edge.weight()
-                            )),
+                            visitor(BfsEvent::BlackTargetEdge(u, v, edge.weight())),
                             continue
                         );
                     }
