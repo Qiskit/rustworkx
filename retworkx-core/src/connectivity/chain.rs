@@ -16,8 +16,7 @@ use std::hash::Hash;
 use hashbrown::HashMap;
 
 use petgraph::visit::{
-    GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable,
-    VisitMap, Visitable,
+    GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable, VisitMap, Visitable,
 };
 use petgraph::Undirected;
 
