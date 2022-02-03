@@ -29,7 +29,7 @@ use retworkx_core::centrality;
 ///    c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
 ///
 /// where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
-/// shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+/// shortest :math:`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
 /// those paths  passing through some  node :math:`v` other than :math:`s, t`.
 /// If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
 /// :math:`\sigma(s, t|v) = 0`
@@ -57,26 +57,16 @@ use retworkx_core::centrality;
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      betweenness score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction(
-    normalized = "true",
-    endpoints = "false",
-    parallel_threshold = "50"
-)]
-#[pyo3(
-    text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)"
-)]
+#[pyfunction(normalized = "true", endpoints = "false", parallel_threshold = "50")]
+#[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)")]
 pub fn graph_betweenness_centrality(
     graph: &graph::PyGraph,
     normalized: bool,
     endpoints: bool,
     parallel_threshold: usize,
 ) -> CentralityMapping {
-    let betweenness = centrality::betweenness_centrality(
-        &graph.graph,
-        endpoints,
-        normalized,
-        parallel_threshold,
-    );
+    let betweenness =
+        centrality::betweenness_centrality(&graph.graph, endpoints, normalized, parallel_threshold);
     CentralityMapping {
         centralities: betweenness
             .into_iter()
@@ -124,26 +114,16 @@ pub fn graph_betweenness_centrality(
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      betweenness score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction(
-    normalized = "true",
-    endpoints = "false",
-    parallel_threshold = "50"
-)]
-#[pyo3(
-    text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)"
-)]
+#[pyfunction(normalized = "true", endpoints = "false", parallel_threshold = "50")]
+#[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)")]
 pub fn digraph_betweenness_centrality(
     graph: &digraph::PyDiGraph,
     normalized: bool,
     endpoints: bool,
     parallel_threshold: usize,
 ) -> CentralityMapping {
-    let betweenness = centrality::betweenness_centrality(
-        &graph.graph,
-        endpoints,
-        normalized,
-        parallel_threshold,
-    );
+    let betweenness =
+        centrality::betweenness_centrality(&graph.graph, endpoints, normalized, parallel_threshold);
     CentralityMapping {
         centralities: betweenness
             .into_iter()

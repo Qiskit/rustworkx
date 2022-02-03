@@ -74,9 +74,7 @@ class TestCompose(unittest.TestCase):
             original_op_nodes[0]: (op_nodes[0], "qr[0]"),
             original_input_nodes[1]: (op_nodes[0], "qr[1]"),
         }
-        res = digraph.compose(
-            other_digraph, node_map, node_map_func=map_fn, edge_map_func=map_fn
-        )
+        res = digraph.compose(other_digraph, node_map, node_map_func=map_fn, edge_map_func=map_fn)
         self.assertEqual({2: 4, 3: 3, 4: 5}, res)
         self.assertEqual(digraph[res[other_output_nodes[0]]], "qr[0]")
         self.assertEqual(digraph[res[other_output_nodes[1]]], "qr[1]")

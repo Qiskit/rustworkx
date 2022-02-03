@@ -39,9 +39,7 @@ def _save_image(image, path):
         image.save(path)
 
 
-@unittest.skipUnless(
-    HAS_PILLOW, "pillow and graphviz are required for running these tests"
-)
+@unittest.skipUnless(HAS_PILLOW, "pillow and graphviz are required for running these tests")
 class TestGraphvizDraw(unittest.TestCase):
     def test_draw_no_args(self):
         graph = retworkx.generators.star_graph(24)
@@ -115,9 +113,7 @@ class TestGraphvizDraw(unittest.TestCase):
         )
         graph.add_edge(0, 1, dict(label="1", name="1"))
         graph_attr = {"bgcolor": "red"}
-        image = graphviz_draw(
-            graph, lambda node: node, lambda edge: edge, graph_attr
-        )
+        image = graphviz_draw(graph, lambda node: node, lambda edge: edge, graph_attr)
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_draw_graph_attr.png")
 

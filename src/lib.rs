@@ -26,6 +26,7 @@ mod matching;
 mod random_graph;
 mod shortest_path;
 mod steiner_tree;
+mod toposort;
 mod transitivity;
 mod traversal;
 mod tree;
@@ -63,8 +64,7 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
-    NodeCount, NodeIndexable,
+    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount, NodeIndexable,
 };
 use petgraph::EdgeType;
 
@@ -110,9 +110,7 @@ where
     }
 }
 
-pub fn get_edge_iter_with_weights<G>(
-    graph: G,
-) -> impl Iterator<Item = (usize, usize, PyObject)>
+pub fn get_edge_iter_with_weights<G>(graph: G) -> impl Iterator<Item = (usize, usize, PyObject)>
 where
     G: GraphBase
         + IntoEdgeReferences
@@ -140,10 +138,8 @@ where
         let j: usize;
         match &node_map {
             Some(map) => {
-                let source_index =
-                    NodeIndex::new(graph.to_index(edge.source()));
-                let target_index =
-                    NodeIndex::new(graph.to_index(edge.target()));
+                let source_index = NodeIndex::new(graph.to_index(edge.source()));
+                let target_index = NodeIndex::new(graph.to_index(edge.target()));
                 i = *map.get(&source_index).unwrap();
                 j = *map.get(&target_index).unwrap();
             }
@@ -210,9 +206,7 @@ impl TryFrom<f64> for CostFn {
 impl TryFrom<(Option<PyObject>, f64)> for CostFn {
     type Error = PyErr;
 
-    fn try_from(
-        func_or_default: (Option<PyObject>, f64),
-    ) -> Result<Self, Self::Error> {
+    fn try_from(func_or_default: (Option<PyObject>, f64)) -> Result<Self, Self::Error> {
         let (obj, val) = func_or_default;
         match obj {
             Some(obj) => Ok(CostFn::PyFunction(obj)),
@@ -254,10 +248,7 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
-fn merge_duplicates<K, V, F, E>(
-    xs: Vec<(K, V)>,
-    mut merge_fn: F,
-) -> Result<Vec<(K, V)>, E>
+fn merge_duplicates<K, V, F, E>(xs: Vec<(K, V)>, mut merge_fn: F) -> Result<Vec<(K, V)>, E>
 where
     K: Hash + Eq,
     F: FnMut(&V, &V) -> Result<V, E>,
@@ -308,6 +299,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(graph_dijkstra_search))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_search))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
@@ -407,9 +400,12 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(articulation_points))?;
+    m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
+    m.add_class::<toposort::TopologicalSorter>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::Chains>()?;
     m.add_class::<iterators::NodeIndices>()?;
@@ -426,6 +422,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodesCountMapping>()?;
     m.add_class::<iterators::NodeMap>()?;
     m.add_class::<iterators::ProductNodeMap>()?;
+    m.add_class::<iterators::BiconnectedComponents>()?;
     m.add_wrapped(wrap_pymodule!(generators))?;
     Ok(())
 }

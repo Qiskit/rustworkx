@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Fixes :meth:`~retworkx.PyGraph.degree` where self-loops should increment
-    by two (and not by one) the degree of a node in a :class:`~retworkx.PyGraph`
-    object.

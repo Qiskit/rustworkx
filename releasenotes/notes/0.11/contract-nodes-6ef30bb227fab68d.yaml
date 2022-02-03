@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    New graph class methods :meth:`retworkx.PyDiGraph.contract_nodes`,
+    Added new graph methods :meth:`retworkx.PyDiGraph.contract_nodes`,
     and :meth:`retworkx.PyGraph.contract_nodes`.
     These methods can be used to replace a set of graph nodes with a single new
     equivalent node. Incoming edges and outgoing edges of and to the

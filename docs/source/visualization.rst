@@ -7,7 +7,7 @@ Visualization
 Visualization API
 =================
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.visualization.mpl_draw
    retworkx.visualization.graphviz_draw

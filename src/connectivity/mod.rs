@@ -15,10 +15,7 @@
 mod connected_components;
 mod core_number;
 
-use super::{
-    digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode,
-    NullGraph,
-};
+use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
 
 use hashbrown::{HashMap, HashSet};
 
@@ -28,14 +25,12 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::{
-    EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable,
-};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{Chains, EdgeList};
+use crate::iterators::{BiconnectedComponents, Chains, EdgeList};
 use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -46,6 +41,12 @@ use retworkx_core::connectivity;
 /// is defined as the exclusive or of the edges.
 ///
 /// This is adapted from algorithm CACM 491 [1]_.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges.
+///     It may produce incorrect/unexpected results if the input graph has
+///     parallel edges.
 ///
 /// :param PyGraph graph: The graph to find the cycle basis in
 /// :param int root: Optional index for starting node for basis
@@ -58,13 +59,9 @@ use retworkx_core::connectivity;
 ///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, root=None)")]
-pub fn cycle_basis(
-    graph: &graph::PyGraph,
-    root: Option<usize>,
-) -> Vec<Vec<usize>> {
+pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize>> {
     let mut root_node = root;
-    let mut graph_nodes: HashSet<NodeIndex> =
-        graph.graph.node_indices().collect();
+    let mut graph_nodes: HashSet<NodeIndex> = graph.graph.node_indices().collect();
     let mut cycles: Vec<Vec<usize>> = Vec::new();
     while !graph_nodes.is_empty() {
         let temp_value: NodeIndex;
@@ -139,9 +136,7 @@ pub fn cycle_basis(
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn strongly_connected_components(
-    graph: &digraph::PyDiGraph,
-) -> Vec<Vec<usize>> {
+pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usize>> {
     algo::kosaraju_scc(&graph.graph)
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
@@ -160,14 +155,9 @@ pub fn strongly_connected_components(
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-pub fn digraph_find_cycle(
-    graph: &digraph::PyDiGraph,
-    source: Option<usize>,
-) -> EdgeList {
-    let mut graph_nodes: HashSet<NodeIndex> =
-        graph.graph.node_indices().collect();
-    let mut cycle: Vec<(usize, usize)> =
-        Vec::with_capacity(graph.graph.edge_count());
+pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
+    let mut graph_nodes: HashSet<NodeIndex> = graph.graph.node_indices().collect();
+    let mut cycle: Vec<(usize, usize)> = Vec::with_capacity(graph.graph.edge_count());
     let temp_value: NodeIndex;
     // If source is not set get an arbitrary node from the set of graph
     // nodes we've not "examined"
@@ -266,10 +256,7 @@ pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
 /// :raises InvalidNode: When an invalid node index is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-pub fn node_connected_component(
-    graph: &graph::PyGraph,
-    node: usize,
-) -> PyResult<HashSet<usize>> {
+pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult<HashSet<usize>> {
     let node = NodeIndex::new(node);
 
     if !graph.graph.contains_node(node) {
@@ -337,9 +324,7 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn weakly_connected_components(
-    graph: &digraph::PyDiGraph,
-) -> Vec<HashSet<usize>> {
+pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
     connected_components::connected_components(&graph.graph)
 }
 
@@ -388,12 +373,10 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
 ///
-///  :return: The adjacency matrix for the input dag as a numpy array
+///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
 #[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
-)]
+#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
 pub fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -404,11 +387,8 @@ pub fn digraph_adjacency_matrix(
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
-        let edge_weight =
-            weight_callable(py, &weight_fn, &weight, default_weight)?;
-        if matrix[[i, j]] == null_value
-            || (null_value.is_nan() && matrix[[i, j]].is_nan())
-        {
+        let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
+        if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
         } else {
             matrix[[i, j]] += edge_weight;
@@ -444,12 +424,10 @@ pub fn digraph_adjacency_matrix(
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
 ///
-/// :return: The adjacency matrix for the input dag as a numpy array
+/// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
 #[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
-)]
+#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
 pub fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
@@ -460,11 +438,8 @@ pub fn graph_adjacency_matrix(
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
-        let edge_weight =
-            weight_callable(py, &weight_fn, &weight, default_weight)?;
-        if matrix[[i, j]] == null_value
-            || (null_value.is_nan() && matrix[[i, j]].is_nan())
-        {
+        let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
+        if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
             matrix[[j, i]] = edge_weight;
         } else {
@@ -475,7 +450,7 @@ pub fn graph_adjacency_matrix(
     Ok(matrix.into_pyarray(py).into())
 }
 
-/// Compute the complement of a graph.
+/// Compute the complement of an undirected graph.
 ///
 /// :param PyGraph graph: The graph to be used.
 ///
@@ -489,36 +464,27 @@ pub fn graph_adjacency_matrix(
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_complement(
-    py: Python,
-    graph: &graph::PyGraph,
-) -> PyResult<graph::PyGraph> {
-    let mut complement_graph = graph.clone(); // keep same node indexes
+pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::PyGraph> {
+    let mut complement_graph = graph.clone(); // keep same node indices
     complement_graph.graph.clear_edges();
 
     for node_a in graph.graph.node_indices() {
-        let old_neighbors: HashSet<NodeIndex> =
-            graph.graph.neighbors(node_a).collect();
+        let old_neighbors: HashSet<NodeIndex> = graph.graph.neighbors(node_a).collect();
         for node_b in graph.graph.node_indices() {
             if node_a != node_b
                 && !old_neighbors.contains(&node_b)
                 && (!complement_graph.multigraph
-                    || !complement_graph
-                        .has_edge(node_a.index(), node_b.index()))
+                    || !complement_graph.has_edge(node_a.index(), node_b.index()))
             {
                 // avoid creating parallel edges in multigraph
-                complement_graph.add_edge(
-                    node_a.index(),
-                    node_b.index(),
-                    py.None(),
-                )?;
+                complement_graph.add_edge(node_a.index(), node_b.index(), py.None())?;
             }
         }
     }
     Ok(complement_graph)
 }
 
-/// Compute the complement of a graph.
+/// Compute the complement of a directed graph.
 ///
 /// :param PyDiGraph graph: The graph to be used.
 ///
@@ -532,11 +498,8 @@ pub fn graph_complement(
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_complement(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-) -> PyResult<digraph::PyDiGraph> {
-    let mut complement_graph = graph.clone(); // keep same node indexes
+pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<digraph::PyDiGraph> {
+    let mut complement_graph = graph.clone(); // keep same node indices
     complement_graph.graph.clear_edges();
 
     for node_a in graph.graph.node_indices() {
@@ -546,11 +509,7 @@ pub fn digraph_complement(
             .collect();
         for node_b in graph.graph.node_indices() {
             if node_a != node_b && !old_neighbors.contains(&node_b) {
-                complement_graph.add_edge(
-                    node_a.index(),
-                    node_b.index(),
-                    py.None(),
-                )?;
+                complement_graph.add_edge(node_a.index(), node_b.index(), py.None())?;
             }
         }
     }
@@ -575,7 +534,7 @@ pub fn digraph_complement(
 /// :returns: A list of lists where each inner list is a path of node indices
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, from, to, /, min=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
 fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     from: usize,
@@ -682,10 +641,7 @@ fn digraph_all_simple_paths(
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_core_number(
-    py: Python,
-    graph: &graph::PyGraph,
-) -> PyResult<PyObject> {
+pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
 }
 
@@ -706,11 +662,68 @@ pub fn graph_core_number(
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_core_number(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-) -> PyResult<PyObject> {
+pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
+}
+
+/// Return the articulation points of an undirected graph.
+///
+/// An articulation point or cut vertex is any node whose removal (along with
+/// all its incident edges) increases the number of connected components of
+/// a graph. An undirected connected graph without articulation points is
+/// biconnected.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph: The undirected graph to be used.
+///
+/// :returns: A set with node indices of the articulation points in the graph.
+/// :rtype: set
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
+    connectivity::articulation_points(&graph.graph, None)
+        .into_iter()
+        .map(|nx| nx.index())
+        .collect()
+}
+
+/// Return the biconnected components of an undirected graph.
+///
+/// Biconnected components are maximal subgraphs such that the removal
+/// of a node (and all edges incident on that node) will not disconnect
+/// the subgraph. Note that nodes may be part of more than one biconnected
+/// component. Those nodes are articulation points, or cut vertices. The
+/// algorithm computes how many biconnected components are in the graph,
+/// and assigning each component an integer label.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph: The undirected graph to be used.
+///
+/// :returns: A dictionary with keys the edge endpoints and value the biconnected
+///     component number that the edge belongs.
+/// :rtype: dict
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
+    let mut bicomp = HashMap::new();
+    connectivity::articulation_points(&graph.graph, Some(&mut bicomp));
+
+    BiconnectedComponents {
+        bicon_comp: bicomp
+            .into_iter()
+            .map(|((v, w), comp)| ((v.index(), w.index()), comp))
+            .collect(),
+    }
 }
 
 /// Returns the chain decomposition of a graph.
@@ -729,8 +742,7 @@ pub fn digraph_core_number(
 ///
 ///     The function implicitly assumes that there are no parallel edges
 ///     or self loops. It may produce incorrect/unexpected results if the
-///     input graph has self loops or parallel edges. It's also a recursive
-///     implementation and might run out of memory in large graphs.
+///     input graph has self loops or parallel edges.
 ///
 /// :param PyGraph: The undirected graph to be used
 /// :param int source: An optional node index in the graph. If specified,
@@ -746,14 +758,8 @@ pub fn digraph_core_number(
 ///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-pub fn chain_decomposition(
-    graph: graph::PyGraph,
-    source: Option<usize>,
-) -> Chains {
-    let chains = connectivity::chain_decomposition(
-        &graph.graph,
-        source.map(NodeIndex::new),
-    );
+pub fn chain_decomposition(graph: graph::PyGraph, source: Option<usize>) -> Chains {
+    let chains = connectivity::chain_decomposition(&graph.graph, source.map(NodeIndex::new));
     Chains {
         chains: chains
             .into_iter()

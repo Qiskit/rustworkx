@@ -62,8 +62,7 @@ pub fn minimum_spanning_edges(
     let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> =
         Vec::with_capacity(graph.graph.edge_count());
     for edge in graph.graph.edge_references() {
-        let weight =
-            weight_callable(py, &weight_fn, edge.weight(), default_weight)?;
+        let weight = weight_callable(py, &weight_fn, edge.weight(), default_weight)?;
         if weight.is_nan() {
             return Err(PyValueError::new_err("NaN found as an edge weight"));
         }
@@ -115,7 +114,7 @@ pub fn minimum_spanning_edges(
 ///
 /// .. note::
 ///
-///     The new graph will keep the same node indexes, but edge indexes might differ.
+///     The new graph will keep the same node indices, but edge indices might differ.
 #[pyfunction(weight_fn = "None", default_weight = "1.0")]
 #[pyo3(text_signature = "(graph, weight_fn=None, default_weight=1.0)")]
 pub fn minimum_spanning_tree(
