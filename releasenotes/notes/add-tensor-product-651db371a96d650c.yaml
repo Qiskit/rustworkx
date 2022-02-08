@@ -10,6 +10,6 @@ features:
       from retworkx.visualization import mpl_draw
       graph_1 = retworkx.generators.path_graph(2)
       graph_2 = retworkx.generators.path_graph(3)
-      graph_product = retworkx.graph_tensor_product(graph_1, graph_2)
+      graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
       
       mpl_draw(graph_product)
