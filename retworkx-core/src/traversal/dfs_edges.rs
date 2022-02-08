@@ -15,8 +15,7 @@ use std::hash::Hash;
 use hashbrown::{HashMap, HashSet};
 
 use petgraph::visit::{
-    EdgeCount, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable,
-    Visitable,
+    EdgeCount, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
 };
 
 /// Return an edge list of the tree edges from a depth-first traversal.
@@ -63,12 +62,7 @@ use petgraph::visit::{
 /// ```
 pub fn dfs_edges<G>(graph: G, source: Option<G::NodeId>) -> Vec<(usize, usize)>
 where
-    G: IntoNodeIdentifiers
-        + NodeIndexable
-        + IntoNeighbors
-        + NodeCount
-        + EdgeCount
-        + Visitable,
+    G: IntoNodeIdentifiers + NodeIndexable + IntoNeighbors + NodeCount + EdgeCount + Visitable,
     G::NodeId: Eq + Hash,
 {
     let nodes: Vec<G::NodeId> = match source {
@@ -81,10 +75,7 @@ where
     let mut out_vec: Vec<(usize, usize)> = if source.is_some() {
         Vec::new()
     } else {
-        Vec::with_capacity(core::cmp::min(
-            graph.node_count() - 1,
-            graph.edge_count(),
-        ))
+        Vec::with_capacity(core::cmp::min(graph.node_count() - 1, graph.edge_count()))
     };
     for start in nodes {
         if visited.contains(&start) {
@@ -93,11 +84,9 @@ where
         visited.insert(start);
         let mut children: Vec<G::NodeId> = graph.neighbors(start).collect();
         children.reverse();
-        let mut stack: Vec<(G::NodeId, Vec<G::NodeId>)> =
-            vec![(start, children)];
+        let mut stack: Vec<(G::NodeId, Vec<G::NodeId>)> = vec![(start, children)];
         // Used to track the last position in children vec across iterations
-        let mut index_map: HashMap<G::NodeId, usize> =
-            HashMap::with_capacity(node_count);
+        let mut index_map: HashMap<G::NodeId, usize> = HashMap::with_capacity(node_count);
         index_map.insert(start, 0);
         while !stack.is_empty() {
             let temp_parent = stack.last().unwrap();
@@ -109,11 +98,9 @@ where
             for child in &children[index..] {
                 index += 1;
                 if !visited.contains(child) {
-                    out_vec
-                        .push((graph.to_index(parent), graph.to_index(*child)));
+                    out_vec.push((graph.to_index(parent), graph.to_index(*child)));
                     visited.insert(*child);
-                    let mut grandchildren: Vec<G::NodeId> =
-                        graph.neighbors(*child).collect();
+                    let mut grandchildren: Vec<G::NodeId> = graph.neighbors(*child).collect();
                     grandchildren.reverse();
                     stack.push((*child, grandchildren));
                     index_map.insert(*child, 0);

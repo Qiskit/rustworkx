@@ -1,0 +1,19 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.cartesian_product` (and its per
+    type variants :func:`~retworkx.digraph_cartesian_product` and
+    :func:`~retworkx.graph_cartesian_product`), which calculates the Cartesian
+    product of two graphs. For example:
+    
+    .. jupyter-execute::
+
+      import retworkx
+      from retworkx.visualization import mpl_draw
+
+      graph_1 = retworkx.generators.path_graph(2)
+      graph_2 = retworkx.generators.path_graph(3)
+
+      graph_product, _ = retworkx.cartesian_product(graph_1, graph_2)
+      
+      mpl_draw(graph_product)

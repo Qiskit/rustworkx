@@ -53,9 +53,7 @@ class TestBfsSearch(unittest.TestCase):
 
         vis = TreeEdgesRecorder()
         retworkx.graph_bfs_search(self.graph, None, vis)
-        self.assertEqual(
-            vis.edges, [(0, 2), (0, 1), (2, 6), (2, 5), (1, 3), (4, 7)]
-        )
+        self.assertEqual(vis.edges, [(0, 2), (0, 1), (2, 6), (2, 5), (1, 3), (4, 7)])
 
     def test_graph_bfs_tree_edges_restricted(self):
         class TreeEdgesRecorderRestricted(retworkx.visit.BFSVisitor):
