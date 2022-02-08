@@ -29,14 +29,12 @@ fn tensor_product<Ty: EdgeType>(
 ) -> (StablePyGraph<Ty>, ProductNodeMap) {
     let mut final_graph = StablePyGraph::<Ty>::default();
 
-    let mut hash_nodes =
-        HashMap::with_capacity(first.node_count() * second.node_count());
+    let mut hash_nodes = HashMap::with_capacity(first.node_count() * second.node_count());
 
     let nodes_first = first.node_indices();
     let nodes_second = second.node_indices();
 
-    let cross =
-        nodes_first.flat_map(|x| nodes_second.clone().map(move |y| (x, y)));
+    let cross = nodes_first.flat_map(|x| nodes_second.clone().map(move |y| (x, y)));
 
     for (x, y) in cross {
         let weight_x = &first[x];
@@ -125,8 +123,7 @@ fn graph_tensor_product(
     first: &graph::PyGraph,
     second: &graph::PyGraph,
 ) -> (graph::PyGraph, ProductNodeMap) {
-    let (out_graph, out_node_map) =
-        tensor_product(py, &first.graph, &second.graph, true);
+    let (out_graph, out_node_map) = tensor_product(py, &first.graph, &second.graph, true);
 
     (
         graph::PyGraph {
@@ -174,8 +171,7 @@ fn digraph_tensor_product(
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
 ) -> (digraph::PyDiGraph, ProductNodeMap) {
-    let (out_graph, out_node_map) =
-        tensor_product(py, &first.graph, &second.graph, false);
+    let (out_graph, out_node_map) = tensor_product(py, &first.graph, &second.graph, false);
 
     (
         digraph::PyDiGraph {
