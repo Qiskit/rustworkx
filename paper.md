@@ -58,7 +58,7 @@ _retworkx_ operates on payloads with callbacks. Callbacks are functions that tak
 
 A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges in the graph. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with payloads.
 
-![A Petersen graph, a hexagonal lattice graph, and a binomial tree graph visualized with the **`retworkx.visualization`** module.\label{fig:graphexample}](paper_img/example_graph.png){ width=100% height==100% }
+![A Petersen graph, a hexagonal lattice graph, and a binomial tree graph created with **`retworkx.generators`** and visualized with the **`retworkx.visualization`** module.\label{fig:graphexample}](paper_img/example_graph.png){ width=100% height==100% }
 
 # Use Cases
 
@@ -80,11 +80,11 @@ In addition, Qiskit needs to traverse the graph. Some transformations, such as g
 
 ## Subgraph Isomorphism
 
-The second use case is based on qubit mapping problem for Noisy Intermediate-Scale Quantum (NISQ) devices [@Bharti2021]. NISQ devices do not have full connectivity among qubits, hence Qiskit needs to take into account an undirected graph representing the connectivity of the device when compiling quantum circuits. Qiskit transforms the quantum circuit such that the pairs of qubits executing two-qubit gates respect the device's architectural constraints. There are many proposed solutions to the qubit mapping problem, including algorithms based on subgraph isomorphism [@Li2021].
+The second use case is based on qubit mapping problem for Noisy Intermediate-Scale Quantum (NISQ) devices [@Bharti2021; @Preskill2018]. NISQ devices do not have full connectivity among qubits, hence Qiskit needs to take into account an undirected graph representing the connectivity of the device when compiling quantum circuits. Qiskit transforms the quantum circuit such that the pairs of qubits executing two-qubit gates respect the device's architectural constraints. There are many proposed solutions to the qubit mapping problem, including algorithms based on subgraph isomorphism [@Li2021].
 
 ![Graph representing the connectivity of the **`ibmq_montreal`** device. Qiskit can check if the required connectivity by a circuit is subgraph isomorphic to the device's connectivity when solving the qubit mapping problem.\label{fig:dagexample}](paper_img/example_coupling_map.png){ width=52.5% height==52.5% }
 
-_retworkx_ implements the VF2 algorithm [@Cordella2004] and some of the VF2++ heuristics [@Juttner2018] to solve subgraph isomorphism. The implementations include both checking if a mapping exists and returning a mapping among the nodes. Qiskit leverages _retworkx_ to provide an experimental layout method based on VF2. Qiskit checks if the graph representing the connectvity required by the circuit and the connectivity provided by the device are subgraph isomorphic. If they are, Qiskit uses VF2 mapping to map the qubits without adding SWAP instructions to the quantum circuit. 
+_retworkx_ implements the VF2 algorithm [@Cordella2004] and some of the VF2++ heuristics [@Juttner2018] to solve subgraph isomorphism. The implementations include both checking if a mapping exists and returning a mapping among the nodes. Qiskit leverages _retworkx_ to provide an experimental layout method based on VF2. Qiskit checks if the graph representing the connectvity required by the circuit and the connectivity provided by the device are subgraph isomorphic. If they are, Qiskit uses VF2 mapping to map the qubits without increasing the depth of the circuit. 
 
 # Limitations
 
