@@ -140,18 +140,11 @@ where
                         scores.put_item(next, next_score);
                         visit_next.push(MinScored(next_score, next));
                         if path.is_some() {
-                            let mut node_path = path
-                                .as_mut()
-                                .unwrap()
-                                .get(&node)
-                                .unwrap()
-                                .clone();
+                            let mut node_path = path.as_mut().unwrap().get(&node).unwrap().clone();
                             node_path.push(next);
-                            path.as_mut().unwrap().entry(next).and_modify(
-                                |new_vec| {
-                                    *new_vec = node_path;
-                                },
-                            );
+                            path.as_mut().unwrap().entry(next).and_modify(|new_vec| {
+                                *new_vec = node_path;
+                            });
                         }
                     }
                 }
@@ -159,8 +152,7 @@ where
                     scores.put_item(next, next_score);
                     visit_next.push(MinScored(next_score, next));
                     if path.is_some() {
-                        let mut node_path =
-                            path.as_mut().unwrap().get(&node).unwrap().clone();
+                        let mut node_path = path.as_mut().unwrap().get(&node).unwrap().clone();
                         node_path.push(next);
                         path.as_mut().unwrap().entry(next).or_insert(node_path);
                     }

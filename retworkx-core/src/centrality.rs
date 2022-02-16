@@ -121,12 +121,7 @@ where
                         is,
                     );
                 } else {
-                    _accumulate_basic(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        is,
-                    );
+                    _accumulate_basic(&locked_betweenness, max_index, &mut shortest_path_calc, is);
                 }
             });
     } else {
@@ -147,12 +142,7 @@ where
                         is,
                     );
                 } else {
-                    _accumulate_basic(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        is,
-                    );
+                    _accumulate_basic(&locked_betweenness, max_index, &mut shortest_path_calc, is);
                 }
             });
     }
@@ -242,8 +232,8 @@ fn _accumulate_endpoints(
         }
     }
     let mut betweenness = locked_betweenness.write().unwrap();
-    betweenness[is] = betweenness[is]
-        .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
+    betweenness[is] =
+        betweenness[is].map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
     for w in &path_calc.verts_sorted_by_distance {
         let iw = w.index();
         if iw != is {
@@ -258,10 +248,7 @@ struct ShortestPathData {
     sigma: HashMap<NodeIndex, f64>,
 }
 
-fn shortest_path_for_centrality<G>(
-    graph: G,
-    node_s: &G::NodeId,
-) -> ShortestPathData
+fn shortest_path_for_centrality<G>(graph: G, node_s: &G::NodeId) -> ShortestPathData
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
@@ -271,8 +258,7 @@ where
 {
     let mut verts_sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
     let c = graph.node_count();
-    let mut predecessors =
-        HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
+    let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
     let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
     let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
     #[allow(non_snake_case)]
