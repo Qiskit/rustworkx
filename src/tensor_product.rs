@@ -27,9 +27,15 @@ fn tensor_product<Ty: EdgeType>(
     second: &StablePyGraph<Ty>,
     undirected: bool,
 ) -> (StablePyGraph<Ty>, ProductNodeMap) {
-    let mut final_graph = StablePyGraph::<Ty>::default();
+    let num_nodes = first.node_count() * second.node_count();
+    let mut num_edges = first.edge_count() * second.edge_count();
 
-    let mut hash_nodes = HashMap::with_capacity(first.node_count() * second.node_count());
+    if undirected {
+        num_edges *= 2;
+    }
+
+    let mut final_graph = StablePyGraph::<Ty>::with_capacity(num_nodes, num_edges);
+    let mut hash_nodes = HashMap::with_capacity(num_nodes);
 
     for x in first.node_indices() {
         for y in second.node_indices() {
