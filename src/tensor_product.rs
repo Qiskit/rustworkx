@@ -31,16 +31,13 @@ fn tensor_product<Ty: EdgeType>(
 
     let mut hash_nodes = HashMap::with_capacity(first.node_count() * second.node_count());
 
-    let nodes_first = first.node_indices();
-    let nodes_second = second.node_indices();
-
-    let cross = nodes_first.flat_map(|x| nodes_second.clone().map(move |y| (x, y)));
-
-    for (x, y) in cross {
-        let weight_x = &first[x];
-        let weight_y = &second[y];
-        let n0 = final_graph.add_node((weight_x, weight_y).into_py(py));
-        hash_nodes.insert((x, y), n0);
+    for x in first.node_indices() {
+        for y in second.node_indices() {
+            let weight_x = &first[x];
+            let weight_y = &second[y];
+            let n0 = final_graph.add_node((weight_x, weight_y).into_py(py));
+            hash_nodes.insert((x, y), n0);
+        }
     }
 
     for edge_first in first.edge_references() {
