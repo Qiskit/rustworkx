@@ -27,17 +27,37 @@ class TestTensorProduct(unittest.TestCase):
         graph_1 = retworkx.generators.path_graph(2)
         graph_2 = retworkx.generators.path_graph(2)
 
-        graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
+        graph_product, node_map = retworkx.graph_tensor_product(graph_1, graph_2)
+        
+        expected_node_map = {(0, 0): 0,
+                             (0, 1): 1,
+                             (1, 0): 2,
+                             (1, 1): 3}
+        self.assertTrue(node_map == expected_node_map)
+        
+        expected_edges = [(0, 3), (3, 0)]
         self.assertEqual(graph_product.num_nodes(), 4)
         self.assertEqual(graph_product.num_edges(), 2)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
+
 
     def test_path_2_tensor_path_3(self):
         graph_1 = retworkx.generators.path_graph(2)
         graph_2 = retworkx.generators.path_graph(3)
 
-        graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
+        graph_product, node_map = retworkx.graph_tensor_product(graph_1, graph_2)
+        expected_node_map = {(0, 1): 1,
+                             (1, 0): 3,
+                             (0, 0): 0,
+                             (1, 2): 5,
+                             (0, 2): 2,
+                             (1, 1): 4}
+        self.assertEqual(dict(node_map), expected_node_map)
+        
+        expected_edges = [(0, 4), (4, 0), (1, 5), (5, 1)]
         self.assertEqual(graph_product.num_nodes(), 6)
         self.assertEqual(graph_product.num_edges(), 4)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
 
     def test_node_weights_tensor(self):
         graph_1 = retworkx.PyGraph()
@@ -52,6 +72,7 @@ class TestTensorProduct(unittest.TestCase):
         graph_1 = retworkx.PyGraph()
         graph_1.add_nodes_from([0, 1])
         graph_1.add_edge(0, 1, "w_1")
+        
         graph_2 = retworkx.PyGraph()
         graph_2.add_nodes_from([0, 1])
         graph_2.add_edge(0, 1, "w_2")

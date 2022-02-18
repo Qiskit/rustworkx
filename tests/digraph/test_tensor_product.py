@@ -27,17 +27,35 @@ class TestTensorProduct(unittest.TestCase):
         graph_1 = retworkx.generators.directed_path_graph(2)
         graph_2 = retworkx.generators.directed_path_graph(2)
 
-        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
+        graph_product, node_map = retworkx.digraph_tensor_product(graph_1, graph_2)
+        expected_node_map = {(0, 0): 0,
+                             (0, 1): 1,
+                             (1, 0): 2,
+                             (1, 1): 3}
+        self.assertTrue(node_map == expected_node_map)
+        
+        expected_edges = [(0, 3)]
         self.assertEqual(graph_product.num_nodes(), 4)
         self.assertEqual(graph_product.num_edges(), 1)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
 
     def test_directed_path_2_tensor_path_3(self):
         graph_1 = retworkx.generators.directed_path_graph(2)
         graph_2 = retworkx.generators.directed_path_graph(3)
 
-        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
+        graph_product, node_map = retworkx.digraph_tensor_product(graph_1, graph_2)
+        expected_node_map = {(0, 1): 1,
+                             (1, 0): 3,
+                             (0, 0): 0,
+                             (1, 2): 5,
+                             (0, 2): 2,
+                             (1, 1): 4}
+        self.assertEqual(dict(node_map), expected_node_map)
+        
+        expected_edges = [(0, 4), (1, 5)]
         self.assertEqual(graph_product.num_nodes(), 6)
         self.assertEqual(graph_product.num_edges(), 2)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
 
     def test_directed_node_weights_tensor(self):
         graph_1 = retworkx.PyDiGraph()
