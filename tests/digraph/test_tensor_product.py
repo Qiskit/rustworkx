@@ -28,12 +28,9 @@ class TestTensorProduct(unittest.TestCase):
         graph_2 = retworkx.generators.directed_path_graph(2)
 
         graph_product, node_map = retworkx.digraph_tensor_product(graph_1, graph_2)
-        expected_node_map = {(0, 0): 0,
-                             (0, 1): 1,
-                             (1, 0): 2,
-                             (1, 1): 3}
+        expected_node_map = {(0, 0): 0, (0, 1): 1, (1, 0): 2, (1, 1): 3}
         self.assertTrue(node_map == expected_node_map)
-        
+
         expected_edges = [(0, 3)]
         self.assertEqual(graph_product.num_nodes(), 4)
         self.assertEqual(graph_product.num_edges(), 1)
@@ -44,14 +41,9 @@ class TestTensorProduct(unittest.TestCase):
         graph_2 = retworkx.generators.directed_path_graph(3)
 
         graph_product, node_map = retworkx.digraph_tensor_product(graph_1, graph_2)
-        expected_node_map = {(0, 1): 1,
-                             (1, 0): 3,
-                             (0, 0): 0,
-                             (1, 2): 5,
-                             (0, 2): 2,
-                             (1, 1): 4}
+        expected_node_map = {(0, 1): 1, (1, 0): 3, (0, 0): 0, (1, 2): 5, (0, 2): 2, (1, 1): 4}
         self.assertEqual(dict(node_map), expected_node_map)
-        
+
         expected_edges = [(0, 4), (1, 5)]
         self.assertEqual(graph_product.num_nodes(), 6)
         self.assertEqual(graph_product.num_edges(), 2)
