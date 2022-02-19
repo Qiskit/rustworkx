@@ -30,7 +30,7 @@ class TestTensorProduct(unittest.TestCase):
         graph_product, node_map = retworkx.graph_tensor_product(graph_1, graph_2)
 
         expected_node_map = {(0, 0): 0, (0, 1): 1, (1, 0): 2, (1, 1): 3}
-        self.assertTrue(node_map == expected_node_map)
+        self.assertEqual(node_map, expected_node_map)
 
         expected_edges = [(0, 3), (3, 0)]
         self.assertEqual(graph_product.num_nodes(), 4)
