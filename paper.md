@@ -48,6 +48,8 @@ The graph and network analysis ecosystem for Python is rich, with many libraries
 
 However, the authors found that no library matched the flexibility that _NetworkX_ provided for interacting with graphs. _igraph_ is efficient for static large graphs, but does not handle graph updates as efficiently. _SNAP_ and _Networkit_ do not support associated edge data with arbitrary Python types. _graph-tool_ supports associated edge data at the cost of maintaing the data in a separate data structure. Thus, the main contribution of _retworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
 
+We note that existing code using _NetworkX_ needs to be modified to use _retworkx_. _retworkx_ is not a drop-in replacement for _NetworkX_, which may be a possible limitation for some users. The authors provide a _NetworkX_ to _retworkx_ conversion guide on the documentation to aid in those situations.
+
 # Graph data structures
 
 _retworkx_ provides two core data structures: `PyGraph` and `PyDiGraph`. They correspond to undirected and directed graphs, respectively. Graphs describe a set of nodes and the edges connecting pairs of those nodes. Internally, _retworkx_ leverages the _petgraph_ library [@bluss2021] to store the graphs using an adjacency list model and the _PyO3_ library [@Hewitt2021] for the Python bindings.
@@ -85,10 +87,6 @@ The second use case is based on qubit mapping problem for Noisy Intermediate-Sca
 ![Graph representing the connectivity of the **`ibmq_montreal`** device. Qiskit can check if the required connectivity by a circuit is subgraph isomorphic to the device's connectivity when solving the qubit mapping problem.\label{fig:dagexample}](paper_img/example_coupling_map.png){ width=52.5% height==52.5% }
 
 _retworkx_ implements the VF2 algorithm [@Cordella2004] and some of the VF2++ heuristics [@Juttner2018] to solve subgraph isomorphism. The implementations include both checking if a mapping exists and returning a mapping among the nodes. Qiskit leverages _retworkx_ to provide an experimental layout method based on VF2. Qiskit checks if the graph representing the connectvity required by the circuit and the connectivity provided by the device are subgraph isomorphic. If they are, Qiskit uses VF2 mapping to map the qubits without increasing the depth of the circuit. 
-
-# Limitations
-
-_retworkx_ is not a drop-in replacement for _NetworkX_. Existing code using _NetworkX_ needs to be modified to use _retworkx_, which may be a possible limitation for some users. The authors provide a _NetworkX_ to _retworkx_ conversion guide on the documentation to aid in those situations.
 
 # Acknowledgements
 
