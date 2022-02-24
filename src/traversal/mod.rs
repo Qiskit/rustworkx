@@ -180,7 +180,7 @@ fn bfs_successors(
 /// :param PyDiGraph graph: The graph to get the ancestors from.
 /// :param int node: The index of the graph node to get the ancestors for
 ///
-/// :returns: A set of node indexes of ancestors of provided node.
+/// :returns: A set of node indices of ancestors of provided node.
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
@@ -207,7 +207,7 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :param PyDiGraph graph: The graph to get the descendants from
 /// :param int node: The index of the graph node to get the descendants for
 ///
-/// :returns: A set of node indexes of descendants of provided node.
+/// :returns: A set of node indices of descendants of provided node.
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]

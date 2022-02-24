@@ -115,7 +115,7 @@ pub fn minimum_spanning_edges(
 ///
 /// .. note::
 ///
-///     The new graph will keep the same node indexes, but edge indexes might differ.
+///     The new graph will keep the same node indices, but edge indices might differ.
 #[pyfunction(weight_fn = "None", default_weight = "1.0")]
 #[pyo3(text_signature = "(graph, weight_fn=None, default_weight=1.0)")]
 pub fn minimum_spanning_tree(
