@@ -40,11 +40,11 @@
                   Christa Zoufal and
                   Donny Greenberg and
                   Stefan Woerner},
-  title        = {Qiskit/qiskit-terra: Qiskit Terra  0.18.3},
+  title        = {Qiskit/qiskit-terra: Qiskit Terra  0.19.1},
   month        = sep,
   year         = 2021,
   publisher    = {Zenodo},
-  version      = {0.18.3},
+  version      = {0.19.1},
   doi          = {10.5281/zenodo.2583252},
   url          = {https://doi.org/10.5281/zenodo.2583252}
 }
@@ -210,46 +210,6 @@
   url = {https://github.com/PyO3/pyo3}
 }
 
-@book{Demetrescu2009,
-  doi = {10.1090/dimacs/074},
-  url = {https://doi.org/10.1090/dimacs/074},
-  year = {2009},
-  month = {jul},
-  publisher = {American Mathematical Society},
-  address = {Providence, RI, USA},
-  editor = {Camil Demetrescu and Andrew V. Goldberg and David Johnson},
-  title = {The Shortest Path Problem: Ninth DIMACS Implementation Challenge}
-}
-
-@Article{Dijkstra1959ANO,
-  title={A note on two problems in connexion with graphs},
-  author={Edsger W. Dijkstra},
-  journal={Numerische Mathematik},
-  year={1959},
-  volume={1},
-  doi={10.1007/BF01386390},
-  pages={269-271}
-}
-
-@article{DeSanto2003,
-author = {De Santo, M. and Foggia, P. and Sansone, C. and Vento, M.},
-title = {A large database of graphs and its use for benchmarking graph isomorphism algorithms},
-journal = {Pattern Recogn. Lett.},
-issue_date = {May 2003},
-volume = {24},
-number = {8},
-month = may,
-year = {2003},
-issn = {0167-8655},
-pages = {1067–1079},
-numpages = {13},
-url = {http://dx.doi.org/10.1016/S0167-8655(02)00253-2},
-doi = {10.1016/S0167-8655(02)00253-2},
-acmid = {763457},
-publisher = {Elsevier Science Inc.},
-address = {New York, NY, USA},
-}
-
 @ARTICLE{Cordella2004,
   author={Cordella, L.P. and Foggia, P. and Sansone, C. and Vento, M.},
   journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
@@ -275,38 +235,99 @@ keywords = {Computational biology, Subgraph isomorphism problem},
 abstract = {This paper presents a largely improved version of the VF2 algorithm for the Subgraph Isomorphism Problem. The improvements are twofold. Firstly, it is based on a new approach for determining the matching order of the nodes, and secondly, more efficient — nevertheless easier to compute — cutting rules are proposed. They together reduce the search space significantly. In addition to the usual Subgraph Isomorphism Problem, the paper also presents specialized algorithms for the Induced Subgraph Isomorphism and for the Graph Isomorphism Problems. Finally, an extensive experimental evaluation is provided using a wide range of inputs, including both real-life biological and chemical datasets and standard randomly generated graph series. The results show major and consistent running time improvements over the other known methods. The C++ implementations of the algorithms are available open-source as part of the LEMON graph and network optimization library.}
 }
 
-@article{Johnson1977,
-author = {Johnson, Donald B.},
-title = {Efficient Algorithms for Shortest Paths in Sparse Networks},
-year = {1977},
-issue_date = {Jan. 1977},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-volume = {24},
-number = {1},
-issn = {0004-5411},
-url = {https://doi.org/10.1145/321992.321993},
-doi = {10.1145/321992.321993},
-abstract = {Algorithms for finding shortest paths are presented which are faster than algorithms
-previously known on networks which are relatively sparse in arcs. Known results which
-the results of this paper extend are surveyed briefly and analyzed. A new implementation
-for priority queues is employed, and a class of “arc set partition” algorithms is
-introduced. For the single source problem on networks with nonnegative arcs a running
-time of O(min(n1+1/k + e, n + e) log n)) is achieved, where there are n nodes and
-e arcs, and k is a fixed integer satisfying k > 0. This bound is O(e) on dense networks.
-For the single source and all pairs problem on unrestricted networks the running time
-is O(min(n2+1/k + ne, n2 log n + ne log n).},
-journal = {J. ACM},
-month = jan,
-pages = {1–13},
-numpages = {13}
+@article{Staudt2016, 
+  title={NetworKit: A tool suite for large-scale complex network analysis}, 
+  volume={4}, 
+  DOI={10.1017/nws.2016.20}, 
+  number={4}, 
+  journal={Network Science}, 
+  publisher={Cambridge University Press}, 
+  author={Staudt, Christian L. and Sazonovs, Aleksejs and Meyerhenke, Henning}, 
+  year={2016}, 
+  pages={508–530}
 }
 
-@techreport{pep427,
-  author  = {Daniel Holth},
-  title   = {The Wheel Binary Package Format 1.0},
-  year    = {2012},
-  type    = {PEP},
-  number  = {427},
-  url     = {https://www.python.org/dev/peps/pep-0427/},
+@manual{Sagemath2020,
+  Key          = {SageMath},
+  Author       = {{The Sage Developers}},
+  Title        = {{S}ageMath, the {S}age {M}athematics {S}oftware {S}ystem ({V}ersion 9.1)},
+  note         = {{\tt https://www.sagemath.org}},
+  Year         = {2020},
+  doi          = {10.5281/zenodo.4066866},
+  url          = {https://doi.org/10.5281/zenodo.4066866}
 }
+
+@misc{Bergholm2020,
+      title={PennyLane: Automatic differentiation of hybrid quantum-classical computations}, 
+      author={Ville Bergholm and Josh Izaac and Maria Schuld and Christian Gogolin and M. Sohaib Alam and Shahnawaz Ahmed and Juan Miguel Arrazola and Carsten Blank and Alain Delgado and Soran Jahangiri and Keri McKiernan and Johannes Jakob Meyer and Zeyue Niu and Antal Száva and Nathan Killoran},
+      year={2020},
+      eprint={1811.04968},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
+}
+
+@misc{Stone2021,
+  author = {
+    Josh Stone 
+    and Nicholas D. Matsakis
+    },
+  title = {Rayon: A data parallelism library for Rust},
+  year = {2021},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/rayon-rs/rayon}
+}
+
+@misc{Cross2021,
+      title={OpenQASM 3: A broader and deeper quantum assembly language}, 
+      author={Andrew W. Cross and Ali Javadi-Abhari and Thomas Alexander and Niel de Beaudrap and Lev S. Bishop and Steven Heidel and Colm A. Ryan and John Smolin and Jay M. Gambetta and Blake R. Johnson},
+      year={2021},
+      eprint={2104.14722},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph},
+      doi={10.48550/arXiv.2104.14722},
+      url={https://doi.org/10.48550/arXiv.2104.14722}
+}
+
+@article{Li2021,
+   title={Qubit Mapping Based on Subgraph Isomorphism and Filtered Depth-Limited Search},
+   volume={70},
+   ISSN={2326-3814},
+   url={http://dx.doi.org/10.1109/TC.2020.3023247},
+   DOI={10.1109/tc.2020.3023247},
+   number={11},
+   journal={IEEE Transactions on Computers},
+   publisher={Institute of Electrical and Electronics Engineers (IEEE)},
+   author={Li, Sanjiang and Zhou, Xiangzhen and Feng, Yuan},
+   year={2021},
+   month={Nov},
+   pages={1777–1788}
+}
+
+@article{Bharti2021,
+   title={Noisy intermediate-scale quantum algorithms},
+   volume={94},
+   ISSN={1539-0756},
+   url={http://dx.doi.org/10.1103/RevModPhys.94.015004},
+   DOI={10.1103/revmodphys.94.015004},
+   number={1},
+   journal={Reviews of Modern Physics},
+   publisher={American Physical Society (APS)},
+   author={Bharti, Kishor and Cervera-Lierta, Alba and Kyaw, Thi Ha and Haug, Tobias and Alperin-Lea, Sumner and Anand, Abhinav and Degroote, Matthias and Heimonen, Hermanni and Kottmann, Jakob S. and Menke, Tim and Mok, Wai-Keong and Sim, Sukin and Kwek, Leong-Chuan and Aspuru-Guzik, Alán},
+   year={2022},
+   month={Feb} 
+}
+
+
+@article{Preskill2018,
+   title={Quantum Computing in the NISQ era and beyond},
+   volume={2},
+   ISSN={2521-327X},
+   url={http://dx.doi.org/10.22331/q-2018-08-06-79},
+   DOI={10.22331/q-2018-08-06-79},
+   journal={Quantum},
+   publisher={Verein zur Forderung des Open Access Publizierens in den Quantenwissenschaften},
+   author={Preskill, John},
+   year={2018},
+   month={Aug},
+   pages={79} }
