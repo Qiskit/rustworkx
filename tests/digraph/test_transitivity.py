@@ -33,9 +33,7 @@ class TestTransitivity(unittest.TestCase):
     def test_transitivity_fulltriangle_directed(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(3)))
-        graph.add_edges_from_no_data(
-            [(0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)]
-        )
+        graph.add_edges_from_no_data([(0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)])
         res = retworkx.transitivity(graph)
         self.assertEqual(res, 1.0)
 

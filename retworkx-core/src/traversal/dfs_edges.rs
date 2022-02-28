@@ -10,15 +10,35 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::hash::Hash;
+
 use hashbrown::{HashMap, HashSet};
 
-use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    EdgeCount, GraphBase, IntoNeighbors, IntoNodeIdentifiers, NodeCount,
-    NodeIndexable, VisitMap, Visitable,
+    EdgeCount, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
 };
 
-/// Return an edge list in depth first order.
+/// Return an edge list of the tree edges from a depth-first traversal.
+///
+/// The pseudo-code for the DFS algorithm is listed below. The output
+/// contains the tree edges found by the procedure.
+///
+/// ```norust
+/// DFS(G, v)
+///   let S be a stack
+///   label v as discovered
+///   PUSH(S, (v, iterator of G.neighbors(v)))
+///   while (S != Ø)
+///       let (v, iterator) := LAST(S)
+///       if hasNext(iterator) then
+///           w := next(iterator)
+///           if w is not labeled as discovered then
+///               label w as discovered                   # (v, w) is a tree edge
+///               PUSH(S, (w, iterator of G.neighbors(w)))
+///       else
+///           POP(S)
+///   end while
+/// ```
 ///
 /// Arguments:
 ///
@@ -42,45 +62,31 @@ use petgraph::visit::{
 /// ```
 pub fn dfs_edges<G>(graph: G, source: Option<G::NodeId>) -> Vec<(usize, usize)>
 where
-    G: GraphBase<NodeId = NodeIndex>
-        + IntoNodeIdentifiers
-        + NodeIndexable
-        + IntoNeighbors
-        + NodeCount
-        + EdgeCount
-        + Visitable,
-    <G as Visitable>::Map: VisitMap<NodeIndex>,
+    G: IntoNodeIdentifiers + NodeIndexable + IntoNeighbors + NodeCount + EdgeCount + Visitable,
+    G::NodeId: Eq + Hash,
 {
-    let nodes: Vec<NodeIndex> = match source {
+    let nodes: Vec<G::NodeId> = match source {
         Some(start) => vec![start],
-        None => graph
-            .node_identifiers()
-            .map(|ind| NodeIndex::new(graph.to_index(ind)))
-            .collect(),
+        None => graph.node_identifiers().collect(),
     };
     let node_count = graph.node_count();
-    let mut visited: HashSet<NodeIndex> = HashSet::with_capacity(node_count);
+    let mut visited: HashSet<G::NodeId> = HashSet::with_capacity(node_count);
     // Avoid potential overallocation if source node is provided
     let mut out_vec: Vec<(usize, usize)> = if source.is_some() {
         Vec::new()
     } else {
-        Vec::with_capacity(core::cmp::min(
-            graph.node_count() - 1,
-            graph.edge_count(),
-        ))
+        Vec::with_capacity(core::cmp::min(graph.node_count() - 1, graph.edge_count()))
     };
     for start in nodes {
         if visited.contains(&start) {
             continue;
         }
         visited.insert(start);
-        let mut children: Vec<NodeIndex> = graph.neighbors(start).collect();
+        let mut children: Vec<G::NodeId> = graph.neighbors(start).collect();
         children.reverse();
-        let mut stack: Vec<(NodeIndex, Vec<NodeIndex>)> =
-            vec![(start, children)];
+        let mut stack: Vec<(G::NodeId, Vec<G::NodeId>)> = vec![(start, children)];
         // Used to track the last position in children vec across iterations
-        let mut index_map: HashMap<NodeIndex, usize> =
-            HashMap::with_capacity(node_count);
+        let mut index_map: HashMap<G::NodeId, usize> = HashMap::with_capacity(node_count);
         index_map.insert(start, 0);
         while !stack.is_empty() {
             let temp_parent = stack.last().unwrap();
@@ -92,10 +98,9 @@ where
             for child in &children[index..] {
                 index += 1;
                 if !visited.contains(child) {
-                    out_vec.push((parent.index(), child.index()));
+                    out_vec.push((graph.to_index(parent), graph.to_index(*child)));
                     visited.insert(*child);
-                    let mut grandchildren: Vec<NodeIndex> =
-                        graph.neighbors(*child).collect();
+                    let mut grandchildren: Vec<G::NodeId> = graph.neighbors(*child).collect();
                     grandchildren.reverse();
                     stack.push((*child, grandchildren));
                     index_map.insert(*child, 0);

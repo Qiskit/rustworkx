@@ -101,9 +101,7 @@ class TestDot(unittest.TestCase):
             'style=filled];\n1 [color=black, fillcolor=red, label="a", '
             'style=filled];\n0 -- 1 [label="1", name=1];\n}\n'
         )
-        res = graph.to_dot(
-            lambda node: node, lambda edge: edge, filename=self.path
-        )
+        res = graph.to_dot(lambda node: node, lambda edge: edge, filename=self.path)
         self.addCleanup(os.remove, self.path)
         self.assertIsNone(res)
         with open(self.path, "r") as fd:
@@ -122,14 +120,11 @@ class TestDot(unittest.TestCase):
         graph = retworkx.undirected_gnp_random_graph(3, 0.9, seed=42)
         dot_str = graph.to_dot(lambda _: {}, lambda _: {}, {"bgcolor": "red"})
         self.assertEqual(
-            "graph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n"
-            "2 -- 0 ;\n2 -- 1 ;\n}\n",
+            "graph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n" "2 -- 0 ;\n2 -- 1 ;\n}\n",
             dot_str,
         )
 
     def test_graph_no_args(self):
         graph = retworkx.undirected_gnp_random_graph(3, 0.95, seed=24)
         dot_str = graph.to_dot()
-        self.assertEqual(
-            "graph {\n0 ;\n1 ;\n2 ;\n2 -- 0 ;\n2 -- 1 ;\n}\n", dot_str
-        )
+        self.assertEqual("graph {\n0 ;\n1 ;\n2 ;\n2 -- 0 ;\n2 -- 1 ;\n}\n", dot_str)

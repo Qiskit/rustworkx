@@ -126,12 +126,9 @@ where
     ) -> (StablePyGraph<Ty>, HashMap<usize, usize>) {
         let order = self.sort(graph);
 
-        let mut new_graph = StablePyGraph::<Ty>::with_capacity(
-            graph.node_count(),
-            graph.edge_count(),
-        );
-        let mut id_map: HashMap<NodeIndex, NodeIndex> =
-            HashMap::with_capacity(graph.node_count());
+        let mut new_graph =
+            StablePyGraph::<Ty>::with_capacity(graph.node_count(), graph.edge_count());
+        let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(graph.node_count());
         for node_index in order {
             let node_data = graph.node_weight(node_index).unwrap();
             let new_index = new_graph.add_node(node_data.clone_ref(py));
@@ -217,16 +214,12 @@ where
                 vd.swap(i, i + index);
                 order.push(NodeIndex::new(item));
 
-                for neigh in
-                    graph.neighbors_directed(graph.from_index(item), Outgoing)
-                {
+                for neigh in graph.neighbors_directed(graph.from_index(item), Outgoing) {
                     conn_in[graph.to_index(neigh)] += 1;
                 }
 
                 if graph.is_directed() {
-                    for neigh in graph
-                        .neighbors_directed(graph.from_index(item), Incoming)
-                    {
+                    for neigh in graph.neighbors_directed(graph.from_index(item), Incoming) {
                         conn_out[graph.to_index(neigh)] += 1;
                     }
                 }
@@ -252,10 +245,7 @@ where
 
                 next_level = Vec::new();
                 for bfs_node in this_level {
-                    for neighbor in graph.neighbors_directed(
-                        graph.from_index(bfs_node),
-                        Outgoing,
-                    ) {
+                    for neighbor in graph.neighbors_directed(graph.from_index(bfs_node), Outgoing) {
                         let neigh = graph.to_index(neighbor);
                         if !seen[neigh] {
                             seen[neigh] = true;
@@ -266,10 +256,8 @@ where
             }
         };
 
-        let mut sorted_nodes: Vec<usize> =
-            graph.node_indices().map(|node| node.index()).collect();
-        sorted_nodes
-            .par_sort_by_key(|&node| (dout[node], din[node], Reverse(node)));
+        let mut sorted_nodes: Vec<usize> = graph.node_indices().map(|node| node.index()).collect();
+        sorted_nodes.par_sort_by_key(|&node| (dout[node], din[node], Reverse(node)));
         sorted_nodes.reverse();
 
         for node in sorted_nodes {
@@ -453,8 +441,7 @@ pub fn is_isomorphic<Ty: EdgeType>(
     }
 
     let mut vf2 = Vf2Algorithm::new(
-        py, g0, g1, node_match, edge_match, id_order, ordering, induced,
-        call_limit,
+        py, g0, g1, node_match, edge_match, id_order, ordering, induced, call_limit,
     );
     if vf2.next(py)?.is_some() {
         return Ok(true);
@@ -545,23 +532,17 @@ where
             .iter()
             .enumerate()
             .for_each(|(index, val)| {
-                mapping.insert(
-                    self.node_map_g0[&val.index()],
-                    self.node_map_g1[&index],
-                );
+                mapping.insert(self.node_map_g0[&val.index()], self.node_map_g1[&index]);
             });
 
         NodeMap { node_map: mapping }
     }
 
-    fn next_candidate(
-        st: &mut [Vf2State<Ty>; 2],
-    ) -> Option<(NodeIndex, NodeIndex, OpenList)> {
-        let mut to_index;
+    fn next_candidate(st: &mut [Vf2State<Ty>; 2]) -> Option<(NodeIndex, NodeIndex, OpenList)> {
+        // Try the out list
+        let mut to_index = st[1].next_out_index(0);
         let mut from_index = None;
         let mut open_list = OpenList::Out;
-        // Try the out list
-        to_index = st[1].next_out_index(0);
 
         if to_index.is_some() {
             from_index = st[0].next_out_index(0);
@@ -585,9 +566,7 @@ where
             }
         }
         match (from_index, to_index) {
-            (Some(n), Some(m)) => {
-                Some((NodeIndex::new(n), NodeIndex::new(m), open_list))
-            }
+            (Some(n), Some(m)) => Some((NodeIndex::new(n), NodeIndex::new(m), open_list)),
             // No more candidates
             _ => None,
         }
@@ -669,12 +648,8 @@ where
                 if m_neigh == end {
                     continue;
                 }
-                let val = edge_multiplicity(
-                    &st[j].graph,
-                    &st[j].adjacency_matrix,
-                    nodes[j],
-                    n_neigh,
-                );
+                let val =
+                    edge_multiplicity(&st[j].graph, &st[j].adjacency_matrix, nodes[j], n_neigh);
 
                 let has_edge = is_adjacent(
                     &st[1 - j].graph,
@@ -695,9 +670,7 @@ where
         if st[0].graph.is_directed() {
             let mut pred_count = [0, 0];
             for j in 0..2 {
-                for n_neigh in
-                    st[j].graph.neighbors_directed(nodes[j], Incoming)
-                {
+                for n_neigh in st[j].graph.neighbors_directed(nodes[j], Incoming) {
                     pred_count[j] += 1;
                     if !induced && j == 0 {
                         continue;
@@ -707,12 +680,8 @@ where
                     if m_neigh == end {
                         continue;
                     }
-                    let val = edge_multiplicity(
-                        &st[j].graph,
-                        &st[j].adjacency_matrix,
-                        n_neigh,
-                        nodes[j],
-                    );
+                    let val =
+                        edge_multiplicity(&st[j].graph, &st[j].adjacency_matrix, n_neigh, nodes[j]);
 
                     let has_edge = is_adjacent(
                         &st[1 - j].graph,
@@ -733,8 +702,7 @@ where
         macro_rules! rule {
             ($arr:ident, $j:expr, $dir:expr) => {{
                 let mut count = 0;
-                for n_neigh in st[$j].graph.neighbors_directed(nodes[$j], $dir)
-                {
+                for n_neigh in st[$j].graph.neighbors_directed(nodes[$j], $dir) {
                     let index = n_neigh.index();
                     if st[$j].$arr[index] > 0 && st[$j].mapping[index] == end {
                         count += 1;
@@ -783,9 +751,7 @@ where
             for j in 0..2 {
                 for n_neigh in st[j].graph.neighbors(nodes[j]) {
                     let index = n_neigh.index();
-                    if st[j].out[index] == 0
-                        && (st[j].ins.is_empty() || st[j].ins[index] == 0)
-                    {
+                    if st[j].out[index] == 0 && (st[j].ins.is_empty() || st[j].ins[index] == 0) {
                         new_count[j] += 1;
                     }
                 }
@@ -796,9 +762,7 @@ where
             if st[0].graph.is_directed() {
                 let mut new_count = [0, 0];
                 for j in 0..2 {
-                    for n_neigh in
-                        st[j].graph.neighbors_directed(nodes[j], Incoming)
-                    {
+                    for n_neigh in st[j].graph.neighbors_directed(nodes[j], Incoming) {
                         let index = n_neigh.index();
                         if st[j].out[index] == 0 && st[j].ins[index] == 0 {
                             new_count[j] += 1;
@@ -812,26 +776,21 @@ where
         }
         // semantic feasibility: compare associated data for nodes
         if node_match.enabled()
-            && !node_match.eq(
-                py,
-                &st[0].graph[nodes[0]],
-                &st[1].graph[nodes[1]],
-            )?
+            && !node_match.eq(py, &st[0].graph[nodes[0]], &st[1].graph[nodes[1]])?
         {
             return Ok(false);
         }
         // semantic feasibility: compare associated data for edges
         if edge_match.enabled() {
-            let matcher = |a: (NodeIndex, &PyObject),
-                           b: (NodeIndex, &PyObject)|
-             -> PyResult<bool> {
-                let (nx, n_edge) = a;
-                let (mx, m_edge) = b;
-                if nx == mx && edge_match.eq(py, n_edge, m_edge)? {
-                    return Ok(true);
-                }
-                Ok(false)
-            };
+            let matcher =
+                |a: (NodeIndex, &PyObject), b: (NodeIndex, &PyObject)| -> PyResult<bool> {
+                    let (nx, n_edge) = a;
+                    let (mx, m_edge) = b;
+                    if nx == mx && edge_match.eq(py, n_edge, m_edge)? {
+                        return Ok(true);
+                    }
+                    Ok(false)
+                };
 
             // outgoing edges
             let range = if induced { 0..2 } else { 1..2 };
@@ -930,11 +889,7 @@ where
                 } => {
                     Vf2Algorithm::<Ty, F, G>::pop_state(&mut self.st, nodes);
 
-                    match Vf2Algorithm::<Ty, F, G>::next_from_ix(
-                        &mut self.st,
-                        nodes[0],
-                        ol,
-                    ) {
+                    match Vf2Algorithm::<Ty, F, G>::next_from_ix(&mut self.st, nodes[0], ol) {
                         None => continue,
                         Some(nx) => {
                             let f = Frame::Inner {
@@ -945,24 +900,21 @@ where
                         }
                     }
                 }
-                Frame::Outer => {
-                    match Vf2Algorithm::<Ty, F, G>::next_candidate(&mut self.st)
-                    {
-                        None => {
-                            if self.st[1].is_complete() {
-                                return Ok(Some(self.mapping()));
-                            }
-                            continue;
+                Frame::Outer => match Vf2Algorithm::<Ty, F, G>::next_candidate(&mut self.st) {
+                    None => {
+                        if self.st[1].is_complete() {
+                            return Ok(Some(self.mapping()));
                         }
-                        Some((nx, mx, ol)) => {
-                            let f = Frame::Inner {
-                                nodes: [nx, mx],
-                                open_list: ol,
-                            };
-                            self.stack.push(f);
-                        }
+                        continue;
                     }
-                }
+                    Some((nx, mx, ol)) => {
+                        let f = Frame::Inner {
+                            nodes: [nx, mx],
+                            open_list: ol,
+                        };
+                        self.stack.push(f);
+                    }
+                },
                 Frame::Inner {
                     nodes,
                     open_list: ol,
@@ -976,10 +928,7 @@ where
                         self.ordering,
                         self.induced,
                     )? {
-                        Vf2Algorithm::<Ty, F, G>::push_state(
-                            &mut self.st,
-                            nodes,
-                        );
+                        Vf2Algorithm::<Ty, F, G>::push_state(&mut self.st, nodes);
                         // Check cardinalities of Tin, Tout sets
                         if self.st[0]
                             .out_size
@@ -1007,16 +956,9 @@ where
                             self.stack.push(Frame::Outer);
                             continue;
                         }
-                        Vf2Algorithm::<Ty, F, G>::pop_state(
-                            &mut self.st,
-                            nodes,
-                        );
+                        Vf2Algorithm::<Ty, F, G>::pop_state(&mut self.st, nodes);
                     }
-                    match Vf2Algorithm::<Ty, F, G>::next_from_ix(
-                        &mut self.st,
-                        nodes[0],
-                        ol,
-                    ) {
+                    match Vf2Algorithm::<Ty, F, G>::next_from_ix(&mut self.st, nodes[0], ol) {
                         None => continue,
                         Some(nx) => {
                             let f = Frame::Inner {
@@ -1053,8 +995,7 @@ macro_rules! vf2_mapping_impl {
                 call_limit: Option<usize>,
             ) -> Self {
                 let vf2 = Vf2Algorithm::new(
-                    py, g0, g1, node_match, edge_match, id_order, ordering,
-                    induced, call_limit,
+                    py, g0, g1, node_match, edge_match, id_order, ordering, induced, call_limit,
                 );
                 $name { vf2 }
             }
@@ -1078,10 +1019,7 @@ macro_rules! vf2_mapping_impl {
 
         #[pyproto]
         impl PyGCProtocol for $name {
-            fn __traverse__(
-                &self,
-                visit: PyVisit,
-            ) -> Result<(), PyTraverseError> {
+            fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
                 for j in 0..2 {
                     for node in self.vf2.st[j].graph.node_weights() {
                         visit.call(node)?;

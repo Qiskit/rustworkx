@@ -22,8 +22,7 @@ fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
     let mut triangles: usize = 0;
 
     let index = NodeIndex::new(node);
-    let mut neighbors: HashSet<NodeIndex> =
-        graph.graph.neighbors(index).collect();
+    let mut neighbors: HashSet<NodeIndex> = graph.graph.neighbors(index).collect();
     neighbors.remove(&index);
 
     for nodev in &neighbors {
@@ -87,10 +86,7 @@ fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
     }
 }
 
-fn _digraph_triangles(
-    graph: &digraph::PyDiGraph,
-    node: usize,
-) -> (usize, usize) {
+fn _digraph_triangles(graph: &digraph::PyDiGraph, node: usize) -> (usize, usize) {
     let mut triangles: usize = 0;
 
     let index = NodeIndex::new(node);

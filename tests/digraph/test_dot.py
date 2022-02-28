@@ -47,9 +47,7 @@ class TestDot(unittest.TestCase):
             'style=filled];\n1 [color=black, fillcolor=red, label="a", '
             'style=filled];\n0 -> 1 [label="1", name=1];\n}\n'
         )
-        res = graph.to_dot(
-            lambda node: node, lambda edge: edge, filename=self.path
-        )
+        res = graph.to_dot(lambda node: node, lambda edge: edge, filename=self.path)
         self.addCleanup(os.remove, self.path)
         self.assertIsNone(res)
         with open(self.path, "r") as fd:
@@ -59,22 +57,17 @@ class TestDot(unittest.TestCase):
     def test_digraph_empty_dicts(self):
         graph = retworkx.directed_gnp_random_graph(3, 0.9, seed=42)
         dot_str = graph.to_dot(lambda _: {}, lambda _: {})
-        self.assertEqual(
-            "digraph {\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n0 -> 2 ;\n}\n", dot_str
-        )
+        self.assertEqual("digraph {\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n0 -> 2 ;\n}\n", dot_str)
 
     def test_digraph_graph_attrs(self):
         graph = retworkx.directed_gnp_random_graph(3, 0.9, seed=42)
         dot_str = graph.to_dot(lambda _: {}, lambda _: {}, {"bgcolor": "red"})
         self.assertEqual(
-            "digraph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n"
-            "0 -> 2 ;\n}\n",
+            "digraph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n" "0 -> 2 ;\n}\n",
             dot_str,
         )
 
     def test_digraph_no_args(self):
         graph = retworkx.directed_gnp_random_graph(3, 0.95, seed=24)
         dot_str = graph.to_dot()
-        self.assertEqual(
-            "digraph {\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n0 -> 2 ;\n}\n", dot_str
-        )
+        self.assertEqual("digraph {\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n0 -> 2 ;\n}\n", dot_str)

@@ -39,12 +39,8 @@ class TestKShortestpath(unittest.TestCase):
     def test_k_graph_shortest_path_with_goal(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(7)))
-        graph.add_edges_from_no_data(
-            [(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
-        )
-        res = retworkx.graph_k_shortest_path_lengths(
-            graph, 0, 2, lambda _: 1, 3
-        )
+        graph.add_edges_from_no_data([(0, 1), (0, 6), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)])
+        res = retworkx.graph_k_shortest_path_lengths(graph, 0, 2, lambda _: 1, 3)
         self.assertEqual({3: 4}, res)
 
     def test_k_graph_shortest_path_with_goal_node_hole(self):
@@ -54,3 +50,26 @@ class TestKShortestpath(unittest.TestCase):
             graph, start=1, k=1, edge_cost=lambda _: 1, goal=3
         )
         self.assertEqual({3: 2}, res)
+
+    def test_graph_k_shortest_path_with_invalid_weight(self):
+        graph = retworkx.generators.path_graph(4)
+        for invalid_weight in [float("nan"), -1]:
+            with self.subTest(invalid_weight=invalid_weight):
+                with self.assertRaises(ValueError):
+                    retworkx.graph_k_shortest_path_lengths(
+                        graph,
+                        start=1,
+                        k=1,
+                        edge_cost=lambda _: invalid_weight,
+                        goal=3,
+                    )
+
+    def test_k_shortest_path_with_no_path(self):
+        g = retworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        path_lenghts = retworkx.graph_k_shortest_path_lengths(
+            g, start=a, k=1, edge_cost=float, goal=b
+        )
+        expected = {}
+        self.assertEqual(expected, path_lenghts)

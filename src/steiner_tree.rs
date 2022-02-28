@@ -25,6 +25,7 @@ use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 
 use crate::generators::pairwise;
 use crate::graph;
+use crate::is_valid_weight;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
 
 use retworkx_core::dictmap::*;
@@ -49,6 +50,8 @@ struct MetricClosureEdge {
 ///
 /// :return: A metric closure graph from the input graph
 /// :rtype: PyGraph
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, weight_fn, /)")]
 pub fn metric_closure(
@@ -80,23 +83,16 @@ fn _metric_closure_edges(
     }
     let mut out_vec = Vec::with_capacity(node_count * (node_count - 1) / 2);
     let mut distances = HashMap::with_capacity(graph.graph.node_count());
-    let paths = all_pairs_dijkstra_shortest_paths(
-        py,
-        &graph.graph,
-        weight_fn,
-        Some(&mut distances),
-    )?
-    .paths;
-    let mut nodes: HashSet<usize> =
-        graph.graph.node_indices().map(|x| x.index()).collect();
+    let paths =
+        all_pairs_dijkstra_shortest_paths(py, &graph.graph, weight_fn, Some(&mut distances))?.paths;
+    let mut nodes: HashSet<usize> = graph.graph.node_indices().map(|x| x.index()).collect();
     let first_node = graph
         .graph
         .node_indices()
         .map(|x| x.index())
         .next()
         .unwrap();
-    let path_keys: HashSet<usize> =
-        paths[&first_node].paths.keys().copied().collect();
+    let path_keys: HashSet<usize> = paths[&first_node].paths.keys().copied().collect();
     // first_node will always be missing from path_keys so if the difference
     // is > 1 with nodes that means there is another node in the graph that
     // first_node doesn't have a path to.
@@ -150,35 +146,28 @@ fn fast_metric_edges(
 
     let cost_fn = |edge: EdgeReference<'_, PyObject>| -> PyResult<f64> {
         if edge.source() != dummy && edge.target() != dummy {
-            let weight: f64 =
-                weight_fn.call1(py, (edge.weight(),))?.extract(py)?;
-            if weight.is_nan() {
-                Err(PyValueError::new_err("NaN found as an edge weight"))
-            } else {
-                Ok(weight)
-            }
+            let weight: f64 = weight_fn.call1(py, (edge.weight(),))?.extract(py)?;
+            is_valid_weight(weight)
         } else {
             Ok(0.0)
         }
     };
 
     let mut paths = DictMap::with_capacity(graph.graph.node_count());
-    let mut distance =
+    let mut distance: DictMap<NodeIndex, f64> =
         dijkstra(&graph.graph, dummy, None, cost_fn, Some(&mut paths))?;
     paths.remove(&dummy);
     distance.remove(&dummy);
     graph.graph.remove_node(dummy);
 
     // ``partition[u]`` holds the terminal node closest to node ``u``.
-    let mut partition: Vec<usize> =
-        vec![std::usize::MAX; graph.graph.node_bound()];
+    let mut partition: Vec<usize> = vec![std::usize::MAX; graph.graph.node_bound()];
     for (u, path) in paths.iter() {
         let u = u.index();
         partition[u] = path[1].index();
     }
 
-    let mut out_edges: Vec<MetricClosureEdge> =
-        Vec::with_capacity(graph.graph.edge_count());
+    let mut out_edges: Vec<MetricClosureEdge> = Vec::with_capacity(graph.graph.edge_count());
 
     for edge in graph.graph.edge_references() {
         let source = edge.source();
@@ -186,8 +175,7 @@ fn fast_metric_edges(
         // assert that ``source`` is reachable from a terminal node.
         if distance.contains_key(&source) {
             let weight = distance[&source] + cost_fn(edge)? + distance[&target];
-            let mut path: Vec<usize> =
-                paths[&source].iter().skip(1).map(|x| x.index()).collect();
+            let mut path: Vec<usize> = paths[&source].iter().skip(1).map(|x| x.index()).collect();
             path.append(
                 &mut paths[&target]
                     .iter()
@@ -261,6 +249,8 @@ fn fast_metric_edges(
 /// :returns: An approximation to the minimal steiner tree of ``graph`` induced
 ///     by ``terminal_nodes``.
 /// :rtype: PyGraph
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
 ///
 /// .. [1] Kou, Markowsky & Berman,
 ///    "A fast algorithm for Steiner trees"
@@ -277,8 +267,7 @@ pub fn steiner_tree(
     terminal_nodes: Vec<usize>,
     weight_fn: PyObject,
 ) -> PyResult<graph::PyGraph> {
-    let mut edge_list =
-        fast_metric_edges(py, graph, &terminal_nodes, &weight_fn)?;
+    let mut edge_list = fast_metric_edges(py, graph, &terminal_nodes, &weight_fn)?;
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
     edge_list.par_sort_unstable_by(|a, b| {
         let weight_a = (a.distance, a.source, a.target);
@@ -294,8 +283,7 @@ pub fn steiner_tree(
         }
     }
     // assert that the terminal nodes are connected.
-    if !terminal_nodes.is_empty() && mst_edges.len() != terminal_nodes.len() - 1
-    {
+    if !terminal_nodes.is_empty() && mst_edges.len() != terminal_nodes.len() - 1 {
         return Err(PyValueError::new_err(
             "The terminal nodes in the input graph must belong to the same connected component. \
                   The steiner tree is not defined for a graph with unconnected terminal nodes",
@@ -304,17 +292,14 @@ pub fn steiner_tree(
     // Generate the output graph from the MST
     let out_edge_list: Vec<[usize; 2]> = mst_edges
         .into_iter()
-        .map(|edge| pairwise(edge.path))
-        .flatten()
+        .flat_map(|edge| pairwise(edge.path))
         .filter_map(|x| x.0.map(|a| [a, x.1]))
         .collect();
-    let out_edges: HashSet<(usize, usize)> =
-        out_edge_list.iter().map(|x| (x[0], x[1])).collect();
+    let out_edges: HashSet<(usize, usize)> = out_edge_list.iter().map(|x| (x[0], x[1])).collect();
     let mut out_graph = graph.clone();
     let out_nodes: HashSet<NodeIndex> = out_edge_list
         .iter()
-        .map(|x| x.iter())
-        .flatten()
+        .flat_map(|x| x.iter())
         .copied()
         .map(NodeIndex::new)
         .collect();
@@ -329,8 +314,7 @@ pub fn steiner_tree(
     for edge in graph.graph.edge_references().filter(|edge| {
         let source = edge.source().index();
         let target = edge.target().index();
-        !out_edges.contains(&(source, target))
-            && !out_edges.contains(&(target, source))
+        !out_edges.contains(&(source, target)) && !out_edges.contains(&(target, source))
     }) {
         out_graph.graph.remove_edge(edge.id());
     }
@@ -346,19 +330,14 @@ fn deduplicate_edges(
 ) -> PyResult<()> {
     if out_graph.multigraph {
         // Find all edges between nodes
-        let mut duplicate_map: HashMap<
-            [NodeIndex; 2],
-            Vec<(EdgeIndex, PyObject)>,
-        > = HashMap::new();
+        let mut duplicate_map: HashMap<[NodeIndex; 2], Vec<(EdgeIndex, PyObject)>> = HashMap::new();
         for edge in out_graph.graph.edge_references() {
             if duplicate_map.contains_key(&[edge.source(), edge.target()]) {
                 duplicate_map
                     .get_mut(&[edge.source(), edge.target()])
                     .unwrap()
                     .push((edge.id(), edge.weight().clone_ref(py)));
-            } else if duplicate_map
-                .contains_key(&[edge.target(), edge.source()])
-            {
+            } else if duplicate_map.contains_key(&[edge.target(), edge.source()]) {
                 duplicate_map
                     .get_mut(&[edge.target(), edge.source()])
                     .unwrap()
@@ -372,8 +351,7 @@ fn deduplicate_edges(
         }
         // For a node pair with > 1 edge find minimum edge and remove others
         for edges_raw in duplicate_map.values().filter(|x| x.len() > 1) {
-            let mut edges: Vec<(EdgeIndex, f64)> =
-                Vec::with_capacity(edges_raw.len());
+            let mut edges: Vec<(EdgeIndex, f64)> = Vec::with_capacity(edges_raw.len());
             for edge in edges_raw {
                 let res = weight_fn.call1(py, (&edge.1,))?;
                 let raw = res.to_object(py);

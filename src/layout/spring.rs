@@ -251,11 +251,10 @@ where
             let fa = f_a.total(&pos[v], ys);
 
             // repulsive forces
-            let ys =
-                graph.node_indices().filter(|&n| n.index() != v).map(|n| {
-                    let n = n.index();
-                    (&pos[n], 1.0)
-                });
+            let ys = graph.node_indices().filter(|&n| n.index() != v).map(|n| {
+                let n = n.index();
+                (&pos[n], 1.0)
+            });
             let fr = f_r.total(&pos[v], ys);
 
             // update current position
@@ -345,8 +344,7 @@ where
     let tol = tol.unwrap_or(1e-6);
     let step = 0.1;
 
-    let mut weights: HashMap<(usize, usize), f64> =
-        HashMap::with_capacity(2 * graph.edge_count());
+    let mut weights: HashMap<(usize, usize), f64> = HashMap::with_capacity(2 * graph.edge_count());
     for e in graph.edge_references() {
         let w = weight_callable(py, &weight_fn, e.weight(), default_weight)?;
         let source = e.source().index();
@@ -360,15 +358,13 @@ where
         Some(false) => {
             let cs = LinearCoolingScheme::new(step, num_iter);
             evolve(
-                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
-                scale, center,
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights, scale, center,
             )
         }
         _ => {
             let cs = AdaptiveCoolingScheme::new(step);
             evolve(
-                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights,
-                scale, center,
+                graph, vpos, fixed, f_a, f_r, cs, num_iter, tol, weights, scale, center,
             )
         }
     };

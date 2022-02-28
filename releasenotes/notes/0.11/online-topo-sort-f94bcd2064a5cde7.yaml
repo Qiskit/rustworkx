@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new class, :class:`~retworkx.TopologicalSorter`, which
+    provides functionality to topologically sort a directed graph. It gives
+    the ability to process nodes while they are becoming ready and then mark
+    them as done, so more nodes can be freed.

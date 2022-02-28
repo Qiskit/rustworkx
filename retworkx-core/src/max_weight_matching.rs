@@ -24,17 +24,12 @@ use hashbrown::{HashMap, HashSet};
 
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers,
-    NodeCount,
+    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
 };
 use petgraph::Undirected;
 
 /// Return 2 * slack of edge k (does not work inside blossoms).
-fn slack(
-    edge_index: usize,
-    dual_var: &[i128],
-    edges: &[(usize, usize, i128)],
-) -> i128 {
+fn slack(edge_index: usize, dual_var: &[i128], edges: &[(usize, usize, i128)]) -> i128 {
     let (source_index, target_index, weight) = edges[edge_index];
     dual_var[source_index] + dual_var[target_index] - 2 * weight
 }
@@ -147,10 +142,7 @@ fn scan_blossom(
         path.push(blossom);
         labels[blossom] = Some(5);
         // Trace one step bacl.
-        assert!(
-            label_ends[blossom]
-                == mate.get(&blossom_base[blossom].unwrap()).copied()
-        );
+        assert!(label_ends[blossom] == mate.get(&blossom_base[blossom].unwrap()).copied());
         if label_ends[blossom].is_none() {
             // The base of blossom is single; stop tracing this path
             v = None;
@@ -222,9 +214,7 @@ fn add_blossom<E>(
             labels[blossom_v] == Some(2)
                 || (labels[blossom_v] == Some(1)
                     && label_ends[blossom_v]
-                        == mate
-                            .get(&blossom_base[blossom_v].unwrap())
-                            .copied())
+                        == mate.get(&blossom_base[blossom_v].unwrap()).copied())
         );
         // Trace one step back.
         assert!(label_ends[blossom_v].is_some());
@@ -247,9 +237,7 @@ fn add_blossom<E>(
             labels[blossom_w] == Some(2)
                 || (labels[blossom_w] == Some(1)
                     && label_ends[blossom_w]
-                        == mate
-                            .get(&blossom_base[blossom_w].unwrap())
-                            .copied())
+                        == mate.get(&blossom_base[blossom_w].unwrap()).copied())
         );
         // Trace one step back
         assert!(label_ends[blossom_w].is_some());
@@ -272,8 +260,7 @@ fn add_blossom<E>(
         in_blossoms[node] = blossom;
     }
     // Compute blossom_best_edges[blossom]
-    let mut best_edge_to: HashMap<usize, usize> =
-        HashMap::with_capacity(2 * num_nodes);
+    let mut best_edge_to: HashMap<usize, usize> = HashMap::with_capacity(2 * num_nodes);
     for bv_ref in &blossom_children[blossom] {
         let bv = *bv_ref;
         // This sub-blossom does not have a list of least-slack edges;
@@ -281,9 +268,7 @@ fn add_blossom<E>(
         let nblists: Vec<Vec<usize>> = if blossom_best_edges[bv].is_empty() {
             let mut tmp: Vec<Vec<usize>> = Vec::new();
             for node in blossom_leaves(bv, num_nodes, blossom_children)? {
-                tmp.push(
-                    neighbor_endpoints[node].iter().map(|p| p / 2).collect(),
-                );
+                tmp.push(neighbor_endpoints[node].iter().map(|p| p / 2).collect());
             }
             tmp
         } else {
@@ -384,8 +369,7 @@ fn expand_blossom<E>(
         // obtained its label, and relabel sub-blossoms until we reach the
         // base.
         assert!(label_ends[blossom].is_some());
-        let entry_child =
-            in_blossoms[endpoints[label_ends[blossom].unwrap() ^ 1]];
+        let entry_child = in_blossoms[endpoints[label_ends[blossom].unwrap() ^ 1]];
         // Decied in which direction we will go around the blossom.
         let i = blossom_children[blossom]
             .iter()
@@ -411,13 +395,11 @@ fn expand_blossom<E>(
             if j < 0 {
                 let length = blossom_endpoints[blossom].len();
                 let index = length - j.abs() as usize;
-                labels[endpoints[blossom_endpoints[blossom]
-                    [index - endpoint_trick]
-                    ^ endpoint_trick
-                    ^ 1]] = Some(0);
+                labels[endpoints
+                    [blossom_endpoints[blossom][index - endpoint_trick] ^ endpoint_trick ^ 1]] =
+                    Some(0);
             } else {
-                labels[endpoints[blossom_endpoints[blossom]
-                    [j as usize - endpoint_trick]
+                labels[endpoints[blossom_endpoints[blossom][j as usize - endpoint_trick]
                     ^ endpoint_trick
                     ^ 1]] = Some(0);
             }
@@ -453,8 +435,7 @@ fn expand_blossom<E>(
                 let index = length - tmp.abs() as usize;
                 blossom_endpoints[blossom][index] ^ endpoint_trick
             } else {
-                blossom_endpoints[blossom][j as usize - endpoint_trick]
-                    ^ endpoint_trick
+                blossom_endpoints[blossom][j as usize - endpoint_trick] ^ endpoint_trick
             };
             // Step to the next T-sub-blossom.
             allowed_edge[p / 2] = true;
@@ -616,8 +597,7 @@ fn augment_blossom(
             let index = length - j.abs() as usize - endpoint_trick;
             blossom_endpoints[blossom][index] ^ endpoint_trick
         } else {
-            blossom_endpoints[blossom][j as usize - endpoint_trick]
-                ^ endpoint_trick
+            blossom_endpoints[blossom][j as usize - endpoint_trick] ^ endpoint_trick
         };
         if tmp > num_nodes {
             augment_blossom(
@@ -695,10 +675,7 @@ fn augment_matching(
         loop {
             let blossom_s = in_blossoms[s];
             assert!(labels[blossom_s] == Some(1));
-            assert!(
-                label_ends[blossom_s]
-                    == mate.get(&blossom_base[blossom_s].unwrap()).copied()
-            );
+            assert!(label_ends[blossom_s] == mate.get(&blossom_base[blossom_s].unwrap()).copied());
             // Augment through the S-blossom from s to base.
             if blossom_s >= num_nodes {
                 augment_blossom(
@@ -783,12 +760,10 @@ fn verify_optimum(
         let mut i_blossoms: Vec<usize> = vec![*i];
         let mut j_blossoms: Vec<usize> = vec![*j];
         while blossom_parents[*i_blossoms.last().unwrap()].is_some() {
-            i_blossoms
-                .push(blossom_parents[*i_blossoms.last().unwrap()].unwrap());
+            i_blossoms.push(blossom_parents[*i_blossoms.last().unwrap()].unwrap());
         }
         while blossom_parents[*j_blossoms.last().unwrap()].is_some() {
-            j_blossoms
-                .push(blossom_parents[*j_blossoms.last().unwrap()].unwrap());
+            j_blossoms.push(blossom_parents[*j_blossoms.last().unwrap()].unwrap());
         }
         i_blossoms.reverse();
         j_blossoms.reverse();
@@ -809,9 +784,7 @@ fn verify_optimum(
     }
     // 2. all single vertices have zero dual value;
     for (node, dual_var_node) in dual_var.iter().enumerate().take(num_nodes) {
-        assert!(
-            mate.get(&node).is_some() || dual_var_node + node_dual_offset == 0
-        );
+        assert!(mate.get(&node).is_some() || dual_var_node + node_dual_offset == 0);
     }
     // 3. all blossoms with positive dual value are full.
     for blossom in num_nodes..2 * num_nodes {
@@ -903,8 +876,7 @@ where
 {
     let num_edges = graph.edge_count();
     let num_nodes = graph.node_count();
-    let mut out_set: HashSet<(usize, usize)> =
-        HashSet::with_capacity(num_nodes);
+    let mut out_set: HashSet<(usize, usize)> = HashSet::with_capacity(num_nodes);
     // Exit fast for graph without edges
     if num_edges == 0 {
         return Ok(HashSet::new());
@@ -948,8 +920,7 @@ where
     // neighbor_endpoints[v] is the list of remote endpoints of the edges
     // attached to v.
     // Not modified by algorithm (only mut to initially construct contents).
-    let mut neighbor_endpoints: Vec<Vec<usize>> =
-        (0..num_nodes).map(|_| Vec::new()).collect();
+    let mut neighbor_endpoints: Vec<Vec<usize>> = (0..num_nodes).map(|_| Vec::new()).collect();
     for edge in 0..num_edges {
         neighbor_endpoints[edges[edge].0].push(2 * edge + 1);
         neighbor_endpoints[edges[edge].1].push(2 * edge);
@@ -989,20 +960,17 @@ where
     // If b is a non-trivial (sub-)blossom,
     // blossom_children[b] is an ordered list of its sub-blossoms, starting with
     // the base and going round the blossom.
-    let mut blossom_children: Vec<Vec<usize>> =
-        (0..2 * num_nodes).map(|_| Vec::new()).collect();
+    let mut blossom_children: Vec<Vec<usize>> = (0..2 * num_nodes).map(|_| Vec::new()).collect();
     // If b is a (sub-)blossom,
     // blossombase[b] is its base VERTEX (i.e. recursive sub-blossom).
-    let mut blossom_base: Vec<Option<usize>> =
-        (0..num_nodes).map(Some).collect();
+    let mut blossom_base: Vec<Option<usize>> = (0..num_nodes).map(Some).collect();
     blossom_base.append(&mut vec![None; num_nodes]);
     // If b is a non-trivial (sub-)blossom,
     // blossom_endpoints[b] is a list of endpoints on its connecting edges,
     // such that blossom_endpoints[b][i] is the local endpoint of
     // blossom_children[b][i] on the edge that connects it to
     // blossom_children[b][wrap(i+1)].
-    let mut blossom_endpoints: Vec<Vec<usize>> =
-        (0..2 * num_nodes).map(|_| Vec::new()).collect();
+    let mut blossom_endpoints: Vec<Vec<usize>> = (0..2 * num_nodes).map(|_| Vec::new()).collect();
     // If v is a free vertex (or an unreached vertex inside a T-blossom),
     // best_edge[v] is the edge to an S-vertex with least slack,
     // or None if there is no such edge. If b is a (possibly trivial)
@@ -1014,8 +982,7 @@ where
     // blossom_best_edges[b] is a list of least-slack edges to neighboring
     // S-blossoms, or None if no such list has been computed yet.
     // This is used for efficient computation of delta3.
-    let mut blossom_best_edges: Vec<Vec<usize>> =
-        (0..2 * num_nodes).map(|_| Vec::new()).collect();
+    let mut blossom_best_edges: Vec<Vec<usize>> = (0..2 * num_nodes).map(|_| Vec::new()).collect();
     let mut unused_blossoms: Vec<usize> = (num_nodes..2 * num_nodes).collect();
     // If v is a vertex,
     // dual_var[v] = 2 * u(v) where u(v) is the v's variable in the dual
@@ -1046,8 +1013,7 @@ where
         label_ends = vec![None; 2 * num_nodes];
         // Forget all about least-slack edges.
         best_edge = vec![None; 2 * num_nodes];
-        blossom_best_edges
-            .splice(num_nodes.., (0..num_nodes).map(|_| Vec::new()));
+        blossom_best_edges.splice(num_nodes.., (0..num_nodes).map(|_| Vec::new()));
         // Loss of labeling means that we can not be sure that currently
         // allowable edges remain allowable througout this stage.
         allowed_edge = vec![false; num_edges];
@@ -1199,12 +1165,7 @@ where
                         // a different S-blossom
                         let blossom = in_blossoms[v];
                         if best_edge[blossom].is_none()
-                            || kslack
-                                < slack(
-                                    best_edge[blossom].unwrap(),
-                                    &dual_var,
-                                    &edges,
-                                )
+                            || kslack < slack(best_edge[blossom].unwrap(), &dual_var, &edges)
                         {
                             best_edge[blossom] = Some(k);
                         }
@@ -1213,12 +1174,7 @@ where
                         // a T-blossom) but we can not reach it yet;
                         // keep track of the least-slack edge that reaches w.
                         if best_edge[w].is_none()
-                            || kslack
-                                < slack(
-                                    best_edge[w].unwrap(),
-                                    &dual_var,
-                                    &edges,
-                                )
+                            || kslack < slack(best_edge[w].unwrap(), &dual_var, &edges)
                         {
                             best_edge[w] = Some(k)
                         }
@@ -1263,8 +1219,7 @@ where
                     && labels[blossom] == Some(1)
                     && best_edge[blossom].is_some()
                 {
-                    let kslack =
-                        slack(best_edge[blossom].unwrap(), &dual_var, &edges);
+                    let kslack = slack(best_edge[blossom].unwrap(), &dual_var, &edges);
                     assert!(kslack % 2 == 0);
                     let d = Some(kslack / 2);
                     if delta_type == -1 || d < delta {
@@ -1293,8 +1248,7 @@ where
                 // verifyable
                 assert!(max_cardinality);
                 delta_type = 1;
-                delta =
-                    Some(max(0, *dual_var[..num_nodes].iter().min().unwrap()));
+                delta = Some(max(0, *dual_var[..num_nodes].iter().min().unwrap()));
             }
 
             // Update dual variables according to delta.
@@ -1413,8 +1367,7 @@ where
     // Transform mate[] such that mate[v] is the vertex to which v is paired
     // Also handle holes in node indices from PyGraph node removals by mapping
     // linear index to node index.
-    let mut seen: HashSet<(usize, usize)> =
-        HashSet::with_capacity(2 * num_nodes);
+    let mut seen: HashSet<(usize, usize)> = HashSet::with_capacity(2 * num_nodes);
     let node_list: Vec<NodeIndex> = graph.node_identifiers().collect();
     for (index, node) in mate.iter() {
         let tmp = (

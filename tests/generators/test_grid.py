@@ -44,9 +44,7 @@ class TestGridGraph(unittest.TestCase):
         self.assertEqual(graph.in_edges(0), [])
 
     def test_directed_grid_graph_dimensions_weights(self):
-        graph = retworkx.generators.directed_grid_graph(
-            4, 5, weights=list(range(20))
-        )
+        graph = retworkx.generators.directed_grid_graph(4, 5, weights=list(range(20)))
         self.assertEqual(len(graph), 20)
         self.assertEqual([x for x in range(20)], graph.nodes())
         self.assertEqual(len(graph.edges()), 31)
@@ -62,9 +60,7 @@ class TestGridGraph(unittest.TestCase):
         self.assertEqual(graph.in_edges(19), [(18, 19, None), (14, 19, None)])
 
     def test_directed_grid_graph_more_dimensions_weights(self):
-        graph = retworkx.generators.directed_grid_graph(
-            4, 5, weights=list(range(16))
-        )
+        graph = retworkx.generators.directed_grid_graph(4, 5, weights=list(range(16)))
         self.assertEqual(len(graph), 20)
         self.assertEqual([x for x in range(16)] + [None] * 4, graph.nodes())
         self.assertEqual(len(graph.edges()), 31)
@@ -80,9 +76,7 @@ class TestGridGraph(unittest.TestCase):
         self.assertEqual(graph.in_edges(19), [(18, 19, None), (14, 19, None)])
 
     def test_directed_grid_graph_less_dimensions_weights(self):
-        graph = retworkx.generators.directed_grid_graph(
-            4, 5, weights=list(range(24))
-        )
+        graph = retworkx.generators.directed_grid_graph(4, 5, weights=list(range(24)))
         self.assertEqual(len(graph), 20)
         self.assertEqual([x for x in range(20)], graph.nodes())
         self.assertEqual(len(graph.edges()), 31)

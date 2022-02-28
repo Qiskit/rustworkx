@@ -477,23 +477,17 @@ macro_rules! custom_vec_iter_impl {
                         Ok(res) => Ok(!res),
                         Err(err) => Err(err),
                     },
-                    _ => Err(PyNotImplementedError::new_err(
-                        "Comparison not implemented",
-                    )),
+                    _ => Err(PyNotImplementedError::new_err("Comparison not implemented")),
                 }
             }
 
             fn __str__(&self) -> PyResult<String> {
-                Python::with_gil(|py| {
-                    Ok(format!("{}{}", stringify!($name), self.$data.str(py)?))
-                })
+                Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
             }
 
             fn __hash__(&self) -> PyResult<u64> {
                 let mut hasher = DefaultHasher::new();
-                Python::with_gil(|py| {
-                    PyHash::hash(&self.$data, py, &mut hasher)
-                })?;
+                Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
 
                 Ok(hasher.finish())
             }
@@ -507,10 +501,7 @@ macro_rules! custom_vec_iter_impl {
 
             fn __getitem__(&'p self, idx: isize) -> PyResult<$T> {
                 if idx >= self.$data.len().try_into().unwrap() {
-                    Err(PyIndexError::new_err(format!(
-                        "Invalid index, {}",
-                        idx
-                    )))
+                    Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
                 } else {
                     Ok(self.$data[idx as usize].clone())
                 }
@@ -524,7 +515,14 @@ custom_vec_iter_impl!(
     bfs_successors,
     (PyObject, Vec<PyObject>),
     "A custom class for the return from :func:`retworkx.bfs_successors`
-    
+
+    The class can is a read-only sequence of tuples of the form::
+
+        [(node, [successor_a, successor_b])]
+
+    where ``node``, ``successor_a``, and ``successor_b`` are the data payloads
+    for the nodes in the graph.
+
     This class is a container class for the results of the
     :func:`retworkx.bfs_successors` function. It implements the Python
     sequence protocol. So you can treat the return as read-only
@@ -543,7 +541,7 @@ custom_vec_iter_impl!(
         # Use as iterator
         bfs_iter = iter(bfs_succ)
         first_element = next(bfs_iter)
-        second_element = nex(bfs_iter)
+        second_element = next(bfs_iter)
 
     "
 );
@@ -571,6 +569,8 @@ custom_vec_iter_impl!(
     usize,
     "A custom class for the return of node indices
 
+    This class can be treated as a read-only sequence of integer node indices.
+
     This class is a container class for the results of functions that
     return a list of node indices. It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
@@ -583,7 +583,7 @@ custom_vec_iter_impl!(
         import retworkx
 
         graph = retworkx.generators.directed_path_graph(5)
-        nodes = retworkx.node_indexes(0)
+        nodes = retworkx.node_indices(0)
         # Index based access
         third_element = nodes[2]
         # Use as iterator
@@ -600,6 +600,14 @@ custom_vec_iter_impl!(
     edges,
     (usize, usize),
     "A custom class for the return of edge lists
+
+    The class is a read-only sequence of tuples representing edge endpoints in
+    the form::
+
+        [(node_index_a, node_index_b)]
+
+    where ``node_index_a`` and ``node_index_b`` are the integer node indices of
+    the edge endpoints.
 
     This class is a container class for the results of functions that
     return a list of edges. It implements the Python sequence
@@ -630,6 +638,14 @@ custom_vec_iter_impl!(
     edges,
     (usize, usize, PyObject),
     "A custom class for the return of edge lists with weights
+
+    This class is a read-only sequence of tuples representing the edge
+    endpoints with the data payload for that edge in the form::
+
+        [(node_index_a, node_index_b, weight)]
+
+    where ``node_index_a`` and ``node_index_b`` are the integer node indices of
+    the edge endpoints and ``weight`` is the data payload of that edge.
 
     This class is a container class for the results of functions that
     return a list of edges with weights. It implements the Python sequence
@@ -673,7 +689,9 @@ custom_vec_iter_impl!(
     edges,
     usize,
     "A custom class for the return of edge indices
-    
+
+    The class is a read only sequence of integer edge indices.
+
     This class is a container class for the results of functions that
     return a list of edge indices. It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
@@ -724,6 +742,8 @@ custom_vec_iter_impl!(
     EdgeList,
     "A custom class for the return of a list of list of edges.
 
+    The class is a read-only sequence of :class:`.EdgeList` instances.
+
     This class is a container class for the results of functions that
     return a list of list of edges. It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
@@ -752,11 +772,7 @@ macro_rules! py_object_protocol_impl {
     ($name:ident, $data:ident) => {
         #[pyproto]
         impl<'p> PyObjectProtocol<'p> for $name {
-            fn __richcmp__(
-                &self,
-                other: PyObject,
-                op: pyo3::basic::CompareOp,
-            ) -> PyResult<bool> {
+            fn __richcmp__(&self, other: PyObject, op: pyo3::basic::CompareOp) -> PyResult<bool> {
                 let compare = |other: PyObject| -> PyResult<bool> {
                     Python::with_gil(|py| PyEq::eq(&self.$data, &other, py))
                 };
@@ -766,23 +782,17 @@ macro_rules! py_object_protocol_impl {
                         Ok(res) => Ok(!res),
                         Err(err) => Err(err),
                     },
-                    _ => Err(PyNotImplementedError::new_err(
-                        "Comparison not implemented",
-                    )),
+                    _ => Err(PyNotImplementedError::new_err("Comparison not implemented")),
                 }
             }
 
             fn __str__(&self) -> PyResult<String> {
-                Python::with_gil(|py| {
-                    Ok(format!("{}{}", stringify!($name), self.$data.str(py)?))
-                })
+                Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
             }
 
             fn __hash__(&self) -> PyResult<u64> {
                 let mut hasher = DefaultHasher::new();
-                Python::with_gil(|py| {
-                    PyHash::hash(&self.$data, py, &mut hasher)
-                })?;
+                Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
 
                 Ok(hasher.finish())
             }
@@ -803,12 +813,9 @@ macro_rules! py_iter_protocol_impl {
             fn __iter__(slf: PyRef<Self>) -> Py<$name> {
                 slf.into()
             }
-            fn __next__(
-                mut slf: PyRefMut<Self>,
-            ) -> IterNextOutput<$T, &'static str> {
+            fn __next__(mut slf: PyRefMut<Self>) -> IterNextOutput<$T, &'static str> {
                 if slf.iter_pos < slf.$data.len() {
-                    let res =
-                        IterNextOutput::Yield(slf.$data[slf.iter_pos].clone());
+                    let res = IterNextOutput::Yield(slf.$data[slf.iter_pos].clone());
                     slf.iter_pos += 1;
                     res
                 } else {
@@ -881,8 +888,8 @@ macro_rules! custom_hash_map_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __contains__(&self, index: usize) -> PyResult<bool> {
-                Ok(self.$data.contains_key(&index))
+            fn __contains__(&self, key: $K) -> PyResult<bool> {
+                Ok(self.$data.contains_key(&key))
             }
         }
 
@@ -892,12 +899,10 @@ macro_rules! custom_hash_map_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __getitem__(&'p self, idx: usize) -> PyResult<$V> {
-                match self.$data.get(&idx) {
+            fn __getitem__(&'p self, key: $K) -> PyResult<$V> {
+                match self.$data.get(&key) {
                     Some(data) => Ok(data.clone()),
-                    None => {
-                        Err(PyIndexError::new_err("No node found for index"))
-                    }
+                    None => Err(PyIndexError::new_err("No node found for index")),
                 }
             }
         }
@@ -958,7 +963,7 @@ custom_hash_map_iter_impl!(
     This class is equivalent to having a read only dict of the form::
 
         {1: (0, 1, 'weight'), 3: (2, 3, 1.2)}
-    
+
     It is used to efficiently represent an edge index map for a retworkx
     graph. It behaves as a drop in replacement for a readonly ``dict``.
     "
@@ -979,6 +984,13 @@ impl PyGCProtocol for EdgeIndexMap {
 }
 
 /// A custom class for the return of paths to target nodes
+///
+/// The class is a read-only mapping of node indices to a list of node indices
+/// representing a path of the form::
+///
+///     {node_c: [node_a, node_b, node_c]}
+///
+/// where ``node_a``, ``node_b``, and ``node_c`` are integer node indices.
 ///
 /// This class is a container class for the results of functions that
 /// return a mapping of target nodes and paths. It implements the Python
@@ -1134,6 +1146,11 @@ custom_hash_map_iter_impl!(
     f64,
     "A custom class for the return of path lengths to target nodes
 
+    This class is a read-only mapping of integer node indices to float path
+    lengths of the form::
+
+        {0: 24.5, 1: 2.1}
+
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths. It implements the Python
     mapping protocol. So you can treat the return as a read-only
@@ -1194,9 +1211,9 @@ custom_hash_map_iter_impl!(
     "A custom class for the return of centralities at target nodes
 
     This class is a container class for the results of functions that
-    return a mapping of node index to the betweenness score for that node.
-    It implements the Python mapping protocol so you can treat the return
-    as a read-only mapping/dict.
+    return a mapping of integer node indices to the float betweenness score for
+    that node. It implements the Python mapping protocol so you can treat the
+    return as a read-only mapping/dict.
     "
 );
 default_pygc_protocol_impl!(CentralityMapping);
@@ -1214,6 +1231,11 @@ custom_hash_map_iter_impl!(
     BigUint,
     "A custom class for the return of number path lengths to target nodes
 
+    This class is a read-only mapping of integer node indices to an integer
+    count for that node of the form::
+
+        {0: 24, 4, 234}
+
     This class is a container class for the results of functions that
     return a mapping of target nodes and counts. It implements the Python
     mapping protocol. So you can treat the return as a read-only
@@ -1222,9 +1244,9 @@ custom_hash_map_iter_impl!(
     order.
 
     For example::
-    
+
         import retworkx
-    
+
         graph = retworkx.generators.directed_path_graph(5)
         edges = retworkx.num_shortest_paths_unweighted(0)
         # Target node access
@@ -1251,6 +1273,11 @@ custom_hash_map_iter_impl!(
     usize,
     PathLengthMapping,
     "A custom class for the return of path lengths to target nodes from all nodes
+
+    This class is a read-only mapping of integer node indices to a
+    :class:`.PathLengthMapping` of the form::
+
+        {0: {1: 1.234, 2: 2.34}}
 
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths from all nodes. It implements
@@ -1282,6 +1309,11 @@ custom_hash_map_iter_impl!(
     usize,
     PathMapping,
     "A custom class for the return of paths to target nodes from all nodes
+
+    This class is a read-only mapping of integer node indices to a
+    :class:`.PathMapping` of the form::
+
+        {0: {1: [0, 2, 3, 1], 2: [0, 2]}}
 
     This class is a container class for the results of functions that
     return a mapping of target nodes and paths from all nodes. It implements
@@ -1325,3 +1357,48 @@ custom_hash_map_iter_impl!(
     "
 );
 default_pygc_protocol_impl!(NodeMap);
+
+custom_hash_map_iter_impl!(
+    ProductNodeMap,
+    ProductNodeMapKeys,
+    ProductNodeMapValues,
+    ProductNodeMapItems,
+    node_map,
+    node_map_keys,
+    node_map_values,
+    node_map_items,
+    (usize, usize),
+    usize,
+    "A class representing a mapping of tuple of node indices to node indices.
+
+    This implements the Python mapping protocol, so you can treat the return as
+    a read-only mapping/dict of the form::
+
+        {(0, 0): 0, (0, 1): 1}
+
+    "
+);
+default_pygc_protocol_impl!(ProductNodeMap);
+
+custom_hash_map_iter_impl!(
+    BiconnectedComponents,
+    BiconnectedComponentsKeys,
+    BiconnectedComponentsValues,
+    BiconnectedComponentsItems,
+    bicon_comp,
+    bicon_comp_keys,
+    bicon_comp_values,
+    bicon_comp_items,
+    (usize, usize),
+    usize,
+    "A class representing a mapping of edge endpoints to biconnected
+    component number that the edge belongs.
+
+    This implements the Python mapping protocol, so you can treat the return as
+    a read-only mapping/dict of the form::
+
+        {(0, 0): 0, (0, 1): 1}
+
+    "
+);
+default_pygc_protocol_impl!(BiconnectedComponents);
