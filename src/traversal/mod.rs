@@ -71,7 +71,7 @@ use crate::iterators::EdgeList;
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
+pub fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
@@ -116,7 +116,7 @@ fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeL
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
+pub fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
@@ -137,7 +137,7 @@ fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
 /// :rtype: BFSSuccessors
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-fn bfs_successors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> iterators::BFSSuccessors {
+pub fn bfs_successors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(&graph.graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
@@ -175,7 +175,7 @@ fn bfs_successors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> iterat
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(&graph.graph);
@@ -202,7 +202,7 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(&graph.graph, index, None, |_| 1);

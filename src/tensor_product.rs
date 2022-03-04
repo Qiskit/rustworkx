@@ -121,7 +121,7 @@ fn tensor_product<Ty: EdgeType>(
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-fn graph_tensor_product(
+pub fn graph_tensor_product(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -169,7 +169,7 @@ fn graph_tensor_product(
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-fn digraph_tensor_product(
+pub fn digraph_tensor_product(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,

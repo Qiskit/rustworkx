@@ -56,9 +56,9 @@ pub fn bfs_handler(
 
     match res {
         Err(e) => {
-            if e.is_instance::<PruneSearch>(py) {
+            if e.is_instance_of::<PruneSearch>(py) {
                 Ok(Control::Prune)
-            } else if e.is_instance::<StopSearch>(py) {
+            } else if e.is_instance_of::<StopSearch>(py) {
                 Ok(Control::Break(()))
             } else {
                 Err(e)

@@ -332,7 +332,7 @@ where
                         return Ok(false);
                     }
                 }
-                Err(ref err) if err.is_instance::<PyKeyError>(py) => {
+                Err(ref err) if err.is_instance_of::<PyKeyError>(py) => {
                     return Ok(false);
                 }
                 Err(err) => return Err(err),
