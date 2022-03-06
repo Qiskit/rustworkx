@@ -137,7 +137,11 @@ pub fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeLis
 /// :rtype: BFSSuccessors
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-pub fn bfs_successors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> iterators::BFSSuccessors {
+pub fn bfs_successors(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(&graph.graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
