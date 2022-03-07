@@ -476,7 +476,7 @@ macro_rules! custom_vec_iter_impl {
                     Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
                 } else if idx < 0 {
                     let len = self.$data.len();
-                    Ok(self.$data[len + idx as usize].clone())
+                    Ok(self.$data[len - idx.abs() as usize].clone())
                 } else {
                     Ok(self.$data[idx as usize].clone())
                 }
