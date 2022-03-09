@@ -7,15 +7,7 @@
 # that they have been altered from the originals.
 
 from setuptools import setup
-try:
-    from setuptools_rust import Binding, RustExtension
-except ImportError:
-    import sys
-    import subprocess
-
-    subprocess.call([sys.executable, '-m', 'pip', 'install',
-                     'setuptools-rust'])
-    from setuptools_rust import Binding, RustExtension
+from setuptools_rust import Binding, RustExtension
 
 
 def readme():
@@ -24,12 +16,12 @@ def readme():
 
 
 mpl_extras = ['matplotlib>=3.0']
-graphviz_extras = ['pydot>=1.4', 'pillow>=5.4']
+graphviz_extras = ['pillow>=5.4']
 
 
 setup(
     name="retworkx",
-    version="0.11.0",
+    version="0.12.0",
     description="A python graph library implemented in Rust",
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -42,7 +34,6 @@ setup(
         "Intended Audience :: Science/Research",
         "Programming Language :: Rust",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
@@ -63,7 +54,7 @@ setup(
     include_package_data=True,
     packages=["retworkx", "retworkx.visualization"],
     zip_safe=False,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     install_requires=['numpy>=1.16.0'],
     extras_require={
         'mpl': mpl_extras,

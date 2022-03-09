@@ -1,0 +1,20 @@
+# Entries in this file are made for two reasons:
+# 1) to merge multiple git commit authors that correspond to a single author
+# 2) to change the canonical name and/or email address of an author.
+#
+# Format is:
+#     Canonical Name <Canonical@email> commit name <commit@email>
+#     \--------------+---------------/ \----------+-------------/
+#                 replace                       find
+# See also: 'git shortlog --help' and 'git check-mailmap --help'.
+#
+# If you don't like the way your name is cited by qiskit, please feel free to
+# open a pull request against this file to set your preferred naming.
+#
+# Note that each qiskit element uses its own mailmap so it may be necessary to
+# propagate changes in other repos for consistency.
+#
+
+Ivan Carvalho <ivancarv@student.ubc.ca> <ivan.ivancps.cn@gmail.com>
+Ivan Carvalho <ivancarv@student.ubc.ca> <ivan.carvalho@alumni.ubc.ca>
+Ivan Carvalho <ivancarv@student.ubc.ca> <8753214+IvanIsCoding@users.noreply.github.com>

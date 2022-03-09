@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Added a new generator function, :func:`~retworkx.generators.barbell_graph`,
+    to the ``retworkx.generators`` module that will generate a barbell graph.
+    For example:
+
+    .. jupyter-execute::
+
+      import retworkx.generators
+      from retworkx.visualization import mpl_draw
+
+      graph = retworkx.generators.barbell_graph(4, 3)
+      mpl_draw(graph)

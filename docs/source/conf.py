@@ -24,9 +24,9 @@ copyright = u'2021, retworkx Contributors'
 
 
 # The short X.Y version.
-version = '0.11.0'
+version = '0.12.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.11.0'
+release = '0.12.0'
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
@@ -38,6 +38,7 @@ extensions = ['sphinx.ext.autodoc',
               'jupyter_sphinx',
               'reno.sphinxext',
               'sphinx.ext.intersphinx',
+              'sphinx_reredirects',
              ]
 html_static_path = ['_static']
 templates_path = ['_templates']
@@ -119,6 +120,11 @@ texinfo_documents = [
    u'retworkx Contributors', 'retworkx', '',
    'Miscellaneous'),
 ]
+
+redirects = {}
+with open("sources.txt", "r") as fd:
+    for source_str in fd:
+        redirects[f"stubs/{source_str}"] = f"../apiref/{source_str}"
 
 # Version extensions
 

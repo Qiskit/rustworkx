@@ -88,10 +88,7 @@ pub fn max_weight_matching(
     )
 }
 
-fn _inner_is_matching(
-    graph: &graph::PyGraph,
-    matching: &HashSet<(usize, usize)>,
-) -> bool {
+fn _inner_is_matching(graph: &graph::PyGraph, matching: &HashSet<(usize, usize)>) -> bool {
     let has_edge = |e: &(usize, usize)| -> bool {
         graph
             .graph
@@ -125,10 +122,7 @@ fn _inner_is_matching(
 /// :rtype: bool
 #[pyfunction]
 #[pyo3(text_signature = "(graph, matching, /)")]
-pub fn is_matching(
-    graph: &graph::PyGraph,
-    matching: HashSet<(usize, usize)>,
-) -> bool {
+pub fn is_matching(graph: &graph::PyGraph, matching: HashSet<(usize, usize)>) -> bool {
     _inner_is_matching(graph, &matching)
 }
 
@@ -151,10 +145,7 @@ pub fn is_matching(
 /// :rtype: bool
 #[pyfunction]
 #[pyo3(text_signature = "(graph, matching, /)")]
-pub fn is_maximal_matching(
-    graph: &graph::PyGraph,
-    matching: HashSet<(usize, usize)>,
-) -> bool {
+pub fn is_maximal_matching(graph: &graph::PyGraph, matching: HashSet<(usize, usize)>) -> bool {
     if !_inner_is_matching(graph, &matching) {
         return false;
     }
