@@ -1849,6 +1849,7 @@ def _graph_difference(
 ):
     return graph_difference(first, second)
 
+
 @functools.singledispatch
 def bfs_search(graph, source, visitor):
     """Breadth-first traversal of a directed/undirected graph.
