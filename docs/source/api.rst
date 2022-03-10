@@ -279,6 +279,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_core_number
    retworkx.digraph_complement
    retworkx.digraph_union
+   retworkx.digraph_difference
    retworkx.digraph_tensor_product
    retworkx.digraph_cartesian_product
    retworkx.digraph_random_layout
@@ -326,6 +327,7 @@ typed API based on the data type.
    retworkx.graph_core_number
    retworkx.graph_complement
    retworkx.graph_union
+   retworkx.graph_difference
    retworkx.graph_tensor_product
    retworkx.graph_cartesian_product
    retworkx.graph_random_layout
