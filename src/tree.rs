@@ -178,8 +178,8 @@ pub fn balanced_cut_edge(
     }
 
     let spanning_tree_graph = &spanning_tree.graph;
-    
-    let balanced_nodes = py.allow_threads( move || {
+
+    let balanced_nodes = py.allow_threads(move || {
         let mut same_partition_tracker: Vec<Vec<usize>> =
             vec![vec![]; spanning_tree_graph.node_count()]; // keeps track of all all the nodes on the same side of the partition
         let mut node_queue: VecDeque<NodeIndex> = VecDeque::<NodeIndex>::new();
@@ -196,8 +196,7 @@ pub fn balanced_cut_edge(
         // this process can be multithreaded, if the locking overhead isn't too high
         // (note: locking may not even be needed given the invariants this is assumed to maintain)
         let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
-        let mut seen_nodes: Vec<bool> =
-            vec![false; spanning_tree_graph.node_count()]; // todo: perf test this
+        let mut seen_nodes: Vec<bool> = vec![false; spanning_tree_graph.node_count()]; // todo: perf test this
         while node_queue.len() > 0 {
             let node = node_queue.pop_front().unwrap();
             if seen_nodes[node.index()] {
@@ -219,10 +218,8 @@ pub fn balanced_cut_edge(
                 // this will be false if root
                 let neighbor = unseen_neighbors[0];
                 pops[neighbor.index()] += pop.clone();
-                let mut current_partition_tracker =
-                    same_partition_tracker[node.index()].clone();
-                same_partition_tracker[neighbor.index()]
-                    .append(&mut current_partition_tracker);
+                let mut current_partition_tracker = same_partition_tracker[node.index()].clone();
+                same_partition_tracker[neighbor.index()].append(&mut current_partition_tracker);
                 // eprintln!("node pushed to queue (pop = {}, target = {}): {}", pops[neighbor.index()], pop_target, neighbor.index());
 
                 if !node_queue.contains(&neighbor) {
@@ -236,15 +233,10 @@ pub fn balanced_cut_edge(
             // pops[node.index()] = 0.0; // not needed?
 
             // Check if balanced
-            if pop >= pop_target * (1.0 - epsilon)
-                && pop <= pop_target * (1.0 + epsilon)
-            {
+            if pop >= pop_target * (1.0 - epsilon) && pop <= pop_target * (1.0 + epsilon) {
                 // slightly different
                 // eprintln!("balanced node found: {}", node.index());
-                balanced_nodes.push((
-                    node.index(),
-                    same_partition_tracker[node.index()].clone(),
-                ));
+                balanced_nodes.push((node.index(), same_partition_tracker[node.index()].clone()));
             }
 
             seen_nodes[node.index()] = true;
@@ -294,14 +286,10 @@ pub fn bipartition_tree(
         let pool = unsafe { py.new_pool() };
         let py = pool.python();
 
-        let mst =
-            minimum_spanning_tree(py, graph, Some(weight_fn.clone()), 1.0)
-                .unwrap();
+        let mst = minimum_spanning_tree(py, graph, Some(weight_fn.clone()), 1.0).unwrap();
         // assert_eq!(is_cyclic_undirected(&mst.graph), false);
         // assert_eq!(connected_components(&mst.graph), 1);
-        balanced_nodes =
-            balanced_cut_edge(py, &mst, py_pops, py_pop_target, py_epsilon)
-                .unwrap();
+        balanced_nodes = balanced_cut_edge(py, &mst, py_pops, py_pop_target, py_epsilon).unwrap();
     }
 
     Ok(balanced_nodes)
