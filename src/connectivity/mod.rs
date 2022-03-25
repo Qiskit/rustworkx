@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-mod connected_components;
+mod conn_components;
 mod core_number;
 
 use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
@@ -228,8 +228,8 @@ pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> 
 /// :rtype: int
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn number_connected_components(graph: &graph::PyGraph) -> usize {
-    connected_components::number_connected_components(&graph.graph)
+pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
+    conn_components::number_connected_components(&graph.graph)
 }
 
 /// Find the connected components in an undirected graph
@@ -242,7 +242,7 @@ fn number_connected_components(graph: &graph::PyGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
-    connected_components::connected_components(&graph.graph)
+    conn_components::connected_components(&graph.graph)
 }
 
 /// Returns the set of nodes in the component of graph containing `node`.
@@ -265,7 +265,7 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
         ));
     }
 
-    Ok(connected_components::bfs_undirected(
+    Ok(conn_components::bfs_undirected(
         &graph.graph,
         node,
         &mut graph.graph.visit_map(),
@@ -301,7 +301,7 @@ pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
 /// :rtype: int
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
+pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     let mut weak_components = graph.node_count();
     let mut vertex_sets = UnionFind::new(graph.graph.node_bound());
     for edge in graph.graph.edge_references() {
@@ -325,7 +325,7 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
-    connected_components::connected_components(&graph.graph)
+    conn_components::connected_components(&graph.graph)
 }
 
 /// Check if the graph is weakly connected
@@ -535,7 +535,7 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
-fn graph_all_simple_paths(
+pub fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     from: usize,
     to: usize,
@@ -589,7 +589,7 @@ fn graph_all_simple_paths(
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
-fn digraph_all_simple_paths(
+pub fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
     from: usize,
     to: usize,

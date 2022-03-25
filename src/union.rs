@@ -126,7 +126,7 @@ fn union<Ty: EdgeType>(
 /// :rtype: PyGraph
 #[pyfunction(merge_nodes = false, merge_edges = false)]
 #[pyo3(text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
-fn graph_union(
+pub fn graph_union(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -174,7 +174,7 @@ fn graph_union(
 /// :rtype: PyDiGraph
 #[pyfunction(merge_nodes = false, merge_edges = false)]
 #[pyo3(text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
-fn digraph_union(
+pub fn digraph_union(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,

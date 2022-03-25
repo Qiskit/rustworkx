@@ -21,9 +21,8 @@ use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 use retworkx_core::dictmap::*;
 
-use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
-use pyo3::gc::{PyGCProtocol, PyVisit};
+use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::PyTraverseError;
@@ -114,7 +113,7 @@ use petgraph::visit::{
 ///     object will not be a multigraph. When ``False`` if a method call is
 ///     made that would add parallel edges the the weight/weight from that
 ///     method call will be used to update the existing edge in place.
-#[pyclass(module = "retworkx", subclass, gc)]
+#[pyclass(module = "retworkx", subclass)]
 #[pyo3(text_signature = "(/, multigraph=True)")]
 #[derive(Clone)]
 pub struct PyGraph {
@@ -1713,22 +1712,20 @@ impl PyGraph {
     pub fn copy(&self) -> PyGraph {
         self.clone()
     }
-}
 
-#[pyproto]
-impl PyMappingProtocol for PyGraph {
     /// Return the nmber of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
     }
-    fn __getitem__(&'p self, idx: usize) -> PyResult<&'p PyObject> {
+
+    fn __getitem__(&self, idx: usize) -> PyResult<&PyObject> {
         match self.graph.node_weight(NodeIndex::new(idx)) {
             Some(data) => Ok(data),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 
-    fn __setitem__(&'p mut self, idx: usize, value: PyObject) -> PyResult<()> {
+    fn __setitem__(&mut self, idx: usize, value: PyObject) -> PyResult<()> {
         let data = match self.graph.node_weight_mut(NodeIndex::new(idx)) {
             Some(node_data) => node_data,
             None => return Err(PyIndexError::new_err("No node found for index")),
@@ -1737,17 +1734,15 @@ impl PyMappingProtocol for PyGraph {
         Ok(())
     }
 
-    fn __delitem__(&'p mut self, idx: usize) -> PyResult<()> {
+    fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
         match self.graph.remove_node(NodeIndex::new(idx as usize)) {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
-}
 
-// Functions to enable Python Garbage Collection
-#[pyproto]
-impl PyGCProtocol for PyGraph {
+    // Functions to enable Python Garbage Collection
+
     // Function for PyTypeObject.tp_traverse [1][2] used to tell Python what
     // objects the PyGraph has strong references to.
     //
