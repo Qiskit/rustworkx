@@ -155,6 +155,7 @@ Connectivity and Cycles
    retworkx.chain_decomposition
    retworkx.all_simple_paths
    retworkx.all_pairs_all_simple_paths
+   retworkx.densest_subgraph_of_size
 
 .. _graph-ops:
 

@@ -2334,3 +2334,37 @@ def _digraph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
 @all_pairs_bellman_ford_shortest_paths.register(PyGraph)
 def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
     return graph_all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
+def densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
+    """Find densest subgraph in a :class:`~.PyGraph`
+
+    This method does not provide any guarantees on the approximation as it
+    does a naive search using BFS traversal.
+
+    :param graph: The graph to find the densest subgraph in. This can be a
+        :class:`~retworkx.PyGraph` or a :class:`~retworkx.PyDiGraph`.
+    :param int num_nodes: The number of nodes in the subgraph to find
+    :param func weight_callback: An optional callable that if specified will be
+        passed the node indices of each edge in the graph and it is expected to
+        return a float value. If specified the lowest avg weight for edges in
+        a found subgraph will be a criteria for selection in addition to the
+        connectivity of the subgraph.
+    :returns: A tuple of the subgraph found and a :class:`~.NodeMap` of the
+        mapping of node indices in the input ``graph`` to the index in the
+        output subgraph.
+
+    :rtype: (subgraph, node_map)
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@densest_subgraph_of_size.register(PyDiGraph)
+def _digraph_densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
+    return digraph_densest_subgraph_of_size(graph, num_nodes, weight_callback=weight_callback)
+
+
+@densest_subgraph_of_size.register(PyGraph)
+def _graph_densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
+    return graph_densest_subgraph_of_size(graph, num_nodes, weight_callback=weight_callback)
