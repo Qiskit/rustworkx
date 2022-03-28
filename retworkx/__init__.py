@@ -1105,6 +1105,32 @@ def _graph_complement(graph):
 
 
 @functools.singledispatch
+def planar_layout(graph, scale=1.0, center=None):
+    """Generate a planar layout
+
+    :param PyGraph|PyDiGraph graph: The graph to generate the layout for
+    :param float|None scale: Scale factor for positions.If scale is ``None``,
+        no re-scaling is performed. (``default=1.0``)
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+
+    :returns: The planar layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@planar_layout.register(PyDiGraph)
+def _digraph_planar_layout(graph, scale=1.0, center=None):
+    return digraph_planar_layout(graph, scale=1.0, center=center)
+
+
+@planar_layout.register(PyGraph)
+def _graph_planar_layout(graph, scale=1.0, center=None):
+    return graph_planar_layout(graph, scale=1.0, center=center)
+
+
+@functools.singledispatch
 def random_layout(graph, center=None, seed=None):
     """Generate a random layout
 

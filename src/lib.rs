@@ -378,6 +378,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(graph_planar_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_planar_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_bipartite_layout))?;
