@@ -12,6 +12,7 @@
 
 import unittest
 
+import itertools
 import retworkx
 
 
@@ -88,9 +89,7 @@ class TestPlanarGraph(unittest.TestCase):
 
     def test_multiple_components_planar(self):
         graph = retworkx.PyGraph()
-        graph.extend_from_edge_list(
-            [(0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3)]
-        )
+        graph.extend_from_edge_list([(0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3)])
         res = retworkx.is_planar(graph)
         self.assertTrue(res)
 
@@ -176,9 +175,7 @@ class TestPlanarGraph(unittest.TestCase):
 
     def test_planar_multigraph(self):
         graph = retworkx.PyGraph()
-        graph.extend_from_edge_list(
-            [(1, 2), (1, 2), (1, 2), (1, 2), (2, 3), (3, 1)]
-        )
+        graph.extend_from_edge_list([(1, 2), (1, 2), (1, 2), (1, 2), (2, 3), (3, 1)])
         res = retworkx.is_planar(graph)
         self.assertTrue(res)
 
@@ -262,3 +259,25 @@ class TestPlanarGraph(unittest.TestCase):
         )
         res = retworkx.is_planar(graph)
         self.assertFalse(res)
+
+    def test_generalized_petersen_graph_planar_instances(self):
+        # see Table 2: https://www.sciencedirect.com/science/article/pii/S0166218X08000371
+        planars = itertools.chain(
+            iter((n, 1) for n in range(3, 17)),
+            iter((n, 2) for n in range(6, 17, 2)),
+        )
+        for (n, k) in planars:
+            with self.subTest(n=n, k=k):
+                graph = retworkx.generators.generalized_petersen_graph(n=n, k=k)
+                self.assertTrue(retworkx.is_planar(graph))
+
+    def test_generalized_petersen_graph_non_planar_instances(self):
+        # see Table 2: https://www.sciencedirect.com/science/article/pii/S0166218X08000371
+        no_planars = itertools.chain(
+            iter((n, 2) for n in range(5, 17, 2)),
+            iter((n, k) for k in range(3, 9) for n in range(2 * k + 1, 17)),
+        )
+        for (n, k) in no_planars:
+            with self.subTest(n=n, k=k):
+                graph = retworkx.generators.generalized_petersen_graph(n=n, k=k)
+                self.assertFalse(retworkx.is_planar(graph))
