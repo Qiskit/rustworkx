@@ -17,13 +17,13 @@ use std::vec::IntoIter;
 use hashbrown::{hash_map::Entry, HashMap};
 use petgraph::{
     visit::{
-        EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges,
-        IntoNodeIdentifiers, NodeCount, Time, VisitMap, Visitable,
+        EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
+        Visitable,
     },
     Undirected,
 };
 
-use crate::traversal::{dfs_visitor, DfsEvent};
+use crate::traversal::{depth_first_search, DfsEvent};
 
 type Edge<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
 
@@ -70,10 +70,7 @@ where
     edges.into_iter()
 }
 
-fn is_target<G: GraphBase>(
-    edge: Option<&Edge<G>>,
-    v: G::NodeId,
-) -> Option<&Edge<G>> {
+fn is_target<G: GraphBase>(edge: Option<&Edge<G>>, v: G::NodeId) -> Option<&Edge<G>> {
     edge.filter(|e| e.1 == v)
 }
 
@@ -143,9 +140,7 @@ where
         G: GraphBase<NodeId = T>,
     {
         match self.inner {
-            Some((_, ref h)) => {
-                lr_state.lowpt.get(h) > lr_state.lowpt.get(&edge)
-            }
+            Some((_, ref h)) => lr_state.lowpt.get(h) > lr_state.lowpt.get(&edge),
             _ => false,
         }
     }
@@ -190,9 +185,7 @@ where
         G: GraphBase<NodeId = T>,
     {
         match (self.left.low(), self.right.low()) {
-            (Some(l_low), Some(r_low)) => {
-                lr_state.lowpt[l_low].min(lr_state.lowpt[r_low])
-            }
+            (Some(l_low), Some(r_low)) => lr_state.lowpt[l_low].min(lr_state.lowpt[r_low]),
             (Some(l_low), None) => lr_state.lowpt[l_low],
             (None, Some(r_low)) => lr_state.lowpt[r_low],
             (None, None) => std::usize::MAX,
@@ -222,6 +215,8 @@ where
     G::NodeId: Hash + Eq,
 {
     graph: G,
+    /// roots of the DFS forest.
+    roots: Vec<G::NodeId>,
     /// distnace from root.
     height: HashMap<G::NodeId, usize>,
     /// parent edge.
@@ -255,6 +250,7 @@ where
 
         LRState {
             graph,
+            roots: Vec::new(),
             height: HashMap::with_capacity(num_nodes),
             eparent: HashMap::with_capacity(num_edges),
             lowpt: HashMap::with_capacity(num_edges),
@@ -271,11 +267,14 @@ where
         }
     }
 
-    fn lr_orientation_visitor(
-        &mut self,
-        event: DfsEvent<G::NodeId, &G::EdgeWeight>,
-    ) {
+    fn lr_orientation_visitor(&mut self, event: DfsEvent<G::NodeId, &G::EdgeWeight>) {
         match event {
+            DfsEvent::Discover(v, _) => {
+                if let Entry::Vacant(entry) = self.height.entry(v) {
+                    entry.insert(0);
+                    self.roots.push(v);
+                }
+            }
             DfsEvent::TreeEdge(v, w, _) => {
                 let ei = (v, w);
                 let v_height = self.height[&v];
@@ -323,18 +322,12 @@ where
                     if let Some(e_par) = self.eparent.get(&v) {
                         match self.lowpt[&ei].cmp(&self.lowpt[e_par]) {
                             Ordering::Less => {
-                                self.lowpt_2.insert(
-                                    *e_par,
-                                    self.lowpt[e_par].min(self.lowpt_2[&ei]),
-                                );
+                                self.lowpt_2
+                                    .insert(*e_par, self.lowpt[e_par].min(self.lowpt_2[&ei]));
                                 self.lowpt.insert(*e_par, self.lowpt[&ei]);
                             }
                             Ordering::Greater => {
-                                insert_or_min(
-                                    &mut self.lowpt_2,
-                                    *e_par,
-                                    self.lowpt[&ei],
-                                );
+                                insert_or_min(&mut self.lowpt_2, *e_par, self.lowpt[&ei]);
                             }
                             _ => {
                                 let val = self.lowpt_2[&ei];
@@ -348,10 +341,7 @@ where
         }
     }
 
-    fn lr_testing_visitor(
-        &mut self,
-        event: LRTestDfsEvent<G::NodeId>,
-    ) -> Result<(), NonPlanar> {
+    fn lr_testing_visitor(&mut self, event: LRTestDfsEvent<G::NodeId>) -> Result<(), NonPlanar> {
         match event {
             LRTestDfsEvent::TreeEdge(v, w) => {
                 let ei = (v, w);
@@ -365,10 +355,7 @@ where
                     self.stack_emarker.insert(ei, last);
                 }
                 self.lowpt_edge.insert(ei, ei);
-                let c_pair = ConflictPair::new(
-                    Interval::default(),
-                    Interval::new(ei, ei),
-                );
+                let c_pair = ConflictPair::new(Interval::default(), Interval::new(ei, ei));
                 self.stack.push(c_pair);
             }
             LRTestDfsEvent::FinishEdge(v, w) => {
@@ -396,23 +383,22 @@ where
                     // side of ``e = (u, v)` is side of a highest return edge
                     if self.lowpt[&e] < self.height[&u] {
                         if let Some(top) = self.stack.last() {
-                            let e_high =
-                                match (top.left.high(), top.right.high()) {
-                                    (Some(hl), Some(hr)) => {
-                                        if self.lowpt[hl] > self.lowpt[hr] {
-                                            hl
-                                        } else {
-                                            hr
-                                        }
+                            let e_high = match (top.left.high(), top.right.high()) {
+                                (Some(hl), Some(hr)) => {
+                                    if self.lowpt[hl] > self.lowpt[hr] {
+                                        hl
+                                    } else {
+                                        hr
                                     }
-                                    (Some(hl), None) => hl,
-                                    (None, Some(hr)) => hr,
-                                    _ => {
-                                        // Otherwise ``top`` would be empty, but we don't push
-                                        // empty conflict pairs in stack.
-                                        unreachable!()
-                                    }
-                                };
+                                }
+                                (Some(hl), None) => hl,
+                                (None, Some(hr)) => hr,
+                                _ => {
+                                    // Otherwise ``top`` would be empty, but we don't push
+                                    // empty conflict pairs in stack.
+                                    unreachable!()
+                                }
+                            };
                             self.eref.insert(e, *e_high);
                         }
                     }
@@ -423,10 +409,7 @@ where
         Ok(())
     }
 
-    fn until_top_of_stack_hits_emarker(
-        &mut self,
-        ei: Edge<G>,
-    ) -> Option<ConflictPair<Edge<G>>> {
+    fn until_top_of_stack_hits_emarker(&mut self, ei: Edge<G>) -> Option<ConflictPair<Edge<G>>> {
         if let Some(&c_pair) = self.stack.last() {
             if self.stack_emarker[&ei] != c_pair {
                 return self.stack.pop();
@@ -436,13 +419,9 @@ where
         None
     }
 
-    fn until_top_of_stack_is_conflicting(
-        &mut self,
-        ei: Edge<G>,
-    ) -> Option<ConflictPair<Edge<G>>> {
+    fn until_top_of_stack_is_conflicting(&mut self, ei: Edge<G>) -> Option<ConflictPair<Edge<G>>> {
         if let Some(c_pair) = self.stack.last() {
-            if c_pair.left.conflict(self, ei) || c_pair.right.conflict(self, ei)
-            {
+            if c_pair.left.conflict(self, ei) || c_pair.right.conflict(self, ei) {
                 return self.stack.pop();
             }
         }
@@ -454,11 +433,7 @@ where
     ///
     /// Interval ``qi`` must be non - empty and contain edges
     /// with smaller lowpt than interval ``pi``.
-    fn union_intervals(
-        &mut self,
-        pi: &mut Interval<Edge<G>>,
-        qi: Interval<Edge<G>>,
-    ) {
+    fn union_intervals(&mut self, pi: &mut Interval<Edge<G>>, qi: Interval<Edge<G>>) {
         match pi.as_mut_low() {
             Some(p_low) => {
                 let (q_low, q_high) = qi.unwrap();
@@ -472,11 +447,7 @@ where
     }
 
     /// Adding constraints associated with edge ``ei``.
-    fn add_constraints(
-        &mut self,
-        ei: Edge<G>,
-        e: Edge<G>,
-    ) -> Result<(), NonPlanar> {
+    fn add_constraints(&mut self, ei: Edge<G>, e: Edge<G>) -> Result<(), NonPlanar> {
         let mut c_pair = ConflictPair::<Edge<G>>::default();
 
         // merge return edges of ei into ``c_pair.right``.
@@ -503,8 +474,7 @@ where
         }
 
         // merge conflicting return edges of e1, . . . , ei−1 into ``c_pair.left``.
-        while let Some(mut q_pair) = self.until_top_of_stack_is_conflicting(ei)
-        {
+        while let Some(mut q_pair) = self.until_top_of_stack_is_conflicting(ei) {
             if q_pair.right.conflict(self, ei) {
                 q_pair.swap();
 
@@ -543,11 +513,7 @@ where
         None
     }
 
-    fn follow_eref_until_is_target(
-        &self,
-        edge: Edge<G>,
-        v: G::NodeId,
-    ) -> Option<Edge<G>> {
+    fn follow_eref_until_is_target(&self, edge: Edge<G>, v: G::NodeId) -> Option<Edge<G>> {
         let mut res = Some(&edge);
         while let Some(b) = is_target::<G>(res, v) {
             res = self.eref.get(b);
@@ -713,31 +679,14 @@ where
     G::NodeId: Hash + Eq,
 {
     let mut state = LRState::new(graph);
-    let mut roots = Vec::new();
 
     // Dfs orientation phase
-    let time = &mut Time(0);
-    let discovered = &mut graph.visit_map();
-    let finished = &mut graph.visit_map();
-
-    for v in graph.node_identifiers() {
-        if !discovered.is_visited(&v) {
-            roots.push(v);
-            state.height.insert(v, 0);
-
-            dfs_visitor(
-                graph,
-                v,
-                &mut |event| state.lr_orientation_visitor(event),
-                discovered,
-                finished,
-                time,
-            );
-        }
-    }
+    depth_first_search(graph, graph.node_identifiers(), |event| {
+        state.lr_orientation_visitor(event)
+    });
 
     // Left - Right partition.
-    for v in roots {
+    for v in state.roots.clone() {
         let res = lr_visit_ordered_dfs_tree(&mut state, v, |state, event| {
             state.lr_testing_visitor(event)
         });

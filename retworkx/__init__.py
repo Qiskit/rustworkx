@@ -42,9 +42,9 @@ class PyDAG(PyDiGraph):
         graph.add_nodes_from(list(range(5)))
         graph.add_nodes_from(list(range(2)))
         graph.remove_node(2)
-        print("After deletion:", graph.node_indexes())
+        print("After deletion:", graph.node_indices())
         res_manual = graph.add_parent(6, None, None)
-        print("After adding a new node:", graph.node_indexes())
+        print("After adding a new node:", graph.node_indices())
 
     Additionally, each node and edge contains an arbitrary Python object as a
     weight/data payload.
@@ -127,9 +127,7 @@ class PyDAG(PyDiGraph):
 
 
 @functools.singledispatch
-def distance_matrix(
-    graph, parallel_threshold=300, as_undirected=False, null_value=0.0
-):
+def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
     """Get the distance matrix for a graph
 
     This differs from functions like :func:`~retworkx.floyd_warshall_numpy` in
@@ -161,9 +159,7 @@ def distance_matrix(
 
 
 @distance_matrix.register(PyDiGraph)
-def _digraph_distance_matrix(
-    graph, parallel_threshold=300, as_undirected=False, null_value=0.0
-):
+def _digraph_distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
     return digraph_distance_matrix(
         graph,
         parallel_threshold=parallel_threshold,
@@ -180,19 +176,19 @@ def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
 
 
 @functools.singledispatch
-def unweighted_average_shortest_path_length(graph, parallel_threshold=300):
+def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disconnected=False):
     r"""Return the average shortest path length with unweighted edges.
 
     The average shortest path length is calculated as
 
     .. math::
 
-        a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
+        a =\sum_{s,t \in V, s \ne t} \frac{d(s, t)}{n(n-1)}
 
     where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
     shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
-    number of nodes in ``graph``. This also assumes that :math:`d(s, t) = 0`
-    if :math:`t` cannot be reached from :math:`s`.
+    number of nodes in ``graph``. If ``disconnected`` is set to ``True``,
+    the average will be taken only between connected nodes.
 
     This function is also multithreaded and will run in parallel if the number
     of nodes in the graph is above the value of ``parallel_threshold`` (it
@@ -201,17 +197,20 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300):
     By default it will use all available CPUs if the environment variable is
     not specified.
 
-    :param PyDiGraph graph: The graph to compute the average shortest path length
-        for
+    :param graph: The graph to compute the average shortest path length for,
+        can be either a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
     :param int parallel_threshold: The number of nodes to calculate the
         the distance matrix in parallel at. It defaults to 300, but this can
         be tuned to any number of nodes.
     :param bool as_undirected: If set to ``True`` the input directed graph
         will be treated as if each edge was bidirectional/undirected while
         finding the shortest paths. Default: ``False``.
+    :param bool disconnected: If set to ``True`` only connected vertex pairs
+        will be included in the calculation. If ``False``, infinity is returned
+        for disconnected graphs. Default: ``False``.
 
-    :returns: The average shortest path length. If the graph is empty this
-        will return NaN and if there is a single node 0 will be returned.
+    :returns: The average shortest path length. If no vertex pairs can be included
+        in the calculation this will return NaN.
 
     :rtype: float
     """
@@ -220,19 +219,20 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300):
 
 @unweighted_average_shortest_path_length.register(PyDiGraph)
 def _digraph_unweighted_average_shortest_path_length(
-    graph, parallel_threshold=300, as_undirected=False
+    graph, parallel_threshold=300, as_undirected=False, disconnected=False
 ):
     return digraph_unweighted_average_shortest_path_length(
         graph,
         parallel_threshold=parallel_threshold,
         as_undirected=as_undirected,
+        disconnected=disconnected,
     )
 
 
 @unweighted_average_shortest_path_length.register(PyGraph)
-def _graph_unweighted_shortest_path_length(graph, parallel_threshold=300):
+def _graph_unweighted_shortest_path_length(graph, parallel_threshold=300, disconnected=False):
     return graph_unweighted_average_shortest_path_length(
-        graph, parallel_threshold=parallel_threshold
+        graph, parallel_threshold=parallel_threshold, disconnected=disconnected
     )
 
 
@@ -273,9 +273,7 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
 
 
 @adjacency_matrix.register(PyDiGraph)
-def _digraph_adjacency_matrix(
-    graph, weight_fn=None, default_weight=1.0, null_value=0.0
-):
+def _digraph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     return digraph_adjacency_matrix(
         graph,
         weight_fn=weight_fn,
@@ -285,9 +283,7 @@ def _digraph_adjacency_matrix(
 
 
 @adjacency_matrix.register(PyGraph)
-def _graph_adjacency_matrix(
-    graph, weight_fn=None, default_weight=1.0, null_value=0.0
-):
+def _graph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     return graph_adjacency_matrix(
         graph,
         weight_fn=weight_fn,
@@ -321,16 +317,12 @@ def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 @all_simple_paths.register(PyDiGraph)
 def _digraph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return digraph_all_simple_paths(
-        graph, from_, to, min_depth=min_depth, cutoff=cutoff
-    )
+    return digraph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
 
 
 @all_simple_paths.register(PyGraph)
 def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return graph_all_simple_paths(
-        graph, from_, to, min_depth=min_depth, cutoff=cutoff
-    )
+    return graph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
 
 
 @functools.singledispatch
@@ -481,9 +473,7 @@ def _digraph_floyd_warshall_numpy(
 
 
 @floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(
-    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
-):
+def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300):
     return graph_floyd_warshall_numpy(
         graph,
         weight_fn=weight_fn,
@@ -520,21 +510,13 @@ def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
 
 
 @astar_shortest_path.register(PyDiGraph)
-def _digraph_astar_shortest_path(
-    graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-):
-    return digraph_astar_shortest_path(
-        graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-    )
+def _digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+    return digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
 
 
 @astar_shortest_path.register(PyGraph)
-def _graph_astar_shortest_path(
-    graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-):
-    return graph_astar_shortest_path(
-        graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-    )
+def _graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+    return graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
 
 
 @functools.singledispatch
@@ -591,9 +573,7 @@ def _digraph_dijkstra_shortest_path(
 
 
 @dijkstra_shortest_paths.register(PyGraph)
-def _graph_dijkstra_shortest_path(
-    graph, source, target=None, weight_fn=None, default_weight=1.0
-):
+def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None, default_weight=1.0):
     return graph_dijkstra_shortest_paths(
         graph,
         source,
@@ -605,9 +585,9 @@ def _graph_dijkstra_shortest_path(
 
 @functools.singledispatch
 def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
-    """Find the shortest path from all nodes
+    """For each node in the graph, finds the shortest paths to all others.
 
-    This function will generate the shortest path from all nodes int the graph
+    This function will generate the shortest path from all nodes in the graph
     using Dijkstra's algorithm. This function is multithreaded and will run
     launch a thread pool with threads equal to the number of CPUs by default.
     You can tune the number of threads with the ``RAYON_NUM_THREADS``
@@ -621,7 +601,7 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
         object and will return a float which will be used to represent the
         weight/cost of the edge
 
-    :return: A read-only dictionary of paths. The keys are destination node
+    :return: A read-only dictionary of paths. The keys are source node
         indices and the values are a dict of target node indices and a list
         of node indices making the path. For example::
 
@@ -648,12 +628,12 @@ def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
 
 @functools.singledispatch
 def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
-    """Find the shortest path from a node
+    """For each node in the graph, calculates the lengths of the shortest paths to all others.
 
-    This function will generate the shortest path from a source node using
-    Dijkstra's algorithm. This function is multithreaded and will run
-    launch a thread pool with threads equal to the number of CPUs by default.
-    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    This function will generate the shortest path lengths from all nodes in the
+    graph using Dijkstra's algorithm. This function is multithreaded and will
+    launch a thread pool with threads equal to the number of CPUs by
+    default. You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads.
 
@@ -715,19 +695,13 @@ def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
 
 
 @dijkstra_shortest_path_lengths.register(PyDiGraph)
-def _digraph_dijkstra_shortest_path_lengths(
-    graph, node, edge_cost_fn, goal=None
-):
-    return digraph_dijkstra_shortest_path_lengths(
-        graph, node, edge_cost_fn, goal=goal
-    )
+def _digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    return digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
 
 
 @dijkstra_shortest_path_lengths.register(PyGraph)
 def _graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return graph_dijkstra_shortest_path_lengths(
-        graph, node, edge_cost_fn, goal=goal
-    )
+    return graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
 
 
 @functools.singledispatch
@@ -757,9 +731,7 @@ def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 
 @k_shortest_path_lengths.register(PyDiGraph)
 def _digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
-    return digraph_k_shortest_path_lengths(
-        graph, start, k, edge_cost, goal=goal
-    )
+    return digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=goal)
 
 
 @k_shortest_path_lengths.register(PyGraph)
@@ -768,10 +740,36 @@ def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 
 
 @functools.singledispatch
-def dfs_edges(graph, source):
-    """Get edge list in depth first order
+def dfs_edges(graph, source=None):
+    """Get an edge list of the tree edges from a depth-first traversal
 
-    :param PyGraph graph: The graph to get the DFS edge list from
+    The pseudo-code for the DFS algorithm is listed below. The output
+    contains the tree edges found by the procedure.
+
+    ::
+
+        DFS(G, v)
+          let S be a stack
+          label v as discovered
+          PUSH(S, (v, iterator of G.neighbors(v)))
+          while (S != Ø)
+              let (v, iterator) := LAST(S)
+              if hasNext(iterator) then
+                  w := next(iterator)
+                  if w is not labeled as discovered then
+                      label w as discovered                   # (v, w) is a tree edge
+                      PUSH(S, (w, iterator of G.neighbors(w)))
+              else
+                  POP(S)
+          end while
+
+    .. note::
+
+        If the input is an undirected graph with a single connected component,
+        the output of this function is a spanning tree.
+
+    :param graph: The graph to get the DFS edge list from. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
     :param int source: An optional node index to use as the starting node
         for the depth-first search. The edge list will only return edges in
         the components reachable from this index. If this is not specified
@@ -781,19 +779,18 @@ def dfs_edges(graph, source):
     :returns: A list of edges as a tuple of the form ``(source, target)`` in
         depth-first order
     :rtype: EdgeList
-        raise TypeError("Invalid Input Type %s for graph" % type(graph))
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
 @dfs_edges.register(PyDiGraph)
-def _digraph_dfs_edges(graph, source):
-    return digraph_dfs_edges(graph, source)
+def _digraph_dfs_edges(graph, source=None):
+    return digraph_dfs_edges(graph, source=source)
 
 
 @dfs_edges.register(PyGraph)
-def _graph_dfs_edges(graph, source):
-    return graph_dfs_edges(graph, source)
+def _graph_dfs_edges(graph, source=None):
+    return graph_dfs_edges(graph, source=source)
 
 
 @functools.singledispatch
@@ -861,9 +858,7 @@ def _digraph_is_isomorphic(
     id_order=True,
     call_limit=None,
 ):
-    return digraph_is_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, call_limit
-    )
+    return digraph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order, call_limit)
 
 
 @is_isomorphic.register(PyGraph)
@@ -875,9 +870,7 @@ def _graph_is_isomorphic(
     id_order=True,
     call_limit=None,
 ):
-    return graph_is_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, call_limit
-    )
+    return graph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order, call_limit)
 
 
 @functools.singledispatch
@@ -1267,7 +1260,7 @@ def _graph_spring_layout(
     )
 
 
-def networkx_converter(graph):
+def networkx_converter(graph, keep_attributes: bool = False):
     """Convert a networkx graph object into a retworkx graph object.
 
     .. note::
@@ -1278,6 +1271,12 @@ def networkx_converter(graph):
         independently.
 
     :param networkx.Graph graph: The networkx graph to convert.
+    :param bool keep_attributes: If ``True``, add networkx node attributes to
+        the data payload in the nodes of the output retworkx graph. When set to
+        ``True``, the node data payloads in the output retworkx graph object
+        will be dictionaries with the node attributes from the input networkx
+        graph where the ``"__networkx_node__"`` key contains the node from the
+        input networkx graph.
 
     :returns: A retworkx graph, either a :class:`~retworkx.PyDiGraph` or a
         :class:`~retworkx.PyGraph` based on whether the input graph is directed
@@ -1291,11 +1290,15 @@ def networkx_converter(graph):
     nodes = list(graph.nodes)
     node_indices = dict(zip(nodes, new_graph.add_nodes_from(nodes)))
     new_graph.add_edges_from(
-        [
-            (node_indices[x[0]], node_indices[x[1]], x[2])
-            for x in graph.edges(data=True)
-        ]
+        [(node_indices[x[0]], node_indices[x[1]], x[2]) for x in graph.edges(data=True)]
     )
+
+    if keep_attributes:
+        for node, node_index in node_indices.items():
+            attributes = graph.nodes[node]
+            attributes["__networkx_node__"] = node
+            new_graph[node_index] = attributes
+
     return new_graph
 
 
@@ -1312,7 +1315,7 @@ def bipartite_layout(
 
     :param graph: The graph to generate the layout for. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :param set first_nodes: The set of node indexes on the left (or top if
+    :param set first_nodes: The set of node indices on the left (or top if
         horitontal is true)
     :param bool horizontal: An optional bool specifying the orientation of the
         layout
@@ -1399,7 +1402,7 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
 
     :param graph: The graph to generate the layout for. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :param list nlist: The list of lists of indexes which represents each shell
+    :param list nlist: The list of lists of indices which represents each shell
     :param float rotate: Angle (in radians) by which to rotate the starting
         position of each shell relative to the starting position of the
         previous shell
@@ -1415,22 +1418,16 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
 
 @shell_layout.register(PyDiGraph)
 def _digraph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
-    return digraph_shell_layout(
-        graph, nlist=nlist, rotate=rotate, scale=scale, center=center
-    )
+    return digraph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale, center=center)
 
 
 @shell_layout.register(PyGraph)
 def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
-    return graph_shell_layout(
-        graph, nlist=nlist, rotate=rotate, scale=scale, center=center
-    )
+    return graph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale, center=center)
 
 
 @functools.singledispatch
-def spiral_layout(
-    graph, scale=1, center=None, resolution=0.35, equidistant=False
-):
+def spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
     """
     Generate a spiral layout of the graph
 
@@ -1451,9 +1448,7 @@ def spiral_layout(
 
 
 @spiral_layout.register(PyDiGraph)
-def _digraph_spiral_layout(
-    graph, scale=1, center=None, resolution=0.35, equidistant=False
-):
+def _digraph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
     return digraph_spiral_layout(
         graph,
         scale=scale,
@@ -1464,9 +1459,7 @@ def _digraph_spiral_layout(
 
 
 @spiral_layout.register(PyGraph)
-def _graph_spiral_layout(
-    graph, scale=1, center=None, resolution=0.35, equidistant=False
-):
+def _graph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
     return graph_spiral_layout(
         graph,
         scale=scale,
@@ -1502,9 +1495,7 @@ def _graph_num_shortest_paths_unweighted(graph, source):
 
 
 @functools.singledispatch
-def betweenness_centrality(
-    graph, normalized=True, endpoints=False, parallel_threshold=50
-):
+def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
     r"""Returns the betweenness centrality of each node in the graph.
 
     Betweenness centrality of a node :math:`v` is the sum of the
@@ -1547,9 +1538,7 @@ def betweenness_centrality(
 
 
 @betweenness_centrality.register(PyDiGraph)
-def _digraph_betweenness_centrality(
-    graph, normalized=True, endpoints=False, parallel_threshold=50
-):
+def _digraph_betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
     return digraph_betweenness_centrality(
         graph,
         normalized=normalized,
@@ -1559,9 +1548,7 @@ def _digraph_betweenness_centrality(
 
 
 @betweenness_centrality.register(PyGraph)
-def _graph_betweenness_centrality(
-    graph, normalized=True, endpoints=False, parallel_threshold=50
-):
+def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
     return graph_betweenness_centrality(
         graph,
         normalized=normalized,
@@ -1722,7 +1709,7 @@ def _digraph_union(
     merge_nodes=False,
     merge_edges=False,
 ):
-    return digraph_union(first, second, merge_nodes=False, merge_edges=False)
+    return digraph_union(first, second, merge_nodes=merge_nodes, merge_edges=merge_edges)
 
 
 @union.register(PyGraph)
@@ -1732,7 +1719,183 @@ def _graph_union(
     merge_nodes=False,
     merge_edges=False,
 ):
-    return graph_union(first, second, merge_nodes=False, merge_edges=False)
+    return graph_union(first, second, merge_nodes=merge_nodes, merge_edges=merge_edges)
+
+
+@functools.singledispatch
+def tensor_product(
+    first,
+    second,
+):
+    """Return a new graph by forming the tensor product
+    from two input graph objects
+
+    :param first: The first graph object
+    :param second: The second graph object
+
+    :returns: A new graph object that is the tensor product of ``second`` and
+        ``first``. It's worth noting the weight/data payload objects are
+        passed by reference from ``first`` and ``second`` to this new object.
+        A read-only dictionary of the product of nodes is also returned. The keys
+        are a tuple where the first element is a node of the first graph and the
+        second element is a node of the second graph, and the values are the map
+        of those elements to node indices in the product graph. For example::
+
+            {
+                (0, 0): 0,
+                (0, 1): 1,
+            }
+
+    :rtype: Tuple[:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`,
+        :class:`~retworkx.ProductNodeMap`]
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@tensor_product.register(PyDiGraph)
+def _digraph_tensor_product(
+    first,
+    second,
+):
+    return digraph_tensor_product(first, second)
+
+
+@tensor_product.register(PyGraph)
+def _graph_tensor_product(
+    first,
+    second,
+):
+    return graph_tensor_product(first, second)
+
+
+@functools.singledispatch
+def cartesian_product(
+    first,
+    second,
+):
+    """Return a new graph by forming the cartesian product
+    from two input graph objects
+
+    :param first: The first graph object
+    :param second: The second graph object
+
+    :returns: A new graph object that is the union of ``second`` and
+        ``first``. It's worth noting the weight/data payload objects are
+        passed by reference from ``first`` and ``second`` to this new object.
+        A read-only dictionary of the product of nodes is also returned. The keys
+        are a tuple where the first element is a node of the first graph and the
+        second element is a node of the second graph, and the values are the map
+        of those elements to node indices in the product graph. For example::
+
+            {
+                (0, 0): 0,
+                (0, 1): 1,
+            }
+
+    :rtype: Tuple[:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`,
+        :class:`~retworkx.ProductNodeMap`]
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@cartesian_product.register(PyDiGraph)
+def _digraph_cartesian_product(
+    first,
+    second,
+):
+    return digraph_cartesian_product(first, second)
+
+
+@cartesian_product.register(PyGraph)
+def _graph_cartesian_product(
+    first,
+    second,
+):
+    return graph_cartesian_product(first, second)
+
+
+@functools.singledispatch
+def bfs_search(graph, source, visitor):
+    """Breadth-first traversal of a directed/undirected graph.
+
+    The pseudo-code for the BFS algorithm is listed below, with the annotated
+    event points, for which the given visitor object will be called with the
+    appropriate method.
+
+    ::
+
+        BFS(G, s)
+          for each vertex u in V
+              color[u] := WHITE
+          end for
+          color[s] := GRAY
+          EQUEUE(Q, s)                             discover vertex s
+          while (Q != Ø)
+              u := DEQUEUE(Q)
+              for each vertex v in Adj[u]          (u,v) is a tree edge
+                  if (color[v] = WHITE)
+                      color[v] = GRAY
+                  else                             (u,v) is a non - tree edge
+                      if (color[v] = GRAY)         (u,v) has a gray target
+                          ...
+                      else if (color[v] = BLACK)   (u,v) has a black target
+                          ...
+              end for
+              color[u] := BLACK                    finish vertex u
+          end while
+
+    If an exception is raised inside the callback function, the graph traversal
+    will be stopped immediately. You can exploit this to exit early by raising a
+    :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+    will return but without raising back the exception. You can also prune part of
+    the search tree by raising :class:`~retworkx.visit.PruneSearch`.
+
+    In the following example we keep track of the tree edges:
+
+    .. jupyter-execute::
+
+        import retworkx
+        from retworkx.visit import BFSVisitor
+
+
+        class TreeEdgesRecorder(BFSVisitor):
+
+            def __init__(self):
+                self.edges = []
+
+            def tree_edge(self, edge):
+                self.edges.append(edge)
+
+        graph = retworkx.PyDiGraph()
+        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
+        vis = TreeEdgesRecorder()
+        retworkx.bfs_search(graph, [0], vis)
+        print('Tree edges:', vis.edges)
+
+    .. note::
+
+        Graph can **not** be mutated while traversing.
+
+    :param graph: The graph to be used. This can be a :class:`~retworkx.PyGraph`
+        or a :class:`~retworkx.PyDiGraph`
+    :param List[int] source: An optional list of node indices to use as the starting
+        nodes for the breadth-first search. If this is not specified then a source
+        will be chosen arbitrarly and repeated until all components of the
+        graph are searched.
+    :param visitor: A visitor object that is invoked at the event points inside the
+        algorithm. This should be a subclass of :class:`~retworkx.visit.BFSVisitor`.
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bfs_search.register(PyDiGraph)
+def _digraph_bfs_search(graph, source, visitor):
+    return digraph_bfs_search(graph, source, visitor)
+
+
+@bfs_search.register(PyGraph)
+def _graph_bfs_search(graph, source, visitor):
+    return graph_bfs_search(graph, source, visitor)
 
 
 @functools.singledispatch
@@ -1813,3 +1976,70 @@ def _digraph_dfs_search(graph, source, visitor):
 @dfs_search.register(PyGraph)
 def _graph_dfs_search(graph, source, visitor):
     return graph_dfs_search(graph, source, visitor)
+
+
+@functools.singledispatch
+def dijkstra_search(graph, source, weight_fn, visitor):
+    """Dijkstra traversal of a graph.
+
+    The pseudo-code for the Dijkstra algorithm is listed below, with the annotated
+    event points, for which the given visitor object will be called with the
+    appropriate method.
+
+    ::
+
+        DIJKSTRA(G, source, weight)
+          for each vertex u in V
+              d[u] := infinity
+              p[u] := u
+          end for
+          d[source] := 0
+          INSERT(Q, source)
+          while (Q != Ø)
+              u := EXTRACT-MIN(Q)                         discover vertex u
+              for each vertex v in Adj[u]                 examine edge (u,v)
+                  if (weight[(u,v)] + d[u] < d[v])        edge (u,v) relaxed
+                      d[v] := weight[(u,v)] + d[u]
+                      p[v] := u
+                      DECREASE-KEY(Q, v)
+                  else                                    edge (u,v) not relaxed
+                      ...
+                  if (d[v] was originally infinity)
+                      INSERT(Q, v)
+              end for                                     finish vertex u
+          end while
+
+    If an exception is raised inside the callback function, the graph traversal
+    will be stopped immediately. You can exploit this to exit early by raising a
+    :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+    will return but without raising back the exception. You can also prune part of the
+    search tree by raising :class:`~retworkx.visit.PruneSearch`.
+
+    .. note::
+
+        Graph can **not** be mutated while traversing.
+
+    :param graph: The graph to be used. This can be a :class:`~retworkx.PyGraph`
+        or a :class:`~retworkx.PyDiGraph`.
+    :param List[int] source: An optional list of node indices to use as the starting nodes
+        for the dijkstra search. If this is not specified then a source
+        will be chosen arbitrarly and repeated until all components of the
+        graph are searched.
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float which
+        will be used to represent the weight/cost of the edge. If not specified,
+        a default value of cost ``1.0`` will be used for each edge.
+    :param visitor: A visitor object that is invoked at the event points inside the
+        algorithm. This should be a subclass of :class:`~retworkx.visit.DijkstraVisitor`.
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@dijkstra_search.register(PyDiGraph)
+def _digraph_dijkstra_search(graph, source, weight_fn, visitor):
+    return digraph_dijkstra_search(graph, source, weight_fn, visitor)
+
+
+@dijkstra_search.register(PyGraph)
+def _graph_dijkstra_search(graph, source, weight_fn, visitor):
+    return graph_dijkstra_search(graph, source, weight_fn, visitor)

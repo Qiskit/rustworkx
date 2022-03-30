@@ -33,9 +33,7 @@ pub fn dfs_handler(
     event: DfsEvent<NodeIndex, &PyObject>,
 ) -> PyResult<Control<()>> {
     let res = match event {
-        DfsEvent::Discover(u, Time(t)) => {
-            vis.discover_vertex.call1(py, (u.index(), t))
-        }
+        DfsEvent::Discover(u, Time(t)) => vis.discover_vertex.call1(py, (u.index(), t)),
         DfsEvent::TreeEdge(u, v, weight) => {
             let edge = (u.index(), v.index(), weight);
             vis.tree_edge.call1(py, (edge,))
@@ -48,14 +46,12 @@ pub fn dfs_handler(
             let edge = (u.index(), v.index(), weight);
             vis.forward_or_cross_edge.call1(py, (edge,))
         }
-        DfsEvent::Finish(u, Time(t)) => {
-            vis.finish_vertex.call1(py, (u.index(), t))
-        }
+        DfsEvent::Finish(u, Time(t)) => vis.finish_vertex.call1(py, (u.index(), t)),
     };
 
     match res {
         Err(e) => {
-            if e.is_instance::<PruneSearch>(py) {
+            if e.is_instance_of::<PruneSearch>(py) {
                 Ok(Control::Prune)
             } else {
                 Err(e)

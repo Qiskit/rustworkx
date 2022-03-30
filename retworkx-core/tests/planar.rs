@@ -115,27 +115,14 @@ fn test_goldner_harary_planar_graph() {
 
 #[test]
 fn test_multiple_components_planar_graph() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
-        (1, 2),
-        (2, 3),
-        (3, 1),
-        (4, 5),
-        (5, 6),
-        (6, 4),
-    ]);
+    let graph = UnGraph::<(), ()>::from_edges(&[(1, 2), (2, 3), (3, 1), (4, 5), (5, 6), (6, 4)]);
     let res = is_planar(&graph);
     assert!(res)
 }
 
 #[test]
 fn test_planar_multi_graph() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
-        (0, 1),
-        (0, 1),
-        (0, 1),
-        (1, 2),
-        (2, 0),
-    ]);
+    let graph = UnGraph::<(), ()>::from_edges(&[(0, 1), (0, 1), (0, 1), (1, 2), (2, 0)]);
     let res = is_planar(&graph);
     assert!(res)
 }

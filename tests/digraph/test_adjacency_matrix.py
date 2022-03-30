@@ -91,13 +91,9 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         node_b = graph.add_node("b")
         graph.add_edge(node_a, node_b, 7.0)
         graph.add_edge(node_a, node_b, 0.5)
-        res = retworkx.adjacency_matrix(
-            graph, lambda x: float(x), null_value=np.inf
-        )
+        res = retworkx.adjacency_matrix(graph, lambda x: float(x), null_value=np.inf)
         self.assertIsInstance(res, np.ndarray)
-        self.assertTrue(
-            np.array_equal(np.array([[np.inf, 7.5], [np.inf, np.inf]]), res)
-        )
+        self.assertTrue(np.array_equal(np.array([[np.inf, 7.5], [np.inf, np.inf]]), res))
 
     def test_graph_to_digraph_adjacency_matrix(self):
         graph = retworkx.PyGraph()
@@ -137,16 +133,12 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         self.assertTrue(np.array_equal(adjacency_matrix, new_adjacency_matrix))
 
     def test_random_graph_different_dtype(self):
-        input_matrix = np.array(
-            [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.int64
-        )
+        input_matrix = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.int64)
         with self.assertRaises(TypeError):
             retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
 
     def test_random_graph_different_dtype_astype_no_copy(self):
-        input_matrix = np.array(
-            [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.int64
-        )
+        input_matrix = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.int64)
         graph = retworkx.PyDiGraph.from_adjacency_matrix(
             input_matrix.astype(np.float64, copy=False)
         )
@@ -164,9 +156,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
             [[np.Inf, 1, np.Inf], [1, np.Inf, 1], [np.Inf, 1, np.Inf]],
             dtype=np.float64,
         )
-        graph = retworkx.PyDiGraph.from_adjacency_matrix(
-            input_matrix, null_value=np.Inf
-        )
+        graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix, null_value=np.Inf)
         adj_matrix = retworkx.adjacency_matrix(graph, float)
         expected_matrix = np.array(
             [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]],
@@ -175,9 +165,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         self.assertTrue(np.array_equal(adj_matrix, expected_matrix))
 
     def test_negative_weight(self):
-        input_matrix = np.array(
-            [[0, 1, 0], [-1, 0, -1], [0, 1, 0]], dtype=float
-        )
+        input_matrix = np.array([[0, 1, 0], [-1, 0, -1], [0, 1, 0]], dtype=float)
         graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix)
         adj_matrix = retworkx.digraph_adjacency_matrix(graph, lambda x: x)
         self.assertTrue(np.array_equal(adj_matrix, input_matrix))
@@ -191,13 +179,9 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
             [[np.nan, 1, np.nan], [1, np.nan, 1], [np.nan, 1, np.nan]],
             dtype=np.float64,
         )
-        graph = retworkx.PyDiGraph.from_adjacency_matrix(
-            input_matrix, null_value=np.nan
-        )
+        graph = retworkx.PyDiGraph.from_adjacency_matrix(input_matrix, null_value=np.nan)
         adj_matrix = retworkx.adjacency_matrix(graph, float)
-        expected_matrix = np.array(
-            [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.float64
-        )
+        expected_matrix = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.float64)
         self.assertTrue(np.array_equal(adj_matrix, expected_matrix))
 
 
@@ -217,16 +201,12 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
         self.assertEqual(graph.weighted_edge_list(), expected)
 
     def test_random_graph_different_dtype(self):
-        input_matrix = np.array(
-            [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.int64
-        )
+        input_matrix = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.int64)
         with self.assertRaises(TypeError):
             retworkx.PyDiGraph.from_complex_adjacency_matrix(input_matrix)
 
     def test_random_graph_different_dtype_astype_no_copy(self):
-        input_matrix = np.array(
-            [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.int64
-        )
+        input_matrix = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.int64)
         graph = retworkx.PyDiGraph.from_complex_adjacency_matrix(
             input_matrix.astype(np.complex128, copy=False)
         )
@@ -239,9 +219,7 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
         self.assertEqual(graph.weighted_edge_list(), expected)
 
     def test_random_graph_complex_dtype(self):
-        input_matrix = np.array(
-            [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=complex
-        )
+        input_matrix = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=complex)
         graph = retworkx.PyDiGraph.from_complex_adjacency_matrix(input_matrix)
         expected = [
             (0, 1, 1 + 0j),
@@ -256,9 +234,7 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
             [[np.Inf, 1, np.Inf], [1, np.Inf, 1], [np.Inf, 1, np.Inf]],
             dtype=np.complex128,
         )
-        graph = retworkx.PyDiGraph.from_complex_adjacency_matrix(
-            input_matrix, null_value=np.Inf
-        )
+        graph = retworkx.PyDiGraph.from_complex_adjacency_matrix(input_matrix, null_value=np.Inf)
         expected = [
             (0, 1, 1 + 0j),
             (1, 0, 1 + 0j),
@@ -268,9 +244,7 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
         self.assertEqual(graph.weighted_edge_list(), expected)
 
     def test_negative_weight(self):
-        input_matrix = np.array(
-            [[0, 1, 0], [-1, 0, -1], [0, 1, 0]], dtype=complex
-        )
+        input_matrix = np.array([[0, 1, 0], [-1, 0, -1], [0, 1, 0]], dtype=complex)
         graph = retworkx.PyDiGraph.from_complex_adjacency_matrix(input_matrix)
         self.assertEqual(
             [(0, 1, 1), (1, 0, -1), (1, 2, -1), (2, 1, 1)],
@@ -282,9 +256,7 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
             [[np.nan, 1, np.nan], [1, np.nan, 1], [np.nan, 1, np.nan]],
             dtype=np.complex128,
         )
-        graph = retworkx.PyDiGraph.from_complex_adjacency_matrix(
-            input_matrix, null_value=np.nan
-        )
+        graph = retworkx.PyDiGraph.from_complex_adjacency_matrix(input_matrix, null_value=np.nan)
         edge_list = graph.weighted_edge_list()
         self.assertEqual(
             edge_list,

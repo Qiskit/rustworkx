@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    Added a new function, :func:`~retworkx.generators.full_rary_tree` that adds
+    support for generating a full :math:`r`\ -ary tree of :math:`n` nodes. For example:
+
+    .. jupyter-execute::
+
+        import retworkx.generators
+        from retworkx.visualization import mpl_draw
+
+        graph = retworkx.generators.full_rary_tree(3, 5)
+        mpl_draw(graph)

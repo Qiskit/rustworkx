@@ -14,33 +14,15 @@
 // ``depth_first_search`` function.
 // https://github.com/petgraph/petgraph/blob/0.6.0/src/visit/dfsvisit.rs
 
-use petgraph::visit::{
-    ControlFlow, EdgeRef, IntoEdges, Time, VisitMap, Visitable,
-};
+use petgraph::visit::{ControlFlow, EdgeRef, IntoEdges, Time, VisitMap, Visitable};
 
-/// Return if the expression is a break value, execute the provided statement
-/// if it is a prune value.
-/// https://github.com/petgraph/petgraph/blob/0.6.0/src/visit/dfsvisit.rs#L27
-macro_rules! try_control {
-    ($e:expr, $p:stmt) => {
-        try_control!($e, $p, ());
-    };
-    ($e:expr, $p:stmt, $q:stmt) => {
-        match $e {
-            x => {
-                if x.should_break() {
-                    return x;
-                } else if x.should_prune() {
-                    $p
-                } else {
-                    $q
-                }
-            }
-        }
-    };
-}
+use super::try_control;
 
 /// A depth first search (DFS) visitor event.
+///
+/// It's similar to upstream petgraph
+/// [`DfsEvent`](https://docs.rs/petgraph/0.6.0/petgraph/visit/enum.DfsEvent.html)
+/// event.
 #[derive(Copy, Clone, Debug)]
 pub enum DfsEvent<N, E> {
     Discover(N, Time),
@@ -194,7 +176,7 @@ where
     C::continuing()
 }
 
-pub fn dfs_visitor<G, F, C>(
+fn dfs_visitor<G, F, C>(
     graph: G,
     u: G::NodeId,
     visitor: &mut F,
@@ -223,10 +205,7 @@ where
             for edge in adjacent_edges {
                 let v = edge.target();
                 if !discovered.is_visited(&v) {
-                    try_control!(
-                        visitor(DfsEvent::TreeEdge(u, v, edge.weight())),
-                        continue
-                    );
+                    try_control!(visitor(DfsEvent::TreeEdge(u, v, edge.weight())), continue);
                     discovered.visit(v);
                     try_control!(
                         visitor(DfsEvent::Discover(v, time_post_inc(time))),
@@ -235,17 +214,10 @@ where
                     next = Some(v);
                     break;
                 } else if !finished.is_visited(&v) {
-                    try_control!(
-                        visitor(DfsEvent::BackEdge(u, v, edge.weight())),
-                        continue
-                    );
+                    try_control!(visitor(DfsEvent::BackEdge(u, v, edge.weight())), continue);
                 } else {
                     try_control!(
-                        visitor(DfsEvent::CrossForwardEdge(
-                            u,
-                            v,
-                            edge.weight()
-                        )),
+                        visitor(DfsEvent::CrossForwardEdge(u, v, edge.weight())),
                         continue
                     );
                 }

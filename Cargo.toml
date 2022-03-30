@@ -1,7 +1,7 @@
 [package]
 name = "retworkx"
 description = "A python graph library implemented in Rust"
-version = "0.11.0"
+version = "0.12.0"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 license = "Apache-2.0"
 readme = "README.md"
@@ -21,8 +21,8 @@ crate-type = ["cdylib"]
 [dependencies]
 ahash = { version = "0.7.6", default-features = false }
 petgraph = "0.6.0"
-fixedbitset = "0.4.0"
-numpy = "0.14.1"
+fixedbitset = "0.4.1"
+numpy = "0.16.2"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.5"
@@ -32,7 +32,7 @@ num-complex = "0.4"
 retworkx-core = { path = "./retworkx-core" }
 
 [dependencies.pyo3]
-version = "0.14.5"
+version = "0.16.2"
 features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.hashbrown]

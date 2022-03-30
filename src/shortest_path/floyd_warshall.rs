@@ -13,8 +13,7 @@
 use hashbrown::HashMap;
 use retworkx_core::dictmap::*;
 
-use super::weight_callable;
-use crate::get_edge_iter_with_weights;
+use crate::{get_edge_iter_with_weights, weight_callable};
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -88,8 +87,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
         let j = NodeIndexable::to_index(&graph, edge.target());
         let weight = edge.weight().clone();
 
-        let edge_weight =
-            weight_callable(py, &weight_fn, &weight, default_weight)?;
+        let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if let Some(row_i) = mat.get_mut(i) {
             insert_or_minimize!(row_i, j, edge_weight);
         }
@@ -134,10 +132,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
         .node_indices()
         .map(|i| {
             let out_map = PathLengthMapping {
-                path_lengths: mat[i.index()]
-                    .iter()
-                    .map(|(k, v)| (*k, *v))
-                    .collect(),
+                path_lengths: mat[i.index()].iter().map(|(k, v)| (*k, *v)).collect(),
             };
             (i.index(), out_map)
         })
@@ -161,8 +156,7 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
 
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
-        let edge_weight =
-            weight_callable(py, &weight_fn, &weight, default_weight)?;
+        let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         mat[[i, j]] = mat[[i, j]].min(edge_weight);
         if as_undirected {
             mat[[j, i]] = mat[[j, i]].min(edge_weight);
@@ -193,14 +187,12 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
                 .into_par_iter()
                 .for_each(|mut row_i| {
                     let m_ik = row_i[k];
-                    row_i.iter_mut().zip(row_k.iter()).for_each(
-                        |(m_ij, m_kj)| {
-                            let d_ijk = m_ik + *m_kj;
-                            if d_ijk < *m_ij {
-                                *m_ij = d_ijk;
-                            }
-                        },
-                    )
+                    row_i.iter_mut().zip(row_k.iter()).for_each(|(m_ij, m_kj)| {
+                        let d_ijk = m_ik + *m_kj;
+                        if d_ijk < *m_ij {
+                            *m_ij = d_ijk;
+                        }
+                    })
                 })
         }
     }

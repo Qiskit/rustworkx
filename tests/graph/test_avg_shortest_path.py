@@ -48,32 +48,40 @@ class TestUnweightedAvgShortestPath(unittest.TestCase):
         graph = retworkx.PyGraph()
         graph.add_node(0)
         res = retworkx.unweighted_average_shortest_path_length(graph)
-        self.assertEqual(0.0, res)
+        self.assertTrue(math.isnan(res), "Output is not NaN")
 
     def test_single_node_self_edge(self):
         graph = retworkx.PyGraph()
         node = graph.add_node(0)
         graph.add_edge(node, node, 0)
         res = retworkx.unweighted_average_shortest_path_length(graph)
-        self.assertEqual(0.0, res)
+        self.assertTrue(math.isnan(res), "Output is not NaN")
 
     def test_disconnected_graph(self):
         graph = retworkx.PyGraph()
         graph.add_nodes_from(list(range(32)))
-        res = retworkx.unweighted_average_shortest_path_length(graph)
-        self.assertEqual(0.0, res)
+        with self.subTest(disconnected=False):
+            res = retworkx.unweighted_average_shortest_path_length(graph)
+            self.assertTrue(math.isinf(res), "Output is not infinity")
+
+        with self.subTest(disconnected=True):
+            res = retworkx.unweighted_average_shortest_path_length(graph, disconnected=True)
+            self.assertTrue(math.isnan(res), "Output is not NaN")
 
     def test_partially_connected_graph(self):
         graph = retworkx.generators.cycle_graph(32)
         graph.add_nodes_from(list(range(32)))
-        res = retworkx.unweighted_average_shortest_path_length(graph)
-        s = 8192
-        den = 4032  # n*(n-1)
-        self.assertAlmostEqual(s / den, res, delta=1e-7)
+        with self.subTest(disconnected=False):
+            res = retworkx.unweighted_average_shortest_path_length(graph)
+            self.assertTrue(math.isinf(res), "Output is not infinity")
+
+        with self.subTest(disconnected=True):
+            s = 8192
+            den = 992  # n*(n-1), n=32 (only connected pairs considered)
+            res = retworkx.unweighted_average_shortest_path_length(graph, disconnected=True)
+            self.assertAlmostEqual(s / den, res, delta=1e-7)
 
     def test_connected_cycle_graph(self):
-        # Show the difference between a fully connected example compared to
-        # a partially connected example in "test_partially_connected_graph":
         graph = retworkx.generators.cycle_graph(32)
         res = retworkx.unweighted_average_shortest_path_length(graph)
         s = 8192
