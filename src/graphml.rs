@@ -521,7 +521,7 @@ impl GraphML {
     }
 
     /// Parse a file written in GraphML format.
-    /// 
+    ///
     /// The implementation is based on a state machine in order to
     /// accept only valid GraphML syntax (e.g a `<data>` element should
     /// be nested inside a `<node>` element) where the internal state changes
