@@ -38,7 +38,6 @@ mod error {
 
     use quick_xml::Error as XmlError;
 
-    #[derive(Debug)]
     pub enum Error {
         Xml(String),
         ParseValue(String),
@@ -119,7 +118,6 @@ enum Domain {
     Edge,
 }
 
-#[derive(Clone, Copy, Debug)]
 enum Type {
     Boolean,
     Int,
@@ -128,7 +126,7 @@ enum Type {
     String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 enum Value {
     Boolean(bool),
     Int(isize),
@@ -151,7 +149,6 @@ impl IntoPy<PyObject> for Value {
     }
 }
 
-#[derive(Debug)]
 struct Key {
     name: String,
     ty: Type,
@@ -175,13 +172,11 @@ impl Key {
     }
 }
 
-#[derive(Debug)]
 struct Node {
     id: String,
     data: HashMap<String, Value>,
 }
 
-#[derive(Debug)]
 struct Edge {
     id: Option<String>,
     source: String,
@@ -189,13 +184,11 @@ struct Edge {
     data: HashMap<String, Value>,
 }
 
-#[derive(Debug)]
 enum Direction {
     Directed,
     UnDirected,
 }
 
-#[derive(Debug)]
 struct Graph {
     dir: Direction,
     nodes: Vec<Node>,
@@ -365,7 +358,6 @@ struct GraphML {
     graphs: Vec<Graph>,
     key_for_nodes: IndexMap<String, Key>,
     key_for_edges: IndexMap<String, Key>,
-    finalized: bool, // Whether the last graph is finished.
 }
 
 impl Default for GraphML {
@@ -374,7 +366,6 @@ impl Default for GraphML {
             graphs: Vec::new(),
             key_for_nodes: IndexMap::new(),
             key_for_edges: IndexMap::new(),
-            finalized: false,
         }
     }
 }
@@ -396,13 +387,8 @@ impl GraphML {
         };
 
         self.graphs.push(Graph::new(dir));
-        self.finalized = false;
 
         Ok(())
-    }
-
-    fn finalize_graph(&mut self) {
-        self.finalized = true;
     }
 
     fn add_node<'a, B: BufRead>(
@@ -410,10 +396,6 @@ impl GraphML {
         reader: &Reader<B>,
         element: &'a BytesStart<'a>,
     ) -> Result<(), Error> {
-        if self.finalized {
-            return Ok(());
-        }
-
         if let Some(graph) = self.graphs.last_mut() {
             graph.add_node(reader, element, self.key_for_nodes.values())?;
         }
@@ -426,10 +408,6 @@ impl GraphML {
         reader: &Reader<B>,
         element: &'a BytesStart<'a>,
     ) -> Result<(), Error> {
-        if self.finalized {
-            return Ok(());
-        }
-
         if let Some(graph) = self.graphs.last_mut() {
             graph.add_edge(reader, element, self.key_for_edges.values())?;
         }
@@ -569,7 +547,10 @@ impl GraphML {
                         match state {
                             State::Node => state = State::DataForNode,
                             State::Edge => state = State::DataForEdge,
-                            _ => {}
+                            _ => {
+                                // in all other cases we have already bailed out in `matches`.
+                                unreachable!()
+                            }
                         }
                     }
                     _ => {}
@@ -601,7 +582,6 @@ impl GraphML {
                     b"graph" => {
                         matches!(state, State::Graph);
                         state = State::Start;
-                        graphml.finalize_graph();
                     }
                     b"node" => {
                         matches!(state, State::Node);
@@ -616,7 +596,10 @@ impl GraphML {
                         match state {
                             State::DataForNode => state = State::Node,
                             State::DataForEdge => state = State::Edge,
-                            _ => {}
+                            _ => {
+                                // in all other cases we have already bailed out in `matches`.
+                                unreachable!()
+                            }
                         }
                     }
                     _ => {}
