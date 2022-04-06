@@ -70,7 +70,7 @@ fn difference<Ty: EdgeType>(
 /// :rtype: :class:`~retworkx.PyGraph`
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-fn graph_difference(
+pub fn graph_difference(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -97,7 +97,7 @@ fn graph_difference(
 /// :rtype: :class:`~retworkx.PyDiGraph`
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-fn digraph_difference(
+pub fn digraph_difference(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
