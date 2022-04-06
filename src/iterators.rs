@@ -782,7 +782,7 @@ macro_rules! custom_hash_map_iter_impl {
         $K:ty, $V:ty, $doc:literal
     ) => {
         #[doc = $doc]
-        #[pyclass(module = "retworkx")]
+        #[pyclass(mapping, module = "retworkx")]
         #[derive(Clone)]
         pub struct $name {
             pub $data: DictMap<$K, $V>,
@@ -980,7 +980,7 @@ impl PyGCProtocol for EdgeIndexMap {
 ///     second_target = next(edges_iter)
 ///     second_path = edges[second_target]
 ///
-#[pyclass(module = "retworkx")]
+#[pyclass(mapping, module = "retworkx")]
 #[derive(Clone)]
 pub struct PathMapping {
     pub paths: DictMap<usize, Vec<usize>>,

@@ -150,7 +150,7 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
 ///     method call is made that would add parallel edges the the weight/weight
 ///     from that method call will be used to update the existing edge in place.
-#[pyclass(module = "retworkx", subclass)]
+#[pyclass(mapping, module = "retworkx", subclass)]
 #[pyo3(text_signature = "(/, check_cycle=False, multigraph=True)")]
 #[derive(Clone)]
 pub struct PyDiGraph {
