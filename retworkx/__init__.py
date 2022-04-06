@@ -627,6 +627,40 @@ def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
 
 
 @functools.singledispatch
+def all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
+    """Return all the simple paths between all pairs of nodes in the graph
+
+    This function is multithreaded and will launch a thread pool with threads
+    equal to the number of CPUs by default. You can tune the number of threads
+    with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+    ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+
+    :param PyGraph graph: The graph to find all simple paths in
+    :param int min_depth: The minimum depth of the path to include in the output
+        list of paths. By default all paths are included regardless of depth,
+        sett to 0 will behave like the default.
+    :param int cutoff: The maximum depth of path to include in the output list
+        of paths. By default includes all paths regardless of depth, setting to
+        0 will behave like default.
+
+    :returns: A mapping of source node indices to a mapping of target node
+        indices to a list of paths between the source and target nodes.
+    :rtype: AllPairsMultiplePathMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@all_pairs_all_simple_paths.register(PyDiGraph)
+def _digraph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
+    return digraph_all_pairs_all_simple_paths(graph, min_depth=min_depth, cutoff=cutoff)
+
+
+@all_pairs_all_simple_paths.register(PyGraph)
+def _graph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
+    return graph_all_pairs_all_simple_paths(graph, min_depth=min_depth, cutoff=cutoff)
+
+
+@functools.singledispatch
 def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
     """For each node in the graph, calculates the lengths of the shortest paths to all others.
 

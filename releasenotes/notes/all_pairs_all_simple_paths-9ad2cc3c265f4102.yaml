@@ -1,0 +1,17 @@
+---
+features:
+  - |
+    Added a new function :func:`~.all_pairs_all_simple_paths` which
+    is used to return all simple paths between all pairs of nodes in a graph. It
+    can also be used with a optional ``min_depth`` and ``cutoff`` parameters to
+    filter the results based on path lengths. For example::
+
+        from retworkx.generators import grid_graph
+        from retworkx import find_all_pairs_all_simple_paths_of_size
+
+        g = grid_graph(2, 3)
+        paths = find_all_pairs_all_simple_paths_of_size(g, min_depth=3, cutoff=3)
+
+    will return a dictionary of dictionaries where the 2 dictionary keys are the
+    node indices and the inner value is the list of all simple paths of length
+    3 between those 2 nodes.

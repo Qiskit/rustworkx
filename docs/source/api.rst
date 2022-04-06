@@ -173,6 +173,7 @@ Other Algorithm Functions
    retworkx.core_number
    retworkx.graph_greedy_color
    retworkx.metric_closure
+   retworkx.all_pairs_all_simple_paths
 
 .. _generator_funcs:
 
@@ -266,6 +267,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_floyd_warshall_numpy
    retworkx.digraph_adjacency_matrix
    retworkx.digraph_all_simple_paths
+   retworkx.digraph_all_pairs_all_simple_paths
    retworkx.digraph_astar_shortest_path
    retworkx.digraph_dijkstra_shortest_paths
    retworkx.digraph_all_pairs_dijkstra_shortest_paths
@@ -314,6 +316,7 @@ typed API based on the data type.
    retworkx.graph_floyd_warshall_numpy
    retworkx.graph_adjacency_matrix
    retworkx.graph_all_simple_paths
+   retworkx.graph_all_pairs_all_simple_paths
    retworkx.graph_astar_shortest_path
    retworkx.graph_dijkstra_shortest_paths
    retworkx.graph_dijkstra_shortest_path_lengths
