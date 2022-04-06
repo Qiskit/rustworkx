@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph;
-use retworkx_core::max_weight_matching;
+use retworkx_core::max_weight_matching as mwm;
 
 use hashbrown::HashSet;
 
@@ -80,7 +80,7 @@ pub fn max_weight_matching(
     default_weight: i128,
     verify_optimum: bool,
 ) -> PyResult<HashSet<(usize, usize)>> {
-    max_weight_matching::max_weight_matching(
+    mwm::max_weight_matching(
         &graph.graph,
         max_cardinality,
         |e| weight_callable(py, &weight_fn, e.weight(), default_weight),

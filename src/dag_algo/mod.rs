@@ -317,7 +317,7 @@ pub fn layers(py: Python, dag: &digraph::PyDiGraph, first_layer: Vec<usize>) -> 
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(dag, key, /)")]
-fn lexicographical_topological_sort(
+pub fn lexicographical_topological_sort(
     py: Python,
     dag: &digraph::PyDiGraph,
     key: PyObject,
@@ -400,7 +400,7 @@ fn lexicographical_topological_sort(
 /// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
+pub fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
     let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => return Err(DAGHasCycle::new_err("Sort encountered a cycle")),
@@ -427,7 +427,7 @@ fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, filter)")]
-fn collect_runs(
+pub fn collect_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
     filter_fn: PyObject,
@@ -499,7 +499,7 @@ fn collect_runs(
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, filter_fn, color_fn)")]
-fn collect_bicolor_runs(
+pub fn collect_bicolor_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
     filter_fn: PyObject,

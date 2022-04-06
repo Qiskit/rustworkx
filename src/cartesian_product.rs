@@ -100,7 +100,7 @@ fn cartesian_product<Ty: EdgeType>(
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-fn graph_cartesian_product(
+pub fn graph_cartesian_product(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -149,7 +149,7 @@ fn graph_cartesian_product(
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-fn digraph_cartesian_product(
+pub fn digraph_cartesian_product(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,

@@ -22,8 +22,8 @@ use std::marker;
 use hashbrown::HashMap;
 use retworkx_core::dictmap::*;
 
-use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
-use pyo3::gc::{PyGCProtocol, PyVisit};
+use pyo3::class::iter::IterNextOutput;
+use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 
@@ -977,7 +977,7 @@ where
 
 macro_rules! vf2_mapping_impl {
     ($name:ident, $Ty:ty) => {
-        #[pyclass(module = "retworkx", gc)]
+        #[pyclass(module = "retworkx")]
         pub struct $name {
             vf2: Vf2Algorithm<$Ty, Option<PyObject>, Option<PyObject>>,
         }
@@ -1001,8 +1001,8 @@ macro_rules! vf2_mapping_impl {
             }
         }
 
-        #[pyproto]
-        impl PyIterProtocol for $name {
+        #[pymethods]
+        impl $name {
             fn __iter__(slf: PyRef<Self>) -> Py<$name> {
                 slf.into()
             }
@@ -1015,10 +1015,7 @@ macro_rules! vf2_mapping_impl {
                     None => Ok(IterNextOutput::Return("Ended")),
                 })
             }
-        }
 
-        #[pyproto]
-        impl PyGCProtocol for $name {
             fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
                 for j in 0..2 {
                     for node in self.vf2.st[j].graph.node_weights() {

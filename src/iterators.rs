@@ -30,9 +30,7 @@
 //      from `usize` to `f64`.
 //
 // You should always implement `PyGCProtocol` for the new custom return type. If you
-// don't store any python object, just use the macro `default_pygc_protocol_impl`.
-//
-// e.g `default_pygc_protocol_impl!(MyReadOnlyType);`
+// don't store any python object, just use `impl PyGCProtocol for MyReadOnlyType {}`.
 //
 // Types `T, K, V` above should implement `PyHash`, `PyEq`, `PyDisplay` traits.
 // These are arleady implemented for many primitive rust types and `PyObject`.
@@ -46,12 +44,10 @@ use std::hash::Hasher;
 use num_bigint::BigUint;
 use retworkx_core::dictmap::*;
 
-use pyo3::class::iter::{IterNextOutput, PyIterProtocol};
-use pyo3::class::{PyMappingProtocol, PyObjectProtocol, PySequenceProtocol};
+use pyo3::class::iter::IterNextOutput;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
-use pyo3::gc::{PyGCProtocol, PyVisit};
+use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::PySequence;
 use pyo3::PyTraverseError;
 
 macro_rules! last_type {
@@ -294,45 +290,24 @@ where
     }
 }
 
-impl<A> PyEq<PySequence> for Vec<A>
-where
-    A: PyEq<PyAny>,
-{
-    #[inline]
-    fn eq(&self, other: &PySequence, py: Python) -> PyResult<bool> {
-        if other.len()? as usize != self.len() {
-            return Ok(false);
-        }
-
-        for (i, item) in self.iter().enumerate() {
-            let other_raw = other.get_item(i)?;
-            if !PyEq::eq(item, other_raw, py)? {
-                return Ok(false);
-            }
-        }
-        Ok(true)
-    }
-}
-
-impl<K, V> PyEq<PyObject> for DictMap<K, V>
+impl<K, V> PyEq<PyAny> for DictMap<K, V>
 where
     for<'p> K: PyEq<K> + Clone + pyo3::ToBorrowedObject,
     for<'p> V: PyEq<PyAny>,
 {
     #[inline]
-    fn eq(&self, other: &PyObject, py: Python) -> PyResult<bool> {
-        let other_ref = other.as_ref(py);
-        if other_ref.len()? != self.len() {
+    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+        if other.len()? != self.len() {
             return Ok(false);
         }
         for (key, value) in self {
-            match other_ref.get_item(key) {
+            match other.get_item(key) {
                 Ok(other_raw) => {
                     if !PyEq::eq(value, other_raw, py)? {
                         return Ok(false);
                     }
                 }
-                Err(ref err) if err.is_instance::<PyKeyError>(py) => {
+                Err(ref err) if err.is_instance_of::<PyKeyError>(py) => {
                     return Ok(false);
                 }
                 Err(err) => return Err(err),
@@ -423,23 +398,18 @@ impl<K: PyDisplay, V: PyDisplay> PyDisplay for DictMap<K, V> {
     }
 }
 
-macro_rules! default_pygc_protocol_impl {
-    ($name:ident) => {
-        #[pyproto]
-        impl PyGCProtocol for $name {
-            fn __traverse__(&self, _: PyVisit) -> Result<(), PyTraverseError> {
-                Ok(())
-            }
+trait PyGCProtocol {
+    fn __traverse__(&self, _: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
 
-            fn __clear__(&mut self) {}
-        }
-    };
+    fn __clear__(&mut self) {}
 }
 
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
-        #[pyclass(module = "retworkx", gc)]
+        #[pyclass(module = "retworkx")]
         #[derive(Clone)]
         pub struct $name {
             pub $data: Vec<$T>,
@@ -459,17 +429,22 @@ macro_rules! custom_vec_iter_impl {
             fn __setstate__(&mut self, state: Vec<$T>) {
                 self.$data = state;
             }
-        }
 
-        #[pyproto]
-        impl<'p> PyObjectProtocol<'p> for $name {
-            fn __richcmp__(
-                &self,
-                other: &'p PySequence,
-                op: pyo3::basic::CompareOp,
-            ) -> PyResult<bool> {
-                let compare = |other: &PySequence| -> PyResult<bool> {
-                    Python::with_gil(|py| PyEq::eq(&self.$data, other, py))
+            fn __richcmp__(&self, other: &PyAny, op: pyo3::basic::CompareOp) -> PyResult<bool> {
+                let compare = |other: &PyAny| -> PyResult<bool> {
+                    Python::with_gil(|py| {
+                        if other.len()? as usize != self.$data.len() {
+                            return Ok(false);
+                        }
+
+                        for (i, item) in self.$data.iter().enumerate() {
+                            let other_raw = other.get_item(i)?;
+                            if !PyEq::eq(item, other_raw, py)? {
+                                return Ok(false);
+                            }
+                        }
+                        Ok(true)
+                    })
                 };
                 match op {
                     pyo3::basic::CompareOp::Eq => compare(other),
@@ -491,20 +466,28 @@ macro_rules! custom_vec_iter_impl {
 
                 Ok(hasher.finish())
             }
-        }
 
-        #[pyproto]
-        impl PySequenceProtocol for $name {
             fn __len__(&self) -> PyResult<usize> {
                 Ok(self.$data.len())
             }
 
-            fn __getitem__(&'p self, idx: isize) -> PyResult<$T> {
-                if idx >= self.$data.len().try_into().unwrap() {
+            fn __getitem__(&self, idx: isize) -> PyResult<$T> {
+                if idx.abs() >= self.$data.len().try_into().unwrap() {
                     Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
+                } else if idx < 0 {
+                    let len = self.$data.len();
+                    Ok(self.$data[len - idx.abs() as usize].clone())
                 } else {
                     Ok(self.$data[idx as usize].clone())
                 }
+            }
+
+            fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
+                PyGCProtocol::__traverse__(self, vis)
+            }
+
+            fn __clear__(&mut self) {
+                PyGCProtocol::__clear__(self)
             }
         }
     };
@@ -546,7 +529,6 @@ custom_vec_iter_impl!(
     "
 );
 
-#[pyproto]
 impl PyGCProtocol for BFSSuccessors {
     fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
         for node in &self.bfs_successors {
@@ -593,7 +575,7 @@ custom_vec_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(NodeIndices);
+impl PyGCProtocol for NodeIndices {}
 
 custom_vec_iter_impl!(
     EdgeList,
@@ -631,7 +613,7 @@ custom_vec_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(EdgeList);
+impl PyGCProtocol for EdgeList {}
 
 custom_vec_iter_impl!(
     WeightedEdgeList,
@@ -670,7 +652,6 @@ custom_vec_iter_impl!(
     "
 );
 
-#[pyproto]
 impl PyGCProtocol for WeightedEdgeList {
     fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
         for edge in &self.edges {
@@ -714,7 +695,7 @@ custom_vec_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(EdgeIndices);
+impl PyGCProtocol for EdgeIndices {}
 
 impl PyHash for EdgeList {
     fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
@@ -726,7 +707,7 @@ impl PyHash for EdgeList {
 impl PyEq<PyAny> for EdgeList {
     #[inline]
     fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
-        PyEq::eq(&self.edges, other.downcast::<PySequence>()?, py)
+        PyEq::eq(&self.edges, other, py)
     }
 }
 
@@ -766,39 +747,7 @@ custom_vec_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(Chains);
-
-macro_rules! py_object_protocol_impl {
-    ($name:ident, $data:ident) => {
-        #[pyproto]
-        impl<'p> PyObjectProtocol<'p> for $name {
-            fn __richcmp__(&self, other: PyObject, op: pyo3::basic::CompareOp) -> PyResult<bool> {
-                let compare = |other: PyObject| -> PyResult<bool> {
-                    Python::with_gil(|py| PyEq::eq(&self.$data, &other, py))
-                };
-                match op {
-                    pyo3::basic::CompareOp::Eq => compare(other),
-                    pyo3::basic::CompareOp::Ne => match compare(other) {
-                        Ok(res) => Ok(!res),
-                        Err(err) => Err(err),
-                    },
-                    _ => Err(PyNotImplementedError::new_err("Comparison not implemented")),
-                }
-            }
-
-            fn __str__(&self) -> PyResult<String> {
-                Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
-            }
-
-            fn __hash__(&self) -> PyResult<u64> {
-                let mut hasher = DefaultHasher::new();
-                Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
-
-                Ok(hasher.finish())
-            }
-        }
-    };
-}
+impl PyGCProtocol for Chains {}
 
 macro_rules! py_iter_protocol_impl {
     ($name:ident, $data:ident, $T:ty) => {
@@ -808,8 +757,8 @@ macro_rules! py_iter_protocol_impl {
             iter_pos: usize,
         }
 
-        #[pyproto]
-        impl PyIterProtocol for $name {
+        #[pymethods]
+        impl $name {
             fn __iter__(slf: PyRef<Self>) -> Py<$name> {
                 slf.into()
             }
@@ -833,7 +782,7 @@ macro_rules! custom_hash_map_iter_impl {
         $K:ty, $V:ty, $doc:literal
     ) => {
         #[doc = $doc]
-        #[pyclass(module = "retworkx", gc)]
+        #[pyclass(mapping, module = "retworkx")]
         #[derive(Clone)]
         pub struct $name {
             pub $data: DictMap<$K, $V>,
@@ -878,12 +827,32 @@ macro_rules! custom_hash_map_iter_impl {
                     iter_pos: 0,
                 }
             }
-        }
 
-        py_object_protocol_impl!($name, $data);
+            fn __richcmp__(&self, other: &PyAny, op: pyo3::basic::CompareOp) -> PyResult<bool> {
+                let compare = |other: &PyAny| -> PyResult<bool> {
+                    Python::with_gil(|py| PyEq::eq(&self.$data, other, py))
+                };
+                match op {
+                    pyo3::basic::CompareOp::Eq => compare(other),
+                    pyo3::basic::CompareOp::Ne => match compare(other) {
+                        Ok(res) => Ok(!res),
+                        Err(err) => Err(err),
+                    },
+                    _ => Err(PyNotImplementedError::new_err("Comparison not implemented")),
+                }
+            }
 
-        #[pyproto]
-        impl PySequenceProtocol for $name {
+            fn __str__(&self) -> PyResult<String> {
+                Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
+            }
+
+            fn __hash__(&self) -> PyResult<u64> {
+                let mut hasher = DefaultHasher::new();
+                Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
+
+                Ok(hasher.finish())
+            }
+
             fn __len__(&self) -> PyResult<usize> {
                 Ok(self.$data.len())
             }
@@ -891,29 +860,27 @@ macro_rules! custom_hash_map_iter_impl {
             fn __contains__(&self, key: $K) -> PyResult<bool> {
                 Ok(self.$data.contains_key(&key))
             }
-        }
 
-        #[pyproto]
-        impl PyMappingProtocol for $name {
-            fn __len__(&self) -> PyResult<usize> {
-                Ok(self.$data.len())
-            }
-
-            fn __getitem__(&'p self, key: $K) -> PyResult<$V> {
+            fn __getitem__(&self, key: $K) -> PyResult<$V> {
                 match self.$data.get(&key) {
                     Some(data) => Ok(data.clone()),
                     None => Err(PyIndexError::new_err("No node found for index")),
                 }
             }
-        }
 
-        #[pyproto]
-        impl PyIterProtocol for $name {
             fn __iter__(slf: PyRef<Self>) -> $nameKeys {
                 $nameKeys {
                     $keys: slf.$data.keys().copied().collect(),
                     iter_pos: 0,
                 }
+            }
+
+            fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
+                PyGCProtocol::__traverse__(self, vis)
+            }
+
+            fn __clear__(&mut self) {
+                PyGCProtocol::__clear__(self)
             }
         }
 
@@ -944,7 +911,7 @@ custom_hash_map_iter_impl!(
     graph. It behaves as a drop in replacement for a readonly ``dict``.
     "
 );
-default_pygc_protocol_impl!(Pos2DMapping);
+impl PyGCProtocol for Pos2DMapping {}
 
 custom_hash_map_iter_impl!(
     EdgeIndexMap,
@@ -969,7 +936,6 @@ custom_hash_map_iter_impl!(
     "
 );
 
-#[pyproto]
 impl PyGCProtocol for EdgeIndexMap {
     fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
         for edge in &self.edge_map {
@@ -1014,7 +980,7 @@ impl PyGCProtocol for EdgeIndexMap {
 ///     second_target = next(edges_iter)
 ///     second_path = edges[second_target]
 ///
-#[pyclass(module = "retworkx", gc)]
+#[pyclass(mapping, module = "retworkx")]
 #[derive(Clone)]
 pub struct PathMapping {
     pub paths: DictMap<usize, Vec<usize>>,
@@ -1066,17 +1032,37 @@ impl PathMapping {
             iter_pos: 0,
         }
     }
-}
 
-py_object_protocol_impl!(PathMapping, paths);
+    fn __richcmp__(&self, other: &PyAny, op: pyo3::basic::CompareOp) -> PyResult<bool> {
+        let compare = |other: &PyAny| -> PyResult<bool> {
+            Python::with_gil(|py| PyEq::eq(&self.paths, other, py))
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err("Comparison not implemented")),
+        }
+    }
 
-#[pyproto]
-impl PyMappingProtocol for PathMapping {
-    /// Return the number of nodes in the graph
+    fn __str__(&self) -> PyResult<String> {
+        Python::with_gil(|py| Ok(format!("PathMapping{}", self.paths.str(py)?)))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        Python::with_gil(|py| PyHash::hash(&self.paths, py, &mut hasher))?;
+
+        Ok(hasher.finish())
+    }
+
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.paths.len())
     }
-    fn __getitem__(&'p self, idx: usize) -> PyResult<NodeIndices> {
+
+    fn __getitem__(&self, idx: usize) -> PyResult<NodeIndices> {
         match self.paths.get(&idx) {
             Some(data) => Ok(NodeIndices {
                 nodes: data.clone(),
@@ -1084,30 +1070,24 @@ impl PyMappingProtocol for PathMapping {
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
-}
-
-#[pyproto]
-impl PySequenceProtocol for PathMapping {
-    fn __len__(&self) -> PyResult<usize> {
-        Ok(self.paths.len())
-    }
 
     fn __contains__(&self, index: usize) -> PyResult<bool> {
         Ok(self.paths.contains_key(&index))
     }
-}
 
-#[pyproto]
-impl PyIterProtocol for PathMapping {
     fn __iter__(slf: PyRef<Self>) -> PathMappingKeys {
         PathMappingKeys {
             path_keys: slf.paths.keys().copied().collect(),
             iter_pos: 0,
         }
     }
-}
 
-default_pygc_protocol_impl!(PathMapping);
+    fn __traverse__(&self, _vis: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
 
 py_iter_protocol_impl!(PathMappingKeys, path_keys, usize);
 py_iter_protocol_impl!(PathMappingValues, path_values, NodeIndices);
@@ -1123,7 +1103,7 @@ impl PyHash for PathMapping {
 impl PyEq<PyAny> for PathMapping {
     #[inline]
     fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
-        PyEq::eq(&self.paths, &other.to_object(py), py)
+        PyEq::eq(&self.paths, other, py)
     }
 }
 
@@ -1175,7 +1155,7 @@ custom_hash_map_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(PathLengthMapping);
+impl PyGCProtocol for PathLengthMapping {}
 
 impl PyHash for PathLengthMapping {
     fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
@@ -1187,7 +1167,7 @@ impl PyHash for PathLengthMapping {
 impl PyEq<PyAny> for PathLengthMapping {
     #[inline]
     fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
-        PyEq::eq(&self.path_lengths, &other.to_object(py), py)
+        PyEq::eq(&self.path_lengths, other, py)
     }
 }
 
@@ -1216,7 +1196,7 @@ custom_hash_map_iter_impl!(
     return as a read-only mapping/dict.
     "
 );
-default_pygc_protocol_impl!(CentralityMapping);
+impl PyGCProtocol for CentralityMapping {}
 
 custom_hash_map_iter_impl!(
     NodesCountMapping,
@@ -1259,7 +1239,7 @@ custom_hash_map_iter_impl!(
         second_path = edges[second_target]
     "
 );
-default_pygc_protocol_impl!(NodesCountMapping);
+impl PyGCProtocol for NodesCountMapping {}
 
 custom_hash_map_iter_impl!(
     AllPairsPathLengthMapping,
@@ -1295,7 +1275,7 @@ custom_hash_map_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(AllPairsPathLengthMapping);
+impl PyGCProtocol for AllPairsPathLengthMapping {}
 
 custom_hash_map_iter_impl!(
     AllPairsPathMapping,
@@ -1331,7 +1311,7 @@ custom_hash_map_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(AllPairsPathMapping);
+impl PyGCProtocol for AllPairsPathMapping {}
 
 custom_hash_map_iter_impl!(
     NodeMap,
@@ -1356,7 +1336,7 @@ custom_hash_map_iter_impl!(
     the object.
     "
 );
-default_pygc_protocol_impl!(NodeMap);
+impl PyGCProtocol for NodeMap {}
 
 custom_hash_map_iter_impl!(
     ProductNodeMap,
@@ -1378,7 +1358,7 @@ custom_hash_map_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(ProductNodeMap);
+impl PyGCProtocol for ProductNodeMap {}
 
 custom_hash_map_iter_impl!(
     BiconnectedComponents,
@@ -1401,4 +1381,4 @@ custom_hash_map_iter_impl!(
 
     "
 );
-default_pygc_protocol_impl!(BiconnectedComponents);
+impl PyGCProtocol for BiconnectedComponents {}
