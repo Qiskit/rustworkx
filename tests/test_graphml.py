@@ -44,7 +44,7 @@ class TestGraphML(unittest.TestCase):
             self.assertDictEqual(node_a, node_b)
 
         for ((s, t, data), edge) in zip(graph.weighted_edge_list(), edges):
-            assert (graph[s]["id"], graph[t]["id"]) == (edge[0], edge[1])
+            self.assertEqual((graph[s]["id"], graph[t]["id"]), (edge[0], edge[1]))
             self.assertDictEqual(data, edge[2])
 
     def assertGraphMLRaises(self, graph_xml):
