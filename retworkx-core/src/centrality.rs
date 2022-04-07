@@ -158,7 +158,7 @@ where
 }
 
 fn _rescale(
-    betweenness: &mut Vec<Option<f64>>,
+    betweenness: &mut [Option<f64>],
     node_count: usize,
     normalized: bool,
     directed: bool,
