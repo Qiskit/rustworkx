@@ -645,7 +645,7 @@ pub fn digraph_all_simple_paths(
 ///     indices to a list of paths between the source and target nodes.
 /// :rtype: AllPairsMultiplePathMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, size)")]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
 pub fn digraph_all_pairs_all_simple_paths(
     graph: &digraph::PyDiGraph,
     min_depth: Option<usize>,
@@ -673,7 +673,7 @@ pub fn digraph_all_pairs_all_simple_paths(
 ///     indices to a list of paths between the source and target nodes.
 /// :rtype: AllPairsMultiplePathMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, size)")]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
 pub fn graph_all_pairs_all_simple_paths(
     graph: &graph::PyGraph,
     min_depth: Option<usize>,
