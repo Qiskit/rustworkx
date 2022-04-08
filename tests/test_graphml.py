@@ -397,3 +397,62 @@ class TestGraphML(unittest.TestCase):
             """
         )
         self.assertGraphMLRaises(graph_xml)
+
+    def test_unsupported_nested_graphs(self):
+        graph_xml = self.HEADER.format(
+            """
+            <graph id="G" edgedefault="directed">
+            <node id="n0">
+                <graph id="n0:" edgedefault="undirected">
+                    <node id="n0::n0"/>
+                    <node id="n0::n1"/>
+                    <edge id="en" source="n0::n0" target="n0::n1"/>
+                </graph>
+            </node>
+            </graph>
+            """
+        )
+        self.assertGraphMLRaises(graph_xml)
+
+    def test_unsupported_hyperedges(self):
+        graph_xml = self.HEADER.format(
+            """
+            <graph id="G" edgedefault="directed">
+            <node id="n0"/>
+            <node id="n1"/>
+            <node id="n2"/>
+            <hyperedge>
+                <endpoint node="n0"/>
+                <endpoint node="n1"/>
+                <endpoint node="n2"/>
+            </hyperedge>
+            </graph>
+            """
+        )
+        self.assertGraphMLRaises(graph_xml)
+
+    def test_unsupported_ports(self):
+        graph_xml = self.HEADER.format(
+            """
+            <graph id="G" edgedefault="directed">
+            <node id="n0">
+                <port name="North"/>
+            </node>
+            </graph>
+            """
+        )
+        self.assertGraphMLRaises(graph_xml)
+
+    def test_unsupported_nested_ports(self):
+        graph_xml = self.HEADER.format(
+            """
+            <graph id="G" edgedefault="directed">
+            <node id="n0">
+                <port name="North">
+                    <port name="Snow"/>
+                </port>
+            </node>
+            </graph>
+            """
+        )
+        self.assertGraphMLRaises(graph_xml)

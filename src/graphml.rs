@@ -37,7 +37,7 @@ pub enum Error {
     Xml(String),
     ParseValue(String),
     NotFound(String),
-    UnSupportedAttribute(String),
+    UnSupported(String),
     InvalidDoc(String),
 }
 
@@ -76,7 +76,7 @@ impl From<Error> for PyErr {
             Error::Xml(msg)
             | Error::ParseValue(msg)
             | Error::NotFound(msg)
-            | Error::UnSupportedAttribute(msg)
+            | Error::UnSupported(msg)
             | Error::InvalidDoc(msg) => PyException::new_err(msg),
         }
     }
@@ -374,7 +374,7 @@ impl GraphML {
             b"directed" => Direction::Directed,
             b"undirected" => Direction::UnDirected,
             _ => {
-                return Err(Error::UnSupportedAttribute(String::from(
+                return Err(Error::InvalidDoc(String::from(
                     "Invalid 'edgedefault' attribute.",
                 )));
             }
@@ -422,7 +422,7 @@ impl GraphML {
             b"double" => Type::Double,
             b"string" => Type::String,
             _ => {
-                return Err(Error::UnSupportedAttribute(format!(
+                return Err(Error::InvalidDoc(format!(
                     "Invalid 'attr.type' attribute in key with id={}.",
                     id,
                 )));
@@ -445,7 +445,7 @@ impl GraphML {
                 Ok(Domain::Edge)
             }
             _ => {
-                return Err(Error::UnSupportedAttribute(format!(
+                return Err(Error::UnSupported(format!(
                     "Unsupported 'for' attribute in key with id={}.",
                     id,
                 )));
@@ -547,6 +547,14 @@ impl GraphML {
                             }
                         }
                     }
+                    b"hyperedge" => {
+                        return Err(Error::UnSupported(String::from(
+                            "Hyperedges are not supported.",
+                        )));
+                    }
+                    b"port" => {
+                        return Err(Error::UnSupported(String::from("Ports are not supported.")));
+                    }
                     _ => {}
                 },
                 Event::Empty(ref e) => match e.name() {
@@ -561,6 +569,9 @@ impl GraphML {
                     b"edge" => {
                         matches!(state, State::Graph);
                         graphml.add_edge(&reader, e)?;
+                    }
+                    b"port" => {
+                        return Err(Error::UnSupported(String::from("Ports are not supported.")));
                     }
                     _ => {}
                 },
