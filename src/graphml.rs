@@ -10,80 +10,74 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::convert::From;
 use std::io::BufRead;
 use std::iter::FromIterator;
+use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
+use std::str::ParseBoolError;
 
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 
 use quick_xml::events::{BytesStart, Event};
+use quick_xml::Error as XmlError;
 use quick_xml::Reader;
 
 use petgraph::algo;
 use petgraph::{Directed, Undirected};
 
+use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::PyErr;
 
-use self::error::Error;
 use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
 
-mod error {
-    use std::convert::From;
-    use std::num::{ParseFloatError, ParseIntError};
-    use std::str::ParseBoolError;
+pub enum Error {
+    Xml(String),
+    ParseValue(String),
+    NotFound(String),
+    UnSupportedAttribute(String),
+    InvalidDoc(String),
+}
 
-    use pyo3::exceptions::PyException;
-    use pyo3::PyErr;
-
-    use quick_xml::Error as XmlError;
-
-    pub enum Error {
-        Xml(String),
-        ParseValue(String),
-        NotFound(String),
-        UnSupportedAttribute(String),
-        InvalidDoc(String),
+impl From<XmlError> for Error {
+    #[inline]
+    fn from(e: XmlError) -> Error {
+        Error::Xml(format!("Xml document not well-formed: {}", e))
     }
+}
 
-    impl From<XmlError> for Error {
-        #[inline]
-        fn from(e: XmlError) -> Error {
-            Error::Xml(format!("Xml document not well-formed: {}", e))
-        }
+impl From<ParseBoolError> for Error {
+    #[inline]
+    fn from(e: ParseBoolError) -> Error {
+        Error::ParseValue(format!("Failed conversion to 'bool': {}", e))
     }
+}
 
-    impl From<ParseBoolError> for Error {
-        #[inline]
-        fn from(e: ParseBoolError) -> Error {
-            Error::ParseValue(format!("Failed conversion to 'bool': {}", e))
-        }
+impl From<ParseIntError> for Error {
+    #[inline]
+    fn from(e: ParseIntError) -> Error {
+        Error::ParseValue(format!("Failed conversion to 'int': {}", e))
     }
+}
 
-    impl From<ParseIntError> for Error {
-        #[inline]
-        fn from(e: ParseIntError) -> Error {
-            Error::ParseValue(format!("Failed conversion to 'int': {}", e))
-        }
+impl From<ParseFloatError> for Error {
+    #[inline]
+    fn from(e: ParseFloatError) -> Error {
+        Error::ParseValue(format!("Failed conversion to 'float' or 'double': {}", e))
     }
+}
 
-    impl From<ParseFloatError> for Error {
-        #[inline]
-        fn from(e: ParseFloatError) -> Error {
-            Error::ParseValue(format!("Failed conversion to 'float' or 'double': {}", e))
-        }
-    }
-
-    impl From<Error> for PyErr {
-        #[inline]
-        fn from(error: Error) -> PyErr {
-            match error {
-                Error::Xml(msg)
-                | Error::ParseValue(msg)
-                | Error::NotFound(msg)
-                | Error::UnSupportedAttribute(msg)
-                | Error::InvalidDoc(msg) => PyException::new_err(msg),
-            }
+impl From<Error> for PyErr {
+    #[inline]
+    fn from(error: Error) -> PyErr {
+        match error {
+            Error::Xml(msg)
+            | Error::ParseValue(msg)
+            | Error::NotFound(msg)
+            | Error::UnSupportedAttribute(msg)
+            | Error::InvalidDoc(msg) => PyException::new_err(msg),
         }
     }
 }
