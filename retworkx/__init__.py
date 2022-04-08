@@ -635,10 +635,11 @@ def all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
     with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
     ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
 
-    :param PyGraph graph: The graph to find all simple paths in
+    :param graph: The graph to find all simple paths in. This can be a :class:`~retworkx.PyGraph`
+        or a :class:`~retworkx.PyDiGraph`
     :param int min_depth: The minimum depth of the path to include in the output
         list of paths. By default all paths are included regardless of depth,
-        sett to 0 will behave like the default.
+        setting to 0 will behave like the default.
     :param int cutoff: The maximum depth of path to include in the output list
         of paths. By default includes all paths regardless of depth, setting to
         0 will behave like default.

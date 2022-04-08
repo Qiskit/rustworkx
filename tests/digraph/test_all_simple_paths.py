@@ -113,7 +113,7 @@ class TestDAGAllSimplePaths(unittest.TestCase):
         self.assertRaises(TypeError, retworkx.digraph_all_simple_paths, (dag, 0, 1))
 
 
-class TestDAGAllSimplePathsAllPairs(unittest.TestCase):
+class TestDiGraphAllSimplePathsAllPairs(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.edges = [

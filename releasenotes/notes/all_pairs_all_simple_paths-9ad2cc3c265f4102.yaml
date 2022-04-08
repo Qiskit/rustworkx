@@ -7,10 +7,10 @@ features:
     filter the results based on path lengths. For example::
 
         from retworkx.generators import grid_graph
-        from retworkx import find_all_pairs_all_simple_paths_of_size
+        from retworkx import all_pairs_all_simple_paths
 
         g = grid_graph(2, 3)
-        paths = find_all_pairs_all_simple_paths_of_size(g, min_depth=3, cutoff=3)
+        paths = all_pairs_all_simple_paths(g, min_depth=3, cutoff=3)
 
     will return a dictionary of dictionaries where the 2 dictionary keys are the
     node indices and the inner value is the list of all simple paths of length
