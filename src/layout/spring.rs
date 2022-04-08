@@ -169,7 +169,7 @@ impl CoolingScheme for LinearCoolingScheme {
 }
 
 // Rescale so that pos in [-scale, scale].
-pub fn rescale(pos: &mut Vec<Point>, scale: Nt, indices: Vec<usize>) {
+pub fn rescale(pos: &mut [Point], scale: Nt, indices: Vec<usize>) {
     let n = indices.len();
     if n == 0 {
         return;
@@ -205,7 +205,7 @@ pub fn rescale(pos: &mut Vec<Point>, scale: Nt, indices: Vec<usize>) {
     }
 }
 
-pub fn recenter(pos: &mut Vec<Point>, center: Point) {
+pub fn recenter(pos: &mut [Point], center: Point) {
     for [px, py] in pos.iter_mut() {
         *px += center[0];
         *py += center[1];
