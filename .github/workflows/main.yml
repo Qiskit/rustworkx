@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - run: pip install -U flake8 black==21.5b0
+      - run: pip install -U flake8 black~=22.0
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
