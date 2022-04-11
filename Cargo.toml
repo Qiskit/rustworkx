@@ -29,7 +29,7 @@ rayon = "1.5"
 num-traits = "0.2"
 num-bigint = "0.4"
 num-complex = "0.4"
-retworkx-core = { path = "./retworkx-core" }
+retworkx-core = { path = "retworkx-core", version = "=0.11.0" }
 
 [dependencies.pyo3]
 version = "0.15.1"
