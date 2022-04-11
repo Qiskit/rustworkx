@@ -20,6 +20,7 @@ use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, Invalid
 
 use hashbrown::{HashMap, HashSet};
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
@@ -644,14 +645,27 @@ pub fn digraph_all_simple_paths(
 /// :returns: A mapping of source node indices to a mapping of target node
 ///     indices to a list of paths between the source and target nodes.
 /// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
 pub fn digraph_all_pairs_all_simple_paths(
     graph: &digraph::PyDiGraph,
     min_depth: Option<usize>,
     cutoff: Option<usize>,
-) -> AllPairsMultiplePathMapping {
-    all_pairs_all_simple_paths::all_pairs_all_simple_paths(&graph.graph, min_depth, cutoff)
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
 }
 
 /// Return all the simple paths between all pairs of nodes in the graph
@@ -672,14 +686,27 @@ pub fn digraph_all_pairs_all_simple_paths(
 /// :returns: A mapping of node indices to to a mapping of target node
 ///     indices to a list of paths between the source and target nodes.
 /// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
 pub fn graph_all_pairs_all_simple_paths(
     graph: &graph::PyGraph,
     min_depth: Option<usize>,
     cutoff: Option<usize>,
-) -> AllPairsMultiplePathMapping {
-    all_pairs_all_simple_paths::all_pairs_all_simple_paths(&graph.graph, min_depth, cutoff)
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
 }
 
 /// Return the core number for each node in the graph.
