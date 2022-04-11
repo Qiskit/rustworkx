@@ -43,8 +43,8 @@ class TestBinomialTreeGraph(unittest.TestCase):
         for n in range(5):
             with self.subTest(n=n):
                 graph = retworkx.generators.binomial_tree_graph(n)
-                self.assertEqual(len(graph), 2 ** n)
-                self.assertEqual(len(graph.edges()), 2 ** n - 1)
+                self.assertEqual(len(graph), 2**n)
+                self.assertEqual(len(graph.edges()), 2**n - 1)
                 self.assertEqual(list(graph.edge_list()), expected_edges[n])
 
     def test_binomial_tree_graph_weights(self):
@@ -103,8 +103,8 @@ class TestBinomialTreeGraph(unittest.TestCase):
         for n in range(5):
             with self.subTest(n=n):
                 graph = retworkx.generators.directed_binomial_tree_graph(n)
-                self.assertEqual(len(graph), 2 ** n)
-                self.assertEqual(len(graph.edges()), 2 ** n - 1)
+                self.assertEqual(len(graph), 2**n)
+                self.assertEqual(len(graph.edges()), 2**n - 1)
                 self.assertEqual(list(graph.edge_list()), expected_edges[n])
 
     def test_directed_binomial_tree_graph_weights(self):
