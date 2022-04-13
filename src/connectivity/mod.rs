@@ -654,10 +654,10 @@ pub fn digraph_all_pairs_all_simple_paths(
     min_depth: Option<usize>,
     cutoff: Option<usize>,
 ) -> PyResult<AllPairsMultiplePathMapping> {
-    if min_depth < Some(2) {
+    if min_depth.is_some() && min_depth < Some(2) {
         return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
     }
-    if cutoff < Some(2) {
+    if cutoff.is_some() && cutoff < Some(2) {
         return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
     }
 
@@ -695,10 +695,10 @@ pub fn graph_all_pairs_all_simple_paths(
     min_depth: Option<usize>,
     cutoff: Option<usize>,
 ) -> PyResult<AllPairsMultiplePathMapping> {
-    if min_depth < Some(2) {
+    if min_depth.is_some() && min_depth < Some(2) {
         return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
     }
-    if cutoff < Some(2) {
+    if cutoff.is_some() && cutoff < Some(2) {
         return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
     }
 

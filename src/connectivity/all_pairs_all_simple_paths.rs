@@ -12,9 +12,9 @@
 
 use rayon::prelude::*;
 
-use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::EdgeType;
+use retworkx_core::connectivity::all_simple_paths_multiple_targets;
 
 use crate::iterators::{AllPairsMultiplePathMapping, MultiplePathMapping};
 use crate::StablePyGraph;
@@ -50,44 +50,30 @@ pub fn all_pairs_all_simple_paths<Ty: EdgeType + Sync>(
     };
     let intermediate_cutoff = cutoff.map(|depth| depth - 2);
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+    let node_index_set = node_indices.iter().copied().collect();
     AllPairsMultiplePathMapping {
         paths: node_indices
             .par_iter()
-            .filter_map(|u| {
+            .map(|u| {
                 let out_paths = MultiplePathMapping {
-                    paths: node_indices
-                        .iter()
-                        .filter_map(|v| {
-                            let output: Vec<Vec<usize>> = algo::all_simple_paths(
-                                graph,
-                                *u,
-                                *v,
-                                intermediate_min,
-                                intermediate_cutoff,
-                            )
-                            .into_iter()
-                            .filter_map(|v: Vec<NodeIndex>| -> Option<Vec<usize>> {
-                                if v.is_empty() {
-                                    return None;
-                                }
-                                let out_vec: Vec<usize> =
-                                    v.into_iter().map(|i| i.index()).collect();
-                                Some(out_vec)
-                            })
+                    paths: all_simple_paths_multiple_targets(
+                        graph,
+                        *u,
+                        &node_index_set,
+                        intermediate_min,
+                        intermediate_cutoff,
+                    )
+                    .iter()
+                    .map(|(v, path)| {
+                        let output: Vec<Vec<usize>> = path
+                            .iter()
+                            .map(|v| v.iter().map(|i| i.index()).collect())
                             .collect();
-                            if output.is_empty() {
-                                None
-                            } else {
-                                Some((v.index(), output))
-                            }
-                        })
-                        .collect(),
+                        (v.index(), output)
+                    })
+                    .collect(),
                 };
-                if out_paths.paths.is_empty() {
-                    None
-                } else {
-                    Some((u.index(), out_paths))
-                }
+                (u.index(), out_paths)
             })
             .collect(),
     }

@@ -15,3 +15,11 @@ features:
     will return a dictionary of dictionaries where the 2 dictionary keys are the
     node indices and the inner value is the list of all simple paths of length
     3 between those 2 nodes.
+  - |
+    The retworkx-core ``connectivity`` module has a new function
+    ``all_simple_paths_multiple_targets`` this is similar to the
+    ``all_simple_paths()`` method in petgraph's ``algo`` module but instead of
+    returning an iterator that will yield the all the simple path from a source
+    to the target node it instead will build a ``DictMap`` of all the simple
+    paths from a source node to all targets in a provided ``HashSet`` of target
+    node indices.
