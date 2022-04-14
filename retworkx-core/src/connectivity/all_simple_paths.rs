@@ -91,7 +91,7 @@ where
                 if !visited.contains(&child) {
                     if to.contains(&child) && visited.len() >= min_length {
                         let new_path: Vec<G::NodeId> =
-                            visited.iter().copied().chain([child]).collect();
+                            visited.iter().chain(&[child]).copied().collect();
                         match output.entry(child) {
                             Entry::Vacant(e) => {
                                 e.insert(vec![new_path]);
@@ -110,7 +110,8 @@ where
                 temp.insert(child);
                 for c in temp {
                     if to.contains(&c) && !visited.contains(&c) && visited.len() >= min_length {
-                        let new_path: Vec<G::NodeId> = visited.iter().cloned().chain([c]).collect();
+                        let new_path: Vec<G::NodeId> =
+                            visited.iter().chain(&[c]).copied().collect();
                         match output.entry(c) {
                             Entry::Vacant(e) => {
                                 e.insert(vec![new_path]);
