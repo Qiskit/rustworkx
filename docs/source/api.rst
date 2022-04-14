@@ -146,6 +146,8 @@ Connectivity and Cycles
    retworkx.articulation_points
    retworkx.biconnected_components
    retworkx.chain_decomposition
+   retworkx.all_simple_paths
+   retworkx.all_pairs_all_simple_paths
 
 .. _graph-ops:
 
@@ -168,12 +170,10 @@ Other Algorithm Functions
    :toctree: apiref
 
    retworkx.adjacency_matrix
-   retworkx.all_simple_paths
    retworkx.transitivity
    retworkx.core_number
    retworkx.graph_greedy_color
    retworkx.metric_closure
-   retworkx.all_pairs_all_simple_paths
 
 .. _generator_funcs:
 
