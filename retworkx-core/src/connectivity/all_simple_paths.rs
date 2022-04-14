@@ -103,7 +103,11 @@ where
                         }
                     }
                     visited.insert(child);
-                    stack.push(graph.neighbors_directed(child, Outgoing));
+                    if to.iter().any(|n| !visited.contains(n)) {
+                        stack.push(graph.neighbors_directed(child, Outgoing));
+                    } else {
+                        visited.pop();
+                    }
                 }
             // visited.len() == max_length
             } else {
