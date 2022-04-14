@@ -237,10 +237,10 @@ class TestGraphAllSimplePathsAllPairs(unittest.TestCase):
         self.assertEqual(paths, expected)
 
     def test_all_simple_path_no_path(self):
-        dag = retworkx.PyGraph()
-        dag.add_node(0)
-        dag.add_node(1)
-        self.assertEqual({0: {}, 1: {}}, retworkx.all_pairs_all_simple_paths(dag))
+        graph = retworkx.PyGraph()
+        graph.add_node(0)
+        graph.add_node(1)
+        self.assertEqual({0: {}, 1: {}}, retworkx.all_pairs_all_simple_paths(graph))
 
     def test_all_simple_paths_empty(self):
-        self.assertEqual({}, retworkx.all_pairs_all_simple_paths(retworkx.PyDiGraph()))
+        self.assertEqual({}, retworkx.all_pairs_all_simple_paths(retworkx.PyGraph()))
