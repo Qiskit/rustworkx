@@ -681,7 +681,7 @@ pub fn digraph_all_pairs_all_simple_paths(
 ///     setting to 0 will behave like the default.
 /// :param int cutoff: The maximum depth of path to include in the output list
 ///     of paths. By default includes all paths regardless of depth, setting to
-///     0 will behave like default.//
+///     0 will behave like default.
 ///
 /// :returns: A mapping of node indices to to a mapping of target node
 ///     indices to a list of paths between the source and target nodes.

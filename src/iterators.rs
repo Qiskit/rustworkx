@@ -1418,7 +1418,7 @@ custom_hash_map_iter_impl!(
     MultiplePathMapping,
     "A custom class for the return of multiple paths for all pairs of nodes in a graph
 
-    This class is a read-only mapping of intiger node indices to a :class:`~.MultiplePathMapping`
+    This class is a read-only mapping of integer node indices to a :class:`~.MultiplePathMapping`
     of the form::
 
         {0: {1: [[0, 1], [0, 2, 1]], 2: [[0, 2]]}}
