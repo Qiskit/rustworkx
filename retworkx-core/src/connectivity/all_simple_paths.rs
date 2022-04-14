@@ -22,6 +22,7 @@ use indexmap::map::Entry;
 use indexmap::IndexSet;
 use petgraph::visit::{IntoNeighborsDirected, NodeCount};
 use petgraph::Direction::Outgoing;
+use std::iter;
 use std::{hash::Hash, iter::FromIterator};
 
 use crate::dictmap::*;
@@ -106,9 +107,7 @@ where
                 }
             // visited.len() == max_length
             } else {
-                let mut temp: IndexSet<G::NodeId> = children.collect();
-                temp.insert(child);
-                for c in temp {
+                for c in children.chain(iter::once(child)) {
                     if to.contains(&c) && !visited.contains(&c) && visited.len() >= min_length {
                         let new_path: Vec<G::NodeId> =
                             visited.iter().chain(&[c]).copied().collect();
