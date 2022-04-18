@@ -236,101 +236,99 @@ impl PyGraph {
                     .unwrap();
                 self.graph.add_node(node_w);
             }
+        } else if nodes_lst.len() == 1 {
+            // graph has only one node, handle logic here to save one if in the loop later
+            let item = nodes_lst
+                .get_item(0)
+                .unwrap()
+                .downcast::<PyTuple>()
+                .unwrap();
+            let node_idx: usize = item.get_item(0).unwrap().extract().unwrap();
+            let node_w = item.get_item(1).unwrap().extract().unwrap();
+
+            for _i in 0..node_idx {
+                self.graph.add_node(py.None());
+            }
+            self.graph.add_node(node_w);
+            for i in 0..node_idx {
+                self.graph.remove_node(NodeIndex::new(i));
+            }
         } else {
-            if nodes_lst.len() == 1 {
-                // graph has only one node, handle logic here to save one if in the loop later
-                let item = nodes_lst
-                    .get_item(0)
-                    .unwrap()
-                    .downcast::<PyTuple>()
-                    .unwrap();
-                let node_idx: usize = item.get_item(0).unwrap().extract().unwrap();
-                let node_w = item.get_item(1).unwrap().extract().unwrap();
+            let last_item = nodes_lst
+                .get_item(nodes_lst.len() - 1)
+                .unwrap()
+                .downcast::<PyTuple>()
+                .unwrap();
 
-                for _i in 0..node_idx {
-                    self.graph.add_node(py.None());
-                }
-                self.graph.add_node(node_w);
-                for i in 0..node_idx {
-                    self.graph.remove_node(NodeIndex::new(i));
-                }
-            } else {
-                let last_item = nodes_lst
-                    .get_item(nodes_lst.len() - 1)
-                    .unwrap()
-                    .downcast::<PyTuple>()
-                    .unwrap();
+            // use a pointer to iter the node list
+            let mut pointer = 0;
+            let mut next_node_idx: usize = nodes_lst
+                .get_item(pointer)
+                .unwrap()
+                .downcast::<PyTuple>()
+                .unwrap()
+                .get_item(0)
+                .unwrap()
+                .downcast::<PyLong>()
+                .unwrap()
+                .extract()
+                .unwrap();
 
-                // use a pointer to iter the node list
-                let mut pointer = 0;
-                let mut next_node_idx: usize = nodes_lst
-                    .get_item(pointer)
-                    .unwrap()
-                    .downcast::<PyTuple>()
-                    .unwrap()
-                    .get_item(0)
-                    .unwrap()
-                    .downcast::<PyLong>()
-                    .unwrap()
-                    .extract()
-                    .unwrap();
+            // list of temporary nodes that will be removed later to re-create holes
+            let node_bound_1: usize = last_item.get_item(0).unwrap().extract().unwrap();
+            let mut tmp_nodes: Vec<NodeIndex> =
+                Vec::with_capacity(node_bound_1 + 1 - nodes_lst.len());
 
-                // list of temporary nodes that will be removed later to re-create holes
-                let node_bound_1: usize = last_item.get_item(0).unwrap().extract().unwrap();
-                let mut tmp_nodes: Vec<NodeIndex> =
-                    Vec::with_capacity(node_bound_1 + 1 - nodes_lst.len());
+            let second_last_node_idx: usize = nodes_lst
+                .get_item(nodes_lst.len() - 2)
+                .unwrap()
+                .downcast::<PyTuple>()
+                .unwrap()
+                .get_item(0)
+                .unwrap()
+                .downcast::<PyLong>()
+                .unwrap()
+                .extract()
+                .unwrap();
 
-                let second_last_node_idx: usize = nodes_lst
-                    .get_item(nodes_lst.len() - 2)
-                    .unwrap()
-                    .downcast::<PyTuple>()
-                    .unwrap()
-                    .get_item(0)
-                    .unwrap()
-                    .downcast::<PyLong>()
-                    .unwrap()
-                    .extract()
-                    .unwrap();
-
-                for i in 0..(second_last_node_idx + 1) {
-                    if i < next_node_idx {
-                        // node does not exist
-                        let tmp_node = self.graph.add_node(py.None());
-                        tmp_nodes.push(tmp_node);
-                    } else {
-                        // add node to the graph, and update the next available node index
-                        let item = nodes_lst
-                            .get_item(pointer)
-                            .unwrap()
-                            .downcast::<PyTuple>()
-                            .unwrap();
-
-                        let node_w = item.get_item(1).unwrap().extract().unwrap();
-                        self.graph.add_node(node_w);
-                        pointer += 1;
-                        next_node_idx = nodes_lst
-                            .get_item(pointer)
-                            .unwrap()
-                            .downcast::<PyTuple>()
-                            .unwrap()
-                            .get_item(0)
-                            .unwrap()
-                            .downcast::<PyLong>()
-                            .unwrap()
-                            .extract()
-                            .unwrap();
-                    }
-                }
-
-                for _i in (second_last_node_idx + 1)..next_node_idx {
+            for i in 0..(second_last_node_idx + 1) {
+                if i < next_node_idx {
+                    // node does not exist
                     let tmp_node = self.graph.add_node(py.None());
                     tmp_nodes.push(tmp_node);
+                } else {
+                    // add node to the graph, and update the next available node index
+                    let item = nodes_lst
+                        .get_item(pointer)
+                        .unwrap()
+                        .downcast::<PyTuple>()
+                        .unwrap();
+
+                    let node_w = item.get_item(1).unwrap().extract().unwrap();
+                    self.graph.add_node(node_w);
+                    pointer += 1;
+                    next_node_idx = nodes_lst
+                        .get_item(pointer)
+                        .unwrap()
+                        .downcast::<PyTuple>()
+                        .unwrap()
+                        .get_item(0)
+                        .unwrap()
+                        .downcast::<PyLong>()
+                        .unwrap()
+                        .extract()
+                        .unwrap();
                 }
-                let last_node_w = last_item.get_item(1).unwrap().extract().unwrap();
-                self.graph.add_node(last_node_w);
-                for tmp_node in tmp_nodes {
-                    self.graph.remove_node(tmp_node);
-                }
+            }
+
+            for _i in (second_last_node_idx + 1)..next_node_idx {
+                let tmp_node = self.graph.add_node(py.None());
+                tmp_nodes.push(tmp_node);
+            }
+            let last_node_w = last_item.get_item(1).unwrap().extract().unwrap();
+            self.graph.add_node(last_node_w);
+            for tmp_node in tmp_nodes {
+                self.graph.remove_node(tmp_node);
             }
         }
 
