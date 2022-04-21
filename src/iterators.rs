@@ -481,7 +481,7 @@ macro_rules! custom_vec_iter_impl {
             fn __getitem__(&self, py: Python, idx: SliceOrInt) -> PyResult<PyObject> {
                 match idx {
                     SliceOrInt::Slice(slc) => {
-                        let len: i64 = self.$data.len().try_into().unwrap();
+                        let len = self.$data.len().try_into().unwrap();
                         let indices = slc.indices(len)?;
                         let start: usize = indices.start.try_into().unwrap();
                         let stop: usize = indices.stop.try_into().unwrap();
