@@ -48,6 +48,7 @@ use pyo3::class::iter::IterNextOutput;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
+use pyo3::types::PySlice;
 use pyo3::PyTraverseError;
 
 macro_rules! last_type {
@@ -406,6 +407,12 @@ trait PyGCProtocol {
     fn __clear__(&mut self) {}
 }
 
+#[derive(FromPyObject)]
+enum SliceOrInt<'a> {
+    Slice(&'a PySlice),
+    Int(isize),
+}
+
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
@@ -471,14 +478,32 @@ macro_rules! custom_vec_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __getitem__(&self, idx: isize) -> PyResult<$T> {
-                if idx.abs() >= self.$data.len().try_into().unwrap() {
-                    Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
-                } else if idx < 0 {
-                    let len = self.$data.len();
-                    Ok(self.$data[len - idx.abs() as usize].clone())
-                } else {
-                    Ok(self.$data[idx as usize].clone())
+            fn __getitem__(&self, py: Python, idx: SliceOrInt) -> PyResult<PyObject> {
+                match idx {
+                    SliceOrInt::Slice(slc) => {
+                        let len: i64 = self.$data.len().try_into().unwrap();
+                        let indices = slc.indices(len)?;
+                        let start: usize = indices.start.try_into().unwrap();
+                        let stop: usize = indices.stop.try_into().unwrap();
+                        let step: usize = indices.step.try_into().unwrap();
+                        let return_vec = $name {
+                            $data: (start..stop)
+                                .step_by(step)
+                                .map(|i| self.$data[i].clone())
+                                .collect(),
+                        };
+                        Ok(return_vec.into_py(py))
+                    }
+                    SliceOrInt::Int(idx) => {
+                        if idx.abs() >= self.$data.len().try_into().unwrap() {
+                            Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
+                        } else if idx < 0 {
+                            let len = self.$data.len();
+                            Ok(self.$data[len - idx.abs() as usize].clone().into_py(py))
+                        } else {
+                            Ok(self.$data[idx as usize].clone().into_py(py))
+                        }
+                    }
                 }
             }
 
