@@ -1,13 +1,75 @@
 use petgraph::{EdgeType, Directed};
 use petgraph::prelude::*;
-use pyo3::{PyObject};
 use pyo3::prelude::*;
 
 use super::spring::{recenter, rescale, Point};
 use crate::iterators::Pos2DMapping;
 use crate::StablePyGraph;
+use crate::Graph;
 use crate::connected_components;
 use retworkx_core::dictmap::*;
+
+pub struct CwCcw<T>  {
+    cw: Option<T>,
+    ccw: Option<T>,
+}
+
+impl<T> Default for CwCcw<T>  {
+    fn default() -> Self {
+        CwCcw { cw: None, ccw: None }
+    }
+}
+
+impl<T> CwCcw<T> {
+    fn new(cw: T, ccw: T) -> Self {
+        CwCcw {
+            cw: Some(cw),
+            ccw: Some(ccw),
+        }
+    }
+
+    fn cw_is_empty(&self) -> bool {
+        self.cw.is_none()
+    }
+
+    fn ccw_is_empty(&self) -> bool {
+        self.ccw.is_none()
+    }
+
+    fn cw_unwrap(self) -> T {
+        self.cw.unwrap()
+    }
+
+    fn ccw_unwrap(self) -> T {
+        self.ccw.unwrap()
+    }
+
+    fn cw_as_ref(&mut self) -> Option<&T> {
+        self.cw.as_ref()
+    }
+
+    fn ccw_as_ref(&mut self) -> Option<&T> {
+        self.ccw.as_ref()
+    }
+
+    fn cw_as_mut(&mut self) -> Option<&mut T> {
+        self.cw.as_mut()
+    }
+
+    fn cc_as_mut(&mut self) -> Option<&mut T> {
+        self.ccw.as_mut()
+    }
+}
+
+pub struct FirstNbr {
+    first_nbr: Option<NodeIndex>,
+}
+
+impl Default for FirstNbr {
+    fn default() -> Self {
+        FirstNbr { first_nbr: None }
+    }
+}
 
 pub fn planar_layout<Ty: EdgeType>(
     py: Python,
@@ -53,22 +115,22 @@ pub fn is_planar<Ty: EdgeType>(
 
 pub fn create_embedding<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
-    embedding: &mut StablePyGraph<Directed>,
+    embedding: &mut Graph<FirstNbr, CwCcw<NodeIndex>, Directed>,
 ) -> bool {
     // DEBUG CODE FOR TESTING BASIC EMBEDDING
-    for v in graph.node_indices() {
-        if v.index() < 5 {
-            println!("GRAPH {:?} {}", v, graph[v].clone());
-            embedding.add_node(graph[v].clone());
-        } else {
-            break;
-        }
-    }
+    // for v in graph.node_indices() {
+    //     if v.index() < 5 {
+    //         println!("GRAPH {:?} {}", v, graph[v].clone());
+    //         embedding.add_node(graph[v].clone());
+    //     } else {
+    //         break;
+    //     }
+    // }
     true
 }
 
 pub fn combinitorial_embedding_to_pos (
-    embedding: &StablePyGraph<Directed>,
+    embedding: &Graph<FirstNbr, CwCcw<NodeIndex>, Directed>,
     pos: &mut Vec<Point>,
 ){
     if embedding.node_count() < 4 {
@@ -81,33 +143,33 @@ pub fn combinitorial_embedding_to_pos (
 }
 
 pub fn triangulate_embedding (
-    embedding: &StablePyGraph<Directed>,
+    embedding: &Graph<FirstNbr, CwCcw<NodeIndex>, Directed>,
     fully_triangulate: bool,
 ) -> Vec<NodeIndex> {
     if embedding.node_count() <= 1 {
         return embedding.node_indices().map(|n| n).collect::<Vec<_>>();
     }
-    let component_nodes = connected_components(embedding);
+    //let component_nodes = connected_components(embedding);
     let outer_face = embedding.node_indices().map(|n| n).collect::<Vec<_>>();
     println!("DFLT {:?}", outer_face);
     outer_face
 }
 
 struct PlanarEmbedding {
-    embedding: StablePyGraph<Directed>,
+    embedding: Graph::<FirstNbr, CwCcw<NodeIndex>, Directed>,
 }
 
 impl Default for PlanarEmbedding {
     fn default () -> Self {
         PlanarEmbedding {
-            embedding: StablePyGraph::<Directed>::new(),
+            embedding: Graph::<FirstNbr, CwCcw<NodeIndex>, Directed>::new(),
         }
     }
 }
 impl PlanarEmbedding {
     pub fn new () -> Self {
         PlanarEmbedding {
-            embedding: StablePyGraph::<Directed>::new(),
+            embedding: Graph::<FirstNbr, CwCcw<NodeIndex>, Directed>::new(),
         }
     }
 
@@ -128,15 +190,16 @@ impl PlanarEmbedding {
     }
 
     fn add_half_edge_cw (
-        &self,
+        &mut self,
         start_node: NodeIndex,
         end_node: NodeIndex,
         ref_neighbor: Option<NodeIndex>
     ){
-        let weight: PyObject = "abc";
-        self.embedding.add_edge(start_node, end_node, weight);
+        let mut cw_weight = CwCcw::<NodeIndex>::default();
+        let new_edge = self.embedding.add_edge(start_node, end_node, cw_weight);
         if !ref_neighbor.is_none() {
-            self.embedding.add_edge(start_node, end_node, weight);
+            self.embedding[new_edge].cw = Some(end_node.clone());
+            //self.embedding.update_edge(start_node, end_node, upd_weight);
         }
     }
 
