@@ -1558,6 +1558,29 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, paral
 
 
 @functools.singledispatch
+def closeness_centrality(graph, wf_improved=True):
+    r"""Returns the closeness centrality of each node in the graph.
+
+    :param PyDiGraph graph: The input graph
+    :param bool wf_improved: If True, scale by the fraction of nodes reachable.
+
+    :returns: A dictionary mapping each node index to its closeness centrality.
+    :rtype: dict
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@closeness_centrality.register(PyDiGraph)
+def _digraph_closeness_centrality(graph, wf_improved=True):
+    return digraph_closeness_centrality(graph, wf_improved=wf_improved)
+
+
+@closeness_centrality.register(PyGraph)
+def _graph_closeness_centrality(graph, wf_improved=True):
+    return graph_closeness_centrality(graph, wf_improved=wf_improved)
+
+
+@functools.singledispatch
 def vf2_mapping(
     first,
     second,

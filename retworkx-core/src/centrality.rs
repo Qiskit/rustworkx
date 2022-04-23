@@ -14,14 +14,11 @@ use std::collections::VecDeque;
 use std::sync::RwLock;
 
 use hashbrown::HashMap;
+use petgraph::algo::dijkstra;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    GraphBase,
-    GraphProp, // allows is_directed
-    IntoNeighborsDirected,
-    IntoNodeIdentifiers,
-    NodeCount,
-    NodeIndexable,
+    GraphBase, GraphProp, IntoEdges, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
+    NodeCount, NodeIndexable, Reversed, Visitable,
 };
 use rayon::prelude::*;
 
@@ -296,4 +293,67 @@ where
         predecessors,
         sigma,
     }
+}
+
+/// Compute the closeness centrality of all nodes in a graph.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `wf_improved` - If True, scale by the fraction of nodes reachable.
+///
+/// # Example
+/// ```rust
+/// use retworkx_core::petgraph;
+/// use retworkx_core::centrality::closeness_centrality;
+///
+/// // Calculate the betweeness centrality of Graph
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
+/// ]);
+/// let output = closeness_centrality(&g, true);
+/// assert_eq!(
+///     vec![Some(1./2.), Some(2./3.), Some(4./7.), Some(2./3.), Some(4./5.)],
+///     output
+/// );
+///
+/// // Calculate the betweeness centrality of DiGraph
+/// let dg = petgraph::graph::Diraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
+/// ]);
+/// let output = closeness_centrality(&dg, true);
+/// assert_eq!(
+///     vec![Some(0.), Some(0.), Some(1./4.), Some(1./3.), Some(4./5.)],
+///     output
+/// );
+/// ```
+pub fn closeness_centrality<G>(graph: G, wf_improved: bool) -> Vec<Option<f64>>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + GraphBase<NodeId = NodeIndex>
+        + IntoEdges
+        + Visitable
+        + NodeCount
+        + IntoEdgesDirected,
+{
+    let max_index = graph.node_bound();
+    let mut betweenness: Vec<Option<f64>> = vec![None; max_index];
+    for node_s in graph.node_identifiers() {
+        let is = graph.to_index(node_s);
+        let dists = dijkstra(Reversed(&graph), node_s, None, |_| 1).into_values();
+        let reachable_node_count = dists.len();
+        if reachable_node_count == 1 {
+            betweenness[is] = Some(0.0);
+            continue;
+        }
+        let dists_sum: usize = dists.sum();
+        betweenness[is] = Some((reachable_node_count - 1) as f64 / dists_sum as f64);
+        if wf_improved {
+            let node_count = graph.node_count();
+            betweenness[is] = betweenness[is]
+                .map(|c| c * (reachable_node_count - 1) as f64 / (node_count - 1) as f64);
+        }
+    }
+    betweenness
 }

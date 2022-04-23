@@ -350,6 +350,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_closeness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
