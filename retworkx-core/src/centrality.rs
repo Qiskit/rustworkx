@@ -318,7 +318,7 @@ where
 /// );
 ///
 /// // Calculate the betweeness centrality of DiGraph
-/// let dg = petgraph::graph::Diraph::<i32, ()>::from_edges(&[
+/// let dg = petgraph::graph::DiGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
 /// let output = closeness_centrality(&dg, true);
