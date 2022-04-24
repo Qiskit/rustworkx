@@ -12,18 +12,34 @@
 
 use hashbrown::HashSet;
 use std::collections::VecDeque;
+use std::hash::Hash;
 
-use petgraph::visit::{GraphBase, VisitMap, Visitable};
+//use petgraph::visit::{GraphBase, VisitMap, Visitable};
 use petgraph::EdgeType;
 use petgraph::graph::Graph;
+use petgraph::{
+    visit::{
+        EdgeCount, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeIndexable,
+        Visitable, VisitMap,
+    },
+    Undirected,
+};
 
-use crate::Graph;
 
-pub fn bfs_undirected<Ty: EdgeType>(
-    graph: &Graph<Ty>,
-    start: <Graph<Ty> as GraphBase>::NodeId,
-    discovered: &mut <Graph<Ty> as Visitable>::Map,
-) -> HashSet<usize> {
+pub fn bfs_undirected(
+    graph: &Graph<(), (), Undirected>,
+    start: &Graph::NodeId,
+    discovered: &mut Graph::Map,
+) -> HashSet<usize>
+// where
+//     G: GraphProp<EdgeType = Undirected>
+//         + EdgeCount
+//         + IntoEdges
+//         + Visitable
+//         + NodeIndexable
+//         + IntoNodeIdentifiers,
+//     G::NodeId: Eq + Hash,
+{
     let mut component = HashSet::new();
     component.insert(start.index());
     let mut stack = VecDeque::new();
@@ -41,14 +57,21 @@ pub fn bfs_undirected<Ty: EdgeType>(
     component
 }
 
-pub fn connected_components<Ty>(graph: &Graph<Ty>) -> Vec<HashSet<usize>>
+pub fn connected_components<G>(graph: G)-> Vec<HashSet<usize>>
 where
-    Ty: EdgeType,
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers
+        + VisitMap<G>,
+    G::NodeId: Eq + Hash,
 {
     let mut conn_components = Vec::new();
     let mut discovered = graph.visit_map();
 
-    for start in graph.node_indices() {
+    for start in graph.node_identifiers() {
         if !discovered.visit(start) {
             continue;
         }
@@ -60,14 +83,20 @@ where
     conn_components
 }
 
-pub fn number_connected_components<Ty>(graph: &Graph<Ty>) -> usize
+pub fn number_connected_components<G>(graph: G)-> usize
 where
-    Ty: EdgeType,
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
 {
     let mut num_components = 0;
 
     let mut discovered = graph.visit_map();
-    for start in graph.node_indices() {
+    for start in graph.node_identifiers() {
         if !discovered.visit(start) {
             continue;
         }
