@@ -74,15 +74,3 @@ pub fn number_connected_components(
 
     num_components
 }
-
-#[test]
-fn test_connected_components() {
-    let mut graph = Graph::<(), (), Undirected>::from_edges(&[
-        (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4)
-    ]);
-    let components = connected_components(&mut graph);
-    let exp1: HashSet<usize> = [0, 1, 3, 2].iter().cloned().collect();
-    let exp2: HashSet<usize> = [7, 5, 4, 6].iter().cloned().collect();
-    let expected: Vec<_> = vec![exp1, exp2];
-    assert_eq!(expected, components);
-}
