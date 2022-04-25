@@ -19,3 +19,4 @@ mod conn_components;
 pub use biconnected::articulation_points;
 pub use chain::chain_decomposition;
 pub use conn_components::connected_components;
+pub use conn_components::number_connected_components;

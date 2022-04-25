@@ -12,34 +12,16 @@
 
 use hashbrown::HashSet;
 use std::collections::VecDeque;
-use std::hash::Hash;
 
-//use petgraph::visit::{GraphBase, VisitMap, Visitable};
-use petgraph::EdgeType;
-use petgraph::graph::Graph;
-use petgraph::{
-    visit::{
-        EdgeCount, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeIndexable,
-        Visitable, VisitMap,
-    },
-    Undirected,
-};
-
+use petgraph::graph::{Graph, NodeIndex};
+use petgraph::visit::{Visitable, VisitMap};
+use petgraph::Undirected;
 
 pub fn bfs_undirected(
-    graph: &Graph<(), (), Undirected>,
-    start: &Graph::NodeId,
-    discovered: &mut Graph::Map,
-) -> HashSet<usize>
-// where
-//     G: GraphProp<EdgeType = Undirected>
-//         + EdgeCount
-//         + IntoEdges
-//         + Visitable
-//         + NodeIndexable
-//         + IntoNodeIdentifiers,
-//     G::NodeId: Eq + Hash,
-{
+    graph: &mut Graph<(), (), Undirected>,
+    start: NodeIndex,
+    discovered: &mut <Graph<(), (), Undirected> as Visitable>::Map,
+) -> HashSet<usize> {
     let mut component = HashSet::new();
     component.insert(start.index());
     let mut stack = VecDeque::new();
@@ -57,21 +39,13 @@ pub fn bfs_undirected(
     component
 }
 
-pub fn connected_components<G>(graph: G)-> Vec<HashSet<usize>>
-where
-    G: GraphProp<EdgeType = Undirected>
-        + EdgeCount
-        + IntoEdges
-        + Visitable
-        + NodeIndexable
-        + IntoNodeIdentifiers
-        + VisitMap<G>,
-    G::NodeId: Eq + Hash,
-{
+pub fn connected_components(
+    graph: &mut Graph<(), (), Undirected>
+) -> Vec<HashSet<usize>> {
     let mut conn_components = Vec::new();
     let mut discovered = graph.visit_map();
 
-    for start in graph.node_identifiers() {
+    for start in graph.node_indices() {
         if !discovered.visit(start) {
             continue;
         }
@@ -83,20 +57,13 @@ where
     conn_components
 }
 
-pub fn number_connected_components<G>(graph: G)-> usize
-where
-    G: GraphProp<EdgeType = Undirected>
-        + EdgeCount
-        + IntoEdges
-        + Visitable
-        + NodeIndexable
-        + IntoNodeIdentifiers,
-    G::NodeId: Eq + Hash,
-{
+pub fn number_connected_components(
+    graph: &mut Graph<(), (), Undirected>
+) -> usize {
     let mut num_components = 0;
 
     let mut discovered = graph.visit_map();
-    for start in graph.node_identifiers() {
+    for start in graph.node_indices() {
         if !discovered.visit(start) {
             continue;
         }
@@ -106,4 +73,16 @@ where
     }
 
     num_components
+}
+
+#[test]
+fn test_connected_components() {
+    let mut graph = Graph::<(), (), Undirected>::from_edges(&[
+        (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4)
+    ]);
+    let components = connected_components(&mut graph);
+    let exp1: HashSet<usize> = [0, 1, 3, 2].iter().cloned().collect();
+    let exp2: HashSet<usize> = [7, 5, 4, 6].iter().cloned().collect();
+    let expected: Vec<_> = vec![exp1, exp2];
+    assert_eq!(expected, components);
 }
