@@ -45,9 +45,13 @@ mod tests {
             (7, 4),
         ]);
         let components = connected_components(&graph);
-        let exp1: HashSet<usize> = [0, 1, 3, 2].iter().cloned().collect();
-        let exp2: HashSet<usize> = [7, 5, 4, 6].iter().cloned().collect();
-        let expected: Vec<_> = vec![exp1, exp2];
+        let mut nodes1 = Vec::<NodeIndex>::new();
+        let mut nodes2 = Vec::<NodeIndex>::new();
+        for i in [0, 1, 3, 2] {nodes1.push(NodeIndex::new(i));}
+        for i in [7, 5, 4, 6] {nodes2.push(NodeIndex::new(i));}
+        let exp1: HashSet<NodeIndex> = nodes1.iter().cloned().collect();
+        let exp2: HashSet<NodeIndex> = nodes2.iter().cloned().collect();
+        let expected = vec![exp1, exp2];
         assert_eq!(expected, components);
     }
 }

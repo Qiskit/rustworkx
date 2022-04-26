@@ -36,7 +36,7 @@ pub fn bfs_undirected<G>(
     graph: G,
     start: G::NodeId,
     discovered: &mut G::Map,
-) -> HashSet<usize>
+) -> HashSet<G::NodeId>
 where
     G: GraphProp<EdgeType = Undirected>
         + EdgeCount
@@ -48,7 +48,7 @@ where
     G::NodeId: Eq + Hash,
 {
     let mut component = HashSet::new();
-    component.insert(graph.to_index(start));
+    component.insert(start);
     let mut stack = VecDeque::new();
     stack.push_front(start);
 
@@ -56,7 +56,7 @@ where
         for succ in graph.neighbors(node) {
             if discovered.visit(succ) {
                 stack.push_back(succ);
-                component.insert(graph.to_index(succ));
+                component.insert(succ);
             }
         }
     }
@@ -74,7 +74,7 @@ where
 /// :rtype: Vec<HashSet<usize>>
 pub fn connected_components<G>(
     graph: G,
-) -> Vec<HashSet<usize>>
+) -> Vec<HashSet<G::NodeId>>
 where
     G: GraphProp<EdgeType = Undirected>
         + EdgeCount
