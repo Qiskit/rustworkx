@@ -341,18 +341,22 @@ where
     let mut betweenness: Vec<Option<f64>> = vec![None; max_index];
     for node_s in graph.node_identifiers() {
         let is = graph.to_index(node_s);
-        let dists = dijkstra(Reversed(&graph), node_s, None, |_| 1).into_values();
-        let reachable_node_count = dists.len();
-        if reachable_node_count == 1 {
+        let map = dijkstra(Reversed(&graph), node_s, None, |_| 1);
+        let mut reachable_nodes_count = 0;
+        let mut dists_sum = 0;
+        for (_, &value) in map.iter() {
+            reachable_nodes_count += 1;
+            dists_sum += value;
+        }
+        if reachable_nodes_count == 1 {
             betweenness[is] = Some(0.0);
             continue;
         }
-        let dists_sum: usize = dists.sum();
-        betweenness[is] = Some((reachable_node_count - 1) as f64 / dists_sum as f64);
+        betweenness[is] = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
         if wf_improved {
             let node_count = graph.node_count();
             betweenness[is] = betweenness[is]
-                .map(|c| c * (reachable_node_count - 1) as f64 / (node_count - 1) as f64);
+                .map(|c| c * (reachable_nodes_count - 1) as f64 / (node_count - 1) as f64);
         }
     }
     betweenness
