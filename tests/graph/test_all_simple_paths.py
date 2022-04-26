@@ -176,3 +176,71 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         dag.add_node(0)
         dag.add_node(1)
         self.assertRaises(TypeError, retworkx.graph_all_simple_paths, (dag, 0, 1))
+
+
+class TestGraphAllSimplePathsAllPairs(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.graph = retworkx.generators.cycle_graph(4)
+
+    def test_all_simple_paths(self):
+        paths = retworkx.all_pairs_all_simple_paths(self.graph)
+        expected = {
+            0: {1: [[0, 1], [0, 3, 2, 1]], 2: [[0, 1, 2], [0, 3, 2]], 3: [[0, 1, 2, 3], [0, 3]]},
+            1: {2: [[1, 2], [1, 0, 3, 2]], 3: [[1, 2, 3], [1, 0, 3]], 0: [[1, 2, 3, 0], [1, 0]]},
+            2: {
+                3: [[2, 3], [2, 1, 0, 3]],
+                0: [[2, 3, 0], [2, 1, 0]],
+                1: [[2, 3, 0, 1], [2, 1]],
+            },
+            3: {0: [[3, 0], [3, 2, 1, 0]], 1: [[3, 0, 1], [3, 2, 1]], 2: [[3, 0, 1, 2], [3, 2]]},
+        }
+        self.assertEqual(paths, expected)
+
+    def test_all_simple_paths_min_depth(self):
+        paths = retworkx.all_pairs_all_simple_paths(self.graph, min_depth=3)
+        expected = {
+            0: {1: [[0, 3, 2, 1]], 2: [[0, 1, 2], [0, 3, 2]], 3: [[0, 1, 2, 3]]},
+            1: {2: [[1, 0, 3, 2]], 3: [[1, 2, 3], [1, 0, 3]], 0: [[1, 2, 3, 0]]},
+            2: {
+                3: [[2, 1, 0, 3]],
+                0: [[2, 3, 0], [2, 1, 0]],
+                1: [[2, 3, 0, 1]],
+            },
+            3: {0: [[3, 2, 1, 0]], 1: [[3, 0, 1], [3, 2, 1]], 2: [[3, 0, 1, 2]]},
+        }
+        self.assertEqual(paths, expected)
+
+    def test_all_simple_paths_with_cutoff(self):
+        paths = retworkx.all_pairs_all_simple_paths(self.graph, cutoff=3)
+        expected = {
+            0: {1: [[0, 1]], 2: [[0, 1, 2], [0, 3, 2]], 3: [[0, 3]]},
+            1: {2: [[1, 2]], 3: [[1, 2, 3], [1, 0, 3]], 0: [[1, 0]]},
+            2: {
+                3: [[2, 3]],
+                0: [[2, 3, 0], [2, 1, 0]],
+                1: [[2, 1]],
+            },
+            3: {0: [[3, 0]], 1: [[3, 0, 1], [3, 2, 1]], 2: [[3, 2]]},
+        }
+        self.assertEqual(paths, expected)
+
+    def test_all_simple_paths_with_min_depth_and_cutoff(self):
+        paths = retworkx.all_pairs_all_simple_paths(self.graph, min_depth=3, cutoff=3)
+        print(paths)
+        expected = {
+            0: {2: [[0, 1, 2], [0, 3, 2]]},
+            1: {3: [[1, 2, 3], [1, 0, 3]]},
+            2: {0: [[2, 3, 0], [2, 1, 0]]},
+            3: {1: [[3, 0, 1], [3, 2, 1]]},
+        }
+        self.assertEqual(paths, expected)
+
+    def test_all_simple_path_no_path(self):
+        graph = retworkx.PyGraph()
+        graph.add_node(0)
+        graph.add_node(1)
+        self.assertEqual({0: {}, 1: {}}, retworkx.all_pairs_all_simple_paths(graph))
+
+    def test_all_simple_paths_empty(self):
+        self.assertEqual({}, retworkx.all_pairs_all_simple_paths(retworkx.PyGraph()))
