@@ -12,11 +12,13 @@
 
 //! Module for connectivity and cut algorithms.
 
+mod all_simple_paths;
 mod biconnected;
 mod chain;
 mod conn_components;
 mod test_connectivity;
 
+pub use all_simple_paths::all_simple_paths_multiple_targets;
 pub use biconnected::articulation_points;
 pub use chain::chain_decomposition;
 pub use conn_components::connected_components;
