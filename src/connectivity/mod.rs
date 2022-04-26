@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+mod all_pairs_all_simple_paths;
 mod conn_components;
 mod core_number;
 
@@ -19,6 +20,7 @@ use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, Invalid
 
 use hashbrown::{HashMap, HashSet};
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
@@ -30,7 +32,7 @@ use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Vis
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{BiconnectedComponents, Chains, EdgeList};
+use crate::iterators::{AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList};
 use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -623,6 +625,88 @@ pub fn digraph_all_simple_paths(
     .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
     .collect();
     Ok(result)
+}
+
+/// Return all the simple paths between all pairs of nodes in the graph
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyDiGraph graph: The graph to find all simple paths in
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A mapping of source node indices to a mapping of target node
+///     indices to a list of paths between the source and target nodes.
+/// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+pub fn digraph_all_pairs_all_simple_paths(
+    graph: &digraph::PyDiGraph,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth.is_some() && min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff.is_some() && cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
+}
+
+/// Return all the simple paths between all pairs of nodes in the graph
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyGraph graph: The graph to find all simple paths in
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A mapping of node indices to to a mapping of target node
+///     indices to a list of paths between the source and target nodes.
+/// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+pub fn graph_all_pairs_all_simple_paths(
+    graph: &graph::PyGraph,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth.is_some() && min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff.is_some() && cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
 }
 
 /// Return the core number for each node in the graph.
