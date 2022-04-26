@@ -16,8 +16,8 @@ use std::hash::Hash;
 
 use petgraph::{
     visit::{
-        EdgeCount, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeIndexable,
-        Visitable, VisitMap, IntoNodeReferences
+        EdgeCount, GraphProp, IntoEdges, IntoNodeIdentifiers, IntoNodeReferences, NodeIndexable,
+        VisitMap, Visitable,
     },
     Undirected,
 };
@@ -32,11 +32,7 @@ use petgraph::{
 ///
 /// :return: A set of connected components for the start node
 /// :rtype: HashSet<usize>
-pub fn bfs_undirected<G>(
-    graph: G,
-    start: G::NodeId,
-    discovered: &mut G::Map,
-) -> HashSet<G::NodeId>
+pub fn bfs_undirected<G>(graph: G, start: G::NodeId, discovered: &mut G::Map) -> HashSet<G::NodeId>
 where
     G: GraphProp<EdgeType = Undirected>
         + EdgeCount
@@ -72,9 +68,7 @@ where
 ///
 /// :return: A list of all the sets of connected components.
 /// :rtype: Vec<HashSet<usize>>
-pub fn connected_components<G>(
-    graph: G,
-) -> Vec<HashSet<G::NodeId>>
+pub fn connected_components<G>(graph: G) -> Vec<HashSet<G::NodeId>>
 where
     G: GraphProp<EdgeType = Undirected>
         + EdgeCount
@@ -108,9 +102,7 @@ where
 ///
 /// :return: The number of connected components.
 /// :rtype: usize
-pub fn number_connected_components<G>(
-    graph: G,
-) -> usize
+pub fn number_connected_components<G>(graph: G) -> usize
 where
     G: GraphProp<EdgeType = Undirected>
         + EdgeCount
