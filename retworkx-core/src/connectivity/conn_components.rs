@@ -14,9 +14,19 @@ use hashbrown::HashSet;
 use std::collections::VecDeque;
 
 use petgraph::graph::{Graph, NodeIndex};
-use petgraph::visit::{Visitable, VisitMap};
+use petgraph::visit::{VisitMap, Visitable};
 use petgraph::Undirected;
 
+/// Given an undirected graph, a start node and the visit_map for
+/// the graph, this function returns a connected component set.
+///
+/// :param Graph graph: The input graph to find the connected
+///     components for.
+/// :param NodeIndex start: The node to start from.
+/// :param Visitable::Map discovered: The visit map for the graph.
+///
+/// :return: A set of connected components for the start node
+/// :rtype: HashSet<usize>
 pub fn bfs_undirected(
     graph: &mut Graph<(), (), Undirected>,
     start: NodeIndex,
@@ -39,9 +49,15 @@ pub fn bfs_undirected(
     component
 }
 
-pub fn connected_components(
-    graph: &mut Graph<(), (), Undirected>
-) -> Vec<HashSet<usize>> {
+/// Given an undirected graph, find a list of all the
+/// connected components.
+///
+/// :param Graph graph: The input graph to find the connected
+///     components for.
+///
+/// :return: A list of all the sets of connected components.
+/// :rtype: Vec<HashSet<usize>>
+pub fn connected_components(graph: &mut Graph<(), (), Undirected>) -> Vec<HashSet<usize>> {
     let mut conn_components = Vec::new();
     let mut discovered = graph.visit_map();
 
@@ -57,9 +73,15 @@ pub fn connected_components(
     conn_components
 }
 
-pub fn number_connected_components(
-    graph: &mut Graph<(), (), Undirected>
-) -> usize {
+/// Given an undirected graph, find a the number of
+/// connected components.
+///
+/// :param Graph graph: The input graph to find the number of connected
+///     components for.
+///
+/// :return: The number of connected components.
+/// :rtype: usize
+pub fn number_connected_components(graph: &mut Graph<(), (), Undirected>) -> usize {
     let mut num_components = 0;
 
     let mut discovered = graph.visit_map();
