@@ -21,20 +21,20 @@ mod tests {
 
     #[test]
     fn test_number_connected() {
-        let mut graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (3, 4)]);
-        assert_eq!(number_connected_components(&mut graph), 2);
+        let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (3, 4)]);
+        assert_eq!(number_connected_components(&graph), 2);
     }
 
     #[test]
     fn test_number_node_holes() {
         let mut graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2)]);
         graph.remove_node(NodeIndex::new(1));
-        assert_eq!(number_connected_components(&mut graph), 2);
+        assert_eq!(number_connected_components(&graph), 2);
     }
 
     #[test]
     fn test_connected_components() {
-        let mut graph = Graph::<(), (), Undirected>::from_edges(&[
+        let graph = Graph::<(), (), Undirected>::from_edges(&[
             (0, 1),
             (1, 2),
             (2, 3),
@@ -44,7 +44,7 @@ mod tests {
             (6, 7),
             (7, 4),
         ]);
-        let components = connected_components(&mut graph);
+        let components = connected_components(&graph);
         let exp1: HashSet<usize> = [0, 1, 3, 2].iter().cloned().collect();
         let exp2: HashSet<usize> = [7, 5, 4, 6].iter().cloned().collect();
         let expected: Vec<_> = vec![exp1, exp2];

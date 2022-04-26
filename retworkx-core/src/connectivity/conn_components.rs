@@ -12,10 +12,15 @@
 
 use hashbrown::HashSet;
 use std::collections::VecDeque;
+use std::hash::Hash;
 
-use petgraph::graph::{Graph, NodeIndex};
-use petgraph::visit::{VisitMap, Visitable};
-use petgraph::Undirected;
+use petgraph::{
+    visit::{
+        EdgeCount, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeIndexable,
+        Visitable, VisitMap, IntoNodeReferences
+    },
+    Undirected,
+};
 
 /// Given an undirected graph, a start node and the visit_map for
 /// the graph, this function returns a connected component set.
@@ -27,21 +32,31 @@ use petgraph::Undirected;
 ///
 /// :return: A set of connected components for the start node
 /// :rtype: HashSet<usize>
-pub fn bfs_undirected(
-    graph: &mut Graph<(), (), Undirected>,
-    start: NodeIndex,
-    discovered: &mut <Graph<(), (), Undirected> as Visitable>::Map,
-) -> HashSet<usize> {
+pub fn bfs_undirected<G>(
+    graph: G,
+    start: G::NodeId,
+    discovered: &mut G::Map,
+) -> HashSet<usize>
+where
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNodeReferences,
+    G::NodeId: Eq + Hash,
+{
     let mut component = HashSet::new();
-    component.insert(start.index());
+    component.insert(graph.to_index(start));
     let mut stack = VecDeque::new();
     stack.push_front(start);
 
     while let Some(node) = stack.pop_front() {
-        for succ in graph.neighbors_undirected(node) {
+        for succ in graph.neighbors(node) {
             if discovered.visit(succ) {
                 stack.push_back(succ);
-                component.insert(succ.index());
+                component.insert(graph.to_index(succ));
             }
         }
     }
@@ -57,11 +72,23 @@ pub fn bfs_undirected(
 ///
 /// :return: A list of all the sets of connected components.
 /// :rtype: Vec<HashSet<usize>>
-pub fn connected_components(graph: &mut Graph<(), (), Undirected>) -> Vec<HashSet<usize>> {
+pub fn connected_components<G>(
+    graph: G,
+) -> Vec<HashSet<usize>>
+where
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNodeReferences,
+    G::NodeId: Eq + Hash,
+{
     let mut conn_components = Vec::new();
     let mut discovered = graph.visit_map();
 
-    for start in graph.node_indices() {
+    for start in graph.node_identifiers() {
         if !discovered.visit(start) {
             continue;
         }
@@ -81,11 +108,23 @@ pub fn connected_components(graph: &mut Graph<(), (), Undirected>) -> Vec<HashSe
 ///
 /// :return: The number of connected components.
 /// :rtype: usize
-pub fn number_connected_components(graph: &mut Graph<(), (), Undirected>) -> usize {
+pub fn number_connected_components<G>(
+    graph: G,
+) -> usize
+where
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNodeReferences,
+    G::NodeId: Eq + Hash,
+{
     let mut num_components = 0;
 
     let mut discovered = graph.visit_map();
-    for start in graph.node_indices() {
+    for start in graph.node_identifiers() {
         if !discovered.visit(start) {
             continue;
         }
