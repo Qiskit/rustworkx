@@ -168,7 +168,6 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         slice_return = indices[-1:-3:-1]
         self.assertEqual([4, 3], slice_return)
         slice_return = indices[3:1:-2]
-        print(slice_return)
         self.assertEqual([3], slice_return)
         slice_return = indices[-3:-1]
         self.assertEqual([2, 3], slice_return)
