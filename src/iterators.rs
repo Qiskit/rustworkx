@@ -495,7 +495,8 @@ macro_rules! custom_vec_iter_impl {
                         Ok(return_vec.into_py(py))
                     }
                     SliceOrInt::Int(idx) => {
-                        if idx.abs() >= self.$data.len().try_into().unwrap() {
+                        let len = self.$data.len() as isize;
+                        if idx >= len || idx < -len {
                             Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
                         } else if idx < 0 {
                             let len = self.$data.len();
