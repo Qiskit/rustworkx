@@ -1561,8 +1561,31 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, paral
 def closeness_centrality(graph, wf_improved=True):
     r"""Returns the closeness centrality of each node in the graph.
 
+    The closeness centrality of a node :math:`u` is the reciprocal of the
+    average shortest path distance to :math:`u` over all :math:`n-1` reachable
+    nodes.
+
+    .. math::
+
+        C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+
+    where :math:`d(v, u)` is the shortest-path distance between :math:`v` and
+    :math:`u`, and :math:`n` is the number of nodes that can reach :math:`u`.
+
+    Wasserman and Faust propose an improved formula for graphs with more than
+    one connected component. The result is "a ratio of the fraction of actors
+    in the group who are reachable, to the average distance" from the reachable
+    actors.
+
+    .. math::
+
+        C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+
+    where :math:`N` is the number of nodes in the graph.
+
     :param PyDiGraph graph: The input graph
-    :param bool wf_improved: If True, scale by the fraction of nodes reachable.
+    :param bool wf_improved: This is optional; the default is True. If True,
+        scale by the fraction of nodes reachable.
 
     :returns: A dictionary mapping each node index to its closeness centrality.
     :rtype: dict
