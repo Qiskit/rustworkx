@@ -331,11 +331,12 @@ pub fn closeness_centrality<G>(graph: G, wf_improved: bool) -> Vec<Option<f64>>
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
-        + GraphBase<NodeId = NodeIndex>
+        + GraphBase
         + IntoEdges
         + Visitable
         + NodeCount
         + IntoEdgesDirected,
+    G::NodeId: std::hash::Hash + Eq,
 {
     let max_index = graph.node_bound();
     let mut betweenness: Vec<Option<f64>> = vec![None; max_index];

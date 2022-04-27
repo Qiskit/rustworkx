@@ -136,17 +136,10 @@ pub fn digraph_betweenness_centrality(
 /// Compute the closeness centrality of all nodes in a PyGraph.
 ///
 /// :param PyGraph graph: The input graph
-/// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
-///    paths between all pairs of nodes.
-/// :param bool endpoints: Whether to include the endpoints of paths in pathlengths used to
-///    compute the betweenness.
-/// :param int parallel_threshold: The number of nodes to calculate the
-///     the betweenness centrality in parallel at if the number of nodes in
-///     the graph is less than this value it will run in a single thread. The
-///     default value is 50
+/// :param bool wf_improved: If True, scale by the fraction of nodes reachable.
 ///
-/// :returns: a read-only dict-like object whose keys are the node indices and values are the
-///      betweenness score for each node.
+/// :returns: a read-only dict-like object whose keys are the node indices and values are its
+///     closeness centrality score for each node.
 /// :rtype: CentralityMapping
 #[pyfunction(wf_improved = "true")]
 #[pyo3(text_signature = "(graph, /, wf_improved=True)")]
@@ -162,6 +155,13 @@ pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> 
 }
 
 /// Compute the closeness centrality of all nodes in a PyDiGraph.
+///
+/// :param PyDiGraph graph: The input digraph
+/// :param bool wf_improved: If True, scale by the fraction of nodes reachable.
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are its
+///     closeness centrality score for each node.
+/// :rtype: CentralityMapping
 #[pyfunction(wf_improved = "true")]
 #[pyo3(text_signature = "(graph, /, wf_improved=True)")]
 pub fn digraph_closeness_centrality(
