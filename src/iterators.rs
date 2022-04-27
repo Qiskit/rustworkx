@@ -1139,6 +1139,170 @@ impl PyDisplay for PathMapping {
     }
 }
 
+/// A custom class for the return multiple paths to target nodes
+///
+/// The class is a read-only mapping of node indices to a list of node indices
+/// representing a path of the form::
+///
+///     {node_c: [[node_a, node_b, node_c], [node_a, node_c]]}
+///
+/// where ``node_a``, ``node_b``, and ``node_c`` are integer node indices.
+///
+/// This class is a container class for the results of functions that
+/// return a mapping of target nodes and paths. It implements the Python
+/// mapping protocol. So you can treat the return as a read-only
+/// mapping/dict.
+#[pyclass(mapping, module = "retworkx")]
+#[derive(Clone)]
+pub struct MultiplePathMapping {
+    pub paths: DictMap<usize, Vec<Vec<usize>>>,
+}
+
+#[pymethods]
+impl MultiplePathMapping {
+    #[new]
+    fn new() -> MultiplePathMapping {
+        MultiplePathMapping {
+            paths: DictMap::new(),
+        }
+    }
+
+    fn __getstate__(&self) -> DictMap<usize, Vec<Vec<usize>>> {
+        self.paths.clone()
+    }
+
+    fn __setstate__(&mut self, state: DictMap<usize, Vec<Vec<usize>>>) {
+        self.paths = state;
+    }
+
+    fn keys(&self) -> MultiplePathMappingKeys {
+        MultiplePathMappingKeys {
+            path_keys: self.paths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn values(&self) -> MultiplePathMappingValues {
+        MultiplePathMappingValues {
+            path_values: self
+                .paths
+                .values()
+                .map(|paths| {
+                    paths
+                        .iter()
+                        .map(|v| NodeIndices { nodes: v.to_vec() })
+                        .collect()
+                })
+                .collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn items(&self) -> MultiplePathMappingItems {
+        let items: Vec<(usize, Vec<NodeIndices>)> = self
+            .paths
+            .iter()
+            .map(|(k, paths)| {
+                let out_paths: Vec<NodeIndices> = paths
+                    .iter()
+                    .map(|v| NodeIndices { nodes: v.to_vec() })
+                    .collect();
+
+                (*k, out_paths)
+            })
+            .collect();
+        MultiplePathMappingItems {
+            path_items: items,
+            iter_pos: 0,
+        }
+    }
+
+    fn __richcmp__(&self, other: &PyAny, op: pyo3::basic::CompareOp) -> PyResult<bool> {
+        let compare = |other: &PyAny| -> PyResult<bool> {
+            Python::with_gil(|py| PyEq::eq(&self.paths, other, py))
+        };
+        match op {
+            pyo3::basic::CompareOp::Eq => compare(other),
+            pyo3::basic::CompareOp::Ne => match compare(other) {
+                Ok(res) => Ok(!res),
+                Err(err) => Err(err),
+            },
+            _ => Err(PyNotImplementedError::new_err("Comparison not implemented")),
+        }
+    }
+
+    fn __str__(&self) -> PyResult<String> {
+        Python::with_gil(|py| Ok(format!("MultiplePathMapping{}", self.paths.str(py)?)))
+    }
+
+    fn __hash__(&self) -> PyResult<u64> {
+        let mut hasher = DefaultHasher::new();
+        Python::with_gil(|py| PyHash::hash(&self.paths, py, &mut hasher))?;
+
+        Ok(hasher.finish())
+    }
+
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.paths.len())
+    }
+
+    fn __getitem__(&self, idx: usize) -> PyResult<Vec<NodeIndices>> {
+        match self.paths.get(&idx) {
+            Some(data) => Ok(data
+                .iter()
+                .cloned()
+                .map(|v| NodeIndices { nodes: v })
+                .collect()),
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
+    }
+
+    fn __contains__(&self, index: usize) -> PyResult<bool> {
+        Ok(self.paths.contains_key(&index))
+    }
+
+    fn __iter__(slf: PyRef<Self>) -> MultiplePathMappingKeys {
+        MultiplePathMappingKeys {
+            path_keys: slf.paths.keys().copied().collect(),
+            iter_pos: 0,
+        }
+    }
+
+    fn __traverse__(&self, _vis: PyVisit) -> Result<(), PyTraverseError> {
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {}
+}
+
+py_iter_protocol_impl!(MultiplePathMappingKeys, path_keys, usize);
+py_iter_protocol_impl!(MultiplePathMappingValues, path_values, Vec<NodeIndices>);
+py_iter_protocol_impl!(
+    MultiplePathMappingItems,
+    path_items,
+    (usize, Vec<NodeIndices>)
+);
+
+impl PyHash for MultiplePathMapping {
+    fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
+        PyHash::hash(&self.paths, py, state)?;
+        Ok(())
+    }
+}
+
+impl PyEq<PyAny> for MultiplePathMapping {
+    #[inline]
+    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+        PyEq::eq(&self.paths, other, py)
+    }
+}
+
+impl PyDisplay for MultiplePathMapping {
+    fn str(&self, py: Python) -> PyResult<String> {
+        Ok(format!("MultiplePathMapping{}", self.paths.str(py)?))
+    }
+}
+
 custom_hash_map_iter_impl!(
     PathLengthMapping,
     PathLengthMappingKeys,
@@ -1266,6 +1430,31 @@ custom_hash_map_iter_impl!(
     "
 );
 impl PyGCProtocol for NodesCountMapping {}
+
+custom_hash_map_iter_impl!(
+    AllPairsMultiplePathMapping,
+    AllPairsMultiplePathMappingKeys,
+    AllPairsMultiplePathMappingValues,
+    AllPairsMultiplePathMappingItems,
+    paths,
+    path_keys,
+    path_values,
+    path_items,
+    usize,
+    MultiplePathMapping,
+    "A custom class for the return of multiple paths for all pairs of nodes in a graph
+
+    This class is a read-only mapping of integer node indices to a :class:`~.MultiplePathMapping`
+    of the form::
+
+        {0: {1: [[0, 1], [0, 2, 1]], 2: [[0, 2]]}}
+
+    This class is a container class for the results of functions return a mapping of
+    target nodes and multiple paths from all nodes. It implements the Python
+    mapping protocol. So you can treat the return as a read-only mapping/dict.
+    "
+);
+impl PyGCProtocol for AllPairsMultiplePathMapping {}
 
 custom_hash_map_iter_impl!(
     AllPairsPathLengthMapping,
