@@ -29,7 +29,7 @@ use petgraph::{
 ///
 /// :return: A set of connected components for the start node
 /// :rtype: HashSet<usize>
-pub fn bfs_undirected<G>(graph: G, start: G::NodeId, discovered: &mut G::Map) -> HashSet<G::NodeId>
+fn bfs_undirected<G>(graph: G, start: G::NodeId, discovered: &mut G::Map) -> HashSet<G::NodeId>
 where
     G: GraphProp<EdgeType = Undirected> + IntoNeighbors + Visitable,
     G::NodeId: Eq + Hash,
