@@ -161,6 +161,19 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         self.assertEqual([0, 2], slice_return)
         self.assertEqual(nodes[0:-1], [0, 1, 2])
 
+    def test_slices_negatives(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(range(5))
+        indices = graph.node_indices()
+        slice_return = indices[-1:-3:-1]
+        self.assertEqual([4, 3], slice_return)
+        slice_return = indices[3:1:-2]
+        print(slice_return)
+        self.assertEqual([3], slice_return)
+        slice_return = indices[-3:-1]
+        self.assertEqual([2, 3], slice_return)
+        self.assertEqual([], indices[-1:-2])
+
 
 class TestNodesCountMapping(unittest.TestCase):
     def setUp(self):

@@ -483,16 +483,29 @@ macro_rules! custom_vec_iter_impl {
                     SliceOrInt::Slice(slc) => {
                         let len = self.$data.len().try_into().unwrap();
                         let indices = slc.indices(len)?;
-                        let start: usize = indices.start.try_into().unwrap();
-                        let stop: usize = indices.stop.try_into().unwrap();
-                        let step: usize = indices.step.try_into().unwrap();
-                        let return_vec = $name {
-                            $data: (start..stop)
-                                .step_by(step)
-                                .map(|i| self.$data[i].clone())
-                                .collect(),
+                        let mut out_vec: Vec<$T> = Vec::new();
+                        // Start and stop will always be positive the slice api converts
+                        // negatives to the index for example:
+                        // list(range(5))[-1:-3:-1]
+                        // will return start=4, stop=2, and step=-1
+                        let mut pos: isize = indices.start;
+                        let mut cond = if indices.step < 0 {
+                            pos > indices.stop
+                        } else {
+                            pos < indices.stop
                         };
-                        Ok(return_vec.into_py(py))
+                        while cond {
+                            if pos < len as isize {
+                                out_vec.push(self.$data[pos as usize].clone());
+                            }
+                            pos += indices.step;
+                            if indices.step < 0 {
+                                cond = pos > indices.stop;
+                            } else {
+                                cond = pos < indices.stop;
+                            }
+                        }
+                        Ok(out_vec.into_py(py))
                     }
                     SliceOrInt::Int(idx) => {
                         let len = self.$data.len() as isize;
