@@ -16,7 +16,6 @@ mod all_simple_paths;
 mod biconnected;
 mod chain;
 mod conn_components;
-mod test_connectivity;
 
 pub use all_simple_paths::all_simple_paths_multiple_targets;
 pub use biconnected::articulation_points;

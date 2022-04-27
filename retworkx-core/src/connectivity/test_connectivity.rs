@@ -11,11 +11,13 @@
 // under the License.
 
 #[cfg(test)]
-mod tests {
+mod test_conn_components {
+    use std::iter::FromIterator;
     use hashbrown::HashSet;
     use petgraph::graph::Graph;
     use petgraph::graph::NodeIndex;
     use petgraph::Undirected;
+    use petgraph::graph::node_index as ndx;
 
     use crate::connectivity::conn_components::{connected_components, number_connected_components};
 
@@ -45,16 +47,8 @@ mod tests {
             (7, 4),
         ]);
         let components = connected_components(&graph);
-        let mut nodes1 = Vec::<NodeIndex>::new();
-        let mut nodes2 = Vec::<NodeIndex>::new();
-        for i in [0, 1, 3, 2] {
-            nodes1.push(NodeIndex::new(i));
-        }
-        for i in [7, 5, 4, 6] {
-            nodes2.push(NodeIndex::new(i));
-        }
-        let exp1: HashSet<NodeIndex> = nodes1.iter().cloned().collect();
-        let exp2: HashSet<NodeIndex> = nodes2.iter().cloned().collect();
+        let exp1 = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
+        let exp2 = HashSet::from_iter([ndx(7), ndx(5), ndx(4), ndx(6)]);
         let expected = vec![exp1, exp2];
         assert_eq!(expected, components);
     }

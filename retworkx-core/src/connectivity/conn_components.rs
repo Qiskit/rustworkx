@@ -15,10 +15,7 @@ use std::collections::VecDeque;
 use std::hash::Hash;
 
 use petgraph::{
-    visit::{
-        EdgeCount, GraphProp, IntoEdges, IntoNodeIdentifiers, IntoNodeReferences, NodeIndexable,
-        VisitMap, Visitable,
-    },
+    visit::{GraphProp, IntoNeighbors, IntoNodeIdentifiers, VisitMap, Visitable},
     Undirected,
 };
 
@@ -34,13 +31,7 @@ use petgraph::{
 /// :rtype: HashSet<usize>
 pub fn bfs_undirected<G>(graph: G, start: G::NodeId, discovered: &mut G::Map) -> HashSet<G::NodeId>
 where
-    G: GraphProp<EdgeType = Undirected>
-        + EdgeCount
-        + IntoEdges
-        + Visitable
-        + NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNodeReferences,
+    G: GraphProp<EdgeType = Undirected> + IntoNeighbors + Visitable,
     G::NodeId: Eq + Hash,
 {
     let mut component = HashSet::new();
@@ -70,13 +61,7 @@ where
 /// :rtype: Vec<HashSet<usize>>
 pub fn connected_components<G>(graph: G) -> Vec<HashSet<G::NodeId>>
 where
-    G: GraphProp<EdgeType = Undirected>
-        + EdgeCount
-        + IntoEdges
-        + Visitable
-        + NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNodeReferences,
+    G: GraphProp<EdgeType = Undirected> + IntoNeighbors + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
     let mut conn_components = Vec::new();
@@ -104,13 +89,7 @@ where
 /// :rtype: usize
 pub fn number_connected_components<G>(graph: G) -> usize
 where
-    G: GraphProp<EdgeType = Undirected>
-        + EdgeCount
-        + IntoEdges
-        + Visitable
-        + NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNodeReferences,
+    G: GraphProp<EdgeType = Undirected> + IntoNeighbors + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
     let mut num_components = 0;
