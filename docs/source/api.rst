@@ -153,7 +153,7 @@ Graph Operations
 ----------------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.complement
    retworkx.union
