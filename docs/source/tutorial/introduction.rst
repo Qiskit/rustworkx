@@ -189,6 +189,30 @@ subsequent additions. For example, building off the previous example if you ran
 
 this new node is assigned index 2 again.
 
+Modifying elements of a graph
+=============================
+
+The graph classes in retworkx also allow for in place mutation of the payloads
+for elements in the graph. For nodes you can simply use the mapping protocol to
+change the payload via it's node index. For example:
+
+.. jupyter-execute::
+
+   last_index = graph.node_indices()[-1]
+   graph[last_index] = "New Payload"
+   print(graph[last_index])
+
+You can update the payload of any node in the graph using this interface. For
+edges you can leverage the :class:`~.PyGraph.update_edge` or
+:class:`~.PyGraph.update_edge_by_index` methods to update an edge's payload
+in place. For example:
+
+.. jupyter-execute::
+
+   edge_index = graph.add_edge(0, 1, None)
+   graph.update_edge_by_index(edge_index, "New Edge Payload")
+   print(graph.get_edge_data_by_index(edge_index))
+
 .. _data_payload:
 
 What to use for node and edge data payload

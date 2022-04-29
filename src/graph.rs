@@ -21,9 +21,8 @@ use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 use retworkx_core::dictmap::*;
 
-use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
-use pyo3::gc::{PyGCProtocol, PyVisit};
+use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::PyTraverseError;
@@ -114,7 +113,7 @@ use petgraph::visit::{
 ///     object will not be a multigraph. When ``False`` if a method call is
 ///     made that would add parallel edges the the weight/weight from that
 ///     method call will be used to update the existing edge in place.
-#[pyclass(module = "retworkx", subclass, gc)]
+#[pyclass(mapping, module = "retworkx", subclass)]
 #[pyo3(text_signature = "(/, multigraph=True)")]
 #[derive(Clone)]
 pub struct PyGraph {
@@ -137,6 +136,21 @@ impl<'a> NodesRemoved for &'a PyGraph {
 impl NodeCount for PyGraph {
     fn node_count(&self) -> usize {
         self.graph.node_count()
+    }
+}
+
+impl PyGraph {
+    fn _add_edge(&mut self, u: NodeIndex, v: NodeIndex, edge: PyObject) -> usize {
+        if !self.multigraph {
+            let exists = self.graph.find_edge(u, v);
+            if let Some(index) = exists {
+                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
+                *edge_weight = edge;
+                return index.index();
+            }
+        }
+        let edge = self.graph.add_edge(u, v, edge);
+        edge.index()
     }
 }
 
@@ -703,19 +717,10 @@ impl PyGraph {
     ///     of an existing edge with ``multigraph=False``) edge.
     /// :rtype: int
     #[pyo3(text_signature = "(self, node_a, node_b, edge, /)")]
-    pub fn add_edge(&mut self, node_a: usize, node_b: usize, edge: PyObject) -> PyResult<usize> {
+    pub fn add_edge(&mut self, node_a: usize, node_b: usize, edge: PyObject) -> usize {
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
-        if !self.multigraph {
-            let exists = self.graph.find_edge(p_index, c_index);
-            if let Some(index) = exists {
-                let edge_weight = self.graph.edge_weight_mut(index).unwrap();
-                *edge_weight = edge;
-                return Ok(index.index());
-            }
-        }
-        let edge = self.graph.add_edge(p_index, c_index, edge);
-        Ok(edge.index())
+        self._add_edge(p_index, c_index, edge)
     }
 
     /// Add new edges to the graph.
@@ -734,27 +739,14 @@ impl PyGraph {
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
-    pub fn add_edges_from(
-        &mut self,
-        obj_list: Vec<(usize, usize, PyObject)>,
-    ) -> PyResult<Vec<usize>> {
+    pub fn add_edges_from(&mut self, obj_list: Vec<(usize, usize, PyObject)>) -> EdgeIndices {
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
-            if !self.multigraph {
-                let exists = self.graph.find_edge(p_index, c_index);
-                if let Some(index) = exists {
-                    let edge_weight = self.graph.edge_weight_mut(index).unwrap();
-                    *edge_weight = obj.2;
-                    out_list.push(index.index());
-                    continue;
-                }
-            }
-            let edge = self.graph.add_edge(p_index, c_index, obj.2);
-            out_list.push(edge.index());
+            out_list.push(self._add_edge(p_index, c_index, obj.2));
         }
-        Ok(out_list)
+        EdgeIndices { edges: out_list }
     }
 
     /// Add new edges to the graph without python data.
@@ -776,24 +768,14 @@ impl PyGraph {
         &mut self,
         py: Python,
         obj_list: Vec<(usize, usize)>,
-    ) -> PyResult<Vec<usize>> {
+    ) -> EdgeIndices {
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
             let p_index = NodeIndex::new(obj.0);
             let c_index = NodeIndex::new(obj.1);
-            if !self.multigraph {
-                let exists = self.graph.find_edge(p_index, c_index);
-                if let Some(index) = exists {
-                    let edge_weight = self.graph.edge_weight_mut(index).unwrap();
-                    *edge_weight = py.None();
-                    out_list.push(index.index());
-                    continue;
-                }
-            }
-            let edge = self.graph.add_edge(p_index, c_index, py.None());
-            out_list.push(edge.index());
+            out_list.push(self._add_edge(p_index, c_index, py.None()));
         }
-        Ok(out_list)
+        EdgeIndices { edges: out_list }
     }
 
     /// Extend graph from an edge list
@@ -818,15 +800,7 @@ impl PyGraph {
             }
             let source_index = NodeIndex::new(source);
             let target_index = NodeIndex::new(target);
-            if !self.multigraph {
-                let exists = self.graph.find_edge(source_index, target_index);
-                if let Some(index) = exists {
-                    let edge_weight = self.graph.edge_weight_mut(index).unwrap();
-                    *edge_weight = py.None();
-                    continue;
-                }
-            }
-            self.graph.add_edge(source_index, target_index, py.None());
+            self._add_edge(source_index, target_index, py.None());
         }
     }
 
@@ -858,15 +832,7 @@ impl PyGraph {
             }
             let source_index = NodeIndex::new(source);
             let target_index = NodeIndex::new(target);
-            if !self.multigraph {
-                let exists = self.graph.find_edge(source_index, target_index);
-                if let Some(index) = exists {
-                    let edge_weight = self.graph.edge_weight_mut(index).unwrap();
-                    *edge_weight = weight;
-                    continue;
-                }
-            }
-            self.graph.add_edge(source_index, target_index, weight);
+            self._add_edge(source_index, target_index, weight);
         }
     }
 
@@ -1607,7 +1573,7 @@ impl PyGraph {
         }
 
         for (source, weight) in edges {
-            self.add_edge(source.index(), node_index.index(), weight)?;
+            self.add_edge(source.index(), node_index.index(), weight);
         }
 
         Ok(node_index.index())
@@ -1713,22 +1679,20 @@ impl PyGraph {
     pub fn copy(&self) -> PyGraph {
         self.clone()
     }
-}
 
-#[pyproto]
-impl PyMappingProtocol for PyGraph {
     /// Return the nmber of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
     }
-    fn __getitem__(&'p self, idx: usize) -> PyResult<&'p PyObject> {
+
+    fn __getitem__(&self, idx: usize) -> PyResult<&PyObject> {
         match self.graph.node_weight(NodeIndex::new(idx)) {
             Some(data) => Ok(data),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 
-    fn __setitem__(&'p mut self, idx: usize, value: PyObject) -> PyResult<()> {
+    fn __setitem__(&mut self, idx: usize, value: PyObject) -> PyResult<()> {
         let data = match self.graph.node_weight_mut(NodeIndex::new(idx)) {
             Some(node_data) => node_data,
             None => return Err(PyIndexError::new_err("No node found for index")),
@@ -1737,17 +1701,15 @@ impl PyMappingProtocol for PyGraph {
         Ok(())
     }
 
-    fn __delitem__(&'p mut self, idx: usize) -> PyResult<()> {
+    fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
         match self.graph.remove_node(NodeIndex::new(idx as usize)) {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
-}
 
-// Functions to enable Python Garbage Collection
-#[pyproto]
-impl PyGCProtocol for PyGraph {
+    // Functions to enable Python Garbage Collection
+
     // Function for PyTypeObject.tp_traverse [1][2] used to tell Python what
     // objects the PyGraph has strong references to.
     //

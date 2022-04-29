@@ -418,3 +418,117 @@ builds. To check what the rendered html output of the release notes will look
 like for the current state of the repo you can run: `tox -edocs` which will
 build all the documentation into `docs/_build/html` and the release notes in
 particular will be located at `docs/_build/html/release_notes.html`
+
+### Pull request review, CI, and merge queue
+
+After you've submitted a pull request to retworkx it will need to pass CI and be
+reviewed by an approved by a core team reviewer. CI runs get triggered
+automatically when your pull request is opened and on every subsequent commit
+made to your pull request's branch. Code review however may take some time,
+sometimes even weeks or months, there are many new pull requests opened every
+day and limited number of reviewers available, and while every proposed change
+is a valuable addition to the project not everything is the highest priority.
+You can help this process move more quickly by actively reviewing other open
+PRs. While only members of the retworkx core team have permission to provide
+final approval and mark a PR as ready for merging, reviewing code is open to
+everyone and all reviews are welcome and extremely valued contributions.
+Helping with code review also helps reduce the burden on the core team and
+enables them to review code faster.
+
+The code review process is a bit of back and forth where you will receive
+feedback and questions about your proposed changes to the project. You will
+likely have multiple rounds of feedback with suggestions or changes requested
+before approval. Please do not get discouraged as this is normal and part of
+ensuring the quality of the retworkx project and even what first appears as a
+straightforward or simple change might have larger implications that aren't
+obvious at first. If you receive feedback feel free to request re-review from
+reviewers after you've adjusted your PR based on the comments received.
+
+Another thing to keep in mind is that CI time is a constrained resource and not
+infinite. While waiting for review and approval it is not necessary to keep your
+PR branch up to date on every change to the `main` branch. Doing it periodically
+is fine to make sure there are no regressions as the codebase changes, but
+doing it too often will just needlessly waste CI resources. This will contribute
+to resource starvation on CI, slowing down total throughput for the project. If
+possible try to bundle updating your branch to the current HEAD on the `main`
+branch with other changes made to the PR branch (like making adjustments from
+code review). This will result in a single CI run instead of doing standalone
+updates with no code changes.
+
+Once your PR has the necessary approvals it will be tagged with the `automerge`
+tag. This is a signal to the [mergify bot](https://mergify.io/) that the PR has
+been approved and is ready for merging. The mergify bot will then enqueue the
+PR onto its merge queue. At this point the process of updating a PR to the
+current HEAD of the `main` branch is fully automated and once CI passes mergify
+will merge the PR automatically. In an effort to conserve CI resources and
+maximize throughput the mergify bot will only update a PR when it's next in the
+merge queue. It might appear as activity on your PR is idle at this point, but
+this likely just means the mergify merge queue is deep and/or CI has a backlog.
+Do **not** manually update a PR branch to HEAD on the `main` branch after it
+has the necessary approvals and is tagged as `automerge` unless it has a merge
+conflict or has a failed CI run. Doing so will just waste CI resources and
+delay everything from merging, including your PR.
+
+### Stable Branch Policy and Backporting
+
+The stable branch is intended to be a safe source of fixes for high-impact bugs,
+documentation fixes, and security issues that have been fixed on main since a
+release. When reviewing a stable branch PR, we must balance the risk of any given
+patch with the value that it will provide to users of the stable branch. Only a
+limited class of changes are appropriate for inclusion on the stable branch. A
+large, risky patch for a major issue might make sense, as might a trivial fix
+for a fairly obscure error-handling case. A number of factors must be weighed
+when considering a change:
+
+- The risk of regression: even the tiniest changes carry some risk of breaking
+  something, and we really want to avoid regressions on the stable branch.
+- The user visibility benefit: are we fixing something that users might actually
+  notice, and if so, how important is it?
+- How self-contained the fix is: if it fixes a significant issue but also
+  refactors a lot of code, it’s probably worth thinking about what a less risky
+  fix might look like.
+- Whether the fix is already on main: a change must be a backport of a change
+  already merged onto main, unless the change simply does not make sense on
+  main.
+
+Normally only bug fixes or non-code changes are allowed on a stable branch, the
+primary exception to this is adding support for new python versions. If a new
+python version is released backporting that feature change with that new support
+is an acceptable backport.
+
+In retworkx at least until the 1.0 release we only maintaing a single stable
+branch at a time for the most recent minor version release.
+
+#### Backporting procedure
+
+In the normal case to backport a pull request all that needs to be done is
+to tag it as `stable-backport-potential`, this will signal the
+[mergify bot](https://mergify.io/) that the PR should be backported after it
+merged. Once a PR tagged as `stable-backport-potential` merges mergify will
+automatically open a new PR backporting it to the stable branch.
+
+##### Manual backport procedure
+
+If the mergify approach doesn't work for some reason and you need to manual
+backport a PR this can be done with the following procedure. When backporting a
+patch from main to stable, we want to keep a reference to the change on main.
+When you create the branch for the stable PR, use:
+
+```
+$ git cherry-pick -x $main_commit_id
+```
+
+However, this only works for small self-contained patches from main. If you
+need to backport a subset of a larger commit (from a squashed PR, for example)
+from main, do this manually. In these cases, add:
+
+```
+Backported from: #main pr number
+```
+
+so that we can track the source of the change subset, even if a strict
+cherry-pick doesn't make sense.
+
+If the patch you’re proposing will not cherry-pick cleanly, you can help by
+resolving the conflicts yourself and proposing the resulting patch. Please keep
+Conflicts lines in the commit message to help review of the stable patch.

@@ -22,17 +22,17 @@ crate-type = ["cdylib"]
 ahash = { version = "0.7.6", default-features = false }
 petgraph = "0.6.0"
 fixedbitset = "0.4.1"
-numpy = "0.15.1"
+numpy = "0.16.2"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.5"
 num-traits = "0.2"
 num-bigint = "0.4"
 num-complex = "0.4"
-retworkx-core = { path = "./retworkx-core" }
+retworkx-core = { path = "retworkx-core", version = "=0.12.0" }
 
 [dependencies.pyo3]
-version = "0.15.1"
+version = "0.16.4"
 features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.hashbrown]

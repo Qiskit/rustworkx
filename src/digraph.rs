@@ -24,9 +24,8 @@ use indexmap::IndexSet;
 
 use retworkx_core::dictmap::*;
 
-use pyo3::class::PyMappingProtocol;
 use pyo3::exceptions::PyIndexError;
-use pyo3::gc::{PyGCProtocol, PyVisit};
+use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
 use pyo3::PyTraverseError;
@@ -151,7 +150,7 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
 ///     method call is made that would add parallel edges the the weight/weight
 ///     from that method call will be used to update the existing edge in place.
-#[pyclass(module = "retworkx", subclass, gc)]
+#[pyclass(mapping, module = "retworkx", subclass)]
 #[pyo3(text_signature = "(/, check_cycle=False, multigraph=True)")]
 #[derive(Clone)]
 pub struct PyDiGraph {
@@ -2638,22 +2637,20 @@ impl PyDiGraph {
     pub fn copy(&self) -> PyDiGraph {
         self.clone()
     }
-}
 
-#[pyproto]
-impl PyMappingProtocol for PyDiGraph {
     /// Return the number of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
     }
-    fn __getitem__(&'p self, idx: usize) -> PyResult<&'p PyObject> {
+
+    fn __getitem__(&self, idx: usize) -> PyResult<&PyObject> {
         match self.graph.node_weight(NodeIndex::new(idx as usize)) {
             Some(data) => Ok(data),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 
-    fn __setitem__(&'p mut self, idx: usize, value: PyObject) -> PyResult<()> {
+    fn __setitem__(&mut self, idx: usize, value: PyObject) -> PyResult<()> {
         let data = match self.graph.node_weight_mut(NodeIndex::new(idx as usize)) {
             Some(node_data) => node_data,
             None => return Err(PyIndexError::new_err("No node found for index")),
@@ -2662,41 +2659,15 @@ impl PyMappingProtocol for PyDiGraph {
         Ok(())
     }
 
-    fn __delitem__(&'p mut self, idx: usize) -> PyResult<()> {
+    fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
         match self.graph.remove_node(NodeIndex::new(idx as usize)) {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
-}
 
-fn is_cycle_check_required(dag: &PyDiGraph, a: NodeIndex, b: NodeIndex) -> bool {
-    let mut parents_a = dag
-        .graph
-        .neighbors_directed(a, petgraph::Direction::Incoming);
-    let mut children_b = dag
-        .graph
-        .neighbors_directed(b, petgraph::Direction::Outgoing);
-    parents_a.next().is_some() && children_b.next().is_some() && dag.graph.find_edge(a, b).is_none()
-}
+    // Functions to enable Python Garbage Collection
 
-fn weight_transform_callable(
-    py: Python,
-    map_fn: &Option<PyObject>,
-    value: &PyObject,
-) -> PyResult<PyObject> {
-    match map_fn {
-        Some(map_fn) => {
-            let res = map_fn.call1(py, (value,))?;
-            Ok(res.to_object(py))
-        }
-        None => Ok(value.clone_ref(py)),
-    }
-}
-
-// Functions to enable Python Garbage Collection
-#[pyproto]
-impl PyGCProtocol for PyDiGraph {
     // Function for PyTypeObject.tp_traverse [1][2] used to tell Python what
     // objects the PyDiGraph has strong references to.
     //
@@ -2729,6 +2700,30 @@ impl PyGCProtocol for PyDiGraph {
     fn __clear__(&mut self) {
         self.graph = StablePyGraph::<Directed>::new();
         self.node_removed = false;
+    }
+}
+
+fn is_cycle_check_required(dag: &PyDiGraph, a: NodeIndex, b: NodeIndex) -> bool {
+    let mut parents_a = dag
+        .graph
+        .neighbors_directed(a, petgraph::Direction::Incoming);
+    let mut children_b = dag
+        .graph
+        .neighbors_directed(b, petgraph::Direction::Outgoing);
+    parents_a.next().is_some() && children_b.next().is_some() && dag.graph.find_edge(a, b).is_none()
+}
+
+fn weight_transform_callable(
+    py: Python,
+    map_fn: &Option<PyObject>,
+    value: &PyObject,
+) -> PyResult<PyObject> {
+    match map_fn {
+        Some(map_fn) => {
+            let res = map_fn.call1(py, (value,))?;
+            Ok(res.to_object(py))
+        }
+        None => Ok(value.clone_ref(py)),
     }
 }
 

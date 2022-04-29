@@ -62,7 +62,7 @@ use pyo3::Python;
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, call_limit=None)"
 )]
-fn digraph_is_isomorphic(
+pub fn digraph_is_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
@@ -125,7 +125,7 @@ fn digraph_is_isomorphic(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, call_limit=None)"
 )]
-fn graph_is_isomorphic(
+pub fn graph_is_isomorphic(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -195,7 +195,7 @@ fn graph_is_isomorphic(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=False, induced=True, call_limit=None)"
 )]
-fn digraph_is_subgraph_isomorphic(
+pub fn digraph_is_subgraph_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
@@ -266,7 +266,7 @@ fn digraph_is_subgraph_isomorphic(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=False, induced=True, call_limit=None)"
 )]
-fn graph_is_subgraph_isomorphic(
+pub fn graph_is_subgraph_isomorphic(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -337,7 +337,7 @@ fn graph_is_subgraph_isomorphic(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, subgraph=False, induced=True, call_limit=None)"
 )]
-fn digraph_vf2_mapping(
+pub fn digraph_vf2_mapping(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
@@ -414,7 +414,7 @@ fn digraph_vf2_mapping(
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, subgraph=False, induced=True, call_limit=None)"
 )]
-fn graph_vf2_mapping(
+pub fn graph_vf2_mapping(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,

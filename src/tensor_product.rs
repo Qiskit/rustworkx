@@ -15,46 +15,68 @@ use crate::{digraph, graph, StablePyGraph};
 
 use hashbrown::HashMap;
 
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 use petgraph::{algo, EdgeType};
 
 use pyo3::prelude::*;
 use pyo3::Python;
 
-fn cartesian_product<Ty: EdgeType>(
+fn tensor_product<Ty: EdgeType>(
     py: Python,
     first: &StablePyGraph<Ty>,
     second: &StablePyGraph<Ty>,
+    undirected: bool,
 ) -> (StablePyGraph<Ty>, ProductNodeMap) {
-    let mut final_graph = StablePyGraph::<Ty>::with_capacity(
-        first.node_count() * second.node_count(),
-        first.node_count() * second.edge_count() + first.edge_count() * second.node_count(),
-    );
+    let num_nodes = first.node_count() * second.node_count();
+    let mut num_edges = first.edge_count() * second.edge_count();
 
-    let mut hash_nodes = HashMap::with_capacity(first.node_count() * second.node_count());
+    if undirected {
+        num_edges *= 2;
+    }
 
-    for (x, weight_x) in first.node_references() {
-        for (y, weight_y) in second.node_references() {
+    let mut final_graph = StablePyGraph::<Ty>::with_capacity(num_nodes, num_edges);
+    let mut hash_nodes = HashMap::with_capacity(num_nodes);
+
+    for x in first.node_indices() {
+        for y in second.node_indices() {
+            let weight_x = &first[x];
+            let weight_y = &second[y];
             let n0 = final_graph.add_node((weight_x, weight_y).into_py(py));
             hash_nodes.insert((x, y), n0);
         }
     }
 
     for edge_first in first.edge_references() {
-        for node_second in second.node_indices() {
-            let source = hash_nodes[&(edge_first.source(), node_second)];
-            let target = hash_nodes[&(edge_first.target(), node_second)];
-
-            final_graph.add_edge(source, target, edge_first.weight().clone_ref(py));
-        }
-    }
-
-    for node_first in first.node_indices() {
         for edge_second in second.edge_references() {
-            let source = hash_nodes[&(node_first, edge_second.source())];
-            let target = hash_nodes[&(node_first, edge_second.target())];
+            let source = hash_nodes
+                .get(&(edge_first.source(), edge_second.source()))
+                .unwrap();
 
-            final_graph.add_edge(source, target, edge_second.weight().clone_ref(py));
+            let target = hash_nodes
+                .get(&(edge_first.target(), edge_second.target()))
+                .unwrap();
+
+            final_graph.add_edge(
+                *source,
+                *target,
+                (
+                    edge_first.weight().clone_ref(py),
+                    edge_second.weight().clone_ref(py),
+                )
+                    .into_py(py),
+            );
+
+            if undirected {
+                final_graph.add_edge(
+                    *target,
+                    *source,
+                    (
+                        edge_second.weight().clone_ref(py),
+                        edge_first.weight().clone_ref(py),
+                    )
+                        .into_py(py),
+                );
+            }
         }
     }
 
@@ -68,15 +90,14 @@ fn cartesian_product<Ty: EdgeType>(
     (final_graph, out_node_map)
 }
 
-/// Return a new PyGraph by forming the cartesian product from two input
+/// Return a new PyGraph by forming the tensor product from two input
 /// PyGraph objects
 ///
 /// :param PyGraph first: The first undirected graph object
 /// :param PyGraph second: The second undirected graph object
 ///
-/// :returns: A new PyGraph object that is the cartesian product of ``first``
-///     and ``second``. It's worth noting the weight/data payload objects are
-///     passed by reference from ``first`` and ``second`` to this new object.
+/// :returns: A new PyGraph object that is the tensor product of ``first``
+///     and ``second``.
 ///     A read-only dictionary of the product of nodes is also returned. The keys
 ///     are a tuple where the first element is a node of the first graph and the
 ///     second element is a node of the second graph, and the values are the map
@@ -96,16 +117,16 @@ fn cartesian_product<Ty: EdgeType>(
 ///
 ///   graph_1 = retworkx.generators.path_graph(2)
 ///   graph_2 = retworkx.generators.path_graph(3)
-///   graph_product, _ = retworkx.graph_cartesian_product(graph_1, graph_2)
+///   graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-pub fn graph_cartesian_product(
+pub fn graph_tensor_product(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
 ) -> (graph::PyGraph, ProductNodeMap) {
-    let (out_graph, out_node_map) = cartesian_product(py, &first.graph, &second.graph);
+    let (out_graph, out_node_map) = tensor_product(py, &first.graph, &second.graph, true);
 
     (
         graph::PyGraph {
@@ -117,15 +138,14 @@ pub fn graph_cartesian_product(
     )
 }
 
-/// Return a new PyDiGraph by forming the cartesian product from two input
-/// PyDiGraph objects
+/// Return a new PyDiGraph by forming the tensor product from two input
+/// PyGraph objects
 ///
 /// :param PyDiGraph first: The first undirected graph object
 /// :param PyDiGraph second: The second undirected graph object
 ///
-/// :returns: A new PyDiGraph object that is the cartesian product of ``first``
-///     and ``second``. It's worth noting the weight/data payload objects are
-///     passed by reference from ``first`` and ``second`` to this new object.
+/// :returns: A new PyDiGraph object that is the tensor product of ``first``
+///     and ``second``.
 ///     A read-only dictionary of the product of nodes is also returned. The keys
 ///     are a tuple where the first element is a node of the first graph and the
 ///     second element is a node of the second graph, and the values are the map
@@ -145,16 +165,16 @@ pub fn graph_cartesian_product(
 ///
 ///   graph_1 = retworkx.generators.directed_path_graph(2)
 ///   graph_2 = retworkx.generators.directed_path_graph(3)
-///   graph_product, _ = retworkx.digraph_cartesian_product(graph_1, graph_2)
+///   graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-pub fn digraph_cartesian_product(
+pub fn digraph_tensor_product(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
 ) -> (digraph::PyDiGraph, ProductNodeMap) {
-    let (out_graph, out_node_map) = cartesian_product(py, &first.graph, &second.graph);
+    let (out_graph, out_node_map) = tensor_product(py, &first.graph, &second.graph, false);
 
     (
         digraph::PyDiGraph {

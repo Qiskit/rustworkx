@@ -484,7 +484,7 @@ pub fn graph_all_pairs_dijkstra_shortest_paths(
 ///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn, /)")]
-fn digraph_astar_shortest_path(
+pub fn digraph_astar_shortest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
@@ -542,7 +542,7 @@ fn digraph_astar_shortest_path(
 ///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn /)")]
-fn graph_astar_shortest_path(
+pub fn graph_astar_shortest_path(
     py: Python,
     graph: &graph::PyGraph,
     node: usize,
@@ -598,7 +598,7 @@ fn graph_astar_shortest_path(
 ///     is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)")]
-fn digraph_k_shortest_path_lengths(
+pub fn digraph_k_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
     start: usize,
@@ -746,7 +746,7 @@ pub fn graph_k_shortest_path_lengths(
 #[pyo3(
     text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
-fn digraph_floyd_warshall(
+pub fn digraph_floyd_warshall(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,

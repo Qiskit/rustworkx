@@ -26,6 +26,7 @@ mod matching;
 mod random_graph;
 mod shortest_path;
 mod steiner_tree;
+mod tensor_product;
 mod toposort;
 mod transitivity;
 mod traversal;
@@ -43,6 +44,7 @@ use matching::*;
 use random_graph::*;
 use shortest_path::*;
 use steiner_tree::*;
+use tensor_product::*;
 use transitivity::*;
 use traversal::*;
 use tree::*;
@@ -72,8 +74,6 @@ use std::convert::TryFrom;
 use std::hash::Hash;
 
 use retworkx_core::dictmap::*;
-
-use crate::generators::PyInit_generators;
 
 trait IsNan {
     fn is_nan(&self) -> bool;
@@ -338,6 +338,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
@@ -353,6 +355,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
@@ -397,7 +401,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         graph_unweighted_average_shortest_path_length
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
-    m.add_wrapped(wrap_pyfunction!(steiner_tree))?;
+    m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
@@ -417,12 +421,14 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::CentralityMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
+    m.add_class::<iterators::MultiplePathMapping>()?;
+    m.add_class::<iterators::AllPairsMultiplePathMapping>()?;
     m.add_class::<iterators::AllPairsPathLengthMapping>()?;
     m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_class::<iterators::NodesCountMapping>()?;
     m.add_class::<iterators::NodeMap>()?;
     m.add_class::<iterators::ProductNodeMap>()?;
     m.add_class::<iterators::BiconnectedComponents>()?;
-    m.add_wrapped(wrap_pymodule!(generators))?;
+    m.add_wrapped(wrap_pymodule!(generators::generators))?;
     Ok(())
 }
