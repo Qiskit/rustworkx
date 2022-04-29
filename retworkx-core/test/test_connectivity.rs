@@ -16,7 +16,7 @@ mod test_conn_components {
     use hashbrown::HashSet;
     use petgraph::graph::Graph;
     use petgraph::graph::NodeIndex;
-    use petgraph::Undirected;
+    use petgraph::{Undirected, Directed};
     use petgraph::graph::node_index as ndx;
 
     use crate::connectivity::conn_components::{connected_components, number_connected_components};
@@ -36,7 +36,7 @@ mod test_conn_components {
 
     #[test]
     fn test_connected_components() {
-        let graph = Graph::<(), (), Undirected>::from_edges(&[
+        let graph = Graph::<(), (), Directed>::from_edges(&[
             (0, 1),
             (1, 2),
             (2, 3),

@@ -14,24 +14,11 @@ use hashbrown::HashSet;
 use std::collections::VecDeque;
 use std::hash::Hash;
 
-use petgraph::{
-    visit::{GraphProp, IntoNeighbors, IntoNodeIdentifiers, VisitMap, Visitable},
-    Undirected,
-};
+use petgraph::visit::{GraphProp, IntoNeighbors, IntoNodeIdentifiers, VisitMap, Visitable};
 
-/// Given an undirected graph, a start node and the visit_map for
-/// the graph, this function returns a connected component set.
-///
-/// :param Graph graph: The input graph to find the connected
-///     components for.
-/// :param NodeIndex start: The node to start from.
-/// :param Visitable::Map discovered: The visit map for the graph.
-///
-/// :return: A set of connected components for the start node
-/// :rtype: HashSet<usize>
 fn bfs_undirected<G>(graph: G, start: G::NodeId, discovered: &mut G::Map) -> HashSet<G::NodeId>
 where
-    G: GraphProp<EdgeType = Undirected> + IntoNeighbors + Visitable,
+    G: GraphProp + IntoNeighbors + Visitable,
     G::NodeId: Eq + Hash,
 {
     let mut component = HashSet::new();
@@ -51,17 +38,44 @@ where
     component
 }
 
-/// Given an undirected graph, find a list of all the
+/// Given an undirected graph, return a list of sets of all the
 /// connected components.
 ///
-/// :param Graph graph: The input graph to find the connected
-///     components for.
+/// Arguments:
 ///
-/// :return: A list of all the sets of connected components.
-/// :rtype: Vec<HashSet<usize>>
+/// * `graph` - The graph object to run the algorithm on
+///
+/// # Example
+/// ```rust
+/// use std::iter::FromIterator;
+/// use hashbrown::HashSet;
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::NodeIndex;
+/// use petgraph::{Undirected, Directed};
+/// use petgraph::graph::node_index as ndx;
+/// use retworkx_core::connectivity::connected_components;
+///
+/// fn test_connected_components() {
+///     let graph = Graph::<(), (), Undirected>::from_edges(&[
+///         (0, 1),
+///         (1, 2),
+///         (2, 3),
+///         (3, 0),
+///         (4, 5),
+///         (5, 6),
+///         (6, 7),
+///         (7, 4),
+///     ]);
+///     let components = connected_components(&graph);
+///     let exp1 = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
+///     let exp2 = HashSet::from_iter([ndx(7), ndx(5), ndx(4), ndx(6)]);
+///     let expected = vec![exp1, exp2];
+///     assert_eq!(expected, components);
+/// };
+/// ```
 pub fn connected_components<G>(graph: G) -> Vec<HashSet<G::NodeId>>
 where
-    G: GraphProp<EdgeType = Undirected> + IntoNeighbors + Visitable + IntoNodeIdentifiers,
+    G: GraphProp + IntoNeighbors + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
     let mut conn_components = Vec::new();
@@ -79,17 +93,26 @@ where
     conn_components
 }
 
-/// Given an undirected graph, find a the number of
+/// Given an undirected graph, return a list of sets of all the
 /// connected components.
 ///
-/// :param Graph graph: The input graph to find the number of connected
-///     components for.
+/// Arguments:
 ///
-/// :return: The number of connected components.
-/// :rtype: usize
+/// * `graph` - The graph object to run the algorithm on
+///
+/// # Example
+/// ```rust
+/// use retworkx_core::petgraph::{Graph, Undirected};
+/// use retworkx_core::connectivity::number_connected_components;
+///
+/// fn test_number_connected() {
+///     let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (3, 4)]);
+///     assert_eq!(number_connected_components(&graph), 2);
+/// };
+/// ```
 pub fn number_connected_components<G>(graph: G) -> usize
 where
-    G: GraphProp<EdgeType = Undirected> + IntoNeighbors + Visitable + IntoNodeIdentifiers,
+    G: GraphProp + IntoNeighbors + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
     let mut num_components = 0;
