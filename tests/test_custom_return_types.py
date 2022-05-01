@@ -20,8 +20,8 @@ import retworkx
 class TestBFSSuccessorsComparisons(unittest.TestCase):
     def setUp(self):
         self.dag = retworkx.PyDAG()
-        node_a = self.dag.add_node("a")
-        self.dag.add_child(node_a, "b", "Edgy")
+        self.node_a = self.dag.add_node("a")
+        self.node_b = self.dag.add_child(self.node_a, "b", "Edgy")
 
     def test__eq__match(self):
         self.assertTrue(retworkx.bfs_successors(self.dag, 0) == [("a", ["b"])])
@@ -87,6 +87,13 @@ class TestBFSSuccessorsComparisons(unittest.TestCase):
         with self.assertRaises(TypeError):
             hash(res)
 
+    def test_slices(self):
+        self.dag.add_child(self.node_a, "c", "New edge")
+        self.dag.add_child(self.node_b, "d", "New edge to d")
+        successors = retworkx.bfs_successors(self.dag, 0)
+        slice_return = successors[0:3:2]
+        self.assertEqual([("a", ["c", "b"])], slice_return)
+
 
 class TestNodeIndicesComparisons(unittest.TestCase):
     def setUp(self):
@@ -145,6 +152,26 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         self.assertIsInstance(hash_res, int)
         # Assert hash is stable
         self.assertEqual(hash_res, hash(res))
+
+    def test_slices(self):
+        self.dag.add_node("new")
+        self.dag.add_node("fun")
+        nodes = self.dag.node_indices()
+        slice_return = nodes[0:3:2]
+        self.assertEqual([0, 2], slice_return)
+        self.assertEqual(nodes[0:-1], [0, 1, 2])
+
+    def test_slices_negatives(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(range(5))
+        indices = graph.node_indices()
+        slice_return = indices[-1:-3:-1]
+        self.assertEqual([4, 3], slice_return)
+        slice_return = indices[3:1:-2]
+        self.assertEqual([3], slice_return)
+        slice_return = indices[-3:-1]
+        self.assertEqual([2, 3], slice_return)
+        self.assertEqual([], indices[-1:-2])
 
 
 class TestNodesCountMapping(unittest.TestCase):
@@ -308,6 +335,12 @@ class TestEdgeIndicesComparisons(unittest.TestCase):
         # Assert hash is stable
         self.assertEqual(hash_res, hash(res))
 
+    def test_slices(self):
+        self.dag.add_edge(0, 1, None)
+        edges = self.dag.edge_indices()
+        slice_return = edges[0:-1]
+        self.assertEqual([0, 1], slice_return)
+
 
 class TestEdgeListComparisons(unittest.TestCase):
     def setUp(self):
@@ -364,6 +397,13 @@ class TestEdgeListComparisons(unittest.TestCase):
         self.assertIsInstance(hash_res, int)
         # Assert hash is stable
         self.assertEqual(hash_res, hash(res))
+
+    def test_slice(self):
+        self.dag.add_edge(0, 1, None)
+        self.dag.add_edge(0, 1, None)
+        edges = self.dag.edge_list()
+        slice_return = edges[0:3:2]
+        self.assertEqual([(0, 1), (0, 1)], slice_return)
 
 
 class TestWeightedEdgeListComparisons(unittest.TestCase):
@@ -427,6 +467,13 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
         res = self.dag.weighted_edge_list()
         with self.assertRaises(TypeError):
             hash(res)
+
+    def test_slice(self):
+        self.dag.add_edge(0, 1, None)
+        self.dag.add_edge(0, 1, None)
+        edges = self.dag.weighted_edge_list()
+        slice_return = edges[0:3:2]
+        self.assertEqual([(0, 1, "Edgy"), (0, 1, None)], slice_return)
 
 
 class TestPathMapping(unittest.TestCase):
