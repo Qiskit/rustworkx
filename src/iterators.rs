@@ -48,6 +48,7 @@ use pyo3::class::iter::IterNextOutput;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
+use pyo3::types::PySlice;
 use pyo3::PyTraverseError;
 
 macro_rules! last_type {
@@ -406,6 +407,12 @@ trait PyGCProtocol {
     fn __clear__(&mut self) {}
 }
 
+#[derive(FromPyObject)]
+enum SliceOrInt<'a> {
+    Slice(&'a PySlice),
+    Int(isize),
+}
+
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
@@ -471,14 +478,46 @@ macro_rules! custom_vec_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __getitem__(&self, idx: isize) -> PyResult<$T> {
-                if idx.abs() >= self.$data.len().try_into().unwrap() {
-                    Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
-                } else if idx < 0 {
-                    let len = self.$data.len();
-                    Ok(self.$data[len - idx.abs() as usize].clone())
-                } else {
-                    Ok(self.$data[idx as usize].clone())
+            fn __getitem__(&self, py: Python, idx: SliceOrInt) -> PyResult<PyObject> {
+                match idx {
+                    SliceOrInt::Slice(slc) => {
+                        let len = self.$data.len().try_into().unwrap();
+                        let indices = slc.indices(len)?;
+                        let mut out_vec: Vec<$T> = Vec::new();
+                        // Start and stop will always be positive the slice api converts
+                        // negatives to the index for example:
+                        // list(range(5))[-1:-3:-1]
+                        // will return start=4, stop=2, and step=-1
+                        let mut pos: isize = indices.start;
+                        let mut cond = if indices.step < 0 {
+                            pos > indices.stop
+                        } else {
+                            pos < indices.stop
+                        };
+                        while cond {
+                            if pos < len as isize {
+                                out_vec.push(self.$data[pos as usize].clone());
+                            }
+                            pos += indices.step;
+                            if indices.step < 0 {
+                                cond = pos > indices.stop;
+                            } else {
+                                cond = pos < indices.stop;
+                            }
+                        }
+                        Ok(out_vec.into_py(py))
+                    }
+                    SliceOrInt::Int(idx) => {
+                        let len = self.$data.len() as isize;
+                        if idx >= len || idx < -len {
+                            Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
+                        } else if idx < 0 {
+                            let len = self.$data.len();
+                            Ok(self.$data[len - idx.abs() as usize].clone().into_py(py))
+                        } else {
+                            Ok(self.$data[idx as usize].clone().into_py(py))
+                        }
+                    }
                 }
             }
 
