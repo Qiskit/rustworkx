@@ -16,7 +16,41 @@ use std::hash::Hash;
 
 use petgraph::visit::{GraphProp, IntoNeighbors, IntoNodeIdentifiers, VisitMap, Visitable};
 
-fn bfs_undirected<G>(graph: G, start: G::NodeId, discovered: &mut G::Map) -> HashSet<G::NodeId>
+/// Given an graph, a node in the graph, and a visit_map,
+/// return the set of nodes connected to the given node.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `node` - The node index to find the connected nodes for
+/// * `graph.visit_map()` - The visit map for the graph
+///
+/// # Example
+/// ```rust
+/// use std::iter::FromIterator;
+/// use hashbrown::HashSet;
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::node_index as ndx;
+/// use petgraph::visit::Visitable;
+/// use petgraph::Directed;
+/// use retworkx_core::connectivity::bfs_undirected;
+///
+/// let graph = Graph::<(), (), Directed>::from_edges(&[
+///     (0, 1),
+///     (1, 2),
+///     (2, 3),
+///     (3, 0),
+///     (4, 5),
+///     (5, 6),
+///     (6, 7),
+///     (7, 4),
+/// ]);
+/// let node_idx = ndx(3);
+/// let component = bfs_undirected(&graph, node_idx, &mut graph.visit_map());
+/// let expected = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
+/// assert_eq!(expected, component);
+/// ```
+pub fn bfs_undirected<G>(graph: G, start: G::NodeId, discovered: &mut G::Map) -> HashSet<G::NodeId>
 where
     G: GraphProp + IntoNeighbors + Visitable,
     G::NodeId: Eq + Hash,
@@ -38,7 +72,7 @@ where
     component
 }
 
-/// Given an undirected graph, return a list of sets of all the
+/// Given a graph, return a list of sets of all the
 /// connected components.
 ///
 /// Arguments:
@@ -55,23 +89,21 @@ where
 /// use petgraph::graph::node_index as ndx;
 /// use retworkx_core::connectivity::connected_components;
 ///
-/// fn test_connected_components() {
-///     let graph = Graph::<(), (), Undirected>::from_edges(&[
-///         (0, 1),
-///         (1, 2),
-///         (2, 3),
-///         (3, 0),
-///         (4, 5),
-///         (5, 6),
-///         (6, 7),
-///         (7, 4),
-///     ]);
-///     let components = connected_components(&graph);
-///     let exp1 = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
-///     let exp2 = HashSet::from_iter([ndx(7), ndx(5), ndx(4), ndx(6)]);
-///     let expected = vec![exp1, exp2];
-///     assert_eq!(expected, components);
-/// };
+/// let graph = Graph::<(), (), Undirected>::from_edges(&[
+///     (0, 1),
+///     (1, 2),
+///     (2, 3),
+///     (3, 0),
+///     (4, 5),
+///     (5, 6),
+///     (6, 7),
+///     (7, 4),
+/// ]);
+/// let components = connected_components(&graph);
+/// let exp1 = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
+/// let exp2 = HashSet::from_iter([ndx(7), ndx(5), ndx(4), ndx(6)]);
+/// let expected = vec![exp1, exp2];
+/// assert_eq!(expected, components);
 /// ```
 pub fn connected_components<G>(graph: G) -> Vec<HashSet<G::NodeId>>
 where
@@ -93,8 +125,7 @@ where
     conn_components
 }
 
-/// Given an undirected graph, return a list of sets of all the
-/// connected components.
+/// Given a graph, return the number of connected components of the graph.
 ///
 /// Arguments:
 ///
@@ -105,10 +136,8 @@ where
 /// use retworkx_core::petgraph::{Graph, Undirected};
 /// use retworkx_core::connectivity::number_connected_components;
 ///
-/// fn test_number_connected() {
-///     let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (3, 4)]);
-///     assert_eq!(number_connected_components(&graph), 2);
-/// };
+/// let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (3, 4)]);
+/// assert_eq!(number_connected_components(&graph), 2);
 /// ```
 pub fn number_connected_components<G>(graph: G) -> usize
 where
@@ -128,4 +157,66 @@ where
     }
 
     num_components
+}
+
+#[cfg(test)]
+mod test_conn_components {
+    use std::iter::FromIterator;
+    use hashbrown::HashSet;
+    use petgraph::graph::{Graph, NodeIndex};
+    use petgraph::graph::node_index as ndx;
+    use petgraph::visit::Visitable;
+    use petgraph::Directed;
+
+    use crate::connectivity::{connected_components, number_connected_components, bfs_undirected};
+
+    #[test]
+    fn test_number_connected() {
+        let graph = Graph::<(), (), Directed>::from_edges([(0, 1), (1, 2), (3, 4)]);
+        assert_eq!(number_connected_components(&graph), 2);
+    }
+
+    #[test]
+    fn test_number_node_holes() {
+        let mut graph = Graph::<(), (), Directed>::from_edges([(0, 1), (1, 2)]);
+        graph.remove_node(NodeIndex::new(1));
+        assert_eq!(number_connected_components(&graph), 2);
+    }
+
+    #[test]
+    fn test_connected_components() {
+        let graph = Graph::<(), (), Directed>::from_edges(&[
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4),
+        ]);
+        let components = connected_components(&graph);
+        let exp1 = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
+        let exp2 = HashSet::from_iter([ndx(7), ndx(5), ndx(4), ndx(6)]);
+        let expected = vec![exp1, exp2];
+        assert_eq!(expected, components);
+    }
+
+    #[test]
+    fn test_bfs_undirected() {
+        let graph = Graph::<(), (), Directed>::from_edges(&[
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4),
+        ]);
+        let node_idx = NodeIndex::new(3);
+        let component = bfs_undirected(&graph, node_idx, &mut graph.visit_map());
+        let expected = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
+        assert_eq!(expected, component);
+    }
 }
