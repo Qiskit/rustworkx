@@ -31,9 +31,10 @@ fn test_is_connected() {
         (7, 4),
     ]);
     let node = NodeIndex::new(6);
-    let component: HashSet<usize> = connectivity::bfs_undirected(&graph, node, &mut graph.visit_map())
-        .into_iter()
-        .map(|x| x.index())
-        .collect();
+    let component: HashSet<usize> =
+        connectivity::bfs_undirected(&graph, node, &mut graph.visit_map())
+            .into_iter()
+            .map(|x| x.index())
+            .collect();
     assert_eq!(component.len(), graph.node_count());
 }

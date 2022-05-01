@@ -161,14 +161,14 @@ where
 
 #[cfg(test)]
 mod test_conn_components {
-    use std::iter::FromIterator;
     use hashbrown::HashSet;
-    use petgraph::graph::{Graph, NodeIndex};
     use petgraph::graph::node_index as ndx;
+    use petgraph::graph::{Graph, NodeIndex};
     use petgraph::visit::Visitable;
     use petgraph::Directed;
+    use std::iter::FromIterator;
 
-    use crate::connectivity::{connected_components, number_connected_components, bfs_undirected};
+    use crate::connectivity::{bfs_undirected, connected_components, number_connected_components};
 
     #[test]
     fn test_number_connected() {

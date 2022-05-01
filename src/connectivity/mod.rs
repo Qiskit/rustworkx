@@ -245,10 +245,7 @@ pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
 pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
     let return_value: Vec<HashSet<usize>> = connectivity::connected_components(&graph.graph)
         .into_iter()
-        .map(|res_map| res_map
-            .into_iter()
-            .map(|x| x.index())
-            .collect())
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
         .collect();
     return_value
 }
@@ -273,10 +270,11 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
         ));
     }
 
-    let return_value: HashSet<usize> = connectivity::bfs_undirected(&graph.graph, node, &mut graph.graph.visit_map())
-        .into_iter()
-        .map(|x| x.index())
-        .collect();
+    let return_value: HashSet<usize> =
+        connectivity::bfs_undirected(&graph.graph, node, &mut graph.graph.visit_map())
+            .into_iter()
+            .map(|x| x.index())
+            .collect();
     Ok(return_value)
 }
 
@@ -335,10 +333,7 @@ pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
     let return_value: Vec<HashSet<usize>> = connectivity::connected_components(&graph.graph)
         .into_iter()
-        .map(|res_map| res_map
-            .into_iter()
-            .map(|x| x.index())
-            .collect())
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
         .collect();
     return_value
 }
