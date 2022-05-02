@@ -14,6 +14,7 @@ use pyo3::prelude::*;
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{Control, Time};
+use petgraph::algo::NegativeCycle;
 
 use crate::PruneSearch;
 use retworkx_core::traversal::DfsEvent;

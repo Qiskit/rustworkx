@@ -504,6 +504,7 @@ name = "retworkx-core"
 version = "0.12.0"
 dependencies = [
  "ahash",
+ "fixedbitset",
  "hashbrown",
  "indexmap",
  "petgraph",
