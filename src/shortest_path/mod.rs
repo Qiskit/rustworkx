@@ -29,7 +29,7 @@ use petgraph::visit::NodeCount;
 use numpy::IntoPyArray;
 
 use retworkx_core::dictmap::*;
-use retworkx_core::shortest_path::{astar, dijkstra, k_shortest_path};
+use retworkx_core::shortest_path::{astar, bellman_ford, dijkstra, k_shortest_path};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices, NodesCountMapping,
@@ -1191,4 +1191,171 @@ pub fn graph_unweighted_average_shortest_path_length(
     }
 
     (sum as f64) / (conn_pairs as f64)
+}
+
+/// Bellman-Ford shortest path algorithm
+/// using SPFA
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /)")]
+pub fn digraph_bellman_ford_shortest_path_lengths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+    edge_cost_fn: PyObject,
+) -> PyResult<PathLengthMapping> {
+    // TODO: cache
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
+
+    let start = NodeIndex::new(node);
+
+    let res: Vec<Option<f64>> = bellman_ford(
+        &graph.graph,
+        start,
+        |e| edge_cost_callable.call(py, e.weight()),
+        None,
+    )?;
+
+    Ok(PathLengthMapping {
+        path_lengths: res
+            .into_iter()
+            .enumerate()
+            .filter_map(|(k_int, opt_v)| {
+                if k_int != node {
+                    opt_v.map(|v| (k_int, v))
+                } else {
+                    None
+                }
+            })
+            .collect(),
+    })
+}
+
+/// Bellman-Ford shortest path algorithm
+/// using SPFA
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /)")]
+pub fn graph_bellman_ford_shortest_path_lengths(
+    py: Python,
+    graph: &graph::PyGraph,
+    node: usize,
+    edge_cost_fn: PyObject,
+) -> PyResult<PathLengthMapping> {
+    // TODO: cache
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
+
+    let start = NodeIndex::new(node);
+
+    let res: Vec<Option<f64>> = bellman_ford(
+        &graph.graph,
+        start,
+        |e| edge_cost_callable.call(py, e.weight()),
+        None,
+    )?;
+
+    Ok(PathLengthMapping {
+        path_lengths: res
+            .into_iter()
+            .enumerate()
+            .filter_map(|(k_int, opt_v)| {
+                if k_int != node {
+                    opt_v.map(|v| (k_int, v))
+                } else {
+                    None
+                }
+            })
+            .collect(),
+    })
+}
+
+/// Bellman-Ford shortest path algorithm
+/// using SPFA
+#[pyfunction(default_weight = "1.0", as_undirected = "false")]
+#[pyo3(text_signature = "(graph, source, /, weight_fn=None, default_weight=1.0)")]
+pub fn graph_bellman_ford_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<PathMapping> {
+    let start = NodeIndex::new(source);
+    let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
+
+    // TODO: cache
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+
+    (bellman_ford(
+        &graph.graph,
+        start,
+        |e| cost_fn.call(py, e.weight()),
+        Some(&mut paths),
+    ) as PyResult<Vec<Option<f64>>>)?;
+
+    Ok(PathMapping {
+        paths: paths
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == source {
+                    None
+                } else {
+                    Some((
+                        k.index(),
+                        v.iter().map(|x| x.index()).collect::<Vec<usize>>(),
+                    ))
+                }
+            })
+            .collect(),
+    })
+}
+
+/// Bellman-Ford shortest path algorithm
+/// using SPFA
+#[pyfunction(default_weight = "1.0", as_undirected = "false")]
+#[pyo3(
+    text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0, as_undirected=False)"
+)]
+pub fn digraph_bellman_ford_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    as_undirected: bool,
+) -> PyResult<PathMapping> {
+    let start = NodeIndex::new(source);
+    let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+
+    if as_undirected {
+        (bellman_ford(
+            // TODO: Use petgraph undirected adapter after
+            // https://github.com/petgraph/petgraph/pull/318 is available in
+            // a petgraph release.
+            &graph.to_undirected(py, true, None)?.graph,
+            start,
+            |e| cost_fn.call(py, e.weight()),
+            Some(&mut paths),
+        ) as PyResult<Vec<Option<f64>>>)?;
+    } else {
+        (bellman_ford(
+            &graph.graph,
+            start,
+            |e| cost_fn.call(py, e.weight()),
+            Some(&mut paths),
+        ) as PyResult<Vec<Option<f64>>>)?;
+    }
+    Ok(PathMapping {
+        paths: paths
+            .iter()
+            .filter_map(|(k, v)| {
+                let k_int = k.index();
+                if k_int == source {
+                    None
+                } else {
+                    Some((k_int, v.iter().map(|x| x.index()).collect::<Vec<usize>>()))
+                }
+            })
+            .collect(),
+    })
 }
