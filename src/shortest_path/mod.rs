@@ -24,7 +24,11 @@ use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
+use petgraph::prelude::*;
+use petgraph::stable_graph::EdgeIndex;
+use petgraph::visit::EdgeIndexable;
 use petgraph::visit::NodeCount;
+use pyo3::exceptions::PyIndexError;
 
 use numpy::IntoPyArray;
 
@@ -1240,17 +1244,25 @@ pub fn graph_bellman_ford_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
 ) -> PyResult<PathLengthMapping> {
-    // TODO: cache
     let edge_cost_callable = CostFn::from(edge_cost_fn);
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
+    for index in 0..=graph.graph.edge_bound() {
+        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => edge_weights.push(Some(edge_cost_callable.call(py, weight)?)),
+            None => edge_weights.push(None),
+        };
+    }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
 
     let start = NodeIndex::new(node);
 
-    let res: Vec<Option<f64>> = bellman_ford(
-        &graph.graph,
-        start,
-        |e| edge_cost_callable.call(py, e.weight()),
-        None,
-    )?;
+    let res: Vec<Option<f64>> = bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), None)?;
 
     Ok(PathLengthMapping {
         path_lengths: res
@@ -1281,15 +1293,24 @@ pub fn graph_bellman_ford_shortest_paths(
     let start = NodeIndex::new(source);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
 
-    // TODO: cache
-    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+    let edge_cost_callable = CostFn::try_from((weight_fn, default_weight))?;
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
+    for index in 0..=graph.graph.edge_bound() {
+        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => edge_weights.push(Some(edge_cost_callable.call(py, weight)?)),
+            None => edge_weights.push(None),
+        };
+    }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
 
-    (bellman_ford(
-        &graph.graph,
-        start,
-        |e| cost_fn.call(py, e.weight()),
-        Some(&mut paths),
-    ) as PyResult<Vec<Option<f64>>>)?;
+    (bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), Some(&mut paths))
+        as PyResult<Vec<Option<f64>>>)?;
 
     Ok(PathMapping {
         paths: paths
@@ -1323,28 +1344,38 @@ pub fn digraph_bellman_ford_shortest_paths(
     default_weight: f64,
     as_undirected: bool,
 ) -> PyResult<PathMapping> {
+    if as_undirected {
+        return graph_bellman_ford_shortest_paths(
+            py,
+            &graph.to_undirected(py, true, None)?,
+            source,
+            weight_fn.map(|x| x.clone_ref(py)),
+            default_weight,
+        );
+    }
+
     let start = NodeIndex::new(source);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
-    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
 
-    if as_undirected {
-        (bellman_ford(
-            // TODO: Use petgraph undirected adapter after
-            // https://github.com/petgraph/petgraph/pull/318 is available in
-            // a petgraph release.
-            &graph.to_undirected(py, true, None)?.graph,
-            start,
-            |e| cost_fn.call(py, e.weight()),
-            Some(&mut paths),
-        ) as PyResult<Vec<Option<f64>>>)?;
-    } else {
-        (bellman_ford(
-            &graph.graph,
-            start,
-            |e| cost_fn.call(py, e.weight()),
-            Some(&mut paths),
-        ) as PyResult<Vec<Option<f64>>>)?;
+    let edge_cost_callable = CostFn::try_from((weight_fn, default_weight))?;
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
+    for index in 0..=graph.graph.edge_bound() {
+        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => edge_weights.push(Some(edge_cost_callable.call(py, weight)?)),
+            None => edge_weights.push(None),
+        };
     }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
+
+    (bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), Some(&mut paths))
+        as PyResult<Vec<Option<f64>>>)?;
+
     Ok(PathMapping {
         paths: paths
             .iter()
