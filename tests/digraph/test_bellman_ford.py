@@ -103,7 +103,6 @@ class TestBellmanFordDiGraph(unittest.TestCase):
             4: [0, 2, 3, 4],
             5: [0, 2, 5],
         }
-        print(paths)
         self.assertEqual(expected, paths)
 
     def test_bellman_ford_with_no_goal_set(self):

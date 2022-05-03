@@ -14,9 +14,9 @@ use std::collections::VecDeque;
 use std::hash::Hash;
 
 use fixedbitset::FixedBitSet;
-use petgraph::algo::Measure;
+use petgraph::algo::{is_cyclic_directed, Measure};
 use petgraph::graph::IndexType;
-use petgraph::unionfind::UnionFind;
+use petgraph::stable_graph::StableDiGraph;
 use petgraph::visit::{
     EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
 };
@@ -68,7 +68,9 @@ where
                 if relaxation_count == node_count {
                     relaxation_count = 0;
 
-                    if check_for_negative_cycle(predecessor.clone()) {
+                    if check_for_negative_cycle(
+                        predecessor.iter().map(|x| x.map(|y| y.index())).collect(),
+                    ) {
                         break; // TODO: raise error
                     }
                 }
@@ -100,22 +102,19 @@ where
     Ok(scores)
 }
 
-fn check_for_negative_cycle<T>(predecessor: Vec<Option<T>>) -> bool
-where
-    T: IndexType,
-{
-    let mut disjoint_sets = UnionFind::<usize>::new(predecessor.len());
+fn check_for_negative_cycle(predecessor: Vec<Option<usize>>) -> bool {
+    let mut path_graph =
+        StableDiGraph::<usize, ()>::with_capacity(predecessor.len(), predecessor.len());
+
+    let node_indices: Vec<_> = (0..predecessor.len())
+        .map(|x| path_graph.add_node(x))
+        .collect();
 
     for (u, pred_u) in predecessor.into_iter().enumerate() {
         if let Some(v) = pred_u {
-            let v = v.index();
-
-            if disjoint_sets.union(u, v) {
-                // Found cycle
-                return true;
-            }
+            path_graph.add_edge(node_indices[v], node_indices[u], ());
         }
     }
 
-    false
+    is_cyclic_directed(&path_graph)
 }

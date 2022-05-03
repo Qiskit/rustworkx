@@ -41,8 +41,6 @@ class TestBellmanFordGraph(unittest.TestCase):
         path_dijkstra = retworkx.graph_dijkstra_shortest_path_lengths(
             self.graph, self.a, lambda x: float(x)
         )
-        print(path)
-        print(path_dijkstra)
         self.assertEqual(path_dijkstra, path)
 
     def test_bellman_ford_path(self):
@@ -58,7 +56,7 @@ class TestBellmanFordGraph(unittest.TestCase):
 
     def test_bellman_ford_with_no_goal_set(self):
         path = retworkx.graph_bellman_ford_shortest_path_lengths(self.graph, self.a, lambda x: 1)
-        expected = {1: 1.0, 2: 1.0, 3: 1.0, 4: 2.0, 5: 2.0}
+        expected = retworkx.graph_dijkstra_shortest_path_lengths(self.graph, self.a, lambda x: 1)
         self.assertEqual(expected, path)
 
     def test_bellman_ford_length_with_no_path(self):
@@ -117,22 +115,19 @@ class TestBellmanFordGraph(unittest.TestCase):
 
     def bellman_ford_with_invalid_weights(self):
         graph = retworkx.generators.path_graph(2)
-        for invalid_weight in [float("nan")]:
-            for as_undirected in [False, True]:
-                with self.subTest(invalid_weight=invalid_weight, as_undirected=as_undirected):
-                    with self.assertRaises(ValueError):
-                        retworkx.graph_bellman_ford_shortest_paths(
-                            graph,
-                            source=0,
-                            weight_fn=lambda _: invalid_weight,
-                            as_undirected=as_undirected,
-                        )
+        for as_undirected in [False, True]:
+            with self.subTest(as_undirected=as_undirected):
+                with self.assertRaises(ValueError):
+                    retworkx.graph_bellman_ford_shortest_paths(
+                        graph,
+                        source=0,
+                        weight_fn=lambda _: float("nan"),
+                        as_undirected=as_undirected,
+                    )
 
     def bellman_ford_lengths_with_invalid_weights(self):
         graph = retworkx.generators.path_graph(2)
-        for invalid_weight in [float("nan")]:
-            with self.subTest(invalid_weight=invalid_weight):
-                with self.assertRaises(ValueError):
-                    retworkx.graph_bellman_ford_shortest_path_lengths(
-                        graph, node=0, edge_cost_fn=lambda _: invalid_weight
-                    )
+        with self.assertRaises(ValueError):
+            retworkx.graph_bellman_ford_shortest_path_lengths(
+                graph, node=0, edge_cost_fn=lambda _: float("nan")
+            )
