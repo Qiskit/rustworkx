@@ -11,6 +11,7 @@
 // under the License.
 
 use std::collections::VecDeque;
+use std::error::Error;
 use std::hash::Hash;
 
 use fixedbitset::FixedBitSet;
@@ -31,13 +32,14 @@ pub fn bellman_ford<G, F, K, E, S>(
     start: G::NodeId,
     mut edge_cost: F,
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
-) -> Result<S, E>
+) -> Result<Option<S>, E>
 where
     G: IntoEdges + Visitable + NodeIndexable + NodeCount + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash + IndexType,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
     S: DistanceMap<G::NodeId, K>,
+    E: Error,
 {
     let node_count = graph.node_count();
     let mut in_queue = FixedBitSet::with_capacity(graph.node_bound());
@@ -71,7 +73,7 @@ where
                     if check_for_negative_cycle(
                         predecessor.iter().map(|x| x.map(|y| y.index())).collect(),
                     ) {
-                        break; // TODO: raise error
+                        return Ok(None);
                     }
                 }
 
@@ -99,7 +101,7 @@ where
         }
     }
 
-    Ok(scores)
+    Ok(Some(scores))
 }
 
 fn check_for_negative_cycle(predecessor: Vec<Option<usize>>) -> bool {

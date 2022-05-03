@@ -131,3 +131,33 @@ class TestBellmanFordGraph(unittest.TestCase):
             retworkx.graph_bellman_ford_shortest_path_lengths(
                 graph, node=0, edge_cost_fn=lambda _: float("nan")
             )
+
+    def test_raises_negative_cycle_bellman_ford_paths(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, -1),
+            ]
+        )
+
+        with self.assertRaises(retworkx.NegativeCycle):
+            retworkx.bellman_ford_shortest_paths(graph, 0, weight_fn=float)
+
+    def test_raises_negative_cycle_bellman_ford_path_lenghts(self):
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, -1),
+            ]
+        )
+
+        with self.assertRaises(retworkx.NegativeCycle):
+            retworkx.bellman_ford_shortest_path_lengths(graph, 0, edge_cost_fn=float)

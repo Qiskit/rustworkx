@@ -18,7 +18,7 @@ mod num_shortest_path;
 
 use std::convert::TryFrom;
 
-use crate::{digraph, graph, CostFn, NoPathFound};
+use crate::{digraph, graph, weight_callable, CostFn, NegativeCycle, NoPathFound};
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -1207,17 +1207,36 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
 ) -> PyResult<PathLengthMapping> {
-    // TODO: cache
-    let edge_cost_callable = CostFn::from(edge_cost_fn);
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
+    let edge_cost_fn = Some(edge_cost_fn);
+    for index in 0..=graph.graph.edge_bound() {
+        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => {
+                edge_weights.push(Some(weight_callable(py, &edge_cost_fn, weight, 1.0)?))
+            }
+            None => edge_weights.push(None),
+        };
+    }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
 
     let start = NodeIndex::new(node);
 
-    let res: Vec<Option<f64>> = bellman_ford(
-        &graph.graph,
-        start,
-        |e| edge_cost_callable.call(py, e.weight()),
-        None,
-    )?;
+    let res: Option<Vec<Option<f64>>> =
+        bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), None)?;
+
+    if res.is_none() {
+        return Err(NegativeCycle::new_err(
+            "The shortest-path is not defined because there is a negative cycle",
+        ));
+    }
+
+    let res = res.unwrap();
 
     Ok(PathLengthMapping {
         path_lengths: res
@@ -1244,12 +1263,14 @@ pub fn graph_bellman_ford_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
 ) -> PyResult<PathLengthMapping> {
-    let edge_cost_callable = CostFn::from(edge_cost_fn);
     let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
+    let edge_cost_fn = Some(edge_cost_fn);
     for index in 0..=graph.graph.edge_bound() {
         let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
-            Some(weight) => edge_weights.push(Some(edge_cost_callable.call(py, weight)?)),
+            Some(weight) => {
+                edge_weights.push(Some(weight_callable(py, &edge_cost_fn, weight, 1.0)?))
+            }
             None => edge_weights.push(None),
         };
     }
@@ -1262,7 +1283,16 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 
     let start = NodeIndex::new(node);
 
-    let res: Vec<Option<f64>> = bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), None)?;
+    let res: Option<Vec<Option<f64>>> =
+        bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), None)?;
+
+    if res.is_none() {
+        return Err(NegativeCycle::new_err(
+            "The shortest-path is not defined because there is a negative cycle",
+        ));
+    }
+
+    let res = res.unwrap();
 
     Ok(PathLengthMapping {
         path_lengths: res
@@ -1293,12 +1323,16 @@ pub fn graph_bellman_ford_shortest_paths(
     let start = NodeIndex::new(source);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
 
-    let edge_cost_callable = CostFn::try_from((weight_fn, default_weight))?;
     let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
     for index in 0..=graph.graph.edge_bound() {
         let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
-            Some(weight) => edge_weights.push(Some(edge_cost_callable.call(py, weight)?)),
+            Some(weight) => edge_weights.push(Some(weight_callable(
+                py,
+                &weight_fn,
+                weight,
+                default_weight,
+            )?)),
             None => edge_weights.push(None),
         };
     }
@@ -1309,8 +1343,14 @@ pub fn graph_bellman_ford_shortest_paths(
         }
     };
 
-    (bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), Some(&mut paths))
-        as PyResult<Vec<Option<f64>>>)?;
+    let res: Option<Vec<Option<f64>>> =
+        bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), Some(&mut paths))?;
+
+    if res.is_none() {
+        return Err(NegativeCycle::new_err(
+            "The shortest-path is not defined because there is a negative cycle",
+        ));
+    }
 
     Ok(PathMapping {
         paths: paths
@@ -1357,12 +1397,16 @@ pub fn digraph_bellman_ford_shortest_paths(
     let start = NodeIndex::new(source);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
 
-    let edge_cost_callable = CostFn::try_from((weight_fn, default_weight))?;
     let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
     for index in 0..=graph.graph.edge_bound() {
         let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
-            Some(weight) => edge_weights.push(Some(edge_cost_callable.call(py, weight)?)),
+            Some(weight) => edge_weights.push(Some(weight_callable(
+                py,
+                &weight_fn,
+                weight,
+                default_weight,
+            )?)),
             None => edge_weights.push(None),
         };
     }
@@ -1373,8 +1417,14 @@ pub fn digraph_bellman_ford_shortest_paths(
         }
     };
 
-    (bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), Some(&mut paths))
-        as PyResult<Vec<Option<f64>>>)?;
+    let res: Option<Vec<Option<f64>>> =
+        bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), Some(&mut paths))?;
+
+    if res.is_none() {
+        return Err(NegativeCycle::new_err(
+            "The shortest-path is not defined because there is a negative cycle",
+        ));
+    }
 
     Ok(PathMapping {
         paths: paths

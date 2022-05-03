@@ -285,6 +285,8 @@ create_exception!(retworkx, NoPathFound, PyException);
 import_exception!(retworkx.visit, PruneSearch);
 // Stop graph traversal.
 import_exception!(retworkx.visit, StopSearch);
+// Negative Cycle found on shortest-path algorithm
+create_exception!(retworkx, NegativeCycle, PyException);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -296,6 +298,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
+    m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;

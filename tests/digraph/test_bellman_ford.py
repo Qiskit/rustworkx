@@ -162,3 +162,51 @@ class TestBellmanFordDiGraph(unittest.TestCase):
             retworkx.digraph_bellman_ford_shortest_path_lengths(
                 graph, node=0, edge_cost_fn=lambda _: float("nan")
             )
+
+    def test_raises_negative_cycle_bellman_ford_paths(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, -1),
+            ]
+        )
+
+        with self.assertRaises(retworkx.NegativeCycle):
+            retworkx.bellman_ford_shortest_paths(graph, 0, weight_fn=float)
+
+    def test_raises_negative_cycle_bellman_ford_path_lenghts(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, -1),
+            ]
+        )
+
+        with self.assertRaises(retworkx.NegativeCycle):
+            retworkx.bellman_ford_shortest_path_lengths(graph, 0, edge_cost_fn=float)
+
+    def test_negative_edges_but_no_cycle(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, 1),
+            ]
+        )
+
+        result = retworkx.bellman_ford_shortest_path_lengths(graph, 0, edge_cost_fn=float)
+
+        expected = {k: v for k, v in retworkx.floyd_warshall(graph, float)[0].items() if k != 0}
+
+        self.assertEqual(result, expected)
