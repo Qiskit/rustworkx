@@ -186,7 +186,7 @@ where
         match raw_weight {
             Some(weight) => edge_weights.push(Some(weight_callable(
                 py,
-                &weight_fn,
+                weight_fn,
                 weight,
                 default_weight,
             )?)),
