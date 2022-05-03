@@ -34,7 +34,7 @@ use numpy::IntoPyArray;
 
 use retworkx_core::dictmap::*;
 use retworkx_core::shortest_path::{
-    astar, bellman_ford, negative_cycle_finder, dijkstra, k_shortest_path,
+    astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
 };
 
 use crate::iterators::{
@@ -1470,8 +1470,7 @@ pub fn negative_edge_cycle(
         }
     };
 
-    let cycle: Option<Vec<_>> =
-        negative_cycle_finder(&graph.graph, |e| edge_cost(e.id()))?;
+    let cycle: Option<Vec<_>> = negative_cycle_finder(&graph.graph, |e| edge_cost(e.id()))?;
 
     Ok(cycle.is_some())
 }
