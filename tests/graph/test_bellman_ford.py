@@ -62,7 +62,7 @@ class TestBellmanFordGraph(unittest.TestCase):
     def test_bellman_ford_length_with_no_path(self):
         g = retworkx.PyGraph()
         a = g.add_node("A")
-        b = g.add_node("B")
+        g.add_node("B")
         path_lenghts = retworkx.graph_bellman_ford_shortest_path_lengths(g, a, edge_cost_fn=float)
         expected = {}
         self.assertEqual(expected, path_lenghts)
