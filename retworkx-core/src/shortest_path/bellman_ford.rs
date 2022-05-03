@@ -92,9 +92,7 @@ where
                     node_path.push(current_node);
                 }
                 node_path.reverse();
-                path.as_mut().unwrap().entry(node).and_modify(|new_vec| {
-                    *new_vec = node_path;
-                });
+                path.as_mut().unwrap().insert(node, node_path);
             }
         }
     }
