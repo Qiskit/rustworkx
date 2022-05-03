@@ -223,9 +223,9 @@ dependencies = [
 
 [[package]]
 name = "num-complex"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26873667bbbb7c5182d4a37c1add32cdf09f841af72da53318fdb81543c15085"
+checksum = "97fbc387afefefd5e9e39493299f3069e14a140dd34dc19b4c1c1a8fddb6a790"
 dependencies = [
  "num-traits",
 ]
@@ -267,7 +267,7 @@ checksum = "383ae168529a39fc97cbc1d9d4fa865377731a519bc27553ed96f50594de7c45"
 dependencies = [
  "libc",
  "ndarray",
- "num-complex 0.4.0",
+ "num-complex 0.4.1",
  "num-traits",
  "pyo3",
 ]
@@ -340,7 +340,7 @@ dependencies = [
  "indoc",
  "libc",
  "num-bigint",
- "num-complex 0.4.0",
+ "num-complex 0.4.1",
  "parking_lot",
  "pyo3-build-config",
  "pyo3-ffi",
@@ -488,7 +488,7 @@ dependencies = [
  "indexmap",
  "ndarray",
  "num-bigint",
- "num-complex 0.4.0",
+ "num-complex 0.4.1",
  "num-traits",
  "numpy",
  "petgraph",
