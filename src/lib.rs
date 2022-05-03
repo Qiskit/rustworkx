@@ -338,6 +338,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
@@ -421,6 +423,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::CentralityMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
+    m.add_class::<iterators::MultiplePathMapping>()?;
+    m.add_class::<iterators::AllPairsMultiplePathMapping>()?;
     m.add_class::<iterators::AllPairsPathLengthMapping>()?;
     m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_class::<iterators::NodesCountMapping>()?;
