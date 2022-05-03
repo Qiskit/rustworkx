@@ -70,6 +70,12 @@ fn tensor_product<Ty: EdgeType>(
     if undirected {
         for edge_first in first.edge_references() {
             for edge_second in second.edge_references() {
+                if edge_first.source() == edge_first.target()
+                    || edge_second.source() == edge_second.target()
+                {
+                    continue;
+                }
+
                 let source = hash_nodes
                     .get(&(edge_first.source(), edge_second.target()))
                     .unwrap();
