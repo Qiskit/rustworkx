@@ -104,6 +104,12 @@ name = "hashbrown"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
+
+[[package]]
+name = "hashbrown"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db0d4cf898abf0081f964436dc980e96670a0f36863e4b83aaacdb65c9d7ccc3"
 dependencies = [
  "ahash",
  "rayon",
@@ -125,7 +131,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc633605454125dec4b66843673f01c7df2b89479b32e0ed634e43a91cff62a5"
 dependencies = [
  "autocfg",
- "hashbrown",
+ "hashbrown 0.11.2",
  "rayon",
 ]
 
@@ -335,7 +341,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd86513975ed69bf3fb5d4a286cdcda66dbc56f84bdf4832b6c82b459f4417b2"
 dependencies = [
  "cfg-if",
- "hashbrown",
+ "hashbrown 0.12.1",
  "indexmap",
  "indoc",
  "libc",
@@ -484,7 +490,7 @@ version = "0.12.0"
 dependencies = [
  "ahash",
  "fixedbitset",
- "hashbrown",
+ "hashbrown 0.12.1",
  "indexmap",
  "ndarray",
  "num-bigint",
@@ -504,7 +510,7 @@ name = "retworkx-core"
 version = "0.12.0"
 dependencies = [
  "ahash",
- "hashbrown",
+ "hashbrown 0.12.1",
  "indexmap",
  "petgraph",
  "rayon",
