@@ -33,7 +33,9 @@ use pyo3::exceptions::PyIndexError;
 use numpy::IntoPyArray;
 
 use retworkx_core::dictmap::*;
-use retworkx_core::shortest_path::{astar, bellman_ford, dijkstra, k_shortest_path};
+use retworkx_core::shortest_path::{
+    astar, bellman_ford, negative_cycle_finder, dijkstra, k_shortest_path,
+};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices, NodesCountMapping,
@@ -1439,4 +1441,37 @@ pub fn digraph_bellman_ford_shortest_paths(
             })
             .collect(),
     })
+}
+
+/// Bellman-Ford shortest path algorithm
+/// using SPFA
+#[pyfunction]
+#[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
+pub fn negative_edge_cycle(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<bool> {
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
+    let edge_cost_fn = Some(edge_cost_fn);
+    for index in 0..=graph.graph.edge_bound() {
+        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => {
+                edge_weights.push(Some(weight_callable(py, &edge_cost_fn, weight, 1.0)?))
+            }
+            None => edge_weights.push(None),
+        };
+    }
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
+
+    let cycle: Option<Vec<_>> =
+        negative_cycle_finder(&graph.graph, |e| edge_cost(e.id()))?;
+
+    Ok(cycle.is_some())
 }

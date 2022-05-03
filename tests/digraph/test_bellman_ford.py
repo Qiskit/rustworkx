@@ -210,3 +210,31 @@ class TestBellmanFordDiGraph(unittest.TestCase):
         expected = {k: v for k, v in retworkx.floyd_warshall(graph, float)[0].items() if k != 0}
 
         self.assertEqual(result, expected)
+
+    def test_negative_cycle_find_true_cycle(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, -1),
+            ]
+        )
+
+        self.assertTrue(retworkx.negative_edge_cycle(graph, float))
+
+    def test_negative_cycle_find_no_cycle(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, 1),
+            ]
+        )
+
+        self.assertFalse(retworkx.negative_edge_cycle(graph, float))
