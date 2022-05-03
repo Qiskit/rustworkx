@@ -18,7 +18,7 @@ mod num_shortest_path;
 
 use std::convert::TryFrom;
 
-use crate::{digraph, graph, weight_callable, CostFn, NegativeCycle, NoPathFound};
+use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -26,7 +26,6 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
-use petgraph::visit::EdgeIndexable;
 use petgraph::visit::NodeCount;
 use pyo3::exceptions::PyIndexError;
 
@@ -1209,17 +1208,8 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
 ) -> PyResult<PathLengthMapping> {
-    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
-    let edge_cost_fn = Some(edge_cost_fn);
-    for index in 0..=graph.graph.edge_bound() {
-        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
-        match raw_weight {
-            Some(weight) => {
-                edge_weights.push(Some(weight_callable(py, &edge_cost_fn, weight, 1.0)?))
-            }
-            None => edge_weights.push(None),
-        };
-    }
+    let edge_weights: Vec<Option<f64>> =
+        edge_weights_from_callable(py, &graph.graph, &Some(edge_cost_fn), 1.0)?;
     let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
         match edge_weights[e.index()] {
             Some(weight) => Ok(weight),
@@ -1265,17 +1255,8 @@ pub fn graph_bellman_ford_shortest_path_lengths(
     node: usize,
     edge_cost_fn: PyObject,
 ) -> PyResult<PathLengthMapping> {
-    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
-    let edge_cost_fn = Some(edge_cost_fn);
-    for index in 0..=graph.graph.edge_bound() {
-        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
-        match raw_weight {
-            Some(weight) => {
-                edge_weights.push(Some(weight_callable(py, &edge_cost_fn, weight, 1.0)?))
-            }
-            None => edge_weights.push(None),
-        };
-    }
+    let edge_weights: Vec<Option<f64>> =
+        edge_weights_from_callable(py, &graph.graph, &Some(edge_cost_fn), 1.0)?;
     let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
         match edge_weights[e.index()] {
             Some(weight) => Ok(weight),
@@ -1325,19 +1306,8 @@ pub fn graph_bellman_ford_shortest_paths(
     let start = NodeIndex::new(source);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
 
-    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
-    for index in 0..=graph.graph.edge_bound() {
-        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
-        match raw_weight {
-            Some(weight) => edge_weights.push(Some(weight_callable(
-                py,
-                &weight_fn,
-                weight,
-                default_weight,
-            )?)),
-            None => edge_weights.push(None),
-        };
-    }
+    let edge_weights: Vec<Option<f64>> =
+        edge_weights_from_callable(py, &graph.graph, &weight_fn, default_weight)?;
     let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
         match edge_weights[e.index()] {
             Some(weight) => Ok(weight),
@@ -1399,19 +1369,8 @@ pub fn digraph_bellman_ford_shortest_paths(
     let start = NodeIndex::new(source);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
 
-    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
-    for index in 0..=graph.graph.edge_bound() {
-        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
-        match raw_weight {
-            Some(weight) => edge_weights.push(Some(weight_callable(
-                py,
-                &weight_fn,
-                weight,
-                default_weight,
-            )?)),
-            None => edge_weights.push(None),
-        };
-    }
+    let edge_weights: Vec<Option<f64>> =
+        edge_weights_from_callable(py, &graph.graph, &weight_fn, default_weight)?;
     let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
         match edge_weights[e.index()] {
             Some(weight) => Ok(weight),
@@ -1452,17 +1411,8 @@ pub fn negative_edge_cycle(
     graph: &digraph::PyDiGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<bool> {
-    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.graph.edge_bound());
-    let edge_cost_fn = Some(edge_cost_fn);
-    for index in 0..=graph.graph.edge_bound() {
-        let raw_weight = graph.graph.edge_weight(EdgeIndex::new(index));
-        match raw_weight {
-            Some(weight) => {
-                edge_weights.push(Some(weight_callable(py, &edge_cost_fn, weight, 1.0)?))
-            }
-            None => edge_weights.push(None),
-        };
-    }
+    let edge_weights: Vec<Option<f64>> =
+        edge_weights_from_callable(py, &graph.graph, &Some(edge_cost_fn), 1.0)?;
     let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
         match edge_weights[e.index()] {
             Some(weight) => Ok(weight),

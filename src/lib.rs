@@ -66,7 +66,8 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount, NodeIndexable,
+    Data, EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable,
 };
 use petgraph::EdgeType;
 
@@ -168,6 +169,32 @@ where
         }
         None => Ok(default),
     }
+}
+
+pub fn edge_weights_from_callable<'p, T, Ty: EdgeType>(
+    py: Python<'p>,
+    graph: &StablePyGraph<Ty>,
+    weight_fn: &'p Option<PyObject>,
+    default_weight: T,
+) -> PyResult<Vec<Option<T>>>
+where
+    T: FromPyObject<'p> + Copy,
+{
+    let mut edge_weights: Vec<Option<T>> = Vec::with_capacity(graph.edge_bound());
+    for index in 0..=graph.edge_bound() {
+        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => edge_weights.push(Some(weight_callable(
+                py,
+                &weight_fn,
+                weight,
+                default_weight,
+            )?)),
+            None => edge_weights.push(None),
+        };
+    }
+
+    Ok(edge_weights)
 }
 
 #[inline]
