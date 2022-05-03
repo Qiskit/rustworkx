@@ -14,6 +14,8 @@ use std::collections::VecDeque;
 use std::hash::Hash;
 
 use fixedbitset::FixedBitSet;
+use hashbrown::HashMap;
+use petgraph::algo::kosaraju_scc;
 use petgraph::algo::{is_cyclic_directed, Measure};
 use petgraph::graph::IndexType;
 use petgraph::stable_graph::StableDiGraph;
@@ -184,13 +186,56 @@ fn check_for_negative_cycle(predecessor: Vec<Option<usize>>) -> bool {
 }
 
 fn recover_negative_cycle_from_predecessors<G>(
-    _graph: G,
-    _predecessor: Vec<Option<G::NodeId>>,
+    graph: G,
+    predecessor: Vec<Option<G::NodeId>>,
 ) -> Vec<G::NodeId>
 where
     G: IntoEdges + Visitable + NodeIndexable + NodeCount + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash + IndexType,
 {
-    // TODO: replace with actual code to find cycle
+    // We build the graph with just the edges in the shortest path graph
+    let mut path_graph =
+        StableDiGraph::<usize, ()>::with_capacity(predecessor.len(), predecessor.len());
+
+    let original_node_indices: HashMap<usize, G::NodeId> =
+        graph.node_identifiers().map(|x| (x.index(), x)).collect();
+
+    let node_indices: Vec<_> = (0..predecessor.len())
+        .map(|x| path_graph.add_node(x))
+        .collect();
+
+    for (u, pred_u) in predecessor.into_iter().enumerate() {
+        if let Some(v) = pred_u {
+            path_graph.add_edge(node_indices[v.index()], node_indices[u], ());
+
+            if v.index() == u {
+                // Edge case: self-loop with negative edge
+                return vec![v, v];
+            }
+        }
+    }
+
+    // Then we find the strongly connected components
+    let sccs = kosaraju_scc(&path_graph);
+
+    for component in sccs {
+        // Because there are N nodes and N edges, the SCC
+        // that consists of more than one node *is* the negative cycle
+        if component.len() >= 2 {
+            let mut cycle: Vec<G::NodeId> = Vec::with_capacity(component.len() + 1);
+
+            for node in component {
+                if let Some(original_node) = original_node_indices.get(&node.index()) {
+                    cycle.push(*original_node);
+                }
+            }
+
+            cycle.push(cycle[0]); // first node must be equal to last node
+
+            return cycle;
+        }
+    }
+
+    // If we reach this line, it means the graph does not have a negative cycle
     Vec::new()
 }

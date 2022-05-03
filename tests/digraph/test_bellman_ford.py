@@ -211,7 +211,7 @@ class TestBellmanFordDiGraph(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_negative_cycle_find_true_cycle(self):
+    def test_negative_edge_cycle_true_cycle(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(4)))
         graph.add_edges_from(
@@ -225,7 +225,7 @@ class TestBellmanFordDiGraph(unittest.TestCase):
 
         self.assertTrue(retworkx.negative_edge_cycle(graph, float))
 
-    def test_negative_cycle_find_no_cycle(self):
+    def test_negative_edge_cycle_no_cycle(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(list(range(4)))
         graph.add_edges_from(
@@ -238,3 +238,51 @@ class TestBellmanFordDiGraph(unittest.TestCase):
         )
 
         self.assertFalse(retworkx.negative_edge_cycle(graph, float))
+
+    def test_find_negative_cycle_true_cycle(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, -1),
+            ]
+        )
+
+        cycle = retworkx.find_negative_cycle(graph, edge_cost_fn=float)
+        cycle_weight = 0
+
+        for i in range(len(cycle) - 1):
+            cycle_weight += graph.get_edge_data(cycle[i], cycle[i + 1])
+
+        self.assertTrue(cycle_weight < 0)
+
+    def test_find_negative_cycle_self_loop_cycle(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from([(0, 1, 1), (1, 0, 1), (0, 0, -1)])
+
+        cycle = retworkx.find_negative_cycle(graph, edge_cost_fn=float)
+        cycle_weight = 0
+
+        for i in range(len(cycle) - 1):
+            cycle_weight += graph.get_edge_data(cycle[i], cycle[i + 1])
+
+        self.assertTrue(cycle_weight < 0)
+
+    def test_find_negative_cycle_no_cycle(self):
+        graph = retworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(4)))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (1, 2, -1),
+                (2, 3, -1),
+                (3, 0, 1),
+            ]
+        )
+
+        with self.assertRaises(ValueError):
+            retworkx.find_negative_cycle(graph, edge_cost_fn=float)

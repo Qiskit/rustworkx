@@ -28,6 +28,7 @@ use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::NodeCount;
 use pyo3::exceptions::PyIndexError;
+use pyo3::exceptions::PyValueError;
 
 use numpy::IntoPyArray;
 
@@ -1423,4 +1424,35 @@ pub fn negative_edge_cycle(
     let cycle: Option<Vec<_>> = negative_cycle_finder(&graph.graph, |e| edge_cost(e.id()))?;
 
     Ok(cycle.is_some())
+}
+
+/// Bellman-Ford shortest path algorithm
+/// using SPFA
+#[pyfunction]
+#[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
+pub fn find_negative_cycle(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<NodeIndices> {
+    let edge_weights: Vec<Option<f64>> =
+        edge_weights_from_callable(py, &graph.graph, &Some(edge_cost_fn), 1.0)?;
+    let edge_cost = |e: EdgeIndex| -> PyResult<f64> {
+        match edge_weights[e.index()] {
+            Some(weight) => Ok(weight),
+            None => Err(PyIndexError::new_err("No edge found for index")),
+        }
+    };
+
+    let cycle: Option<Vec<_>> = negative_cycle_finder(&graph.graph, |e| edge_cost(e.id()))?;
+
+    if cycle.is_none() {
+        return Err(PyValueError::new_err("There is no negative cycle"));
+    }
+
+    let cycle = cycle.unwrap();
+
+    Ok(NodeIndices {
+        nodes: cycle.into_iter().map(|x| x.index()).collect(),
+    })
 }
