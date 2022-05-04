@@ -52,7 +52,7 @@ use crate::distancemap::DistanceMap;
 /// use retworkx_core::shortest_path::bellman_ford;
 /// use retworkx_core::Result;
 ///
-/// let mut graph : Graph<(),(),Directed>= Graph::new();
+/// let mut graph : Graph<(),i32,Directed>= Graph::new();
 /// let a = graph.add_node(()); // node with no weight
 /// let b = graph.add_node(());
 /// let c = graph.add_node(());
@@ -65,33 +65,33 @@ use crate::distancemap::DistanceMap;
 /// let z = graph.add_node(());
 ///
 /// graph.extend_with_edges(&[
-///     (a, b),
-///     (b, c),
-///     (c, d),
-///     (d, a),
-///     (e, f),
-///     (b, e),
-///     (f, g),
-///     (g, h),
-///     (h, e)
+///     (a, b, 1),
+///     (b, c, 1),
+///     (c, d, 1),
+///     (d, a, 1),
+///     (e, f, -2),
+///     (b, e, -1),
+///     (f, g, 5),
+///     (g, h, 2),
+///     (h, e, -1)
 /// ]);
 /// // a ----> b ----> e ----> f
 /// // ^       |       ^       |
 /// // |       v       |       v
 /// // d <---- c       h <---- g
 ///
-/// let expected_res: DictMap<NodeIndex, usize> = [
+/// let expected_res: DictMap<NodeIndex, i32> = [
 ///      (a, 3),
 ///      (b, 0),
 ///      (c, 1),
 ///      (d, 2),
-///      (e, 1),
-///      (f, 2),
-///      (g, 3),
+///      (e, -1),
+///      (f, -3),
+///      (g, 2),
 ///      (h, 4)
 ///     ].iter().cloned().collect();
-/// let res: Result<Option<DictMap<NodeIndex, usize>>> = bellman_ford(
-///     &graph, b, |_| Ok(1), None
+/// let res: Result<Option<DictMap<NodeIndex, i32>>> = bellman_ford(
+///     &graph, b, |x| Ok(*x.weight()), None
 /// );
 /// assert_eq!(res.unwrap().unwrap(), expected_res);
 /// // z is not inside res because there is not path from b to z.
@@ -180,7 +180,7 @@ where
 /// Finds an arbitrary negative cycle in a graph using the Bellman-Ford
 /// algorithm with the SPFA heuristic.
 ///
-/// Returns a vector of NodeIds if there are cycles, and None if there aren't.
+/// Returns a vector of NodeIds if there are cycles, and [`None`] if there aren't.
 /// The output is an arbitrary cycle with the property that the first node of the cycle is also the first
 /// and last element of the vector.
 /// # Example
