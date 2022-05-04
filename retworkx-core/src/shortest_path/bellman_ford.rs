@@ -308,7 +308,7 @@ where
         .map(|x| path_graph.add_node(x))
         .collect();
 
-    for (u, pred_u) in predecessor.into_iter().enumerate() {
+    for (u, pred_u) in predecessor.iter().enumerate() {
         if let Some(v) = pred_u {
             path_graph.add_edge(node_indices[graph.to_index(*v)], node_indices[u], ());
         }
@@ -356,7 +356,7 @@ where
             let mut cycle: Vec<G::NodeId> = Vec::with_capacity(component.len() + 1);
 
             let start_node = graph.from_index(component[0].index());
-            let mut current_node = start_node.clone();
+            let mut current_node = start_node;
 
             loop {
                 cycle.push(current_node);
