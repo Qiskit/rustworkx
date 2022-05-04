@@ -211,25 +211,25 @@ impl PlanarEmbedding {
         ref_nbr: Option<NodeIndex>
     ){
         let cw_weight = CwCcw::<NodeIndex>::default();
+        let first_nbr = FirstNbr::<NodeIndex>::default();
         let new_edge = self.embedding.add_edge(start_node, end_node, cw_weight);
         if ref_nbr.is_none() {
             // The start node has no neighbors
-            //cw_weight.cw = Some(end_node.clone());
-            //self.embedding.update_edge(start_node, end_node, cw_weight);
+            self.update_edge_weight(start_node, end_node, end_node, true);
             self.update_edge_weight(start_node, end_node, end_node, false);
-            // self.embedding[new_edge].ccw = Some(end_node.clone());
-            // self.embedding[start_node].first_nbr = Some(end_node.clone());
-            // return
+            self.embedding[start_node].first_nbr = Some(end_node);
+            return
         }
-        // // if ref_nbr not in self[start_node] error
-        // let ref_nbr_edge = self.embedding.find_edge(start_node, ref_nbr.unwrap().clone());
-        // let cw_ref_node = ref_nbr_edge.unwrap().cw;
-        // let cw_ref_edge = self.embedding.find_edge(start_node, cw_ref_node);
+        // if ref_nbr not in self[start_node] error
+        let ref_nbr_node = ref_nbr.unwrap();
+        let cw_ref_edge = self.embedding.find_edge(start_node, ref_nbr_node).unwrap();
+        let cw_ref_node = self.embedding.edge_weight_mut(cw_ref_edge).unwrap().cw.unwrap();
 
-        // self.embedding[ref_nbr_edge].cw = Some(end_node.clone());
-        // self.embedding[new_edge].cw = Some(cw_ref_node.clone());
-        // self.embedding[cw_ref_edge].ccw = Some(end_node.clone());
-        // self.embedding[new_edge].ccw = ref_nbr.unwrap().clone();
+        // Alter half-edge data structures
+        self.update_edge_weight(start_node, ref_nbr_node, end_node, true);
+        self.update_edge_weight(start_node, end_node, cw_ref_node, true);
+        self.update_edge_weight(start_node, cw_ref_node, end_node, false);
+        self.update_edge_weight(start_node, end_node, ref_nbr_node, false);
     }
 
     fn add_half_edge_ccw (
@@ -238,26 +238,31 @@ impl PlanarEmbedding {
         end_node: NodeIndex,
         ref_nbr: Option<NodeIndex>
     ){
-        let mut cw_weight = CwCcw::<NodeIndex>::default();
-        let new_edge = self.embedding.add_edge(start_node, end_node, cw_weight);
-        if !ref_nbr.is_none() {
-            self.embedding[new_edge].cw = Some(end_node.clone());
-            self.embedding[new_edge].ccw = Some(end_node.clone());
-            self.embedding[start_node].first_nbr = Some(end_node.clone());
-            return
+        if ref_nbr.is_none() {
+            let cw_weight = CwCcw::<NodeIndex>::default();
+            let new_edge = self.embedding.add_edge(start_node, end_node, cw_weight);
+            self.update_edge_weight(start_node, end_node, end_node, true);
+            self.update_edge_weight(start_node, end_node, end_node, false);
+            self.embedding[start_node].first_nbr = Some(end_node);
         } else {
-            return
-            //let ccw_ref = self.embedding.find_edge(start_node, ref_nbr.unwrap().clone()).ccw;
-            //self.add_half_edge_cw(start_node, end_node, ccw_ref);
-
-            //if ref_nbr == self.embedding[start_node].first_nbr {
-            //    self.embedding[start_node].first_nbr = Some(end_node.clone());
-            //}
+            let ref_nbr_node = ref_nbr.unwrap();
+            let ccw_ref_edge = self.embedding.find_edge(start_node, ref_nbr_node).unwrap();
+            let ccw_ref_node = self.embedding.edge_weight_mut(ccw_ref_edge).unwrap().ccw;
+            self.add_half_edge_cw(start_node, end_node, ccw_ref_node);
+            if ref_nbr == self.embedding[start_node].first_nbr {
+                self.embedding[start_node].first_nbr = Some(end_node);
+            }
         }
     }
 
     fn add_half_edge_first (&self, start_node: NodeIndex, end_node: NodeIndex)
     {
+        if self.embedding.contains(start_node) && !self.embedding[start_node].first_nbr.is_none() {
+            let ref_node = self.embedding[start_node].first_nbr.unwrap();
+        } else {
+            let ref_node = Some(None);
+        }
+        self.add_half_edge_ccw(start_node, end_node, ref_node);
     }
 
     fn next_face_half_edge (&self, v: NodeIndex, w: NodeIndex)
@@ -267,16 +272,14 @@ impl PlanarEmbedding {
     fn traverse_face (&self, v: NodeIndex, w: NodeIndex, mark_half_edges: bool)
     {
     }
-    fn update_edge_weight(&mut self, v: NodeIndex, w: NodeIndex, new_value: NodeIndex, cw: bool) {
-        //let found_weight = self.embedding.edge_weight_mut(self.embedding.find_edge(v, w).unwrap()).unwrap();
+    fn update_edge_weight(&mut self, v: NodeIndex, w: NodeIndex, new_node: NodeIndex, cw: bool) {
         let found_edge = self.embedding.find_edge(v, w);
-        let found_weight = self.embedding.edge_weight_mut(found_edge.unwrap()).unwrap().clone();
+        let mut found_weight = self.embedding.edge_weight_mut(found_edge.unwrap()).unwrap();
 
         if cw {
-            found_weight.cw = Some(new_value.clone());
+            found_weight.cw = Some(new_node);
         } else {
-            found_weight.ccw = Some(new_value.clone());
+            found_weight.ccw = Some(new_node);
         }
-        self.embedding.update_edge(v, w, found_weight);
     }
 }
