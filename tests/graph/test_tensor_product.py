@@ -32,7 +32,7 @@ class TestTensorProduct(unittest.TestCase):
         expected_node_map = {(0, 0): 0, (0, 1): 1, (1, 0): 2, (1, 1): 3}
         self.assertEqual(node_map, expected_node_map)
 
-        expected_edges = [(0, 3), (3, 0)]
+        expected_edges = [(0, 3), (1, 2)]
         self.assertEqual(graph_product.num_nodes(), 4)
         self.assertEqual(graph_product.num_edges(), 2)
         self.assertEqual(graph_product.edge_list(), expected_edges)
@@ -45,7 +45,7 @@ class TestTensorProduct(unittest.TestCase):
         expected_node_map = {(0, 1): 1, (1, 0): 3, (0, 0): 0, (1, 2): 5, (0, 2): 2, (1, 1): 4}
         self.assertEqual(dict(node_map), expected_node_map)
 
-        expected_edges = [(0, 4), (4, 0), (1, 5), (5, 1)]
+        expected_edges = [(0, 4), (1, 5), (1, 3), (2, 4)]
         self.assertEqual(graph_product.num_nodes(), 6)
         self.assertEqual(graph_product.num_edges(), 4)
         self.assertEqual(graph_product.edge_list(), expected_edges)
@@ -69,4 +69,44 @@ class TestTensorProduct(unittest.TestCase):
         graph_2.add_edge(0, 1, "w_2")
 
         graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
-        self.assertEqual([("w_1", "w_2"), ("w_2", "w_1")], graph_product.edges())
+        self.assertEqual([("w_1", "w_2"), ("w_1", "w_2")], graph_product.edges())
+
+    def test_multi_graph_1(self):
+        graph_1 = retworkx.generators.path_graph(2)
+        graph_1.add_edge(0, 1, None)
+        graph_2 = retworkx.generators.path_graph(2)
+
+        graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
+        expected_edges = [(0, 3), (0, 3), (1, 2), (1, 2)]
+        self.assertEqual(graph_product.num_edges(), 4)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
+
+    def test_multi_graph_2(self):
+        graph_1 = retworkx.generators.path_graph(2)
+        graph_1.add_edge(0, 0, None)
+        graph_2 = retworkx.generators.path_graph(2)
+
+        graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
+        expected_edges = [(0, 3), (0, 1), (1, 2)]
+        self.assertEqual(graph_product.num_edges(), 3)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
+
+    def test_multi_graph_3(self):
+        graph_1 = retworkx.generators.path_graph(2)
+        graph_2 = retworkx.generators.path_graph(2)
+        graph_2.add_edge(0, 1, None)
+
+        graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
+        expected_edges = [(0, 3), (0, 3), (1, 2), (1, 2)]
+        self.assertEqual(graph_product.num_edges(), 4)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
+
+    def test_multi_graph_4(self):
+        graph_1 = retworkx.generators.path_graph(2)
+        graph_2 = retworkx.generators.path_graph(2)
+        graph_2.add_edge(0, 0, None)
+
+        graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
+        expected_edges = [(0, 3), (0, 2), (1, 2)]
+        self.assertEqual(graph_product.num_edges(), 3)
+        self.assertEqual(graph_product.edge_list(), expected_edges)

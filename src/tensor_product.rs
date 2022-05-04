@@ -65,14 +65,31 @@ fn tensor_product<Ty: EdgeType>(
                 )
                     .into_py(py),
             );
+        }
+    }
+    if undirected {
+        for edge_first in first.edge_references() {
+            for edge_second in second.edge_references() {
+                if edge_first.source() == edge_first.target()
+                    || edge_second.source() == edge_second.target()
+                {
+                    continue;
+                }
 
-            if undirected {
+                let source = hash_nodes
+                    .get(&(edge_first.source(), edge_second.target()))
+                    .unwrap();
+
+                let target = hash_nodes
+                    .get(&(edge_first.target(), edge_second.source()))
+                    .unwrap();
+
                 final_graph.add_edge(
-                    *target,
                     *source,
+                    *target,
                     (
-                        edge_second.weight().clone_ref(py),
                         edge_first.weight().clone_ref(py),
+                        edge_second.weight().clone_ref(py),
                     )
                         .into_py(py),
                 );
