@@ -180,7 +180,9 @@ where
 /// Finds an arbitrary negative cycle in a graph using the Bellman-Ford
 /// algorithm with the SPFA heuristic.
 ///
-/// Returns a vector of NodeIds if there are cycles, and None if there aren't
+/// Returns a vector of NodeIds if there are cycles, and None if there aren't.
+/// The output is an arbitrary cycle with the property that the first node of the cycle is also the first
+/// and last element of the vector.
 /// # Example
 /// ```rust
 /// use retworkx_core::petgraph::Graph;

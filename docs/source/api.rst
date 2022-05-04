@@ -361,6 +361,7 @@ Exceptions
    retworkx.DAGWouldCycle
    retworkx.NoEdgeBetweenNodes
    retworkx.DAGHasCycle
+   retworkx.NegativeCycle
    retworkx.NoSuitableNeighbors
    retworkx.NoPathFound
    retworkx.NullGraph

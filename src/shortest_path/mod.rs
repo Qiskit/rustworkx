@@ -1199,8 +1199,22 @@ pub fn graph_unweighted_average_shortest_path_length(
     (sum as f64) / (conn_pairs as f64)
 }
 
-/// Bellman-Ford shortest path algorithm
-/// using SPFA
+/// Compute the lengths of the shortest paths for a PyDiGraph object using
+/// the Bellman-Ford algorithm with the SPFA heuristic.
+///
+/// :param PyDiGraph graph: The input graph to use
+/// :param int node: The node index to use as the source for finding the
+///     shortest paths from
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an
+///     edge's data object and will return a float that represents the
+///     cost/weight of that edge. It can be negative.
+///
+/// :returns: A read-only dictionary of the shortest paths from the provided node where
+///     the key is the node index of the end of the path and the value is the
+///     cost/sum of the weights of path
+/// :rtype: PathLengthMapping
+/// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, edge_cost_fn, /)")]
 pub fn digraph_bellman_ford_shortest_path_lengths(
@@ -1246,8 +1260,22 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
     })
 }
 
-/// Bellman-Ford shortest path algorithm
-/// using SPFA
+/// Compute the lengths of the shortest paths for a PyGraph object using
+/// the Bellman-Ford algorithm with the SPFA heuristic.
+///
+/// :param PyGraph graph: The input graph to use
+/// :param int node: The node index to use as the source for finding the
+///     shortest paths from
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an
+///     edge's data object and will return a float that represents the
+///     cost/weight of that edge. It can be negative.
+///
+/// :returns: A read-only dictionary of the shortest paths from the provided node where
+///     the key is the node index of the end of the path and the value is the
+///     cost/sum of the weights of path
+/// :rtype: PathLengthMapping
+/// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, edge_cost_fn, /)")]
 pub fn graph_bellman_ford_shortest_path_lengths(
@@ -1293,8 +1321,26 @@ pub fn graph_bellman_ford_shortest_path_lengths(
     })
 }
 
-/// Bellman-Ford shortest path algorithm
-/// using SPFA
+/// Find the shortest path from a node
+///
+/// This function will generate the shortest path from a source node using
+/// the Bellman-Ford algorithm with the SPFA heuristic.
+///
+/// :param PyGraph graph: The input graph to use
+/// :param int source: The node index to find paths from
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+/// :param bool as_undirected: If set to true the graph will be treated as
+///     undirected for finding the shortest path.
+///
+/// :return: Read-only dictionary of paths. The keys are destination node indices and
+///     the dict values are lists of node indices making the path.
+/// :rtype: PathMapping
+/// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(text_signature = "(graph, source, /, weight_fn=None, default_weight=1.0)")]
 pub fn graph_bellman_ford_shortest_paths(
@@ -1343,8 +1389,26 @@ pub fn graph_bellman_ford_shortest_paths(
     })
 }
 
-/// Bellman-Ford shortest path algorithm
-/// using SPFA
+/// Find the shortest path from a node
+///
+/// This function will generate the shortest path from a source node using
+/// the Bellman-Ford algorithm with the SPFA heuristic.
+///
+/// :param PyDiGraph graph: The input graph to use
+/// :param int source: The node index to find paths from
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+/// :param bool as_undirected: If set to true the graph will be treated as
+///     undirected for finding the shortest path.
+///
+/// :return: Read-only dictionary of paths. The keys are destination node indices and
+///     the dict values are lists of node indices making the path.
+/// :rtype: PathMapping
+/// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(
     text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0, as_undirected=False)"
@@ -1403,8 +1467,18 @@ pub fn digraph_bellman_ford_shortest_paths(
     })
 }
 
-/// Bellman-Ford shortest path algorithm
-/// using SPFA
+/// Cehck if a negative cycle exists on a graph
+///
+/// This function will check for the existence of a negative cycle in a graph
+/// using the Bellman-Ford algorithm with the SPFA heuristic.
+///
+/// :param PyDiGraph graph: The input graph to use
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an edge's
+///     data object and will return a float that represents the cost of that
+///     edge.
+///
+/// :return: True if there is a negative cycle or False otherwise
+/// :rtype: bool
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn negative_edge_cycle(
@@ -1426,8 +1500,19 @@ pub fn negative_edge_cycle(
     Ok(cycle.is_some())
 }
 
-/// Bellman-Ford shortest path algorithm
-/// using SPFA
+/// Find a negative cycle of a graph
+///
+/// This function will find an arbitrary negative cycle in a graph
+/// using the Bellman-Ford algorithm with the SPFA heuristic.
+///
+/// :param PyDiGraph graph: The input graph to use
+/// :param edge_cost_fn: A python callable that will take in 1 parameter, an edge's
+///     data object and will return a float that represents the cost of that
+///     edge.
+///
+/// :return: A list of the nodes in an arbitrary negative cycle, if it exists
+/// :rtype: NodeIndices
+/// :raises ValueError: when there is no cycle in the graph provided
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn find_negative_cycle(
