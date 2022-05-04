@@ -34,6 +34,7 @@ Shortest Paths
    retworkx.bellman_ford_shortest_paths
    retworkx.bellman_ford_shortest_path_lengths
    retworkx.negative_edge_cycle
+   retworkx.find_negative_cycle
    retworkx.distance_matrix
    retworkx.floyd_warshall
    retworkx.floyd_warshall_numpy
