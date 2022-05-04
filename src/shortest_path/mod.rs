@@ -1213,7 +1213,7 @@ pub fn graph_unweighted_average_shortest_path_length(
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
-/// 
+///
 /// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
@@ -1275,7 +1275,7 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
-/// 
+///
 /// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
@@ -1341,7 +1341,7 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 /// :return: Read-only dictionary of paths. The keys are destination node indices and
 ///     the dict values are lists of node indices making the path.
 /// :rtype: PathMapping
-/// 
+///
 /// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
@@ -1410,7 +1410,7 @@ pub fn graph_bellman_ford_shortest_paths(
 /// :return: Read-only dictionary of paths. The keys are destination node indices and
 ///     the dict values are lists of node indices making the path.
 /// :rtype: PathMapping
-/// 
+///
 /// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
@@ -1516,7 +1516,7 @@ pub fn negative_edge_cycle(
 ///
 /// :return: A list of the nodes in an arbitrary negative cycle, if it exists
 /// :rtype: NodeIndices
-/// 
+///
 /// :raises ValueError: when there is no cycle in the graph provided
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]

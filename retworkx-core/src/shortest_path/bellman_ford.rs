@@ -14,7 +14,6 @@ use std::collections::VecDeque;
 use std::hash::Hash;
 
 use fixedbitset::FixedBitSet;
-use hashbrown::HashMap;
 use petgraph::algo::kosaraju_scc;
 use petgraph::algo::{is_cyclic_directed, Measure};
 use petgraph::graph::IndexType;
@@ -141,9 +140,7 @@ where
                 if relaxation_count == node_count {
                     relaxation_count = 0;
 
-                    if check_for_negative_cycle(
-                        predecessor.iter().map(|x| x.map(|y| y.index())).collect(),
-                    ) {
+                    if check_for_negative_cycle(graph, &predecessor) {
                         return Ok(None);
                     }
                 }
@@ -272,9 +269,7 @@ where
                 if relaxation_count == node_count {
                     relaxation_count = 0;
 
-                    if check_for_negative_cycle(
-                        predecessor.iter().map(|x| x.map(|y| y.index())).collect(),
-                    ) {
+                    if check_for_negative_cycle(graph, &predecessor) {
                         return Ok(Some(recover_negative_cycle_from_predecessors(
                             graph,
                             predecessor,
@@ -302,7 +297,10 @@ where
 /// For graphs with negative cycles, the graph is cyclic and the cycle
 /// in the shortest path graph is equivalent to the negative cycle in
 /// the original graph.
-fn check_for_negative_cycle(predecessor: Vec<Option<usize>>) -> bool {
+fn check_for_negative_cycle<G>(graph: G, predecessor: &[Option<G::NodeId>]) -> bool
+where
+    G: IntoEdges + Visitable + NodeIndexable + NodeCount + IntoNodeIdentifiers,
+{
     let mut path_graph =
         StableDiGraph::<usize, ()>::with_capacity(predecessor.len(), predecessor.len());
 
@@ -312,7 +310,7 @@ fn check_for_negative_cycle(predecessor: Vec<Option<usize>>) -> bool {
 
     for (u, pred_u) in predecessor.into_iter().enumerate() {
         if let Some(v) = pred_u {
-            path_graph.add_edge(node_indices[v], node_indices[u], ());
+            path_graph.add_edge(node_indices[graph.to_index(*v)], node_indices[u], ());
         }
     }
 
@@ -333,20 +331,17 @@ where
     let mut path_graph =
         StableDiGraph::<usize, ()>::with_capacity(predecessor.len(), predecessor.len());
 
-    let original_node_indices: HashMap<usize, G::NodeId> =
-        graph.node_identifiers().map(|x| (x.index(), x)).collect();
-
     let node_indices: Vec<_> = (0..predecessor.len())
         .map(|x| path_graph.add_node(x))
         .collect();
 
-    for (u, pred_u) in predecessor.into_iter().enumerate() {
+    for (u, pred_u) in predecessor.iter().enumerate() {
         if let Some(v) = pred_u {
             path_graph.add_edge(node_indices[v.index()], node_indices[u], ());
 
             if v.index() == u {
                 // Edge case: self-loop with negative edge
-                return vec![v, v];
+                return vec![*v, *v];
             }
         }
     }
@@ -360,13 +355,20 @@ where
         if component.len() >= 2 {
             let mut cycle: Vec<G::NodeId> = Vec::with_capacity(component.len() + 1);
 
-            for node in component {
-                if let Some(original_node) = original_node_indices.get(&node.index()) {
-                    cycle.push(*original_node);
+            let start_node = graph.from_index(component[0].index());
+            let mut current_node = start_node.clone();
+
+            loop {
+                cycle.push(current_node);
+                current_node = predecessor[current_node.index()].unwrap();
+
+                if current_node == start_node {
+                    break;
                 }
             }
 
             cycle.push(cycle[0]); // first node must be equal to last node
+            cycle.reverse(); // the real path uses edges with (pred_u, u) not (u, pred_u)
 
             return cycle;
         }
