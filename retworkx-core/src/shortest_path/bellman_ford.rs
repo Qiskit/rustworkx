@@ -43,7 +43,7 @@ use crate::distancemap::DistanceMap;
 /// ending at the index.
 ///
 /// Returns a [`DistanceMap`] that maps `NodeId` to path cost if there are no
-/// negative cycles. If there are negative cycles, the Result is None.
+/// negative cycles. If there are negative cycles, the result is [`None`].
 /// # Example
 /// ```rust
 /// use retworkx_core::petgraph::Graph;

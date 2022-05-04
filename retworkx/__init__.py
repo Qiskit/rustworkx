@@ -2108,6 +2108,7 @@ def bellman_ford_shortest_paths(
     :return: A read-only dictionary of paths. The keys are destination node indices
         and the dict values are lists of node indices making the path.
     :rtype: PathMapping
+    
     :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
@@ -2158,6 +2159,7 @@ def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn):
         where the key is the node index of the end of the path and the value is the
         cost/sum of the weights of path
     :rtype: PathLengthMapping
+    
     :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
