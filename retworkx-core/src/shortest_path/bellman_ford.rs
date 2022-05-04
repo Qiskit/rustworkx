@@ -26,8 +26,76 @@ use petgraph::visit::{
 use crate::dictmap::*;
 use crate::distancemap::DistanceMap;
 
-/// Bellman-Ford shortest path algorithm
-/// using SPFA
+/// Bellman-Ford shortest path algorithm with the SPFA heuristic.
+///
+/// Compute the length of the shortest path from `start` to every reachable
+/// node.
+///
+/// The graph should be [`Visitable`] and implement [`IntoEdges`]. The function
+/// `edge_cost` should return the cost for a particular edge, which is used
+/// to compute path costs. Edge costs can be negative, as long as there is no
+/// negative cycle.
+///
+///
+/// If `path` is not [`None`], then the algorithm will mutate the input
+/// [`DictMap`] to insert an entry where the index is the dest node index
+/// the value is a Vec of node indices of the path starting with `start` and
+/// ending at the index.
+///
+/// Returns a [`DistanceMap`] that maps `NodeId` to path cost if there are no
+/// negative cycles. If there are negative cycles, the Result is None.
+/// # Example
+/// ```rust
+/// use retworkx_core::petgraph::Graph;
+/// use retworkx_core::petgraph::prelude::*;
+/// use retworkx_core::dictmap::DictMap;
+/// use retworkx_core::shortest_path::bellman_ford;
+/// use retworkx_core::Result;
+///
+/// let mut graph : Graph<(),(),Directed>= Graph::new();
+/// let a = graph.add_node(()); // node with no weight
+/// let b = graph.add_node(());
+/// let c = graph.add_node(());
+/// let d = graph.add_node(());
+/// let e = graph.add_node(());
+/// let f = graph.add_node(());
+/// let g = graph.add_node(());
+/// let h = graph.add_node(());
+/// // z will be in another connected component
+/// let z = graph.add_node(());
+///
+/// graph.extend_with_edges(&[
+///     (a, b),
+///     (b, c),
+///     (c, d),
+///     (d, a),
+///     (e, f),
+///     (b, e),
+///     (f, g),
+///     (g, h),
+///     (h, e)
+/// ]);
+/// // a ----> b ----> e ----> f
+/// // ^       |       ^       |
+/// // |       v       |       v
+/// // d <---- c       h <---- g
+///
+/// let expected_res: DictMap<NodeIndex, usize> = [
+///      (a, 3),
+///      (b, 0),
+///      (c, 1),
+///      (d, 2),
+///      (e, 1),
+///      (f, 2),
+///      (g, 3),
+///      (h, 4)
+///     ].iter().cloned().collect();
+/// let res: Result<Option<DictMap<NodeIndex, usize>>> = bellman_ford(
+///     &graph, b, |_| Ok(1), None
+/// );
+/// assert_eq!(res.unwrap().unwrap(), expected_res);
+/// // z is not inside res because there is not path from b to z.
+/// ```
 pub fn bellman_ford<G, F, K, E, S>(
     graph: G,
     start: G::NodeId,
@@ -52,6 +120,7 @@ where
     scores.put_item(start, zero_score);
     visit_next.push_back(start);
 
+    // SPFA heuristic: relax only nodes that need to be relaxed
     while let Some(node) = visit_next.pop_front() {
         in_queue.set(node.index(), false);
         let node_score = *scores.get_item(node).unwrap();
@@ -67,6 +136,8 @@ where
                 predecessor[next.index()] = Some(node);
                 relaxation_count += 1;
 
+                // We do the negative cycle check every O(|V|)
+                // iterations to amortize the cost, as it costs O(|V|) to run it
                 if relaxation_count == node_count {
                     relaxation_count = 0;
 
@@ -77,6 +148,7 @@ where
                     }
                 }
 
+                // Node needs to be relaxed on a future iteration
                 if !in_queue.contains(next.index()) {
                     visit_next.push_back(next);
                     in_queue.set(next.index(), true);
@@ -85,6 +157,7 @@ where
         }
     }
 
+    // Build path from predecessors
     if path.is_some() {
         for node in graph.node_identifiers() {
             if scores.get_item(node).is_some() {
@@ -104,8 +177,52 @@ where
     Ok(Some(scores))
 }
 
-/// Find negative cycle
-/// using SPFA
+/// Finds an arbitrary negative cycle in a graph using the Bellman-Ford
+/// algorithm with the SPFA heuristic.
+///
+/// Returns a vector of NodeIds if there are cycles, and None if there aren't
+/// # Example
+/// ```rust
+/// use retworkx_core::petgraph::Graph;
+/// use retworkx_core::petgraph::prelude::*;
+/// use retworkx_core::dictmap::DictMap;
+/// use retworkx_core::shortest_path::negative_cycle_finder;
+/// use retworkx_core::Result;
+///
+/// let mut graph : Graph<(),i32,Directed>= Graph::new();
+/// let a = graph.add_node(()); // node with no weight
+/// let b = graph.add_node(());
+/// let c = graph.add_node(());
+/// let d = graph.add_node(());
+/// let e = graph.add_node(());
+/// let f = graph.add_node(());
+/// let g = graph.add_node(());
+/// let h = graph.add_node(());
+/// // z will be in another connected component
+/// let z = graph.add_node(());
+///
+/// graph.extend_with_edges(&[
+///     (a, b, 1),
+///     (b, c, 1),
+///     (c, d, 1),
+///     (d, a, 1),
+///     (e, f, 1),
+///     (b, e, 1),
+///     (f, g, -4),
+///     (g, h, 1),
+///     (h, e, 1)
+/// ]);
+/// // a ----> b ----> e ----> f
+/// // ^       |       ^       |
+/// // |       v       |       v
+/// // d <---- c       h <---- g
+///
+/// let res: Result<Option<Vec<NodeIndex>>> = negative_cycle_finder(
+///     &graph, |x| Ok(*x.weight())
+/// );
+/// assert_eq!(res.unwrap().unwrap().len() - 1, 4);
+/// // the first/last node in the cycle appears twice
+/// ```
 pub fn negative_cycle_finder<G, F, K, E>(
     graph: G,
     mut edge_cost: F,
@@ -124,11 +241,15 @@ where
     let mut visit_next = VecDeque::with_capacity(graph.node_bound());
     let mut relaxation_count: usize = 0;
 
+    // For detecting cycles, this is equivalent to connecting all nodes
+    // to a source with weight equal to zero. This avoids having to loop
+    // through components to find the cycle.
     for node in graph.node_identifiers() {
         visit_next.push_back(node);
         in_queue.set(node.index(), true);
     }
 
+    // SPFA heuristic: relax only nodes that need to be relaxed
     while let Some(node) = visit_next.pop_front() {
         in_queue.set(node.index(), false);
         let node_score = scores[node.index()];
@@ -144,6 +265,8 @@ where
                 predecessor[next.index()] = Some(node);
                 relaxation_count += 1;
 
+                // We do the negative cycle check every O(|V|)
+                // iterations to amortize the cost, as it costs O(|V|) to run it
                 if relaxation_count == node_count {
                     relaxation_count = 0;
 
@@ -157,6 +280,7 @@ where
                     }
                 }
 
+                // Node needs to be relaxed on a future iteration
                 if !in_queue.contains(next.index()) {
                     visit_next.push_back(next);
                     in_queue.set(next.index(), true);
@@ -168,6 +292,14 @@ where
     Ok(None)
 }
 
+/// Function that checks if there is a cycle in the shortest path graph
+///
+/// The shortest path graph has N nodes and up to N edges. For a connected
+/// graph without negative cycles, the graph is a DAG with N - 1 edges.
+///
+/// For graphs with negative cycles, the graph is cyclic and the cycle
+/// in the shortest path graph is equivalent to the negative cycle in
+/// the original graph.
 fn check_for_negative_cycle(predecessor: Vec<Option<usize>>) -> bool {
     let mut path_graph =
         StableDiGraph::<usize, ()>::with_capacity(predecessor.len(), predecessor.len());
@@ -185,6 +317,8 @@ fn check_for_negative_cycle(predecessor: Vec<Option<usize>>) -> bool {
     is_cyclic_directed(&path_graph)
 }
 
+/// Returns the cycle found in the shortest path graph
+/// using Strongly Connected Components to detect the cycle.
 fn recover_negative_cycle_from_predecessors<G>(
     graph: G,
     predecessor: Vec<Option<G::NodeId>>,
