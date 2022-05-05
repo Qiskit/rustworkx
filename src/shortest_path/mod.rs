@@ -1513,7 +1513,7 @@ pub fn digraph_bellman_ford_shortest_paths(
     })
 }
 
-/// Cehck if a negative cycle exists on a graph
+/// Check if a negative cycle exists on a graph
 ///
 /// This function will check for the existence of a negative cycle in a graph
 /// using the Bellman-Ford algorithm with the SPFA heuristic.
