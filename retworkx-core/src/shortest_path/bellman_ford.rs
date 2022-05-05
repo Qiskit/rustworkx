@@ -280,8 +280,8 @@ where
                     if check_for_negative_cycle(graph, &predecessor) {
                         return Ok(BellmanFordData {
                             negative_cycle: true,
-                            scores: scores,
-                            predecessor: predecessor,
+                            scores,
+                            predecessor,
                         });
                     }
                 }
@@ -297,8 +297,8 @@ where
 
     Ok(BellmanFordData {
         negative_cycle: false,
-        scores: scores,
-        predecessor: predecessor,
+        scores,
+        predecessor,
     })
 }
 
