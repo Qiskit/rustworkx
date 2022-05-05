@@ -1220,7 +1220,7 @@ pub fn graph_unweighted_average_shortest_path_length(
 /// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
 pub fn digraph_bellman_ford_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -1299,7 +1299,7 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
 /// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
 pub fn graph_bellman_ford_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
@@ -1380,7 +1380,7 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 /// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
-#[pyo3(text_signature = "(graph, source, /, weight_fn=None, default_weight=1.0)")]
+#[pyo3(text_signature = "(graph, source, /, target=None, weight_fn=None, default_weight=1.0)")]
 pub fn graph_bellman_ford_shortest_paths(
     py: Python,
     graph: &graph::PyGraph,
@@ -1452,7 +1452,7 @@ pub fn graph_bellman_ford_shortest_paths(
 ///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(
-    text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0, as_undirected=False)"
+    text_signature = "(graph, source, /, target=None, weight_fn=None, default_weight=1.0, as_undirected=False)"
 )]
 pub fn digraph_bellman_ford_shortest_paths(
     py: Python,

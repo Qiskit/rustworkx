@@ -6,6 +6,6 @@ features:
     algorithm with the SPFA heuristic:
 
      * :func:`retworkx.find_negative_cycle`
-     * :func:`retworkx.bellman_ford_path_lengths`
+     * :func:`retworkx.bellman_ford_shortest_path_lengths`
      * :func:`retworkx.bellman_ford_shortest_paths`
      * :func:`retworkx.negative_edge_cycle`

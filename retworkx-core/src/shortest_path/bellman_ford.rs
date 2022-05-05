@@ -19,7 +19,7 @@ use petgraph::algo::{is_cyclic_directed, Measure};
 use petgraph::graph::IndexType;
 use petgraph::stable_graph::StableDiGraph;
 use petgraph::visit::{
-    EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
+    EdgeRef, GraphBase, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
 };
 
 use crate::dictmap::*;
@@ -27,7 +27,7 @@ use crate::distancemap::DistanceMap;
 
 struct BellmanFordData<G, S>
 where
-    G: IntoEdges + Visitable + NodeIndexable + NodeCount + IntoNodeIdentifiers,
+    G: GraphBase,
 {
     negative_cycle: bool,
     scores: S,
@@ -139,8 +139,8 @@ where
                 let mut node_path = Vec::<G::NodeId>::new();
                 let mut current_node = node;
                 node_path.push(current_node);
-                while predecessor[current_node.index()].is_some() {
-                    current_node = predecessor[current_node.index()].unwrap();
+                while let Some(pred_node) = predecessor[current_node.index()] {
+                    current_node = pred_node;
                     node_path.push(current_node);
                 }
                 node_path.reverse();
@@ -210,8 +210,8 @@ where
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
-    let starts: Vec<G::NodeId> = graph.node_identifiers().collect();
-    let res: BellmanFordData<G, Vec<Option<K>>> = inner_bellman_ford(graph, starts, edge_cost)?;
+    let res: BellmanFordData<G, Vec<Option<K>>> =
+        inner_bellman_ford(graph, graph.node_identifiers(), edge_cost)?;
 
     let BellmanFordData {
         negative_cycle,
@@ -254,6 +254,7 @@ where
     for start in starts {
         scores.put_item(start, zero_score);
         visit_next.push_back(start);
+        in_queue.set(graph.to_index(start), true);
     }
 
     // SPFA heuristic: relax only nodes that need to be relaxed
@@ -312,7 +313,7 @@ where
 /// the original graph.
 fn check_for_negative_cycle<G>(graph: G, predecessor: &[Option<G::NodeId>]) -> bool
 where
-    G: IntoEdges + Visitable + NodeIndexable + NodeCount + IntoNodeIdentifiers,
+    G: GraphBase + NodeIndexable,
 {
     let mut path_graph =
         StableDiGraph::<usize, ()>::with_capacity(predecessor.len(), predecessor.len());
