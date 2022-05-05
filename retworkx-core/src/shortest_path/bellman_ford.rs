@@ -25,10 +25,21 @@ use petgraph::visit::{
 use crate::dictmap::*;
 use crate::distancemap::DistanceMap;
 
+struct BellmanFordData<G, S>
+where
+    G: IntoEdges + Visitable + NodeIndexable + NodeCount + IntoNodeIdentifiers,
+{
+    negative_cycle: bool,
+    scores: S,
+    predecessor: Vec<Option<G::NodeId>>,
+}
+
 /// Bellman-Ford shortest path algorithm with the SPFA heuristic.
 ///
 /// Compute the length of the shortest path from `start` to every reachable
-/// node.
+/// node. This implementation differs from petgraph's implementation because it
+/// has an expected time complexity of O(kE) with 1 < k <= |V|. For random
+/// graphs, we expect the SPFA heuristic to be very efficient.
 ///
 /// The graph should be [`Visitable`] and implement [`IntoEdges`]. The function
 /// `edge_cost` should return the cost for a particular edge, which is used
@@ -98,7 +109,7 @@ use crate::distancemap::DistanceMap;
 pub fn bellman_ford<G, F, K, E, S>(
     graph: G,
     start: G::NodeId,
-    mut edge_cost: F,
+    edge_cost: F,
     mut path: Option<&mut DictMap<G::NodeId, Vec<G::NodeId>>>,
 ) -> Result<Option<S>, E>
 where
@@ -108,50 +119,17 @@ where
     K: Measure + Copy,
     S: DistanceMap<G::NodeId, K>,
 {
-    let node_count = graph.node_count();
-    let mut in_queue = FixedBitSet::with_capacity(graph.node_bound());
-    let mut scores: S = S::build(graph.node_bound());
-    let mut predecessor: Vec<Option<G::NodeId>> = vec![None; graph.node_bound()];
-    let mut visit_next = VecDeque::with_capacity(graph.node_bound());
-    let zero_score = K::default();
-    let mut relaxation_count: usize = 0;
+    let res: BellmanFordData<G, S> = inner_bellman_ford(graph, vec![start], edge_cost)?;
 
-    scores.put_item(start, zero_score);
-    visit_next.push_back(start);
+    let BellmanFordData {
+        negative_cycle,
+        scores,
+        predecessor,
+    } = res;
 
-    // SPFA heuristic: relax only nodes that need to be relaxed
-    while let Some(node) = visit_next.pop_front() {
-        in_queue.set(node.index(), false);
-        let node_score = *scores.get_item(node).unwrap();
-
-        for edge in graph.edges(node) {
-            let next = edge.target();
-            let current_score = scores.get_item(next);
-            let cost = edge_cost(edge)?;
-            let next_score = node_score + cost;
-
-            if current_score.is_none() || next_score < *current_score.unwrap() {
-                scores.put_item(next, next_score);
-                predecessor[next.index()] = Some(node);
-                relaxation_count += 1;
-
-                // We do the negative cycle check every O(|V|)
-                // iterations to amortize the cost, as it costs O(|V|) to run it
-                if relaxation_count == node_count {
-                    relaxation_count = 0;
-
-                    if check_for_negative_cycle(graph, &predecessor) {
-                        return Ok(None);
-                    }
-                }
-
-                // Node needs to be relaxed on a future iteration
-                if !in_queue.contains(next.index()) {
-                    visit_next.push_back(next);
-                    in_queue.set(next.index(), true);
-                }
-            }
-        }
+    // Shortest path is not defined
+    if negative_cycle {
+        return Ok(None);
     }
 
     // Build path from predecessors
@@ -224,7 +202,7 @@ where
 /// ```
 pub fn negative_cycle_finder<G, F, K, E>(
     graph: G,
-    mut edge_cost: F,
+    edge_cost: F,
 ) -> Result<Option<Vec<G::NodeId>>, E>
 where
     G: IntoEdges + Visitable + NodeIndexable + NodeCount + IntoNodeIdentifiers,
@@ -232,35 +210,65 @@ where
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
+    let starts: Vec<G::NodeId> = graph.node_identifiers().collect();
+    let res: BellmanFordData<G, Vec<Option<K>>> = inner_bellman_ford(graph, starts, edge_cost)?;
+
+    let BellmanFordData {
+        negative_cycle,
+        scores: _,
+        predecessor,
+    } = res;
+
+    // There is no cycle in the graph
+    if !negative_cycle {
+        return Ok(None);
+    }
+
+    Ok(Some(recover_negative_cycle_from_predecessors(
+        graph,
+        predecessor,
+    )))
+}
+
+fn inner_bellman_ford<G, I, F, K, E, S>(
+    graph: G,
+    starts: I,
+    mut edge_cost: F,
+) -> Result<BellmanFordData<G, S>, E>
+where
+    G: IntoEdges + Visitable + NodeIndexable + NodeCount + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash + IndexType,
+    F: FnMut(G::EdgeRef) -> Result<K, E>,
+    K: Measure + Copy,
+    S: DistanceMap<G::NodeId, K>,
+    I: IntoIterator<Item = G::NodeId>,
+{
     let node_count = graph.node_count();
     let mut in_queue = FixedBitSet::with_capacity(graph.node_bound());
-    let zero_score = K::default();
-    let mut scores: Vec<K> = vec![zero_score; graph.node_bound()];
+    let mut scores: S = S::build(graph.node_bound());
     let mut predecessor: Vec<Option<G::NodeId>> = vec![None; graph.node_bound()];
     let mut visit_next = VecDeque::with_capacity(graph.node_bound());
+    let zero_score = K::default();
     let mut relaxation_count: usize = 0;
 
-    // For detecting cycles, this is equivalent to connecting all nodes
-    // to a source with weight equal to zero. This avoids having to loop
-    // through components to find the cycle.
-    for node in graph.node_identifiers() {
-        visit_next.push_back(node);
-        in_queue.set(node.index(), true);
+    for start in starts {
+        scores.put_item(start, zero_score);
+        visit_next.push_back(start);
     }
 
     // SPFA heuristic: relax only nodes that need to be relaxed
     while let Some(node) = visit_next.pop_front() {
         in_queue.set(node.index(), false);
-        let node_score = scores[node.index()];
+        let node_score = *scores.get_item(node).unwrap();
 
         for edge in graph.edges(node) {
             let next = edge.target();
-            let current_score = scores[next.index()];
+            let current_score = scores.get_item(next);
             let cost = edge_cost(edge)?;
             let next_score = node_score + cost;
 
-            if next_score < current_score {
-                scores[next.index()] = next_score;
+            if current_score.is_none() || next_score < *current_score.unwrap() {
+                scores.put_item(next, next_score);
                 predecessor[next.index()] = Some(node);
                 relaxation_count += 1;
 
@@ -270,10 +278,11 @@ where
                     relaxation_count = 0;
 
                     if check_for_negative_cycle(graph, &predecessor) {
-                        return Ok(Some(recover_negative_cycle_from_predecessors(
-                            graph,
-                            predecessor,
-                        )));
+                        return Ok(BellmanFordData {
+                            negative_cycle: true,
+                            scores: scores,
+                            predecessor: predecessor,
+                        });
                     }
                 }
 
@@ -286,7 +295,11 @@ where
         }
     }
 
-    Ok(None)
+    Ok(BellmanFordData {
+        negative_cycle: false,
+        scores: scores,
+        predecessor: predecessor,
+    })
 }
 
 /// Function that checks if there is a cycle in the shortest path graph
