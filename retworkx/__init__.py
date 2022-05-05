@@ -1583,7 +1583,8 @@ def closeness_centrality(graph, wf_improved=True):
 
     where :math:`N` is the number of nodes in the graph.
 
-    :param PyDiGraph graph: The input graph
+    :param graph: The input graph. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
     :param bool wf_improved: This is optional; the default is True. If True,
         scale by the fraction of nodes reachable.
 

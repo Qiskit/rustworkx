@@ -295,19 +295,27 @@ where
     }
 }
 
-/// Compute the closeness centrality of all nodes in a graph.
+/// Compute the closeness centrality of each node in the graph.
+///
+/// The closeness centrality of a node `u` is the reciprocal of the average
+/// shortest path distance to `u` over all `n-1` reachable nodes.
+///
+/// Wasserman and Faust propose an improved formula for graphs with more than
+/// one connected component. The result is "a ratio of the fraction of actors
+/// in the group who are reachable, to the average distance" from the reachable
+/// actors. You can enable this by setting `wf_improved` to `true`.
 ///
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on
-/// * `wf_improved` - If True, scale by the fraction of nodes reachable.
+/// * `wf_improved` - If `true`, scale by the fraction of nodes reachable.
 ///
 /// # Example
 /// ```rust
 /// use retworkx_core::petgraph;
 /// use retworkx_core::centrality::closeness_centrality;
 ///
-/// // Calculate the betweeness centrality of Graph
+/// // Calculate the closeness centrality of Graph
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
@@ -317,7 +325,7 @@ where
 ///     output
 /// );
 ///
-/// // Calculate the betweeness centrality of DiGraph
+/// // Calculate the closeness centrality of DiGraph
 /// let dg = petgraph::graph::DiGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
@@ -339,26 +347,22 @@ where
     G::NodeId: std::hash::Hash + Eq,
 {
     let max_index = graph.node_bound();
-    let mut betweenness: Vec<Option<f64>> = vec![None; max_index];
+    let mut closeness: Vec<Option<f64>> = vec![None; max_index];
     for node_s in graph.node_identifiers() {
         let is = graph.to_index(node_s);
         let map = dijkstra(Reversed(&graph), node_s, None, |_| 1);
-        let mut reachable_nodes_count = 0;
-        let mut dists_sum = 0;
-        for (_, &value) in map.iter() {
-            reachable_nodes_count += 1;
-            dists_sum += value;
-        }
+        let reachable_nodes_count = map.len();
+        let dists_sum: usize = map.into_values().sum();
         if reachable_nodes_count == 1 {
-            betweenness[is] = Some(0.0);
+            closeness[is] = Some(0.0);
             continue;
         }
-        betweenness[is] = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
+        closeness[is] = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
         if wf_improved {
             let node_count = graph.node_count();
-            betweenness[is] = betweenness[is]
+            closeness[is] = closeness[is]
                 .map(|c| c * (reachable_nodes_count - 1) as f64 / (node_count - 1) as f64);
         }
     }
-    betweenness
+    closeness
 }
