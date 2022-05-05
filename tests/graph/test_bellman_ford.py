@@ -59,6 +59,34 @@ class TestBellmanFordGraph(unittest.TestCase):
         expected = retworkx.graph_dijkstra_shortest_path_lengths(self.graph, self.a, lambda x: 1)
         self.assertEqual(expected, path)
 
+    def test_bellman_path(self):
+        path = retworkx.graph_bellman_ford_shortest_paths(
+            self.graph, self.a, weight_fn=lambda x: float(x), target=self.e
+        )
+        expected = retworkx.graph_dijkstra_shortest_paths(
+            self.graph, self.a, weight_fn=lambda x: float(x), target=self.e
+        )
+        self.assertEqual(expected, path)
+
+    def test_bellman_path_lengths(self):
+        path = retworkx.graph_bellman_ford_shortest_path_lengths(
+            self.graph, self.a, lambda x: float(x), goal=self.e
+        )
+        expected = retworkx.graph_dijkstra_shortest_path_lengths(
+            self.graph, self.a, lambda x: float(x), goal=self.e
+        )
+        self.assertEqual(expected, path)
+
+    def test_bellman_ford_length_with_no_path_and_goal(self):
+        g = retworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        path_lenghts = retworkx.graph_bellman_ford_shortest_path_lengths(
+            g, a, edge_cost_fn=float, goal=b
+        )
+        expected = retworkx.graph_dijkstra_shortest_path_lengths(g, a, edge_cost_fn=float, goal=b)
+        self.assertEqual(expected, path_lenghts)
+
     def test_bellman_ford_length_with_no_path(self):
         g = retworkx.PyGraph()
         a = g.add_node("A")

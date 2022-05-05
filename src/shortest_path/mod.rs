@@ -1208,13 +1208,16 @@ pub fn graph_unweighted_average_shortest_path_length(
 /// :param edge_cost_fn: A python callable that will take in 1 parameter, an
 ///     edge's data object and will return a float that represents the
 ///     cost/weight of that edge. It can be negative.
+/// :param int goal: An optional node index to use as the end of the path.
+///     When specified the output dictionary will only have a single entry with
+///     the length of the shortest path to the goal node.
 ///
 /// :returns: A read-only dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
 ///
-/// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, edge_cost_fn, /)")]
@@ -1223,6 +1226,7 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
     graph: &digraph::PyDiGraph,
     node: usize,
     edge_cost_fn: PyObject,
+    goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let edge_weights: Vec<Option<f64>> =
         edge_weights_from_callable(py, &graph.graph, &Some(edge_cost_fn), 1.0)?;
@@ -1245,6 +1249,19 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
     }
 
     let res = res.unwrap();
+
+    if let Some(goal_usize) = goal {
+        return Ok(PathLengthMapping {
+            path_lengths: match res[goal_usize] {
+                Some(goal_length) => {
+                    let mut ans = DictMap::new();
+                    ans.insert(goal_usize, goal_length);
+                    ans
+                }
+                None => DictMap::new(),
+            },
+        });
+    }
 
     Ok(PathLengthMapping {
         path_lengths: res
@@ -1270,13 +1287,16 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
 /// :param edge_cost_fn: A python callable that will take in 1 parameter, an
 ///     edge's data object and will return a float that represents the
 ///     cost/weight of that edge. It can be negative.
+/// :param int goal: An optional node index to use as the end of the path.
+///     When specified the output dictionary will only have a single entry with
+///     the length of the shortest path to the goal node.
 ///
 /// :returns: A read-only dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
 ///
-/// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, edge_cost_fn, /)")]
@@ -1285,6 +1305,7 @@ pub fn graph_bellman_ford_shortest_path_lengths(
     graph: &graph::PyGraph,
     node: usize,
     edge_cost_fn: PyObject,
+    goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let edge_weights: Vec<Option<f64>> =
         edge_weights_from_callable(py, &graph.graph, &Some(edge_cost_fn), 1.0)?;
@@ -1308,6 +1329,19 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 
     let res = res.unwrap();
 
+    if let Some(goal_usize) = goal {
+        return Ok(PathLengthMapping {
+            path_lengths: match res[goal_usize] {
+                Some(goal_length) => {
+                    let mut ans = DictMap::new();
+                    ans.insert(goal_usize, goal_length);
+                    ans
+                }
+                None => DictMap::new(),
+            },
+        });
+    }
+
     Ok(PathLengthMapping {
         path_lengths: res
             .into_iter()
@@ -1330,6 +1364,7 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 ///
 /// :param PyGraph graph: The input graph to use
 /// :param int source: The node index to find paths from
+/// :param int target: An optional target to find a path to
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float which
 ///     will be used to represent the weight/cost of the edge
@@ -1342,7 +1377,7 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 ///     the dict values are lists of node indices making the path.
 /// :rtype: PathMapping
 ///
-/// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(text_signature = "(graph, source, /, weight_fn=None, default_weight=1.0)")]
@@ -1350,6 +1385,7 @@ pub fn graph_bellman_ford_shortest_paths(
     py: Python,
     graph: &graph::PyGraph,
     source: usize,
+    target: Option<usize>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
 ) -> PyResult<PathMapping> {
@@ -1379,7 +1415,7 @@ pub fn graph_bellman_ford_shortest_paths(
             .iter()
             .filter_map(|(k, v)| {
                 let k_int = k.index();
-                if k_int == source {
+                if k_int == source || target.is_some() && target.unwrap() != k_int {
                     None
                 } else {
                     Some((
@@ -1399,6 +1435,7 @@ pub fn graph_bellman_ford_shortest_paths(
 ///
 /// :param PyDiGraph graph: The input graph to use
 /// :param int source: The node index to find paths from
+/// :param int target: An optional target to find a path to
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float which
 ///     will be used to represent the weight/cost of the edge
@@ -1411,7 +1448,7 @@ pub fn graph_bellman_ford_shortest_paths(
 ///     the dict values are lists of node indices making the path.
 /// :rtype: PathMapping
 ///
-/// :raises :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(
@@ -1421,6 +1458,7 @@ pub fn digraph_bellman_ford_shortest_paths(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: usize,
+    target: Option<usize>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     as_undirected: bool,
@@ -1430,6 +1468,7 @@ pub fn digraph_bellman_ford_shortest_paths(
             py,
             &graph.to_undirected(py, true, None)?,
             source,
+            target,
             weight_fn.map(|x| x.clone_ref(py)),
             default_weight,
         );
@@ -1461,10 +1500,13 @@ pub fn digraph_bellman_ford_shortest_paths(
             .iter()
             .filter_map(|(k, v)| {
                 let k_int = k.index();
-                if k_int == source {
+                if k_int == source || target.is_some() && target.unwrap() != k_int {
                     None
                 } else {
-                    Some((k_int, v.iter().map(|x| x.index()).collect::<Vec<usize>>()))
+                    Some((
+                        k.index(),
+                        v.iter().map(|x| x.index()).collect::<Vec<usize>>(),
+                    ))
                 }
             })
             .collect(),
@@ -1517,7 +1559,7 @@ pub fn negative_edge_cycle(
 /// :return: A list of the nodes in an arbitrary negative cycle, if it exists
 /// :rtype: NodeIndices
 ///
-/// :raises ValueError: when there is no cycle in the graph provided
+/// :raises: ValueError: when there is no cycle in the graph provided
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn find_negative_cycle(
