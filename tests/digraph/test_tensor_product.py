@@ -68,3 +68,43 @@ class TestTensorProduct(unittest.TestCase):
 
         graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
         self.assertEqual([("w_1", "w_2")], graph_product.edges())
+
+    def test_multi_graph_1(self):
+        graph_1 = retworkx.generators.directed_path_graph(2)
+        graph_1.add_edge(0, 1, None)
+        graph_2 = retworkx.generators.directed_path_graph(2)
+
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
+        expected_edges = [(0, 3), (0, 3)]
+        self.assertEqual(graph_product.num_edges(), 2)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
+
+    def test_multi_graph_2(self):
+        graph_1 = retworkx.generators.directed_path_graph(2)
+        graph_1.add_edge(0, 0, None)
+        graph_2 = retworkx.generators.directed_path_graph(2)
+
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
+        expected_edges = [(0, 3), (0, 1)]
+        self.assertEqual(graph_product.num_edges(), 2)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
+
+    def test_multi_graph_3(self):
+        graph_1 = retworkx.generators.directed_path_graph(2)
+        graph_2 = retworkx.generators.directed_path_graph(2)
+        graph_2.add_edge(0, 1, None)
+
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
+        expected_edges = [(0, 3), (0, 3)]
+        self.assertEqual(graph_product.num_edges(), 2)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
+
+    def test_multi_graph_4(self):
+        graph_1 = retworkx.generators.directed_path_graph(2)
+        graph_2 = retworkx.generators.directed_path_graph(2)
+        graph_2.add_edge(0, 0, None)
+
+        graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
+        expected_edges = [(0, 3), (0, 2)]
+        self.assertEqual(graph_product.num_edges(), 2)
+        self.assertEqual(graph_product.edge_list(), expected_edges)
