@@ -352,7 +352,7 @@ where
         let is = graph.to_index(node_s);
         let map = dijkstra(Reversed(&graph), node_s, None, |_| 1);
         let reachable_nodes_count = map.len();
-        let dists_sum: usize = map.into_values().sum();
+        let dists_sum: usize = map.into_iter().map(|(_, v)| v).sum();
         if reachable_nodes_count == 1 {
             closeness[is] = Some(0.0);
             continue;
