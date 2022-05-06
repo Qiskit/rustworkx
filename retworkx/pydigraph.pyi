@@ -13,17 +13,7 @@ import numpy as np
 from .custom_return_types import *
 from .pygraph import PyGraph
 
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    TypeVar,
-    Optional,
-    List,
-    Tuple,
-    Sequence
-)
+from typing import Any, Callable, Dict, Generic, TypeVar, Optional, List, Tuple, Sequence
 
 S = TypeVar("S")
 T = TypeVar("T")
