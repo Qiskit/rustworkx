@@ -15,14 +15,16 @@ from retworkx import EdgeList, PyDiGraph, NodeIndices, WeightedEdgeList
 
 import pytest
 
+
 @pytest.mark.mypy_testing
 def test_pydigraph_simple() -> None:
     graph: PyDiGraph[str, int] = PyDiGraph()
     node_a: int = graph.add_node("A")
     node_b: int = graph.add_node("B")
     edge_ab: int = graph.add_edge(node_a, node_b, 3)
-    reveal_type(node_a) # R: builtins.int
-    reveal_type(edge_ab) # R: builtins.int
+    reveal_type(node_a)  # R: builtins.int
+    reveal_type(edge_ab)  # R: builtins.int
+
 
 @pytest.mark.mypy_testing
 def test_custom_return_types() -> None:
@@ -34,15 +36,17 @@ def test_custom_return_types() -> None:
     edges: EdgeList = graph.edge_list()
     weighted_edges: WeightedEdgeList[int] = graph.weighted_edge_list()
     node_indices: NodeIndices = graph.node_indexes()
-    
-    reveal_type(edges) # R: retworkx.custom_return_types.EdgeList
-    reveal_type(weighted_edges) # R: retworkx.custom_return_types.WeightedEdgeList[builtins.int]
-    reveal_type(node_indices) # R: retworkx.custom_return_types.NodeIndices
+
+    reveal_type(edges)  # R: retworkx.custom_return_types.EdgeList
+    reveal_type(weighted_edges)  # R: retworkx.custom_return_types.WeightedEdgeList[builtins.int]
+    reveal_type(node_indices)  # R: retworkx.custom_return_types.NodeIndices
 
     list_of_edges: List[Tuple[int, int]] = list(edges)
     list_of_weights: List[Tuple[int, int, int]] = list(weighted_edges)
     list_of_nodes: List[int] = list(node_indices)
 
-    reveal_type(list_of_edges) # R: builtins.list[Tuple[builtins.int, builtins.int]]
-    reveal_type(list_of_weights) # R: builtins.list[Tuple[builtins.int, builtins.int, builtins.int]]
-    reveal_type(list_of_nodes) # R: builtins.list[builtins.int]
+    reveal_type(list_of_edges)  # R: builtins.list[Tuple[builtins.int, builtins.int]]
+    reveal_type(
+        list_of_weights
+    )  # R: builtins.list[Tuple[builtins.int, builtins.int, builtins.int]]
+    reveal_type(list_of_nodes)  # R: builtins.list[builtins.int]
