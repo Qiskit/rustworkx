@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from typing import List, Tuple, Optional
+from typing import Optional
 from retworkx import PyGraph, PyDiGraph
 
 import pytest
@@ -23,7 +23,7 @@ def test_pygraph_add_edges_from_no_data_illegal() -> None:
     node_b: int = graph.add_node("B")
 
     # fmt: off
-    graph.add_edges_from_no_data([(node_a, node_b)]) # E: Invalid self argument "PyGraph[str, float]" to attribute function "add_edges_from_no_data" with type "Callable[[PyGraph[S, Optional[T]], List[Tuple[int, int]]], List[int]]"
+    graph.add_edges_from_no_data([(node_a, node_b)])  # E: Invalid self argument "PyGraph[str, float]" to attribute function "add_edges_from_no_data" with type "Callable[[PyGraph[S, Optional[T]], List[Tuple[int, int]]], List[int]]"
     # fmt: on
 
 
@@ -41,7 +41,7 @@ def test_pygraph_extend_from_edge_list_illegal() -> None:
     graph: PyGraph[str, float] = PyGraph()
 
     # fmt: off
-    graph.extend_from_edge_list([(0, 5)]) # E: Invalid self argument "PyGraph[str, float]" to attribute function "extend_from_edge_list" with type "Callable[[PyGraph[Optional[S], Optional[T]], List[Tuple[int, int]]], None]"
+    graph.extend_from_edge_list([(0, 5)])  # E: Invalid self argument "PyGraph[str, float]" to attribute function "extend_from_edge_list" with type "Callable[[PyGraph[Optional[S], Optional[T]], List[Tuple[int, int]]], None]"
     # fmt: on
 
 
@@ -58,7 +58,7 @@ def test_pydigraph_add_edges_from_no_data_illegal() -> None:
     node_b: int = graph.add_node("B")
 
     # fmt: off
-    graph.add_edges_from_no_data([(node_a, node_b)]) # E: Invalid self argument "PyDiGraph[str, float]" to attribute function "add_edges_from_no_data" with type "Callable[[PyDiGraph[S, Optional[T]], List[Tuple[int, int]]], List[int]]"
+    graph.add_edges_from_no_data([(node_a, node_b)])  # E: Invalid self argument "PyDiGraph[str, float]" to attribute function "add_edges_from_no_data" with type "Callable[[PyDiGraph[S, Optional[T]], List[Tuple[int, int]]], List[int]]"
     # fmt: on
 
 
@@ -76,7 +76,7 @@ def test_pydigraph_extend_from_edge_list_illegal() -> None:
     graph: PyDiGraph[str, float] = PyDiGraph()
 
     # fmt: off
-    graph.extend_from_edge_list([(0, 5)]) # E: Invalid self argument "PyDiGraph[str, float]" to attribute function "extend_from_edge_list" with type "Callable[[PyDiGraph[Optional[S], Optional[T]], List[Tuple[int, int]]], None]"
+    graph.extend_from_edge_list([(0, 5)])  # E: Invalid self argument "PyDiGraph[str, float]" to attribute function "extend_from_edge_list" with type "Callable[[PyDiGraph[Optional[S], Optional[T]], List[Tuple[int, int]]], None]"
     # fmt: on
 
 

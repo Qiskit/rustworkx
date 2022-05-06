@@ -39,7 +39,7 @@ jobs:
       - name: Black Codestyle Format
         run: black --check --diff retworkx tests
       - name: Python Lint
-        run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests
+        run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403 tests/stubs/*:E501' setup.py retworkx tests
       - name: retworkx-core Rust Tests
         run: pushd retworkx-core && cargo test && popd
       - name: retworkx-core Docs
