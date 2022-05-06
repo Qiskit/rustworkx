@@ -135,18 +135,40 @@ pub fn digraph_betweenness_centrality(
 
 /// Compute the closeness centrality of all nodes in a PyGraph.
 ///
+/// The closeness centrality of a node :math:`u` is the reciprocal of the
+/// average shortest path distance to :math:`u` over all :math:`n-1` reachable
+/// nodes.
+///
+/// .. math::
+///
+///     C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+///
+/// where :math:`d(v, u)` is the shortest-path distance between :math:`v` and
+/// :math:`u`, and :math:`n` is the number of nodes that can reach :math:`u`.
+///
+/// Wasserman and Faust propose an improved formula for graphs with more than
+/// one connected component. The result is "a ratio of the fraction of actors
+/// in the group who are reachable, to the average distance" from the reachable
+/// actors.
+///
+/// .. math::
+///
+///     C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+///
+/// where :math:`N` is the number of nodes in the graph.
+///
 /// :param PyGraph graph: The input graph
 /// :param bool wf_improved: If True, scale by the fraction of nodes reachable.
 ///
-/// :returns: a read-only dict-like object whose keys are the node indices and values are its
-///     closeness centrality score for each node.
+/// :returns: a read-only dict-like object whose keys are the node indices and
+///     values are its closeness centrality score for each node.
 /// :rtype: CentralityMapping
 #[pyfunction(wf_improved = "true")]
 #[pyo3(text_signature = "(graph, /, wf_improved=True)")]
 pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> CentralityMapping {
-    let betweenness = centrality::closeness_centrality(&graph.graph, wf_improved);
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
     CentralityMapping {
-        centralities: betweenness
+        centralities: closeness
             .into_iter()
             .enumerate()
             .filter_map(|(i, v)| v.map(|x| (i, x)))
@@ -155,6 +177,28 @@ pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> 
 }
 
 /// Compute the closeness centrality of all nodes in a PyDiGraph.
+///
+/// The closeness centrality of a node :math:`u` is the reciprocal of the
+/// average shortest path distance to :math:`u` over all :math:`n-1` reachable
+/// nodes.
+///
+/// .. math::
+///
+///     C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+///
+/// where :math:`d(v, u)` is the shortest-path distance between :math:`v` and
+/// :math:`u`, and :math:`n` is the number of nodes that can reach :math:`u`.
+///
+/// Wasserman and Faust propose an improved formula for graphs with more than
+/// one connected component. The result is "a ratio of the fraction of actors
+/// in the group who are reachable, to the average distance" from the reachable
+/// actors.
+///
+/// .. math::
+///
+///     C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+///
+/// where :math:`N` is the number of nodes in the graph.
 ///
 /// :param PyDiGraph graph: The input digraph
 /// :param bool wf_improved: If True, scale by the fraction of nodes reachable.
@@ -168,9 +212,9 @@ pub fn digraph_closeness_centrality(
     graph: &digraph::PyDiGraph,
     wf_improved: bool,
 ) -> CentralityMapping {
-    let betweenness = centrality::closeness_centrality(&graph.graph, wf_improved);
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
     CentralityMapping {
-        centralities: betweenness
+        centralities: closeness
             .into_iter()
             .enumerate()
             .filter_map(|(i, v)| v.map(|x| (i, x)))

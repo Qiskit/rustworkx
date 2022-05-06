@@ -57,14 +57,14 @@ class TestCentralityGraph(unittest.TestCase):
         self.assertEqual(expected, betweenness)
 
     def test_closeness_centrality(self):
-        betweenness = retworkx.graph_closeness_centrality(self.graph)
+        closeness = retworkx.graph_closeness_centrality(self.graph)
         expected = {0: 0.5, 1: 0.75, 2: 0.75, 3: 0.5}
-        self.assertEqual(expected, betweenness)
+        self.assertEqual(expected, closeness)
 
     def test_closeness_centrality_wf_improved(self):
-        betweenness = retworkx.graph_closeness_centrality(self.graph, wf_improved=False)
+        closeness = retworkx.graph_closeness_centrality(self.graph, wf_improved=False)
         expected = {0: 0.5, 1: 0.75, 2: 0.75, 3: 0.5}
-        self.assertEqual(expected, betweenness)
+        self.assertEqual(expected, closeness)
 
 
 class TestCentralityGraphDeletedNode(unittest.TestCase):
@@ -111,11 +111,11 @@ class TestCentralityGraphDeletedNode(unittest.TestCase):
         self.assertEqual(expected, betweenness)
 
     def test_closeness_centrality(self):
-        betweenness = retworkx.graph_closeness_centrality(self.graph)
+        closeness = retworkx.graph_closeness_centrality(self.graph)
         expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
-        self.assertEqual(expected, betweenness)
+        self.assertEqual(expected, closeness)
 
     def test_closeness_centrality_wf_improved(self):
-        betweenness = retworkx.graph_closeness_centrality(self.graph, wf_improved=False)
+        closeness = retworkx.graph_closeness_centrality(self.graph, wf_improved=False)
         expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
-        self.assertEqual(expected, betweenness)
+        self.assertEqual(expected, closeness)
