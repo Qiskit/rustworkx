@@ -37,16 +37,18 @@ def test_custom_return_types() -> None:
     weighted_edges: WeightedEdgeList[int] = graph.weighted_edge_list()
     node_indices: NodeIndices = graph.node_indexes()
 
+    # fmt: off
     reveal_type(edges)  # R: retworkx.custom_return_types.EdgeList
     reveal_type(weighted_edges)  # R: retworkx.custom_return_types.WeightedEdgeList[builtins.int]
     reveal_type(node_indices)  # R: retworkx.custom_return_types.NodeIndices
+    # fmt: on
 
     list_of_edges: List[Tuple[int, int]] = list(edges)
     list_of_weights: List[Tuple[int, int, int]] = list(weighted_edges)
     list_of_nodes: List[int] = list(node_indices)
 
+    # fmt: off
     reveal_type(list_of_edges)  # R: builtins.list[Tuple[builtins.int, builtins.int]]
-    reveal_type(
-        list_of_weights
-    )  # R: builtins.list[Tuple[builtins.int, builtins.int, builtins.int]]
+    reveal_type(list_of_weights)  # R: builtins.list[Tuple[builtins.int, builtins.int, builtins.int]]
     reveal_type(list_of_nodes)  # R: builtins.list[builtins.int]
+    # fmt: on
