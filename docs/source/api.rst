@@ -146,6 +146,8 @@ Connectivity and Cycles
    retworkx.articulation_points
    retworkx.biconnected_components
    retworkx.chain_decomposition
+   retworkx.all_simple_paths
+   retworkx.all_pairs_all_simple_paths
 
 .. _graph-ops:
 
@@ -153,7 +155,7 @@ Graph Operations
 ----------------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
    retworkx.complement
    retworkx.union
@@ -168,7 +170,6 @@ Other Algorithm Functions
    :toctree: apiref
 
    retworkx.adjacency_matrix
-   retworkx.all_simple_paths
    retworkx.transitivity
    retworkx.core_number
    retworkx.graph_greedy_color
@@ -276,6 +277,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_floyd_warshall_numpy
    retworkx.digraph_adjacency_matrix
    retworkx.digraph_all_simple_paths
+   retworkx.digraph_all_pairs_all_simple_paths
    retworkx.digraph_astar_shortest_path
    retworkx.digraph_dijkstra_shortest_paths
    retworkx.digraph_all_pairs_dijkstra_shortest_paths
@@ -324,6 +326,7 @@ typed API based on the data type.
    retworkx.graph_floyd_warshall_numpy
    retworkx.graph_adjacency_matrix
    retworkx.graph_all_simple_paths
+   retworkx.graph_all_pairs_all_simple_paths
    retworkx.graph_astar_shortest_path
    retworkx.graph_dijkstra_shortest_paths
    retworkx.graph_dijkstra_shortest_path_lengths
