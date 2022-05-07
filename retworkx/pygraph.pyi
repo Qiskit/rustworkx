@@ -56,7 +56,7 @@ class PyGraph(Generic[S, T]):
         self: PyGraph[Optional[S], Optional[T]], edge_list: Sequence[Tuple[int, int]], /
     ) -> None: ...
     def extend_from_weighted_edge_list(
-        self: PyGraph[Optional[S], T],,
+        self: PyGraph[Optional[S], T],
         edge_list: Sequence[Tuple[int, int, T]],
         /,
     ) -> None: ...
