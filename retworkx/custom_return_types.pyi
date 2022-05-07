@@ -46,44 +46,17 @@ class RetworkxCustomHashMapIter(Generic[S, T_co], Mapping[S, T_co], ABC):
     def __ne__(self, other: Mapping[S, T_co]) -> bool: ...
     def __setstate__(self, state) -> None: ...
 
-class NodeIndices(RetworkxCustomVecIter[int]):
-    pass
-
-class PathLengthMapping(RetworkxCustomHashMapIter[int, float]):
-    pass
-
-class PathMapping(RetworkxCustomHashMapIter[int, NodeIndices]):
-    pass
-
-class AllPairsPathLengthMapping(RetworkxCustomHashMapIter[int, PathLengthMapping]):
-    pass
-
-class AllPairsPathMapping(RetworkxCustomHashMapIter[int, PathMapping]):
-    pass
-
-class BFSSuccessors(Generic[T_co], RetworkxCustomVecIter[Tuple[T_co, List[T_co]]]):
-    pass
-
-class EdgeIndexMap(Generic[T_co], RetworkxCustomHashMapIter[int, Tuple[int, int, T_co]]):
-    pass
-
-class EdgeIndices(RetworkxCustomVecIter[int]):
-    pass
-
-class Chains(RetworkxCustomVecIter[EdgeIndices]):
-    pass
-
-class EdgeList(RetworkxCustomVecIter[Tuple[int, int]]):
-    pass
-
-class NodeMap(RetworkxCustomHashMapIter[int, int]):
-    pass
-
-class NodesCountMapping(RetworkxCustomHashMapIter[int, int]):
-    pass
-
-class Pos2DMapping(RetworkxCustomHashMapIter[int, Tuple[float, float]]):
-    pass
-
-class WeightedEdgeList(Generic[T_co], RetworkxCustomVecIter[Tuple[int, int, T_co]]):
-    pass
+class NodeIndices(RetworkxCustomVecIter[int]): ...
+class PathLengthMapping(RetworkxCustomHashMapIter[int, float]): ...
+class PathMapping(RetworkxCustomHashMapIter[int, NodeIndices]): ...
+class AllPairsPathLengthMapping(RetworkxCustomHashMapIter[int, PathLengthMapping]): ...
+class AllPairsPathMapping(RetworkxCustomHashMapIter[int, PathMapping]): ...
+class BFSSuccessors(Generic[T_co], RetworkxCustomVecIter[Tuple[T_co, List[T_co]]]): ...
+class EdgeIndexMap(Generic[T_co], RetworkxCustomHashMapIter[int, Tuple[int, int, T_co]]): ...
+class EdgeIndices(RetworkxCustomVecIter[int]): ...
+class Chains(RetworkxCustomVecIter[EdgeIndices]): ...
+class EdgeList(RetworkxCustomVecIter[Tuple[int, int]]): ...
+class NodeMap(RetworkxCustomHashMapIter[int, int]): ...
+class NodesCountMapping(RetworkxCustomHashMapIter[int, int]): ...
+class Pos2DMapping(RetworkxCustomHashMapIter[int, Tuple[float, float]]): ...
+class WeightedEdgeList(Generic[T_co], RetworkxCustomVecIter[Tuple[int, int, T_co]]): ...
