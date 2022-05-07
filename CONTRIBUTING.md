@@ -289,7 +289,7 @@ tox -estubs
 ```
 
 We also encourage type annotation contributions
-to add tests in the `stubs-tests` directory to verify the correctness of the annotations.
+to add tests in the `tests/stubs` directory to verify the correctness of the annotations.
 
 ### Release Notes
 

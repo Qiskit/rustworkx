@@ -10,5 +10,9 @@
 # For implementation details, see __init__.py and lib.rs
 
 from .retworkx import *
+from typing import Generic, TypeVar
 
-class PyDAG(PyDiGraph): ...
+S = TypeVar("S")
+T = TypeVar("T")
+
+class PyDAG(Generic[S, T], PyDiGraph[S, T]): ...
