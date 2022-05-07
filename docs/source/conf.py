@@ -60,6 +60,7 @@ master_doc = 'index'
 autosummary_generate = True
 autosummary_generate_overwrite = False
 autoclass_content = 'both'
+autodoc_typehints = 'none' # disabled until https://github.com/Qiskit/qiskit_sphinx_theme/issues/21 is fixed
 
 # Intersphinx configuration
 intersphinx_mapping = {
