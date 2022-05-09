@@ -394,7 +394,7 @@ fn expand_blossom<E>(
             labels[endpoints[p ^ 1]] = Some(0);
             if j < 0 {
                 let length = blossom_endpoints[blossom].len();
-                let index = length - j.abs() as usize;
+                let index = length - j.unsigned_abs() as usize;
                 labels[endpoints
                     [blossom_endpoints[blossom][index - endpoint_trick] ^ endpoint_trick ^ 1]] =
                     Some(0);
@@ -422,7 +422,7 @@ fn expand_blossom<E>(
             let endpoint_index = if j < 0 {
                 let tmp = j - endpoint_trick as i128;
                 let length = blossom_endpoints[blossom].len();
-                let index = length - tmp.abs() as usize;
+                let index = length - tmp.unsigned_abs() as usize;
                 blossom_endpoints[blossom][index]
             } else {
                 blossom_endpoints[blossom][j as usize - endpoint_trick]
@@ -432,7 +432,7 @@ fn expand_blossom<E>(
             p = if j < 0 {
                 let tmp = j - endpoint_trick as i128;
                 let length = blossom_endpoints[blossom].len();
-                let index = length - tmp.abs() as usize;
+                let index = length - tmp.unsigned_abs() as usize;
                 blossom_endpoints[blossom][index] ^ endpoint_trick
             } else {
                 blossom_endpoints[blossom][j as usize - endpoint_trick] ^ endpoint_trick
@@ -445,7 +445,7 @@ fn expand_blossom<E>(
         // its mate (so don't call assign_label())
         let blossom_v = if j < 0 {
             let length = blossom_children[blossom].len();
-            let index = length - j.abs() as usize;
+            let index = length - j.unsigned_abs() as usize;
             blossom_children[blossom][index]
         } else {
             blossom_children[blossom][j as usize]
@@ -459,7 +459,7 @@ fn expand_blossom<E>(
         j += j_step;
         let mut j_index = if j < 0 {
             let length = blossom_children[blossom].len();
-            length - j.abs() as usize
+            length - j.unsigned_abs() as usize
         } else {
             j as usize
         };
@@ -474,7 +474,7 @@ fn expand_blossom<E>(
                 j += j_step;
                 if j < 0 {
                     let length = blossom_children[blossom].len();
-                    j_index = length - j.abs() as usize;
+                    j_index = length - j.unsigned_abs() as usize;
                 } else {
                     j_index = j as usize;
                 }
@@ -513,7 +513,7 @@ fn expand_blossom<E>(
             j += j_step;
             if j < 0 {
                 let length = blossom_children[blossom].len();
-                j_index = length - j.abs() as usize;
+                j_index = length - j.unsigned_abs() as usize;
             } else {
                 j_index = j as usize;
             }
@@ -587,14 +587,14 @@ fn augment_blossom(
 
         tmp = if j < 0 {
             let length = blossom_children[blossom].len();
-            let index = length - j.abs() as usize;
+            let index = length - j.unsigned_abs() as usize;
             blossom_children[blossom][index]
         } else {
             blossom_children[blossom][j as usize]
         };
         let p = if j < 0 {
             let length = blossom_endpoints[blossom].len();
-            let index = length - j.abs() as usize - endpoint_trick;
+            let index = length - j.unsigned_abs() as usize - endpoint_trick;
             blossom_endpoints[blossom][index] ^ endpoint_trick
         } else {
             blossom_endpoints[blossom][j as usize - endpoint_trick] ^ endpoint_trick
@@ -615,7 +615,7 @@ fn augment_blossom(
         j += j_step;
         if j < 0 {
             let length = blossom_children[blossom].len();
-            let index = length - j.abs() as usize;
+            let index = length - j.unsigned_abs() as usize;
             tmp = blossom_children[blossom][index];
         } else {
             tmp = blossom_children[blossom][j as usize];
