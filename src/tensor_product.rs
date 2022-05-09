@@ -150,6 +150,7 @@ pub fn graph_tensor_product(
             graph: out_graph,
             multigraph: true,
             node_removed: false,
+            attrs: py.None(),
         },
         out_node_map,
     )
@@ -200,6 +201,7 @@ pub fn digraph_tensor_product(
             check_cycle: false,
             node_removed: false,
             multigraph: true,
+            attrs: py.None(),
         },
         out_node_map,
     )

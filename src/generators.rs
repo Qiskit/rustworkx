@@ -117,6 +117,7 @@ pub fn directed_cycle_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -190,6 +191,7 @@ pub fn cycle_graph(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -265,6 +267,7 @@ pub fn directed_path_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -330,6 +333,7 @@ pub fn path_graph(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -419,6 +423,7 @@ pub fn directed_star_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -481,6 +486,7 @@ pub fn star_graph(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -546,6 +552,7 @@ pub fn mesh_graph(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -613,6 +620,7 @@ pub fn directed_mesh_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -714,6 +722,7 @@ pub fn grid_graph(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -834,6 +843,7 @@ pub fn directed_grid_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -927,6 +937,7 @@ pub fn binomial_tree_graph(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -1005,6 +1016,7 @@ pub fn full_rary_tree(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -1113,6 +1125,7 @@ pub fn directed_binomial_tree_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -1194,6 +1207,7 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
             graph,
             node_removed: false,
             multigraph,
+            attrs: py.None(),
         });
     }
 
@@ -1257,6 +1271,7 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -1342,6 +1357,7 @@ pub fn directed_heavy_square_graph(
             check_cycle: false,
             cycle_state: algo::DfsSpace::default(),
             multigraph,
+            attrs: py.None(),
         });
     }
 
@@ -1435,6 +1451,7 @@ pub fn directed_heavy_square_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -1524,6 +1541,7 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
             graph,
             node_removed: false,
             multigraph,
+            attrs: py.None(),
         });
     }
 
@@ -1595,6 +1613,7 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -1691,6 +1710,7 @@ pub fn directed_heavy_hex_graph(
             check_cycle: false,
             cycle_state: algo::DfsSpace::default(),
             multigraph,
+            attrs: py.None(),
         });
     }
 
@@ -1800,6 +1820,7 @@ pub fn directed_heavy_hex_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -1841,6 +1862,7 @@ pub fn hexagonal_lattice_graph(
             graph,
             node_removed: false,
             multigraph,
+            attrs: py.None(),
         };
     }
 
@@ -1906,6 +1928,7 @@ pub fn hexagonal_lattice_graph(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     }
 }
 
@@ -1953,6 +1976,7 @@ pub fn directed_hexagonal_lattice_graph(
             check_cycle: false,
             cycle_state: algo::DfsSpace::default(),
             multigraph,
+            attrs: py.None(),
         };
     }
 
@@ -2050,6 +2074,7 @@ pub fn directed_hexagonal_lattice_graph(
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
+        attrs: py.None(),
     }
 }
 
@@ -2222,6 +2247,7 @@ pub fn generalized_petersen_graph(
         graph,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 
@@ -2321,6 +2347,7 @@ pub fn barbell_graph(
         graph: left_mesh,
         node_removed: false,
         multigraph,
+        attrs: py.None(),
     })
 }
 

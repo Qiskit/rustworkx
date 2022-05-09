@@ -41,3 +41,8 @@ class TestDeepcopy(unittest.TestCase):
         dag = retworkx.PyDAG()
         empty_copy = copy.deepcopy(dag)
         self.assertEqual(len(empty_copy), 0)
+
+    def test_deepcopy_attrs(self):
+        graph = retworkx.PyDiGraph(attrs="abc")
+        graph_copy = copy.deepcopy(graph)
+        self.assertEqual(graph.attrs, graph_copy.attrs)

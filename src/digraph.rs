@@ -144,14 +144,30 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// if a method call is made that would add a parallel edge it will instead
 /// update the existing edge's weight/data payload.
 ///
+/// Each ``PyGraph`` object has an :attr:`~.PyGraph.attrs` attribute which is
+/// used to contain additional attributes/metadata of the graph instance. By
+/// default this is set to ``None`` but can optionally be specified by using the
+/// ``attrs` keyword argument when constructing a new graph::
+///
+///     graph = retworkx.PyGraph(attrs=dict(source_path='/tmp/graph.csv'))
+///
+/// This attribute can be set to any Python object. Additionally, you can access
+/// and modify this attribute after creating an object. For example::
+///
+///     source_path = graph.attrs
+///     graph.attrs = {'new_path': '/tmp/new.csv', 'old_path': source_path}
+///
 /// :param bool check_cycle: When this is set to ``True`` the created
 ///     ``PyDiGraph`` has runtime cycle detection enabled.
 /// :param bool multgraph: When this is set to ``False`` the created
 ///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
 ///     method call is made that would add parallel edges the the weight/weight
 ///     from that method call will be used to update the existing edge in place.
+/// :param attrs: An optional attributes payload to assign to the
+///     :attrs:`~.PyGraph.attrs` attribute. This can be any Python object. If
+///     it is not specified :attrs:`~.PyGraph.attrs` will be set to ``None``.
 #[pyclass(mapping, module = "retworkx", subclass)]
-#[pyo3(text_signature = "(/, check_cycle=False, multigraph=True)")]
+#[pyo3(text_signature = "(/, check_cycle=False, multigraph=True, attrs=None)")]
 #[derive(Clone)]
 pub struct PyDiGraph {
     pub graph: StablePyGraph<Directed>,
@@ -159,6 +175,8 @@ pub struct PyDiGraph {
     pub check_cycle: bool,
     pub node_removed: bool,
     pub multigraph: bool,
+    #[pyo3(get, set)]
+    pub attrs: PyObject,
 }
 
 impl GraphBase for PyDiGraph {
@@ -262,13 +280,18 @@ impl PyDiGraph {
 impl PyDiGraph {
     #[new]
     #[args(check_cycle = "false", multigraph = "true")]
-    fn new(check_cycle: bool, multigraph: bool) -> Self {
+    fn new(py: Python, check_cycle: bool, multigraph: bool, attrs: Option<PyObject>) -> Self {
+        let graph_attrs = match attrs {
+            Some(g_attr) => g_attr,
+            None => py.None(),
+        };
         PyDiGraph {
             graph: StablePyGraph::<Directed>::new(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
             multigraph,
+            attrs: graph_attrs,
         }
     }
 
@@ -279,6 +302,7 @@ impl PyDiGraph {
         out_dict.set_item("nodes", node_dict)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
         out_dict.set_item("multigraph", self.multigraph)?;
+        out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
         let dir = petgraph::Direction::Incoming;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
@@ -310,6 +334,11 @@ impl PyDiGraph {
             .unwrap()
             .downcast::<PyBool>()?;
         self.multigraph = multigraph_raw.extract()?;
+        let attrs = match dict_state.get_item("attrs") {
+            Some(attr) => attr.into(),
+            None => py.None(),
+        };
+        self.attrs = attrs;
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -1892,6 +1921,7 @@ impl PyDiGraph {
             check_cycle: false,
             node_removed: false,
             multigraph: true,
+            attrs: py.None(),
         })
     }
 
@@ -2417,6 +2447,10 @@ impl PyDiGraph {
     /// :param list nodes: A list of node indices to generate the subgraph
     ///     from. If a node index is included that is not present in the graph
     ///     it will silently be ignored.
+    /// :param preserve_attrs: If set to the True the attributes of the PyGraph
+    ///     will be copied by reference to be the attributes of the output
+    ///     subgraph. By default this is set to False and the :attr:`~.PyGraph.attrs`
+    ///     attribute will be ``None`` in the subgraph.
     ///
     /// :returns: A new PyDiGraph object representing a subgraph of this graph.
     ///     It is worth noting that node and edge weight/data payloads are
@@ -2425,8 +2459,9 @@ impl PyDiGraph {
     ///     the other.
     /// :rtype: PyGraph
     ///
-    #[pyo3(text_signature = "(self, nodes, /)")]
-    pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyDiGraph {
+    #[args(preserve_attrs = "false")]
+    #[pyo3(text_signature = "(self, nodes, /, preserve_attrs=False)")]
+    pub fn subgraph(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> PyDiGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
         let node_filter = |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
@@ -2441,12 +2476,18 @@ impl PyDiGraph {
             let new_target = *node_map.get(&edge.target()).unwrap();
             out_graph.add_edge(new_source, new_target, edge.weight().clone_ref(py));
         }
+        let attrs = if preserve_attrs {
+            self.attrs.clone_ref(py)
+        } else {
+            py.None()
+        };
         PyDiGraph {
             graph: out_graph,
             node_removed: false,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: self.check_cycle,
             multigraph: self.multigraph,
+            attrs,
         }
     }
 
@@ -2626,6 +2667,7 @@ impl PyDiGraph {
             graph: new_graph,
             node_removed: false,
             multigraph,
+            attrs: py.None(),
         })
     }
 
@@ -2688,6 +2730,7 @@ impl PyDiGraph {
         {
             visit.call(edge)?;
         }
+        visit.call(&self.attrs)?;
         Ok(())
     }
 
@@ -2697,9 +2740,10 @@ impl PyDiGraph {
     //
     // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
     // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
-    fn __clear__(&mut self) {
+    fn __clear__(&mut self, py: Python) {
         self.graph = StablePyGraph::<Directed>::new();
         self.node_removed = false;
+        self.attrs = py.None();
     }
 }
 
@@ -2771,5 +2815,6 @@ where
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     }
 }

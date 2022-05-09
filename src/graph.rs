@@ -109,17 +109,35 @@ use petgraph::visit::{
 /// if a method call is made that would add a parallel edge it will instead
 /// update the existing edge's weight/data payload.
 ///
+/// Each ``PyGraph`` object has an :attr:`~.PyGraph.attrs` attribute which is
+/// used to contain additional attributes/metadata of the graph instance. By
+/// default this is set to ``None`` but can optionally be specified by using the
+/// ``attrs` keyword argument when constructing a new graph::
+///
+///     graph = retworkx.PyGraph(attrs=dict(source_path='/tmp/graph.csv'))
+///
+/// This attribute can be set to any Python object. Additionally, you can access
+/// and modify this attribute after creating an object. For example::
+///
+///     source_path = graph.attrs
+///     graph.attrs = {'new_path': '/tmp/new.csv', 'old_path': source_path}
+///
 /// :param bool multigraph: When this is set to ``False`` the created PyGraph
 ///     object will not be a multigraph. When ``False`` if a method call is
 ///     made that would add parallel edges the the weight/weight from that
 ///     method call will be used to update the existing edge in place.
+/// :param attrs: An optional attributes payload to assign to the
+///     :attrs:`~.PyGraph.attrs` attribute. This can be any Python object. If
+///     it is not specified :attrs:`~.PyGraph.attrs` will be set to ``None``.
 #[pyclass(mapping, module = "retworkx", subclass)]
-#[pyo3(text_signature = "(/, multigraph=True)")]
+#[pyo3(text_signature = "(/, multigraph=True, attrs=None)")]
 #[derive(Clone)]
 pub struct PyGraph {
     pub graph: StablePyGraph<Undirected>,
     pub node_removed: bool,
     pub multigraph: bool,
+    #[pyo3(get, set)]
+    pub attrs: PyObject,
 }
 
 impl GraphBase for PyGraph {
@@ -158,11 +176,16 @@ impl PyGraph {
 impl PyGraph {
     #[new]
     #[args(multigraph = "true")]
-    fn new(multigraph: bool) -> Self {
+    fn new(py: Python, multigraph: bool, attrs: Option<PyObject>) -> Self {
+        let graph_attrs = match attrs {
+            Some(g_attr) => g_attr,
+            None => py.None(),
+        };
         PyGraph {
             graph: StablePyGraph::<Undirected>::default(),
             node_removed: false,
             multigraph,
+            attrs: graph_attrs,
         }
     }
 
@@ -173,6 +196,7 @@ impl PyGraph {
         out_dict.set_item("nodes", node_dict)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
         out_dict.set_item("multigraph", self.multigraph)?;
+        out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
             node_dict.set_item(node_index.index(), node_data)?;
@@ -204,6 +228,11 @@ impl PyGraph {
             .unwrap()
             .downcast::<PyBool>()?;
         self.multigraph = multigraph_raw.extract()?;
+        let attrs = match dict_state.get_item("attrs") {
+            Some(attr) => attr.into(),
+            None => py.None(),
+        };
+        self.attrs = attrs;
 
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
@@ -1053,6 +1082,7 @@ impl PyGraph {
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
             multigraph: self.multigraph,
+            attrs: py.None(),
         }
     }
 
@@ -1253,6 +1283,7 @@ impl PyGraph {
             graph: out_graph,
             node_removed: false,
             multigraph: true,
+            attrs: py.None(),
         })
     }
 
@@ -1584,6 +1615,10 @@ impl PyGraph {
     /// :param list nodes: A list of node indices to generate the subgraph
     ///     from. If a node index is included that is not present in the graph
     ///     it will silently be ignored.
+    /// :param preserve_attrs: If set to the True the attributes of the PyGraph
+    ///     will be copied by reference to be the attributes of the output
+    ///     subgraph. By default this is set to False and the :attr:`~.PyGraph.attrs`
+    ///     attribute will be ``None`` in the subgraph.
     ///
     /// :returns: A new PyGraph object representing a subgraph of this graph.
     ///     It is worth noting that node and edge weight/data payloads are
@@ -1592,8 +1627,9 @@ impl PyGraph {
     ///     the other.
     /// :rtype: PyGraph
     ///
+    #[args(preserve_attrs = "false")]
     #[pyo3(text_signature = "(self, nodes, /)")]
-    pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyGraph {
+    pub fn subgraph(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> PyGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
         let node_filter = |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
@@ -1608,10 +1644,16 @@ impl PyGraph {
             let new_target = *node_map.get(&edge.target()).unwrap();
             out_graph.add_edge(new_source, new_target, edge.weight().clone_ref(py));
         }
+        let attrs = if preserve_attrs {
+            self.attrs.clone_ref(py)
+        } else {
+            py.None()
+        };
         PyGraph {
             graph: out_graph,
             node_removed: false,
             multigraph: self.multigraph,
+            attrs,
         }
     }
 
@@ -1730,6 +1772,7 @@ impl PyGraph {
         {
             visit.call(edge)?;
         }
+        visit.call(&self.attrs)?;
         Ok(())
     }
 
@@ -1739,9 +1782,10 @@ impl PyGraph {
     //
     // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
     // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
-    fn __clear__(&mut self) {
+    fn __clear__(&mut self, py: Python) {
         self.graph = StablePyGraph::<Undirected>::default();
         self.node_removed = false;
+        self.attrs = py.None();
     }
 }
 
@@ -1803,5 +1847,6 @@ where
         graph: out_graph,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     }
 }
