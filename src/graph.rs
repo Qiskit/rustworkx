@@ -177,15 +177,11 @@ impl PyGraph {
     #[new]
     #[args(multigraph = "true")]
     fn new(py: Python, multigraph: bool, attrs: Option<PyObject>) -> Self {
-        let graph_attrs = match attrs {
-            Some(g_attr) => g_attr,
-            None => py.None(),
-        };
         PyGraph {
             graph: StablePyGraph::<Undirected>::default(),
             node_removed: false,
             multigraph,
-            attrs: graph_attrs,
+            attrs: attrs.unwrap_or_else(|| py.None()),
         }
     }
 

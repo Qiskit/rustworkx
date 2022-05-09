@@ -287,7 +287,7 @@ impl PyDiGraph {
             check_cycle,
             node_removed: false,
             multigraph,
-            attrs: attrs.unwrap_or(py.None()),
+            attrs: attrs.unwrap_or_else(|| py.None()),
         }
     }
 
