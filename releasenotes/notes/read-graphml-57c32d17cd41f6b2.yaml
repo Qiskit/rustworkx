@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new function :func:`~retworkx.read_graphml` that generates
+    a retworkx graph object (a :class:`~retworkx.PyGraph` or a :class:`~retworkx.PyDiGraph`)
+    from a file written in GraphML format. GraphML is an xml serialization
+    format for representing graph files.

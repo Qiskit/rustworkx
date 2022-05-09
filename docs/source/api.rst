@@ -240,6 +240,16 @@ Layout Functions
    retworkx.spiral_layout
 
 
+.. _graphml:
+
+GraphML
+==========
+
+.. autosummary::
+   :toctree: apiref
+
+   retworkx.read_graphml
+
 .. _converters:
 
 Converters
