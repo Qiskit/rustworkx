@@ -28,7 +28,7 @@ class TestGraphML(unittest.TestCase):
         </graphml>
     """
 
-    def assertDictEqual(self, xs, ys):
+    def assertDictPayloadEqual(self, xs, ys):
         self.assertEqual(len(xs), len(ys))
         for key, va in xs.items():
             vb = ys.get(key, None)
@@ -37,15 +37,16 @@ class TestGraphML(unittest.TestCase):
                 or (va == vb)
             )
 
-    def assertGraphEqual(self, graph, nodes, edges, directed=True):
+    def assertGraphEqual(self, graph, nodes, edges, directed=True, attrs={}):
         self.assertTrue(isinstance(graph, retworkx.PyDiGraph if directed else retworkx.PyGraph))
         self.assertEqual(len(graph), len(nodes))
+        self.assertEqual(graph.attrs, attrs)
         for node_a, node_b in zip(graph.nodes(), nodes):
-            self.assertDictEqual(node_a, node_b)
+            self.assertDictPayloadEqual(node_a, node_b)
 
         for ((s, t, data), edge) in zip(graph.weighted_edge_list(), edges):
             self.assertEqual((graph[s]["id"], graph[t]["id"]), (edge[0], edge[1]))
-            self.assertDictEqual(data, edge[2])
+            self.assertDictPayloadEqual(data, edge[2])
 
     def assertGraphMLRaises(self, graph_xml):
         with tempfile.NamedTemporaryFile("wt") as fd:
@@ -146,6 +147,59 @@ class TestGraphML(unittest.TestCase):
                 ("n0", "n1", {"id": "e01", "fidelity": 0.95}),
             ]
             self.assertGraphEqual(graph, nodes, edges, directed=True)
+
+    def test_key_for_graph(self):
+        graph_xml = self.HEADER.format(
+            """
+            <key id="d0" for="graph" attr.name="test" attr.type="boolean"/>
+            <graph id="G" edgedefault="directed">
+            <data key="d0">true</data>
+            <node id="n0"/>
+            </graph>
+            """
+        )
+
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            graphml = retworkx.read_graphml(fd.name)
+            graph = graphml[0]
+            nodes = [{"id": "n0"}]
+            edges = []
+            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"test": True})
+
+    def test_key_for_all(self):
+        graph_xml = self.HEADER.format(
+            """
+            <key id="d0" for="all" attr.name="test" attr.type="string"/>
+            <graph id="G" edgedefault="directed">
+            <data key="d0">I'm a graph.</data>
+            <node id="n0">
+                <data key="d0">I'm a node.</data>
+            </node>
+            <node id="n1">
+                <data key="d0">I'm a node.</data>
+            </node>
+            <edge source="n0" target="n1">
+                <data key="d0">I'm an edge.</data>
+            </edge>
+            </graph>
+            """
+        )
+
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            graphml = retworkx.read_graphml(fd.name)
+            graph = graphml[0]
+            nodes = [
+                {"id": "n0", "test": "I'm a node."},
+                {"id": "n1", "test": "I'm a node."},
+            ]
+            edges = [("n0", "n1", {"test": "I'm an edge."})]
+            self.assertGraphEqual(
+                graph, nodes, edges, directed=True, attrs={"test": "I'm a graph."}
+            )
 
     def test_key_default_undefined(self):
         graph_xml = self.HEADER.format(
@@ -393,7 +447,7 @@ class TestGraphML(unittest.TestCase):
     def test_unsupported_key_domain(self):
         graph_xml = self.HEADER.format(
             """
-            <key id="d0" for="all" attr.name="test" attr.type="int"/>
+            <key id="d0" for="bad" attr.name="test" attr.type="int"/>
             """
         )
         self.assertGraphMLRaises(graph_xml)
