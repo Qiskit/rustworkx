@@ -112,7 +112,7 @@ use petgraph::visit::{
 /// Each ``PyGraph`` object has an :attr:`~.PyGraph.attrs` attribute which is
 /// used to contain additional attributes/metadata of the graph instance. By
 /// default this is set to ``None`` but can optionally be specified by using the
-/// ``attrs` keyword argument when constructing a new graph::
+/// ``attrs`` keyword argument when constructing a new graph::
 ///
 ///     graph = retworkx.PyGraph(attrs=dict(source_path='/tmp/graph.csv'))
 ///
@@ -127,8 +127,8 @@ use petgraph::visit::{
 ///     made that would add parallel edges the the weight/weight from that
 ///     method call will be used to update the existing edge in place.
 /// :param attrs: An optional attributes payload to assign to the
-///     :attrs:`~.PyGraph.attrs` attribute. This can be any Python object. If
-///     it is not specified :attrs:`~.PyGraph.attrs` will be set to ``None``.
+///     :attr:`~.PyGraph.attrs` attribute. This can be any Python object. If
+///     it is not specified :attr:`~.PyGraph.attrs` will be set to ``None``.
 #[pyclass(mapping, module = "retworkx", subclass)]
 #[pyo3(text_signature = "(/, multigraph=True, attrs=None)")]
 #[derive(Clone)]
