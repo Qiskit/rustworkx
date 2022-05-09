@@ -1628,7 +1628,7 @@ impl PyGraph {
     /// :rtype: PyGraph
     ///
     #[args(preserve_attrs = "false")]
-    #[pyo3(text_signature = "(self, nodes, /)")]
+    #[pyo3(text_signature = "(self, nodes, /, preserve_attrs=False)")]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> PyGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());

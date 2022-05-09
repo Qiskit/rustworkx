@@ -144,12 +144,12 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// if a method call is made that would add a parallel edge it will instead
 /// update the existing edge's weight/data payload.
 ///
-/// Each ``PyGraph`` object has an :attr:`~.PyGraph.attrs` attribute which is
+/// Each ``PyDiGraph`` object has an :attr:`~.PyDiGraph.attrs` attribute which is
 /// used to contain additional attributes/metadata of the graph instance. By
 /// default this is set to ``None`` but can optionally be specified by using the
 /// ``attrs` keyword argument when constructing a new graph::
 ///
-///     graph = retworkx.PyGraph(attrs=dict(source_path='/tmp/graph.csv'))
+///     graph = retworkx.PyDiGraph(attrs=dict(source_path='/tmp/graph.csv'))
 ///
 /// This attribute can be set to any Python object. Additionally, you can access
 /// and modify this attribute after creating an object. For example::
@@ -164,8 +164,8 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///     method call is made that would add parallel edges the the weight/weight
 ///     from that method call will be used to update the existing edge in place.
 /// :param attrs: An optional attributes payload to assign to the
-///     :attrs:`~.PyGraph.attrs` attribute. This can be any Python object. If
-///     it is not specified :attrs:`~.PyGraph.attrs` will be set to ``None``.
+///     :attrs:`~.PyDiGraph.attrs` attribute. This can be any Python object. If
+///     it is not specified :attrs:`~.PyDiGraph.attrs` will be set to ``None``.
 #[pyclass(mapping, module = "retworkx", subclass)]
 #[pyo3(text_signature = "(/, check_cycle=False, multigraph=True, attrs=None)")]
 #[derive(Clone)]
@@ -281,17 +281,13 @@ impl PyDiGraph {
     #[new]
     #[args(check_cycle = "false", multigraph = "true")]
     fn new(py: Python, check_cycle: bool, multigraph: bool, attrs: Option<PyObject>) -> Self {
-        let graph_attrs = match attrs {
-            Some(g_attr) => g_attr,
-            None => py.None(),
-        };
         PyDiGraph {
             graph: StablePyGraph::<Directed>::new(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
             multigraph,
-            attrs: graph_attrs,
+            attrs: attrs.unwrap_or(py.None()),
         }
     }
 
@@ -2447,9 +2443,9 @@ impl PyDiGraph {
     /// :param list nodes: A list of node indices to generate the subgraph
     ///     from. If a node index is included that is not present in the graph
     ///     it will silently be ignored.
-    /// :param preserve_attrs: If set to the True the attributes of the PyGraph
+    /// :param preserve_attrs: If set to the True the attributes of the PyDiGraph
     ///     will be copied by reference to be the attributes of the output
-    ///     subgraph. By default this is set to False and the :attr:`~.PyGraph.attrs`
+    ///     subgraph. By default this is set to False and the :attr:`~.PyDiGraph.attrs`
     ///     attribute will be ``None`` in the subgraph.
     ///
     /// :returns: A new PyDiGraph object representing a subgraph of this graph.

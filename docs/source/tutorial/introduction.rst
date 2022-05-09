@@ -302,7 +302,7 @@ which returns the node indices of any neighbors of node ``2``.
 Graph Attributes
 ================
 
-Graphs in retworkx have an attributes attribute which can be used to assign
+Graphs in retworkx have an attribute which can be used to assign
 metadata to a graph object. This can be assigned at object creation or
 accessed and modified after creation with the :attr:`~.PyGraph.attrs` attribute.
 This attribute can be any Python object and defaults to being ``None`` if not
