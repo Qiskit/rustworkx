@@ -300,6 +300,8 @@ impl IntoPy<PyObject> for Graph {
                     graph,
                     node_removed: false,
                     multigraph: true,
+                    // TODO: Add graph attributes here
+                    attrs: py.None(),
                 };
 
                 out.into_py(py)
@@ -315,6 +317,8 @@ impl IntoPy<PyObject> for Graph {
                     check_cycle: false,
                     node_removed: false,
                     multigraph: true,
+                    // TODO: Add graph attributes here
+                    attrs: py.None(),
                 };
 
                 out.into_py(py)
