@@ -24,9 +24,9 @@ copyright = u'2021, retworkx Contributors'
 
 
 # The short X.Y version.
-version = '0.11.0'
+version = '0.12.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.11.0'
+release = '0.12.0'
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
@@ -60,6 +60,7 @@ master_doc = 'index'
 autosummary_generate = True
 autosummary_generate_overwrite = False
 autoclass_content = 'both'
+autodoc_typehints = 'none' # disabled until https://github.com/Qiskit/qiskit_sphinx_theme/issues/21 is fixed
 
 # Intersphinx configuration
 intersphinx_mapping = {
@@ -155,6 +156,17 @@ def _get_version_label(current_version):
     else:
         return "Development"
 
+def avoid_duplicate_in_dispatch(app, obj, bound_method):
+    if hasattr(obj, 'dispatch') and hasattr(obj, 'register') and obj.dispatch.__module__ == 'functools':
+        # TODO: disable this trick once https://github.com/Qiskit/qiskit_sphinx_theme/issues/21 is fixed
+        # Basically, to avoid signatures being duplicated, we want to disable the singledispatch function
+        # from Sphinx's autodoc. But if we unregister the function, our jupyter notebook executions
+        # will fail. Hence we just trick the check in sphinx/util/inspect/is_singledispatch_function
+        # that checks for obj.dispatch.__module__ == 'functools'. This should be harmless as
+        # that property is only used on __repr__ and not to dispatch the function itself
+        obj.dispatch.__module__ = "retworkx"
+
 
 def setup(app):
     app.connect('config-inited', _get_versions)
+    app.connect('autodoc-before-process-signature', avoid_duplicate_in_dispatch)

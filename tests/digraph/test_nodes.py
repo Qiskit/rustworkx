@@ -155,9 +155,7 @@ class TestNodes(unittest.TestCase):
         dag.add_edge(node_b, node_d, "Multiple out edgy")
         dag.add_edge(node_e, node_b, "multiple in edgy")
         node_c = dag.add_child(node_b, "c", "Edgy_mk2")
-        dag.remove_node_retain_edges(
-            node_b, condition=lambda a, b: a == "multiple in edgy"
-        )
+        dag.remove_node_retain_edges(node_b, condition=lambda a, b: a == "multiple in edgy")
         res = dag.nodes()
         self.assertEqual(["a", "d", "e", "c"], res)
         self.assertEqual([0, 1, 2, 4], dag.node_indexes())
@@ -243,9 +241,7 @@ class TestNodes(unittest.TestCase):
         cr_1_out = dag.add_node("cr[1]_out")
         dag.add_edge(cr_1, cr_1_out, "cr[1]")
 
-        res = list(
-            retworkx.lexicographical_topological_sort(dag, lambda x: str(x))
-        )
+        res = list(retworkx.lexicographical_topological_sort(dag, lambda x: str(x)))
         expected = [
             "cr[0]",
             "cr[0]_out",
@@ -383,9 +379,7 @@ class TestNodes(unittest.TestCase):
         graph.add_edge(3, 0, "edge1")
         graph.merge_nodes(0, 1)
         self.assertEqual(graph.node_indexes(), [1, 2, 3])
-        self.assertEqual(
-            [(3, 1, "edge1"), (1, 2, "edge0")], graph.weighted_edge_list()
-        )
+        self.assertEqual([(3, 1, "edge1"), (1, 2, "edge0")], graph.weighted_edge_list())
 
     def test_merge_nodes_no_match(self):
         graph = retworkx.PyDiGraph()
@@ -394,9 +388,7 @@ class TestNodes(unittest.TestCase):
         graph.add_edge(3, 0, "edge1")
         graph.merge_nodes(0, 2)
         self.assertEqual(graph.node_indexes(), [0, 1, 2, 3])
-        self.assertEqual(
-            [(0, 2, "edge0"), (3, 0, "edge1")], graph.weighted_edge_list()
-        )
+        self.assertEqual([(0, 2, "edge0"), (3, 0, "edge1")], graph.weighted_edge_list())
 
     def test_merge_nodes_invalid_node_first_index(self):
         graph = retworkx.PyDiGraph()

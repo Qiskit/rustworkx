@@ -193,13 +193,7 @@ where
         // `dijkstra_visitor` returns a "signal" to either continue or exit early
         // but it never "prunes", so we use `unreachable`.
         try_control!(
-            dijkstra_visitor(
-                graph,
-                start,
-                &mut edge_cost,
-                &mut visitor,
-                visited
-            ),
+            dijkstra_visitor(graph, start, &mut edge_cost, &mut visitor, visited),
             unreachable!()
         );
     }
@@ -237,10 +231,7 @@ where
             continue;
         }
 
-        try_control_with_result!(
-            visitor(DijkstraEvent::Discover(node, node_score)),
-            continue
-        );
+        try_control_with_result!(visitor(DijkstraEvent::Discover(node, node_score)), continue);
 
         for edge in graph.edges(node) {
             let next = edge.target();
@@ -259,33 +250,21 @@ where
                 Occupied(ent) => {
                     if next_score < *ent.get() {
                         try_control_with_result!(
-                            visitor(DijkstraEvent::EdgeRelaxed(
-                                node,
-                                next,
-                                edge.weight()
-                            )),
+                            visitor(DijkstraEvent::EdgeRelaxed(node, next, edge.weight())),
                             continue
                         );
                         *ent.into_mut() = next_score;
                         visit_next.push(MinScored(next_score, next));
                     } else {
                         try_control_with_result!(
-                            visitor(DijkstraEvent::EdgeNotRelaxed(
-                                node,
-                                next,
-                                edge.weight()
-                            )),
+                            visitor(DijkstraEvent::EdgeNotRelaxed(node, next, edge.weight())),
                             continue
                         );
                     }
                 }
                 Vacant(ent) => {
                     try_control_with_result!(
-                        visitor(DijkstraEvent::EdgeRelaxed(
-                            node,
-                            next,
-                            edge.weight()
-                        )),
+                        visitor(DijkstraEvent::EdgeRelaxed(node, next, edge.weight())),
                         continue
                     );
                     ent.insert(next_score);

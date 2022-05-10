@@ -12,30 +12,27 @@
 
 #![allow(clippy::float_cmp)]
 
-mod connected_components;
+mod all_pairs_all_simple_paths;
+mod conn_components;
 mod core_number;
 
-use super::{
-    digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode,
-    NullGraph,
-};
+use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
 
 use hashbrown::{HashMap, HashSet};
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::{
-    EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable,
-};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{BiconnectedComponents, Chains, EdgeList};
+use crate::iterators::{AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList};
 use retworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -64,13 +61,9 @@ use retworkx_core::connectivity;
 ///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, root=None)")]
-pub fn cycle_basis(
-    graph: &graph::PyGraph,
-    root: Option<usize>,
-) -> Vec<Vec<usize>> {
+pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize>> {
     let mut root_node = root;
-    let mut graph_nodes: HashSet<NodeIndex> =
-        graph.graph.node_indices().collect();
+    let mut graph_nodes: HashSet<NodeIndex> = graph.graph.node_indices().collect();
     let mut cycles: Vec<Vec<usize>> = Vec::new();
     while !graph_nodes.is_empty() {
         let temp_value: NodeIndex;
@@ -145,9 +138,7 @@ pub fn cycle_basis(
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn strongly_connected_components(
-    graph: &digraph::PyDiGraph,
-) -> Vec<Vec<usize>> {
+pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usize>> {
     algo::kosaraju_scc(&graph.graph)
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
@@ -166,14 +157,9 @@ pub fn strongly_connected_components(
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-pub fn digraph_find_cycle(
-    graph: &digraph::PyDiGraph,
-    source: Option<usize>,
-) -> EdgeList {
-    let mut graph_nodes: HashSet<NodeIndex> =
-        graph.graph.node_indices().collect();
-    let mut cycle: Vec<(usize, usize)> =
-        Vec::with_capacity(graph.graph.edge_count());
+pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
+    let mut graph_nodes: HashSet<NodeIndex> = graph.graph.node_indices().collect();
+    let mut cycle: Vec<(usize, usize)> = Vec::with_capacity(graph.graph.edge_count());
     let temp_value: NodeIndex;
     // If source is not set get an arbitrary node from the set of graph
     // nodes we've not "examined"
@@ -244,8 +230,8 @@ pub fn digraph_find_cycle(
 /// :rtype: int
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn number_connected_components(graph: &graph::PyGraph) -> usize {
-    connected_components::number_connected_components(&graph.graph)
+pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
+    conn_components::number_connected_components(&graph.graph)
 }
 
 /// Find the connected components in an undirected graph
@@ -258,7 +244,7 @@ fn number_connected_components(graph: &graph::PyGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
-    connected_components::connected_components(&graph.graph)
+    conn_components::connected_components(&graph.graph)
 }
 
 /// Returns the set of nodes in the component of graph containing `node`.
@@ -272,10 +258,7 @@ pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
 /// :raises InvalidNode: When an invalid node index is provided.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-pub fn node_connected_component(
-    graph: &graph::PyGraph,
-    node: usize,
-) -> PyResult<HashSet<usize>> {
+pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult<HashSet<usize>> {
     let node = NodeIndex::new(node);
 
     if !graph.graph.contains_node(node) {
@@ -284,7 +267,7 @@ pub fn node_connected_component(
         ));
     }
 
-    Ok(connected_components::bfs_undirected(
+    Ok(conn_components::bfs_undirected(
         &graph.graph,
         node,
         &mut graph.graph.visit_map(),
@@ -320,7 +303,7 @@ pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
 /// :rtype: int
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
+pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     let mut weak_components = graph.node_count();
     let mut vertex_sets = UnionFind::new(graph.graph.node_bound());
     for edge in graph.graph.edge_references() {
@@ -343,10 +326,8 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn weakly_connected_components(
-    graph: &digraph::PyDiGraph,
-) -> Vec<HashSet<usize>> {
-    connected_components::connected_components(&graph.graph)
+pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
+    conn_components::connected_components(&graph.graph)
 }
 
 /// Check if the graph is weakly connected
@@ -397,9 +378,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
 #[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
-)]
+#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
 pub fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -410,11 +389,8 @@ pub fn digraph_adjacency_matrix(
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
-        let edge_weight =
-            weight_callable(py, &weight_fn, &weight, default_weight)?;
-        if matrix[[i, j]] == null_value
-            || (null_value.is_nan() && matrix[[i, j]].is_nan())
-        {
+        let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
+        if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
         } else {
             matrix[[i, j]] += edge_weight;
@@ -453,9 +429,7 @@ pub fn digraph_adjacency_matrix(
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
 #[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
-)]
+#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
 pub fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
@@ -466,11 +440,8 @@ pub fn graph_adjacency_matrix(
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
-        let edge_weight =
-            weight_callable(py, &weight_fn, &weight, default_weight)?;
-        if matrix[[i, j]] == null_value
-            || (null_value.is_nan() && matrix[[i, j]].is_nan())
-        {
+        let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
+        if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
             matrix[[j, i]] = edge_weight;
         } else {
@@ -495,29 +466,20 @@ pub fn graph_adjacency_matrix(
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_complement(
-    py: Python,
-    graph: &graph::PyGraph,
-) -> PyResult<graph::PyGraph> {
+pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::PyGraph> {
     let mut complement_graph = graph.clone(); // keep same node indices
     complement_graph.graph.clear_edges();
 
     for node_a in graph.graph.node_indices() {
-        let old_neighbors: HashSet<NodeIndex> =
-            graph.graph.neighbors(node_a).collect();
+        let old_neighbors: HashSet<NodeIndex> = graph.graph.neighbors(node_a).collect();
         for node_b in graph.graph.node_indices() {
             if node_a != node_b
                 && !old_neighbors.contains(&node_b)
                 && (!complement_graph.multigraph
-                    || !complement_graph
-                        .has_edge(node_a.index(), node_b.index()))
+                    || !complement_graph.has_edge(node_a.index(), node_b.index()))
             {
                 // avoid creating parallel edges in multigraph
-                complement_graph.add_edge(
-                    node_a.index(),
-                    node_b.index(),
-                    py.None(),
-                )?;
+                complement_graph.add_edge(node_a.index(), node_b.index(), py.None());
             }
         }
     }
@@ -538,10 +500,7 @@ pub fn graph_complement(
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_complement(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-) -> PyResult<digraph::PyDiGraph> {
+pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<digraph::PyDiGraph> {
     let mut complement_graph = graph.clone(); // keep same node indices
     complement_graph.graph.clear_edges();
 
@@ -552,11 +511,7 @@ pub fn digraph_complement(
             .collect();
         for node_b in graph.graph.node_indices() {
             if node_a != node_b && !old_neighbors.contains(&node_b) {
-                complement_graph.add_edge(
-                    node_a.index(),
-                    node_b.index(),
-                    py.None(),
-                )?;
+                complement_graph.add_edge(node_a.index(), node_b.index(), py.None())?;
             }
         }
     }
@@ -582,7 +537,7 @@ pub fn digraph_complement(
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
-fn graph_all_simple_paths(
+pub fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     from: usize,
     to: usize,
@@ -636,7 +591,7 @@ fn graph_all_simple_paths(
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
-fn digraph_all_simple_paths(
+pub fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
     from: usize,
     to: usize,
@@ -672,6 +627,88 @@ fn digraph_all_simple_paths(
     Ok(result)
 }
 
+/// Return all the simple paths between all pairs of nodes in the graph
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyDiGraph graph: The graph to find all simple paths in
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A mapping of source node indices to a mapping of target node
+///     indices to a list of paths between the source and target nodes.
+/// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+pub fn digraph_all_pairs_all_simple_paths(
+    graph: &digraph::PyDiGraph,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth.is_some() && min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff.is_some() && cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
+}
+
+/// Return all the simple paths between all pairs of nodes in the graph
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyGraph graph: The graph to find all simple paths in
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A mapping of node indices to to a mapping of target node
+///     indices to a list of paths between the source and target nodes.
+/// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+pub fn graph_all_pairs_all_simple_paths(
+    graph: &graph::PyGraph,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth.is_some() && min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff.is_some() && cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
+}
+
 /// Return the core number for each node in the graph.
 ///
 /// A k-core is a maximal subgraph that contains nodes of degree k or more.
@@ -688,10 +725,7 @@ fn digraph_all_simple_paths(
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_core_number(
-    py: Python,
-    graph: &graph::PyGraph,
-) -> PyResult<PyObject> {
+pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
 }
 
@@ -712,10 +746,7 @@ pub fn graph_core_number(
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_core_number(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-) -> PyResult<PyObject> {
+pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
 }
 
@@ -811,14 +842,8 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
 ///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-pub fn chain_decomposition(
-    graph: graph::PyGraph,
-    source: Option<usize>,
-) -> Chains {
-    let chains = connectivity::chain_decomposition(
-        &graph.graph,
-        source.map(NodeIndex::new),
-    );
+pub fn chain_decomposition(graph: graph::PyGraph, source: Option<usize>) -> Chains {
+    let chains = connectivity::chain_decomposition(&graph.graph, source.map(NodeIndex::new));
     Chains {
         chains: chains
             .into_iter()

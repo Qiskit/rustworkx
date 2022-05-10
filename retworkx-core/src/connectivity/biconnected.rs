@@ -15,8 +15,8 @@ use std::hash::Hash;
 
 use petgraph::{
     visit::{
-        EdgeCount, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers,
-        NodeIndexable, Time, Visitable,
+        EdgeCount, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeIndexable, Time,
+        Visitable,
     },
     Undirected,
 };
@@ -153,13 +153,9 @@ where
                     // now find a biconnected component that the
                     // current articulation point belongs.
                     if components.is_some() {
-                        if let Some(at) =
-                            edge_stack.iter().rposition(|&x| x == (pu_id, u_id))
-                        {
+                        if let Some(at) = edge_stack.iter().rposition(|&x| x == (pu_id, u_id)) {
                             tmp_components.extend(
-                                edge_stack[at..]
-                                    .iter()
-                                    .map(|edge| (*edge, num_components)),
+                                edge_stack[at..].iter().map(|edge| (*edge, num_components)),
                             );
                             edge_stack.truncate(at);
                             num_components += 1;
@@ -168,14 +164,9 @@ where
                 }
 
                 if is_root(&parent, pu) && components.is_some() {
-                    if let Some(at) =
-                        edge_stack.iter().position(|&x| x == (pu_id, u_id))
-                    {
-                        tmp_components.extend(
-                            edge_stack[at..]
-                                .iter()
-                                .map(|edge| (*edge, num_components)),
-                        );
+                    if let Some(at) = edge_stack.iter().position(|&x| x == (pu_id, u_id)) {
+                        tmp_components
+                            .extend(edge_stack[at..].iter().map(|edge| (*edge, num_components)));
                         edge_stack.truncate(at);
                         num_components += 1;
                     }

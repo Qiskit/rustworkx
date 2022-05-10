@@ -2,9 +2,9 @@
 name: CI Jobs
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'stable/*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, 'stable/*' ]
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.head_ref }}
   cancel-in-progress: true
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - run: pip install -U flake8 black==21.5b0
+      - run: pip install -U flake8 black~=22.0
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.7, 3.8, 3.9, "3.10"]
         platform: [
           { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
@@ -63,7 +63,7 @@ jobs:
         ]
         include:
           # Test minimal supported Rust version
-          - rust: 1.41.1
+          - rust: 1.48.0
             python-version: 3.8
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
@@ -101,19 +101,19 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-08-31
+          toolchain: stable
           override: true
           profile: default
           components: llvm-tools-preview
       - name: Download grcov
-        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -
+        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
       - name: Install deps
         run: pip install -U setuptools-rust networkx testtools fixtures
       - name: Build retworkx
         run: python setup.py develop
         env:
           CARGO_INCREMENTAL: 0
-          RUSTFLAGS: "-Zinstrument-coverage"
+          RUSTFLAGS: "-Cinstrument-coverage"
           LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
       - name: Run tests
         run: cd tests && python -m unittest discover . && cd ..
