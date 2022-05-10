@@ -89,14 +89,14 @@ interpreters isn’t currently supported.
 #### Tier 1
 
 Tier 1 supported platforms are fully tested upstream as part of the development
-processes to ensure any proposed change will function correctly. Pre-compiled
+process to ensure any proposed change will function correctly. Pre-compiled
 binaries are built, tested, and published to PyPI as part of the release
 process. These platforms are expected to be installable with just a functioning
 Python environment.
 
 #### Tier 2
 
-Tier 2 platforms are not tested upstream as part of development process.
+Tier 2 platforms are not tested upstream as part of the development process.
 However, pre-compiled binaries are built, tested, and published to PyPI as part
 of the release process and these packages can be expected to be installed with
 just a functioning Python environment.
