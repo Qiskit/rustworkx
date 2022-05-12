@@ -36,10 +36,7 @@ pub fn random_layout<Ty: EdgeType>(
                 match center {
                     Some(center) => (
                         n.index(),
-                        [
-                            random_tuple[0] + center[0],
-                            random_tuple[1] + center[1],
-                        ],
+                        [random_tuple[0] + center[0], random_tuple[1] + center[1]],
                     ),
                     None => (n.index(), random_tuple),
                 }

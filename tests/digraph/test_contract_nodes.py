@@ -37,18 +37,14 @@ class TestContractNodesCheckCycleSwitch(unittest.TestCase):
          └─►┤c│
             └─┘
         """
-        self.dag.contract_nodes(
-            [self.node_a, self.node_c], self.new_weight, **kwargs
-        )
+        self.dag.contract_nodes([self.node_a, self.node_c], self.new_weight, **kwargs)
 
     def test_cycle_check_enable_local(self):
         # Disable at class level.
         self.dag.check_cycle = False
 
         # Check removal is not allowed with explicit check_cycle=True.
-        self.assertRaises(
-            retworkx.DAGWouldCycle, self.contract, check_cycle=True
-        )
+        self.assertRaises(retworkx.DAGWouldCycle, self.contract, check_cycle=True)
 
     def test_cycle_check_disable_local(self):
         # Enable at class level.

@@ -22,10 +22,7 @@ class LayoutTest(unittest.TestCase):
         for k in exp:
             ev = exp[k]
             rv = res[k]
-            if (
-                abs(ev[0] - rv[0]) > self.thres
-                or abs(ev[1] - rv[1]) > self.thres
-            ):
+            if abs(ev[0] - rv[0]) > self.thres or abs(ev[1] - rv[1]) > self.thres:
                 self.fail(
                     "The position for node %s, %s, differs from the expected "
                     "position, %s by more than the allowed threshold of %s"
@@ -54,9 +51,7 @@ class TestRandomLayout(LayoutTest):
         self.assertEqual(expected, res)
 
     def test_random_layout_center(self):
-        res = retworkx.graph_random_layout(
-            self.graph, center=(0.5, 0.5), seed=42
-        )
+        res = retworkx.graph_random_layout(self.graph, center=(0.5, 0.5), seed=42)
         expected = {
             1: [1.260833410686741, 1.0278396573581516],
             5: [0.7363512785218512, 1.4286365888207462],
@@ -117,9 +112,7 @@ class TestBipartiteLayout(LayoutTest):
         self.assertLayoutEquiv(expected, res)
 
     def test_bipartite_layout_horizontal(self):
-        res = retworkx.bipartite_layout(
-            self.graph, {0, 1, 2, 3}, horizontal=True
-        )
+        res = retworkx.bipartite_layout(self.graph, {0, 1, 2, 3}, horizontal=True)
         expected = {
             0: (1.0, -0.9),
             1: (0.3333333333333333, -0.9),
@@ -151,9 +144,7 @@ class TestBipartiteLayout(LayoutTest):
         self.assertLayoutEquiv(expected, res)
 
     def test_bipartite_layout_center(self):
-        res = retworkx.bipartite_layout(
-            self.graph, {4, 5, 6}, center=(0.5, 0.5)
-        )
+        res = retworkx.bipartite_layout(self.graph, {4, 5, 6}, center=(0.5, 0.5))
         expected = {
             4: (-0.5, -0.0357142857142857),
             5: (-0.5, 0.5),
@@ -311,9 +302,7 @@ class TestShellLayout(LayoutTest):
         self.assertLayoutEquiv(expected, res)
 
     def test_shell_layout_nlist(self):
-        res = retworkx.shell_layout(
-            self.graph, nlist=[[0, 2], [1, 3], [4, 9], [8, 7], [6, 5]]
-        )
+        res = retworkx.shell_layout(self.graph, nlist=[[0, 2], [1, 3], [4, 9], [8, 7], [6, 5]])
         expected = {
             0: (0.16180340945720673, 0.11755704879760742),
             2: (-0.16180339455604553, -0.11755707114934921),
@@ -347,9 +336,7 @@ class TestShellLayout(LayoutTest):
         self.assertLayoutEquiv(expected, res)
 
     def test_shell_layout_scale(self):
-        res = retworkx.shell_layout(
-            self.graph, nlist=[[0, 1, 2, 3, 4], [9, 8, 7, 6, 5]], scale=2
-        )
+        res = retworkx.shell_layout(self.graph, nlist=[[0, 1, 2, 3, 4], [9, 8, 7, 6, 5]], scale=2)
         expected = {
             0: (-4.371138828673793e-08, 1.0),
             1: (-0.9510565996170044, 0.30901679396629333),

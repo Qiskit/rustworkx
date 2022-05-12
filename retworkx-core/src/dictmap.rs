@@ -40,17 +40,11 @@ pub trait InitWithHasher {
 impl<K, V> InitWithHasher for DictMap<K, V> {
     #[inline]
     fn new() -> Self {
-        indexmap::IndexMap::with_capacity_and_hasher(
-            0,
-            ahash::RandomState::default(),
-        )
+        indexmap::IndexMap::with_capacity_and_hasher(0, ahash::RandomState::default())
     }
 
     #[inline]
     fn with_capacity(n: usize) -> Self {
-        indexmap::IndexMap::with_capacity_and_hasher(
-            n,
-            ahash::RandomState::default(),
-        )
+        indexmap::IndexMap::with_capacity_and_hasher(n, ahash::RandomState::default())
     }
 }

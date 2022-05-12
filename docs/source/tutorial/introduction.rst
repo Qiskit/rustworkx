@@ -1,3 +1,7 @@
+.. This document was adapted from and originally modeled on the similar
+   introduction tutorial in  NetworkX's documentation which can be found here:
+   https://networkx.org/documentation/networkx-2.6.2/tutorial.html
+
 ########################
 Introduction to retworkx
 ########################
@@ -185,6 +189,30 @@ subsequent additions. For example, building off the previous example if you ran
 
 this new node is assigned index 2 again.
 
+Modifying elements of a graph
+=============================
+
+The graph classes in retworkx also allow for in place mutation of the payloads
+for elements in the graph. For nodes you can simply use the mapping protocol to
+change the payload via it's node index. For example:
+
+.. jupyter-execute::
+
+   last_index = graph.node_indices()[-1]
+   graph[last_index] = "New Payload"
+   print(graph[last_index])
+
+You can update the payload of any node in the graph using this interface. For
+edges you can leverage the :class:`~.PyGraph.update_edge` or
+:class:`~.PyGraph.update_edge_by_index` methods to update an edge's payload
+in place. For example:
+
+.. jupyter-execute::
+
+   edge_index = graph.add_edge(0, 1, None)
+   graph.update_edge_by_index(edge_index, "New Edge Payload")
+   print(graph.get_edge_data_by_index(edge_index))
+
 .. _data_payload:
 
 What to use for node and edge data payload
@@ -269,6 +297,32 @@ method:
     print(G.neighbors(2))
 
 which returns the node indices of any neighbors of node ``2``.
+
+
+Graph Attributes
+================
+
+Graphs in retworkx have an attribute which can be used to assign
+metadata to a graph object. This can be assigned at object creation or
+accessed and modified after creation with the :attr:`~.PyGraph.attrs` attribute.
+This attribute can be any Python object and defaults to being ``None`` if not
+specified at graph object creation time. For example::
+
+    import retworkx as rx
+
+    graph = rx.PyGraph(attrs=dict(day="Friday"))
+    graph.attrs['day'] = "Monday"
+
+Or, you could use a custom class like::
+
+    class Day:
+
+        def __init__(self, day):
+            self.day = day
+
+    graph = rx.PyGraph(attrs=Day("Friday"))
+    graph.attrs = Day("Monday")
+
 
 Directed Graphs
 ===============

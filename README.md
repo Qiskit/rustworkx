@@ -6,7 +6,7 @@
 [![](https://img.shields.io/github/release/Qiskit/retworkx.svg?style=popout-square)](https://github.com/Qiskit/retworkx/releases)
 [![](https://img.shields.io/pypi/dm/retworkx.svg?style=popout-square)](https://pypi.org/project/retworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/retworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/retworkx?branch=main)
-[![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Minimum rustc 1.48.0](https://img.shields.io/badge/rustc-1.48.0+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 [![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
 
   - You can see the full rendered docs at:
@@ -39,7 +39,7 @@ environment.
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able able to build the package
-from the published source package you need to have rust >=1.41.1 installed (and
+from the published source package you need to have rust >=1.48.0 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
 rust) to make this simpler, or rely on
@@ -161,3 +161,12 @@ you want to build retworkx in debug mode you have to use
 retworkx is the work of [many people](https://github.com/Qiskit/retworkx/graphs/contributors) who contribute 
 to the project at different levels. If you use retworkx in your research, please cite our 
 [paper](https://arxiv.org/abs/2110.15221) as per the included [BibTeX file](CITATION.bib).
+
+## Community
+
+Besides Github interactions (such as opening issues) there are two locations
+available to talk to other retworkx users and developers. The first is a
+public Slack channel in the Qiskit workspace,
+[#retworkx](https://qiskit.slack.com/messages/retworkx/). You can join the
+Qiskit Slack workspace [here](http://ibm.co/joinqiskitslack). Additionally,
+there is an IRC channel `#retworkx` on the [OFTC IRC network](https://www.oftc.net/)

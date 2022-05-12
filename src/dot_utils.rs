@@ -14,8 +14,8 @@ use std::collections::BTreeMap;
 use std::io::prelude::*;
 
 use petgraph::visit::{
-    Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences,
-    IntoNodeReferences, NodeIndexable, NodeRef,
+    Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable,
+    NodeRef,
 };
 use pyo3::prelude::*;
 
@@ -32,11 +32,7 @@ pub fn build_dot<G, T>(
 ) -> PyResult<()>
 where
     T: Write,
-    G: GraphBase
-        + IntoEdgeReferences
-        + IntoNodeReferences
-        + NodeIndexable
-        + GraphProp,
+    G: GraphBase + IntoEdgeReferences + IntoNodeReferences + NodeIndexable + GraphProp,
     G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
 {
     writeln!(file, "{} {{", TYPE[graph.is_directed() as usize])?;
@@ -77,11 +73,10 @@ fn attr_map_to_string<'a>(
     if attrs.is_none() {
         return Ok("".to_string());
     }
-    let attr_callable =
-        |node: &'a PyObject| -> PyResult<BTreeMap<String, String>> {
-            let res = attrs.unwrap().call1(py, (node,))?;
-            res.extract(py)
-        };
+    let attr_callable = |node: &'a PyObject| -> PyResult<BTreeMap<String, String>> {
+        let res = attrs.unwrap().call1(py, (node,))?;
+        res.extract(py)
+    };
 
     let attrs = attr_callable(weight)?;
     if attrs.is_empty() {

@@ -14,9 +14,7 @@
 // ``depth_first_search`` function.
 // https://github.com/petgraph/petgraph/blob/0.6.0/src/visit/dfsvisit.rs
 
-use petgraph::visit::{
-    ControlFlow, EdgeRef, IntoEdges, Time, VisitMap, Visitable,
-};
+use petgraph::visit::{ControlFlow, EdgeRef, IntoEdges, Time, VisitMap, Visitable};
 
 use super::try_control;
 
@@ -207,10 +205,7 @@ where
             for edge in adjacent_edges {
                 let v = edge.target();
                 if !discovered.is_visited(&v) {
-                    try_control!(
-                        visitor(DfsEvent::TreeEdge(u, v, edge.weight())),
-                        continue
-                    );
+                    try_control!(visitor(DfsEvent::TreeEdge(u, v, edge.weight())), continue);
                     discovered.visit(v);
                     try_control!(
                         visitor(DfsEvent::Discover(v, time_post_inc(time))),
@@ -219,17 +214,10 @@ where
                     next = Some(v);
                     break;
                 } else if !finished.is_visited(&v) {
-                    try_control!(
-                        visitor(DfsEvent::BackEdge(u, v, edge.weight())),
-                        continue
-                    );
+                    try_control!(visitor(DfsEvent::BackEdge(u, v, edge.weight())), continue);
                 } else {
                     try_control!(
-                        visitor(DfsEvent::CrossForwardEdge(
-                            u,
-                            v,
-                            edge.weight()
-                        )),
+                        visitor(DfsEvent::CrossForwardEdge(u, v, edge.weight())),
                         continue
                     );
                 }

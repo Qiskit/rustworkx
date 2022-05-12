@@ -32,9 +32,7 @@ class TestHeavyHexGraph(unittest.TestCase):
         d = 3
         graph = retworkx.generators.directed_heavy_hex_graph(d)
         self.assertEqual(len(graph), (5 * d * d - 2 * d - 1) / 2)
-        self.assertEqual(
-            len(graph.edges()), 2 * d * (d - 1) + (d + 1) * (d - 1)
-        )
+        self.assertEqual(len(graph.edges()), 2 * d * (d - 1) + (d + 1) * (d - 1))
         expected_edges = [
             (0, 13),
             (1, 13),
@@ -61,13 +59,9 @@ class TestHeavyHexGraph(unittest.TestCase):
 
     def test_directed_heavy_hex_graph_3_bidirectional(self):
         d = 3
-        graph = retworkx.generators.directed_heavy_hex_graph(
-            d, bidirectional=True
-        )
+        graph = retworkx.generators.directed_heavy_hex_graph(d, bidirectional=True)
         self.assertEqual(len(graph), (5 * d * d - 2 * d - 1) / 2)
-        self.assertEqual(
-            len(graph.edges()), 2 * (2 * d * (d - 1) + (d + 1) * (d - 1))
-        )
+        self.assertEqual(len(graph.edges()), 2 * (2 * d * (d - 1) + (d + 1) * (d - 1)))
         expected_edges = [
             (0, 13),
             (1, 13),
@@ -116,9 +110,7 @@ class TestHeavyHexGraph(unittest.TestCase):
         d = 3
         graph = retworkx.generators.heavy_hex_graph(d)
         self.assertEqual(len(graph), (5 * d * d - 2 * d - 1) / 2)
-        self.assertEqual(
-            len(graph.edges()), 2 * d * (d - 1) + (d + 1) * (d - 1)
-        )
+        self.assertEqual(len(graph.edges()), 2 * d * (d - 1) + (d + 1) * (d - 1))
         expected_edges = [
             (0, 13),
             (13, 1),
@@ -147,9 +139,7 @@ class TestHeavyHexGraph(unittest.TestCase):
         d = 5
         graph = retworkx.generators.directed_heavy_hex_graph(d)
         self.assertEqual(len(graph), (5 * d * d - 2 * d - 1) / 2)
-        self.assertEqual(
-            len(graph.edges()), 2 * d * (d - 1) + (d + 1) * (d - 1)
-        )
+        self.assertEqual(len(graph.edges()), 2 * d * (d - 1) + (d + 1) * (d - 1))
         expected_edges = [
             (0, 37),
             (1, 37),
@@ -220,13 +210,9 @@ class TestHeavyHexGraph(unittest.TestCase):
 
     def test_directed_heavy_hex_graph_5_bidirectional(self):
         d = 5
-        graph = retworkx.generators.directed_heavy_hex_graph(
-            d, bidirectional=True
-        )
+        graph = retworkx.generators.directed_heavy_hex_graph(d, bidirectional=True)
         self.assertEqual(len(graph), (5 * d * d - 2 * d - 1) / 2)
-        self.assertEqual(
-            len(graph.edges()), 2 * (2 * d * (d - 1) + (d + 1) * (d - 1))
-        )
+        self.assertEqual(len(graph.edges()), 2 * (2 * d * (d - 1) + (d + 1) * (d - 1)))
         expected_edges = [
             (0, 37),
             (1, 37),
@@ -363,9 +349,7 @@ class TestHeavyHexGraph(unittest.TestCase):
         d = 5
         graph = retworkx.generators.heavy_hex_graph(d)
         self.assertEqual(len(graph), (5 * d * d - 2 * d - 1) / 2)
-        self.assertEqual(
-            len(graph.edges()), 2 * d * (d - 1) + (d + 1) * (d - 1)
-        )
+        self.assertEqual(len(graph.edges()), 2 * d * (d - 1) + (d + 1) * (d - 1))
         expected_edges = [
             (0, 37),
             (37, 1),

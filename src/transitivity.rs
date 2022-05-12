@@ -22,8 +22,7 @@ fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
     let mut triangles: usize = 0;
 
     let index = NodeIndex::new(node);
-    let mut neighbors: HashSet<NodeIndex> =
-        graph.graph.neighbors(index).collect();
+    let mut neighbors: HashSet<NodeIndex> = graph.graph.neighbors(index).collect();
     neighbors.remove(&index);
 
     for nodev in &neighbors {
@@ -71,7 +70,7 @@ fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
 /// :rtype: float
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
+pub fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
     let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let (triangles, triples) = node_indices
         .par_iter()
@@ -87,10 +86,7 @@ fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
     }
 }
 
-fn _digraph_triangles(
-    graph: &digraph::PyDiGraph,
-    node: usize,
-) -> (usize, usize) {
+fn _digraph_triangles(graph: &digraph::PyDiGraph, node: usize) -> (usize, usize) {
     let mut triangles: usize = 0;
 
     let index = NodeIndex::new(node);
@@ -175,7 +171,7 @@ fn _digraph_triangles(
 ///    Physical Review E, 76(2), 026107 (2007)
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
+pub fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
     let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let (triangles, triples) = node_indices
         .par_iter()

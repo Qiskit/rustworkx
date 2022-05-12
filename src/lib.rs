@@ -19,6 +19,7 @@ mod digraph;
 mod dot_utils;
 mod generators;
 mod graph;
+mod graphml;
 mod isomorphism;
 mod iterators;
 mod layout;
@@ -26,6 +27,7 @@ mod matching;
 mod random_graph;
 mod shortest_path;
 mod steiner_tree;
+mod tensor_product;
 mod toposort;
 mod transitivity;
 mod traversal;
@@ -37,12 +39,14 @@ use centrality::*;
 use coloring::*;
 use connectivity::*;
 use dag_algo::*;
+use graphml::*;
 use isomorphism::*;
 use layout::*;
 use matching::*;
 use random_graph::*;
 use shortest_path::*;
 use steiner_tree::*;
+use tensor_product::*;
 use transitivity::*;
 use traversal::*;
 use tree::*;
@@ -64,8 +68,8 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers,
-    NodeCount, NodeIndexable,
+    Data, EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable,
 };
 use petgraph::EdgeType;
 
@@ -73,8 +77,6 @@ use std::convert::TryFrom;
 use std::hash::Hash;
 
 use retworkx_core::dictmap::*;
-
-use crate::generators::PyInit_generators;
 
 trait IsNan {
     fn is_nan(&self) -> bool;
@@ -111,9 +113,7 @@ where
     }
 }
 
-pub fn get_edge_iter_with_weights<G>(
-    graph: G,
-) -> impl Iterator<Item = (usize, usize, PyObject)>
+pub fn get_edge_iter_with_weights<G>(graph: G) -> impl Iterator<Item = (usize, usize, PyObject)>
 where
     G: GraphBase
         + IntoEdgeReferences
@@ -141,10 +141,8 @@ where
         let j: usize;
         match &node_map {
             Some(map) => {
-                let source_index =
-                    NodeIndex::new(graph.to_index(edge.source()));
-                let target_index =
-                    NodeIndex::new(graph.to_index(edge.target()));
+                let source_index = NodeIndex::new(graph.to_index(edge.source()));
+                let target_index = NodeIndex::new(graph.to_index(edge.target()));
                 i = *map.get(&source_index).unwrap();
                 j = *map.get(&target_index).unwrap();
             }
@@ -173,6 +171,32 @@ where
         }
         None => Ok(default),
     }
+}
+
+pub fn edge_weights_from_callable<'p, T, Ty: EdgeType>(
+    py: Python<'p>,
+    graph: &StablePyGraph<Ty>,
+    weight_fn: &'p Option<PyObject>,
+    default_weight: T,
+) -> PyResult<Vec<Option<T>>>
+where
+    T: FromPyObject<'p> + Copy,
+{
+    let mut edge_weights: Vec<Option<T>> = Vec::with_capacity(graph.edge_bound());
+    for index in 0..=graph.edge_bound() {
+        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => edge_weights.push(Some(weight_callable(
+                py,
+                weight_fn,
+                weight,
+                default_weight,
+            )?)),
+            None => edge_weights.push(None),
+        };
+    }
+
+    Ok(edge_weights)
 }
 
 #[inline]
@@ -211,9 +235,7 @@ impl TryFrom<f64> for CostFn {
 impl TryFrom<(Option<PyObject>, f64)> for CostFn {
     type Error = PyErr;
 
-    fn try_from(
-        func_or_default: (Option<PyObject>, f64),
-    ) -> Result<Self, Self::Error> {
+    fn try_from(func_or_default: (Option<PyObject>, f64)) -> Result<Self, Self::Error> {
         let (obj, val) = func_or_default;
         match obj {
             Some(obj) => Ok(CostFn::PyFunction(obj)),
@@ -255,10 +277,7 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
-fn merge_duplicates<K, V, F, E>(
-    xs: Vec<(K, V)>,
-    mut merge_fn: F,
-) -> Result<Vec<(K, V)>, E>
+fn merge_duplicates<K, V, F, E>(xs: Vec<(K, V)>, mut merge_fn: F) -> Result<Vec<(K, V)>, E>
 where
     K: Hash + Eq,
     F: FnMut(&V, &V) -> Result<V, E>,
@@ -295,6 +314,8 @@ create_exception!(retworkx, NoPathFound, PyException);
 import_exception!(retworkx.visit, PruneSearch);
 // Stop graph traversal.
 import_exception!(retworkx.visit, StopSearch);
+// Negative Cycle found on shortest-path algorithm
+create_exception!(retworkx, NegativeCycle, PyException);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -306,6 +327,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
+    m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
@@ -348,12 +370,20 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bellman_ford_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bellman_ford_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(negative_edge_cycle))?;
+    m.add_wrapped(wrap_pyfunction!(find_negative_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_path_lengths))?;
@@ -363,6 +393,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
@@ -407,12 +439,13 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         graph_unweighted_average_shortest_path_length
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
-    m.add_wrapped(wrap_pyfunction!(steiner_tree))?;
+    m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
+    m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
@@ -427,12 +460,14 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::CentralityMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
+    m.add_class::<iterators::MultiplePathMapping>()?;
+    m.add_class::<iterators::AllPairsMultiplePathMapping>()?;
     m.add_class::<iterators::AllPairsPathLengthMapping>()?;
     m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_class::<iterators::NodesCountMapping>()?;
     m.add_class::<iterators::NodeMap>()?;
     m.add_class::<iterators::ProductNodeMap>()?;
     m.add_class::<iterators::BiconnectedComponents>()?;
-    m.add_wrapped(wrap_pymodule!(generators))?;
+    m.add_wrapped(wrap_pymodule!(generators::generators))?;
     Ok(())
 }

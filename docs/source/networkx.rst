@@ -51,7 +51,7 @@ from the above retworkx example::
     assert 'my_node_a' == graph[node_a]
     assert 'my_node_b' == graph[node_b]
 
-The use of integer indexes for everything is normally the biggest difference that
+The use of integer indices for everything is normally the biggest difference that
 existing networkx users have to adapt to when migrating to retworkx.
 
 Similarly when there are algorithm functions that operate on a node or edge
@@ -137,11 +137,39 @@ networkx has a concept of
 `graph <https://networkx.org/documentation/stable/tutorial.html#graph-attributes>`__,
 `node <https://networkx.org/documentation/stable/tutorial.html#node-attributes>`__,
 and `edge attributes <https://networkx.org/documentation/stable/tutorial.html#edge-attributes>`__
-in addition to the hashable object used for a node's payload. Retworkx
-has no analogous concept. Instead, the payloads for nodes and edges are any 
-python object (hashable or not). This enables you to build similar structures 
-to the attributes concept, but also use alternative structures specific to 
-your use case.
+in addition to the hashable object used for a node's payload. Retworkx has
+graph attributes similar to NetworkX however instead of being treated like
+a dictionary on the graph object itself they're accessible from a dedicated
+:class:`~.PyGraph.attrs` attribute. This attribute can be any Python object
+so you can use it to have different containers than a dictionary. For example,
+something like::
+
+    import networkx as nx
+
+    graph = nx.Graph(day="Friday")
+    graph['day'] = "Monday"
+
+can be done in retworkx with::
+
+    import retworkx as rx
+
+    graph = rx.PyGraph(attrs=dict(day="Friday"))
+    graph.attrs['day'] = "Monday"
+
+Additionally you could use a custom class with retworkx like::
+
+    class Day:
+
+        def __init__(self, day):
+            self.day = day
+
+    graph = rx.PyGraph(attrs=Day("Friday"))
+    graph.attrs = Day("Monday")
+
+But for nodes and edges retworkx has no analogous concept. Instead, the payloads
+for nodes and edges are any python object (hashable or not). This enables you to
+build similar structures to the attributes concept, but also use alternative
+structures specific to your use case.
 
 For example, something like::
 

@@ -28,12 +28,10 @@ fn cartesian_product<Ty: EdgeType>(
 ) -> (StablePyGraph<Ty>, ProductNodeMap) {
     let mut final_graph = StablePyGraph::<Ty>::with_capacity(
         first.node_count() * second.node_count(),
-        first.node_count() * second.edge_count()
-            + first.edge_count() * second.node_count(),
+        first.node_count() * second.edge_count() + first.edge_count() * second.node_count(),
     );
 
-    let mut hash_nodes =
-        HashMap::with_capacity(first.node_count() * second.node_count());
+    let mut hash_nodes = HashMap::with_capacity(first.node_count() * second.node_count());
 
     for (x, weight_x) in first.node_references() {
         for (y, weight_y) in second.node_references() {
@@ -47,11 +45,7 @@ fn cartesian_product<Ty: EdgeType>(
             let source = hash_nodes[&(edge_first.source(), node_second)];
             let target = hash_nodes[&(edge_first.target(), node_second)];
 
-            final_graph.add_edge(
-                source,
-                target,
-                edge_first.weight().clone_ref(py),
-            );
+            final_graph.add_edge(source, target, edge_first.weight().clone_ref(py));
         }
     }
 
@@ -60,11 +54,7 @@ fn cartesian_product<Ty: EdgeType>(
             let source = hash_nodes[&(node_first, edge_second.source())];
             let target = hash_nodes[&(node_first, edge_second.target())];
 
-            final_graph.add_edge(
-                source,
-                target,
-                edge_second.weight().clone_ref(py),
-            );
+            final_graph.add_edge(source, target, edge_second.weight().clone_ref(py));
         }
     }
 
@@ -110,19 +100,19 @@ fn cartesian_product<Ty: EdgeType>(
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-fn graph_cartesian_product(
+pub fn graph_cartesian_product(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
 ) -> (graph::PyGraph, ProductNodeMap) {
-    let (out_graph, out_node_map) =
-        cartesian_product(py, &first.graph, &second.graph);
+    let (out_graph, out_node_map) = cartesian_product(py, &first.graph, &second.graph);
 
     (
         graph::PyGraph {
             graph: out_graph,
             multigraph: true,
             node_removed: false,
+            attrs: py.None(),
         },
         out_node_map,
     )
@@ -160,13 +150,12 @@ fn graph_cartesian_product(
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
-fn digraph_cartesian_product(
+pub fn digraph_cartesian_product(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
 ) -> (digraph::PyDiGraph, ProductNodeMap) {
-    let (out_graph, out_node_map) =
-        cartesian_product(py, &first.graph, &second.graph);
+    let (out_graph, out_node_map) = cartesian_product(py, &first.graph, &second.graph);
 
     (
         digraph::PyDiGraph {
@@ -175,6 +164,7 @@ fn digraph_cartesian_product(
             check_cycle: false,
             node_removed: false,
             multigraph: true,
+            attrs: py.None(),
         },
         out_node_map,
     )

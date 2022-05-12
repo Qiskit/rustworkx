@@ -76,20 +76,11 @@ pub struct TopologicalSorter {
 impl TopologicalSorter {
     #[new]
     #[args(check_cycle = "true")]
-    fn new(
-        py: Python,
-        dag: Py<PyDiGraph>,
-        check_cycle: bool,
-    ) -> PyResult<Self> {
+    fn new(py: Python, dag: Py<PyDiGraph>, check_cycle: bool) -> PyResult<Self> {
         {
             let dag = &dag.borrow(py);
-            if !dag.check_cycle
-                && check_cycle
-                && !is_directed_acyclic_graph(dag)
-            {
-                return Err(DAGHasCycle::new_err(
-                    "PyDiGraph object has a cycle",
-                ));
+            if !dag.check_cycle && check_cycle && !is_directed_acyclic_graph(dag) {
+                return Err(DAGHasCycle::new_err("PyDiGraph object has a cycle"));
             }
         }
 
@@ -100,10 +91,7 @@ impl TopologicalSorter {
                 .node_identifiers()
                 .filter(|node| {
                     dag.graph
-                        .neighbors_directed(
-                            *node,
-                            petgraph::Direction::Incoming,
-                        )
+                        .neighbors_directed(*node, petgraph::Direction::Incoming)
                         .next()
                         .is_none()
                 })
@@ -198,10 +186,7 @@ impl TopologicalSorter {
                     Entry::Vacant(entry) => {
                         let in_degree = dag
                             .graph
-                            .neighbors_directed(
-                                succ,
-                                petgraph::Direction::Incoming,
-                            )
+                            .neighbors_directed(succ, petgraph::Direction::Incoming)
                             .count()
                             - 1;
 

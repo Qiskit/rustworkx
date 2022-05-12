@@ -3,8 +3,8 @@ requires = ["setuptools", "wheel", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-line-length = 80
-target-version = ['py36', 'py37', 'py38', 'py39']
+line-length = 100
+target-version = ['py37', 'py38', 'py39', 'py310']
 
 [tool.cibuildwheel]
 manylinux-x86_64-image = "quay.io/pypa/manylinux2010_x86_64:latest"

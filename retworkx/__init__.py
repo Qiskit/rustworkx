@@ -42,9 +42,9 @@ class PyDAG(PyDiGraph):
         graph.add_nodes_from(list(range(5)))
         graph.add_nodes_from(list(range(2)))
         graph.remove_node(2)
-        print("After deletion:", graph.node_indexes())
+        print("After deletion:", graph.node_indices())
         res_manual = graph.add_parent(6, None, None)
-        print("After adding a new node:", graph.node_indexes())
+        print("After adding a new node:", graph.node_indices())
 
     Additionally, each node and edge contains an arbitrary Python object as a
     weight/data payload.
@@ -127,9 +127,7 @@ class PyDAG(PyDiGraph):
 
 
 @functools.singledispatch
-def distance_matrix(
-    graph, parallel_threshold=300, as_undirected=False, null_value=0.0
-):
+def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
     """Get the distance matrix for a graph
 
     This differs from functions like :func:`~retworkx.floyd_warshall_numpy` in
@@ -161,9 +159,7 @@ def distance_matrix(
 
 
 @distance_matrix.register(PyDiGraph)
-def _digraph_distance_matrix(
-    graph, parallel_threshold=300, as_undirected=False, null_value=0.0
-):
+def _digraph_distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
     return digraph_distance_matrix(
         graph,
         parallel_threshold=parallel_threshold,
@@ -180,9 +176,7 @@ def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
 
 
 @functools.singledispatch
-def unweighted_average_shortest_path_length(
-    graph, parallel_threshold=300, disconnected=False
-):
+def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disconnected=False):
     r"""Return the average shortest path length with unweighted edges.
 
     The average shortest path length is calculated as
@@ -236,9 +230,7 @@ def _digraph_unweighted_average_shortest_path_length(
 
 
 @unweighted_average_shortest_path_length.register(PyGraph)
-def _graph_unweighted_shortest_path_length(
-    graph, parallel_threshold=300, disconnected=False
-):
+def _graph_unweighted_shortest_path_length(graph, parallel_threshold=300, disconnected=False):
     return graph_unweighted_average_shortest_path_length(
         graph, parallel_threshold=parallel_threshold, disconnected=disconnected
     )
@@ -281,9 +273,7 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
 
 
 @adjacency_matrix.register(PyDiGraph)
-def _digraph_adjacency_matrix(
-    graph, weight_fn=None, default_weight=1.0, null_value=0.0
-):
+def _digraph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     return digraph_adjacency_matrix(
         graph,
         weight_fn=weight_fn,
@@ -293,9 +283,7 @@ def _digraph_adjacency_matrix(
 
 
 @adjacency_matrix.register(PyGraph)
-def _graph_adjacency_matrix(
-    graph, weight_fn=None, default_weight=1.0, null_value=0.0
-):
+def _graph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     return graph_adjacency_matrix(
         graph,
         weight_fn=weight_fn,
@@ -329,16 +317,12 @@ def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
 
 @all_simple_paths.register(PyDiGraph)
 def _digraph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return digraph_all_simple_paths(
-        graph, from_, to, min_depth=min_depth, cutoff=cutoff
-    )
+    return digraph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
 
 
 @all_simple_paths.register(PyGraph)
 def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return graph_all_simple_paths(
-        graph, from_, to, min_depth=min_depth, cutoff=cutoff
-    )
+    return graph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
 
 
 @functools.singledispatch
@@ -489,9 +473,7 @@ def _digraph_floyd_warshall_numpy(
 
 
 @floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(
-    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
-):
+def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300):
     return graph_floyd_warshall_numpy(
         graph,
         weight_fn=weight_fn,
@@ -528,21 +510,13 @@ def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
 
 
 @astar_shortest_path.register(PyDiGraph)
-def _digraph_astar_shortest_path(
-    graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-):
-    return digraph_astar_shortest_path(
-        graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-    )
+def _digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+    return digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
 
 
 @astar_shortest_path.register(PyGraph)
-def _graph_astar_shortest_path(
-    graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-):
-    return graph_astar_shortest_path(
-        graph, node, goal_fn, edge_cost_fn, estimate_cost_fn
-    )
+def _graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
+    return graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
 
 
 @functools.singledispatch
@@ -599,9 +573,7 @@ def _digraph_dijkstra_shortest_path(
 
 
 @dijkstra_shortest_paths.register(PyGraph)
-def _graph_dijkstra_shortest_path(
-    graph, source, target=None, weight_fn=None, default_weight=1.0
-):
+def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None, default_weight=1.0):
     return graph_dijkstra_shortest_paths(
         graph,
         source,
@@ -652,6 +624,41 @@ def _digraph_all_pairsdijkstra_shortest_path(graph, edge_cost_fn):
 @all_pairs_dijkstra_shortest_paths.register(PyGraph)
 def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
     return graph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
+def all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
+    """Return all the simple paths between all pairs of nodes in the graph
+
+    This function is multithreaded and will launch a thread pool with threads
+    equal to the number of CPUs by default. You can tune the number of threads
+    with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+    ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+
+    :param graph: The graph to find all simple paths in. This can be a :class:`~retworkx.PyGraph`
+        or a :class:`~retworkx.PyDiGraph`
+    :param int min_depth: The minimum depth of the path to include in the output
+        list of paths. By default all paths are included regardless of depth,
+        setting to 0 will behave like the default.
+    :param int cutoff: The maximum depth of path to include in the output list
+        of paths. By default includes all paths regardless of depth, setting to
+        0 will behave like default.
+
+    :returns: A mapping of source node indices to a mapping of target node
+        indices to a list of paths between the source and target nodes.
+    :rtype: AllPairsMultiplePathMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@all_pairs_all_simple_paths.register(PyDiGraph)
+def _digraph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
+    return digraph_all_pairs_all_simple_paths(graph, min_depth=min_depth, cutoff=cutoff)
+
+
+@all_pairs_all_simple_paths.register(PyGraph)
+def _graph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
+    return graph_all_pairs_all_simple_paths(graph, min_depth=min_depth, cutoff=cutoff)
 
 
 @functools.singledispatch
@@ -723,19 +730,13 @@ def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
 
 
 @dijkstra_shortest_path_lengths.register(PyDiGraph)
-def _digraph_dijkstra_shortest_path_lengths(
-    graph, node, edge_cost_fn, goal=None
-):
-    return digraph_dijkstra_shortest_path_lengths(
-        graph, node, edge_cost_fn, goal=goal
-    )
+def _digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    return digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
 
 
 @dijkstra_shortest_path_lengths.register(PyGraph)
 def _graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return graph_dijkstra_shortest_path_lengths(
-        graph, node, edge_cost_fn, goal=goal
-    )
+    return graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
 
 
 @functools.singledispatch
@@ -765,9 +766,7 @@ def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 
 @k_shortest_path_lengths.register(PyDiGraph)
 def _digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
-    return digraph_k_shortest_path_lengths(
-        graph, start, k, edge_cost, goal=goal
-    )
+    return digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=goal)
 
 
 @k_shortest_path_lengths.register(PyGraph)
@@ -894,9 +893,7 @@ def _digraph_is_isomorphic(
     id_order=True,
     call_limit=None,
 ):
-    return digraph_is_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, call_limit
-    )
+    return digraph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order, call_limit)
 
 
 @is_isomorphic.register(PyGraph)
@@ -908,9 +905,7 @@ def _graph_is_isomorphic(
     id_order=True,
     call_limit=None,
 ):
-    return graph_is_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, call_limit
-    )
+    return graph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order, call_limit)
 
 
 @functools.singledispatch
@@ -1330,10 +1325,7 @@ def networkx_converter(graph, keep_attributes: bool = False):
     nodes = list(graph.nodes)
     node_indices = dict(zip(nodes, new_graph.add_nodes_from(nodes)))
     new_graph.add_edges_from(
-        [
-            (node_indices[x[0]], node_indices[x[1]], x[2])
-            for x in graph.edges(data=True)
-        ]
+        [(node_indices[x[0]], node_indices[x[1]], x[2]) for x in graph.edges(data=True)]
     )
 
     if keep_attributes:
@@ -1358,7 +1350,7 @@ def bipartite_layout(
 
     :param graph: The graph to generate the layout for. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :param set first_nodes: The set of node indexes on the left (or top if
+    :param set first_nodes: The set of node indices on the left (or top if
         horitontal is true)
     :param bool horizontal: An optional bool specifying the orientation of the
         layout
@@ -1445,7 +1437,7 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
 
     :param graph: The graph to generate the layout for. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-    :param list nlist: The list of lists of indexes which represents each shell
+    :param list nlist: The list of lists of indices which represents each shell
     :param float rotate: Angle (in radians) by which to rotate the starting
         position of each shell relative to the starting position of the
         previous shell
@@ -1461,22 +1453,16 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
 
 @shell_layout.register(PyDiGraph)
 def _digraph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
-    return digraph_shell_layout(
-        graph, nlist=nlist, rotate=rotate, scale=scale, center=center
-    )
+    return digraph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale, center=center)
 
 
 @shell_layout.register(PyGraph)
 def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
-    return graph_shell_layout(
-        graph, nlist=nlist, rotate=rotate, scale=scale, center=center
-    )
+    return graph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale, center=center)
 
 
 @functools.singledispatch
-def spiral_layout(
-    graph, scale=1, center=None, resolution=0.35, equidistant=False
-):
+def spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
     """
     Generate a spiral layout of the graph
 
@@ -1497,9 +1483,7 @@ def spiral_layout(
 
 
 @spiral_layout.register(PyDiGraph)
-def _digraph_spiral_layout(
-    graph, scale=1, center=None, resolution=0.35, equidistant=False
-):
+def _digraph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
     return digraph_spiral_layout(
         graph,
         scale=scale,
@@ -1510,9 +1494,7 @@ def _digraph_spiral_layout(
 
 
 @spiral_layout.register(PyGraph)
-def _graph_spiral_layout(
-    graph, scale=1, center=None, resolution=0.35, equidistant=False
-):
+def _graph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
     return graph_spiral_layout(
         graph,
         scale=scale,
@@ -1548,9 +1530,7 @@ def _graph_num_shortest_paths_unweighted(graph, source):
 
 
 @functools.singledispatch
-def betweenness_centrality(
-    graph, normalized=True, endpoints=False, parallel_threshold=50
-):
+def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
     r"""Returns the betweenness centrality of each node in the graph.
 
     Betweenness centrality of a node :math:`v` is the sum of the
@@ -1593,9 +1573,7 @@ def betweenness_centrality(
 
 
 @betweenness_centrality.register(PyDiGraph)
-def _digraph_betweenness_centrality(
-    graph, normalized=True, endpoints=False, parallel_threshold=50
-):
+def _digraph_betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
     return digraph_betweenness_centrality(
         graph,
         normalized=normalized,
@@ -1605,9 +1583,7 @@ def _digraph_betweenness_centrality(
 
 
 @betweenness_centrality.register(PyGraph)
-def _graph_betweenness_centrality(
-    graph, normalized=True, endpoints=False, parallel_threshold=50
-):
+def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
     return graph_betweenness_centrality(
         graph,
         normalized=normalized,
@@ -1768,9 +1744,7 @@ def _digraph_union(
     merge_nodes=False,
     merge_edges=False,
 ):
-    return digraph_union(
-        first, second, merge_nodes=merge_nodes, merge_edges=merge_edges
-    )
+    return digraph_union(first, second, merge_nodes=merge_nodes, merge_edges=merge_edges)
 
 
 @union.register(PyGraph)
@@ -1780,9 +1754,53 @@ def _graph_union(
     merge_nodes=False,
     merge_edges=False,
 ):
-    return graph_union(
-        first, second, merge_nodes=merge_nodes, merge_edges=merge_edges
-    )
+    return graph_union(first, second, merge_nodes=merge_nodes, merge_edges=merge_edges)
+
+
+@functools.singledispatch
+def tensor_product(
+    first,
+    second,
+):
+    """Return a new graph by forming the tensor product
+    from two input graph objects
+
+    :param first: The first graph object
+    :param second: The second graph object
+
+    :returns: A new graph object that is the tensor product of ``second`` and
+        ``first``. It's worth noting the weight/data payload objects are
+        passed by reference from ``first`` and ``second`` to this new object.
+        A read-only dictionary of the product of nodes is also returned. The keys
+        are a tuple where the first element is a node of the first graph and the
+        second element is a node of the second graph, and the values are the map
+        of those elements to node indices in the product graph. For example::
+
+            {
+                (0, 0): 0,
+                (0, 1): 1,
+            }
+
+    :rtype: Tuple[:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`,
+        :class:`~retworkx.ProductNodeMap`]
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@tensor_product.register(PyDiGraph)
+def _digraph_tensor_product(
+    first,
+    second,
+):
+    return digraph_tensor_product(first, second)
+
+
+@tensor_product.register(PyGraph)
+def _graph_tensor_product(
+    first,
+    second,
+):
+    return graph_tensor_product(first, second)
 
 
 @functools.singledispatch
@@ -2060,3 +2078,109 @@ def _digraph_dijkstra_search(graph, source, weight_fn, visitor):
 @dijkstra_search.register(PyGraph)
 def _graph_dijkstra_search(graph, source, weight_fn, visitor):
     return graph_dijkstra_search(graph, source, weight_fn, visitor)
+
+
+@functools.singledispatch
+def bellman_ford_shortest_paths(
+    graph,
+    source,
+    target=None,
+    weight_fn=None,
+    default_weight=1.0,
+    as_undirected=False,
+):
+    """Find the shortest path from a node
+
+    This function will generate the shortest path from a source node using
+    the Bellman-Ford algorithm wit the SPFA heuristic.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param int source: The node index to find paths from
+    :param int target: An optional target to find a path to
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float
+        which will be used to represent the weight/cost of the edge
+    :param float default_weight: If ``weight_fn`` isn't specified this optional
+        float value will be used for the weight/cost of each edge.
+    :param bool as_undirected: If set to true the graph will be treated as
+        undirected for finding the shortest path. This only works with a
+        :class:`~retworkx.PyDiGraph` input for ``graph``
+
+    :return: A read-only dictionary of paths. The keys are destination node indices
+        and the dict values are lists of node indices making the path.
+    :rtype: PathMapping
+
+    :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+        path is not defined
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bellman_ford_shortest_paths.register(PyDiGraph)
+def _digraph_bellman_ford_shortest_path(
+    graph,
+    source,
+    target=None,
+    weight_fn=None,
+    default_weight=1.0,
+    as_undirected=False,
+):
+    return digraph_bellman_ford_shortest_paths(
+        graph,
+        source,
+        target=target,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        as_undirected=as_undirected,
+    )
+
+
+@bellman_ford_shortest_paths.register(PyGraph)
+def _graph_bellman_ford_shortest_path(
+    graph, source, target=None, weight_fn=None, default_weight=1.0
+):
+    return graph_bellman_ford_shortest_paths(
+        graph,
+        source,
+        target=target,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+    )
+
+
+@functools.singledispatch
+def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    """Compute the lengths of the shortest paths for a graph object using
+    the Bellman-Ford algorithm with the SPFA heuristic.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param int node: The node index to use as the source for finding the
+        shortest paths from
+    :param edge_cost_fn: A python callable that will take in 1 parameter, an
+        edge's data object and will return a float that represents the
+        cost/weight of that edge. It can be negative.
+    :param int goal: An optional node index to use as the end of the path.
+        When specified the output dictionary will only have a single entry with
+        the length of the shortest path to the goal node.
+
+    :returns: A read-only dictionary of the shortest paths from the provided node
+        where the key is the node index of the end of the path and the value is the
+        cost/sum of the weights of path
+    :rtype: PathLengthMapping
+
+    :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+        path is not defined
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bellman_ford_shortest_path_lengths.register(PyDiGraph)
+def _digraph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    return digraph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
+
+
+@bellman_ford_shortest_path_lengths.register(PyGraph)
+def _graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    return graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)

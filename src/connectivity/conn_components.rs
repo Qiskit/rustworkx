@@ -40,9 +40,7 @@ pub fn bfs_undirected<Ty: EdgeType>(
     component
 }
 
-pub fn connected_components<Ty>(
-    graph: &StablePyGraph<Ty>,
-) -> Vec<HashSet<usize>>
+pub fn connected_components<Ty>(graph: &StablePyGraph<Ty>) -> Vec<HashSet<usize>>
 where
     Ty: EdgeType,
 {

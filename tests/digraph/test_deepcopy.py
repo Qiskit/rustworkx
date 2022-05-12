@@ -23,9 +23,7 @@ class TestDeepcopy(unittest.TestCase):
         dag_a.add_child(node_a, "a_2", "a_1")
         dag_a.add_child(node_a, "a_3", "a_2")
         dag_b = copy.deepcopy(dag_a)
-        self.assertTrue(
-            retworkx.is_isomorphic_node_match(dag_a, dag_b, lambda x, y: x == y)
-        )
+        self.assertTrue(retworkx.is_isomorphic_node_match(dag_a, dag_b, lambda x, y: x == y))
 
     def test_deepcopy_with_holes(self):
         dag_a = retworkx.PyDAG()
@@ -43,3 +41,8 @@ class TestDeepcopy(unittest.TestCase):
         dag = retworkx.PyDAG()
         empty_copy = copy.deepcopy(dag)
         self.assertEqual(len(empty_copy), 0)
+
+    def test_deepcopy_attrs(self):
+        graph = retworkx.PyDiGraph(attrs="abc")
+        graph_copy = copy.deepcopy(graph)
+        self.assertEqual(graph.attrs, graph_copy.attrs)

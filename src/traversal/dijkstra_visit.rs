@@ -33,9 +33,7 @@ pub fn dijkstra_handler(
     event: DijkstraEvent<NodeIndex, &PyObject, f64>,
 ) -> PyResult<Control<()>> {
     let res = match event {
-        DijkstraEvent::Discover(u, score) => {
-            vis.discover_vertex.call1(py, (u.index(), score))
-        }
+        DijkstraEvent::Discover(u, score) => vis.discover_vertex.call1(py, (u.index(), score)),
         DijkstraEvent::ExamineEdge(u, v, weight) => {
             let edge = (u.index(), v.index(), weight);
             vis.examine_edge.call1(py, (edge,))
@@ -53,9 +51,9 @@ pub fn dijkstra_handler(
 
     match res {
         Err(e) => {
-            if e.is_instance::<PruneSearch>(py) {
+            if e.is_instance_of::<PruneSearch>(py) {
                 Ok(Control::Prune)
-            } else if e.is_instance::<StopSearch>(py) {
+            } else if e.is_instance_of::<StopSearch>(py) {
                 Ok(Control::Break(()))
             } else {
                 Err(e)

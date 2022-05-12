@@ -43,8 +43,7 @@ fn union<Ty: EdgeType>(
 ) -> PyResult<StablePyGraph<Ty>> {
     let mut out_graph = first.clone();
 
-    let mut node_map: Vec<Entry<NodeIndex>> =
-        vec![Entry::None; second.node_bound()];
+    let mut node_map: Vec<Entry<NodeIndex>> = vec![Entry::None; second.node_bound()];
     for node in second.node_indices() {
         let weight = &second[node];
         if merge_nodes {
@@ -77,9 +76,7 @@ fn union<Ty: EdgeType>(
                 (node_map[source], node_map[target])
             {
                 for edge in first.edges(new_source) {
-                    if edge.target() == new_target
-                        && weights_equal(new_weight, edge.weight())?
-                    {
+                    if edge.target() == new_target && weights_equal(new_weight, edge.weight())? {
                         found = true;
                         break;
                     }
@@ -90,11 +87,7 @@ fn union<Ty: EdgeType>(
         if !found {
             let new_source = extract(node_map[source]);
             let new_target = extract(node_map[target]);
-            out_graph.add_edge(
-                new_source,
-                new_target,
-                new_weight.clone_ref(py),
-            );
+            out_graph.add_edge(new_source, new_target, new_weight.clone_ref(py));
         }
     }
 
@@ -132,23 +125,21 @@ fn union<Ty: EdgeType>(
 ///     passed by reference from ``first`` and ``second`` to this new object.
 /// :rtype: PyGraph
 #[pyfunction(merge_nodes = false, merge_edges = false)]
-#[pyo3(
-    text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)"
-)]
-fn graph_union(
+#[pyo3(text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
+pub fn graph_union(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
     merge_nodes: bool,
     merge_edges: bool,
 ) -> PyResult<graph::PyGraph> {
-    let out_graph =
-        union(py, &first.graph, &second.graph, merge_nodes, merge_edges)?;
+    let out_graph = union(py, &first.graph, &second.graph, merge_nodes, merge_edges)?;
 
     Ok(graph::PyGraph {
         graph: out_graph,
         node_removed: first.node_removed,
         multigraph: true,
+        attrs: py.None(),
     })
 }
 
@@ -183,18 +174,15 @@ fn graph_union(
 ///     passed by reference from ``first`` and ``second`` to this new object.
 /// :rtype: PyDiGraph
 #[pyfunction(merge_nodes = false, merge_edges = false)]
-#[pyo3(
-    text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)"
-)]
-fn digraph_union(
+#[pyo3(text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
+pub fn digraph_union(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
     merge_nodes: bool,
     merge_edges: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let out_graph =
-        union(py, &first.graph, &second.graph, merge_nodes, merge_edges)?;
+    let out_graph = union(py, &first.graph, &second.graph, merge_nodes, merge_edges)?;
 
     Ok(digraph::PyDiGraph {
         graph: out_graph,
@@ -202,5 +190,6 @@ fn digraph_union(
         check_cycle: false,
         node_removed: first.node_removed,
         multigraph: true,
+        attrs: py.None(),
     })
 }
