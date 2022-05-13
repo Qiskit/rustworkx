@@ -207,12 +207,11 @@ pub fn digraph_spring_layout(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, / scale=1.0, center=None)")]
 pub fn graph_planar_layout(
-    py: Python,
     graph: &graph::PyGraph,
     scale: Option<f64>,
     center: Option<[f64; 2]>,
 ) -> Pos2DMapping {
-    planar::planar_layout(py, &graph.graph, scale, center)
+    planar::planar_layout(&graph.graph, scale, center)
 }
 
 /// Generate a planar layout
@@ -225,16 +224,15 @@ pub fn graph_planar_layout(
 ///
 /// :returns: The planar layout of the graph.
 /// :rtype: Pos2DMapping
-#[pyfunction]
-#[pyo3(text_signature = "(graph, / scale=1.0, center=None)")]
-pub fn digraph_planar_layout(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-    scale: Option<f64>,
-    center: Option<[f64; 2]>,
-) -> Pos2DMapping {
-    planar::planar_layout(py, &graph.graph, scale, center)
-}
+// #[pyfunction]
+// #[pyo3(text_signature = "(graph, / scale=1.0, center=None)")]
+// pub fn digraph_planar_layout(
+//     graph: &digraph::PyDiGraph,
+//     scale: Option<f64>,
+//     center: Option<[f64; 2]>,
+// ) -> Pos2DMapping {
+//     planar::planar_layout(&graph.graph, scale, center)
+// }
 
 /// Generate a random layout
 ///
