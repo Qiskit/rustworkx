@@ -1594,7 +1594,7 @@ pub fn find_negative_cycle(
 /// to all others in a :class:`~retworkx.PyDiGraph` object
 ///
 /// This function will calculate the shortest path lengths from all nodes in the
-/// graph using Dijkstra's algorithm. This function is multithreaded and will
+/// graph using the Bellman-Ford algorithm. This function is multithreaded and will
 /// launch a thread pool with threads equal to the number of CPUs by
 /// default. You can tune the number of threads with the ``RAYON_NUM_THREADS``
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
@@ -1617,8 +1617,9 @@ pub fn find_negative_cycle(
 ///         }
 ///
 /// :rtype: AllPairsPathLengthMapping
-/// :raises ValueError: when an edge weight with NaN or negative value
-///     is provided.
+///
+/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn digraph_all_pairs_bellman_ford_path_lengths(
@@ -1633,7 +1634,7 @@ pub fn digraph_all_pairs_bellman_ford_path_lengths(
 /// :class:`~retworkx.PyDiGraph` object
 ///
 /// This function will generate the shortest paths from all nodes in the graph
-/// Dijkstra's algorithm. This function is multithreaded and will run
+/// the Bellman-Ford  algorithm. This function is multithreaded and will run
 /// launch a thread pool with threads equal to the number of CPUs by default.
 /// You can tune the number of threads with the ``RAYON_NUM_THREADS``
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
@@ -1656,8 +1657,9 @@ pub fn digraph_all_pairs_bellman_ford_path_lengths(
 ///         }
 ///
 /// :rtype: AllPairsPathMapping
-/// :raises ValueError: when an edge weight with NaN or negative value
-///     is provided.
+///
+/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn digraph_all_pairs_bellman_ford_shortest_paths(
@@ -1672,7 +1674,7 @@ pub fn digraph_all_pairs_bellman_ford_shortest_paths(
 /// to all others in a :class:`~retworkx.PyGraph` object
 ///
 /// This function will generate the shortest path from a source node using
-/// Dijkstra's algorithm.
+/// the Bellman-Ford  algorithm.
 ///
 /// :param graph: The input :class:`~retworkx.PyGraph` to use
 /// :param edge_cost_fn: A callable object that acts as a weight function for
@@ -1691,8 +1693,9 @@ pub fn digraph_all_pairs_bellman_ford_shortest_paths(
 ///         }
 ///
 /// :rtype: AllPairsPathLengthMapping
-/// :raises ValueError: when an edge weight with NaN or negative value
-///     is provided.
+///
+/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn graph_all_pairs_bellman_ford_path_lengths(
@@ -1707,7 +1710,7 @@ pub fn graph_all_pairs_bellman_ford_path_lengths(
 /// :class:`~retworkx.PyGraph` object
 ///
 /// This function will generate the shortest path from a source node using
-/// Dijkstra's algorithm.
+/// the Bellman-Ford algorithm.
 ///
 /// :param graph: The input :class:`~retworkx.PyGraph` object to use
 /// :param edge_cost_fn: A callable object that acts as a weight function for
@@ -1726,8 +1729,9 @@ pub fn graph_all_pairs_bellman_ford_path_lengths(
 ///         }
 ///
 /// :rtype: AllPairsPathMapping
-/// :raises ValueError: when an edge weight with NaN or negative value
-///     is provided.
+///
+/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn graph_all_pairs_bellman_ford_shortest_paths(
