@@ -24,7 +24,7 @@ class TestConnectedComponents(unittest.TestCase):
 
     def test_number_connected_direct(self):
         graph = retworkx.PyDiGraph()
-        graph.add_nodes_from([0, 1, 2, 3])
+        graph.add_nodes_from(range(4))
         graph.add_edges_from_no_data([
             (3, 2), (2, 1), (1, 0)
         ])

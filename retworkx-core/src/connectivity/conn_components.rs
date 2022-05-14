@@ -14,7 +14,8 @@ use hashbrown::HashSet;
 use std::collections::VecDeque;
 use std::hash::Hash;
 
-use petgraph::visit::{GraphProp, IntoNeighbors, IntoNodeIdentifiers, VisitMap, Visitable};
+use petgraph::visit::{GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, VisitMap, Visitable};
+use petgraph::{Incoming, Outgoing};
 
 /// Given an graph, a node in the graph, and a visit_map,
 /// return the set of nodes connected to the given node.
@@ -52,7 +53,7 @@ use petgraph::visit::{GraphProp, IntoNeighbors, IntoNodeIdentifiers, VisitMap, V
 /// ```
 pub fn bfs_undirected<G>(graph: G, start: G::NodeId, discovered: &mut G::Map) -> HashSet<G::NodeId>
 where
-    G: GraphProp + IntoNeighbors + Visitable,
+    G: GraphProp + IntoNeighborsDirected + Visitable,
     G::NodeId: Eq + Hash,
 {
     let mut component = HashSet::new();
@@ -61,7 +62,10 @@ where
     stack.push_front(start);
 
     while let Some(node) = stack.pop_front() {
-        for succ in graph.neighbors(node) {
+        for succ in graph
+            .neighbors_directed(node, Outgoing)
+            .chain(graph.neighbors_directed(node, Incoming))
+        {
             if discovered.visit(succ) {
                 stack.push_back(succ);
                 component.insert(succ);
@@ -107,7 +111,7 @@ where
 /// ```
 pub fn connected_components<G>(graph: G) -> Vec<HashSet<G::NodeId>>
 where
-    G: GraphProp + IntoNeighbors + Visitable + IntoNodeIdentifiers,
+    G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
     let mut conn_components = Vec::new();
@@ -141,7 +145,7 @@ where
 /// ```
 pub fn number_connected_components<G>(graph: G) -> usize
 where
-    G: GraphProp + IntoNeighbors + Visitable + IntoNodeIdentifiers,
+    G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
     let mut num_components = 0;
@@ -165,14 +169,14 @@ mod test_conn_components {
     use petgraph::graph::node_index as ndx;
     use petgraph::graph::{Graph, NodeIndex};
     use petgraph::visit::Visitable;
-    use petgraph::Directed;
+    use petgraph::{Directed, Undirected};
     use std::iter::FromIterator;
 
     use crate::connectivity::{bfs_undirected, connected_components, number_connected_components};
 
     #[test]
     fn test_number_connected() {
-        let graph = Graph::<(), (), Directed>::from_edges([(0, 1), (1, 2), (3, 4)]);
+        let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (3, 4)]);
         assert_eq!(number_connected_components(&graph), 2);
     }
 
@@ -184,8 +188,14 @@ mod test_conn_components {
     }
 
     #[test]
+    fn test_number_connected_directed() {
+        let graph = Graph::<(), (), Directed>::from_edges([(3, 2), (2, 1), (1, 0)]);
+        assert_eq!(number_connected_components(&graph), 1);
+    }
+
+    #[test]
     fn test_connected_components() {
-        let graph = Graph::<(), (), Directed>::from_edges(&[
+        let graph = Graph::<(), (), Undirected>::from_edges(&[
             (0, 1),
             (1, 2),
             (2, 3),
