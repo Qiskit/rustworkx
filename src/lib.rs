@@ -388,6 +388,16 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_all_pairs_bellman_ford_path_lengths
+    ))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_all_pairs_bellman_ford_shortest_paths
+    ))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_bellman_ford_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(
+        graph_all_pairs_bellman_ford_shortest_paths
+    ))?;
     m.add_wrapped(wrap_pyfunction!(graph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
