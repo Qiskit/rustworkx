@@ -298,6 +298,32 @@ method:
 
 which returns the node indices of any neighbors of node ``2``.
 
+
+Graph Attributes
+================
+
+Graphs in retworkx have an attribute which can be used to assign
+metadata to a graph object. This can be assigned at object creation or
+accessed and modified after creation with the :attr:`~.PyGraph.attrs` attribute.
+This attribute can be any Python object and defaults to being ``None`` if not
+specified at graph object creation time. For example::
+
+    import retworkx as rx
+
+    graph = rx.PyGraph(attrs=dict(day="Friday"))
+    graph.attrs['day'] = "Monday"
+
+Or, you could use a custom class like::
+
+    class Day:
+
+        def __init__(self, day):
+            self.day = day
+
+    graph = rx.PyGraph(attrs=Day("Friday"))
+    graph.attrs = Day("Monday")
+
+
 Directed Graphs
 ===============
 
