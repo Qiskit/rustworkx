@@ -25,9 +25,7 @@ class TestConnectedComponents(unittest.TestCase):
     def test_number_connected_direct(self):
         graph = retworkx.PyDiGraph()
         graph.add_nodes_from(range(4))
-        graph.add_edges_from_no_data([
-            (3, 2), (2, 1), (1, 0)
-        ])
+        graph.add_edges_from_no_data([(3, 2), (2, 1), (1, 0)])
         self.assertEqual(len(retworkx.weakly_connected_components(graph)), 1)
 
     def test_number_connected_node_holes(self):
