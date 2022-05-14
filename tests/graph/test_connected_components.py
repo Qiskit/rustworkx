@@ -18,7 +18,7 @@ import retworkx
 class TestConnectedComponents(unittest.TestCase):
     def test_number_connected(self):
         graph = retworkx.PyGraph()
-        graph.add_nodes_from([0, 1, 2])
+        graph.add_nodes_from(range(3))
         graph.add_edge(0, 1, None)
         self.assertEqual(retworkx.number_connected_components(graph), 2)
 
@@ -29,10 +29,10 @@ class TestConnectedComponents(unittest.TestCase):
             (3, 2), (2, 1), (1, 0)
         ])
         self.assertEqual(len(retworkx.weakly_connected_components(graph)), 1)
-    
+
     def test_number_connected_node_holes(self):
         graph = retworkx.PyGraph()
-        graph.add_nodes_from([0, 1, 2])
+        graph.add_nodes_from(range(3))
         graph.remove_node(1)
         self.assertEqual(retworkx.number_connected_components(graph), 2)
 
