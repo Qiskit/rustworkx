@@ -274,9 +274,9 @@ pub fn bipartition_tree(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: PyObject,
-    py_pops: &PyList,
-    py_pop_target: &PyFloat,
-    py_epsilon: &PyFloat,
+    py_pops: Vec<f64>,
+    py_pop_target: f64,
+    py_epsilon: f64,
 ) -> PyResult<Vec<(usize, Vec<usize>)>> {
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
 
