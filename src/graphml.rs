@@ -110,6 +110,8 @@ fn xml_attribute<'a, B: BufRead>(
 enum Domain {
     Node,
     Edge,
+    Graph,
+    All,
 }
 
 enum Type {
@@ -187,19 +189,24 @@ struct Graph {
     dir: Direction,
     nodes: Vec<Node>,
     edges: Vec<Edge>,
+    attributes: HashMap<String, Value>,
 }
 
 impl Graph {
-    fn new(dir: Direction) -> Self {
+    fn new<'a, I>(dir: Direction, default_attrs: I) -> Self
+    where
+        I: Iterator<Item = &'a Key>,
+    {
         Self {
             dir,
             nodes: Vec::new(),
             edges: Vec::new(),
+            attributes: HashMap::from_iter(
+                default_attrs.map(|key| (key.name.clone(), key.default.clone())),
+            ),
         }
     }
-}
 
-impl Graph {
     fn add_node<'a, B: BufRead, I>(
         &mut self,
         reader: &Reader<B>,
@@ -300,6 +307,7 @@ impl IntoPy<PyObject> for Graph {
                     graph,
                     node_removed: false,
                     multigraph: true,
+                    attrs: self.attributes.into_py(py),
                 };
 
                 out.into_py(py)
@@ -315,6 +323,7 @@ impl IntoPy<PyObject> for Graph {
                     check_cycle: false,
                     node_removed: false,
                     multigraph: true,
+                    attrs: self.attributes.into_py(py),
                 };
 
                 out.into_py(py)
@@ -330,6 +339,7 @@ enum State {
     Edge,
     DataForNode,
     DataForEdge,
+    DataForGraph,
     Key,
     DefaultForKey,
 }
@@ -352,6 +362,8 @@ struct GraphML {
     graphs: Vec<Graph>,
     key_for_nodes: IndexMap<String, Key>,
     key_for_edges: IndexMap<String, Key>,
+    key_for_graph: IndexMap<String, Key>,
+    key_for_all: IndexMap<String, Key>,
 }
 
 impl Default for GraphML {
@@ -360,6 +372,8 @@ impl Default for GraphML {
             graphs: Vec::new(),
             key_for_nodes: IndexMap::new(),
             key_for_edges: IndexMap::new(),
+            key_for_graph: IndexMap::new(),
+            key_for_all: IndexMap::new(),
         }
     }
 }
@@ -380,7 +394,10 @@ impl GraphML {
             }
         };
 
-        self.graphs.push(Graph::new(dir));
+        self.graphs.push(Graph::new(
+            dir,
+            self.key_for_graph.values().chain(self.key_for_all.values()),
+        ));
 
         Ok(())
     }
@@ -391,7 +408,11 @@ impl GraphML {
         element: &'a BytesStart<'a>,
     ) -> Result<(), Error> {
         if let Some(graph) = self.graphs.last_mut() {
-            graph.add_node(reader, element, self.key_for_nodes.values())?;
+            graph.add_node(
+                reader,
+                element,
+                self.key_for_nodes.values().chain(self.key_for_all.values()),
+            )?;
         }
 
         Ok(())
@@ -403,7 +424,11 @@ impl GraphML {
         element: &'a BytesStart<'a>,
     ) -> Result<(), Error> {
         if let Some(graph) = self.graphs.last_mut() {
-            graph.add_edge(reader, element, self.key_for_edges.values())?;
+            graph.add_edge(
+                reader,
+                element,
+                self.key_for_edges.values().chain(self.key_for_all.values()),
+            )?;
         }
 
         Ok(())
@@ -444,9 +469,17 @@ impl GraphML {
                 self.key_for_edges.insert(id, key);
                 Ok(Domain::Edge)
             }
+            b"graph" => {
+                self.key_for_graph.insert(id, key);
+                Ok(Domain::Graph)
+            }
+            b"all" => {
+                self.key_for_all.insert(id, key);
+                Ok(Domain::All)
+            }
             _ => {
-                return Err(Error::UnSupported(format!(
-                    "Unsupported 'for' attribute in key with id={}.",
+                return Err(Error::InvalidDoc(format!(
+                    "Invalid 'for' attribute in key with id={}.",
                     id,
                 )));
             }
@@ -457,6 +490,8 @@ impl GraphML {
         let elem = match domain {
             Domain::Node => self.key_for_nodes.last_mut(),
             Domain::Edge => self.key_for_edges.last_mut(),
+            Domain::Graph => self.key_for_graph.last_mut(),
+            Domain::All => self.key_for_all.last_mut(),
         };
 
         if let Some((_, key)) = elem {
@@ -467,10 +502,13 @@ impl GraphML {
     }
 
     fn last_node_set_data(&mut self, key: &str, val: String) -> Result<(), Error> {
-        let key = self
-            .key_for_nodes
-            .get(key)
-            .ok_or_else(|| Error::NotFound(format!("Key '{}' for nodes not found.", key)))?;
+        let key = match self.key_for_all.get(key) {
+            Some(key) => key,
+            None => self
+                .key_for_nodes
+                .get(key)
+                .ok_or_else(|| Error::NotFound(format!("Key '{}' for nodes not found.", key)))?,
+        };
 
         if let Some(graph) = self.graphs.last_mut() {
             graph.last_node_set_data(key, val)?;
@@ -480,13 +518,32 @@ impl GraphML {
     }
 
     fn last_edge_set_data(&mut self, key: &str, val: String) -> Result<(), Error> {
-        let key = self
-            .key_for_edges
-            .get(key)
-            .ok_or_else(|| Error::NotFound(format!("Key '{}' for edges not found.", key)))?;
+        let key = match self.key_for_all.get(key) {
+            Some(key) => key,
+            None => self
+                .key_for_edges
+                .get(key)
+                .ok_or_else(|| Error::NotFound(format!("Key '{}' for edges not found.", key)))?,
+        };
 
         if let Some(graph) = self.graphs.last_mut() {
             graph.last_edge_set_data(key, val)?;
+        }
+
+        Ok(())
+    }
+
+    fn last_graph_set_attribute(&mut self, key: &str, val: String) -> Result<(), Error> {
+        let key = match self.key_for_all.get(key) {
+            Some(key) => key,
+            None => self
+                .key_for_graph
+                .get(key)
+                .ok_or_else(|| Error::NotFound(format!("Key '{}' for graph not found.", key)))?,
+        };
+
+        if let Some(graph) = self.graphs.last_mut() {
+            graph.attributes.insert(key.name.clone(), key.parse(val)?);
         }
 
         Ok(())
@@ -536,11 +593,12 @@ impl GraphML {
                         state = State::Edge;
                     }
                     b"data" => {
-                        matches!(state, State::Node | State::Edge);
+                        matches!(state, State::Node | State::Edge | State::Graph);
                         last_data_key = xml_attribute(&reader, e, b"key")?;
                         match state {
                             State::Node => state = State::DataForNode,
                             State::Edge => state = State::DataForEdge,
+                            State::Graph => state = State::DataForGraph,
                             _ => {
                                 // in all other cases we have already bailed out in `matches`.
                                 unreachable!()
@@ -597,10 +655,14 @@ impl GraphML {
                         state = State::Graph;
                     }
                     b"data" => {
-                        matches!(state, State::DataForNode | State::DataForEdge);
+                        matches!(
+                            state,
+                            State::DataForNode | State::DataForEdge | State::DataForGraph
+                        );
                         match state {
                             State::DataForNode => state = State::Node,
                             State::DataForEdge => state = State::Edge,
+                            State::DataForGraph => state = State::Graph,
                             _ => {
                                 // in all other cases we have already bailed out in `matches`.
                                 unreachable!()
@@ -623,6 +685,12 @@ impl GraphML {
                     State::DataForEdge => {
                         graphml
                             .last_edge_set_data(&last_data_key, e.unescape_and_decode(&reader)?)?;
+                    }
+                    State::DataForGraph => {
+                        graphml.last_graph_set_attribute(
+                            &last_data_key,
+                            e.unescape_and_decode(&reader)?,
+                        )?;
                     }
                     _ => {}
                 },
@@ -652,6 +720,10 @@ impl GraphML {
 ///
 ///     This implementation does not support mixed graphs (directed and unidirected edges together),
 ///     hyperedges, nested graphs, or ports.
+///
+/// .. note::
+///
+///     GraphML attributes with `graph` domain are stored in :attr:`~.PyGraph.attrs` field.
 ///
 /// :param str path: The path of the input file to read.
 ///

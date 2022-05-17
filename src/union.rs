@@ -139,6 +139,7 @@ pub fn graph_union(
         graph: out_graph,
         node_removed: first.node_removed,
         multigraph: true,
+        attrs: py.None(),
     })
 }
 
@@ -189,5 +190,6 @@ pub fn digraph_union(
         check_cycle: false,
         node_removed: first.node_removed,
         multigraph: true,
+        attrs: py.None(),
     })
 }

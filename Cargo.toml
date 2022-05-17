@@ -33,7 +33,7 @@ quick-xml = "0.22.0"
 retworkx-core = { path = "retworkx-core", version = "=0.12.0" }
 
 [dependencies.pyo3]
-version = "0.16.4"
+version = "0.16.5"
 features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.hashbrown]

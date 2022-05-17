@@ -68,7 +68,8 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount, NodeIndexable,
+    Data, EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable,
 };
 use petgraph::EdgeType;
 
@@ -170,6 +171,32 @@ where
         }
         None => Ok(default),
     }
+}
+
+pub fn edge_weights_from_callable<'p, T, Ty: EdgeType>(
+    py: Python<'p>,
+    graph: &StablePyGraph<Ty>,
+    weight_fn: &'p Option<PyObject>,
+    default_weight: T,
+) -> PyResult<Vec<Option<T>>>
+where
+    T: FromPyObject<'p> + Copy,
+{
+    let mut edge_weights: Vec<Option<T>> = Vec::with_capacity(graph.edge_bound());
+    for index in 0..=graph.edge_bound() {
+        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => edge_weights.push(Some(weight_callable(
+                py,
+                weight_fn,
+                weight,
+                default_weight,
+            )?)),
+            None => edge_weights.push(None),
+        };
+    }
+
+    Ok(edge_weights)
 }
 
 #[inline]
@@ -287,6 +314,8 @@ create_exception!(retworkx, NoPathFound, PyException);
 import_exception!(retworkx.visit, PruneSearch);
 // Stop graph traversal.
 import_exception!(retworkx.visit, StopSearch);
+// Negative Cycle found on shortest-path algorithm
+create_exception!(retworkx, NegativeCycle, PyException);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -298,6 +327,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
+    m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
@@ -348,6 +378,12 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bellman_ford_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bellman_ford_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(negative_edge_cycle))?;
+    m.add_wrapped(wrap_pyfunction!(find_negative_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_path_lengths))?;
