@@ -19,9 +19,9 @@ import pytest
 @pytest.mark.mypy_testing
 def test_pygraph_simple() -> None:
     graph: PyGraph[str, float] = PyGraph()
-    node_a: int = graph.add_node("A")
-    node_b: int = graph.add_node("B")
-    edge_ab: int = graph.add_edge(node_a, node_b, 3.5)
+    node_a = graph.add_node("A")
+    node_b = graph.add_node("B")
+    edge_ab = graph.add_edge(node_a, node_b, 3.5)
     reveal_type(node_a)  # R: builtins.int
     reveal_type(edge_ab)  # R: builtins.int
 
@@ -29,13 +29,13 @@ def test_pygraph_simple() -> None:
 @pytest.mark.mypy_testing
 def test_custom_return_types() -> None:
     graph: PyGraph[str, float] = PyGraph()
-    node_a: int = graph.add_node("A")
-    node_b: int = graph.add_node("B")
+    node_a = graph.add_node("A")
+    node_b = graph.add_node("B")
     graph.add_edge(node_a, node_b, 3.5)
 
-    edges: EdgeList = graph.edge_list()
-    weighted_edges: WeightedEdgeList[float] = graph.weighted_edge_list()
-    node_indices: NodeIndices = graph.node_indexes()
+    edges = graph.edge_list()
+    weighted_edges = graph.weighted_edge_list()
+    node_indices = graph.node_indexes()
 
     # fmt: off
     reveal_type(edges)  # R: retworkx.custom_return_types.EdgeList
@@ -43,9 +43,9 @@ def test_custom_return_types() -> None:
     reveal_type(node_indices)  # R: retworkx.custom_return_types.NodeIndices
     # fmt: on
 
-    list_of_edges: List[Tuple[int, int]] = list(edges)
-    list_of_weights: List[Tuple[int, int, float]] = list(weighted_edges)
-    list_of_nodes: List[int] = list(node_indices)
+    list_of_edges = list(edges)
+    list_of_weights = list(weighted_edges)
+    list_of_nodes = list(node_indices)
 
     # fmt: off
     reveal_type(list_of_edges)  # R: builtins.list[Tuple[builtins.int, builtins.int]]
