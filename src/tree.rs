@@ -180,19 +180,11 @@ pub fn balanced_cut_edge(
         same_partition_tracker[leaf_node.index()].push(leaf_node.index());
     }
 
-    // eprintln!("leaf nodes: {}", node_queue.len());
-
-    // this process can be multithreaded, if the locking overhead isn't too high
-    // (note: locking may not even be needed given the invariants this is assumed to maintain)
+    // BFS search for balanced nodes
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
     let mut seen_nodes: Vec<bool> = vec![false; spanning_tree_graph.node_count()]; // todo: perf test this
     while !node_queue.is_empty() {
         let node = node_queue.pop_front().unwrap();
-        if seen_nodes[node.index()] {
-            // should not need this
-            // eprintln!("Invalid state! Double vision . . .");
-            continue;
-        }
         let pop = pops[node.index()];
 
         // todo: factor out expensive clones
@@ -202,14 +194,13 @@ pub fn balanced_cut_edge(
             .neighbors(node)
             .filter(|node| !seen_nodes[node.index()])
             .collect();
-        // eprintln!("unseen_neighbors: {}", unseen_neighbors.len());
+
         if unseen_neighbors.len() == 1 {
             // this will be false if root
             let neighbor = unseen_neighbors[0];
             pops[neighbor.index()] += pop;
             let mut current_partition_tracker = same_partition_tracker[node.index()].clone();
             same_partition_tracker[neighbor.index()].append(&mut current_partition_tracker);
-            // eprintln!("node pushed to queue (pop = {}, target = {}): {}", pops[neighbor.index()], pop_target, neighbor.index());
 
             if !node_queue.contains(&neighbor) {
                 node_queue.push_back(neighbor);
@@ -219,12 +210,10 @@ pub fn balanced_cut_edge(
         } else {
             continue;
         }
-        // pops[node.index()] = 0.0; // not needed?
 
         // Check if balanced
         if pop >= pop_target * (1.0 - epsilon) && pop <= pop_target * (1.0 + epsilon) {
             // slightly different
-            // eprintln!("balanced node found: {}", node.index());
             balanced_nodes.push((node.index(), same_partition_tracker[node.index()].clone()));
         }
 
@@ -268,14 +257,12 @@ pub fn bipartition_tree(
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
 
     while balanced_nodes.is_empty() {
-        // Wee: https://pyo3.rs/v0.15.1/memory.html#gil-bound-memory
+        // See: https://pyo3.rs/v0.15.1/memory.html#gil-bound-memory
         // (workaround to force objects to be gc'ed on each loop)
         let pool = unsafe { py.new_pool() };
         let py = pool.python();
 
         let mst = minimum_spanning_tree(py, graph, Some(weight_fn.clone()), 1.0).unwrap();
-        // assert_eq!(is_cyclic_undirected(&mst.graph), false);
-        // assert_eq!(connected_components(&mst.graph), 1);
         balanced_nodes = balanced_cut_edge(py, &mst, pops.clone(), pop_target, epsilon).unwrap();
     }
 
