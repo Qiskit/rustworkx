@@ -9,6 +9,8 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations
 // under the License.
+//
+use std::mem;
 
 use std::cmp::Ordering;
 use std::collections::VecDeque;
@@ -209,8 +211,10 @@ pub fn balanced_cut_edge(
             // this will be false if root
             let neighbor = unseen_neighbors[0];
             pops[neighbor.index()] += pop.clone();
-            let mut current_partition_tracker = same_partition_tracker[node.index()].clone();
+            // let mut current_partition_tracker = same_partition_tracker[node.index()].clone();
+            let mut current_partition_tracker = mem::take(&mut same_partition_tracker[node.index()]);
             same_partition_tracker[neighbor.index()].append(&mut current_partition_tracker);
+            // same_partition_tracker[neighbor.index()].append(&mut current_partition_tracker);
             // eprintln!("node pushed to queue (pop = {}, target = {}): {}", pops[neighbor.index()], pop_target, neighbor.index());
 
             if !node_queue.contains(&neighbor) {
@@ -270,7 +274,7 @@ pub fn bipartition_tree(
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
 
     while balanced_nodes.len() == 0 {
-        // Wee: https://pyo3.rs/v0.15.1/memory.html#gil-bound-memory
+        // See: https://pyo3.rs/v0.15.1/memory.html#gil-bound-memory
         // (workaround to force objects to be gc'ed on each loop)
         let pool = unsafe { py.new_pool() };
         let py = pool.python();
