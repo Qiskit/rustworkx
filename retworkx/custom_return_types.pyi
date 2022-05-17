@@ -11,9 +11,7 @@
 
 from typing import Any, Generic, List, Iterable, Mapping, TypeVar, Tuple, overload
 from collections.abc import ABC, Sequence
-
-# Until PEP 673 is implemented in Python 3.11, we need to use this hack
-Self = TypeVar("Self", bound="RetworkxCustomVecIter")
+from typing_extensions import Self
 
 S = TypeVar("S")
 T_co = TypeVar("T_co", covariant=True)
