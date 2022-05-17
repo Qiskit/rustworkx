@@ -24,8 +24,6 @@ use petgraph::stable_graph::EdgeReference;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
 
-use numpy::PyReadonlyArray1;
-
 use rayon::prelude::*;
 
 use crate::iterators::WeightedEdgeList;
@@ -163,13 +161,13 @@ pub fn minimum_spanning_tree(
 #[pyfunction]
 #[pyo3(text_signature = "(spanning_tree, pop, target_pop, epsilon)")]
 pub fn balanced_cut_edge(
-    py: Python,
+    _py: Python,
     spanning_tree: &graph::PyGraph,
     pops: Vec<f64>,
     pop_target: f64,
     epsilon: f64,
 ) -> PyResult<Vec<(usize, Vec<usize>)>> {
-    let mut pops = pops.clone();
+    let mut pops = pops;
     let spanning_tree_graph = &spanning_tree.graph;
     let mut same_partition_tracker: Vec<Vec<usize>> =
         vec![vec![]; spanning_tree_graph.node_count()]; // keeps track of all all the nodes on the same side of the partition
@@ -188,7 +186,7 @@ pub fn balanced_cut_edge(
     // (note: locking may not even be needed given the invariants this is assumed to maintain)
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
     let mut seen_nodes: Vec<bool> = vec![false; spanning_tree_graph.node_count()]; // todo: perf test this
-    while node_queue.len() > 0 {
+    while !node_queue.is_empty() {
         let node = node_queue.pop_front().unwrap();
         if seen_nodes[node.index()] {
             // should not need this
@@ -208,7 +206,7 @@ pub fn balanced_cut_edge(
         if unseen_neighbors.len() == 1 {
             // this will be false if root
             let neighbor = unseen_neighbors[0];
-            pops[neighbor.index()] += pop.clone();
+            pops[neighbor.index()] += pop;
             let mut current_partition_tracker = same_partition_tracker[node.index()].clone();
             same_partition_tracker[neighbor.index()].append(&mut current_partition_tracker);
             // eprintln!("node pushed to queue (pop = {}, target = {}): {}", pops[neighbor.index()], pop_target, neighbor.index());
@@ -216,7 +214,7 @@ pub fn balanced_cut_edge(
             if !node_queue.contains(&neighbor) {
                 node_queue.push_back(neighbor);
             }
-        } else if unseen_neighbors.len() == 0 {
+        } else if unseen_neighbors.is_empty() {
             break;
         } else {
             continue;
@@ -269,7 +267,7 @@ pub fn bipartition_tree(
 ) -> PyResult<Vec<(usize, Vec<usize>)>> {
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
 
-    while balanced_nodes.len() == 0 {
+    while balanced_nodes.is_empty() {
         // Wee: https://pyo3.rs/v0.15.1/memory.html#gil-bound-memory
         // (workaround to force objects to be gc'ed on each loop)
         let pool = unsafe { py.new_pool() };
