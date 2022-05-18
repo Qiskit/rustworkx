@@ -183,9 +183,9 @@ pub fn balanced_cut_edge(
     let spanning_tree_graph = &spanning_tree.graph;
     let mut same_partition_tracker: Vec<Vec<usize>> =
         vec![vec![]; spanning_tree_graph.node_count()]; // keeps track of all all the nodes on the same side of the partition
+
     let mut node_queue: VecDeque<NodeIndex> = VecDeque::<NodeIndex>::new();
     for leaf_node in spanning_tree_graph.node_indices() {
-        // todo: filter expr
         if spanning_tree_graph.neighbors(leaf_node).count() == 1 {
             node_queue.push_back(leaf_node);
         }
@@ -194,12 +194,11 @@ pub fn balanced_cut_edge(
 
     // BFS search for balanced nodes
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
-    let mut seen_nodes: Vec<bool> = vec![false; spanning_tree_graph.node_count()]; // todo: perf test this
+    let mut seen_nodes: Vec<bool> = vec![false; spanning_tree_graph.node_count()];
     while !node_queue.is_empty() {
         let node = node_queue.pop_front().unwrap();
         let pop = pops[node.index()];
 
-        // todo: factor out expensive clones
         // Mark as seen; push to queue if only one unseen neighbor
         let unseen_neighbors: Vec<NodeIndex> = spanning_tree
             .graph
