@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::mem;
-
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 
