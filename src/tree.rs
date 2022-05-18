@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::mem;
+
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 
@@ -127,6 +129,18 @@ pub fn minimum_spanning_tree(
     let mut spanning_tree = (*graph).clone();
     spanning_tree.graph.clear_edges();
 
+    _minimum_spanning_tree(py, graph, &mut spanning_tree, weight_fn, default_weight)?;
+    Ok(spanning_tree)
+}
+
+/// Helper function to allow reuse of spanning_tree object to reduce memory allocs
+fn _minimum_spanning_tree<'a>(
+    py: Python,
+    graph: &graph::PyGraph,
+    spanning_tree: &'a mut graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<&'a mut graph::PyGraph> {
     for edge in minimum_spanning_edges(py, graph, weight_fn, default_weight)?
         .edges
         .iter()
@@ -255,14 +269,11 @@ pub fn bipartition_tree(
     epsilon: f64,
 ) -> PyResult<Vec<(usize, Vec<usize>)>> {
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
+    let mut mst = (*graph).clone();
 
     while balanced_nodes.is_empty() {
-        // See: https://pyo3.rs/v0.15.1/memory.html#gil-bound-memory
-        // (workaround to force objects to be gc'ed on each loop)
-        let pool = unsafe { py.new_pool() };
-        let py = pool.python();
-
-        let mst = minimum_spanning_tree(py, graph, Some(weight_fn.clone()), 1.0).unwrap();
+        mst.graph.clear_edges();
+        _minimum_spanning_tree(py, graph, &mut mst, Some(weight_fn.clone()), 1.0)?;
         balanced_nodes = balanced_cut_edge(py, &mst, pops.clone(), pop_target, epsilon).unwrap();
     }
 
