@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::collections::HashSet;
 use std::cmp::Ordering;
+use std::collections::HashSet;
 use std::collections::VecDeque;
 
 use super::{graph, weight_callable};
@@ -217,9 +217,11 @@ pub fn balanced_cut_edge(
             if !node_queue.contains(&neighbor) {
                 node_queue.push_back(neighbor);
             }
-        } else if unseen_neighbors.is_empty() { // root
+        } else if unseen_neighbors.is_empty() {
+            // root
             break;
-        } else { // Not at the leaves of the unseen subgraph
+        } else {
+            // Not at the leaves of the unseen subgraph
             continue;
         }
 
