@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::collections::HashSet;
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 
@@ -194,7 +195,7 @@ pub fn balanced_cut_edge(
 
     // BFS search for balanced nodes
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
-    let mut seen_nodes: Vec<bool> = vec![false; spanning_tree_graph.node_count()];
+    let mut seen_nodes = HashSet::with_capacity(spanning_tree_graph.node_count());
     while !node_queue.is_empty() {
         let node = node_queue.pop_front().unwrap();
         let pop = pops[node.index()];
@@ -203,7 +204,7 @@ pub fn balanced_cut_edge(
         let unseen_neighbors: Vec<NodeIndex> = spanning_tree
             .graph
             .neighbors(node)
-            .filter(|node| !seen_nodes[node.index()])
+            .filter(|node| !seen_nodes.contains(&node.index()))
             .collect();
 
         if unseen_neighbors.len() == 1 {
@@ -228,7 +229,7 @@ pub fn balanced_cut_edge(
             balanced_nodes.push((node.index(), same_partition_tracker[node.index()].clone()));
         }
 
-        seen_nodes[node.index()] = true;
+        seen_nodes.insert(node.index());
     }
 
     Ok(balanced_nodes)
