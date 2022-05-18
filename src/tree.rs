@@ -183,7 +183,7 @@ pub fn balanced_cut_edge(
     let mut pops = pops;
     let spanning_tree_graph = &spanning_tree.graph;
     let mut same_partition_tracker: Vec<Vec<usize>> =
-        vec![vec![]; spanning_tree_graph.node_count()]; // keeps track of all all the nodes on the same side of the partition
+        vec![vec![]; spanning_tree_graph.node_count()]; // Keeps track of all all the nodes on the same side of the partition
 
     let mut node_queue: VecDeque<NodeIndex> = VecDeque::<NodeIndex>::new();
     for leaf_node in spanning_tree_graph.node_indices() {
@@ -208,7 +208,7 @@ pub fn balanced_cut_edge(
             .collect();
 
         if unseen_neighbors.len() == 1 {
-            // this will be false if root
+            // This will be false if root
             let neighbor = unseen_neighbors[0];
             pops[neighbor.index()] += pop;
             let mut current_partition_tracker = same_partition_tracker[node.index()].clone();
@@ -217,15 +217,14 @@ pub fn balanced_cut_edge(
             if !node_queue.contains(&neighbor) {
                 node_queue.push_back(neighbor);
             }
-        } else if unseen_neighbors.is_empty() {
+        } else if unseen_neighbors.is_empty() { // root
             break;
-        } else {
+        } else { // Not at the leaves of the unseen subgraph
             continue;
         }
 
         // Check if balanced
         if pop >= pop_target * (1.0 - epsilon) && pop <= pop_target * (1.0 + epsilon) {
-            // slightly different
             balanced_nodes.push((node.index(), same_partition_tracker[node.index()].clone()));
         }
 
