@@ -18,13 +18,15 @@ use petgraph::visit::{GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, Vis
 use petgraph::{Incoming, Outgoing};
 
 /// Given an graph, a node in the graph, and a visit_map,
-/// return the set of nodes connected to the given node.
+/// return the set of nodes connected to the given node
+/// using breadth first search and treating all edges
+/// as undirected.
 ///
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on
 /// * `node` - The node index to find the connected nodes for
-/// * `graph.visit_map()` - The visit map for the graph
+/// * `discovered()` - The visit map for the graph
 ///
 /// # Example
 /// ```rust

@@ -243,11 +243,10 @@ pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
-    let return_value: Vec<HashSet<usize>> = connectivity::connected_components(&graph.graph)
+    connectivity::connected_components(&graph.graph)
         .into_iter()
         .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
-        .collect();
-    return_value
+        .collect()
 }
 
 /// Returns the set of nodes in the component of graph containing `node`.
@@ -270,12 +269,12 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
         ));
     }
 
-    let return_value: HashSet<usize> =
+    Ok(
         connectivity::bfs_undirected(&graph.graph, node, &mut graph.graph.visit_map())
             .into_iter()
             .map(|x| x.index())
-            .collect();
-    Ok(return_value)
+            .collect(),
+    )
 }
 
 /// Check if the graph is connected.
@@ -331,11 +330,10 @@ pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
-    let return_value: Vec<HashSet<usize>> = connectivity::connected_components(&graph.graph)
+    connectivity::connected_components(&graph.graph)
         .into_iter()
         .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
-        .collect();
-    return_value
+        .collect()
 }
 
 /// Check if the graph is weakly connected
