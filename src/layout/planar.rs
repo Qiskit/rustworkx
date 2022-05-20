@@ -6,9 +6,7 @@ use crate::iterators::Pos2DMapping;
 use crate::Graph;
 use crate::StablePyGraph;
 use retworkx_core::dictmap::*;
-use retworkx_core::planar::{PlanarEmbedding, is_planar, create_embedding};
-// use retworkx_core::planar::is_planar;
-// use retworkx_core::planar::create_embedding;
+use retworkx_core::planar::{PlanarEmbedding, is_planar, create_embedding, combinatorial_embedding_to_pos};
 
 pub fn planar_layout(
     graph: &StablePyGraph<Undirected>,
@@ -17,30 +15,26 @@ pub fn planar_layout(
 ) -> Pos2DMapping {
 
     let node_num = graph.node_count();
-    println!("NODE NUM {}", node_num);
     if node_num == 0 {
         return Pos2DMapping {
             pos_map: DictMap::new(),
         };
     }
 
-    println!("before is");
     let (its_planar, lr_state) = is_planar(graph);
 
     if !its_planar {
-        println!("is false");
         return Pos2DMapping {
             pos_map: DictMap::new(),
         };
     } else {
-        println!("is true");
 
         let mut planar_emb = PlanarEmbedding::default();
         planar_emb.embedding = Graph::with_capacity(node_num, 0);
-        println!("ROOTS {:?}", lr_state.roots);
-        let mut pos = create_embedding(&planar_emb, &lr_state);
 
-        println!("after emb to pos {:?}", pos);
+        create_embedding(&planar_emb, &lr_state);
+
+        let mut pos = combinatorial_embedding_to_pos(&planar_emb);
 
         if let Some(scale) = scale {
             rescale(&mut pos, scale, (0..node_num).collect());

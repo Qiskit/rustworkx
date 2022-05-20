@@ -17,3 +17,5 @@ pub mod embedding;
 
 pub use lr_planar::is_planar;
 pub use embedding::PlanarEmbedding;
+pub use embedding::create_embedding;
+pub use embedding::combinatorial_embedding_to_pos;

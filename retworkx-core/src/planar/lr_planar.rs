@@ -21,6 +21,8 @@ use petgraph::{
         Visitable,
     },
     Undirected,
+    Directed,
+    graph::Graph,
 };
 
 use crate::traversal::{depth_first_search, DfsEvent};
@@ -237,6 +239,8 @@ where
     eref: HashMap<Edge<G>, Edge<G>>,
     /// side of edge, or modifier for side of reference edge.
     side: HashMap<Edge<G>, Sign>,
+    DG: Graph<(), (), Directed>,
+
 }
 
 impl<G> LRState<G>
@@ -264,6 +268,7 @@ where
                 .edge_references()
                 .map(|e| ((e.source(), e.target()), Sign::Plus))
                 .collect(),
+            DG: Graph::with_capacity(num_nodes, 0),
         }
     }
 

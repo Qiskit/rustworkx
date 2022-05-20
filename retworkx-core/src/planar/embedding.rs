@@ -3,6 +3,7 @@ use petgraph::Directed;
 use petgraph::visit::{GraphBase, NodeIndexable};
 use petgraph::graph::Graph;
 use std::hash::Hash;
+use hashbrown::hash_map::HashMap;
 use std::fmt::Debug;
 
 use crate::dictmap::*;
@@ -159,23 +160,32 @@ impl PlanarEmbedding {
 pub fn create_embedding<G: GraphBase>(
     planar_emb: &PlanarEmbedding,
     lr_state: &LRState<G>,
-) -> Vec<Point> where <G as GraphBase>::NodeId: Hash + Eq, <G as GraphBase>::NodeId: Debug {
+) where <G as GraphBase>::NodeId: Hash + Eq, <G as GraphBase>::NodeId: Debug {
     println!("ROOTS {:?}", lr_state.roots);
 
     //let mut planar_emb = PlanarEmbedding::default();
 
-    let mut pos = combinatorial_embedding_to_pos(&planar_emb);
-    pos
 }
 
-fn combinatorial_embedding_to_pos(
+pub fn combinatorial_embedding_to_pos(
     planar_emb: &PlanarEmbedding,
 ) -> Vec<Point> {
     let mut pos: Vec<Point> = Vec::with_capacity(planar_emb.embedding.node_count());
     if planar_emb.embedding.node_count() < 4 {
-        pos = [[0.0, 0.0], [2.0, 0.0], [1.0, 1.0]].to_vec()
+        let default_pos = [[0.0, 0.0], [2.0, 0.0], [1.0, 1.0]].to_vec();
+        pos = planar_emb.embedding
+            .node_indices()
+            .map(|n| default_pos[n.index()])
+            .collect();
     }
     let outer_face = triangulate_embedding(&planar_emb, true);
+
+    let right_t_child = HashMap::<NodeIndex, usize>::new();
+    let left_t_child = HashMap::<NodeIndex, usize>::new();
+    let delta_x = HashMap::<NodeIndex, usize>::new();
+    let y_coord = HashMap::<NodeIndex, usize>::new();
+
+    let node_list = canonical_ordering(&planar_emb, outer_face);
 
     pos
 }
@@ -183,6 +193,19 @@ fn combinatorial_embedding_to_pos(
 fn triangulate_embedding(
     planar_emb: &PlanarEmbedding,
     fully_triangulate: bool,
+) -> Vec<NodeIndex> {
+    if planar_emb.embedding.node_count() <= 1 {
+        return planar_emb.embedding.node_indices().map(|n| n).collect::<Vec<_>>();
+    }
+    //let component_nodes = connected_components(embedding);
+    let outer_face = planar_emb.embedding.node_indices().map(|n| n).collect::<Vec<_>>();
+    println!("DFLT {:?}", outer_face);
+    outer_face
+}
+
+fn canonical_ordering(
+    planar_emb: &PlanarEmbedding,
+    outer_face: Vec<NodeIndex>,
 ) -> Vec<NodeIndex> {
     if planar_emb.embedding.node_count() <= 1 {
         return planar_emb.embedding.node_indices().map(|n| n).collect::<Vec<_>>();
