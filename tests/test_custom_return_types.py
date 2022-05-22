@@ -406,7 +406,7 @@ class TestEdgeListComparisons(unittest.TestCase):
         slice_return = edges[0:3:2]
         self.assertEqual([(0, 1), (0, 1)], slice_return)
 
-    def test_slice(self):
+    def test_numpy_conversion(self):
         g = retworkx.generators.directed_star_graph(5)
         res = g.edge_list()
         # TODO: check dtype argument and assert the result is correct
