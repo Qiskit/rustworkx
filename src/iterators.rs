@@ -45,7 +45,7 @@ use num_bigint::BigUint;
 use retworkx_core::dictmap::*;
 
 use ndarray::prelude::*;
-use numpy::IntoPyArray;
+use numpy::{PyArrayDescr, ToPyArray};
 use pyo3::class::iter::IterNextOutput;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::PyVisit;
@@ -423,19 +423,18 @@ macro_rules! py_convert_to_py_array_impl {
     ($($t:ty)*) => ($(
         impl PyConvertToPyArray for Vec<$t> {
             fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
-                Ok(self.clone().into_pyarray(py).into())
+                Ok(self.clone().to_pyarray(py).into())
             }
         }
     )*)
 }
 
-macro_rules! py_convert_to_py_array_not_impl {
+macro_rules! py_convert_to_py_array_obj_impl {
     ($t:ty) => {
         impl PyConvertToPyArray for Vec<$t> {
-            fn convert_to_pyarray(&self, _py: Python) -> PyResult<PyObject> {
-                Err(PyNotImplementedError::new_err(
-                    "Numpy conversion not implemented for given type",
-                ))
+            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+                let pyobj_vec: Vec<PyObject> = self.iter().map(|x| x.clone().into_py(py)).collect();
+                Ok(pyobj_vec.to_pyarray(py).into())
             }
         }
     };
@@ -443,9 +442,9 @@ macro_rules! py_convert_to_py_array_not_impl {
 
 py_convert_to_py_array_impl! {usize u8 u16 u32 u64 isize i8 i16 i32 i64 f32 f64}
 
-py_convert_to_py_array_not_impl! {EdgeList}
-py_convert_to_py_array_not_impl! {(PyObject, Vec<PyObject>)}
-py_convert_to_py_array_not_impl! {(usize, usize, PyObject)}
+py_convert_to_py_array_obj_impl! {EdgeList}
+py_convert_to_py_array_obj_impl! {(PyObject, Vec<PyObject>)}
+py_convert_to_py_array_obj_impl! {(usize, usize, PyObject)}
 
 impl PyConvertToPyArray for Vec<(usize, usize)> {
     fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
@@ -456,7 +455,7 @@ impl PyConvertToPyArray for Vec<(usize, usize)> {
             mat[[index, 1]] = element.1;
         }
 
-        Ok(mat.into_pyarray(py).into())
+        Ok(mat.to_pyarray(py).into())
     }
 }
 
@@ -568,7 +567,9 @@ macro_rules! custom_vec_iter_impl {
                 }
             }
 
-            fn __array__(&self, py: Python) -> PyResult<PyObject> {
+            fn __array__(&self, py: Python, _dt: Option<&PyArrayDescr>) -> PyResult<PyObject> {
+                // Note: we accept the dtype argument on the signature but
+                // effictively do nothing with it to let Numpy handle the conversion itself
                 self.$data.convert_to_pyarray(py)
             }
 
