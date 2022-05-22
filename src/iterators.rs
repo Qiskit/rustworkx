@@ -44,6 +44,7 @@ use std::hash::Hasher;
 use num_bigint::BigUint;
 use retworkx_core::dictmap::*;
 
+use ndarray::prelude::*;
 use numpy::IntoPyArray;
 use pyo3::class::iter::IterNextOutput;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
@@ -447,10 +448,15 @@ py_convert_to_py_array_not_impl! {(PyObject, Vec<PyObject>)}
 py_convert_to_py_array_not_impl! {(usize, usize, PyObject)}
 
 impl PyConvertToPyArray for Vec<(usize, usize)> {
-    fn convert_to_pyarray(&self, _py: Python) -> PyResult<PyObject> {
-        Err(PyNotImplementedError::new_err(
-            "Numpy conversion not implemented for given type",
-        ))
+    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+        let mut mat = Array2::<usize>::from_elem((self.len(), 2), 0);
+
+        for (index, element) in self.iter().enumerate() {
+            mat[[index, 0]] = element.0;
+            mat[[index, 1]] = element.1;
+        }
+
+        Ok(mat.into_pyarray(py).into())
     }
 }
 

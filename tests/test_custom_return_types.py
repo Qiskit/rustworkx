@@ -15,6 +15,7 @@ import pickle
 import unittest
 
 import retworkx
+import numpy as np
 
 
 class TestBFSSuccessorsComparisons(unittest.TestCase):
@@ -404,6 +405,12 @@ class TestEdgeListComparisons(unittest.TestCase):
         edges = self.dag.edge_list()
         slice_return = edges[0:3:2]
         self.assertEqual([(0, 1), (0, 1)], slice_return)
+
+    def test_slice(self):
+        g = retworkx.generators.directed_star_graph(5)
+        res = g.edge_list()
+        # TODO: check dtype argument and assert the result is correct
+        np.asarray(res)
 
 
 class TestWeightedEdgeListComparisons(unittest.TestCase):
