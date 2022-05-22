@@ -414,6 +414,46 @@ enum SliceOrInt<'a> {
     Int(isize),
 }
 
+trait PyConvertToPyArray {
+    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject>;
+}
+
+macro_rules! py_convert_to_py_array_impl {
+    ($($t:ty)*) => ($(
+        impl PyConvertToPyArray for Vec<$t> {
+            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+                Ok(self.clone().into_pyarray(py).into())
+            }
+        }
+    )*)
+}
+
+macro_rules! py_convert_to_py_array_not_impl {
+    ($t:ty) => {
+        impl PyConvertToPyArray for Vec<$t> {
+            fn convert_to_pyarray(&self, _py: Python) -> PyResult<PyObject> {
+                Err(PyNotImplementedError::new_err(
+                    "Numpy conversion not implemented for given type",
+                ))
+            }
+        }
+    };
+}
+
+py_convert_to_py_array_impl! {usize u8 u16 u32 u64 isize i8 i16 i32 i64 f32 f64}
+
+py_convert_to_py_array_not_impl! {EdgeList}
+py_convert_to_py_array_not_impl! {(PyObject, Vec<PyObject>)}
+py_convert_to_py_array_not_impl! {(usize, usize, PyObject)}
+
+impl PyConvertToPyArray for Vec<(usize, usize)> {
+    fn convert_to_pyarray(&self, _py: Python) -> PyResult<PyObject> {
+        Err(PyNotImplementedError::new_err(
+            "Numpy conversion not implemented for given type",
+        ))
+    }
+}
+
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
@@ -523,8 +563,7 @@ macro_rules! custom_vec_iter_impl {
             }
 
             fn __array__(&self, py: Python) -> PyResult<PyObject> {
-                let empty_vec: Vec<usize> = vec![];
-                Ok(empty_vec.into_pyarray(py).into())
+                self.$data.convert_to_pyarray(py)
             }
 
             fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
