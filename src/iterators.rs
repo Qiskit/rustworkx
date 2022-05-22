@@ -44,6 +44,7 @@ use std::hash::Hasher;
 use num_bigint::BigUint;
 use retworkx_core::dictmap::*;
 
+use numpy::IntoPyArray;
 use pyo3::class::iter::IterNextOutput;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::PyVisit;
@@ -519,6 +520,11 @@ macro_rules! custom_vec_iter_impl {
                         }
                     }
                 }
+            }
+
+            fn __array__(&self, py: Python) -> PyResult<PyObject> {
+                let empty_vec: Vec<usize> = vec![];
+                Ok(empty_vec.into_pyarray(py).into())
             }
 
             fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
