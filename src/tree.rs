@@ -150,30 +150,23 @@ fn _minimum_spanning_tree<'a>(
     Ok(spanning_tree)
 }
 
-/// Find balanced cut edge of the minmum spanning tree of a graph using node
-/// contraction. Assumes that the tree is connected and is a spanning tree.
+/// Find balanced cut edge of a spanning tree using node contraction. 
+/// Assumes that the tree is connected and is a spanning tree.
 ///
-/// :param PyGraph graph: Undirected graph
-/// :param weight_fn: A callable object (function, lambda, etc) which
-///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
-///     for edge object. Some simple examples are::
+/// :param PyGraph graph: Spanning tree. Must be fully connected
+/// :param pops: The populations assigned to each node in the graph.
+/// :param float pop_target: The population target to reach when partitioning the
+///     graph.
+/// :param float epsilon: The maximum percent deviation from the pop_target
+///     allowed while still being a valid balanced cut edge.
 ///
-///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
-///
-///     to return a weight of 1 for all edges. Also::
-///
-///         minimum_spanning_tree(graph, weight_fn: float)
-///
-///     to cast the edge object as a float as the weight.
-/// :param float default_weight: If ``weight_fn`` isn't specified this optional
-///     float value will be used for the weight/cost of each edge.
-///
-/// :returns: A set of nodes in one half of the spanning tree
+/// :returns: A list of tuples, with each tuple representing a distinct
+/// balanced edge that can be cut. The tuple contains the root of one of the
+/// two partitioned subtrees and the set of nodes making up that subtree.
 ///
 #[pyfunction]
 #[pyo3(text_signature = "(spanning_tree, pop, target_pop, epsilon)")]
-pub fn balanced_cut_edge(
+pub fn bipartition_tree(
     _py: Python,
     spanning_tree: &graph::PyGraph,
     pops: Vec<f64>,
@@ -252,14 +245,19 @@ pub fn balanced_cut_edge(
 ///         minimum_spanning_tree(graph, weight_fn: float)
 ///
 ///     to cast the edge object as a float as the weight.
-/// :param float default_weight: If ``weight_fn`` isn't specified this optional
-///     float value will be used for the weight/cost of each edge.
+/// :param pops: The populations assigned to each node in the graph.
+/// :param float pop_target: The population target to reach when partitioning the
+///     graph.
+/// :param float epsilon: The maximum percent deviation from the pop_target
+///     allowed while still being a valid balanced cut edge.
 ///
-/// :returns: A set of nodes in one half of the spanning tree
+/// :returns: A list of tuples, with each tuple representing a distinct
+/// balanced edge that can be cut. The tuple contains the root of one of the
+/// two partitioned subtrees and the set of nodes making up that subtree.
 ///
 #[pyfunction]
 #[pyo3(text_signature = "(graph, weight_fn, pop, target_pop, epsilon)")]
-pub fn bipartition_tree(
+pub fn bipartition_graph(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: PyObject,

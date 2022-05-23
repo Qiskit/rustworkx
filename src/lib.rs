@@ -412,8 +412,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
     m.add_wrapped(wrap_pyfunction!(minimum_spanning_edges))?;
     m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree))?;
-    m.add_wrapped(wrap_pyfunction!(balanced_cut_edge))?;
     m.add_wrapped(wrap_pyfunction!(bipartition_tree))?;
+    m.add_wrapped(wrap_pyfunction!(bipartition_graph))?;
     m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
