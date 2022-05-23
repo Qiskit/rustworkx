@@ -150,8 +150,13 @@ fn _minimum_spanning_tree<'a>(
     Ok(spanning_tree)
 }
 
-/// Find balanced cut edge of a spanning tree using node contraction. 
-/// Assumes that the tree is connected and is a spanning tree.
+/// Bipartition tree by finding balanced cut edges of a spanning tree using
+/// node contraction. Assumes that the tree is connected and is a spanning tree.
+/// A balanced edge is defined as an edge that, when cut, will split the
+/// population of the tree into two connected subtrees that have population near
+/// the population target within some epsilon. The function returns a list of
+/// all such possible cuts, represented as the set of nodes in one
+/// partition/subtree.
 ///
 /// :param PyGraph graph: Spanning tree. Must be fully connected
 /// :param pops: The populations assigned to each node in the graph.
@@ -230,7 +235,8 @@ pub fn bipartition_tree(
 }
 
 /// Bipartition graph into two contiguous, population-balanced components.
-/// Assumes that graph is contiguous.
+/// Assumes that the graph is contiguous. See :func:`~bipartition_tree` for
+/// details on how balance is defined.
 ///
 /// :param PyGraph graph: Undirected graph
 /// :param weight_fn: A callable object (function, lambda, etc) which
@@ -271,7 +277,7 @@ pub fn bipartition_graph(
     while balanced_nodes.is_empty() {
         mst.graph.clear_edges();
         _minimum_spanning_tree(py, graph, &mut mst, Some(weight_fn.clone()), 1.0)?;
-        balanced_nodes = balanced_cut_edge(py, &mst, pops.clone(), pop_target, epsilon).unwrap();
+        balanced_nodes = bipartition_tree(py, &mst, pops.clone(), pop_target, epsilon).unwrap();
     }
 
     Ok(balanced_nodes)
