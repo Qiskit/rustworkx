@@ -5,6 +5,8 @@ use petgraph::graph::Graph;
 use std::hash::Hash;
 use hashbrown::hash_map::HashMap;
 use std::fmt::Debug;
+use std::ops::IndexMut;
+use petgraph::adj::IndexType;
 
 use crate::dictmap::*;
 use crate::planar::is_planar;
@@ -161,9 +163,62 @@ pub fn create_embedding<G: GraphBase>(
     planar_emb: &PlanarEmbedding,
     lr_state: &LRState<G>,
 ) where <G as GraphBase>::NodeId: Hash + Eq, <G as GraphBase>::NodeId: Debug {
-    println!("ROOTS {:?}", lr_state.roots);
+    //println!("ROOTS {:?}", lr_state.roots);
 
-    //let mut planar_emb = PlanarEmbedding::default();
+    for node in lr_state.dir_graph.node_indices() {
+        for edge in lr_state.dir_graph.edges(node) {
+            println!("Edge {:?}, {:?}", edge.source(), edge.target());
+        }
+    }
+    let mut ordered_adjs: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+    for v in lr_state.dir_graph.node_indices() {
+        ordered_adjs.insert(v, lr_state.dir_graph.edges(v).map(|e| e.target()).collect());
+    }
+    for x in ordered_adjs {
+        println!("ordered {:?}", x);
+    }
+    for x in &lr_state.nesting_depth {
+        println!("nesting {:?}", x);
+    }
+    let mut emb_nesting: HashMap<(NodeIndex, NodeIndex), usize> = HashMap::new();
+    emb_nesting = lr_state.nesting_depth
+                    .iter()
+                    .map(|(a, b)| (a.index(), b.index()))
+                    .collect();
+    for v in ordered_adjs {
+        ordered_adjs[&v.0].sort_by_key(|n| lr_state.nesting_depth[(&v.0, n)]);
+    }
+    for x in ordered_adjs {
+        println!("ordered {:?}", x);
+    }
+    // for v in self.DG:  # sort the adjacency lists by nesting depth
+    //     # note: this sorting leads to non linear time
+    //     self.ordered_adjs[v] = sorted(
+    //         self.DG[v], key=lambda x: self.nesting_depth[(v, x)]
+    //     )
+    // for e in self.DG.edges:
+    //     self.nesting_depth[e] = self.sign(e) * self.nesting_depth[e]
+
+    // self.embedding.add_nodes_from(self.DG.nodes)
+    // for v in self.DG:
+    //     # sort the adjacency lists again
+    //     self.ordered_adjs[v] = sorted(
+    //         self.DG[v], key=lambda x: self.nesting_depth[(v, x)]
+    //     )
+    //     # initialize the embedding
+    //     previous_node = None
+    //     for w in self.ordered_adjs[v]:
+    //         self.embedding.add_half_edge_cw(v, w, previous_node)
+    //         previous_node = w
+
+    // # Free no longer used variables
+    // self.DG = None
+    // self.nesting_depth = None
+    // self.ref = None
+
+    // # compute the complete embedding
+    // for v in self.roots:
+    //     self.dfs_embedding(v)
 
 }
 

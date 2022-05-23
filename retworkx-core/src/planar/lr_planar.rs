@@ -18,11 +18,11 @@ use hashbrown::{hash_map::Entry, HashMap};
 use petgraph::{
     visit::{
         EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
-        Visitable,
+        Visitable, NodeIndexable,
     },
     Undirected,
     Directed,
-    graph::Graph,
+    graph::{Graph, NodeIndex},
 };
 
 use crate::traversal::{depth_first_search, DfsEvent};
@@ -218,7 +218,7 @@ where
 {
     graph: G,
     /// roots of the DFS forest.
-    pub roots: Vec<G::NodeId>,
+    roots: Vec<G::NodeId>,
     /// distnace from root.
     height: HashMap<G::NodeId, usize>,
     /// parent edge.
@@ -230,7 +230,7 @@ where
     /// next back edge in traversal with lowest return point.
     lowpt_edge: HashMap<Edge<G>, Edge<G>>,
     /// proxy for nesting order ≺ given by twice lowpt (plus 1 if chordal).
-    nesting_depth: HashMap<Edge<G>, usize>,
+    pub nesting_depth: HashMap<Edge<G>, usize>,
     /// stack for conflict pairs.
     stack: Vec<ConflictPair<Edge<G>>>,
     /// marks the top conflict pair when an edge was pushed in the stack.
@@ -239,20 +239,20 @@ where
     eref: HashMap<Edge<G>, Edge<G>>,
     /// side of edge, or modifier for side of reference edge.
     side: HashMap<Edge<G>, Sign>,
-    DG: Graph<(), (), Directed>,
-
+    /// directed graph used to build the embedding
+    pub dir_graph: Graph<(), (), Directed>,
 }
 
 impl<G> LRState<G>
 where
-    G: GraphBase + NodeCount + EdgeCount + IntoEdges + Visitable,
+    G: GraphBase + NodeCount + EdgeCount + IntoNodeIdentifiers + NodeIndexable + IntoEdges + Visitable,
     G::NodeId: Hash + Eq,
 {
     fn new(graph: G) -> Self {
         let num_nodes = graph.node_count();
         let num_edges = graph.edge_count();
 
-        LRState {
+        let mut lr_state = LRState {
             graph,
             roots: Vec::new(),
             height: HashMap::with_capacity(num_nodes),
@@ -268,8 +268,12 @@ where
                 .edge_references()
                 .map(|e| ((e.source(), e.target()), Sign::Plus))
                 .collect(),
-            DG: Graph::with_capacity(num_nodes, 0),
-        }
+            dir_graph: Graph::with_capacity(num_nodes, 0),
+        };
+        for node in graph.node_identifiers() {
+            lr_state.dir_graph.add_node(());
+        };
+        lr_state
     }
 
     fn lr_orientation_visitor(&mut self, event: DfsEvent<G::NodeId, &G::EdgeWeight>) {
@@ -281,6 +285,7 @@ where
                 }
             }
             DfsEvent::TreeEdge(v, w, _) => {
+                self.dir_graph.add_edge(NodeIndex::new(self.graph.to_index(v)), NodeIndex::new(self.graph.to_index(w)), ());
                 let ei = (v, w);
                 let v_height = self.height[&v];
                 let w_height = v_height + 1;
@@ -294,6 +299,7 @@ where
             DfsEvent::BackEdge(v, w, _) => {
                 // do *not* consider ``(v, w)`` as a back edge if ``(w, v)`` is a tree edge.
                 if Some(&(w, v)) != self.eparent.get(&v) {
+                    self.dir_graph.add_edge(NodeIndex::new(self.graph.to_index(v)), NodeIndex::new(self.graph.to_index(w)), ());
                     let ei = (v, w);
                     self.lowpt.insert(ei, self.height[&w]);
                     self.lowpt_2.insert(ei, self.height[&v]);
@@ -679,6 +685,7 @@ where
         + NodeCount
         + EdgeCount
         + IntoEdges
+        + NodeIndexable
         + IntoNodeIdentifiers
         + Visitable,
     G::NodeId: Hash + Eq,
@@ -701,6 +708,12 @@ where
         }
     }
     println!("LR true");
+
+    for node in state.dir_graph.node_indices() {
+        for edge in state.dir_graph.edges(node) {
+            println!("Edge {:?}, {:?}", edge.source(), edge.target());
+        }
+    }
 
     (true, state)
 }
