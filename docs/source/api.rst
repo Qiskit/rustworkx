@@ -103,6 +103,7 @@ Tree
    retworkx.minimum_spanning_edges
    retworkx.minimum_spanning_tree
    retworkx.steiner_tree
+   retworkx.bipartition_tree
 
 .. _isomorphism:
 
@@ -178,6 +179,7 @@ Other Algorithm Functions
    retworkx.core_number
    retworkx.graph_greedy_color
    retworkx.metric_closure
+   retworkx.bipartition_graph
 
 .. _generator_funcs:
 
