@@ -240,17 +240,8 @@ pub fn bipartition_tree(
 ///
 /// :param PyGraph graph: Undirected graph
 /// :param weight_fn: A callable object (function, lambda, etc) which
-///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
-///     for edge object. Some simple examples are::
-///
-///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
-///
-///     to return a weight of 1 for all edges. Also::
-///
-///         minimum_spanning_tree(graph, weight_fn: float)
-///
-///     to cast the edge object as a float as the weight.
+///     will be passed the edge object and expected to return a ``float``. See
+///     :func:`~minimum_spanning_tree` for details.
 /// :param pops: The populations assigned to each node in the graph.
 /// :param float pop_target: The population target to reach when partitioning the
 ///     graph.
