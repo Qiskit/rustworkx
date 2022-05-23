@@ -136,3 +136,15 @@ class TestSubgraph(unittest.TestCase):
         subgraph = graph.edge_subgraph([(0, 1), (1, 2), (1, 3)])
         self.assertEqual([0, 1, 2], subgraph.nodes())
         self.assertEqual([(0, 1, 2), (0, 1, 3), (1, 2, 4)], subgraph.weighted_edge_list())
+
+    def test_preserve_attrs(self):
+        graph = retworkx.PyGraph(attrs="My attribute")
+        graph.add_node("a")
+        graph.add_node("b")
+        graph.add_node("c")
+        graph.add_node("d")
+        graph.add_edges_from([(0, 1, 1), (0, 2, 2), (0, 3, 3), (1, 3, 4)])
+        subgraph = graph.subgraph([1, 3], preserve_attrs=True)
+        self.assertEqual([(0, 1, 4)], subgraph.weighted_edge_list())
+        self.assertEqual(["b", "d"], subgraph.nodes())
+        self.assertEqual(graph.attrs, subgraph.attrs)

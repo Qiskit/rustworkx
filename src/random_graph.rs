@@ -131,6 +131,7 @@ pub fn directed_gnp_random_graph(
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }
@@ -225,6 +226,7 @@ pub fn undirected_gnp_random_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }
@@ -306,6 +308,7 @@ pub fn directed_gnm_random_graph(
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }
@@ -382,6 +385,7 @@ pub fn undirected_gnm_random_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }
@@ -485,6 +489,7 @@ pub fn random_geometric_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }

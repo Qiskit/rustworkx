@@ -2104,3 +2104,109 @@ def _digraph_dijkstra_search(graph, source, weight_fn, visitor):
 @dijkstra_search.register(PyGraph)
 def _graph_dijkstra_search(graph, source, weight_fn, visitor):
     return graph_dijkstra_search(graph, source, weight_fn, visitor)
+
+
+@functools.singledispatch
+def bellman_ford_shortest_paths(
+    graph,
+    source,
+    target=None,
+    weight_fn=None,
+    default_weight=1.0,
+    as_undirected=False,
+):
+    """Find the shortest path from a node
+
+    This function will generate the shortest path from a source node using
+    the Bellman-Ford algorithm wit the SPFA heuristic.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param int source: The node index to find paths from
+    :param int target: An optional target to find a path to
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float
+        which will be used to represent the weight/cost of the edge
+    :param float default_weight: If ``weight_fn`` isn't specified this optional
+        float value will be used for the weight/cost of each edge.
+    :param bool as_undirected: If set to true the graph will be treated as
+        undirected for finding the shortest path. This only works with a
+        :class:`~retworkx.PyDiGraph` input for ``graph``
+
+    :return: A read-only dictionary of paths. The keys are destination node indices
+        and the dict values are lists of node indices making the path.
+    :rtype: PathMapping
+
+    :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+        path is not defined
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bellman_ford_shortest_paths.register(PyDiGraph)
+def _digraph_bellman_ford_shortest_path(
+    graph,
+    source,
+    target=None,
+    weight_fn=None,
+    default_weight=1.0,
+    as_undirected=False,
+):
+    return digraph_bellman_ford_shortest_paths(
+        graph,
+        source,
+        target=target,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        as_undirected=as_undirected,
+    )
+
+
+@bellman_ford_shortest_paths.register(PyGraph)
+def _graph_bellman_ford_shortest_path(
+    graph, source, target=None, weight_fn=None, default_weight=1.0
+):
+    return graph_bellman_ford_shortest_paths(
+        graph,
+        source,
+        target=target,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+    )
+
+
+@functools.singledispatch
+def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    """Compute the lengths of the shortest paths for a graph object using
+    the Bellman-Ford algorithm with the SPFA heuristic.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :param int node: The node index to use as the source for finding the
+        shortest paths from
+    :param edge_cost_fn: A python callable that will take in 1 parameter, an
+        edge's data object and will return a float that represents the
+        cost/weight of that edge. It can be negative.
+    :param int goal: An optional node index to use as the end of the path.
+        When specified the output dictionary will only have a single entry with
+        the length of the shortest path to the goal node.
+
+    :returns: A read-only dictionary of the shortest paths from the provided node
+        where the key is the node index of the end of the path and the value is the
+        cost/sum of the weights of path
+    :rtype: PathLengthMapping
+
+    :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+        path is not defined
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@bellman_ford_shortest_path_lengths.register(PyDiGraph)
+def _digraph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    return digraph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
+
+
+@bellman_ford_shortest_path_lengths.register(PyGraph)
+def _graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+    return graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
