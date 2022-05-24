@@ -166,8 +166,8 @@ fn _minimum_spanning_tree<'a>(
 ///     allowed while still being a valid balanced cut edge.
 ///
 /// :returns: A list of tuples, with each tuple representing a distinct
-/// balanced edge that can be cut. The tuple contains the root of one of the
-/// two partitioned subtrees and the set of nodes making up that subtree.
+///     balanced edge that can be cut. The tuple contains the root of one of the
+///     two partitioned subtrees and the set of nodes making up that subtree.
 #[pyfunction]
 #[pyo3(text_signature = "(spanning_tree, pop, target_pop, epsilon)")]
 pub fn bipartition_tree(
@@ -242,14 +242,14 @@ pub fn bipartition_tree(
 ///     will be passed the edge object and expected to return a ``float``. See
 ///     :func:`~minimum_spanning_tree` for details.
 /// :param pops: The populations assigned to each node in the graph.
-/// :param float pop_target: The population target to reach when partitioning the
-///     graph.
+/// :param float pop_target: The population target to reach when partitioning
+///     the graph.
 /// :param float epsilon: The maximum percent deviation from the pop_target
 ///     allowed while still being a valid balanced cut edge.
 ///
 /// :returns: A list of tuples, with each tuple representing a distinct
-/// balanced edge that can be cut. The tuple contains the root of one of the
-/// two partitioned subtrees and the set of nodes making up that subtree.
+///     balanced edge that can be cut. The tuple contains the root of one of the
+///     two partitioned subtrees and the set of nodes making up that subtree.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, weight_fn, pop, target_pop, epsilon)")]
 pub fn bipartition_graph(

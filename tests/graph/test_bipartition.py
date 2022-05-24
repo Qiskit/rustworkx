@@ -56,17 +56,17 @@ class TestBipartition(unittest.TestCase):
 
     def test_one_balanced_edge_tree(self):
         balanced_edges = retworkx.bipartition_tree(
-            self.tree, 
+            self.tree,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
             0.2,
         )
         self.assertEqual(len(balanced_edges), 1)
 
-        # Since this is already a spanning tree, bipartition_graph should 
+        # Since this is already a spanning tree, bipartition_graph should
         # behave identically. That is, it should be invariant to weight_fn
         graph_balanced_edges = retworkx.bipartition_graph(
-            self.tree, 
+            self.tree,
             lambda x: random.random(),
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
@@ -76,7 +76,7 @@ class TestBipartition(unittest.TestCase):
 
     def test_two_balanced_edges_tree(self):
         balanced_edges = retworkx.bipartition_tree(
-            self.tree, 
+            self.tree,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
             0.5,
@@ -84,7 +84,7 @@ class TestBipartition(unittest.TestCase):
         self.assertEqual(len(balanced_edges), 1)
 
         graph_balanced_edges = retworkx.bipartition_graph(
-            self.tree, 
+            self.tree,
             lambda x: random.random(),
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
@@ -94,7 +94,7 @@ class TestBipartition(unittest.TestCase):
 
     def test_three_balanced_edges_line(self):
         balanced_edges = retworkx.bipartition_tree(
-            self.line, 
+            self.line,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
             0.5,
@@ -102,7 +102,7 @@ class TestBipartition(unittest.TestCase):
         self.assertEqual(len(balanced_edges), 3)
 
         graph_balanced_edges = retworkx.bipartition_graph(
-            self.line, 
+            self.line,
             lambda x: random.random(),
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
@@ -112,7 +112,7 @@ class TestBipartition(unittest.TestCase):
 
     def test_one_balanced_edges_line(self):
         balanced_edges = retworkx.bipartition_tree(
-            self.line, 
+            self.line,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
             0.01,
@@ -120,7 +120,7 @@ class TestBipartition(unittest.TestCase):
         self.assertEqual(len(balanced_edges), 1)
 
         graph_balanced_edges = retworkx.bipartition_graph(
-            self.line, 
+            self.line,
             lambda x: random.random(),
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
