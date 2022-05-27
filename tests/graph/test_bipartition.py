@@ -11,7 +11,6 @@
 # under the License.
 
 import unittest
-import random
 
 import retworkx
 
@@ -67,7 +66,7 @@ class TestBipartition(unittest.TestCase):
         # behave identically. That is, it should be invariant to weight_fn
         graph_balanced_edges = retworkx.bipartition_graph(
             self.tree,
-            lambda x: random.random(),
+            lambda _: 1,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
             0.2,
@@ -85,7 +84,7 @@ class TestBipartition(unittest.TestCase):
 
         graph_balanced_edges = retworkx.bipartition_graph(
             self.tree,
-            lambda x: random.random(),
+            lambda _: 1,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
             0.5,
@@ -103,7 +102,7 @@ class TestBipartition(unittest.TestCase):
 
         graph_balanced_edges = retworkx.bipartition_graph(
             self.line,
-            lambda x: random.random(),
+            lambda _: 1,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
             0.5,
@@ -121,7 +120,7 @@ class TestBipartition(unittest.TestCase):
 
         graph_balanced_edges = retworkx.bipartition_graph(
             self.line,
-            lambda x: random.random(),
+            lambda _: 1,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
             3.0,
             0.01,
