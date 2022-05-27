@@ -133,13 +133,13 @@ pub fn minimum_spanning_tree(
 }
 
 /// Helper function to allow reuse of spanning_tree object to reduce memory allocs
-fn _minimum_spanning_tree<'a>(
+fn _minimum_spanning_tree(
     py: Python,
     graph: &graph::PyGraph,
-    spanning_tree: &'a mut graph::PyGraph,
+    spanning_tree: &mut graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
-) -> PyResult<&'a mut graph::PyGraph> {
+) -> PyResult<()> {
     for edge in minimum_spanning_edges(py, graph, weight_fn, default_weight)?
         .edges
         .iter()
@@ -147,7 +147,7 @@ fn _minimum_spanning_tree<'a>(
         spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py));
     }
 
-    Ok(spanning_tree)
+    Ok(())
 }
 
 /// Bipartition tree by finding balanced cut edges of a spanning tree using
