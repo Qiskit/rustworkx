@@ -179,7 +179,7 @@ pub fn bipartition_tree(
     let mut pops = pops;
     let spanning_tree_graph = &spanning_tree.graph;
     let mut same_partition_tracker: Vec<Vec<usize>> =
-        vec![vec![]; spanning_tree_graph.node_count()]; // Keeps track of all all the nodes on the same side of the partition
+        vec![vec![]; spanning_tree_graph.node_bound()]; // Keeps track of all all the nodes on the same side of the partition
 
     let mut node_queue: VecDeque<NodeIndex> = VecDeque::<NodeIndex>::new();
     for leaf_node in spanning_tree_graph.node_indices() {
