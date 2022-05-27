@@ -125,20 +125,21 @@ pub fn minimum_spanning_tree(
     weight_fn: Option<PyObject>,
     default_weight: f64,
 ) -> PyResult<graph::PyGraph> {
-    let mut spanning_tree: graph::PyGraph = graph.clone();
+    let mut spanning_tree = (*graph).clone();
     spanning_tree.graph.clear_edges();
 
-    _minimum_spanning_tree(py, graph, spanning_tree, weight_fn, default_weight)
+    _minimum_spanning_tree(py, graph, &mut spanning_tree, weight_fn, default_weight)?;
+    Ok(spanning_tree)
 }
 
 /// Helper function to allow reuse of spanning_tree object to reduce memory allocs
-fn _minimum_spanning_tree(
+fn _minimum_spanning_tree<'a>(
     py: Python,
     graph: &graph::PyGraph,
-    mut spanning_tree: graph::PyGraph,
+    spanning_tree: &'a mut graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
-) -> PyResult<graph::PyGraph> {
+) -> PyResult<&'a mut graph::PyGraph> {
     for edge in minimum_spanning_edges(py, graph, weight_fn, default_weight)?
         .edges
         .iter()
@@ -171,11 +172,11 @@ fn _minimum_spanning_tree(
 #[pyo3(text_signature = "(spanning_tree, pop, target_pop, epsilon)")]
 pub fn bipartition_tree(
     _py: Python,
-    spanning_tree: graph::PyGraph,
+    spanning_tree: &graph::PyGraph,
     pops: Vec<f64>,
     pop_target: f64,
     epsilon: f64,
-) -> PyResult<(graph::PyGraph, Vec<(usize, Vec<usize>)>)> {
+) -> PyResult<Vec<(usize, Vec<usize>)>> {
     let mut pops = pops;
     let spanning_tree_graph = &spanning_tree.graph;
     let mut same_partition_tracker: Vec<Vec<usize>> =
@@ -229,7 +230,7 @@ pub fn bipartition_tree(
         seen_nodes.insert(node.index());
     }
 
-    Ok((spanning_tree, balanced_nodes))
+    Ok(balanced_nodes)
 }
 
 /// Bipartition graph into two contiguous, population-balanced components.
@@ -260,13 +261,12 @@ pub fn bipartition_graph(
     epsilon: f64,
 ) -> PyResult<Vec<(usize, Vec<usize>)>> {
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
-    let mut mst: graph::PyGraph = graph.clone();
+    let mut mst = (*graph).clone();
 
     while balanced_nodes.is_empty() {
         mst.graph.clear_edges();
-        mst = _minimum_spanning_tree(py, graph, mst, Some(weight_fn.clone()), 1.0)?;
-        (mst, balanced_nodes) =
-            bipartition_tree(py, mst, pops.clone(), pop_target, epsilon).unwrap();
+        _minimum_spanning_tree(py, graph, &mut mst, Some(weight_fn.clone()), 1.0)?;
+        balanced_nodes = bipartition_tree(py, &mst, pops.clone(), pop_target, epsilon).unwrap();
     }
 
     Ok(balanced_nodes)
