@@ -11,7 +11,7 @@
 // under the License.
 
 use std::cmp::Ordering;
-use std::collections::HashSet;
+use hashbrown::HashSet;
 use std::collections::VecDeque;
 
 use super::{graph, weight_callable};
