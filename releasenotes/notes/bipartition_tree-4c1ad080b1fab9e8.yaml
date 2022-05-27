@@ -7,14 +7,16 @@ features:
     when cut, will split the population of the tree into two connected subtrees
     that have population near the population target within some epsilon. The 
     function returns a list of all such possible cuts, represented as the set 
-    of nodes in one partition/subtree. For example::
+    of nodes in one partition/subtree. For example,
 
-          balanced_node_choices = retworkx.bipartition_tree(
-              tree,
-              pops,
-              float(pop_target),
-              float(epsilon)
-          )
+    .. code-block:: python
+
+        balanced_node_choices = retworkx.bipartition_tree(
+            tree,
+            pops,
+            float(pop_target),
+            float(epsilon)
+        )
 
     returns a list of tuples, with each tuple representing a distinct balanced
     edge that can be cut. The tuple contains the root of one of the two 
