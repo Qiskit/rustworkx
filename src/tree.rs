@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::cmp::Ordering;
 use hashbrown::HashSet;
+use std::cmp::Ordering;
 use std::collections::VecDeque;
 
 use super::{graph, weight_callable};
