@@ -62,9 +62,9 @@ class TestBipartition(unittest.TestCase):
         )
         self.assertEqual(len(balanced_edges), 1)
 
-        # Since this is already a spanning tree, bipartition_graph should
+        # Since this is already a spanning tree, bipartition_graph_mst should
         # behave identically. That is, it should be invariant to weight_fn
-        graph_balanced_edges = retworkx.bipartition_graph(
+        graph_balanced_edges = retworkx.bipartition_graph_mst(
             self.tree,
             lambda _: 1,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
@@ -82,7 +82,7 @@ class TestBipartition(unittest.TestCase):
         )
         self.assertEqual(len(balanced_edges), 1)
 
-        graph_balanced_edges = retworkx.bipartition_graph(
+        graph_balanced_edges = retworkx.bipartition_graph_mst(
             self.tree,
             lambda _: 1,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
@@ -100,7 +100,7 @@ class TestBipartition(unittest.TestCase):
         )
         self.assertEqual(len(balanced_edges), 3)
 
-        graph_balanced_edges = retworkx.bipartition_graph(
+        graph_balanced_edges = retworkx.bipartition_graph_mst(
             self.line,
             lambda _: 1,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
@@ -118,7 +118,7 @@ class TestBipartition(unittest.TestCase):
         )
         self.assertEqual(len(balanced_edges), 1)
 
-        graph_balanced_edges = retworkx.bipartition_graph(
+        graph_balanced_edges = retworkx.bipartition_graph_mst(
             self.line,
             lambda _: 1,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],

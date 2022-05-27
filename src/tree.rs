@@ -233,8 +233,8 @@ pub fn bipartition_tree(
     Ok(balanced_nodes)
 }
 
-/// Bipartition graph into two contiguous, population-balanced components.
-/// Assumes that the graph is contiguous. See :func:`~bipartition_tree` for
+/// Bipartition graph into two contiguous, population-balanced components using
+/// mst. Assumes that the graph is contiguous. See :func:`~bipartition_tree` for
 /// details on how balance is defined.
 ///
 /// :param PyGraph graph: Undirected graph
@@ -252,7 +252,7 @@ pub fn bipartition_tree(
 ///     two partitioned subtrees and the set of nodes making up that subtree.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, weight_fn, pop, target_pop, epsilon)")]
-pub fn bipartition_graph(
+pub fn bipartition_graph_mst(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: PyObject,

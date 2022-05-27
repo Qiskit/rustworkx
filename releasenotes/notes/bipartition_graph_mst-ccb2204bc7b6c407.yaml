@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    Added a new function :func:`~.bipartition_graph` that takes in a connected
+    Added a new function :func:`~.bipartition_graph_mst` that takes in a connected
     graph and tries to draw a minimum spanning tree and find a balanced cut
     edge to target using :func:`~.bipartition_tree`. If such a corresponding
     tree and edge cannnot be found, then it retries.

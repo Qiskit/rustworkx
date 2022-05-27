@@ -179,7 +179,7 @@ Other Algorithm Functions
    retworkx.core_number
    retworkx.graph_greedy_color
    retworkx.metric_closure
-   retworkx.bipartition_graph
+   retworkx.bipartition_graph_mst
 
 .. _generator_funcs:
 
