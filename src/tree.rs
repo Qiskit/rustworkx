@@ -11,7 +11,6 @@
 // under the License.
 
 use hashbrown::HashSet;
-use numpy::PyReadonlyArray1;
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 
@@ -174,29 +173,21 @@ fn _minimum_spanning_tree(
 pub fn bipartition_tree(
     _py: Python,
     spanning_tree: &graph::PyGraph,
-    pops: PyReadonlyArray1<f64>,
+    pops: Vec<f64>,
     pop_target: f64,
     epsilon: f64,
 ) -> PyResult<Vec<(usize, Vec<usize>)>> {
-    // See: https://github.com/Qiskit/retworkx/pull/572#discussion_r883643134
-    // There should be no other views of pops, so this should be fine
-    unsafe {
-        Ok(_bipartition_tree(
-            spanning_tree,
-            pops.as_slice_mut()?,
-            pop_target,
-            epsilon,
-        ))
-    }
+    Ok(_bipartition_tree(spanning_tree, pops, pop_target, epsilon))
 }
 
 /// Internal _bipartition_tree implementation.
 fn _bipartition_tree(
     spanning_tree: &graph::PyGraph,
-    pops: &mut [f64],
+    pops: Vec<f64>,
     pop_target: f64,
     epsilon: f64,
 ) -> Vec<(usize, Vec<usize>)> {
+    let mut pops = pops;
     let spanning_tree_graph = &spanning_tree.graph;
     let mut same_partition_tracker: Vec<Vec<usize>> =
         vec![vec![]; spanning_tree_graph.node_bound()]; // Keeps track of all all the nodes on the same side of the partition
@@ -275,18 +266,17 @@ pub fn bipartition_graph_mst(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: PyObject,
-    pops: PyReadonlyArray1<f64>,
+    pops: Vec<f64>,
     pop_target: f64,
     epsilon: f64,
 ) -> PyResult<Vec<(usize, Vec<usize>)>> {
     let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
     let mut mst = (*graph).clone();
-    let pops_slice: Vec<f64> = pops.to_vec()?;
 
     while balanced_nodes.is_empty() {
         mst.graph.clear_edges();
         _minimum_spanning_tree(py, graph, &mut mst, Some(weight_fn.clone()), 1.0)?;
-        balanced_nodes = _bipartition_tree(&mst, &mut pops_slice.clone(), pop_target, epsilon);
+        balanced_nodes = _bipartition_tree(&mst, pops.clone(), pop_target, epsilon);
     }
 
     Ok(balanced_nodes)
