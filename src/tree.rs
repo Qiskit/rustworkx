@@ -156,7 +156,7 @@ fn _minimum_spanning_tree(
 /// population of the tree into two connected subtrees that have population near
 /// the population target within some epsilon. The function returns a list of
 /// all such possible cuts, represented as the set of nodes in one
-/// partition/subtree.
+/// partition/subtree. Wraps around ``_bipartition_tree``.
 ///
 /// :param PyGraph graph: Spanning tree. Must be fully connected
 /// :param pops: The populations assigned to each node in the graph.
@@ -177,6 +177,16 @@ pub fn bipartition_tree(
     pop_target: f64,
     epsilon: f64,
 ) -> PyResult<Vec<(usize, Vec<usize>)>> {
+    Ok(_bipartition_tree(spanning_tree, pops, pop_target, epsilon))
+}
+
+/// Internal _bipartition_tree implementation.
+fn _bipartition_tree(
+    spanning_tree: &graph::PyGraph,
+    pops: Vec<f64>,
+    pop_target: f64,
+    epsilon: f64,
+) -> Vec<(usize, Vec<usize>)> {
     let mut pops = pops;
     let spanning_tree_graph = &spanning_tree.graph;
     let mut same_partition_tracker: Vec<Vec<usize>> =
@@ -230,7 +240,7 @@ pub fn bipartition_tree(
         seen_nodes.insert(node.index());
     }
 
-    Ok(balanced_nodes)
+    balanced_nodes
 }
 
 /// Bipartition graph into two contiguous, population-balanced components using
@@ -266,7 +276,7 @@ pub fn bipartition_graph_mst(
     while balanced_nodes.is_empty() {
         mst.graph.clear_edges();
         _minimum_spanning_tree(py, graph, &mut mst, Some(weight_fn.clone()), 1.0)?;
-        balanced_nodes = bipartition_tree(py, &mst, pops.clone(), pop_target, epsilon).unwrap();
+        balanced_nodes = _bipartition_tree(&mst, pops.clone(), pop_target, epsilon);
     }
 
     Ok(balanced_nodes)
