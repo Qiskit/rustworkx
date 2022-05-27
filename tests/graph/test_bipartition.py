@@ -73,7 +73,7 @@ class TestBipartition(unittest.TestCase):
         )
         self.assertEqual(balanced_edges, graph_balanced_edges)
 
-    def test_two_balanced_edges_tree(self):
+    def test_one_balanced_edge_tree_alt(self):
         balanced_edges = retworkx.bipartition_tree(
             self.tree,
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
