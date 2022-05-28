@@ -12,7 +12,9 @@
 
 use hashbrown::HashSet;
 use std::cmp::Ordering;
+use std::collections::LinkedList;
 use std::collections::VecDeque;
+use std::mem;
 
 use super::{graph, weight_callable};
 
@@ -188,23 +190,25 @@ fn _bipartition_tree(
 ) -> Vec<(usize, Vec<usize>)> {
     let mut pops = pops;
     let spanning_tree_graph = &spanning_tree.graph;
-    let mut same_partition_tracker: Vec<Vec<usize>> =
-        vec![vec![]; spanning_tree_graph.node_bound()]; // Keeps track of all all the nodes on the same side of the partition
+    let mut same_partition_tracker: Vec<LinkedList<usize>> =
+        vec![LinkedList::new(); spanning_tree_graph.node_bound()]; // Keeps track of all all the nodes on the same side of the partition
 
     let mut node_queue: VecDeque<NodeIndex> = VecDeque::<NodeIndex>::new();
     for leaf_node in spanning_tree_graph.node_indices() {
         if spanning_tree_graph.neighbors(leaf_node).count() == 1 {
             node_queue.push_back(leaf_node);
         }
-        same_partition_tracker[leaf_node.index()].push(leaf_node.index());
+        same_partition_tracker[leaf_node.index()].push_back(leaf_node.index());
     }
 
-    // BFS search for balanced nodes
-    let mut balanced_nodes: Vec<(usize, Vec<usize>)> = vec![];
+    // BFS search for balanced nodes using LinkedList since append is O(1)
+    let mut balanced_nodes: Vec<(usize, LinkedList<usize>)> = vec![];
     let mut seen_nodes = HashSet::with_capacity(spanning_tree_graph.node_count());
     while !node_queue.is_empty() {
         let node = node_queue.pop_front().unwrap();
-        let pop = pops[node.index()];
+        if seen_nodes.contains(&node.index()) {
+            continue;
+        }
 
         // Mark as seen; push to queue if only one unseen neighbor
         let unseen_neighbors: Vec<NodeIndex> = spanning_tree
@@ -214,32 +218,40 @@ fn _bipartition_tree(
             .collect();
 
         if unseen_neighbors.len() == 1 {
-            // This will be false if root
+            // At leaf, will be false at root
+            let pop = pops[node.index()];
+
+            // Update neighbor pop
             let neighbor = unseen_neighbors[0];
             pops[neighbor.index()] += pop;
-            let mut current_partition_tracker = same_partition_tracker[node.index()].clone();
+
+            // Check if balanced; mark as seen
+            if pop >= pop_target * (1.0 - epsilon) && pop <= pop_target * (1.0 + epsilon) {
+                balanced_nodes.push((node.index(), same_partition_tracker[node.index()].clone()));
+            }
+            seen_nodes.insert(node.index());
+
+            // Update neighbor partition tracker
+            let mut current_partition_tracker =
+                mem::take(&mut same_partition_tracker[node.index()]);
             same_partition_tracker[neighbor.index()].append(&mut current_partition_tracker);
 
-            if !node_queue.contains(&neighbor) {
-                node_queue.push_back(neighbor);
-            }
+            // Queue neighbor
+            node_queue.push_back(neighbor);
         } else if unseen_neighbors.is_empty() {
-            // root
+            // Is root
             break;
         } else {
-            // Not at the leaves of the unseen subgraph
+            // Not a leaf yet
             continue;
         }
-
-        // Check if balanced
-        if pop >= pop_target * (1.0 - epsilon) && pop <= pop_target * (1.0 + epsilon) {
-            balanced_nodes.push((node.index(), same_partition_tracker[node.index()].clone()));
-        }
-
-        seen_nodes.insert(node.index());
     }
 
+    // Convert LinkedList back to vec
     balanced_nodes
+        .iter()
+        .map(|(node, partition_nodes)| (*node, partition_nodes.iter().copied().collect()))
+        .collect()
 }
 
 /// Bipartition graph into two contiguous, population-balanced components using
