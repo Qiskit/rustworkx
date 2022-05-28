@@ -171,13 +171,12 @@ fn _minimum_spanning_tree(
 #[pyfunction]
 #[pyo3(text_signature = "(spanning_tree, pops, target_pop, epsilon)")]
 pub fn bipartition_tree(
-    _py: Python,
     spanning_tree: &graph::PyGraph,
     pops: Vec<f64>,
     pop_target: f64,
     epsilon: f64,
-) -> PyResult<Vec<(usize, Vec<usize>)>> {
-    Ok(_bipartition_tree(spanning_tree, pops, pop_target, epsilon))
+) -> Vec<(usize, Vec<usize>)> {
+    _bipartition_tree(spanning_tree, pops, pop_target, epsilon)
 }
 
 /// Internal _bipartition_tree implementation.
