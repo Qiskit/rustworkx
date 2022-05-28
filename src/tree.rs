@@ -260,7 +260,7 @@ fn _bipartition_tree(
 ///     balanced edge that can be cut. The tuple contains the root of one of the
 ///     two partitioned subtrees and the set of nodes making up that subtree.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, weight_fn, pop, target_pop, epsilon)")]
+#[pyo3(text_signature = "(graph, weight_fn, pops, target_pop, epsilon)")]
 pub fn bipartition_graph_mst(
     py: Python,
     graph: &graph::PyGraph,
