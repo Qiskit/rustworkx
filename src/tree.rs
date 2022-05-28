@@ -169,7 +169,7 @@ fn _minimum_spanning_tree(
 ///     balanced edge that can be cut. The tuple contains the root of one of the
 ///     two partitioned subtrees and the set of nodes making up that subtree.
 #[pyfunction]
-#[pyo3(text_signature = "(spanning_tree, pop, target_pop, epsilon)")]
+#[pyo3(text_signature = "(spanning_tree, pops, target_pop, epsilon)")]
 pub fn bipartition_tree(
     _py: Python,
     spanning_tree: &graph::PyGraph,
