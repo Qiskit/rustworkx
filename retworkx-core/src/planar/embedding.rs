@@ -8,10 +8,11 @@ use std::hash::Hash;
 
 use crate::dictmap::*;
 use crate::planar::is_planar;
-use crate::planar::lr_planar::LRState;
+use crate::planar::lr_planar::{LRState, Sign::Plus};
 
 pub type Point = [f64; 2];
 
+#[derive(Debug)]
 pub struct CwCcw<T> {
     cw: Option<T>,
     ccw: Option<T>,
@@ -35,6 +36,7 @@ impl<T> CwCcw<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct FirstNbr<T> {
     first_nbr: Option<T>,
 }
@@ -145,6 +147,7 @@ impl PlanarEmbedding {
             found_weight.ccw = Some(new_node);
         }
     }
+
     fn get_edge_weight(&self, v: NodeIndex, w: NodeIndex, cw: bool) -> NodeIndex {
         let found_edge = self.embedding.find_edge(v, w);
         let found_weight = self.embedding.edge_weight(found_edge.unwrap()).unwrap();
@@ -172,11 +175,11 @@ pub fn create_embedding<G: GraphBase + NodeIndexable>(
     <G as GraphBase>::NodeId: Hash + Eq,
     <G as GraphBase>::NodeId: Debug,
 {
-    for node in lr_state.dir_graph.node_indices() {
-        for edge in lr_state.dir_graph.edges(node) {
-            println!("Edge {:?}, {:?}", edge.source(), edge.target());
-        }
-    }
+    // for node in lr_state.dir_graph.node_indices() {
+    //     for edge in lr_state.dir_graph.edges(node) {
+    //         println!("Edge {:?}, {:?}", edge.source(), edge.target());
+    //     }
+    // }
 
     let mut ordered_adjs: Vec<Vec<NodeIndex>> = Vec::new();
 
@@ -186,6 +189,8 @@ pub fn create_embedding<G: GraphBase + NodeIndexable>(
         let first_nbr = FirstNbr::<NodeIndex>::default();
         planar_emb.embedding.add_node(first_nbr);
     }
+
+
     for x in &ordered_adjs {
         println!("ordered {:?}", x);
     }
@@ -193,50 +198,46 @@ pub fn create_embedding<G: GraphBase + NodeIndexable>(
         println!("nesting {:?}", x);
     }
 
+
     for v in lr_state.dir_graph.node_indices() {
         let mut prev_node: Option<NodeIndex> = None;
         for w in &ordered_adjs[v.index()] {
-            //println!("v {:?} w {:?} prev {:?}", v, *w, prev_node);
             planar_emb.add_half_edge_cw(v, *w, prev_node);
             prev_node = Some(*w)
         }
     }
 
-    //println!("roots {:?}", &lr_state.roots);
     let mut left_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
     let mut right_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
     let mut idx: Vec<usize> = vec![0; ordered_adjs.len()];
-    //println!("First idx {:?}", idx);
-    //idx.push(vec![0; ordered_adjs.len()]);
 
     for v_id in lr_state.roots.iter() {
         let v = id_to_index(&lr_state.graph, *v_id);
         println!("second v {:?} v index {:?} ord {:?} idx {:?}", v, v.index(), ordered_adjs[v.index()], idx);
 
         let mut dfs_stack: Vec<NodeIndex> = vec![v];
-        //println!("idx {:?}", idx);
 
         println!("lr eparent {:?}", lr_state.eparent);
         while dfs_stack.len() > 0 {
             let v = dfs_stack.pop().unwrap();
-            //println!("v {:?} {:?}", v, idx);
             let idx2 = idx[v.index()];
             for (w_pos, w) in ordered_adjs[v.index()][idx2..].iter().enumerate() {
-                //println!("w {:?} {:?}", w, idx);
                 let w_id = index_to_id(&lr_state.graph, *w);
                 println!("third v {:?} vindex {:?} w {:?} w_id {:?} w_pos {:?} idx {:?} ", v, v.index(), *w, w_id, w_pos, idx);
                 idx[v.index()] += 1;
 
                 let ei = (v, w);
-                let (mut v1, mut v2) = (NodeIndex::new(0), NodeIndex::new(0));
+                let ei_id = (index_to_id(&lr_state.graph, v), index_to_id(&lr_state.graph, *w));
+                //let (mut v1, mut v2) = (NodeIndex::default(), NodeIndex::default());
                 if lr_state.eparent.contains_key(&w_id) {
-                    let e_id = lr_state.eparent[&w_id];
-                    (v1, v2) = (
-                        id_to_index(&lr_state.graph, e_id.0),
-                        id_to_index(&lr_state.graph, e_id.1),
+                    let parent_id = lr_state.eparent[&w_id];
+                    let (v1, v2) = (
+                        id_to_index(&lr_state.graph, parent_id.0),
+                        id_to_index(&lr_state.graph, parent_id.1),
                     );
 
                     if ei == (v1, &v2) {
+                        println!("in ei {:?}", ei);
                         planar_emb.add_half_edge_first(*w, v);
                         left_ref.entry(v).or_insert(*w);
                         right_ref.entry(v).or_insert(*w);
@@ -244,36 +245,18 @@ pub fn create_embedding<G: GraphBase + NodeIndexable>(
                         dfs_stack.push(*w);
                         break;
                     } else {
-                        planar_emb.add_half_edge_cw(*w, v, Some(right_ref[w]));
+                        if lr_state.side[&ei_id] == Plus {
+                            planar_emb.add_half_edge_cw(*w, v, Some(right_ref[w]));
+                        } else {
+                            planar_emb.add_half_edge_ccw(*w, v, Some(left_ref[w]));
+                            left_ref.entry(*w).or_insert(v);
+                        }
+                        println!("in else {:?}", ei);
                     }
                 }
             }
         }
     }
-
-    // for v in self.DG:  # sort the adjacency lists by nesting depth
-    //     # note: this sorting leads to non linear time
-    //     self.ordered_adjs[v] = sorted(
-    //         self.DG[v], key=lambda x: self.nesting_depth2[(v, x)]
-    //     )
-    // for e in self.DG.edges:
-    //     self.nesting_depth2[e] = self.sign(e) * self.nesting_depth2[e]
-
-    // self.embedding.add_nodes_from(self.DG.nodes)
-    // for v in self.DG:
-    //     # sort the adjacency lists again
-    //     self.ordered_adjs[v] = sorted(
-    //         self.DG[v], key=lambda x: self.nesting_depth2[(v, x)]
-    //     )
-    //     # initialize the embedding
-    //     previous_node = None
-    //     for w in self.ordered_adjs[v]:
-    //         self.embedding.add_half_edge_cw(v, w, previous_node)
-    //         previous_node = w
-
-    // # compute the complete embedding
-    // for v in self.roots:
-    //     self.dfs_embedding(v)
 }
 
 pub fn combinatorial_embedding_to_pos(planar_emb: &PlanarEmbedding) -> Vec<Point> {

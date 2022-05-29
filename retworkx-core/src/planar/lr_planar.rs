@@ -194,6 +194,7 @@ where
     }
 }
 
+#[derive(PartialEq)]
 pub enum Sign {
     Plus,
     Minus,
@@ -253,7 +254,7 @@ where
         + Visitable,
     G::NodeId: Hash + Eq,
 {
-    fn new(graph: G) -> Self {
+    pub fn new(graph: G) -> Self {
         let num_nodes = graph.node_count();
         let num_edges = graph.edge_count();
 
@@ -692,7 +693,7 @@ where
 /// ]);
 /// assert!(is_planar(&grid))
 /// ```
-pub fn is_planar<G>(graph: G) -> (bool, LRState<G>)
+pub fn is_planar<G>(graph: G, lr_state: &mut LRState<G>) -> bool
 where
     G: GraphProp<EdgeType = Undirected>
         + NodeCount
@@ -703,30 +704,30 @@ where
         + Visitable,
     G::NodeId: Hash + Eq,
 {
-    let mut state = LRState::new(graph);
-
-    // Dfs orientation phase
+    // let lr_state = match state {
+    //     Some(state) => state.unwrap(),
+    //     None => &mut LRState::new(graph),
+    // };
+    // // Dfs orientation phase
     depth_first_search(graph, graph.node_identifiers(), |event| {
-        state.lr_orientation_visitor(event)
+        lr_state.lr_orientation_visitor(event)
     });
 
-    println!("LR before roots");
     // Left - Right partition.
-    for v in state.roots.clone() {
-        let res = lr_visit_ordered_dfs_tree(&mut state, v, |state, event| {
-            state.lr_testing_visitor(event)
+    for v in lr_state.roots.clone() {
+        let res = lr_visit_ordered_dfs_tree(lr_state, v, |lr_state, event| {
+            lr_state.lr_testing_visitor(event)
         });
         if res.is_err() {
-            return (false, state);
+            return false;
         }
     }
-    println!("LR true");
 
-    for node in state.dir_graph.node_indices() {
-        for edge in state.dir_graph.edges(node) {
+    for node in lr_state.dir_graph.node_indices() {
+        for edge in lr_state.dir_graph.edges(node) {
             println!("Edge {:?}, {:?}", edge.source(), edge.target());
         }
     }
 
-    (true, state)
+    true
 }

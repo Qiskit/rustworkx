@@ -15,6 +15,7 @@ pub fn planar_layout(
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
+
     let node_num = graph.node_count();
     if node_num == 0 {
         return Pos2DMapping {
@@ -22,7 +23,8 @@ pub fn planar_layout(
         };
     }
 
-    let (its_planar, lr_state) = is_planar(graph);
+    let mut lr_state = LRState::new(graph);
+    let its_planar = is_planar(graph, &mut lr_state);
 
     if !its_planar {
         return Pos2DMapping {
@@ -33,6 +35,11 @@ pub fn planar_layout(
         planar_emb.embedding = Graph::with_capacity(node_num, 0);
 
         create_embedding(&mut planar_emb, &lr_state);
+
+        for node in planar_emb.embedding.node_indices() {
+            println!("emb node {:?}", planar_emb.embedding[node]);
+            println!("emb edges {:?}", planar_emb.embedding.edges(node));
+        }
 
         let mut pos = combinatorial_embedding_to_pos(&planar_emb);
 
