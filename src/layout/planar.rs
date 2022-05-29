@@ -6,14 +6,15 @@ use crate::iterators::Pos2DMapping;
 use crate::Graph;
 use crate::StablePyGraph;
 use retworkx_core::dictmap::*;
-use retworkx_core::planar::{PlanarEmbedding, is_planar, create_embedding, combinatorial_embedding_to_pos};
+use retworkx_core::planar::{
+    combinatorial_embedding_to_pos, create_embedding, is_planar, LRState, PlanarEmbedding,
+};
 
 pub fn planar_layout(
     graph: &StablePyGraph<Undirected>,
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
-
     let node_num = graph.node_count();
     if node_num == 0 {
         return Pos2DMapping {
@@ -28,11 +29,10 @@ pub fn planar_layout(
             pos_map: DictMap::new(),
         };
     } else {
-
         let mut planar_emb = PlanarEmbedding::default();
         planar_emb.embedding = Graph::with_capacity(node_num, 0);
 
-        create_embedding(&planar_emb, &lr_state);
+        create_embedding(&mut planar_emb, &lr_state);
 
         let mut pos = combinatorial_embedding_to_pos(&planar_emb);
 

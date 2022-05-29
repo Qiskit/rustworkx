@@ -12,10 +12,10 @@
 
 //! Module for planar graphs.
 
-pub mod lr_planar;
 pub mod embedding;
+pub mod lr_planar;
 
-pub use lr_planar::is_planar;
-pub use embedding::PlanarEmbedding;
-pub use embedding::create_embedding;
 pub use embedding::combinatorial_embedding_to_pos;
+pub use embedding::create_embedding;
+pub use embedding::PlanarEmbedding;
+pub use lr_planar::{is_planar, LRState};

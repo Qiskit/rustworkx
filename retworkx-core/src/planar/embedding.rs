@@ -1,12 +1,10 @@
-use petgraph::prelude::*;
-use petgraph::Directed;
-use petgraph::visit::{GraphBase, NodeIndexable};
-use petgraph::graph::Graph;
-use std::hash::Hash;
 use hashbrown::hash_map::HashMap;
+use petgraph::graph::Graph;
+use petgraph::prelude::*;
+use petgraph::visit::{GraphBase, NodeIndexable};
+use petgraph::Directed;
 use std::fmt::Debug;
-use std::ops::IndexMut;
-use petgraph::adj::IndexType;
+use std::hash::Hash;
 
 use crate::dictmap::*;
 use crate::planar::is_planar;
@@ -159,51 +157,113 @@ impl PlanarEmbedding {
     }
 }
 
-pub fn create_embedding<G: GraphBase>(
-    planar_emb: &PlanarEmbedding,
-    lr_state: &LRState<G>,
-) where <G as GraphBase>::NodeId: Hash + Eq, <G as GraphBase>::NodeId: Debug {
-    //println!("ROOTS {:?}", lr_state.roots);
+fn id_to_index<G: GraphBase + NodeIndexable>(graph: G, node_id: G::NodeId) -> NodeIndex {
+    NodeIndex::new(graph.to_index(node_id))
+}
 
+fn index_to_id<G: GraphBase + NodeIndexable>(graph: G, node_index: NodeIndex) -> G::NodeId {
+    graph.from_index(node_index.index())
+}
+
+pub fn create_embedding<G: GraphBase + NodeIndexable>(
+    planar_emb: &mut PlanarEmbedding,
+    lr_state: &LRState<G>,
+) where
+    <G as GraphBase>::NodeId: Hash + Eq,
+    <G as GraphBase>::NodeId: Debug,
+{
     for node in lr_state.dir_graph.node_indices() {
         for edge in lr_state.dir_graph.edges(node) {
             println!("Edge {:?}, {:?}", edge.source(), edge.target());
         }
     }
-    let mut ordered_adjs: HashMap<NodeIndex, Vec<NodeIndex>> = HashMap::new();
+
+    let mut ordered_adjs: Vec<Vec<NodeIndex>> = Vec::new();
+
     for v in lr_state.dir_graph.node_indices() {
-        ordered_adjs.insert(v, lr_state.dir_graph.edges(v).map(|e| e.target()).collect());
+        ordered_adjs.push(lr_state.dir_graph.edges(v).map(|e| e.target()).collect());
+
+        let first_nbr = FirstNbr::<NodeIndex>::default();
+        planar_emb.embedding.add_node(first_nbr);
     }
-    for x in ordered_adjs {
+    for x in &ordered_adjs {
         println!("ordered {:?}", x);
     }
     for x in &lr_state.nesting_depth {
         println!("nesting {:?}", x);
     }
-    let mut emb_nesting: HashMap<(NodeIndex, NodeIndex), usize> = HashMap::new();
-    emb_nesting = lr_state.nesting_depth
-                    .iter()
-                    .map(|(a, b)| (a.index(), b.index()))
-                    .collect();
-    for v in ordered_adjs {
-        ordered_adjs[&v.0].sort_by_key(|n| lr_state.nesting_depth[(&v.0, n)]);
+
+    for v in lr_state.dir_graph.node_indices() {
+        let mut prev_node: Option<NodeIndex> = None;
+        for w in &ordered_adjs[v.index()] {
+            //println!("v {:?} w {:?} prev {:?}", v, *w, prev_node);
+            planar_emb.add_half_edge_cw(v, *w, prev_node);
+            prev_node = Some(*w)
+        }
     }
-    for x in ordered_adjs {
-        println!("ordered {:?}", x);
+
+    //println!("roots {:?}", &lr_state.roots);
+    let mut left_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
+    let mut right_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
+    let mut idx: Vec<usize> = vec![0; ordered_adjs.len()];
+    //println!("First idx {:?}", idx);
+    //idx.push(vec![0; ordered_adjs.len()]);
+
+    for v_id in lr_state.roots.iter() {
+        let v = id_to_index(&lr_state.graph, *v_id);
+        println!("second v {:?} v index {:?} ord {:?} idx {:?}", v, v.index(), ordered_adjs[v.index()], idx);
+
+        let mut dfs_stack: Vec<NodeIndex> = vec![v];
+        //println!("idx {:?}", idx);
+
+        println!("lr eparent {:?}", lr_state.eparent);
+        while dfs_stack.len() > 0 {
+            let v = dfs_stack.pop().unwrap();
+            //println!("v {:?} {:?}", v, idx);
+            let idx2 = idx[v.index()];
+            for (w_pos, w) in ordered_adjs[v.index()][idx2..].iter().enumerate() {
+                //println!("w {:?} {:?}", w, idx);
+                let w_id = index_to_id(&lr_state.graph, *w);
+                println!("third v {:?} vindex {:?} w {:?} w_id {:?} w_pos {:?} idx {:?} ", v, v.index(), *w, w_id, w_pos, idx);
+                idx[v.index()] += 1;
+
+                let ei = (v, w);
+                let (mut v1, mut v2) = (NodeIndex::new(0), NodeIndex::new(0));
+                if lr_state.eparent.contains_key(&w_id) {
+                    let e_id = lr_state.eparent[&w_id];
+                    (v1, v2) = (
+                        id_to_index(&lr_state.graph, e_id.0),
+                        id_to_index(&lr_state.graph, e_id.1),
+                    );
+
+                    if ei == (v1, &v2) {
+                        planar_emb.add_half_edge_first(*w, v);
+                        left_ref.entry(v).or_insert(*w);
+                        right_ref.entry(v).or_insert(*w);
+                        dfs_stack.push(v);
+                        dfs_stack.push(*w);
+                        break;
+                    } else {
+                        planar_emb.add_half_edge_cw(*w, v, Some(right_ref[w]));
+                    }
+                }
+            }
+        }
     }
+
     // for v in self.DG:  # sort the adjacency lists by nesting depth
     //     # note: this sorting leads to non linear time
     //     self.ordered_adjs[v] = sorted(
-    //         self.DG[v], key=lambda x: self.nesting_depth[(v, x)]
+    //         self.DG[v], key=lambda x: self.nesting_depth2[(v, x)]
     //     )
     // for e in self.DG.edges:
-    //     self.nesting_depth[e] = self.sign(e) * self.nesting_depth[e]
+    //     self.nesting_depth2[e] = self.sign(e) * self.nesting_depth2[e]
 
     // self.embedding.add_nodes_from(self.DG.nodes)
     // for v in self.DG:
     //     # sort the adjacency lists again
     //     self.ordered_adjs[v] = sorted(
-    //         self.DG[v], key=lambda x: self.nesting_depth[(v, x)]
+    //         self.DG[v], key=lambda x: self.nesting_depth2[(v, x)]
     //     )
     //     # initialize the embedding
     //     previous_node = None
@@ -211,24 +271,17 @@ pub fn create_embedding<G: GraphBase>(
     //         self.embedding.add_half_edge_cw(v, w, previous_node)
     //         previous_node = w
 
-    // # Free no longer used variables
-    // self.DG = None
-    // self.nesting_depth = None
-    // self.ref = None
-
     // # compute the complete embedding
     // for v in self.roots:
     //     self.dfs_embedding(v)
-
 }
 
-pub fn combinatorial_embedding_to_pos(
-    planar_emb: &PlanarEmbedding,
-) -> Vec<Point> {
+pub fn combinatorial_embedding_to_pos(planar_emb: &PlanarEmbedding) -> Vec<Point> {
     let mut pos: Vec<Point> = Vec::with_capacity(planar_emb.embedding.node_count());
     if planar_emb.embedding.node_count() < 4 {
         let default_pos = [[0.0, 0.0], [2.0, 0.0], [1.0, 1.0]].to_vec();
-        pos = planar_emb.embedding
+        pos = planar_emb
+            .embedding
             .node_indices()
             .map(|n| default_pos[n.index()])
             .collect();
@@ -245,28 +298,38 @@ pub fn combinatorial_embedding_to_pos(
     pos
 }
 
-fn triangulate_embedding(
-    planar_emb: &PlanarEmbedding,
-    fully_triangulate: bool,
-) -> Vec<NodeIndex> {
+fn triangulate_embedding(planar_emb: &PlanarEmbedding, fully_triangulate: bool) -> Vec<NodeIndex> {
     if planar_emb.embedding.node_count() <= 1 {
-        return planar_emb.embedding.node_indices().map(|n| n).collect::<Vec<_>>();
+        return planar_emb
+            .embedding
+            .node_indices()
+            .map(|n| n)
+            .collect::<Vec<_>>();
     }
     //let component_nodes = connected_components(embedding);
-    let outer_face = planar_emb.embedding.node_indices().map(|n| n).collect::<Vec<_>>();
+    let outer_face = planar_emb
+        .embedding
+        .node_indices()
+        .map(|n| n)
+        .collect::<Vec<_>>();
     println!("DFLT {:?}", outer_face);
     outer_face
 }
 
-fn canonical_ordering(
-    planar_emb: &PlanarEmbedding,
-    outer_face: Vec<NodeIndex>,
-) -> Vec<NodeIndex> {
+fn canonical_ordering(planar_emb: &PlanarEmbedding, outer_face: Vec<NodeIndex>) -> Vec<NodeIndex> {
     if planar_emb.embedding.node_count() <= 1 {
-        return planar_emb.embedding.node_indices().map(|n| n).collect::<Vec<_>>();
+        return planar_emb
+            .embedding
+            .node_indices()
+            .map(|n| n)
+            .collect::<Vec<_>>();
     }
     //let component_nodes = connected_components(embedding);
-    let outer_face = planar_emb.embedding.node_indices().map(|n| n).collect::<Vec<_>>();
+    let outer_face = planar_emb
+        .embedding
+        .node_indices()
+        .map(|n| n)
+        .collect::<Vec<_>>();
     println!("DFLT {:?}", outer_face);
     outer_face
 }
