@@ -13,6 +13,7 @@
 use std::cmp::Ordering;
 use std::hash::Hash;
 use std::vec::IntoIter;
+use std::ops::Mul;
 
 use hashbrown::{hash_map::Entry, HashMap};
 use petgraph::{
@@ -195,7 +196,7 @@ where
 }
 
 #[derive(PartialEq)]
-pub enum Sign {
+pub enum Sign{
     Plus,
     Minus,
 }
@@ -236,7 +237,7 @@ where
     /// marks the top conflict pair when an edge was pushed in the stack.
     stack_emarker: HashMap<Edge<G>, ConflictPair<Edge<G>>>,
     /// edge relative to which side is defined.
-    eref: HashMap<Edge<G>, Edge<G>>,
+    pub eref: HashMap<Edge<G>, Edge<G>>,
     /// side of edge, or modifier for side of reference edge.
     pub side: HashMap<Edge<G>, Sign>,
     /// directed graph used to build the embedding
@@ -723,11 +724,11 @@ where
         }
     }
 
-    for node in lr_state.dir_graph.node_indices() {
-        for edge in lr_state.dir_graph.edges(node) {
-            println!("Edge {:?}, {:?}", edge.source(), edge.target());
-        }
-    }
+    // for node in lr_state.dir_graph.node_indices() {
+    //     for edge in lr_state.dir_graph.edges(node) {
+    //         println!("Edge {:?}, {:?}", edge.source(), edge.target());
+    //     }
+    // }
 
     true
 }
