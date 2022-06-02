@@ -69,10 +69,19 @@ pub fn all_pairs_bellman_ford_path_lengths<Ty: EdgeType + Sync>(
     let out_map: DictMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
-            let path_lenghts: Option<Vec<Option<f64>>> =
+            if *negative_cycle.read().unwrap() {
+                return (
+                    x.index(),
+                    PathLengthMapping {
+                        path_lengths: DictMap::new(),
+                    },
+                );
+            }
+
+            let path_lengths: Option<Vec<Option<f64>>> =
                 bellman_ford(graph, x, |e| edge_cost(e.id()), None).unwrap();
 
-            if path_lenghts.is_none() {
+            if path_lengths.is_none() {
                 let mut cycle = negative_cycle.write().unwrap();
                 *cycle = true;
                 return (
@@ -84,7 +93,7 @@ pub fn all_pairs_bellman_ford_path_lengths<Ty: EdgeType + Sync>(
             }
 
             let out_map = PathLengthMapping {
-                path_lengths: path_lenghts
+                path_lengths: path_lengths
                     .unwrap()
                     .into_iter()
                     .enumerate()
@@ -153,12 +162,21 @@ pub fn all_pairs_bellman_ford_shortest_paths<Ty: EdgeType + Sync>(
         paths: node_indices
             .into_par_iter()
             .map(|x| {
+                if *negative_cycle.read().unwrap() {
+                    return (
+                        x.index(),
+                        PathMapping {
+                            paths: DictMap::new(),
+                        },
+                    );
+                }
+
                 let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
                     DictMap::with_capacity(graph.node_count());
-                let path_lenghts: Option<Vec<Option<f64>>> =
+                let path_lengths: Option<Vec<Option<f64>>> =
                     bellman_ford(graph, x, |e| edge_cost(e.id()), Some(&mut paths)).unwrap();
 
-                if path_lenghts.is_none() {
+                if path_lengths.is_none() {
                     let mut cycle = negative_cycle.write().unwrap();
                     *cycle = true;
                     return (
