@@ -33,6 +33,8 @@ Shortest Paths
    retworkx.all_pairs_dijkstra_path_lengths
    retworkx.bellman_ford_shortest_paths
    retworkx.bellman_ford_shortest_path_lengths
+   retworkx.all_pairs_bellman_ford_shortest_paths
+   retworkx.all_pairs_bellman_ford_path_lengths
    retworkx.negative_edge_cycle
    retworkx.find_negative_cycle
    retworkx.distance_matrix
@@ -289,6 +291,8 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_all_pairs_dijkstra_path_lengths
    retworkx.digraph_bellman_ford_shortest_path_lengths
    retworkx.digraph_bellman_ford_shortest_path_lengths
+   retworkx.digraph_all_pairs_bellman_ford_shortest_paths
+   retworkx.digraph_all_pairs_bellman_ford_path_lengths
    retworkx.digraph_k_shortest_path_lengths
    retworkx.digraph_dfs_edges
    retworkx.digraph_dfs_search
@@ -341,6 +345,8 @@ typed API based on the data type.
    retworkx.graph_all_pairs_dijkstra_path_lengths
    retworkx.graph_bellman_ford_shortest_path_lengths
    retworkx.graph_bellman_ford_shortest_path_lengths
+   retworkx.graph_all_pairs_bellman_ford_shortest_paths
+   retworkx.graph_all_pairs_bellman_ford_path_lengths
    retworkx.graph_dfs_edges
    retworkx.graph_dfs_search
    retworkx.graph_transitivity
