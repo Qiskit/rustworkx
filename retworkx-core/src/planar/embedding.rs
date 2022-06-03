@@ -1,4 +1,5 @@
 use hashbrown::hash_map::HashMap;
+use hashbrown::HashSet;
 use petgraph::graph::Edge;
 use petgraph::graph::Graph;
 use petgraph::prelude::*;
@@ -7,19 +8,20 @@ use petgraph::Directed;
 use rayon::prelude::*;
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::ops::Mul;
+
+use crate::connectivity::connected_components;
 
 use crate::planar::lr_planar::{LRState, Sign};
 
 pub type Point = [f64; 2];
 
-#[derive(Debug)]
-pub struct CwCcw<T> {
+#[derive(Debug, Clone)]
+pub struct CwCcw<T: Clone> {
     cw: Option<T>,
     ccw: Option<T>,
 }
 
-impl<T> Default for CwCcw<T> {
+impl<T: Clone> Default for CwCcw<T> {
     fn default() -> Self {
         CwCcw {
             cw: None,
@@ -28,31 +30,41 @@ impl<T> Default for CwCcw<T> {
     }
 }
 
-impl<T> CwCcw<T> {
+impl<T: Clone> CwCcw<T> {
     fn new(cw: T, ccw: T) -> Self {
         CwCcw {
             cw: Some(cw),
             ccw: Some(ccw),
         }
     }
+    fn clone(&self) -> Self {
+        CwCcw {
+            cw: self.cw.clone(),
+            ccw: self.ccw.clone(),
+        }
+    }
 }
 
-#[derive(Debug)]
-pub struct FirstNbr<T> {
+#[derive(Debug, Clone)]
+pub struct FirstNbr<T: Clone> {
     first_nbr: Option<T>,
 }
 
-impl<T> Default for FirstNbr<T> {
+impl<T: Clone> Default for FirstNbr<T> {
     fn default() -> Self {
         FirstNbr { first_nbr: None }
     }
 }
 
-impl<T> FirstNbr<T> {
+impl<T: Clone> FirstNbr<T> {
     fn new(first_nbr: T) -> Self {
         FirstNbr {
             first_nbr: Some(first_nbr),
         }
+    }
+
+    fn clone(&self) -> Option<T> {
+        self.first_nbr.clone()
     }
 }
 
@@ -72,6 +84,27 @@ impl PlanarEmbedding {
         PlanarEmbedding {
             embedding: Graph::<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>::new(),
         }
+    }
+
+    fn clone(&self) -> Graph<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed> {
+        self.embedding.clone()
+    }
+
+    fn neighbors_cw_order(&mut self, v: NodeIndex) -> Vec<NodeIndex> {
+        let mut nbrs: Vec<NodeIndex> = vec![];
+        let mut first_nbr = self.embedding[v].first_nbr;
+        if first_nbr.is_none() {
+            return nbrs
+        }
+        let start_node = first_nbr.unwrap();
+        nbrs.push(start_node);
+
+        let mut current_node = self.get_edge_weight(v, start_node, true);
+        while start_node != current_node {
+            nbrs.push(current_node);
+            current_node = self.get_edge_weight(v, current_node, true);
+        }
+        nbrs
     }
 
     fn add_half_edge_cw(
@@ -157,6 +190,11 @@ impl PlanarEmbedding {
         } else {
             found_weight.ccw.unwrap()
         }
+    }
+
+    fn connect_components(&mut self, v: NodeIndex, w: NodeIndex) {
+        self.add_half_edge_first(v, w);
+        self.add_half_edge_first(w, v);
     }
 }
 
@@ -301,8 +339,7 @@ pub fn create_embedding<G: GraphBase + NodeIndexable>(
         Edge<G>: Hash + Eq + Copy,
     {
         let mut dfs_stack: Vec<Edge<G>> = vec![edge];
-        let mut old_ref: HashMap<Edge<G>, Edge<G>> =
-            HashMap::with_capacity(eref.len());
+        let mut old_ref: HashMap<Edge<G>, Edge<G>> = HashMap::with_capacity(eref.len());
 
         // """Resolve the relative side of an edge to the absolute side."""
 
@@ -330,60 +367,82 @@ pub fn create_embedding<G: GraphBase + NodeIndexable>(
     }
 }
 
-pub fn embedding_to_pos(planar_emb: &PlanarEmbedding) -> Vec<Point> {
+pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
     let mut pos: Vec<Point> = Vec::with_capacity(planar_emb.embedding.node_count());
     if planar_emb.embedding.node_count() < 4 {
         let default_pos = [[0.0, 0.0], [2.0, 0.0], [1.0, 1.0]].to_vec();
-        pos = planar_emb
+        return planar_emb
             .embedding
             .node_indices()
             .map(|n| default_pos[n.index()])
             .collect();
     }
-    let outer_face = triangulate_embedding(&planar_emb, true);
+    let outer_face = triangulate_embedding(planar_emb);
 
     let right_t_child = HashMap::<NodeIndex, usize>::new();
     let left_t_child = HashMap::<NodeIndex, usize>::new();
     let delta_x = HashMap::<NodeIndex, usize>::new();
     let y_coord = HashMap::<NodeIndex, usize>::new();
 
-    let node_list = canonical_ordering(&planar_emb, outer_face);
+    let node_list = canonical_ordering(planar_emb, outer_face);
 
     pos
 }
 
-fn triangulate_embedding(planar_emb: &PlanarEmbedding, fully_triangulate: bool) -> Vec<NodeIndex> {
-    if planar_emb.embedding.node_count() <= 1 {
-        return planar_emb
-            .embedding
-            .node_indices()
-            .map(|n| n)
-            .collect::<Vec<_>>();
+fn triangulate_embedding(
+    planar_emb: &mut PlanarEmbedding,
+) -> Vec<NodeIndex> {
+    let component_sets = connected_components(&planar_emb.embedding);
+
+    for i in 0..(component_sets.len() - 1) {
+        let v1 = component_sets[i].iter().next().unwrap();
+        let v2 = component_sets[i + 1].iter().next().unwrap();
+        planar_emb.connect_components(*v1, *v2);
     }
-    //let component_nodes = connected_components(embedding);
-    let outer_face = planar_emb
-        .embedding
-        .node_indices()
-        .map(|n| n)
-        .collect::<Vec<_>>();
-    // println!("DFLT {:?}", outer_face);
+    let mut outer_face = vec![];
+    let mut face_list = vec![];
+    let mut edges_counted:HashSet<NodeIndex> = HashSet::new();
+
+    for v in planar_emb.embedding.node_indices() {
+        for w in planar_emb.neighbors_cw_order(v) {
+            let new_face = make_bi_connected(planar_emb, v, w, &mut edges_counted);
+            let new_len = new_face.len();
+            if new_len > 0 {
+                face_list.push(new_face.clone());
+                if new_len > outer_face.len() {
+                    outer_face = new_face;
+                }
+            }
+        }
+    }
+    for face in face_list {
+        if face != outer_face {
+            triangulate_face(planar_emb, face[0], face[1]);
+        }
+    }
+    println!("outer_face {:?}", outer_face);
     outer_face
 }
 
-fn canonical_ordering(planar_emb: &PlanarEmbedding, outer_face: Vec<NodeIndex>) -> Vec<NodeIndex> {
-    if planar_emb.embedding.node_count() <= 1 {
-        return planar_emb
-            .embedding
-            .node_indices()
-            .map(|n| n)
-            .collect::<Vec<_>>();
-    }
-    //let component_nodes = connected_components(embedding);
-    let outer_face = planar_emb
-        .embedding
-        .node_indices()
-        .map(|n| n)
-        .collect::<Vec<_>>();
-    // println!("DFLT {:?}", outer_face);
-    outer_face
+fn triangulate_face(planar_emb: &PlanarEmbedding, v1: NodeIndex, v2: NodeIndex) {
+    ()
+}
+
+fn make_bi_connected(
+    planar_emb: &PlanarEmbedding,
+    start_node: NodeIndex,
+    end_node: NodeIndex,
+    edges_counted: &mut HashSet<NodeIndex>,
+) -> Vec<NodeIndex> {
+    vec![NodeIndex::new(0), NodeIndex::new(1)]
+}
+
+fn canonical_ordering(
+    planar_emb: &mut PlanarEmbedding,
+    outer_face: Vec<NodeIndex>,
+) -> Vec<(NodeIndex, Vec<NodeIndex>)> {
+    vec![(
+        NodeIndex::new(0),
+        vec![NodeIndex::new(1), NodeIndex::new(2)],
+    )]
 }

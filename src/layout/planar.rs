@@ -1,7 +1,6 @@
 use petgraph::prelude::*;
 
 use super::spring::{recenter, rescale, Point};
-use crate::connected_components;
 use crate::iterators::Pos2DMapping;
 use crate::Graph;
 use crate::StablePyGraph;
@@ -40,7 +39,7 @@ pub fn planar_layout(
         //     println!("emb edges {:?}", planar_emb.embedding.edges(node));
         // }
 
-        let mut pos = embedding_to_pos(&planar_emb);
+        let mut pos = embedding_to_pos(&mut planar_emb);
 
         if let Some(scale) = scale {
             rescale(&mut pos, scale, (0..node_num).collect());

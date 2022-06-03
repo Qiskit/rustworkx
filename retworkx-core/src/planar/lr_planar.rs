@@ -13,7 +13,6 @@
 use std::cmp::Ordering;
 use std::hash::Hash;
 use std::vec::IntoIter;
-use std::ops::Mul;
 
 use hashbrown::{hash_map::Entry, HashMap};
 use petgraph::{
@@ -196,7 +195,7 @@ where
 }
 
 #[derive(PartialEq)]
-pub enum Sign{
+pub enum Sign {
     Plus,
     Minus,
 }
