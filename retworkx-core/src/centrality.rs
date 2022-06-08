@@ -377,7 +377,7 @@ where
                 *x.get_mut(&neighbor).unwrap() += x_last[node] * w;
             }
         }
-        let mut norm: f64 = x.values().map(|val| val.powi(2)).sum::<f64>().sqrt();
+        let norm: f64 = x.values().map(|val| val.powi(2)).sum::<f64>().sqrt();
         if norm == 0. {
             return Ok(None);
         }
