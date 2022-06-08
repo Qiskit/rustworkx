@@ -155,8 +155,8 @@ pub fn digraph_betweenness_centrality(
 /// In the case of multigraphs the weights of any parallel edges will be
 /// summed when computing the eigenvector centrality.
 ///
-/// :param PyDigraph graph: The graph object to run the algorithm on
-/// :param weight_fn: An optional input callable that will be pased the edge's
+/// :param PyGraph graph: The graph object to run the algorithm on
+/// :param weight_fn: An optional input callable that will be passed the edge's
 ///     payload object and is expected to return a `float` weight for that edge.
 ///     If this is not specified ``default_weight`` will be used as the weight
 ///     for every edge in ``graph``
@@ -217,8 +217,8 @@ pub fn graph_eigenvector_centrality(
 /// In the case of multigraphs the weights of any parallel edges will be
 /// summed when computing the eigenvector centrality.
 ///
-/// :param PyDigraph graph: The graph object to run the algorithm on
-/// :param weight_fn: An optional input callable that will be pased the edge's
+/// :param PyDiGraph graph: The graph object to run the algorithm on
+/// :param weight_fn: An optional input callable that will be passed the edge's
 ///     payload object and is expected to return a `float` weight for that edge.
 ///     If this is not specified ``default_weight`` will be used as the weight
 ///     for every edge in ``graph``

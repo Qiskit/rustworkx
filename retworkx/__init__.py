@@ -1594,7 +1594,7 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, paral
 
 @functools.singledispatch
 def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6):
-    """Compute the eigenvector centrality of a :class:`~PyGraph`.
+    """Compute the eigenvector centrality of a graph.
 
     For details on the eigenvector centrality refer to:
 
@@ -1613,8 +1613,9 @@ def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=1
     In the case of multigraphs the weights of any parallel edges will be
     summed when computing the eigenvector centrality.
 
-    :param PyDigraph graph: The graph object to run the algorithm on
-    :param weight_fn: An optional input callable that will be pased the edge's
+    :param graph: Graph to be used. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param weight_fn: An optional input callable that will be passed the edge's
         payload object and is expected to return a `float` weight for that edge.
         If this is not specified ``default_weight`` will be used as the weight
         for every edge in ``graph``

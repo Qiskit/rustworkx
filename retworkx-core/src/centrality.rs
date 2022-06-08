@@ -323,13 +323,13 @@ where
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on
-/// * `weight_fn` - An input callable that will be pased the `EdgeRef` for
+/// * `weight_fn` - An input callable that will be passed the `EdgeRef` for
 ///     an edge in the graph and is expected to return a `Result<f64>` of
 ///     the weight of that edge.
 /// * `max_iter` - The maximum number of iterations in the power method. If
 ///     set to `None` a default value of 100 is used.
 /// * `tol` - The error tolerance used when checking for convergence in the
-///     power method. If set to `None` a dfault value of 1e-6 is used.
+///     power method. If set to `None` a default value of 1e-6 is used.
 ///
 /// # Example
 /// ```rust
@@ -343,7 +343,7 @@ where
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 1), (1, 2)
 /// ]);
-/// // Calculate the betweeness centrality
+/// // Calculate the eigenvector centrality
 /// let output: Result<Option<HashMap<petgraph::graph::NodeIndex, f64>>> =
 ///     eigenvector_centrality(&g, |_| {Ok(1.)}, None, None);
 /// ```
@@ -354,13 +354,8 @@ pub fn eigenvector_centrality<G, F, E>(
     tol: Option<f64>,
 ) -> Result<Option<HashMap<G::NodeId, f64>>, E>
 where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNeighbors
-        + IntoEdges
-        + NodeCount
-        + GraphProp
-        + GraphBase<NodeId = NodeIndex>,
+    G: NodeIndexable + IntoNodeIdentifiers + IntoNeighbors + IntoEdges + NodeCount,
+    G::NodeId: Eq + std::hash::Hash,
     F: FnMut(G::EdgeRef) -> Result<f64, E>,
 {
     let tol: f64 = tol.unwrap_or(1e-6);
