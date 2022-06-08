@@ -359,7 +359,7 @@ where
     F: FnMut(G::EdgeRef) -> Result<f64, E>,
 {
     let tol: f64 = tol.unwrap_or(1e-6);
-    let max_iter = max_iter.unwrap_or(50);
+    let max_iter = max_iter.unwrap_or(100);
     let n_start: HashMap<G::NodeId, f64> = graph.node_identifiers().map(|n| (n, 1.)).collect();
     let n_start_sum: f64 = n_start.len() as f64;
     let mut x: HashMap<G::NodeId, f64> =
