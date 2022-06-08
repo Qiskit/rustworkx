@@ -352,7 +352,7 @@ pub fn eigenvector_centrality<G, F, E>(
     mut weight_fn: F,
     max_iter: Option<usize>,
     tol: Option<f64>,
-) -> Result<Option<HashMap<G::NodeId, f64>>, E>
+) -> Result<Option<Vec<f64>>, E>
 where
     G: NodeIndexable + IntoNodeIdentifiers + IntoNeighbors + IntoEdges + NodeCount,
     G::NodeId: Eq + std::hash::Hash,
@@ -360,29 +360,30 @@ where
 {
     let tol: f64 = tol.unwrap_or(1e-6);
     let max_iter = max_iter.unwrap_or(100);
-    let mut x: HashMap<G::NodeId, f64> = graph.node_identifiers().map(|n| (n, 1.)).collect();
+    let mut x: Vec<f64> = vec![1.; graph.node_bound()];
     let node_count = graph.node_count();
     for _ in 0..max_iter {
         let x_last = x.clone();
-        for node in x_last.keys() {
-            for neighbor in graph.neighbors(*node) {
+        for node_index in graph.node_identifiers() {
+            let node = graph.to_index(node_index);
+            for neighbor in graph.neighbors(node_index) {
                 let w_vec: Vec<G::EdgeRef> = graph
-                    .edges(*node)
+                    .edges(node_index)
                     .filter(|edge| edge.target() == neighbor)
                     .collect();
                 let mut w = 0.;
                 for edge in w_vec {
                     w += weight_fn(edge)?;
                 }
-                *x.get_mut(&neighbor).unwrap() += x_last[node] * w;
+                x[graph.to_index(neighbor)] += x_last[node] * w;
             }
         }
-        let norm: f64 = x.values().map(|val| val.powi(2)).sum::<f64>().sqrt();
+        let norm: f64 = x.iter().map(|val| val.powi(2)).sum::<f64>().sqrt();
         if norm == 0. {
             return Ok(None);
         }
-        x = x.iter().map(|(k, v)| (*k, v / norm)).collect();
-        if x.keys()
+        x = x.iter().map(|v| v / norm).collect();
+        if (0..x.len())
             .map(|node| (x[node] - x_last[node]).abs())
             .sum::<f64>()
             < node_count as f64 * tol

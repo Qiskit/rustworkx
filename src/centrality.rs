@@ -18,8 +18,8 @@ use crate::iterators::CentralityMapping;
 use crate::CostFn;
 use crate::FailedToConverge;
 
+use petgraph::graph::NodeIndex;
 use pyo3::prelude::*;
-
 use retworkx_core::centrality;
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
@@ -189,7 +189,17 @@ pub fn graph_eigenvector_centrality(
     )?;
     match ev_centrality {
         Some(centrality) => Ok(CentralityMapping {
-            centralities: centrality.iter().map(|(k, v)| (k.index(), *v)).collect(),
+            centralities: centrality
+                .iter()
+                .enumerate()
+                .filter_map(|(k, v)| {
+                    if graph.graph.node_weight(NodeIndex::new(k)).is_some() {
+                        Some((k, *v))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
             "Function failed to converge on a solution in {} iterations",
@@ -251,7 +261,17 @@ pub fn digraph_eigenvector_centrality(
     )?;
     match ev_centrality {
         Some(centrality) => Ok(CentralityMapping {
-            centralities: centrality.iter().map(|(k, v)| (k.index(), *v)).collect(),
+            centralities: centrality
+                .iter()
+                .enumerate()
+                .filter_map(|(k, v)| {
+                    if graph.graph.node_weight(NodeIndex::new(k)).is_some() {
+                        Some((k, *v))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
             "Function failed to converge on a solution in {} iterations",
