@@ -333,8 +333,6 @@ where
 ///
 /// # Example
 /// ```rust
-/// use hashbrown::HashMap;
-///
 /// use retworkx_core::Result;
 /// use retworkx_core::petgraph;
 /// use retworkx_core::petgraph::visit::{IntoEdges, IntoNodeIdentifiers};
@@ -344,8 +342,7 @@ where
 ///     (0, 1), (1, 2)
 /// ]);
 /// // Calculate the eigenvector centrality
-/// let output: Result<Option<HashMap<petgraph::graph::NodeIndex, f64>>> =
-///     eigenvector_centrality(&g, |_| {Ok(1.)}, None, None);
+/// let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| {Ok(1.)}, None, None);
 /// ```
 pub fn eigenvector_centrality<G, F, E>(
     graph: G,
@@ -397,8 +394,6 @@ where
 #[cfg(test)]
 mod test_eigenvector_centrality {
 
-    use hashbrown::HashMap;
-
     use crate::centrality::eigenvector_centrality;
     use crate::petgraph;
     use crate::Result;
@@ -413,7 +408,7 @@ mod test_eigenvector_centrality {
     #[test]
     fn test_no_convergence() {
         let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
-        let output: Result<Option<HashMap<petgraph::graph::NodeIndex, f64>>> =
+        let output: Result<Option<Vec<f64>>> =
             eigenvector_centrality(&g, |_| Ok(1.), Some(0), None);
         let result = output.unwrap();
         assert_eq!(None, result);
@@ -433,27 +428,23 @@ mod test_eigenvector_centrality {
             (2, 4),
             (3, 4),
         ]);
-        let output: Result<Option<HashMap<petgraph::graph::NodeIndex, f64>>> =
-            eigenvector_centrality(&g, |_| Ok(1.), None, None);
+        let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(1.), None, None);
         let result = output.unwrap().unwrap();
         let expected_value: f64 = (1_f64 / 5_f64).sqrt();
         let expected_values: Vec<f64> = vec![expected_value; 5];
         for i in 0..5 {
-            let index = petgraph::graph::NodeIndex::new(i);
-            assert_almost_equal!(expected_values[i], result[&index], 1e-4);
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
         }
     }
 
     #[test]
     fn test_undirected_path_graph() {
         let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
-        let output: Result<Option<HashMap<petgraph::graph::NodeIndex, f64>>> =
-            eigenvector_centrality(&g, |_| Ok(1.), None, None);
+        let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(1.), None, None);
         let result = output.unwrap().unwrap();
         let expected_values: Vec<f64> = vec![0.5, 0.7071, 0.5];
         for i in 0..3 {
-            let index = petgraph::graph::NodeIndex::new(i);
-            assert_almost_equal!(expected_values[i], result[&index], 1e-4);
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
         }
     }
 
@@ -478,16 +469,14 @@ mod test_eigenvector_centrality {
             (7, 5),
             (7, 6),
         ]);
-        let output: Result<Option<HashMap<petgraph::graph::NodeIndex, f64>>> =
-            eigenvector_centrality(&g, |_| Ok(2.), None, None);
+        let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(2.), None, None);
         let result = output.unwrap().unwrap();
         let expected_values: Vec<f64> = vec![
             0.25368793, 0.19576478, 0.32817092, 0.40430835, 0.48199885, 0.15724483, 0.51346196,
             0.32475403,
         ];
         for i in 0..8 {
-            let index = petgraph::graph::NodeIndex::new(i);
-            assert_almost_equal!(expected_values[i], result[&index], 1e-4);
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
         }
     }
 }
