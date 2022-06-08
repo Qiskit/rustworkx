@@ -360,10 +360,7 @@ where
 {
     let tol: f64 = tol.unwrap_or(1e-6);
     let max_iter = max_iter.unwrap_or(100);
-    let n_start: HashMap<G::NodeId, f64> = graph.node_identifiers().map(|n| (n, 1.)).collect();
-    let n_start_sum: f64 = n_start.len() as f64;
-    let mut x: HashMap<G::NodeId, f64> =
-        n_start.iter().map(|(k, v)| (*k, v / n_start_sum)).collect();
+    let mut x: HashMap<G::NodeId, f64> = graph.node_identifiers().map(|n| (n, 1.)).collect();
     let node_count = graph.node_count();
     for _ in 0..max_iter {
         let x_last = x.clone();
@@ -382,7 +379,7 @@ where
         }
         let mut norm: f64 = x.values().map(|val| val.powi(2)).sum::<f64>().sqrt();
         if norm == 0. {
-            norm = 1.;
+            return Ok(None);
         }
         x = x.iter().map(|(k, v)| (*k, v / norm)).collect();
         if x.keys()
