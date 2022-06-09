@@ -19,6 +19,8 @@ use crate::CostFn;
 use crate::FailedToConverge;
 
 use petgraph::graph::NodeIndex;
+use petgraph::visit::EdgeIndexable;
+use petgraph::visit::EdgeRef;
 use pyo3::prelude::*;
 use retworkx_core::centrality;
 
@@ -180,10 +182,17 @@ pub fn graph_eigenvector_centrality(
     max_iter: usize,
     tol: f64,
 ) -> PyResult<CentralityMapping> {
-    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
     let ev_centrality = centrality::eigenvector_centrality(
         &graph.graph,
-        |e| cost_fn.call(py, e.weight()),
+        |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
         Some(max_iter),
         Some(tol),
     )?;
@@ -252,13 +261,21 @@ pub fn digraph_eigenvector_centrality(
     max_iter: usize,
     tol: f64,
 ) -> PyResult<CentralityMapping> {
-    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
     let ev_centrality = centrality::eigenvector_centrality(
         &graph.graph,
-        |e| cost_fn.call(py, e.weight()),
+        |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
         Some(max_iter),
         Some(tol),
     )?;
+
     match ev_centrality {
         Some(centrality) => Ok(CentralityMapping {
             centralities: centrality
