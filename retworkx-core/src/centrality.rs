@@ -363,15 +363,9 @@ where
         let x_last = x.clone();
         for node_index in graph.node_identifiers() {
             let node = graph.to_index(node_index);
-            for neighbor in graph.neighbors(node_index) {
-                let w_vec: Vec<G::EdgeRef> = graph
-                    .edges(node_index)
-                    .filter(|edge| edge.target() == neighbor)
-                    .collect();
-                let mut w = 0.;
-                for edge in w_vec {
-                    w += weight_fn(edge)?;
-                }
+            for edge in graph.edges(node_index) {
+                let w = weight_fn(edge)?;
+                let neighbor = edge.target();
                 x[graph.to_index(neighbor)] += x_last[node] * w;
             }
         }
