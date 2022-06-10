@@ -373,7 +373,9 @@ where
         if norm == 0. {
             return Ok(None);
         }
-        x = x.iter().map(|v| v / norm).collect();
+        for v in x.iter_mut() {
+            *v /= norm;
+        }
         if (0..x.len())
             .map(|node| (x[node] - x_last[node]).abs())
             .sum::<f64>()

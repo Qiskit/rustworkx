@@ -282,7 +282,7 @@ pub fn digraph_eigenvector_centrality(
                 .iter()
                 .enumerate()
                 .filter_map(|(k, v)| {
-                    if graph.graph.node_weight(NodeIndex::new(k)).is_some() {
+                    if graph.graph.contains_node(NodeIndex::new(k)) {
                         Some((k, *v))
                     } else {
                         None
