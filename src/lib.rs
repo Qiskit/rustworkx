@@ -22,6 +22,7 @@ mod graph;
 mod graphml;
 mod isomorphism;
 mod iterators;
+mod json;
 mod layout;
 mod matching;
 mod random_graph;
@@ -41,6 +42,7 @@ use connectivity::*;
 use dag_algo::*;
 use graphml::*;
 use isomorphism::*;
+use json::*;
 use layout::*;
 use matching::*;
 use random_graph::*;
@@ -316,6 +318,8 @@ import_exception!(retworkx.visit, PruneSearch);
 import_exception!(retworkx.visit, StopSearch);
 // Negative Cycle found on shortest-path algorithm
 create_exception!(retworkx, NegativeCycle, PyException);
+// JSON Error
+create_exception!(retworkx, JSONSerializationError, PyException);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -456,6 +460,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
