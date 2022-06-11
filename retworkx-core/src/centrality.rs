@@ -16,8 +16,11 @@ use std::sync::RwLock;
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
+    EdgeRef,
     GraphBase,
     GraphProp, // allows is_directed
+    IntoEdges,
+    IntoNeighbors,
     IntoNeighborsDirected,
     IntoNodeIdentifiers,
     NodeCount,
@@ -58,7 +61,7 @@ use rayon::prelude::*;
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
-/// // Calculate the betweeness centrality
+/// // Calculate the betweenness centrality
 /// let output = betweenness_centrality(&g, true, true, 200);
 /// assert_eq!(
 ///     vec![Some(0.4), Some(0.5), Some(0.45), Some(0.5), Some(0.75)],
@@ -295,5 +298,181 @@ where
         verts_sorted_by_distance,
         predecessors,
         sigma,
+    }
+}
+
+/// Compute the eigenvector centrality of a graph
+///
+/// For details on the eigenvector centrality refer to:
+///
+/// Phillip Bonacich. “Power and Centrality: A Family of Measures.”
+/// American Journal of Sociology 92(5):1170–1182, 1986
+/// <https://doi.org/10.1086/228631>
+///
+/// This function uses a power iteration method to compute the eigenvector
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm is based on the NetworkX
+/// [`eigenvector_centrality()`](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality.html)
+/// function.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the eigenvector centrality.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `weight_fn` - An input callable that will be passed the `EdgeRef` for
+///     an edge in the graph and is expected to return a `Result<f64>` of
+///     the weight of that edge.
+/// * `max_iter` - The maximum number of iterations in the power method. If
+///     set to `None` a default value of 100 is used.
+/// * `tol` - The error tolerance used when checking for convergence in the
+///     power method. If set to `None` a default value of 1e-6 is used.
+///
+/// # Example
+/// ```rust
+/// use retworkx_core::Result;
+/// use retworkx_core::petgraph;
+/// use retworkx_core::petgraph::visit::{IntoEdges, IntoNodeIdentifiers};
+/// use retworkx_core::centrality::eigenvector_centrality;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 1), (1, 2)
+/// ]);
+/// // Calculate the eigenvector centrality
+/// let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| {Ok(1.)}, None, None);
+/// ```
+pub fn eigenvector_centrality<G, F, E>(
+    graph: G,
+    mut weight_fn: F,
+    max_iter: Option<usize>,
+    tol: Option<f64>,
+) -> Result<Option<Vec<f64>>, E>
+where
+    G: NodeIndexable + IntoNodeIdentifiers + IntoNeighbors + IntoEdges + NodeCount,
+    G::NodeId: Eq + std::hash::Hash,
+    F: FnMut(G::EdgeRef) -> Result<f64, E>,
+{
+    let tol: f64 = tol.unwrap_or(1e-6);
+    let max_iter = max_iter.unwrap_or(100);
+    let mut x: Vec<f64> = vec![1.; graph.node_bound()];
+    let node_count = graph.node_count();
+    for _ in 0..max_iter {
+        let x_last = x.clone();
+        for node_index in graph.node_identifiers() {
+            let node = graph.to_index(node_index);
+            for edge in graph.edges(node_index) {
+                let w = weight_fn(edge)?;
+                let neighbor = edge.target();
+                x[graph.to_index(neighbor)] += x_last[node] * w;
+            }
+        }
+        let norm: f64 = x.iter().map(|val| val.powi(2)).sum::<f64>().sqrt();
+        if norm == 0. {
+            return Ok(None);
+        }
+        for v in x.iter_mut() {
+            *v /= norm;
+        }
+        if (0..x.len())
+            .map(|node| (x[node] - x_last[node]).abs())
+            .sum::<f64>()
+            < node_count as f64 * tol
+        {
+            return Ok(Some(x));
+        }
+    }
+    Ok(None)
+}
+
+#[cfg(test)]
+mod test_eigenvector_centrality {
+
+    use crate::centrality::eigenvector_centrality;
+    use crate::petgraph;
+    use crate::Result;
+
+    macro_rules! assert_almost_equal {
+        ($x:expr, $y:expr, $d:expr) => {
+            if !($x - $y < $d || $y - $x < $d) {
+                panic!("{} != {} within delta of {}", $x, $y, $d);
+            }
+        };
+    }
+    #[test]
+    fn test_no_convergence() {
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let output: Result<Option<Vec<f64>>> =
+            eigenvector_centrality(&g, |_| Ok(1.), Some(0), None);
+        let result = output.unwrap();
+        assert_eq!(None, result);
+    }
+
+    #[test]
+    fn test_undirected_complete_graph() {
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (0, 4),
+            (1, 2),
+            (1, 3),
+            (1, 4),
+            (2, 3),
+            (2, 4),
+            (3, 4),
+        ]);
+        let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(1.), None, None);
+        let result = output.unwrap().unwrap();
+        let expected_value: f64 = (1_f64 / 5_f64).sqrt();
+        let expected_values: Vec<f64> = vec![expected_value; 5];
+        for i in 0..5 {
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_undirected_path_graph() {
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(1.), None, None);
+        let result = output.unwrap().unwrap();
+        let expected_values: Vec<f64> = vec![0.5, 0.7071, 0.5];
+        for i in 0..3 {
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_directed_graph() {
+        let g = petgraph::graph::DiGraph::<i32, ()>::from_edges([
+            (0, 1),
+            (0, 2),
+            (1, 3),
+            (2, 1),
+            (2, 4),
+            (3, 1),
+            (3, 4),
+            (3, 5),
+            (4, 5),
+            (4, 6),
+            (4, 7),
+            (5, 7),
+            (6, 0),
+            (6, 4),
+            (6, 7),
+            (7, 5),
+            (7, 6),
+        ]);
+        let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(2.), None, None);
+        let result = output.unwrap().unwrap();
+        let expected_values: Vec<f64> = vec![
+            0.25368793, 0.19576478, 0.32817092, 0.40430835, 0.48199885, 0.15724483, 0.51346196,
+            0.32475403,
+        ];
+        for i in 0..8 {
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
+        }
     }
 }

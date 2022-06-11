@@ -54,6 +54,7 @@ Centrality
    :toctree: apiref
 
    retworkx.betweenness_centrality
+   retworkx.eigenvector_centrality
 
 .. _traversal:
 
@@ -311,6 +312,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_spring_layout
    retworkx.digraph_num_shortest_paths_unweighted
    retworkx.digraph_betweenness_centrality
+   retworkx.digraph_eigenvector_centrality
    retworkx.digraph_unweighted_average_shortest_path_length
    retworkx.digraph_bfs_search
    retworkx.digraph_dijkstra_search
@@ -363,6 +365,7 @@ typed API based on the data type.
    retworkx.graph_spring_layout
    retworkx.graph_num_shortest_paths_unweighted
    retworkx.graph_betweenness_centrality
+   retworkx.graph_eigenvector_centrality
    retworkx.graph_unweighted_average_shortest_path_length
    retworkx.graph_bfs_search
    retworkx.graph_dijkstra_search
