@@ -61,7 +61,7 @@ use rayon::prelude::*;
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
-/// // Calculate the betweeness centrality
+/// // Calculate the betweenness centrality
 /// let output = betweenness_centrality(&g, true, true, 200);
 /// assert_eq!(
 ///     vec![Some(0.4), Some(0.5), Some(0.45), Some(0.5), Some(0.75)],
