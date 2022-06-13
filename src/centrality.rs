@@ -10,13 +10,18 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::iterators::CentralityMapping;
+use std::convert::TryFrom;
 
 use crate::digraph;
 use crate::graph;
+use crate::iterators::CentralityMapping;
+use crate::CostFn;
+use crate::FailedToConverge;
 
+use petgraph::graph::NodeIndex;
+use petgraph::visit::EdgeIndexable;
+use petgraph::visit::EdgeRef;
 use pyo3::prelude::*;
-
 use retworkx_core::centrality;
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
@@ -130,5 +135,164 @@ pub fn digraph_betweenness_centrality(
             .enumerate()
             .filter_map(|(i, v)| v.map(|x| (i, x)))
             .collect(),
+    }
+}
+
+/// Compute the eigenvector centrality of a :class:`~PyGraph`.
+///
+/// For details on the eigenvector centrality refer to:
+///
+/// Phillip Bonacich. “Power and Centrality: A Family of Measures.”
+/// American Journal of Sociology 92(5):1170–1182, 1986
+/// <https://doi.org/10.1086/228631>
+///
+/// This function uses a power iteration method to compute the eigenvector
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm is based on the NetworkX
+/// `eigenvector_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality.html>`__
+/// function.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the eigenvector centrality.
+///
+/// :param PyGraph graph: The graph object to run the algorithm on
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///     payload object and is expected to return a `float` weight for that edge.
+///     If this is not specified ``default_weight`` will be used as the weight
+///     for every edge in ``graph``
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+/// :param int max_iter: The maximum number of iterations in the power method. If
+///     not specified a default value of 100 is used.
+/// :param float tol: The error tolerance used when checking for convergence in the
+///     power method. If this is not specified default value of 1e-6 is used.
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for that node.
+/// :rtype: CentralityMapping
+#[pyfunction(default_weight = "1.0", max_iter = "100", tol = "1e-6")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)")]
+pub fn graph_eigenvector_centrality(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    max_iter: usize,
+    tol: f64,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+    let ev_centrality = centrality::eigenvector_centrality(
+        &graph.graph,
+        |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
+        Some(max_iter),
+        Some(tol),
+    )?;
+    match ev_centrality {
+        Some(centrality) => Ok(CentralityMapping {
+            centralities: centrality
+                .iter()
+                .enumerate()
+                .filter_map(|(k, v)| {
+                    if graph.graph.contains_node(NodeIndex::new(k)) {
+                        Some((k, *v))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        }),
+        None => Err(FailedToConverge::new_err(format!(
+            "Function failed to converge on a solution in {} iterations",
+            max_iter
+        ))),
+    }
+}
+
+/// Compute the eigenvector centrality of a :class:`~PyDiGraph`.
+///
+/// For details on the eigenvector centrality refer to:
+///
+/// Phillip Bonacich. “Power and Centrality: A Family of Measures.”
+/// American Journal of Sociology 92(5):1170–1182, 1986
+/// <https://doi.org/10.1086/228631>
+///
+/// This function uses a power iteration method to compute the eigenvector
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm is based on the NetworkX
+/// `eigenvector_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality.html>`__
+/// function.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the eigenvector centrality.
+///
+/// :param PyDiGraph graph: The graph object to run the algorithm on
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///     payload object and is expected to return a `float` weight for that edge.
+///     If this is not specified ``default_weight`` will be used as the weight
+///     for every edge in ``graph``
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+/// :param int max_iter: The maximum number of iterations in the power method. If
+///     not specified a default value of 100 is used.
+/// :param float tol: The error tolerance used when checking for convergence in the
+///     power method. If this is not specified default value of 1e-6 is used.
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for that node.
+/// :rtype: CentralityMapping
+#[pyfunction(default_weight = "1.0", max_iter = "100", tol = "1e-6")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)")]
+pub fn digraph_eigenvector_centrality(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    max_iter: usize,
+    tol: f64,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+    let ev_centrality = centrality::eigenvector_centrality(
+        &graph.graph,
+        |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
+        Some(max_iter),
+        Some(tol),
+    )?;
+
+    match ev_centrality {
+        Some(centrality) => Ok(CentralityMapping {
+            centralities: centrality
+                .iter()
+                .enumerate()
+                .filter_map(|(k, v)| {
+                    if graph.graph.contains_node(NodeIndex::new(k)) {
+                        Some((k, *v))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        }),
+        None => Err(FailedToConverge::new_err(format!(
+            "Function failed to converge on a solution in {} iterations",
+            max_iter
+        ))),
     }
 }
