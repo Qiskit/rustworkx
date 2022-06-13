@@ -15,10 +15,10 @@ use std::ops::Index;
 use hashbrown::{HashMap, HashSet};
 
 use ndarray::prelude::*;
-use petgraph::prelude::*;
 use petgraph::EdgeType;
 use rayon::prelude::*;
 
+use crate::NodeIndex;
 use crate::NodesRemoved;
 use crate::StablePyGraph;
 

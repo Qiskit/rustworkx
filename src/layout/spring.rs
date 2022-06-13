@@ -20,7 +20,6 @@ use hashbrown::{HashMap, HashSet};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
@@ -29,6 +28,7 @@ use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
+use crate::NodeIndex;
 use crate::StablePyGraph;
 
 type Nt = f64;

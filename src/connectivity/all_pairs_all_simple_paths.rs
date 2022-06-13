@@ -12,11 +12,11 @@
 
 use rayon::prelude::*;
 
-use petgraph::graph::NodeIndex;
 use petgraph::EdgeType;
 use retworkx_core::connectivity::all_simple_paths_multiple_targets;
 
 use crate::iterators::{AllPairsMultiplePathMapping, MultiplePathMapping};
+use crate::NodeIndex;
 use crate::StablePyGraph;
 use retworkx_core::dictmap::*;
 

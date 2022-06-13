@@ -39,9 +39,9 @@ use super::{
     find_node_by_weight, merge_duplicates, weight_callable, IsNan, NoEdgeBetweenNodes,
     NodesRemoved, StablePyGraph,
 };
+use super::{EdgeIndex, NodeIndex};
 
 use petgraph::algo;
-use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::visit::{
     GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered, NodeIndexable,

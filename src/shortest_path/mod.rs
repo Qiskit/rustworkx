@@ -19,17 +19,16 @@ mod num_shortest_path;
 
 use std::convert::TryFrom;
 
+use crate::EdgeIndex;
+use crate::NodeIndex;
 use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
 
-use pyo3::prelude::*;
-use pyo3::Python;
-
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::NodeCount;
 use pyo3::exceptions::PyIndexError;
 use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
+use pyo3::Python;
 
 use numpy::IntoPyArray;
 

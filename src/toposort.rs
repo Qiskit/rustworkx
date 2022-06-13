@@ -19,11 +19,11 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::IntoNodeIdentifiers;
 
 use crate::dag_algo::is_directed_acyclic_graph;
 use crate::DAGHasCycle;
+use crate::NodeIndex;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum NodeState {

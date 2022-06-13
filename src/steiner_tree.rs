@@ -19,7 +19,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
+use petgraph::stable_graph::EdgeReference;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 
@@ -27,6 +27,7 @@ use crate::generators::pairwise;
 use crate::graph;
 use crate::is_valid_weight;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
+use crate::{EdgeIndex, NodeIndex};
 
 use retworkx_core::dictmap::*;
 use retworkx_core::shortest_path::dijkstra;
@@ -144,7 +145,7 @@ fn fast_metric_edges(
             .add_edge(dummy, NodeIndex::new(*node), py.None());
     }
 
-    let cost_fn = |edge: EdgeReference<'_, PyObject>| -> PyResult<f64> {
+    let cost_fn = |edge: EdgeReference<'_, PyObject, usize>| -> PyResult<f64> {
         if edge.source() != dummy && edge.target() != dummy {
             let weight: f64 = weight_fn.call1(py, (edge.weight(),))?.extract(py)?;
             is_valid_weight(weight)

@@ -11,6 +11,7 @@
 // under the License.
 
 use crate::graph;
+use crate::NodeIndex;
 use retworkx_core::dictmap::*;
 
 use hashbrown::{HashMap, HashSet};
@@ -20,7 +21,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::NodeCount;
 

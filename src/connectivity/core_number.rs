@@ -17,11 +17,11 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
 use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
+use crate::NodeIndex;
 use crate::StablePyGraph;
 
 pub fn core_number<Ty>(py: Python, graph: &StablePyGraph<Ty>) -> PyResult<PyObject>

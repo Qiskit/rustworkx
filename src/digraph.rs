@@ -37,7 +37,6 @@ use num_traits::Zero;
 use numpy::PyReadonlyArray2;
 
 use petgraph::algo;
-use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 
 use petgraph::visit::{
@@ -53,6 +52,7 @@ use super::{
     find_node_by_weight, merge_duplicates, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan,
     NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved, StablePyGraph,
 };
+use super::{EdgeIndex, NodeIndex};
 
 use super::dag_algo::is_directed_acyclic_graph;
 
@@ -282,7 +282,7 @@ impl PyDiGraph {
     #[args(check_cycle = "false", multigraph = "true")]
     fn new(py: Python, check_cycle: bool, multigraph: bool, attrs: Option<PyObject>) -> Self {
         PyDiGraph {
-            graph: StablePyGraph::<Directed>::new(),
+            graph: StablePyGraph::<Directed>::default(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
@@ -315,7 +315,7 @@ impl PyDiGraph {
     }
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
-        self.graph = StablePyGraph::<Directed>::new();
+        self.graph = StablePyGraph::<Directed>::default();
         let dict_state = state.cast_as::<PyDict>(py)?;
 
         let nodes_dict = dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
@@ -1845,7 +1845,7 @@ impl PyDiGraph {
     ) -> PyResult<PyDiGraph> {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
-        let mut out_graph = StablePyGraph::<Directed>::new();
+        let mut out_graph = StablePyGraph::<Directed>::default();
         let mut label_map: HashMap<String, usize> = HashMap::new();
         for line_raw in buf_reader.lines() {
             let line = line_raw?;
@@ -2461,7 +2461,7 @@ impl PyDiGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
         let node_filter = |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
-        let mut out_graph = StablePyGraph::<Directed>::new();
+        let mut out_graph = StablePyGraph::<Directed>::with_capacity(nodes.len(), 0);
         let filtered = NodeFiltered(&self.graph, node_filter);
         for node in filtered.node_references() {
             let new_node = out_graph.add_node(node.1.clone_ref(py));
@@ -2737,7 +2737,7 @@ impl PyDiGraph {
     // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
     // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
     fn __clear__(&mut self, py: Python) {
-        self.graph = StablePyGraph::<Directed>::new();
+        self.graph = StablePyGraph::<Directed>::default();
         self.node_removed = false;
         self.attrs = py.None();
     }
@@ -2777,7 +2777,7 @@ where
 {
     let array = matrix.as_array();
     let shape = array.shape();
-    let mut out_graph = StablePyGraph::<Directed>::new();
+    let mut out_graph = StablePyGraph::<Directed>::with_capacity(shape[0], 0);
     let _node_indices: Vec<NodeIndex> = (0..shape[0])
         .map(|node| out_graph.add_node(node.to_object(py)))
         .collect();

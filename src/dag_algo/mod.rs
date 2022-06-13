@@ -17,6 +17,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use super::iterators::NodeIndices;
+use crate::NodeIndex;
 use crate::{digraph, DAGHasCycle, InvalidNode};
 
 use pyo3::exceptions::PyValueError;
@@ -25,7 +26,6 @@ use pyo3::types::PyList;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::NodeCount;
 

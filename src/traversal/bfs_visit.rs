@@ -12,9 +12,9 @@
 
 use pyo3::prelude::*;
 
-use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::Control;
 
+use crate::NodeIndex;
 use crate::{PruneSearch, StopSearch};
 use retworkx_core::traversal::BfsEvent;
 

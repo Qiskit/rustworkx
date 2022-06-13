@@ -10,9 +10,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use crate::NodeIndex;
 use crate::{digraph, find_node_by_weight, graph, StablePyGraph};
 
-use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 use petgraph::{algo, EdgeType};
 

@@ -12,11 +12,11 @@
 
 use hashbrown::HashSet;
 
-use petgraph::prelude::*;
 use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
+use crate::NodeIndex;
 use crate::StablePyGraph;
 
 pub fn compute_distance_sum<Ty: EdgeType + Sync>(

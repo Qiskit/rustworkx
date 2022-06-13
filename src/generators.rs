@@ -14,7 +14,6 @@ use std::collections::VecDeque;
 use std::iter;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 use petgraph::Undirected;
@@ -24,7 +23,7 @@ use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
-use super::{digraph, graph, StablePyGraph};
+use super::{digraph, graph, NodeIndex, StablePyGraph};
 
 pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
 where
@@ -2294,7 +2293,7 @@ pub fn barbell_graph(
         return Err(PyIndexError::new_err("num_mesh_nodes not specified"));
     }
 
-    let mut left_mesh = StableUnGraph::<PyObject, PyObject>::default();
+    let mut left_mesh = StableUnGraph::<PyObject, PyObject, usize>::default();
     let mesh_nodes: Vec<NodeIndex> = (0..num_mesh_nodes.unwrap())
         .map(|_| left_mesh.add_node(py.None()))
         .collect();

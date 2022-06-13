@@ -65,7 +65,8 @@ use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
 use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
+use petgraph::graph::EdgeIndex as PGEdgeIndex;
+use petgraph::graph::NodeIndex as PGNodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
     Data, EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount,
@@ -98,7 +99,9 @@ impl IsNan for Complex64 {
         self.re.is_nan() || self.im.is_nan()
     }
 }
-pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty, usize>;
+pub type NodeIndex = PGNodeIndex<usize>;
+pub type EdgeIndex = PGEdgeIndex<usize>;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;

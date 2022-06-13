@@ -18,11 +18,11 @@ use hashbrown::HashSet;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::IntoEdgeReferences;
 
 use crate::weight_callable;
+use crate::NodeIndex;
 
 /// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
 ///

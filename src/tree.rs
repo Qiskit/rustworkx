@@ -59,7 +59,7 @@ pub fn minimum_spanning_edges(
 ) -> PyResult<WeightedEdgeList> {
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
 
-    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> =
+    let mut edge_list: Vec<(f64, EdgeReference<PyObject, usize>)> =
         Vec::with_capacity(graph.graph.edge_count());
     for edge in graph.graph.edge_references() {
         let weight = weight_callable(py, &weight_fn, edge.weight(), default_weight)?;

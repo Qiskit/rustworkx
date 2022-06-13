@@ -10,14 +10,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{digraph, DAGHasCycle};
+use crate::{digraph, DAGHasCycle, NodeIndex};
 
 use hashbrown::HashMap;
 
 use pyo3::prelude::*;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 
 use num_traits::{Num, Zero};

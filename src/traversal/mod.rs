@@ -32,10 +32,10 @@ use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::visit::{Bfs, NodeCount, Reversed};
 
 use crate::iterators::EdgeList;
+use crate::NodeIndex;
 
 /// Get an edge list of the tree edges from a depth-first traversal
 ///

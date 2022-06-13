@@ -17,8 +17,8 @@ use crate::graph;
 use crate::iterators::CentralityMapping;
 use crate::CostFn;
 use crate::FailedToConverge;
+use crate::NodeIndex;
 
-use petgraph::graph::NodeIndex;
 use petgraph::visit::EdgeIndexable;
 use petgraph::visit::EdgeRef;
 use pyo3::prelude::*;

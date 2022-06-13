@@ -15,6 +15,7 @@
 mod all_pairs_all_simple_paths;
 mod core_number;
 
+use super::NodeIndex;
 use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
 
 use hashbrown::{HashMap, HashSet};
@@ -24,7 +25,6 @@ use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
 

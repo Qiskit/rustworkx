@@ -19,7 +19,6 @@ use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::EdgeType;
 
@@ -28,6 +27,8 @@ use rayon::prelude::*;
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, PathLengthMapping, PathMapping,
 };
+use crate::EdgeIndex;
+use crate::NodeIndex;
 use crate::{edge_weights_from_callable, NegativeCycle, StablePyGraph};
 
 pub fn all_pairs_bellman_ford_path_lengths<Ty: EdgeType + Sync>(

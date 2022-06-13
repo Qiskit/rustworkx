@@ -12,6 +12,9 @@
 
 #![allow(clippy::float_cmp)]
 
+use std::convert::TryInto;
+
+use crate::NodeIndex;
 use crate::{digraph, graph, StablePyGraph};
 
 use pyo3::exceptions::PyValueError;
@@ -20,7 +23,6 @@ use pyo3::types::PyDict;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 
 use rand::distributions::{Distribution, Uniform};
@@ -71,7 +73,7 @@ pub fn directed_gnp_random_graph(
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut inner_graph = StablePyGraph::<Directed>::new();
+    let mut inner_graph = StablePyGraph::<Directed>::with_capacity(num_nodes.try_into()?, 0);
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }
@@ -270,7 +272,10 @@ pub fn directed_gnm_random_graph(
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut inner_graph = StablePyGraph::<Directed>::new();
+    let mut inner_graph = StablePyGraph::<Directed>::with_capacity(
+        num_nodes.try_into()?,
+        (num_nodes * (num_nodes - 1)).try_into()?,
+    );
     for x in 0..num_nodes {
         inner_graph.add_node(x.to_object(py));
     }

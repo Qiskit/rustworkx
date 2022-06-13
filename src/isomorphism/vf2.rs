@@ -27,7 +27,6 @@ use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 
-use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing, Undirected};
@@ -35,6 +34,7 @@ use petgraph::{Directed, Incoming, Outgoing, Undirected};
 use rayon::slice::ParallelSliceMut;
 
 use crate::iterators::NodeMap;
+use crate::NodeIndex;
 use crate::StablePyGraph;
 
 /// Returns `true` if we can map every element of `xs` to a unique

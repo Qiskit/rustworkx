@@ -15,7 +15,7 @@ use hashbrown::HashSet;
 
 use pyo3::prelude::*;
 
-use petgraph::graph::NodeIndex;
+use crate::NodeIndex;
 use rayon::prelude::*;
 
 fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
