@@ -243,7 +243,7 @@ Layout Functions
    retworkx.spiral_layout
 
 
-.. _serializers
+.. _serialization:
 
 Serialization
 =============
