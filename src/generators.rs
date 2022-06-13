@@ -92,29 +92,25 @@ pub fn directed_cycle_graph(
     };
     let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
 
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => {
-                if bidirectional {
-                    graph.add_edge(node_b, node_a, py.None());
-                }
-                graph.add_edge(node_a, node_b, py.None());
-            }
-            None => continue,
-        };
+    for a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(a + 1);
+        let node_a = NodeIndex::new(a);
+        graph.add_edge(node_a, node_b, py.None());
+        if bidirectional {
+            graph.add_edge(node_b, node_a, py.None());
+        }
     }
     let last_node_index = NodeIndex::new(node_len - 1);
     let first_node_index = NodeIndex::new(0);
@@ -172,24 +168,21 @@ pub fn cycle_graph(
     }
     let node_len = get_num_nodes(&num_nodes, &weights);
     let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => graph.add_edge(node_a, node_b, py.None()),
-            None => continue,
-        };
+    for node_a in 0..node_len - 1 {
+        let node_b = node_a + 1;
+        graph.add_edge(NodeIndex::new(node_a), NodeIndex::new(node_b), py.None());
     }
     let last_node_index = NodeIndex::new(node_len - 1);
     let first_node_index = NodeIndex::new(0);
@@ -251,29 +244,23 @@ pub fn directed_path_graph(
     };
     let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
 
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => (0..node_len).for_each(|_| {
+            graph.add_node(py.None());
+        }),
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => {
-                graph.add_edge(node_a, node_b, py.None());
-                if bidirectional {
-                    graph.add_edge(node_b, node_a, py.None());
-                }
-            }
-            None => continue,
-        };
+    for a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(a + 1);
+        let node_a = NodeIndex::new(a);
+        graph.add_edge(node_a, node_b, py.None());
+        if bidirectional {
+            graph.add_edge(node_b, node_a, py.None());
+        }
     }
     Ok(digraph::PyDiGraph {
         graph,
@@ -325,24 +312,19 @@ pub fn path_graph(
     }
     let node_len = get_num_nodes(&num_nodes, &weights);
     let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => (0..node_len).for_each(|_| {
+            graph.add_node(py.None());
+        }),
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => graph.add_edge(node_a, node_b, py.None()),
-            None => continue,
-        };
+    for node_a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(node_a + 1);
+        graph.add_edge(NodeIndex::new(node_a), node_b, py.None());
     }
     Ok(graph::PyGraph {
         graph,
@@ -421,7 +403,7 @@ pub fn directed_star_graph(
             }
         }
         None => {
-            (0..num_nodes.unwrap()).for_each(|_| {
+            (0..node_len).for_each(|_| {
                 graph.add_node(py.None());
             });
         }
@@ -496,7 +478,7 @@ pub fn star_graph(
             }
         }
         None => {
-            (0..num_nodes.unwrap()).for_each(|_| {
+            (0..node_len).for_each(|_| {
                 graph.add_node(py.None());
             });
         }
@@ -560,7 +542,7 @@ pub fn mesh_graph(
             }
         }
         None => {
-            (0..num_nodes.unwrap()).for_each(|_| {
+            (0..node_len).for_each(|_| {
                 graph.add_node(py.None());
             });
         }
@@ -628,7 +610,7 @@ pub fn directed_mesh_graph(
             }
         }
         None => {
-            (0..num_nodes.unwrap()).for_each(|_| {
+            (0..node_len).for_each(|_| {
                 graph.add_node(py.None());
             });
         }
@@ -692,7 +674,6 @@ pub fn grid_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -702,10 +683,11 @@ pub fn grid_graph(
     let mut rowlen = rows.unwrap_or(0);
     let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
+    let num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
 
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             if num_nodes < weights.len() && rowlen == 0 {
                 collen = weights.len();
                 rowlen = 1;
@@ -718,30 +700,35 @@ pub fn grid_graph(
                 if node_cnt == 0 {
                     break;
                 }
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
                 node_cnt -= 1;
             }
             for _i in 0..node_cnt {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
+                graph.add_node(py.None());
             }
-            node_list
         }
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+        None => {
+            (0..num_nodes).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
 
     for i in 0..rowlen {
         for j in 0..collen {
             if i + 1 < rowlen {
                 graph.add_edge(
-                    nodes[i * collen + j],
-                    nodes[(i + 1) * collen + j],
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new((i + 1) * collen + j),
                     py.None(),
                 );
             }
             if j + 1 < collen {
-                graph.add_edge(nodes[i * collen + j], nodes[i * collen + j + 1], py.None());
+                graph.add_edge(
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new(i * collen + j + 1),
+                    py.None(),
+                );
             }
         }
     }
@@ -800,7 +787,6 @@ pub fn directed_grid_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -810,10 +796,14 @@ pub fn directed_grid_graph(
     let mut rowlen = rows.unwrap_or(0);
     let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
+    let mut num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    if bidirectional {
+        num_edges *= 2;
+    }
+    let mut graph = StablePyGraph::<Directed>::with_capacity(num_nodes, num_edges);
 
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             if num_nodes < weights.len() && rowlen == 0 {
                 collen = weights.len();
                 rowlen = 1;
@@ -826,40 +816,49 @@ pub fn directed_grid_graph(
                 if node_cnt == 0 {
                     break;
                 }
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
                 node_cnt -= 1;
             }
             for _i in 0..node_cnt {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
+                graph.add_node(py.None());
             }
-            node_list
         }
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+        None => {
+            (0..num_nodes).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
 
     for i in 0..rowlen {
         for j in 0..collen {
             if i + 1 < rowlen {
                 graph.add_edge(
-                    nodes[i * collen + j],
-                    nodes[(i + 1) * collen + j],
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new((i + 1) * collen + j),
                     py.None(),
                 );
                 if bidirectional {
                     graph.add_edge(
-                        nodes[(i + 1) * collen + j],
-                        nodes[i * collen + j],
+                        NodeIndex::new((i + 1) * collen + j),
+                        NodeIndex::new(i * collen + j),
                         py.None(),
                     );
                 }
             }
 
             if j + 1 < collen {
-                graph.add_edge(nodes[i * collen + j], nodes[i * collen + j + 1], py.None());
+                graph.add_edge(
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new(i * collen + j + 1),
+                    py.None(),
+                );
                 if bidirectional {
-                    graph.add_edge(nodes[i * collen + j + 1], nodes[i * collen + j], py.None());
+                    graph.add_edge(
+                        NodeIndex::new(i * collen + j + 1),
+                        NodeIndex::new(i * collen + j),
+                        py.None(),
+                    );
                 }
             }
         }
