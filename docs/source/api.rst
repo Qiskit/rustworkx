@@ -243,15 +243,16 @@ Layout Functions
    retworkx.spiral_layout
 
 
-.. _graphml:
+.. _serializers
 
-GraphML
-==========
+Serialization
+=============
 
 .. autosummary::
    :toctree: apiref
 
    retworkx.read_graphml
+   retworkx.node_link_json
 
 .. _converters:
 
@@ -316,6 +317,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_unweighted_average_shortest_path_length
    retworkx.digraph_bfs_search
    retworkx.digraph_dijkstra_search
+   retworkx.digraph_node_link_json
 
 .. _api-functions-pygraph:
 
@@ -369,6 +371,7 @@ typed API based on the data type.
    retworkx.graph_unweighted_average_shortest_path_length
    retworkx.graph_bfs_search
    retworkx.graph_dijkstra_search
+   retworkx.digraph_node_link_json
 
 Exceptions
 ==========
@@ -386,6 +389,7 @@ Exceptions
    retworkx.NullGraph
    retworkx.visit.StopSearch
    retworkx.visit.PruneSearch
+   retworkx.JSONSerializationError
 
 Custom Return Types
 ===================

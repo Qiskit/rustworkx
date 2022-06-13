@@ -17,6 +17,29 @@ use crate::{digraph, graph};
 use pyo3::prelude::*;
 use pyo3::Python;
 
+/// Generate a JSON object representing a :class:`~.PyDiGraph in a node-link format
+///
+/// :param PyDiGraph graph: The graph to generate the JSON for
+/// :param str path: An optional path to write the JSON output to. If specified
+///     the function will not return anything and instead will write the JSON
+///     to the file specified.
+/// :param graph_attrs: An optional callable that will be passed the
+///     :attr:`~.PyDiGraph.attrs` attribute of the graph and is expected to
+///     return a dictionary of string keys to string values representing the
+///     graph attributes. This dictionary will be included as attributes in
+///     the output JSON. If anything other than a dictionary with string keys
+///     and string values is returned an exception will be raised.
+/// :param node_attrs: An optional callable that will be passed the node data
+///     payload for each node in the graph and is expected to return a
+///     dictionary of string keys to string values representing the data payload.
+///     This dictionary will be used as the ``data`` field for each node.
+/// :param edge_attrs:  An optional callable that will be passed the edge data
+///     payload for each node in the graph and is expected to return a
+///     dictionary of string keys to string values representing the data payload.
+///     This dictionary will be used as the ``data`` field for each edge.
+///
+/// :returns: Either the JSON string for the payload or ``None`` if ``path`` is specified
+/// :rtype: str
 #[pyfunction]
 pub fn digraph_node_link_json(
     py: Python,
@@ -38,6 +61,29 @@ pub fn digraph_node_link_json(
     )
 }
 
+/// Generate a JSON object representing a :class:`~.PyGraph in a node-link format
+///
+/// :param PyGraph graph: The graph to generate the JSON for
+/// :param str path: An optional path to write the JSON output to. If specified
+///     the function will not return anything and instead will write the JSON
+///     to the file specified.
+/// :param graph_attrs: An optional callable that will be passed the
+///     :attr:`~.PyGraph.attrs` attribute of the graph and is expected to
+///     return a dictionary of string keys to string values representing the
+///     graph attributes. This dictionary will be included as attributes in
+///     the output JSON. If anything other than a dictionary with string keys
+///     and string values is returned an exception will be raised.
+/// :param node_attrs: An optional callable that will be passed the node data
+///     payload for each node in the graph and is expected to return a
+///     dictionary of string keys to string values representing the data payload.
+///     This dictionary will be used as the ``data`` field for each node.
+/// :param edge_attrs:  An optional callable that will be passed the edge data
+///     payload for each node in the graph and is expected to return a
+///     dictionary of string keys to string values representing the data payload.
+///     This dictionary will be used as the ``data`` field for each edge.
+///
+/// :returns: Either the JSON string for the payload or ``None`` if ``path`` is specified
+/// :rtype: str
 #[pyfunction]
 pub fn graph_node_link_json(
     py: Python,

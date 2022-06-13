@@ -334,7 +334,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
-    m.add("JSONSerializationError", py.get_type::<JSONSerializationError>())?;
+    m.add(
+        "JSONSerializationError",
+        py.get_type::<JSONSerializationError>(),
+    )?;
     m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;

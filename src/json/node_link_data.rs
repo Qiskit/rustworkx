@@ -29,7 +29,7 @@ use crate::StablePyGraph;
 struct Graph {
     directed: bool,
     multigraph: bool,
-    graph: Option<BTreeMap<String, String>>,
+    attrs: Option<BTreeMap<String, String>>,
     nodes: Vec<Node>,
     links: Vec<Link>,
 }
@@ -96,7 +96,7 @@ pub fn node_link_data<Ty: EdgeType>(
     let output_struct = Graph {
         directed: graph.is_directed(),
         multigraph,
-        graph: graph_attrs,
+        attrs: graph_attrs,
         nodes,
         links,
     };
