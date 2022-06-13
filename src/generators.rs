@@ -91,6 +91,16 @@ pub fn directed_cycle_graph(
         node_len
     };
     let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
 
     match weights {
         Some(weights) => {
@@ -168,6 +178,15 @@ pub fn cycle_graph(
     }
     let node_len = get_num_nodes(&num_nodes, &weights);
     let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+
     match weights {
         Some(weights) => {
             for weight in weights {
@@ -243,6 +262,16 @@ pub fn directed_path_graph(
         node_len
     };
     let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
 
     match weights {
         Some(weights) => {
@@ -312,6 +341,14 @@ pub fn path_graph(
     }
     let node_len = get_num_nodes(&num_nodes, &weights);
     let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
     match weights {
         Some(weights) => {
             for weight in weights {
@@ -390,6 +427,16 @@ pub fn directed_star_graph(
         ));
     }
     let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph: StablePyGraph::<Directed>::default(),
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
     let num_edges = if bidirectional {
         (2 * node_len) - 2
     } else {
@@ -470,6 +517,14 @@ pub fn star_graph(
         ));
     }
     let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph: StablePyGraph::<Undirected>::default(),
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
     let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len - 1);
     match weights {
         Some(weights) => {
@@ -535,6 +590,14 @@ pub fn mesh_graph(
     let node_len = get_num_nodes(&num_nodes, &weights);
     let num_edges = (node_len * (node_len - 1)) / 2;
     let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, num_edges);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
     match weights {
         Some(weights) => {
             for weight in weights {
@@ -603,6 +666,16 @@ pub fn directed_mesh_graph(
     let node_len = get_num_nodes(&num_nodes, &weights);
     let num_edges = node_len * (node_len - 1);
     let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
     match weights {
         Some(weights) => {
             for weight in weights {
