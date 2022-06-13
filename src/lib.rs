@@ -320,6 +320,8 @@ import_exception!(retworkx.visit, StopSearch);
 create_exception!(retworkx, NegativeCycle, PyException);
 // JSON Error
 create_exception!(retworkx, JSONSerializationError, PyException);
+// Failed to Converge on a solution
+create_exception!(retworkx, FailedToConverge, PyException);
 
 #[pymodule]
 fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -332,6 +334,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
+    m.add("JSONSerializationError", py.get_type::<JSONSerializationError>())?;
+    m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
@@ -404,6 +408,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     ))?;
     m.add_wrapped(wrap_pyfunction!(graph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;

@@ -1593,6 +1593,64 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, paral
 
 
 @functools.singledispatch
+def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6):
+    """Compute the eigenvector centrality of a graph.
+
+    For details on the eigenvector centrality refer to:
+
+    Phillip Bonacich. “Power and Centrality: A Family of Measures.”
+    American Journal of Sociology 92(5):1170–1182, 1986
+    <https://doi.org/10.1086/228631>
+
+    This function uses a power iteration method to compute the eigenvector
+    and convergence is not guaranteed. The function will stop when `max_iter`
+    iterations is reached or when the computed vector between two iterations
+    is smaller than the error tolerance multiplied by the number of nodes.
+    The implementation of this algorithm is based on the NetworkX
+    `eigenvector_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality.html>`__
+    function.
+
+    In the case of multigraphs the weights of any parallel edges will be
+    summed when computing the eigenvector centrality.
+
+    :param graph: Graph to be used. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param weight_fn: An optional input callable that will be passed the edge's
+        payload object and is expected to return a `float` weight for that edge.
+        If this is not specified ``default_weight`` will be used as the weight
+        for every edge in ``graph``
+    :param float default_weight: If ``weight_fn`` is not set the default weight
+        value to use for the weight of all edges
+    :param int max_iter: The maximum number of iterations in the power method. If
+        not specified a default value of 100 is used.
+    :param float tol: The error tolerance used when checking for convergence in the
+        power method. If this is not specified default value of 1e-6 is used.
+
+    :returns: a read-only dict-like object whose keys are the node indices and values are the
+         centrality score for that node.
+    :rtype: CentralityMapping
+    """
+
+
+@eigenvector_centrality.register(PyDiGraph)
+def _digraph_eigenvector_centrality(
+    graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
+):
+    return digraph_eigenvector_centrality(
+        graph, weight_fn=weight_fn, default_weight=default_weight, max_iter=max_iter, tol=tol
+    )
+
+
+@eigenvector_centrality.register(PyGraph)
+def _graph_eigenvector_centrality(
+    graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
+):
+    return graph_eigenvector_centrality(
+        graph, weight_fn=weight_fn, default_weight=default_weight, max_iter=max_iter, tol=tol
+    )
+
+
+@functools.singledispatch
 def vf2_mapping(
     first,
     second,
