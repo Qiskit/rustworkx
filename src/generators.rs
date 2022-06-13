@@ -588,16 +588,16 @@ pub fn mesh_graph(
         ));
     }
     let node_len = get_num_nodes(&num_nodes, &weights);
-    let num_edges = (node_len * (node_len - 1)) / 2;
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, num_edges);
     if node_len == 0 {
         return Ok(graph::PyGraph {
-            graph,
+            graph: StablePyGraph::<Undirected>::default(),
             node_removed: false,
             multigraph,
             attrs: py.None(),
         });
     }
+    let num_edges = (node_len * (node_len - 1)) / 2;
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, num_edges);
     match weights {
         Some(weights) => {
             for weight in weights {
@@ -664,11 +664,9 @@ pub fn directed_mesh_graph(
         ));
     }
     let node_len = get_num_nodes(&num_nodes, &weights);
-    let num_edges = node_len * (node_len - 1);
-    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
     if node_len == 0 {
         return Ok(digraph::PyDiGraph {
-            graph,
+            graph: StablePyGraph::<Directed>::default(),
             node_removed: false,
             check_cycle: false,
             cycle_state: algo::DfsSpace::default(),
@@ -676,6 +674,8 @@ pub fn directed_mesh_graph(
             attrs: py.None(),
         });
     }
+    let num_edges = node_len * (node_len - 1);
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
     match weights {
         Some(weights) => {
             for weight in weights {
@@ -756,7 +756,19 @@ pub fn grid_graph(
     let mut rowlen = rows.unwrap_or(0);
     let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
-    let num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    let mut num_edges = 0;
+    if num_nodes == 0 {
+        if weights.is_none() {
+            return Ok(graph::PyGraph {
+                graph: StablePyGraph::<Undirected>::default(),
+                node_removed: false,
+                multigraph,
+                attrs: py.None(),
+            });
+        }
+    } else {
+        num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    }
     let mut graph = StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
 
     match weights {
@@ -869,7 +881,21 @@ pub fn directed_grid_graph(
     let mut rowlen = rows.unwrap_or(0);
     let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
-    let mut num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    let mut num_edges = 0;
+    if num_nodes == 0 {
+        if weights.is_none() {
+            return Ok(digraph::PyDiGraph {
+                graph: StablePyGraph::<Directed>::default(),
+                node_removed: false,
+                check_cycle: false,
+                cycle_state: algo::DfsSpace::default(),
+                multigraph,
+                attrs: py.None(),
+            });
+        }
+    } else {
+        num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    }
     if bidirectional {
         num_edges *= 2;
     }
