@@ -122,6 +122,10 @@ use petgraph::visit::{
 ///     source_path = graph.attrs
 ///     graph.attrs = {'new_path': '/tmp/new.csv', 'old_path': source_path}
 ///
+/// The maximum number of nodes and edges allowed on a ``PyGraph`` object is
+/// :math:`2^{32} - 1` (4,294,967,294) each. Attempting to add more nodes or
+/// edges than this will result in an exception being raised.
+///
 /// :param bool multigraph: When this is set to ``False`` the created PyGraph
 ///     object will not be a multigraph. When ``False`` if a method call is
 ///     made that would add parallel edges the the weight/weight from that
