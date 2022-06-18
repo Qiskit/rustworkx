@@ -98,3 +98,11 @@ class TestStarGraph(unittest.TestCase):
     def test_star_no_weights_or_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.star_graph()
+
+    def test_zero_length_star_graph(self):
+        graph = retworkx.generators.star_graph(0)
+        self.assertEqual(0, len(graph))
+
+    def test_zero_length_directed_star_graph(self):
+        graph = retworkx.generators.directed_star_graph(0)
+        self.assertEqual(0, len(graph))

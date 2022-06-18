@@ -57,3 +57,11 @@ class TestMeshGraph(unittest.TestCase):
     def test_mesh_no_weights_or_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.mesh_graph()
+
+    def test_zero_size_mesh_graph(self):
+        graph = retworkx.generators.mesh_graph(0)
+        self.assertEqual(0, len(graph))
+
+    def test_zero_size_directed_mesh_graph(self):
+        graph = retworkx.generators.directed_mesh_graph(0)
+        self.assertEqual(0, len(graph))

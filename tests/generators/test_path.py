@@ -61,3 +61,11 @@ class TestPathGraph(unittest.TestCase):
     def test_path_no_weights_or_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.path_graph()
+
+    def test_zero_length_path_graph(self):
+        graph = retworkx.generators.path_graph(0)
+        self.assertEqual(0, len(graph))
+
+    def test_zero_length_directed_path_graph(self):
+        graph = retworkx.generators.directed_path_graph(0)
+        self.assertEqual(0, len(graph))
