@@ -693,7 +693,7 @@ where
 /// ]);
 /// assert!(is_planar(&grid))
 /// ```
-pub fn is_planar<G>(graph: G, lr_state: &mut LRState<G>) -> bool
+pub fn is_planar<G>(graph: G, state: Option<&mut LRState<G>>) -> bool
 where
     G: GraphProp<EdgeType = Undirected>
         + NodeCount
@@ -704,10 +704,12 @@ where
         + Visitable,
     G::NodeId: Hash + Eq,
 {
-    // let lr_state = match state {
-    //     Some(state) => state.unwrap(),
-    //     None => &mut LRState::new(graph),
-    // };
+    let mut lr_state = LRState::new(graph);
+    let lr_state = match state {
+        Some(state) => state,
+        None => &mut lr_state,
+    };
+
     // // Dfs orientation phase
     depth_first_search(graph, graph.node_identifiers(), |event| {
         lr_state.lr_orientation_visitor(event)

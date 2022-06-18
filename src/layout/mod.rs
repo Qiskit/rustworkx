@@ -12,6 +12,7 @@
 
 mod bipartite;
 mod circular;
+mod embedding;
 mod planar;
 mod random;
 mod shell;
