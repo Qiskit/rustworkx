@@ -194,7 +194,7 @@ where
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Sign {
     Plus,
     Minus,

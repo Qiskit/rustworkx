@@ -9,8 +9,8 @@ use rayon::prelude::*;
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use retworkx_core::connectivity::connected_components;
 use crate::StablePyGraph;
+use retworkx_core::connectivity::connected_components;
 use retworkx_core::planar::lr_planar::{LRState, Sign};
 
 pub type Point = [f64; 2];
@@ -90,16 +90,17 @@ impl PlanarEmbedding {
 
         let mut node = self.get_edge_weight(v, start_node, true);
         if let Some(mut current_node) = node {
-            //println!("current_node 1 {:?}", current_node);
-
-            while start_node != current_node {
+            println!("current_node 1 {:?}", current_node);
+            let mut count = 0;
+            while start_node != current_node && count < 20 {
+                count += 1;
                 nbrs.push(current_node);
                 node = self.get_edge_weight(v, current_node, true);
                 current_node = match node {
                     Some(node) => node,
                     None => break,
                 };
-                //println!("current_node 2 {:?}", current_node);
+                println!("current_node 2 {:?}", current_node);
             }
         }
         println!("nbrs 1 in nbrs_cw_order {:?}", nbrs);
@@ -182,7 +183,7 @@ impl PlanarEmbedding {
         //
         if new_node.is_none() {
             println!("NEW NODE NONE in next_face {:?} {:?} {:?}", new_node, v, w);
-            return (w, v);
+            panic!("HELP!"); //return (w, v);
         }
         (w, new_node.unwrap())
     }
@@ -205,15 +206,16 @@ impl PlanarEmbedding {
     }
 
     fn get_edge_weight(&self, v: NodeIndex, w: NodeIndex, cw: bool) -> Option<NodeIndex> {
-        println!("GET EDGE v w {:?} {:?}", v, w);
+        //println!("GET EDGE v w {:?} {:?}", v, w);
         let found_edge = self.embedding.find_edge(v, w);
         // FIX THIS
         //
         //
         if found_edge.is_none() {
+            println!("GET EDGE find edge is none {:?}", found_edge);
             return None;
         }
-        println!("GET EDGE find edge{:?}", found_edge);
+        //println!("GET EDGE find edge{:?}", found_edge);
         let found_weight = self.embedding.edge_weight(found_edge.unwrap()); //.unwrap();
                                                                             //println!("after found weight {:?}", found_weight);
         if found_weight.is_none() {
@@ -236,71 +238,69 @@ impl PlanarEmbedding {
     }
 }
 
-fn id_to_index<G: GraphBase + NodeIndexable>(graph: G, node_id: G::NodeId) -> NodeIndex {
-    NodeIndex::new(graph.to_index(node_id))
-}
-
-fn index_to_id<G: GraphBase + NodeIndexable>(graph: G, node_index: NodeIndex) -> G::NodeId {
-    graph.from_index(node_index.index())
-}
-
 pub fn create_embedding(
     planar_emb: &mut PlanarEmbedding,
     lr_state: &mut LRState<&StablePyGraph<Undirected>>,
-)
-// where
-//    <G as GraphBase>::NodeId: Hash + Eq,
-//    <G as GraphBase>::NodeId: Debug,
-//    // These are needed for par_sort
-//    G: std::marker::Sync,
-//    <G as GraphBase>::NodeId: Sync,
-{
+) {
+    // ********** DEBUG
     for node in lr_state.dir_graph.node_indices() {
         for edge in lr_state.dir_graph.edges(node) {
             println!("Edge {:?}, {:?}", edge.source(), edge.target());
         }
     }
+    // ********** DEBUG END
 
     let mut ordered_adjs: Vec<Vec<NodeIndex>> = Vec::new();
 
+    let mut nesting_depth: HashMap<(NodeIndex, NodeIndex), i32> =
+        HashMap::with_capacity(lr_state.nesting_depth.len());
+
+    // Create the adjacency list for each node
     for v in lr_state.dir_graph.node_indices() {
         ordered_adjs.push(lr_state.dir_graph.edges(v).map(|e| e.target()).collect());
 
+        // Add empty FirstNbr to the embedding
         let first_nbr = FirstNbr::<NodeIndex>::default();
         planar_emb.embedding.add_node(first_nbr);
-        let mut nesting_depth: HashMap<(NodeIndex, NodeIndex), i32> =
-            HashMap::with_capacity(lr_state.nesting_depth.len());
+
         // Change the sign for nesting_depth
         for e in lr_state.dir_graph.edges(v) {
             let edge: (NodeIndex, NodeIndex) = (e.source(), e.target());
-            //let edge_base = (index_to_id(&lr_state.graph, edge.source()), index_to_id(&lr_state.graph, edge.target()));
             let signed_depth: i32 = lr_state.nesting_depth[&edge] as i32;
-            nesting_depth.insert(edge,
-                sign(edge, &mut lr_state.eref, &mut lr_state.side) * signed_depth);
-            //lr_state.nesting_depth[&edge];
+            let signed_side = if lr_state.side.contains_key(&edge)
+                && sign(edge, &mut lr_state.eref, &mut lr_state.side) == Sign::Minus
+            {
+                -1
+            } else {
+                1
+            };
+            nesting_depth.insert(edge, signed_depth * signed_side);
         }
     }
+    // ********** DEBUG
     for x in &ordered_adjs {
         println!("ordered {:?}", x);
     }
-    for x in &lr_state.nesting_depth {
+    // ********** DEBUG END
+
+    // ********** DEBUG
+    for x in &nesting_depth {
         println!("nesting {:?}", x);
     }
+    // ********** DEBUG END
 
-    //lr_state.nesting_depth.iter().enumerate().map(|(e, val)| (e, val * sign(e)));
-
+    // Sort the adjacency list using nesting depth as sort order
     for (v, adjs) in ordered_adjs.iter_mut().enumerate() {
-        adjs.par_sort_by_key(|x| {
-            lr_state.nesting_depth[&(
-                index_to_id(&lr_state.graph, NodeIndex::new(v)),
-                index_to_id(&lr_state.graph, *x),
-            )]
-        });
+        adjs.par_sort_by_key(|x| nesting_depth[&(NodeIndex::new(v), *x)]);
     }
+
+    // ********** DEBUG
     for x in &ordered_adjs {
         println!("ordered 2222 {:?}", x);
     }
+    // ********** DEBUG END
 
+    // Add the initial half edge cw to the embedding using the ordered adjacency list
     for v in lr_state.dir_graph.node_indices() {
         let mut prev_node: Option<NodeIndex> = None;
         for w in &ordered_adjs[v.index()] {
@@ -308,124 +308,83 @@ pub fn create_embedding(
             prev_node = Some(*w)
         }
     }
+
+    // ********** DEBUG
     for v in planar_emb.embedding.node_indices() {
         println!("11111 embedding node {:?} {:?}", v, planar_emb.embedding[v]);
     }
+    println!("lr eparent {:?}", lr_state.eparent);
+    // ********** DEBUG END
 
+    // Start the DFS traversal for the embedding
     let mut left_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
     let mut right_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
     let mut idx: Vec<usize> = vec![0; ordered_adjs.len()];
 
-    for v_id in lr_state.roots.iter() {
-        let v = id_to_index(&lr_state.graph, *v_id);
-        // println!(
-        //     "second v {:?} v index {:?} ord {:?} idx {:?}",
-        //     v,
-        //     v.index(),
-        //     ordered_adjs[v.index()],
-        //     idx
-        // );
+    for v in lr_state.roots.iter() {
+        // Create the stack with an initial entry of v
+        let mut dfs_stack: Vec<NodeIndex> = vec![*v];
 
-        let mut dfs_stack: Vec<NodeIndex> = vec![v];
-
-        // println!("lr eparent {:?}", lr_state.eparent);
         while dfs_stack.len() > 0 {
             let v = dfs_stack.pop().unwrap();
             let idx2 = idx[v.index()];
-            for (w_pos, w) in ordered_adjs[v.index()][idx2..].iter().enumerate() {
-                let w_id = index_to_id(&lr_state.graph, *w);
-                // println!(
-                //     "third v {:?} vindex {:?} w {:?} w_id {:?} w_pos {:?} idx {:?} ",
-                //     v,
-                //     v.index(),
-                //     *w,
-                //     w_id,
-                //     w_pos,
-                //     idx
-                // );
+
+            // Iterate over the ordered_adjs starting at the saved index until the end
+            for w in ordered_adjs[v.index()][idx2..].iter() {
                 idx[v.index()] += 1;
 
-                let ei = (v, w);
-                let ei_id = (
-                    index_to_id(&lr_state.graph, v),
-                    index_to_id(&lr_state.graph, *w),
-                );
-                if lr_state.eparent.contains_key(&w_id) {
-                    let parent_id = lr_state.eparent[&w_id];
-                    let (v1, v2) = (
-                        id_to_index(&lr_state.graph, parent_id.0),
-                        id_to_index(&lr_state.graph, parent_id.1),
-                    );
-
-                    if ei == (v1, &v2) {
-                        // println!("in ei {:?}", ei);
-                        planar_emb.add_half_edge_first(*w, v);
-                        left_ref.entry(v).or_insert(*w);
-                        right_ref.entry(v).or_insert(*w);
-                        dfs_stack.push(v);
-                        dfs_stack.push(*w);
-                        break;
+                let ei = (v, *w);
+                if lr_state.eparent.contains_key(&w) && ei == lr_state.eparent[&w] {
+                    println!("in ei {:?}", ei);
+                    planar_emb.add_half_edge_first(*w, v);
+                    left_ref.entry(v).or_insert(*w);
+                    right_ref.entry(v).or_insert(*w);
+                    dfs_stack.push(v);
+                    dfs_stack.push(*w);
+                    break;
+                } else {
+                    if !lr_state.side.contains_key(&ei) || lr_state.side[&ei] == Sign::Plus {
+                        planar_emb.add_half_edge_cw(*w, v, Some(right_ref[w]));
                     } else {
-                        if lr_state.side[&ei_id] == Sign::Plus {
-                            planar_emb.add_half_edge_cw(*w, v, Some(right_ref[w]));
-                        } else {
-                            planar_emb.add_half_edge_ccw(*w, v, Some(left_ref[w]));
-                            left_ref.entry(*w).or_insert(v);
-                        }
-                        // println!("in else {:?}", ei);
+                        planar_emb.add_half_edge_ccw(*w, v, Some(left_ref[w]));
+                        left_ref.entry(*w).or_insert(v);
                     }
+                    println!("in else {:?}", ei);
                 }
             }
         }
     }
 
+    // ********** DEBUG
     for v in planar_emb.embedding.node_indices() {
-        println!("22222 embedding node {:?} {:?}", v, planar_emb.embedding[v]);
+        for w in &ordered_adjs[v.index()] {
+            println!(
+                "22222 embedding node {:?} {:?} {:?} {:?}",
+                v,
+                planar_emb.embedding[v],
+                planar_emb.get_edge_weight(v, *w, true),
+                planar_emb.get_edge_weight(v, *w, false)
+            );
+        }
     }
+    // ********** DEBUG END
+
     pub fn sign(
         edge: (NodeIndex, NodeIndex),
         eref: &mut HashMap<(NodeIndex, NodeIndex), (NodeIndex, NodeIndex)>,
         side: &mut HashMap<(NodeIndex, NodeIndex), Sign>,
-    ) -> i32 {
-        let mut dfs_stack: Vec<(NodeIndex, NodeIndex)> = vec![edge];
-        let mut old_ref: HashMap<(NodeIndex, NodeIndex), (NodeIndex, NodeIndex)> =
-            HashMap::with_capacity(eref.len());
+    ) -> Sign {
+        // Resolve the relative side of an edge to the absolute side.
 
-        // """Resolve the relative side of an edge to the absolute side."""
-
-        let mut e: (NodeIndex, NodeIndex) = edge;
-        let mut side_final: i32 = 1;
-        // for e in side {
-        //     println!("side {} {}", e.0.0.index(), e.0.1.index());
-        // }
-        //return side_final;
-        while dfs_stack.len() > 0 {
-            e = dfs_stack.pop().unwrap();
-
-            if eref.contains_key(&e) {
-                dfs_stack.push(e);
-                dfs_stack.push(eref[&e]);
-                *old_ref.get_mut(&e).unwrap() = eref[&e];
-                eref.remove(&e);
+        if eref.contains_key(&edge) {
+            if side[&edge].clone() == sign(eref[&edge].clone(), eref, side) {
+                *side.get_mut(&edge).unwrap() = Sign::Plus;
             } else {
-                if side.contains_key(&e) {
-                if side[&e] == side[&old_ref[&e]] {
-                        *side.get_mut(&e).unwrap() = Sign::Plus;
-                    } else {
-                        println!("side no find plus {} {}", e.0.index(), e.1.index());
-                    }
-                    side_final = 1;
-                } else {
-                    if side.contains_key(&e) {
-                        *side.get_mut(&e).unwrap() = Sign::Minus;
-                    } else {
-                        println!("side no find minus {} {}", e.0.index(), e.1.index());
-                    }
-                    side_final = -1;
-                }
+                *side.get_mut(&edge).unwrap() = Sign::Minus;
             }
+            eref.remove(&edge);
         }
-        side_final
+        side[&edge]
     }
 }
 
@@ -439,7 +398,7 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
             .map(|n| default_pos[n.index()])
             .collect();
     }
-    let outer_face = triangulate_embedding(planar_emb);
+    let outer_face = triangulate_embedding(planar_emb, true);
 
     let right_t_child = HashMap::<NodeIndex, usize>::new();
     let left_t_child = HashMap::<NodeIndex, usize>::new();
@@ -451,7 +410,10 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
     pos
 }
 
-fn triangulate_embedding(planar_emb: &mut PlanarEmbedding) -> Vec<NodeIndex> {
+fn triangulate_embedding(
+    planar_emb: &mut PlanarEmbedding,
+    fully_triangulate: bool,
+) -> Vec<NodeIndex> {
     let component_sets = connected_components(&planar_emb.embedding);
     println!("CONN COMP {:?}", component_sets);
 
@@ -459,36 +421,96 @@ fn triangulate_embedding(planar_emb: &mut PlanarEmbedding) -> Vec<NodeIndex> {
         let v1 = component_sets[i].iter().next().unwrap();
         let v2 = component_sets[i + 1].iter().next().unwrap();
         planar_emb.connect_components(*v1, *v2);
+        println!("v1 v2 {:?} {:?}", *v1, *v2);
     }
     let mut outer_face = vec![];
     let mut face_list = vec![];
     let mut edges_counted: HashSet<(NodeIndex, NodeIndex)> = HashSet::new();
     println!(" in triangulate component sets{:?}", component_sets);
-    return outer_face;
 
     for v in planar_emb.embedding.node_indices() {
         for w in planar_emb.neighbors_cw_order(v) {
             let new_face = make_bi_connected(planar_emb, v, w, &mut edges_counted);
-            let new_len = new_face.len();
-            if new_len > 0 {
+            if new_face.len() > 0 {
                 face_list.push(new_face.clone());
-                if new_len > outer_face.len() {
+                if new_face.len() > outer_face.len() {
                     outer_face = new_face;
                 }
             }
         }
     }
-    return outer_face;
 
     println!("FINAL Face list {:?}", face_list);
     for face in face_list {
         println!("face {:?} outer_face {:?}", face, outer_face);
-        if face != outer_face {
+        if face != outer_face || fully_triangulate {
             triangulate_face(planar_emb, face[0], face[1]);
         }
     }
+    if fully_triangulate {
+        let v1 = outer_face[0];
+        let v2 = outer_face[1];
+        let v3 = planar_emb.get_edge_weight(v2, v1, false);
+        outer_face = vec![v1, v2, v3.unwrap()];
+    }
     println!("outer_face {:?}", outer_face);
     outer_face
+}
+
+fn make_bi_connected(
+    planar_emb: &mut PlanarEmbedding,
+    start_node: NodeIndex,
+    out_node: NodeIndex,
+    edges_counted: &mut HashSet<(NodeIndex, NodeIndex)>,
+) -> Vec<NodeIndex> {
+    if edges_counted.contains(&(start_node, out_node)) || start_node == out_node {
+        println!(
+            "biconnect already in start out {:?} {:?}",
+            start_node, out_node
+        );
+        return vec![];
+    }
+    edges_counted.insert((start_node, out_node));
+    //println!("edges counted {:?} {:?} {:?}", start_node, out_node, edges_counted);
+    let mut v1 = start_node.clone();
+    let mut v2 = out_node.clone();
+    let mut face_list: Vec<NodeIndex> = vec![start_node];
+    let (_, mut v3) = planar_emb.next_face_half_edge(v1, v2);
+
+    let mut count = 0;
+    while (v2 != start_node || v3 != out_node) && count < 20 {
+        // && count < 300 {
+        if v1 == v2 {
+            println!("BICONNECT V1==V2 should raise");
+        }
+        println!("face_list in while {:?} {:?} {:?}", v2, v3, face_list);
+
+        if face_list.contains(&v2) {
+            println!(
+                "face_list contains v2 {:?} {:?} {:?}",
+                v2, v3, edges_counted
+            );
+            planar_emb.add_half_edge_cw(v1, v3, Some(v2));
+            planar_emb.add_half_edge_ccw(v3, v1, Some(v2));
+            edges_counted.insert((v2, v3));
+            edges_counted.insert((v3, v1));
+            v2 = v1.clone();
+        } else {
+            println!(
+                "face_list not contain v2 {:?} {:?} {:?}",
+                v2, v3, edges_counted
+            );
+            face_list.push(v2);
+        }
+        v1 = v2.clone();
+        println!("2 edges counted {:?} {:?} {:?}", v2, v3, edges_counted);
+        (v2, v3) = planar_emb.next_face_half_edge(v2, v3);
+        println!("3 edges counted {:?} {:?} {:?}", v2, v3, edges_counted);
+
+        edges_counted.insert((v1, v2));
+        count += 1;
+    }
+    face_list
 }
 
 fn triangulate_face(planar_emb: &mut PlanarEmbedding, mut v1: NodeIndex, mut v2: NodeIndex) {
@@ -511,53 +533,74 @@ fn triangulate_face(planar_emb: &mut PlanarEmbedding, mut v1: NodeIndex, mut v2:
     }
 }
 
-fn make_bi_connected(
-    planar_emb: &mut PlanarEmbedding,
-    start_node: NodeIndex,
-    out_node: NodeIndex,
-    edges_counted: &mut HashSet<(NodeIndex, NodeIndex)>,
-) -> Vec<NodeIndex> {
-    if edges_counted.contains(&(start_node, out_node)) || start_node == out_node {
-        return vec![];
-    }
-    edges_counted.insert((start_node, out_node));
-    //println!("edges counted {:?} {:?} {:?}", start_node, out_node, edges_counted);
-    let mut v1 = start_node.clone();
-    let mut v2 = out_node.clone();
-    let mut face_list: Vec<NodeIndex> = vec![start_node];
-    let (_, mut v3) = planar_emb.next_face_half_edge(v1, v2);
-
-    let mut count = 0;
-    while (v2 != start_node || v3 != out_node) && v2 != v3 && count < 20 {
-        // && count < 300 {
-        //println!("face_list in while {:?} {:?} {:?}", v2, v3, face_list);
-
-        if face_list.contains(&v2) {
-            //println!("face_list contains v2 {:?} {:?} {:?}", v2, v3, edges_counted);
-            planar_emb.add_half_edge_cw(v1, v3, Some(v2));
-            planar_emb.add_half_edge_ccw(v3, v1, Some(v2));
-            edges_counted.insert((v2, v3));
-            edges_counted.insert((v3, v1));
-            v2 = v1.clone();
-        } else {
-            //println!("face_list not contain v2 {:?} {:?} {:?}", v2, v3, edges_counted);
-            face_list.push(v2);
-        }
-        v1 = v2.clone();
-        //println!("2 edges counted {:?} {:?} {:?}", v2, v3, edges_counted);
-        (v2, v3) = planar_emb.next_face_half_edge(v2, v3);
-        //println!("3 edges counted {:?} {:?} {:?}", v2, v3, edges_counted);
-
-        edges_counted.insert((v1, v2));
-        count += 1;
-    }
-    face_list
-}
-
 fn canonical_ordering(
     planar_emb: &mut PlanarEmbedding,
     outer_face: Vec<NodeIndex>,
 ) -> Vec<(NodeIndex, Vec<NodeIndex>)> {
+    let v1 = outer_face[0];
+    let v2 = outer_face[1];
+    let mut chords: HashMap<NodeIndex, usize> =
+        HashMap::with_capacity(planar_emb.embedding.node_count());
+    let mut marked_nodes: HashSet<NodeIndex> =
+        HashSet::with_capacity(planar_emb.embedding.node_count());
+    let mut ready_to_pick: HashSet<NodeIndex> = HashSet::with_capacity(outer_face.len());
+
+    let mut outer_face_cw_nbr: HashMap<NodeIndex, NodeIndex> =
+        HashMap::with_capacity(outer_face.len());
+    let mut outer_face_ccw_nbr: HashMap<NodeIndex, NodeIndex> =
+        HashMap::with_capacity(outer_face.len());
+    let mut prev_nbr = v2.clone();
+
+    for v in outer_face.iter().rev() {
+        outer_face_ccw_nbr.entry(prev_nbr).or_insert(*v);
+        prev_nbr = *v;
+    }
+    outer_face_ccw_nbr.entry(prev_nbr).or_insert(v1);
+
+    for v in outer_face.iter().rev() {
+        outer_face_cw_nbr.entry(prev_nbr).or_insert(*v);
+        prev_nbr = *v;
+    }
+
+    fn is_outer_face_nbr(
+        x: NodeIndex,
+        y: NodeIndex,
+        outer_face_cw_nbr: &HashMap<NodeIndex, NodeIndex>,
+        outer_face_ccw_nbr: &HashMap<NodeIndex, NodeIndex>,
+    ) -> bool {
+        if !outer_face_ccw_nbr.contains_key(&x) {
+            return outer_face_cw_nbr[&x] == y;
+        }
+        if !outer_face_ccw_nbr.contains_key(&x) {
+            return outer_face_cw_nbr[&x] == y;
+        }
+        outer_face_cw_nbr[&x] == y || outer_face_ccw_nbr[&x] == y
+    }
+
+    fn is_on_outer_face(
+        x: NodeIndex,
+        v1: NodeIndex,
+        marked_nodes: &HashSet<NodeIndex>,
+        outer_face_ccw_nbr: &HashMap<NodeIndex, NodeIndex>,
+    ) -> bool {
+        !marked_nodes.contains(&x) && (outer_face_ccw_nbr.contains_key(&x) || x == v1)
+    }
+
+    for v in outer_face {
+        for nbr in planar_emb.neighbors_cw_order(v) {
+            if is_on_outer_face(nbr, v1, &marked_nodes, &outer_face_ccw_nbr)
+                && is_outer_face_nbr(v, nbr, &outer_face_cw_nbr, &outer_face_ccw_nbr)
+            {
+                if chords.contains_key(&v) {
+                    let chords_plus = chords[&v].clone();
+                    chords.entry(v).or_insert(chords_plus + 1);
+                } else {
+                    chords.entry(v).or_insert(1);
+                }
+                ready_to_pick.remove(&v);
+            }
+        }
+    }
     vec![(
         NodeIndex::new(0),
         vec![NodeIndex::new(1), NodeIndex::new(2)],
