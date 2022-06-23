@@ -1,13 +1,11 @@
 use hashbrown::hash_map::HashMap;
 use hashbrown::HashSet;
-use petgraph::graph::Edge;
 use petgraph::graph::Graph;
 use petgraph::prelude::*;
-use petgraph::visit::{GraphBase, NodeIndexable};
+use petgraph::visit::NodeIndexable;
 use petgraph::Directed;
 use rayon::prelude::*;
 use std::fmt::Debug;
-use std::hash::Hash;
 
 use crate::StablePyGraph;
 use retworkx_core::connectivity::connected_components;
@@ -390,6 +388,9 @@ pub fn create_embedding(
 
 pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
     let mut pos: Vec<Point> = Vec::with_capacity(planar_emb.embedding.node_count());
+    for p in 0..planar_emb.embedding.node_count() {
+        pos.push([0.0, 0.0]);
+    }
     if planar_emb.embedding.node_count() < 4 {
         let default_pos = [[0.0, 0.0], [2.0, 0.0], [1.0, 1.0]].to_vec();
         return planar_emb
@@ -398,15 +399,106 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
             .map(|n| default_pos[n.index()])
             .collect();
     }
-    let outer_face = triangulate_embedding(planar_emb, true);
+    let outer_face = triangulate_embedding(planar_emb, false);
 
-    let right_t_child = HashMap::<NodeIndex, usize>::new();
-    let left_t_child = HashMap::<NodeIndex, usize>::new();
-    let delta_x = HashMap::<NodeIndex, usize>::new();
-    let y_coord = HashMap::<NodeIndex, usize>::new();
+    let mut right_t_child: HashMap<Option<NodeIndex>, Option<NodeIndex>> = HashMap::new();
+    let mut left_t_child = HashMap::<Option<NodeIndex>, Option<NodeIndex>>::new();
+    let mut delta_x = HashMap::<Option<NodeIndex>, usize>::new();
+    let mut y_coord = HashMap::<Option<NodeIndex>, usize>::new();
 
     let node_list = canonical_ordering(planar_emb, outer_face);
 
+    let v1 = node_list[0].0;
+    let v2 = node_list[1].0;
+    let v3 = node_list[2].0;
+
+    println!("NODE LIST v1 {:?} {:?}", v1, node_list);
+
+    delta_x.entry(v1).or_insert(0);
+    y_coord.entry(v1).or_insert(0);
+    right_t_child.entry(v1).or_insert(v3);
+    left_t_child.entry(v1).or_insert(None);
+
+    delta_x.entry(v2).or_insert(1);
+    y_coord.entry(v2).or_insert(0);
+    right_t_child.entry(v2).or_insert(None);
+    left_t_child.entry(v2).or_insert(None);
+
+    delta_x.entry(v3).or_insert(1);
+    y_coord.entry(v3).or_insert(1);
+    right_t_child.entry(v3).or_insert(v2);
+    left_t_child.entry(v3).or_insert(None);
+
+    for k in 3..node_list.len() {
+        let vk = node_list[k].0;
+        if vk.is_none() {
+            continue
+        }
+        let contour_nbrs = &node_list[k].1;
+
+        let wp = contour_nbrs[0];
+        let wp1 = contour_nbrs[1];
+        let wq = contour_nbrs[contour_nbrs.len() - 1];
+        let wq1 = contour_nbrs[contour_nbrs.len() - 2];
+
+        let adds_mult_tri = contour_nbrs.len() > 2;
+
+        let delta_wp1_plus = delta_x[&wp1] + 1;
+        delta_x.entry(wp1).or_insert(delta_wp1_plus);
+        let delta_wq_plus = delta_x[&wq] + 1;
+        delta_x.entry(wq).or_insert(delta_wq_plus);
+
+        let delta_x_wp_wq = contour_nbrs.iter().map(|x| delta_x[x]).sum::<usize>();
+
+        println!("delta_x_wp_wq {:?}", delta_x_wp_wq);
+
+        let y_wp = y_coord[&wp].clone();
+        let y_wq = y_coord[&wp].clone();
+        delta_x.entry(vk).or_insert(delta_x_wp_wq - y_wp + y_wq); //y_coord[&wp] + y_coord[&wq]);
+        y_coord.entry(vk).or_insert(delta_x_wp_wq + y_wp + y_wq); //y_coord.cloned()[&wp] + y_coord.cloned()[&wq]);
+        let d_vk = delta_x[&vk].clone();
+        delta_x.entry(wq).or_insert(delta_x_wp_wq - d_vk);
+
+        if adds_mult_tri {
+            let delta_wp1_minus = delta_x[&wp1] - delta_x[&vk];
+            delta_x.entry(wp1).or_insert(delta_wp1_minus);
+        }
+
+        right_t_child.entry(wp).or_insert(vk);
+        right_t_child.entry(vk).or_insert(wq);
+        if adds_mult_tri {
+            left_t_child.entry(vk).or_insert(wp1);
+            right_t_child.entry(wq1).or_insert(None);
+        } else {
+            left_t_child.entry(vk).or_insert(None);
+        }
+    }
+
+    pub fn set_position(
+        parent: Option<NodeIndex>,
+        tree: &HashMap::<Option<NodeIndex>, Option<NodeIndex>>,
+        remaining_nodes: &mut Vec<Option<NodeIndex>>,
+        delta_x: &HashMap::<Option<NodeIndex>, usize>,
+        y_coord: &HashMap::<Option<NodeIndex>, usize>,
+        pos: &mut Vec<Point>
+    ) {
+        let child = tree[&parent];
+        let parent_node_x = pos[parent.unwrap().index()][0];
+
+        if child.is_some() {
+            let child_x = parent_node_x + (delta_x[&child] as f64);
+            pos[child.unwrap().index()] = [child_x, (y_coord[&child] as f64)];
+            remaining_nodes.push(child);
+        }
+    }
+
+    pos[v1.unwrap().index()] = [0 as f64, y_coord[&v1] as f64];
+    let mut remaining_nodes = vec![v1];
+    while remaining_nodes.len() > 0 {
+        let parent_node = remaining_nodes.pop().unwrap();
+        set_position(parent_node, &left_t_child, &mut remaining_nodes, &delta_x, &y_coord, &mut pos);
+        set_position(parent_node, &right_t_child, &mut remaining_nodes, &delta_x, &y_coord, &mut pos);
+    }
     pos
 }
 
@@ -536,14 +628,16 @@ fn triangulate_face(planar_emb: &mut PlanarEmbedding, mut v1: NodeIndex, mut v2:
 fn canonical_ordering(
     planar_emb: &mut PlanarEmbedding,
     outer_face: Vec<NodeIndex>,
-) -> Vec<(NodeIndex, Vec<NodeIndex>)> {
+) -> Vec<(Option<NodeIndex>, Vec<Option<NodeIndex>>)> {
     let v1 = outer_face[0];
     let v2 = outer_face[1];
-    let mut chords: HashMap<NodeIndex, usize> =
-        HashMap::with_capacity(planar_emb.embedding.node_count());
-    let mut marked_nodes: HashSet<NodeIndex> =
-        HashSet::with_capacity(planar_emb.embedding.node_count());
-    let mut ready_to_pick: HashSet<NodeIndex> = HashSet::with_capacity(outer_face.len());
+    let mut chords: HashMap<NodeIndex, usize> = HashMap::new();
+    let mut marked_nodes: HashSet<NodeIndex> = HashSet::new();
+    let mut ready_to_pick: HashSet<NodeIndex> = HashSet::new();
+
+    for node in outer_face.iter() {
+        ready_to_pick.insert(*node);
+    }
 
     let mut outer_face_cw_nbr: HashMap<NodeIndex, NodeIndex> =
         HashMap::with_capacity(outer_face.len());
@@ -589,7 +683,7 @@ fn canonical_ordering(
     for v in outer_face {
         for nbr in planar_emb.neighbors_cw_order(v) {
             if is_on_outer_face(nbr, v1, &marked_nodes, &outer_face_ccw_nbr)
-                && is_outer_face_nbr(v, nbr, &outer_face_cw_nbr, &outer_face_ccw_nbr)
+                && !is_outer_face_nbr(v, nbr, &outer_face_cw_nbr, &outer_face_ccw_nbr)
             {
                 if chords.contains_key(&v) {
                     let chords_plus = chords[&v].clone();
@@ -600,9 +694,102 @@ fn canonical_ordering(
                 ready_to_pick.remove(&v);
             }
         }
+        println!("READY 1st {:?} {:?}", v, ready_to_pick);
+        println!("Chords 1st {:?}", chords);
     }
-    vec![(
-        NodeIndex::new(0),
-        vec![NodeIndex::new(1), NodeIndex::new(2)],
-    )]
+
+    let mut canon_order: Vec<(Option<NodeIndex>, Vec<Option<NodeIndex>>)> =
+        vec![(None, vec![]); planar_emb.embedding.node_count()];
+
+    canon_order[0] = (Some(v1), vec![]);
+    canon_order[1] = (Some(v2), vec![]);
+    println!("READY before {:?}", ready_to_pick);
+    println!("Marked before {:?}", marked_nodes);
+
+    ready_to_pick.remove(&v1);
+    ready_to_pick.remove(&v2);
+
+    println!("READY after {:?}", ready_to_pick);
+    for k in (1..planar_emb.embedding.node_count()).rev() {
+        let v_try = ready_to_pick.iter().next();
+        if v_try.is_none() {
+            continue;
+        }
+        let v = v_try.unwrap().clone();
+        ready_to_pick.remove(&v);
+        marked_nodes.insert(v);
+
+        let mut wp: Option<NodeIndex> = None;
+        let mut wq: Option<NodeIndex> = None;
+
+        for nbr in planar_emb.neighbors_cw_order(v) {
+            if marked_nodes.contains(&nbr) {
+                continue;
+            }
+            if is_on_outer_face(nbr, v1, &marked_nodes, &outer_face_ccw_nbr) {
+                if nbr == v1 {
+                    wp = Some(v1);
+                } else if nbr == v2 {
+                    wq = Some(v2);
+                } else {
+                    if outer_face_cw_nbr[&nbr] == v1 {
+                        wp = Some(nbr);
+                    } else {
+                        wq = Some(nbr);
+                    }
+                }
+            }
+            if !wp.is_none() && !wq.is_none() {
+                break;
+            }
+        }
+
+        let mut wp_wq = vec![wp];
+        let mut nbr = wp.unwrap();
+        while Some(nbr) != wp {
+            let next_nbr = planar_emb.get_edge_weight(v, nbr, false).unwrap();
+            wp_wq.push(Some(next_nbr));
+            outer_face_cw_nbr.entry(nbr).or_insert(next_nbr);
+            outer_face_ccw_nbr.entry(next_nbr).or_insert(nbr);
+            nbr = next_nbr;
+        }
+        if wp_wq.len() == 2 {
+            let wp_un = wp.unwrap();
+            let chords_wp = chords[&wp_un].clone() - 1;
+            chords.entry(wp_un).or_insert(chords_wp);
+            if chords[&wp_un] == 0 {
+                ready_to_pick.insert(wp_un);
+            }
+            let wq_un = wq.unwrap();
+            let chords_wq = chords[&wq_un].clone() - 1;
+            chords.entry(wq_un).or_insert(chords_wq);
+            if chords[&wq_un] == 0 {
+                ready_to_pick.insert(wq_un);
+            }
+        } else {
+            let mut new_face_nodes: HashSet<NodeIndex> = HashSet::new();
+            if wp_wq.len() > 1 {
+                for w in &wp_wq[1..(wp_wq.len() - 1)] {
+                    let w_un = w.unwrap();
+                    new_face_nodes.insert(w_un);
+                    for nbr in planar_emb.neighbors_cw_order(w_un) {
+                        if is_on_outer_face(nbr, v1, &marked_nodes, &outer_face_ccw_nbr)
+                            && !is_outer_face_nbr(w_un, nbr, &outer_face_cw_nbr, &outer_face_ccw_nbr)
+                        {
+                            let chords_w = chords[&w_un].clone() + 1;
+                            chords.entry(w_un).or_insert(chords_w);
+                            ready_to_pick.remove(&w_un);
+                            if !new_face_nodes.contains(&nbr) {
+                                let chords_nbr = chords[&nbr].clone() + 1;
+                                chords.entry(nbr).or_insert(chords_nbr);
+                                ready_to_pick.remove(&nbr);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        canon_order[k] = (Some(v), wp_wq);
+    }
+    canon_order
 }
