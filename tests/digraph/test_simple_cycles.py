@@ -36,11 +36,8 @@ class TestSimpleCycles(unittest.TestCase):
         # to tarjan's algorithm, but it gives us a good test with
         # a known value (networkX does this too)
         num_circuits = [1, 5, 20, 84, 409, 2365, 16064]
-        num_circuits = [5]
-        for n, c in zip([3], num_circuits):
+        for n, c in zip(range(2, 9), num_circuits):
             with self.subTest(n=n):
                 graph = retworkx.generators.directed_mesh_graph(n)
-                print(graph.edge_list())
                 res = retworkx.simple_cycles(graph)
-                print(res)
                 self.assertEqual(len(res), c)
