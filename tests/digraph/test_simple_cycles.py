@@ -16,7 +16,6 @@ import retworkx
 
 
 class TestSimpleCycles(unittest.TestCase):
-
     def test_simple_cycles(self):
         edges = [(0, 0), (0, 1), (0, 2), (1, 2), (2, 0), (2, 1), (2, 2)]
         graph = retworkx.PyDiGraph()
