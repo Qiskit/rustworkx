@@ -2338,7 +2338,7 @@ def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
 
 @functools.singledispatch
 def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
-    """Generate a JSON object representing a :class:`~.PyGraph in a node-link format
+    """Generate a JSON object representing a graph in a node-link format
 
     :param PyGraph graph: The graph to generate the JSON for
     :param str path: An optional path to write the JSON output to. If specified

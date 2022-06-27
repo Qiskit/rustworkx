@@ -17,7 +17,7 @@ use crate::{digraph, graph};
 use pyo3::prelude::*;
 use pyo3::Python;
 
-/// Generate a JSON object representing a :class:`~.PyDiGraph in a node-link format
+/// Generate a JSON object representing a :class:`~.PyDiGraph` in a node-link format
 ///
 /// :param PyDiGraph graph: The graph to generate the JSON for
 /// :param str path: An optional path to write the JSON output to. If specified
@@ -61,7 +61,7 @@ pub fn digraph_node_link_json(
     )
 }
 
-/// Generate a JSON object representing a :class:`~.PyGraph in a node-link format
+/// Generate a JSON object representing a :class:`~.PyGraph` in a node-link format
 ///
 /// :param PyGraph graph: The graph to generate the JSON for
 /// :param str path: An optional path to write the JSON output to. If specified
