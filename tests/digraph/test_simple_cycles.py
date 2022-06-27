@@ -22,7 +22,6 @@ class TestSimpleCycles(unittest.TestCase):
         graph.extend_from_edge_list(edges)
         expected = [[0], [0, 1, 2], [0, 2], [1, 2], [2]]
         res = retworkx.simple_cycles(graph)
-        print(res)
         self.assertEqual(len(res), len(expected))
         for cycle in res:
             self.assertIn(sorted(cycle), expected)
@@ -40,3 +39,31 @@ class TestSimpleCycles(unittest.TestCase):
                 graph = retworkx.generators.directed_mesh_graph(n)
                 res = retworkx.simple_cycles(graph)
                 self.assertEqual(len(res), c)
+
+    def test_empty_graph(self):
+        self.assertEqual(
+            retworkx.simple_cycles(retworkx.PyDiGraph()),
+            [],
+        )
+
+    def test_figure_1(self):
+        # This graph tests figured 1 from the Johnson's algorithm paper
+        for k in range(3, 10):
+            with self.subTest(k=k):
+                graph = retworkx.PyDiGraph()
+                edge_list = []
+                for n in range(2, k + 2):
+                    edge_list.append((1, n))
+                    edge_list.append((n, k + 2))
+                edge_list.append((2 * k + 1, 1))
+                for n in range(k + 2, 2 * k + 2):
+                    edge_list.append((n, 2 * k + 2))
+                    edge_list.append((n, n + 1))
+                edge_list.append((2 * k + 3, k + 2))
+                for n in range(2 * k + 3, 3 * k + 3):
+                    edge_list.append((2 * k + 2, n))
+                    edge_list.append((n, 3 * k + 3))
+                edge_list.append((3 * k + 3, 2 * k + 2))
+                graph.extend_from_edge_list(edge_list)
+                cycles = retworkx.simple_cycles(graph)
+                self.assertEqual(len(cycles), 3 * k)
