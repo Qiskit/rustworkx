@@ -11,10 +11,10 @@
 // under the License.
 
 use std::collections::VecDeque;
+use std::hash::Hash;
 use std::sync::RwLock;
 
 use hashbrown::HashMap;
-use petgraph::graph::NodeIndex;
 use petgraph::visit::{
     EdgeRef,
     GraphBase,
@@ -80,8 +80,9 @@ where
         + IntoNeighborsDirected
         + NodeCount
         + GraphProp
-        + GraphBase<NodeId = NodeIndex>
+        + GraphBase
         + std::marker::Sync,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Hash + Send,
     // rustfmt deletes the following comments if placed inline above
     // + IntoNodeIdentifiers // for node_identifiers()
     // + IntoNeighborsDirected // for neighbors()
@@ -105,14 +106,17 @@ where
         betweenness[is] = Some(0.0);
     }
     let locked_betweenness = RwLock::new(&mut betweenness);
-    let node_indices: Vec<NodeIndex> = graph.node_identifiers().collect();
+    let node_indices: Vec<usize> = graph
+        .node_identifiers()
+        .map(|i| graph.to_index(i))
+        .collect();
     if graph.node_count() < parallel_threshold {
         node_indices
             .iter()
             .map(|node_s| {
                 (
-                    shortest_path_for_centrality(&graph, node_s),
-                    graph.to_index(*node_s),
+                    shortest_path_for_centrality(&graph, &graph.from_index(*node_s)),
+                    *node_s,
                 )
             })
             .for_each(|(mut shortest_path_calc, is)| {
@@ -122,9 +126,16 @@ where
                         max_index,
                         &mut shortest_path_calc,
                         is,
+                        &graph,
                     );
                 } else {
-                    _accumulate_basic(&locked_betweenness, max_index, &mut shortest_path_calc, is);
+                    _accumulate_basic(
+                        &locked_betweenness,
+                        max_index,
+                        &mut shortest_path_calc,
+                        is,
+                        &graph,
+                    );
                 }
             });
     } else {
@@ -132,8 +143,8 @@ where
             .par_iter()
             .map(|node_s| {
                 (
-                    shortest_path_for_centrality(&graph, node_s),
-                    graph.to_index(*node_s),
+                    shortest_path_for_centrality(&graph, &graph.from_index(*node_s)),
+                    node_s,
                 )
             })
             .for_each(|(mut shortest_path_calc, is)| {
@@ -142,10 +153,17 @@ where
                         &locked_betweenness,
                         max_index,
                         &mut shortest_path_calc,
-                        is,
+                        *is,
+                        &graph,
                     );
                 } else {
-                    _accumulate_basic(&locked_betweenness, max_index, &mut shortest_path_calc, is);
+                    _accumulate_basic(
+                        &locked_betweenness,
+                        max_index,
+                        &mut shortest_path_calc,
+                        *is,
+                        &graph,
+                    );
                 }
             });
     }
@@ -193,44 +211,64 @@ fn _rescale(
     }
 }
 
-fn _accumulate_basic(
+fn _accumulate_basic<G>(
     locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
     max_index: usize,
-    path_calc: &mut ShortestPathData,
+    path_calc: &mut ShortestPathData<G>,
     is: usize,
-) {
+    graph: G,
+) where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphProp
+        + GraphBase
+        + std::marker::Sync,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
+{
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
-        let iw = w.index();
+        let iw = graph.to_index(*w);
         let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
         let p_w = path_calc.predecessors.get(w).unwrap();
         for v in p_w {
-            let iv = (*v).index();
+            let iv = graph.to_index(*v);
             delta[iv] += path_calc.sigma[v] * coeff;
         }
     }
     let mut betweenness = locked_betweenness.write().unwrap();
     for w in &path_calc.verts_sorted_by_distance {
-        let iw = w.index();
+        let iw = graph.to_index(*w);
         if iw != is {
             betweenness[iw] = betweenness[iw].map(|x| x + delta[iw]);
         }
     }
 }
 
-fn _accumulate_endpoints(
+fn _accumulate_endpoints<G>(
     locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
     max_index: usize,
-    path_calc: &mut ShortestPathData,
+    path_calc: &mut ShortestPathData<G>,
     is: usize,
-) {
+    graph: G,
+) where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphProp
+        + GraphBase
+        + std::marker::Sync,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
+{
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
-        let iw = w.index();
+        let iw = graph.to_index(*w);
         let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
         let p_w = path_calc.predecessors.get(w).unwrap();
         for v in p_w {
-            let iv = (*v).index();
+            let iv = graph.to_index(*v);
             delta[iv] += path_calc.sigma[v] * coeff;
         }
     }
@@ -238,46 +276,44 @@ fn _accumulate_endpoints(
     betweenness[is] =
         betweenness[is].map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
     for w in &path_calc.verts_sorted_by_distance {
-        let iw = w.index();
+        let iw = graph.to_index(*w);
         if iw != is {
             betweenness[iw] = betweenness[iw].map(|x| x + delta[iw] + 1.0);
         }
     }
 }
 
-struct ShortestPathData {
-    verts_sorted_by_distance: Vec<NodeIndex>,
-    predecessors: HashMap<NodeIndex, Vec<NodeIndex>>,
-    sigma: HashMap<NodeIndex, f64>,
+struct ShortestPathData<G>
+where
+    G: GraphBase,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
+{
+    verts_sorted_by_distance: Vec<G::NodeId>,
+    predecessors: HashMap<G::NodeId, Vec<G::NodeId>>,
+    sigma: HashMap<G::NodeId, f64>,
 }
 
-fn shortest_path_for_centrality<G>(graph: G, node_s: &G::NodeId) -> ShortestPathData
+fn shortest_path_for_centrality<G>(graph: G, node_s: &G::NodeId) -> ShortestPathData<G>
 where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNeighborsDirected
-        + NodeCount
-        + GraphBase<NodeId = NodeIndex>, // for get() and get_mut()
+    G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphBase,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
 {
-    let mut verts_sorted_by_distance: Vec<NodeIndex> = Vec::new(); // a stack
+    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
     let c = graph.node_count();
     let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
     let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
     let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
     #[allow(non_snake_case)]
-    let mut Q: VecDeque<NodeIndex> = VecDeque::with_capacity(c);
-
-    let i_s = graph.to_index(*node_s);
-    let index_s = NodeIndex::new(i_s);
+    let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
 
     for node in graph.node_identifiers() {
         predecessors.insert(node, Vec::new());
         sigma.insert(node, 0.0);
         distance.insert(node, -1);
     }
-    sigma.insert(index_s, 1.0);
-    distance.insert(index_s, 0);
-    Q.push_back(index_s);
+    sigma.insert(*node_s, 1.0);
+    distance.insert(*node_s, 0);
+    Q.push_back(*node_s);
     while let Some(v) = Q.pop_front() {
         verts_sorted_by_distance.push(v);
         let distance_v = distance[&v];
