@@ -173,6 +173,7 @@ pub fn graph_densest_subgraph_of_size(
         graph: inner_graph,
         node_removed: false,
         multigraph: graph.multigraph,
+        attrs: py.None(),
     };
     Ok((out_graph, node_map))
 }
@@ -208,6 +209,7 @@ pub fn digraph_densest_subgraph_of_size(
         cycle_state: algo::DfsSpace::default(),
         check_cycle: graph.check_cycle,
         multigraph: graph.multigraph,
+        attrs: py.None(),
     };
     Ok((out_graph, node_map))
 }
