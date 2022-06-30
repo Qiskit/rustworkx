@@ -58,13 +58,13 @@ Nodes and edges of the graph may also be associated with data payloads. Payloads
 
 _retworkx_ operates on payloads with callbacks. Callbacks are functions that take payloads and return statically typed data. They resemble the named attributes in _NetworkX_. Callbacks are beneficial because they bridge the arbitrary stored data with the static types _retworkx_ expects.
 
-A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges in the graph. Moreover, the indices provide a clear separation between the underlying graph structure and the data associated with payloads.
+A defining characteristic of _retworkx_ graphs is that each node maps to a non-negative integer node index, and similarly, each edge maps to an edge index. Those indices uniquely determine nodes and edges in the graph. Indices are stable, hence the index for a node $v$ does not change even if another node $u$ is removed. Moreover, indices separate the data representing the graph's structure, which is stored in Rust, from the payloads associated with nodes and edges, which are stored in Python.
 
 ![A Petersen graph, a hexagonal lattice graph, and a binomial tree graph created with **`retworkx.generators`** and visualized with the **`retworkx.visualization`** module.\label{fig:graphexample}](paper_img/example_graph.png){ width=100% height==100% }
 
 # Use Cases
 
-_retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to millions. The library is particularly suited for applications that have core routines executing graph algorithms. In those applications, the performance of _retworkx_ considerably reduces computation time. Examples of applications using _retworkx_ include the Qiskit compiler [@Qiskit2021], PennyLane [@Bergholm2020], atompack [@Ullberg2021], and qtcodes [@Jha2021].
+_retworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to 4 billion. The library is particularly suited for applications that have core routines executing graph algorithms. In those applications, the performance of _retworkx_ considerably reduces computation time. Examples of applications using _retworkx_ include the Qiskit compiler [@Qiskit2021], PennyLane [@Bergholm2020], atompack [@Ullberg2021], and qtcodes [@Jha2021].
 
 For common use cases, _retworkx_ can provide speedups ranging from 3x to 100x faster compared to the same code using _NetworkX_ while staying competitive with other compiled libraries like _igraph_ and _graph-tool_. The gains in performance are application-specific, but as a general rule, the more work that is offloaded to _retworkx_ and Rust, the larger are the gains.     
 
