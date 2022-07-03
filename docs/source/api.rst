@@ -371,7 +371,7 @@ typed API based on the data type.
    retworkx.graph_unweighted_average_shortest_path_length
    retworkx.graph_bfs_search
    retworkx.graph_dijkstra_search
-   retworkx.digraph_node_link_json
+   retworkx.graph_node_link_json
 
 Exceptions
 ==========
