@@ -10,7 +10,7 @@ features:
       graph = retworkx.generators.path_graph(weights=['a', 'b', 'c'])
       print(retworkx.node_link_json(graph, node_attrs=lambda n: {'label': n}))
 
-    will output a JSON payload equivelent (identical except for whitespace) to:
+    will output a JSON payload equivalent (identical except for whitespace) to:
 
     .. code-block:: json
 

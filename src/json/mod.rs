@@ -41,6 +41,9 @@ use pyo3::Python;
 /// :returns: Either the JSON string for the payload or ``None`` if ``path`` is specified
 /// :rtype: str
 #[pyfunction]
+#[pyo3(
+    text_signature = "(graph, /, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None)"
+)]
 pub fn digraph_node_link_json(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -85,6 +88,9 @@ pub fn digraph_node_link_json(
 /// :returns: Either the JSON string for the payload or ``None`` if ``path`` is specified
 /// :rtype: str
 #[pyfunction]
+#[pyo3(
+    text_signature = "(graph, /, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None)"
+)]
 pub fn graph_node_link_json(
     py: Python,
     graph: &graph::PyGraph,
