@@ -1,16 +1,16 @@
 ---
 features:
   - |
-    A new kwarg, ``multigraph`` was added to the :class:`~retworkx.PyDiGraph`
+    A new kwarg, ``multigraph`` was added to the :class:`~rustworkx.PyDiGraph`
     generator functions:
 
-     * :func:`retworkx.generators.directed_cycle_graph`
-     * :func:`retworkx.generators.directed_path_graph`
-     * :func:`retworkx.generators.directed_star_graph`
-     * :func:`retworkx.generators.directed_mesh_graph`
-     * :func:`retworkx.generators.directed_grid_graph`
+     * :func:`rustworkx.generators.directed_cycle_graph`
+     * :func:`rustworkx.generators.directed_path_graph`
+     * :func:`rustworkx.generators.directed_star_graph`
+     * :func:`rustworkx.generators.directed_mesh_graph`
+     * :func:`rustworkx.generators.directed_grid_graph`
 
     This can be used to set whether the generated
-    :class:`~retworkx.PyDiGraph` objects are multi graphs or not (to set
+    :class:`~rustworkx.PyDiGraph` objects are multi graphs or not (to set
     whether parallel edges can be added or not). By default this is set to
     ``True``.

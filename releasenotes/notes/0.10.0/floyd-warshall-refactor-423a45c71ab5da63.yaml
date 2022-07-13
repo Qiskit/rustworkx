@@ -1,19 +1,19 @@
 ---
 features:
   - |
-    The :func:`~retworkx.floyd_warshall` function has been completely reworked
-    and now works with a :class:`~retworkx.PyGraph` object in addition to the
-    :class:`~retworkx.PyDiGraph` objects already supported. It has a new kwarg
+    The :func:`~rustworkx.floyd_warshall` function has been completely reworked
+    and now works with a :class:`~rustworkx.PyGraph` object in addition to the
+    :class:`~rustworkx.PyDiGraph` objects already supported. It has a new kwarg
     ``weight_fn`` which is used to support custom edge weighting, and also
     now executes in parallel.
   - |
-    Added two new functions, :func:`~retworkx.graph_floyd_warshall` and
-    :func:`~retworkx.digraph_floyd_warshall`, which are typed versions of the
-    existing :func:`~retworkx.floyd_warshall`.
+    Added two new functions, :func:`~rustworkx.graph_floyd_warshall` and
+    :func:`~rustworkx.digraph_floyd_warshall`, which are typed versions of the
+    existing :func:`~rustworkx.floyd_warshall`.
 upgrade:
   - |
-    The :func:`~retworkx.floyd_warshall` function no longer returns a ``dict``
-    and instead will return a :class:`retworkx.AllPairsPathLengthMapping`
+    The :func:`~rustworkx.floyd_warshall` function no longer returns a ``dict``
+    and instead will return a :class:`rustworkx.AllPairsPathLengthMapping`
     object. This new return type is much faster to build and it implements the
     Python mapping protocol in a read-only fashion. This change should mostly
     be compatible unless explicit type checking or mutating the output was

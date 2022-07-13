@@ -1,9 +1,9 @@
 ---
 upgrade:
   - |
-    The minimum supported Rust version for building retworkx has been raised from
-    1.41 to 1.48. To compile retworkx from source you will need to ensure you have
+    The minimum supported Rust version for building rustworkx has been raised from
+    1.41 to 1.48. To compile rustworkx from source you will need to ensure you have
     at Rustc >=1.48 installed.
   - |
-    The minimum supported Python version for using retworkx has been raised to Python 3.7.
-    To use retworkx you will need to ensure you are using Python >=3.7.
+    The minimum supported Python version for using rustworkx has been raised to Python 3.7.
+    To use rustworkx you will need to ensure you are using Python >=3.7.

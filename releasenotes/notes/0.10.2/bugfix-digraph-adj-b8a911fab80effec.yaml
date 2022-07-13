@@ -1,7 +1,7 @@
 ---
 fixes:
   - |
-    Fixes the output of :meth:`~retworkx.PyDiGraph.adj` to include
+    Fixes the output of :meth:`~rustworkx.PyDiGraph.adj` to include
     neighbors that have an edge between them and the specified node,
     in either direction. Previously, only outbound nodes were included.
 

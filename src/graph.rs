@@ -19,7 +19,7 @@ use std::str;
 
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
@@ -58,9 +58,9 @@ use petgraph::visit::{
 ///
 /// .. jupyter-execute::
 ///
-///        import retworkx
+///        import rustworkx
 ///
-///        graph = retworkx.PyGraph()
+///        graph = rustworkx.PyGraph()
 ///        graph.add_nodes_from(list(range(5)))
 ///        graph.add_nodes_from(list(range(2)))
 ///        graph.remove_node(2)
@@ -74,9 +74,9 @@ use petgraph::visit::{
 ///
 /// .. jupyter-execute::
 ///
-///     import retworkx
+///     import rustworkx
 ///
-///     graph = retworkx.PyGraph()
+///     graph = rustworkx.PyGraph()
 ///     data_payload = "An arbitrary Python object"
 ///     node_index = graph.add_node(data_payload)
 ///     print("Node Index: %s" % node_index)
@@ -87,9 +87,9 @@ use petgraph::visit::{
 ///
 /// .. jupyter-execute::
 ///
-///     import retworkx
+///     import rustworkx
 ///
-///     graph = retworkx.PyGraph()
+///     graph = rustworkx.PyGraph()
 ///     data_payload = "An arbitrary Python object"
 ///     node_index = graph.add_node(data_payload)
 ///     graph[node_index] = "New Payload"
@@ -101,11 +101,11 @@ use petgraph::visit::{
 /// ``multigraph`` kwarg to ``False`` when calling the ``PyGraph``
 /// constructor. For example::
 ///
-///     import retworkx
-///     graph = retworkx.PyGraph(multigraph=False)
+///     import rustworkx
+///     graph = rustworkx.PyGraph(multigraph=False)
 ///
 /// This can only be set at ``PyGraph`` initialization and not adjusted after
-/// creation. When :attr:`~retworkx.PyGraph.multigraph` is set to ``False``
+/// creation. When :attr:`~rustworkx.PyGraph.multigraph` is set to ``False``
 /// if a method call is made that would add a parallel edge it will instead
 /// update the existing edge's weight/data payload.
 ///
@@ -114,7 +114,7 @@ use petgraph::visit::{
 /// default this is set to ``None`` but can optionally be specified by using the
 /// ``attrs`` keyword argument when constructing a new graph::
 ///
-///     graph = retworkx.PyGraph(attrs=dict(source_path='/tmp/graph.csv'))
+///     graph = rustworkx.PyGraph(attrs=dict(source_path='/tmp/graph.csv'))
 ///
 /// This attribute can be set to any Python object. Additionally, you can access
 /// and modify this attribute after creating an object. For example::
@@ -133,7 +133,7 @@ use petgraph::visit::{
 /// :param attrs: An optional attributes payload to assign to the
 ///     :attr:`~.PyGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyGraph.attrs` will be set to ``None``.
-#[pyclass(mapping, module = "retworkx", subclass)]
+#[pyclass(mapping, module = "rustworkx", subclass)]
 #[pyo3(text_signature = "(/, multigraph=True, attrs=None)")]
 #[derive(Clone)]
 pub struct PyGraph {
@@ -400,7 +400,7 @@ impl PyGraph {
     ///
     ///  Note if there are multiple edges between the nodes only one will be
     ///  returned. To get all edge data objects use
-    ///  :meth:`~retworkx.PyGraph.get_all_edge_data`
+    ///  :meth:`~rustworkx.PyGraph.get_all_edge_data`
     ///
     /// :param int node_a: The index for the first node
     /// :param int node_b: The index for the second node
@@ -424,8 +424,8 @@ impl PyGraph {
     /// Return the list of edge indices incident to a provided node
     ///
     /// You can later retrieve the data payload of this edge with
-    /// :meth:`~retworkx.PyGraph.get_edge_data_by_index` or its
-    /// endpoints with :meth:`~retworkx.PyGraph.get_edge_endpoints_by_index`.
+    /// :meth:`~rustworkx.PyGraph.get_edge_data_by_index` or its
+    /// endpoints with :meth:`~rustworkx.PyGraph.get_edge_endpoints_by_index`.
     ///
     /// :param int node: The node index to get incident edges from. If
     ///     this node index is not present in the graph this method will
@@ -481,7 +481,7 @@ impl PyGraph {
     ///
     /// This will return a list of tuples with the parent index, the node index
     /// and the edge data. This can be used to recreate add_edge() calls. As
-    /// :class:`~retworkx.PyGraph` is undirected this will return all edges
+    /// :class:`~rustworkx.PyGraph` is undirected this will return all edges
     /// with the second endpoint node index always being ``node``.
     ///
     /// :param int node: The index of the node to get the edges for
@@ -504,7 +504,7 @@ impl PyGraph {
     ///
     /// This will return a list of tuples with the child index, the node index
     /// and the edge data. This can be used to recreate add_edge() calls. As
-    /// :class:`~retworkx.PyGraph` is undirected this will return all edges
+    /// :class:`~rustworkx.PyGraph` is undirected this will return all edges
     /// with the first endpoint node index always being ``node``.
     ///
     /// :param int node: The index of the node to get the edges for
@@ -571,7 +571,7 @@ impl PyGraph {
     /// If there are parallel edges in the graph only one edge will be updated.
     /// if you need to update a specific edge or need to ensure all parallel
     /// edges get updated you should use
-    /// :meth:`~retworkx.PyGraph.update_edge_by_index` instead.
+    /// :meth:`~rustworkx.PyGraph.update_edge_by_index` instead.
     ///
     /// :param int source: The index for the first node
     /// :param int target: The index for the second node
@@ -733,7 +733,7 @@ impl PyGraph {
 
     /// Add an edge between 2 nodes.
     ///
-    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// If :attr:`~rustworkx.PyGraph.multigraph` is ``False`` and an edge already
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``edge``.
     ///
@@ -759,7 +759,7 @@ impl PyGraph {
     ///     ``node_b`` are integer indices describing where an edge should be
     ///     added, and ``obj`` is the python object for the edge data.
     ///
-    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// If :attr:`~rustworkx.PyGraph.multigraph` is ``False`` and an edge already
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``edge``. This will occur in order
     /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
@@ -786,7 +786,7 @@ impl PyGraph {
     ///     added. Unlike :meth:`add_edges_from` there is no data payload and
     ///     when the edge is created None will be used.
     ///
-    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// If :attr:`~rustworkx.PyGraph.multigraph` is ``False`` and an edge already
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``None``.
     ///
@@ -812,7 +812,7 @@ impl PyGraph {
     /// This method differs from :meth:`add_edges_from_no_data` in that it will
     /// add nodes if a node index is not present in the edge list.
     ///
-    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// If :attr:`~rustworkx.PyGraph.multigraph` is ``False`` and an edge already
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``None``.
     ///
@@ -838,7 +838,7 @@ impl PyGraph {
     /// This method differs from :meth:`add_edges_from` in that it will
     /// add nodes if a node index is not present in the edge list.
     ///
-    /// If :attr:`~retworkx.PyGraph.multigraph` is ``False`` and an edge already
+    /// If :attr:`~rustworkx.PyGraph.multigraph` is ``False`` and an edge already
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``edge``. This will occur in order
     /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
@@ -1042,18 +1042,18 @@ impl PyGraph {
         })
     }
 
-    /// Generate a new :class:`~retworkx.PyDiGraph` object from this graph
+    /// Generate a new :class:`~rustworkx.PyDiGraph` object from this graph
     ///
-    /// This will create a new :class:`~retworkx.PyDiGraph` object from this
+    /// This will create a new :class:`~rustworkx.PyDiGraph` object from this
     /// graph. All edges in this graph will result in a bidirectional edge
     /// pair in the output graph.
     ///
     /// .. note::
     ///
-    ///     The node indices in the output :class:`~retworkx.PyDiGraph` may
+    ///     The node indices in the output :class:`~rustworkx.PyDiGraph` may
     ///     differ if nodes have been removed.
     ///
-    /// :returns: A new :class:`~retworkx.PyDiGraph` object with a
+    /// :returns: A new :class:`~rustworkx.PyDiGraph` object with a
     ///     bidirectional edge pair for each edge in this graph. Also all
     ///     node and edge weights/data payloads are copied by reference to
     ///     the output graph
@@ -1091,18 +1091,18 @@ impl PyGraph {
     /// :param node_attr: A callable that will take in a node data object
     ///     and return a dictionary of attributes to be associated with the
     ///     node in the dot file. The key and value of this dictionary **must**
-    ///     be a string. If they're not strings retworkx will raise TypeError
+    ///     be a string. If they're not strings rustworkx will raise TypeError
     ///     (unfortunately without an error message because of current
     ///     limitations in the PyO3 type checking)
     /// :param edge_attr: A callable that will take in an edge data object
     ///     and return a dictionary of attributes to be associated with the
     ///     node in the dot file. The key and value of this dictionary **must**
-    ///     be a string. If they're not strings retworkx will raise TypeError
+    ///     be a string. If they're not strings rustworkx will raise TypeError
     ///     (unfortunately without an error message because of current
     ///     limitations in the PyO3 type checking)
     /// :param dict graph_attr: An optional dictionary that specifies any graph
     ///     attributes for the output dot file. The key and value of this
-    ///     dictionary **must** be a string. If they're not strings retworkx
+    ///     dictionary **must** be a string. If they're not strings rustworkx
     ///     will raise TypeError (unfortunately without an error message
     ///     because of current limitations in the PyO3 type checking)
     /// :param str filename: An optional path to write the dot file to
@@ -1113,7 +1113,7 @@ impl PyGraph {
     /// :rtype: str
     ///
     /// Using this method enables you to leverage graphviz to visualize a
-    /// :class:`retworkx.PyGraph` object. For example:
+    /// :class:`rustworkx.PyGraph` object. For example:
     ///
     /// .. jupyter-execute::
     ///
@@ -1123,9 +1123,9 @@ impl PyGraph {
     ///   import pydot
     ///   from PIL import Image
     ///
-    ///   import retworkx
+    ///   import rustworkx
     ///
-    ///   graph = retworkx.undirected_gnp_random_graph(15, .25)
+    ///   graph = rustworkx.undirected_gnp_random_graph(15, .25)
     ///   dot_str = graph.to_dot(
     ///       lambda node: dict(
     ///           color='black', fillcolor='lightblue', style='filled'))
@@ -1187,8 +1187,8 @@ impl PyGraph {
     ///
     ///   import tempfile
     ///
-    ///   import retworkx
-    ///   from retworkx.visualization import mpl_draw
+    ///   import rustworkx
+    ///   from rustworkx.visualization import mpl_draw
     ///
     ///   with tempfile.NamedTemporaryFile('wt') as fd:
     ///       path = fd.name
@@ -1198,7 +1198,7 @@ impl PyGraph {
     ///       fd.write('1 2\n')
     ///       fd.write('2 3\n')
     ///       fd.flush()
-    ///       graph = retworkx.PyGraph.read_edge_list(path)
+    ///       graph = rustworkx.PyGraph.read_edge_list(path)
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
@@ -1305,9 +1305,9 @@ impl PyGraph {
     ///     import os
     ///     import tempfile
     ///
-    ///     import retworkx
+    ///     import rustworkx
     ///
-    ///     graph = retworkx.generators.path_graph(5)
+    ///     graph = rustworkx.generators.path_graph(5)
     ///     path = os.path.join(tempfile.gettempdir(), "edge_list")
     ///     graph.write_edge_list(path, deliminator=',')
     ///     # Print file contents
@@ -1348,25 +1348,25 @@ impl PyGraph {
         Ok(())
     }
 
-    /// Create a new :class:`~retworkx.PyGraph` object from an adjacency matrix
+    /// Create a new :class:`~rustworkx.PyGraph` object from an adjacency matrix
     /// with matrix elements of type ``float``
     ///
-    /// This method can be used to construct a new :class:`~retworkx.PyGraph`
+    /// This method can be used to construct a new :class:`~rustworkx.PyGraph`
     /// object from an input adjacency matrix. The node weights will be the
     /// index from the matrix. The edge weights will be a float value of the
     /// value from the matrix.
     ///
     /// This differs from the
-    /// :meth:`~retworkx.PyGraph.from_complex_adjacency_matrix` in that the
+    /// :meth:`~rustworkx.PyGraph.from_complex_adjacency_matrix` in that the
     /// type of the elements of input matrix must be a ``float`` (specifically
     /// a ``numpy.float64``) and the output graph edge weights will be ``float``
-    /// too. While in :meth:`~retworkx.PyGraph.from_complex_adjacency_matrix`
+    /// too. While in :meth:`~rustworkx.PyGraph.from_complex_adjacency_matrix`
     /// the matrix elements are of type ``complex`` (specifically
     /// ``numpy.complex128``) and the edge weights in the output graph will be
     /// ``complex`` too.
     ///
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
-    ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
+    ///     a new :class:`~rustworkx.PyGraph` object from. It must be a 2
     ///     dimensional array and be a ``float``/``np.float64`` data type.
     /// :param float null_value: An optional float that will treated as a null
     ///     value. If any element in the input matrix is this value it will be
@@ -1385,25 +1385,25 @@ impl PyGraph {
         _from_adjacency_matrix(py, matrix, null_value)
     }
 
-    /// Create a new :class:`~retworkx.PyGraph` object from an adjacency matrix
+    /// Create a new :class:`~rustworkx.PyGraph` object from an adjacency matrix
     /// with matrix elements of type ``complex``
     ///
-    /// This method can be used to construct a new :class:`~retworkx.PyGraph`
+    /// This method can be used to construct a new :class:`~rustworkx.PyGraph`
     /// object from an input adjacency matrix. The node weights will be the
     /// index from the matrix. The edge weights will be a complex value of the
     /// value from the matrix.
     ///
     /// This differs from the
-    /// :meth:`~retworkx.PyGraph.from_adjacency_matrix` in that the type of
+    /// :meth:`~rustworkx.PyGraph.from_adjacency_matrix` in that the type of
     /// the elements of the input matrix in this method must be a ``complex``
     /// (specifically a ``numpy.complex128``) and the output graph edge weights
     /// will be ``complex`` too. While in
-    /// :meth:`~retworkx.PyGraph.from_adjacency_matrix` the matrix elements
+    /// :meth:`~rustworkx.PyGraph.from_adjacency_matrix` the matrix elements
     /// are of type ``float`` (specifically ``numpy.float64``) and the edge
     /// weights in the output graph will be ``float`` too.
     ///
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
-    ///     a new :class:`~retworkx.PyGraph` object from. It must be a 2
+    ///     a new :class:`~rustworkx.PyGraph` object from. It must be a 2
     ///     dimensional array and be a ``complex``/``np.complex128`` data type.
     /// :param float null_value: An optional complex that will treated as a null
     ///     value. If any element in the input matrix is this value it will be
@@ -1461,11 +1461,11 @@ impl PyGraph {
     ///   import pydot
     ///   from PIL import Image
     ///
-    ///   import retworkx
-    ///   from retworkx.visualization import mpl_draw
+    ///   import rustworkx
+    ///   from rustworkx.visualization import mpl_draw
     ///
     ///   # Build first graph and visualize:
-    ///   graph = retworkx.PyGraph()
+    ///   graph = rustworkx.PyGraph()
     ///   node_a, node_b, node_c = graph.add_nodes_from(['A', 'B', 'C'])
     ///   graph.add_edges_from([(node_a, node_b, 'A to B'),
     ///                         (node_b, node_c, 'B to C')])
@@ -1476,7 +1476,7 @@ impl PyGraph {
     /// .. jupyter-execute::
     ///
     ///   # Build second graph and visualize:
-    ///   other_graph = retworkx.PyGraph()
+    ///   other_graph = rustworkx.PyGraph()
     ///   node_d, node_e = other_graph.add_nodes_from(['D', 'E'])
     ///   other_graph.add_edge(node_d, node_e, 'D to E')
     ///   mpl_draw(other_graph, with_labels=True, labels=str, edge_labels=str)
@@ -1540,7 +1540,7 @@ impl PyGraph {
     /// .. note::
     ///     This method does not preserve the ordering of endpoints in
     ///     edge tuple representations (e.g. the tuples returned from
-    ///     :meth:`~retworkx.PyGraph.edge_list`).
+    ///     :meth:`~rustworkx.PyGraph.edge_list`).
     ///
     /// :param list nodes: A set of nodes to be removed and replaced
     ///     by the new node. Any nodes not in the graph are ignored.
@@ -1551,7 +1551,7 @@ impl PyGraph {
     ///     specified, is used to merge parallel edges introduced by the
     ///     contraction, which will occur if any two edges between ``nodes``
     ///     and the rest of the graph share an endpoint.
-    ///     If this instance of :class:`~retworkx.PyGraph` is a multigraph,
+    ///     If this instance of :class:`~rustworkx.PyGraph` is a multigraph,
     ///     leave this unspecified to preserve parallel edges. If unspecified
     ///     when not a multigraph, parallel edges and their weights will be
     ///     combined by choosing one of the edge's weights arbitrarily based

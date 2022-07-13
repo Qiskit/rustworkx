@@ -1,7 +1,7 @@
 ---
 fixes:
   - |
-    The output from :meth:`retworkx.PyDiGraph.neighbors`
-    and :meth:`retworkx.PyGraph.neighbors` methods will no longer
+    The output from :meth:`rustworkx.PyDiGraph.neighbors`
+    and :meth:`rustworkx.PyGraph.neighbors` methods will no longer
     include duplicate entries in case of parallel edges between nodes. See
-    `#250 <https://github.com/Qiskit/retworkx/issues/250>`__ for more details.
+    `#250 <https://github.com/Qiskit/rustworkx/issues/250>`__ for more details.
