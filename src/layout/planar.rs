@@ -33,6 +33,17 @@ pub fn planar_layout(
 
         create_embedding(&mut planar_emb, &mut lr_state);
 
+        for v in graph.node_indices() {
+            println!("\nNode {:?}", v);
+            println!("First_nbr {:?}", planar_emb.embedding[v].first_nbr);
+
+            for nbr in planar_emb.neighbors_cw_order(v) {
+                println!("Nbr {:?}", nbr);
+            }
+        }
+        println!("DONE\n");
+
+
         // DEBUG
         // for node in planar_emb.embedding.node_indices() {
         //     println!("emb node {:?}", planar_emb.embedding[node]);
