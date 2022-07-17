@@ -259,7 +259,7 @@ pub fn create_embedding(
 
     let mut ordered_adjs: Vec<Vec<NodeIndex>> = Vec::new();
 
-    //let mut nesting_depth: HashMap<(NodeIndex, NodeIndex), i64> =
+    //let mut nesting_depth: HashMap<(NodeIndex, NodeIndex), isize> =
     //    HashMap::with_capacity(lr_state.nesting_depth.len());
 
     // Create the adjacency list for each node
@@ -280,7 +280,7 @@ pub fn create_embedding(
         // Change the sign for nesting_depth
         for e in lr_state.dir_graph.edges(v) {
             let edge: (NodeIndex, NodeIndex) = (e.source(), e.target());
-            let signed_depth: i64 = lr_state.nesting_depth[&edge] as i64;
+            let signed_depth: isize = lr_state.nesting_depth[&edge] as isize;
             let signed_side = if lr_state.side.contains_key(&edge)
                 && sign(edge, &mut lr_state.eref, &mut lr_state.side) == Sign::Minus
             {
@@ -430,11 +430,11 @@ pub fn create_embedding(
     }
 }
 
+/// Once the embedding has been created, triangulate the embedding,
+/// create a canonical ordering, and convert the embedding to position
+/// coordinates.
 pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
-    let mut pos: Vec<Point> = Vec::with_capacity(planar_emb.embedding.node_count());
-    for p in 0..planar_emb.embedding.node_count() {
-        pos.push([0.0, 0.0]);
-    }
+    let mut pos: Vec<Point> = vec![[0.0, 0.0]; planar_emb.embedding.node_count()];
     if planar_emb.embedding.node_count() < 4 {
         let default_pos = [[0.0, 0.0], [2.0, 0.0], [1.0, 1.0]].to_vec();
         return planar_emb
@@ -444,42 +444,18 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
             .collect();
     }
     let outer_face = triangulate_embedding(planar_emb, false);
-    let mut outer2 = outer_face.clone();
-
-    println!("\n\nAFTER TRI\n");
-    for v in outer_face.clone() {
-        println!("\nNode {:?}", v);
-        println!("First_nbr {:?}", planar_emb.embedding[v].first_nbr);
-
-        for nbr in planar_emb.neighbors_cw_order(v) {
-            println!("Nbr {:?}", nbr);
-        }
-    }
-    println!("DONE\n");
-
-    let mut right_t_child = HashMap::<Option<NodeIndex>, Option<NodeIndex>>::new();
-    let mut left_t_child = HashMap::<Option<NodeIndex>, Option<NodeIndex>>::new();
-    let mut delta_x = HashMap::<Option<NodeIndex>, i64>::new();
-    let mut y_coord = HashMap::<Option<NodeIndex>, i64>::new();
 
     let node_list = canonical_ordering(planar_emb, outer_face);
 
-    println!("\n\nAFTER CANON\n");
-    for v in outer2 {
-        println!("\nNode {:?}", v);
-        println!("First_nbr {:?}", planar_emb.embedding[v].first_nbr);
+    let mut right_t_child = HashMap::<Option<NodeIndex>, Option<NodeIndex>>::new();
+    let mut left_t_child = HashMap::<Option<NodeIndex>, Option<NodeIndex>>::new();
+    let mut delta_x = HashMap::<Option<NodeIndex>, isize>::new();
+    let mut y_coord = HashMap::<Option<NodeIndex>, isize>::new();
 
-        for nbr in planar_emb.neighbors_cw_order(v) {
-            println!("Nbr {:?}", nbr);
-        }
-    }
-    println!("DONE\n");
-
+    // Set the coordinates for the first 3 nodes.
     let v1 = node_list[0].0;
     let v2 = node_list[1].0;
     let v3 = node_list[2].0;
-
-    println!("NODE LIST v1 {:?} v2 {:?} v3 {:?} node_list {:?}", v1, v2, v3, node_list);
 
     delta_x.insert(v1, 0);
     y_coord.insert(v1, 0);
@@ -496,12 +472,10 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
     right_t_child.insert(v3, v2);
     left_t_child.insert(v3, None);
 
-    println!("delta {:?} y {:?} right {:?} left {:?}", delta_x, y_coord, right_t_child, left_t_child);
+    // Set coordinates for the remaining nodes, adjusting
+    // positions along the way as needed.
     for k in 3..node_list.len() {
         let vk = node_list[k].0;
-        if vk.is_none() {
-            continue;
-        }
         let contour_nbrs = &node_list[k].1;
 
         let wp = contour_nbrs[0];
@@ -509,43 +483,34 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
         let wq = contour_nbrs[contour_nbrs.len() - 1];
         let wq1 = contour_nbrs[contour_nbrs.len() - 2];
 
-        println!("NODE List in canon k {:?} wp {:?} wp1 {:?} wq {:?} wq1 {:?}", k, wp, wp1, wq, wq1);
         let adds_mult_tri = contour_nbrs.len() > 2;
 
-        let mut delta_wp1_plus = 0;
+        let mut delta_wp1_plus = 1;
         if delta_x.contains_key(&wp1) {
             delta_wp1_plus = delta_x[&wp1] + 1;
         }
         delta_x.insert(wp1, delta_wp1_plus);
-        println!("delta_x wp1 {:?} d of wp1 {:?} wp1_plus {:?}", &wp1, delta_x[&wp1], delta_wp1_plus);
 
-        let mut delta_wq_plus = 0;
+        let mut delta_wq_plus = 1;
         if delta_x.contains_key(&wq) {
             delta_wq_plus = delta_x[&wq] + 1;
         }
         delta_x.insert(wq, delta_wq_plus);
 
-        println!("delta_x wq {:?} d of wq {:?} wq_plus {:?}", &wq, delta_x[&wq], delta_wq_plus);
-        println!("adds, {:?} delta_x {:?} contour_nbrs {:?}", adds_mult_tri, delta_x, contour_nbrs);
-
-        let delta_x_wp_wq = contour_nbrs[1..].iter().map(|x| delta_x[x]).sum::<i64>();
-
-        println!("delta_x {:?} delta_x_wp_wq {:?}", delta_x, delta_x_wp_wq);
+        let delta_x_wp_wq = contour_nbrs[1..].iter().map(|x| delta_x[x]).sum::<isize>();
 
         let y_wp = y_coord[&wp].clone();
         let y_wq = y_coord[&wq].clone();
-        delta_x.insert(vk, (delta_x_wp_wq - y_wp + y_wq) % 2); //y_coord[&wp] + y_coord[&wq]);
-        y_coord.insert(vk, (delta_x_wp_wq + y_wp + y_wq) % 2); //y_coord.cloned()[&wp] + y_coord.cloned()[&wq]);
-        let d_vk = delta_x[&vk].clone();
-        delta_x.insert(wq, delta_x_wp_wq - d_vk);
+        delta_x.insert(vk, (delta_x_wp_wq - y_wp + y_wq) / 2 as isize); //y_coord[&wp] + y_coord[&wq]);
+        y_coord.insert(vk, (delta_x_wp_wq + y_wp + y_wq) / 2 as isize); //y_coord.cloned()[&wp] + y_coord.cloned()[&wq]);
 
-        println!("delta_x {:?} y_coord {:?}", delta_x, y_coord);
+        //let d_vk = delta_x[&vk].clone();
+        delta_x.insert(wq, delta_x_wp_wq - delta_x[&vk]);//d_vk);
 
         if adds_mult_tri {
-            let delta_wp1_minus = delta_x[&wp1] - delta_x[&vk];
-            delta_x.insert(wp1, delta_wp1_minus);
+            //let delta_wp1_minus = delta_x[&wp1] - delta_x[&vk];
+            delta_x.insert(wp1, delta_x[&wp1] - delta_x[&vk]);//delta_wp1_minus);
         }
-
         right_t_child.insert(wp, vk);
         right_t_child.insert(vk, wq);
         if adds_mult_tri {
@@ -554,36 +519,33 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
         } else {
             left_t_child.insert(vk, None);
         }
-        println!("right {:?} left {:?}", right_t_child, left_t_child);
     }
 
+    // Set the position of the next tree child.
     fn set_position(
         parent: Option<NodeIndex>,
         tree: &HashMap<Option<NodeIndex>, Option<NodeIndex>>,
         remaining_nodes: &mut Vec<Option<NodeIndex>>,
-        delta_x: &HashMap<Option<NodeIndex>, i64>,
-        y_coord: &HashMap<Option<NodeIndex>, i64>,
+        delta_x: &HashMap<Option<NodeIndex>, isize>,
+        y_coord: &HashMap<Option<NodeIndex>, isize>,
         pos: &mut Vec<Point>,
     ) {
-        println!("IN SET {:?}", remaining_nodes);
         let child = tree[&parent];
         let parent_node_x = pos[parent.unwrap().index()][0];
 
         if child.is_some() {
             let child_x = parent_node_x + (delta_x[&child] as f64);
-            pos.insert(child.unwrap().index(), [child_x, (y_coord[&child] as f64)]);
+            pos[child.unwrap().index()] = [child_x, (y_coord[&child] as f64)];
             remaining_nodes.push(child);
         }
-        println!("IN SET END{:?}", remaining_nodes);        
     }
 
-    pos.insert(v1.unwrap().index(), [0.0, y_coord[&v1] as f64]);
+    pos[v1.unwrap().index()] = [0.0, y_coord[&v1] as f64];
     let mut remaining_nodes = vec![v1];
-    println!("\nREMAINING {:?}", remaining_nodes);
+
+    // Set the positions of all the nodes.
     while remaining_nodes.len() > 0 {
         let parent_node = remaining_nodes.pop().unwrap();
-        println!("parent_node {:?} left_t_child {:?} remaining_nodes {:?} delta_x {:?} y_coord {:?} pos {:?} ",
-            parent_node, left_t_child, remaining_nodes, delta_x, y_coord, pos);
         set_position(
             parent_node,
             &left_t_child,
@@ -592,8 +554,6 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
             &y_coord,
             &mut pos,
         );
-        println!("parent_node {:?} right_t_child {:?} remaining_nodes {:?} delta_x {:?} y_coord {:?} pos {:?} ",
-            parent_node, right_t_child, remaining_nodes, delta_x, y_coord, pos);
         set_position(
             parent_node,
             &right_t_child,
@@ -721,12 +681,15 @@ fn triangulate_face(planar_emb: &mut PlanarEmbedding, mut v1: NodeIndex, mut v2:
             (v1, v2, v3) = (v2, v3, v4);
             println!("\nContains EDGE {:?} {:?} {:?} {:?}", v1, v2, v3, v4);
         } else {
-            //planar_emb.add_half_edge_cw(v1, v3, Some(v2));
-            //planar_emb.add_half_edge_ccw(v3, v1, Some(v2));
+            planar_emb.add_half_edge_cw(v1, v3, Some(v2));
+            planar_emb.add_half_edge_ccw(v3, v1, Some(v2));
+            println!("get cw {:?}", planar_emb.get_edge_weight(v1, v3, true));
+            println!("get ccw {:?}", planar_emb.get_edge_weight(v3, v1, false));
             (v1, v2, v3) = (v1, v3, v4);
             println!("\nDont Contains EDGE count {:?} {:?} {:?} {:?} {:?}", count, v1, v2, v3, v4);
         }
         (_, v4) = planar_emb.next_face_half_edge(v2, v3);
+        println!("after v4 v2 {:?} v3 {:?} v4 {:?}", v2, v3, v4);
         count += 1;
     }
 }
@@ -829,8 +792,10 @@ fn canonical_ordering(
     ready_to_pick.remove(&v2);
 
     println!("READY after {:?}", ready_to_pick);
-    for k in (1..planar_emb.embedding.node_count()).rev() {
+    //println!("\n RANGE {:?}", (1..(planar_emb.embedding.node_count()-1)).rev());
+    for k in (1..(planar_emb.embedding.node_count())).rev() {
         let v_try = ready_to_pick.iter().next();
+        println!("\nv_try {:?}", v_try);
         if v_try.is_none() {
             continue;
         }
@@ -838,35 +803,38 @@ fn canonical_ordering(
         println!("in canon v {:?} k {:?}", v, k);
         ready_to_pick.remove(&v);
         marked_nodes.insert(v);
+        println!("ready_to_pick {:?} marked {:?}", ready_to_pick, marked_nodes);
 
         let mut wp: Option<NodeIndex> = None;
         let mut wq: Option<NodeIndex> = None;
 
-        for nbr in planar_emb.neighbors_cw_order(v) {
-            println!("nbr {:?}", nbr);
-            if marked_nodes.contains(&nbr) {
+        println!("\n nbrs_cw_order of v {:?} {:?}", v, planar_emb.neighbors_cw_order(v));
+        for nbr in planar_emb.neighbors_cw_order(v).iter() {
+            println!("nbr {:?}", *nbr);
+            if marked_nodes.contains(nbr) {
                 continue;
             }
-            println!("check outer face {:?}", nbr);
+            println!("check outer face {:?}", *nbr);
 
-            if is_on_outer_face(nbr, v1, &marked_nodes, &outer_face_ccw_nbr) {
-                println!("is outer {:?}", nbr);
+            if is_on_outer_face(*nbr, v1, &marked_nodes, &outer_face_ccw_nbr) {
+                println!("is outer {:?} {:?} {:?}", *nbr, v1, v2);//, outer_face_cw_nbr[nbr]);
 
-                if nbr == v1 {
+                if *nbr == v1 {
                     wp = Some(v1);
-                } else if nbr == v2 {
+                } else if *nbr == v2 {
                     wq = Some(v2);
                 } else {
-                    if outer_face_cw_nbr[&nbr] == v1 {
-                        wp = Some(nbr);
+                    if outer_face_cw_nbr[nbr] == v {
+                        wp = Some(*nbr);
                     } else {
-                        wq = Some(nbr);
+                        wq = Some(*nbr);
                     }
                 }
             }
             println!("wp {:?} wq {:?}", wp, wq);
 
-            if !wp.is_none() && !wq.is_none() {
+            if (wp.is_some() && wq.is_some()) {
+                println!("\nBREAKING {:?} {:?}", wp, wq);
                 break;
             }
         }
@@ -935,12 +903,13 @@ fn canonical_ordering(
         canon_order[k] = (Some(v), wp_wq);
         println!("\ncanon order k {:?} v {:?} wp_wq {:?}", k, v, x);
     }
-    let mut order: Vec<(Option<NodeIndex>, Vec<Option<NodeIndex>>)> = vec![];
-    //    vec![(None, vec![]); planar_emb.embedding.node_count()];
-    order.push((Some(NodeIndex::new(0)), vec![]));
-    order.push((Some(NodeIndex::new(1)), vec![]));
-    order.push((Some(NodeIndex::new(2)), vec![Some(NodeIndex::new(0)), Some(NodeIndex::new(1))]));
-    order.push((Some(NodeIndex::new(3)), vec![Some(NodeIndex::new(0)), Some(NodeIndex::new(2))]));
-    order.push((Some(NodeIndex::new(4)), vec![Some(NodeIndex::new(3)), Some(NodeIndex::new(2))]));
-    order
+    // let mut order: Vec<(Option<NodeIndex>, Vec<Option<NodeIndex>>)> = vec![];
+    // //    vec![(None, vec![]); planar_emb.embedding.node_count()];
+    // order.push((Some(NodeIndex::new(0)), vec![]));
+    // order.push((Some(NodeIndex::new(1)), vec![]));
+    // order.push((Some(NodeIndex::new(2)), vec![Some(NodeIndex::new(0)), Some(NodeIndex::new(1))]));
+    // order.push((Some(NodeIndex::new(3)), vec![Some(NodeIndex::new(0)), Some(NodeIndex::new(2))]));
+    // order.push((Some(NodeIndex::new(4)), vec![Some(NodeIndex::new(3)), Some(NodeIndex::new(2))]));
+    println!("\nCANON ORDER {:?}", canon_order);
+    canon_order
 }

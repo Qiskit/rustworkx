@@ -8,6 +8,8 @@ use crate::StablePyGraph;
 use retworkx_core::dictmap::*;
 use retworkx_core::planar::{is_planar, LRState};
 
+/// If a graph is planar, create a set of position coordinates for a planar
+/// layout that can be passed to a drawer.
 pub fn planar_layout(
     graph: &StablePyGraph<Undirected>,
     scale: Option<f64>,
@@ -20,36 +22,25 @@ pub fn planar_layout(
         };
     }
 
+    // First determine if the graph is planar.
     let mut lr_state = LRState::new(graph);
     let its_planar = is_planar(graph, Some(&mut lr_state));
 
+    // If not planar, return an empty pos_map
     if !its_planar {
         return Pos2DMapping {
             pos_map: DictMap::new(),
         };
+
+    // If planar, create the position coordinates.
     } else {
         let mut planar_emb = PlanarEmbedding::new();
         planar_emb.embedding = Graph::with_capacity(node_num, 0);
 
+        // First create the graph embedding
         create_embedding(&mut planar_emb, &mut lr_state);
 
-        for v in graph.node_indices() {
-            println!("\nNode {:?}", v);
-            println!("First_nbr {:?}", planar_emb.embedding[v].first_nbr);
-
-            for nbr in planar_emb.neighbors_cw_order(v) {
-                println!("Nbr {:?}", nbr);
-            }
-        }
-        println!("DONE\n");
-
-
-        // DEBUG
-        // for node in planar_emb.embedding.node_indices() {
-        //     println!("emb node {:?}", planar_emb.embedding[node]);
-        //     println!("emb edges {:?}", planar_emb.embedding.edges(node));
-        // }
-
+        // Then convert the embedding to position coordinates.
         let mut pos = embedding_to_pos(&mut planar_emb);
 
         if let Some(scale) = scale {

@@ -230,7 +230,7 @@ where
     /// next back edge in traversal with lowest return point.
     lowpt_edge: HashMap<Edge<G>, Edge<G>>,
     /// proxy for nesting order ≺ given by twice lowpt (plus 1 if chordal).
-    pub nesting_depth: HashMap<Edge<G>, i64>,
+    pub nesting_depth: HashMap<Edge<G>, isize>,
     /// stack for conflict pairs.
     stack: Vec<ConflictPair<Edge<G>>>,
     /// marks the top conflict pair when an edge was pushed in the stack.
@@ -338,9 +338,9 @@ where
 
                     if self.lowpt_2[&ei] < self.height[&v] {
                         // if it's chordal, add one.
-                        self.nesting_depth.insert(ei, (2 * low) as i64 + 1);
+                        self.nesting_depth.insert(ei, (2 * low) as isize + 1);
                     } else {
-                        self.nesting_depth.insert(ei, (2 * low) as i64);
+                        self.nesting_depth.insert(ei, (2 * low) as isize);
                     }
 
                     // update lowpoints of parent edge.
