@@ -291,11 +291,12 @@ where
                 }
             }
             DfsEvent::TreeEdge(v, w, _) => {
-                self.dir_graph.add_edge(
-                    NodeIndex::new(self.graph.to_index(v)),
-                    NodeIndex::new(self.graph.to_index(w)),
-                    (),
-                );
+                let v_dir = NodeIndex::new(self.graph.to_index(v));
+                let w_dir = NodeIndex::new(self.graph.to_index(w));
+                println!("TREE v_dir {:?} w_dir {:?}", v_dir, w_dir);
+                if !self.dir_graph.contains_edge(v_dir, w_dir) {
+                    self.dir_graph.add_edge(v_dir, w_dir, ());
+                }
                 let ei = (v, w);
                 let v_height = self.height[&v];
                 let w_height = v_height + 1;
@@ -309,11 +310,12 @@ where
             DfsEvent::BackEdge(v, w, _) => {
                 // do *not* consider ``(v, w)`` as a back edge if ``(w, v)`` is a tree edge.
                 if Some(&(w, v)) != self.eparent.get(&v) {
-                    self.dir_graph.add_edge(
-                        NodeIndex::new(self.graph.to_index(v)),
-                        NodeIndex::new(self.graph.to_index(w)),
-                        (),
-                    );
+                    let v_dir = NodeIndex::new(self.graph.to_index(v));
+                    let w_dir = NodeIndex::new(self.graph.to_index(w));
+                    println!("BACK v_dir {:?} w_dir {:?}", v_dir, w_dir);
+                    if !self.dir_graph.contains_edge(v_dir, w_dir) {
+                        self.dir_graph.add_edge(v_dir, w_dir, ());
+                    }
                     let ei = (v, w);
                     self.lowpt.insert(ei, self.height[&w]);
                     self.lowpt_2.insert(ei, self.height[&v]);

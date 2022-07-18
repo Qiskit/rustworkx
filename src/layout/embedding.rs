@@ -276,6 +276,12 @@ pub fn create_embedding(
         adjs.par_sort_by_key(|x| lr_state.nesting_depth[&(NodeIndex::new(v), *x)]);
     }
 
+    // ********** DEBUG
+    for x in &ordered_adjs {
+        println!("ordered {:?}", x);
+    }
+    // ********** DEBUG END
+
     for v in lr_state.dir_graph.node_indices() {
         // Change the sign for nesting_depth
         for e in lr_state.dir_graph.edges(v) {
@@ -792,8 +798,7 @@ fn canonical_ordering(
     ready_to_pick.remove(&v2);
 
     println!("READY after {:?}", ready_to_pick);
-    //println!("\n RANGE {:?}", (1..(planar_emb.embedding.node_count()-1)).rev());
-    for k in (1..(planar_emb.embedding.node_count())).rev() {
+    for k in (2..(planar_emb.embedding.node_count())).rev() {
         let v_try = ready_to_pick.iter().next();
         println!("\nv_try {:?}", v_try);
         if v_try.is_none() {
@@ -833,7 +838,7 @@ fn canonical_ordering(
             }
             println!("wp {:?} wq {:?}", wp, wq);
 
-            if (wp.is_some() && wq.is_some()) {
+            if wp.is_some() && wq.is_some() {
                 println!("\nBREAKING {:?} {:?}", wp, wq);
                 break;
             }
