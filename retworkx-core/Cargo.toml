@@ -17,7 +17,7 @@ petgraph = "0.6.2"
 rayon = "1.5"
 
 [dependencies.hashbrown]
-version = "0.11"
+version = "0.12"
 features = ["rayon"]
 
 [dependencies.indexmap]
