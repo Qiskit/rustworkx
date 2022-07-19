@@ -726,12 +726,5 @@ where
             return false;
         }
     }
-
-    // for node in lr_state.dir_graph.node_indices() {
-    //     for edge in lr_state.dir_graph.edges(node) {
-    //         println!("Edge {:?}, {:?}", edge.source(), edge.target());
-    //     }
-    // }
-
     true
 }
