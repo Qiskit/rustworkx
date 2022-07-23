@@ -11,9 +11,9 @@
 // under the License.
 
 use hashbrown::HashSet;
+use petgraph::algo;
 use std::collections::VecDeque;
 use std::hash::Hash;
-use petgraph::algo;
 // use super::digraph;
 use petgraph::visit::{GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, VisitMap, Visitable};
 use petgraph::{Incoming, Outgoing};
@@ -166,17 +166,12 @@ where
     num_components
 }
 
-/// Compute the strongly connected components for a directed graph
-///
-/// This function is implemented using Kosaraju's algorithm
-///
-/// :param PyDiGraph graph: The input graph to find the strongly connected
-///     components for.
-///
-/// :return: A list of list of node ids for strongly connected components
-/// :rtype: list
-pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usize>> {
-    algo::kosaraju_scc(&graph.graph)
+pub fn strongly_connected_components<G>(graph: G) -> Vec<Vec<usize>>
+where
+    G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+{
+    algo::kosaraju_scc(&graph)
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
         .collect()
