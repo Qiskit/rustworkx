@@ -138,7 +138,7 @@ pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usize>> {
-    connectivity::strongly_connected_components(graph.graph)
+    connectivity::strongly_connected_components(&graph.graph)
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,
@@ -258,20 +258,7 @@ pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult<HashSet<usize>> {
-    let node = NodeIndex::new(node);
-
-    if !graph.graph.contains_node(node) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'node' is not a valid node index",
-        ));
-    }
-
-    Ok(
-        connectivity::bfs_undirected(&graph.graph, node, &mut graph.graph.visit_map())
-            .into_iter()
-            .map(|x| x.index())
-            .collect(),
-    )
+    connectivity::node_connected_component(&graph.graph, node)
 }
 
 /// Check if the graph is connected.
@@ -285,13 +272,7 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
-    match graph.graph.node_indices().next() {
-        Some(node) => {
-            let component = node_connected_component(graph, node.index())?;
-            Ok(component.len() == graph.graph.node_count())
-        }
-        None => Err(NullGraph::new_err("Invalid operation on a NullGraph")),
-    }
+    connectivity::is_connected(&graph.graph)
 }
 
 /// Find the number of weakly connected components in a directed graph
