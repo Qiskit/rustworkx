@@ -1277,7 +1277,7 @@ pub fn directed_binomial_tree_graph(
 ///        ...   S       ...
 ///
 /// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 /// This function doesn't support the variant Fig 10.b right.
 ///
 /// Note that if ``d`` is set to ``1`` a :class:`~retworkx.PyGraph` with a
@@ -1296,26 +1296,12 @@ pub fn directed_binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import graphviz_draw
 ///
 ///   graph = retworkx.generators.heavy_square_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(d, /, multigraph=True)")]
@@ -1423,7 +1409,7 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///        ...   S       ...
 ///
 /// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 /// This function doesn't support the variant Fig 10.b right.
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
@@ -1439,26 +1425,12 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import graphviz_draw
 ///
-///   graph = retworkx.generators.heavy_square_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graph = retworkx.generators.directed_heavy_square_graph(3)
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(bidirectional = false, multigraph = true)]
 #[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
@@ -1630,26 +1602,12 @@ pub fn directed_heavy_square_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import graphviz_draw
 ///
 ///   graph = retworkx.generators.heavy_hex_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(d, /, multigraph=True)")]
@@ -1792,26 +1750,12 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import graphviz_draw
 ///
-///   graph = retworkx.generators.heavy_hex_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graph = retworkx.generators.directed_heavy_hex_graph(3)
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(bidirectional = false, multigraph = true)]
 #[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]

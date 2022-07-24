@@ -18,13 +18,14 @@
 #![allow(clippy::many_single_char_names)]
 
 use std::cmp::max;
+use std::hash::Hash;
 use std::mem;
 
 use hashbrown::{HashMap, HashSet};
 
-use petgraph::graph::NodeIndex;
 use petgraph::visit::{
     EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable,
 };
 use petgraph::Undirected;
 
@@ -870,9 +871,11 @@ where
         + NodeCount
         + IntoNodeIdentifiers
         + GraphProp<EdgeType = Undirected>
-        + GraphBase<NodeId = NodeIndex>
+        + GraphBase
+        + NodeIndexable
         + IntoEdges,
     F: FnMut(G::EdgeRef) -> Result<i128, E>,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
 {
     let num_edges = graph.edge_count();
     let num_nodes = graph.node_count();
@@ -885,7 +888,7 @@ where
     // algorithm operates on contiguous indices 0..num_nodes. node_map maps
     // the PyGraph's NodeIndex to the contingous usize used inside the
     // algorithm
-    let node_map: HashMap<NodeIndex, usize> = graph
+    let node_map: HashMap<G::NodeId, usize> = graph
         .node_identifiers()
         .enumerate()
         .map(|(index, node_index)| (node_index, index))
@@ -1368,15 +1371,15 @@ where
     // Also handle holes in node indices from PyGraph node removals by mapping
     // linear index to node index.
     let mut seen: HashSet<(usize, usize)> = HashSet::with_capacity(2 * num_nodes);
-    let node_list: Vec<NodeIndex> = graph.node_identifiers().collect();
+    let node_list: Vec<G::NodeId> = graph.node_identifiers().collect();
     for (index, node) in mate.iter() {
         let tmp = (
-            node_list[*index].index(),
-            node_list[endpoints[*node]].index(),
+            graph.to_index(node_list[*index]),
+            graph.to_index(node_list[endpoints[*node]]),
         );
         let rev_tmp = (
-            node_list[endpoints[*node]].index(),
-            node_list[*index].index(),
+            graph.to_index(node_list[endpoints[*node]]),
+            graph.to_index(node_list[*index]),
         );
         if !seen.contains(&tmp) && !seen.contains(&rev_tmp) {
             out_set.insert(tmp);

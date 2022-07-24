@@ -157,6 +157,10 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///     source_path = graph.attrs
 ///     graph.attrs = {'new_path': '/tmp/new.csv', 'old_path': source_path}
 ///
+/// The maximum number of nodes and edges allowed on a ``PyGraph`` object is
+/// :math:`2^{32} - 1` (4,294,967,294) each. Attempting to add more nodes or
+/// edges than this will result in an exception being raised.
+///
 /// :param bool check_cycle: When this is set to ``True`` the created
 ///     ``PyDiGraph`` has runtime cycle detection enabled.
 /// :param bool multgraph: When this is set to ``False`` the created
