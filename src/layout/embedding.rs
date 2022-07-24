@@ -711,6 +711,7 @@ fn canonical_ordering(
         let mut wq: Option<NodeIndex> = None;
         println!("2 ready after {:?}", ready_to_pick);
         for nbr in planar_emb.neighbors_cw_order(v).iter() {
+            println!("top of while ready {:?} v {:?} v1 {:?} v2 {:?} wp {:?} wq {:?} chords{:?}", ready_to_pick, v, v1, v2, wp, wq, chords);
             if marked_nodes.contains(nbr) {
                 continue;
             }
@@ -732,7 +733,7 @@ fn canonical_ordering(
                 break;
             }
         }
-        println!("3 ready {:?} wp {:?} wq {:?}", ready_to_pick, wp, wq);
+        println!("3 ready {:?} wp {:?} wq {:?} chords {:?}", ready_to_pick, wp, wq, chords);
         let mut wp_wq = vec![];
         if wp.is_some() && wq.is_some() {
             wp_wq = vec![wp];
@@ -744,7 +745,7 @@ fn canonical_ordering(
                 outer_face_ccw_nbr.insert(next_nbr, nbr);
                 nbr = next_nbr;
             }
-            println!("4 ready {:?} wp_wq {:?}", ready_to_pick, wp_wq);
+            println!("4 ready {:?} wp_wq {:?} chords {:?}", ready_to_pick, wp_wq, chords);
             if wp_wq.len() == 2 {
                 let wp_un = wp.unwrap();
                 if chords.contains_key(&wp_un) {
@@ -762,18 +763,20 @@ fn canonical_ordering(
                         ready_to_pick.insert(wq_un);
                     }
                 }
-                println!("5 ready {:?} wp_wq {:?}", ready_to_pick, wp_wq);
+                println!("5 ready {:?} wp_wq {:?} chords {:?}", ready_to_pick, wp_wq, chords);
             } else {
                 let mut new_face_nodes: HashSet<NodeIndex> = HashSet::new();
                 if wp_wq.len() > 1 {
-                    println!("6 ready {:?} wp_wq {:?}", ready_to_pick, wp_wq);
+                    println!("6 ready {:?} wp_wq {:?} chords {:?}", ready_to_pick, wp_wq, chords);
                     for w in &wp_wq[1..(wp_wq.len() - 1)] {
                         let w_un = w.unwrap();
                         new_face_nodes.insert(w_un);
                     }
+                    println!("new face {:?}", new_face_nodes);
                     for w in &new_face_nodes {
                         let w_un = *w;
                         ready_to_pick.insert(w_un);
+                        println!("6.5 ready {:?} w_un {:?}", ready_to_pick, w_un);
                         for nbr in planar_emb.neighbors_cw_order(w_un) {
                             if is_on_outer_face(nbr, v1, &marked_nodes, &outer_face_ccw_nbr)
                                 && !is_outer_face_nbr(
@@ -783,25 +786,27 @@ fn canonical_ordering(
                                     &outer_face_ccw_nbr,
                                 )
                             {
+                                println!("is on nbr {:?}", nbr);
+                                let mut chords_w_plus = 1;
                                 if chords.contains_key(&w_un) {
-                                    let chords_w = chords[&w_un].clone() + 1;
-                                    chords.insert(w_un, chords_w);
-                                    ready_to_pick.remove(&w_un);
-                                    if !new_face_nodes.contains(&nbr) {
-                                        let mut chords_plus = 1;
-                                        if chords.contains_key(&nbr) {
-                                            chords_plus = chords[&nbr] + 1
-                                        }
-                                        //let chords_nbr = chords[&nbr].clone() + 1;
-                                        chords.insert(nbr, chords_plus);
-                                        ready_to_pick.remove(&nbr);
+                                    chords_w_plus = chords[&w_un].clone() + 1;
+                                }
+                                chords.insert(w_un, chords_w_plus);
+                                ready_to_pick.remove(&w_un);
+                                if !new_face_nodes.contains(&nbr) {
+                                    let mut chords_plus = 1;
+                                    if chords.contains_key(&nbr) {
+                                        chords_plus = chords[&nbr] + 1
                                     }
+                                    //let chords_nbr = chords[&nbr].clone() + 1;
+                                    chords.insert(nbr, chords_plus);
+                                    ready_to_pick.remove(&nbr);
                                 }
                             }
                         }
                     }
                 }
-                println!("7 ready {:?} wp_wq {:?}", ready_to_pick, wp_wq);
+                println!("7 ready {:?} wp_wq {:?} chords {:?}", ready_to_pick, wp_wq, chords);
 
             }
         }
