@@ -293,7 +293,6 @@ where
             DfsEvent::TreeEdge(v, w, _) => {
                 let v_dir = NodeIndex::new(self.graph.to_index(v));
                 let w_dir = NodeIndex::new(self.graph.to_index(w));
-                println!("TREE v_dir {:?} w_dir {:?}", v_dir, w_dir);
                 if !self.dir_graph.contains_edge(v_dir, w_dir) {
                     self.dir_graph.add_edge(v_dir, w_dir, ());
                 }
@@ -312,7 +311,6 @@ where
                 if Some(&(w, v)) != self.eparent.get(&v) {
                     let v_dir = NodeIndex::new(self.graph.to_index(v));
                     let w_dir = NodeIndex::new(self.graph.to_index(w));
-                    println!("BACK v_dir {:?} w_dir {:?}", v_dir, w_dir);
                     if !self.dir_graph.contains_edge(v_dir, w_dir) {
                         self.dir_graph.add_edge(v_dir, w_dir, ());
                     }

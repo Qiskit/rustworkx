@@ -28,6 +28,7 @@ pub fn planar_layout(
 
     // If not planar, return an empty pos_map
     if !its_planar {
+        // RAISE?
         return Pos2DMapping {
             pos_map: DictMap::new(),
         };
@@ -40,9 +41,6 @@ pub fn planar_layout(
         // First create the graph embedding
         create_embedding(&mut planar_emb, &mut lr_state);
 
-        for node in planar_emb.embedding.node_indices() {
-            println!("node {:?} data {:?}", node, planar_emb.embedding[node]);
-        }
         // Then convert the embedding to position coordinates.
         let mut pos = embedding_to_pos(&mut planar_emb);
 
