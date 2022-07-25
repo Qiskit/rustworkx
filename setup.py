@@ -21,6 +21,9 @@ mpl_extras = ['matplotlib>=3.0']
 graphviz_extras = ['pillow>=5.4']
 
 PKG_NAME = os.getenv('RUSTWORKX_PKG_NAME', "rustworkx")
+PKG_VERSION = "0.12.0"
+PKG_PACKAGES = ["rustworkx", "rustworkx.visualization"]
+PKG_INSTALL_REQUIRES = ['numpy>=1.16.0']
 
 retworkx_readme_compat = """# retworkx
 
@@ -35,10 +38,12 @@ will be supported.
 README = readme()
 if PKG_NAME == "retworkx":
     README = retworkx_readme_compat + README
+    PKG_PACKAGES = ["retworkx"]
+    PKG_INSTALL_REQUIRES.append(f"rustworkx=={PKG_VERSION}")
 
 setup(
     name=PKG_NAME,
-    version="0.12.0",
+    version=PKG_VERSION,
     description="A python graph library implemented in Rust",
     long_description=README,
     long_description_content_type='text/markdown',
@@ -69,10 +74,10 @@ setup(
     rust_extensions=[RustExtension("rustworkx.rustworkx", "Cargo.toml",
                                    binding=Binding.PyO3)],
     include_package_data=True,
-    packages=["rustworkx", "rustworkx.visualization", "retworkx"],
+    packages=PKG_PACKAGES,
     zip_safe=False,
     python_requires=">=3.7",
-    install_requires=['numpy>=1.16.0'],
+    install_requires=PKG_INSTALL_REQUIRES,
     extras_require={
         'mpl': mpl_extras,
         'graphviz': graphviz_extras,
