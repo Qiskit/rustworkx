@@ -1,5 +1,6 @@
 use hashbrown::hash_map::HashMap;
 use hashbrown::HashSet;
+use indexmap::set::IndexSet;
 use petgraph::graph::Graph;
 use petgraph::prelude::*;
 use petgraph::visit::NodeIndexable;
@@ -115,11 +116,13 @@ impl PlanarEmbedding {
         }
         // if ref_nbr not in self[start_node] error
         let ref_nbr_node = ref_nbr.unwrap();
-        // DEBUG - RAISE?
+        // RAISE?
         if self.embedding.find_edge(start_node, ref_nbr_node).is_none() {
             println!("NO REF NBR in ADD CW {:?} {:?}", start_node, ref_nbr_node);
         }
-        let cw_ref = self.get_edge_weight(start_node, ref_nbr_node, true).unwrap();
+        let cw_ref = self
+            .get_edge_weight(start_node, ref_nbr_node, true)
+            .unwrap();
         // Alter half-edge data structures
         self.update_edge_weight(start_node, ref_nbr_node, end_node, true);
         self.update_edge_weight(start_node, end_node, cw_ref, true);
@@ -179,7 +182,7 @@ impl PlanarEmbedding {
             // RAISE?
             self.embedding.add_edge(v, w, cw_weight);
         }
-        let mut found_weight = self.embedding.edge_weight_mut(found_edge.unwrap()); //.unwrap();
+        let mut found_weight = self.embedding.edge_weight_mut(found_edge.unwrap());
         let mut cw_weight2 = CwCcw::<NodeIndex>::default();
         if found_weight.is_none() {
             // RAISE?
@@ -241,17 +244,17 @@ pub fn create_embedding(
         for e in lr_state.dir_graph.edges(v) {
             let edge: (NodeIndex, NodeIndex) = (e.source(), e.target());
             let signed_depth: isize = lr_state.nesting_depth[&edge] as isize;
-            let signed_side = if lr_state.side.contains_key(&edge)
-                && sign(edge, &mut lr_state.eref, &mut lr_state.side) == Sign::Minus
-            {
+            let signed_side = if sign(edge, &mut lr_state.eref, &mut lr_state.side) == Sign::Minus {
                 -1
             } else {
                 1
             };
-            lr_state.nesting_depth.insert(edge, signed_depth * signed_side);
+            lr_state
+                .nesting_depth
+                .insert(edge, signed_depth * signed_side);
         }
     }
-    // Sort the adjacency list using nesting depth as sort order
+    // Sort the adjacency list using revised nesting depth as sort order
     for (v, adjs) in ordered_adjs.iter_mut().enumerate() {
         adjs.par_sort_by_key(|x| lr_state.nesting_depth[&(NodeIndex::new(v), *x)]);
     }
@@ -310,8 +313,7 @@ pub fn create_embedding(
         let temp_side: Sign;
         if side.contains_key(&edge) {
             temp_side = side[&edge].clone();
-        }
-        else {
+        } else {
             temp_side = Sign::Plus;
         }
         if eref.contains_key(&edge) {
@@ -324,8 +326,7 @@ pub fn create_embedding(
         }
         if side.contains_key(&edge) {
             side[&edge]
-        }
-        else {
+        } else {
             Sign::Plus
         }
     }
@@ -402,15 +403,12 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
 
         let y_wp = y_coord[&wp].clone();
         let y_wq = y_coord[&wq].clone();
-        delta_x.insert(vk, (delta_x_wp_wq - y_wp + y_wq) / 2 as isize); //y_coord[&wp] + y_coord[&wq]);
-        y_coord.insert(vk, (delta_x_wp_wq + y_wp + y_wq) / 2 as isize); //y_coord.cloned()[&wp] + y_coord.cloned()[&wq]);
-
-        //let d_vk = delta_x[&vk].clone();
-        delta_x.insert(wq, delta_x_wp_wq - delta_x[&vk]);//d_vk);
+        delta_x.insert(vk, (delta_x_wp_wq - y_wp + y_wq) / 2 as isize);
+        y_coord.insert(vk, (delta_x_wp_wq + y_wp + y_wq) / 2 as isize);
+        delta_x.insert(wq, delta_x_wp_wq - delta_x[&vk]);
 
         if adds_mult_tri {
-            //let delta_wp1_minus = delta_x[&wp1] - delta_x[&vk];
-            delta_x.insert(wp1, delta_x[&wp1] - delta_x[&vk]);//delta_wp1_minus);
+            delta_x.insert(wp1, delta_x[&wp1] - delta_x[&vk]);
         }
         right_t_child.insert(wp, vk);
         right_t_child.insert(vk, wq);
@@ -570,7 +568,7 @@ fn canonical_ordering(
     let v2 = outer_face[1];
     let mut chords: HashMap<NodeIndex, usize> = HashMap::new();
     let mut marked_nodes: HashSet<NodeIndex> = HashSet::new();
-    let mut ready_to_pick: HashSet<NodeIndex> = HashSet::new();
+    let mut ready_to_pick: IndexSet<NodeIndex> = IndexSet::new();
 
     for node in outer_face.iter() {
         ready_to_pick.insert(*node);
@@ -627,7 +625,7 @@ fn canonical_ordering(
                     chords_plus = chords[&v].clone();
                 }
                 chords.insert(v, chords_plus + 1);
-                ready_to_pick.remove(&v);
+                ready_to_pick.shift_remove(&v);
             }
         }
     }
@@ -637,17 +635,11 @@ fn canonical_ordering(
 
     canon_order[0] = (Some(v1), vec![]);
     canon_order[1] = (Some(v2), vec![]);
-    ready_to_pick.remove(&v1);
-    ready_to_pick.remove(&v2);
+    ready_to_pick.shift_remove(&v1);
+    ready_to_pick.shift_remove(&v2);
 
     for k in (2..(planar_emb.embedding.node_count())).rev() {
-        let v_try = ready_to_pick.iter().next();
-        if v_try.is_none() {
-            // RAISE?
-            continue;
-        }
-        let v = v_try.unwrap().clone();
-        ready_to_pick.remove(&v);
+        let v = ready_to_pick.pop().unwrap();
         marked_nodes.insert(v);
 
         let mut wp: Option<NodeIndex> = None;
@@ -725,14 +717,14 @@ fn canonical_ordering(
                                     chords_w_plus = chords[&w_un].clone() + 1;
                                 }
                                 chords.insert(w_un, chords_w_plus);
-                                ready_to_pick.remove(&w_un);
+                                ready_to_pick.shift_remove(&w_un);
                                 if !new_face_nodes.contains(&nbr) {
                                     let mut chords_plus = 1;
                                     if chords.contains_key(&nbr) {
                                         chords_plus = chords[&nbr] + 1
                                     }
                                     chords.insert(nbr, chords_plus);
-                                    ready_to_pick.remove(&nbr);
+                                    ready_to_pick.shift_remove(&nbr);
                                 }
                             }
                         }
