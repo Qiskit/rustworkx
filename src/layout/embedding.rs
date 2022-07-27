@@ -364,9 +364,9 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
 
     // Set coordinates for the remaining nodes, adjusting
     // positions along the way as needed.
-    for k in 3..node_list.len() {
-        let vk = node_list[k].0;
-        let contour_nbrs = &node_list[k].1;
+    for ordering in node_list.iter().skip(3) {
+        let vk = ordering.0;
+        let contour_nbrs = &ordering.1;
 
         let wp = contour_nbrs[0];
         let wp1 = contour_nbrs[1];
