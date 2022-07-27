@@ -38,6 +38,7 @@ extensions = ['sphinx.ext.autodoc',
               'jupyter_sphinx',
               'reno.sphinxext',
               'sphinx.ext.intersphinx',
+              'sphinxemoji.sphinxemoji',
               'sphinx_reredirects',
              ]
 html_static_path = ['_static']

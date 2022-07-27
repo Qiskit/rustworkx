@@ -1,6 +1,6 @@
-#############################
+##############################
 rustworkx Tutorials and Guides
-#############################
+##############################
 
 This section contains tutorials on using rustworkx.
 

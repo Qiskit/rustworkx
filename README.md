@@ -12,7 +12,7 @@
   - You can see the full rendered docs at:
     <https://qiskit.org/documentation/rustworkx>
 
-:warning: The retworkx project has been renamed to **rustworkx**. The use of the
+|:warning:| The retworkx project has been renamed to **rustworkx**. The use of the
 retworkx package will still work for the time being but starting in the 1.0.0
 release retworkx will no longer be supported
 

@@ -2,9 +2,9 @@
    introduction tutorial in  NetworkX's documentation which can be found here:
    https://networkx.org/documentation/networkx-2.6.2/tutorial.html
 
-########################
+#########################
 Introduction to rustworkx
-########################
+#########################
 
 This guide serves as an introduction to working with rustworkx. If you're a
 current or past `NetworkX <https:://networkx.org>`__ user who is looking at

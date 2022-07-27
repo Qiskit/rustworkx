@@ -1,8 +1,8 @@
 .. _networkx:
 
-###########################
+############################
 rustworkx for NetworkX users
-###########################
+############################
 
 This is an introductory guide for existing `NetworkX <https://networkx.org>`__
 users on how to use rustworkx, how it differs from NetworkX, and key
