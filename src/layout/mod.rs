@@ -215,26 +215,6 @@ pub fn graph_planar_layout(
     planar::planar_layout(&graph.graph, scale, center)
 }
 
-/// Generate a planar layout
-///
-/// :param PyDiGraph graph: The graph to generate the layout for
-/// :param float|None scale: Scale factor for positions.If scale is ``None``,
-///     no re-scaling is performed. (``default=1.0``)
-/// :param tuple center: An optional center position. This is a 2 tuple of two
-///     ``float`` values for the center position
-///
-/// :returns: The planar layout of the graph.
-/// :rtype: Pos2DMapping
-// #[pyfunction]
-// #[pyo3(text_signature = "(graph, / scale=1.0, center=None)")]
-// pub fn digraph_planar_layout(
-//     graph: &digraph::PyDiGraph,
-//     scale: Option<f64>,
-//     center: Option<[f64; 2]>,
-// ) -> Pos2DMapping {
-//     planar::planar_layout(&graph.graph, scale, center)
-// }
-
 /// Generate a random layout
 ///
 /// :param PyGraph graph: The graph to generate the layout for

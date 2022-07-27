@@ -540,14 +540,12 @@ fn triangulate_face(planar_emb: &mut PlanarEmbedding, mut v1: NodeIndex, mut v2:
     }
     while v1 != v4 {
         if planar_emb.embedding.contains_edge(v1, v3) {
-            // (v1, v2, v3) = (v2, v3, v4);
             v1 = v2;
             v2 = v3;
             v3 = v4;
         } else {
             planar_emb.add_half_edge_cw(v1, v3, Some(v2));
             planar_emb.add_half_edge_ccw(v3, v1, Some(v2));
-            // (v1, v2, v3) = (v1, v3, v4);
             v2 = v3;
             v3 = v4;
         }
