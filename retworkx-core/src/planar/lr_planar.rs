@@ -683,7 +683,7 @@ where
 /// # Example:
 /// ```rust
 /// use retworkx_core::petgraph::graph::UnGraph;
-/// use retworkx_core::planar::is_planar;
+/// use retworkx_core::planar::{is_planar, LRState};
 ///
 /// let grid = UnGraph::<(), ()>::from_edges(&[
 ///    // row edges
@@ -691,7 +691,8 @@ where
 ///    // col edges
 ///    (0, 3), (3, 6), (1, 4), (4, 7), (2, 5), (5, 8),
 /// ]);
-/// assert!(is_planar(&grid))
+/// let mut lr_state = LRState::new(&grid);
+/// assert!(is_planar(&grid, Some(&mut lr_state)))
 /// ```
 pub fn is_planar<G>(graph: G, state: Option<&mut LRState<G>>) -> bool
 where

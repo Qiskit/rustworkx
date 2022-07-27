@@ -13,7 +13,7 @@
 //! Test module for planar graphs.
 
 use retworkx_core::petgraph::graph::UnGraph;
-use retworkx_core::planar::is_planar;
+use retworkx_core::planar::{is_planar, LRState};
 
 #[test]
 fn test_simple_planar_graph() {
@@ -30,7 +30,8 @@ fn test_simple_planar_graph() {
         (4, 5),
         (5, 7),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert!(res)
 }
 
@@ -52,7 +53,8 @@ fn test_planar_grid_3_3_graph() {
         (2, 5),
         (5, 8),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert!(res)
 }
 
@@ -73,7 +75,8 @@ fn test_planar_with_self_loop() {
         (3, 5),
         (4, 5),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert!(res)
 }
 
@@ -109,21 +112,24 @@ fn test_goldner_harary_planar_graph() {
         (9, 10),
         (10, 11),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert!(res)
 }
 
 #[test]
 fn test_multiple_components_planar_graph() {
     let graph = UnGraph::<(), ()>::from_edges(&[(1, 2), (2, 3), (3, 1), (4, 5), (5, 6), (6, 4)]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert!(res)
 }
 
 #[test]
 fn test_planar_multi_graph() {
     let graph = UnGraph::<(), ()>::from_edges(&[(0, 1), (0, 1), (0, 1), (1, 2), (2, 0)]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert!(res)
 }
 
@@ -140,7 +146,8 @@ fn test_k3_3_non_planar() {
         (2, 4),
         (2, 5),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert_eq!(res, false)
 }
 
@@ -158,7 +165,8 @@ fn test_k5_non_planar() {
         (2, 4),
         (3, 4),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert_eq!(res, false)
 }
 
@@ -179,7 +187,8 @@ fn test_multiple_components_non_planar() {
         (7, 8),
         (8, 6),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert_eq!(res, false)
 }
 
@@ -198,7 +207,8 @@ fn test_non_planar() {
         (4, 6),
         (4, 7),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert_eq!(res, false)
 }
 
@@ -216,7 +226,8 @@ fn test_planar_graph1() {
         (0, 10),
         (1, 7),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert!(res)
 }
 
@@ -241,7 +252,8 @@ fn test_non_planar_graph2() {
         (3, 6),
         (2, 8),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert_eq!(res, false)
 }
 
@@ -263,6 +275,7 @@ fn test_non_planar_graph3() {
         (5, 11),
         (5, 13),
     ]);
-    let res = is_planar(&graph);
+    let mut lr_state = LRState::new(&graph);
+    let res = is_planar(&graph, Some(&mut lr_state));
     assert_eq!(res, false)
 }
