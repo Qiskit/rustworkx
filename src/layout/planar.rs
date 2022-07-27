@@ -29,9 +29,9 @@ pub fn planar_layout(
     // If not planar, return an empty pos_map
     if !its_planar {
         // RAISE?
-        return Pos2DMapping {
+        Pos2DMapping {
             pos_map: DictMap::new(),
-        };
+        }
 
     // If planar, create the position coordinates.
     } else {

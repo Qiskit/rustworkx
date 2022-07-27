@@ -136,21 +136,20 @@ impl PlanarEmbedding {
         end_node: NodeIndex,
         ref_nbr: Option<NodeIndex>,
     ) {
-        if ref_nbr.is_none() {
-            // Start node has no neighbors
-            let cw_weight = CwCcw::<NodeIndex>::default();
-            self.embedding.add_edge(start_node, end_node, cw_weight);
-            self.update_edge_weight(start_node, end_node, end_node, true);
-            self.update_edge_weight(start_node, end_node, end_node, false);
-            self.embedding[start_node].first_nbr = Some(end_node);
-        } else {
-            let ref_nbr_node = ref_nbr.unwrap();
+        if let Some(ref_nbr_node) = ref_nbr {
             let ccw_ref_node = self.get_edge_weight(start_node, ref_nbr_node, false);
             self.add_half_edge_cw(start_node, end_node, ccw_ref_node);
             if ref_nbr == self.embedding[start_node].first_nbr {
                 // Update first neighbor
                 self.embedding[start_node].first_nbr = Some(end_node);
             }
+        } else {
+            // Start node has no neighbors
+            let cw_weight = CwCcw::<NodeIndex>::default();
+            self.embedding.add_edge(start_node, end_node, cw_weight);
+            self.update_edge_weight(start_node, end_node, end_node, true);
+            self.update_edge_weight(start_node, end_node, end_node, false);
+            self.embedding[start_node].first_nbr = Some(end_node);
         }
     }
 
@@ -196,20 +195,12 @@ impl PlanarEmbedding {
     }
 
     fn get_edge_weight(&self, v: NodeIndex, w: NodeIndex, cw: bool) -> Option<NodeIndex> {
-        let found_edge = self.embedding.find_edge(v, w);
-        if found_edge.is_none() {
-            // RAISE?
-            return None;
-        }
-        let found_weight = self.embedding.edge_weight(found_edge.unwrap());
-        if found_weight.is_none() {
-            // RAISE?
-            return None;
-        }
+        let found_edge = self.embedding.find_edge(v, w)?;
+        let found_weight = self.embedding.edge_weight(found_edge)?;
         if cw {
-            found_weight.unwrap().cw
+            found_weight.cw
         } else {
-            found_weight.unwrap().ccw
+            found_weight.ccw
         }
     }
 
@@ -275,7 +266,7 @@ pub fn create_embedding(
         // Create the stack with an initial entry of v
         let mut dfs_stack: Vec<NodeIndex> = vec![*v];
 
-        while dfs_stack.len() > 0 {
+        while !dfs_stack.is_empty() {
             let v = dfs_stack.pop().unwrap();
             let idx2 = idx[v.index()];
 
@@ -283,20 +274,18 @@ pub fn create_embedding(
             for w in ordered_adjs[v.index()][idx2..].iter() {
                 idx[v.index()] += 1;
                 let ei = (v, *w);
-                if lr_state.eparent.contains_key(&w) && ei == lr_state.eparent[&w] {
+                if lr_state.eparent.contains_key(w) && ei == lr_state.eparent[w] {
                     planar_emb.add_half_edge_first(*w, v);
                     left_ref.insert(v, *w);
                     right_ref.insert(v, *w);
                     dfs_stack.push(v);
                     dfs_stack.push(*w);
                     break;
+                } else if !lr_state.side.contains_key(&ei) || lr_state.side[&ei] == Sign::Plus {
+                    planar_emb.add_half_edge_cw(*w, v, Some(right_ref[w]));
                 } else {
-                    if !lr_state.side.contains_key(&ei) || lr_state.side[&ei] == Sign::Plus {
-                        planar_emb.add_half_edge_cw(*w, v, Some(right_ref[w]));
-                    } else {
-                        planar_emb.add_half_edge_ccw(*w, v, Some(left_ref[w]));
-                        left_ref.insert(*w, v);
-                    }
+                    planar_emb.add_half_edge_ccw(*w, v, Some(left_ref[w]));
+                    left_ref.insert(*w, v);
                 }
             }
         }
@@ -310,14 +299,13 @@ pub fn create_embedding(
         // Resolve the relative side of an edge to the absolute side.
 
         // Create a temp of Plus in case edge not in side.
-        let temp_side: Sign;
-        if side.contains_key(&edge) {
-            temp_side = side[&edge].clone();
+        let temp_side: Sign = if side.contains_key(&edge) {
+            side[&edge]
         } else {
-            temp_side = Sign::Plus;
-        }
+            Sign::Plus
+        };
         if eref.contains_key(&edge) {
-            if temp_side == sign(eref[&edge].clone(), eref, side) {
+            if temp_side == sign(eref[&edge], eref, side) {
                 side.insert(edge, Sign::Plus);
             } else {
                 side.insert(edge, Sign::Minus);
@@ -401,10 +389,10 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
 
         let delta_x_wp_wq = contour_nbrs[1..].iter().map(|x| delta_x[x]).sum::<isize>();
 
-        let y_wp = y_coord[&wp].clone();
-        let y_wq = y_coord[&wq].clone();
-        delta_x.insert(vk, (delta_x_wp_wq - y_wp + y_wq) / 2 as isize);
-        y_coord.insert(vk, (delta_x_wp_wq + y_wp + y_wq) / 2 as isize);
+        let y_wp = y_coord[&wp];
+        let y_wq = y_coord[&wq];
+        delta_x.insert(vk, (delta_x_wp_wq - y_wp + y_wq) / 2_isize);
+        y_coord.insert(vk, (delta_x_wp_wq + y_wp + y_wq) / 2_isize);
         delta_x.insert(wq, delta_x_wp_wq - delta_x[&vk]);
 
         if adds_mult_tri {
@@ -427,14 +415,14 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
         remaining_nodes: &mut Vec<Option<NodeIndex>>,
         delta_x: &HashMap<Option<NodeIndex>, isize>,
         y_coord: &HashMap<Option<NodeIndex>, isize>,
-        pos: &mut Vec<Point>,
+        pos: &mut [Point],
     ) {
         let child = tree[&parent];
         let parent_node_x = pos[parent.unwrap().index()][0];
 
-        if child.is_some() {
+        if let Some(child_un) = child {
             let child_x = parent_node_x + (delta_x[&child] as f64);
-            pos[child.unwrap().index()] = [child_x, (y_coord[&child] as f64)];
+            pos[child_un.index()] = [child_x, (y_coord[&child] as f64)];
             remaining_nodes.push(child);
         }
     }
@@ -443,7 +431,7 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
     let mut remaining_nodes = vec![v1];
 
     // Set the positions of all the nodes.
-    while remaining_nodes.len() > 0 {
+    while !remaining_nodes.is_empty() {
         let parent_node = remaining_nodes.pop().unwrap();
         set_position(
             parent_node,
@@ -482,7 +470,7 @@ fn triangulate_embedding(
     for v in planar_emb.embedding.node_indices() {
         for w in planar_emb.neighbors_cw_order(v) {
             let new_face = make_bi_connected(planar_emb, &v, &w, &mut edges_counted);
-            if new_face.len() > 0 {
+            if !new_face.is_empty() {
                 face_list.push(new_face.clone());
                 if new_face.len() > outer_face.len() {
                     outer_face = new_face;
@@ -515,8 +503,8 @@ fn make_bi_connected(
         return vec![];
     }
     edges_counted.insert((*start_node, *out_node));
-    let mut v1 = start_node.clone();
-    let mut v2 = out_node.clone();
+    let mut v1 = *start_node;
+    let mut v2 = *out_node;
     let mut face_list: Vec<NodeIndex> = vec![*start_node];
     let (_, mut v3) = planar_emb.next_face_half_edge(v1, v2);
 
@@ -531,11 +519,11 @@ fn make_bi_connected(
             planar_emb.add_half_edge_ccw(v3, v1, Some(v2));
             edges_counted.insert((v2, v3));
             edges_counted.insert((v3, v1));
-            v2 = v1.clone();
+            v2 = v1;
         } else {
             face_list.push(v2);
         }
-        v1 = v2.clone();
+        v1 = v2;
         (v2, v3) = planar_emb.next_face_half_edge(v2, v3);
         edges_counted.insert((v1, v2));
     }
@@ -578,14 +566,14 @@ fn canonical_ordering(
     let mut outer_face_ccw_nbr: HashMap<NodeIndex, NodeIndex> =
         HashMap::with_capacity(outer_face.len());
 
-    let mut prev_nbr = v2.clone();
+    let mut prev_nbr = v2;
     for v in outer_face[2..outer_face.len()].iter() {
         outer_face_ccw_nbr.insert(prev_nbr, *v);
         prev_nbr = *v;
     }
     outer_face_ccw_nbr.insert(prev_nbr, v1);
 
-    prev_nbr = v1.clone();
+    prev_nbr = v1;
     for v in outer_face[1..outer_face.len()].iter().rev() {
         outer_face_cw_nbr.insert(prev_nbr, *v);
         prev_nbr = *v;
@@ -622,7 +610,7 @@ fn canonical_ordering(
             {
                 let mut chords_plus = 0;
                 if chords.contains_key(&v) {
-                    chords_plus = chords[&v].clone();
+                    chords_plus = chords[&v];
                 }
                 chords.insert(v, chords_plus + 1);
                 ready_to_pick.shift_remove(&v);
@@ -653,12 +641,10 @@ fn canonical_ordering(
                     wp = Some(v1);
                 } else if *nbr == v2 {
                     wq = Some(v2);
+                } else if outer_face_cw_nbr[nbr] == v {
+                    wp = Some(*nbr);
                 } else {
-                    if outer_face_cw_nbr[nbr] == v {
-                        wp = Some(*nbr);
-                    } else {
-                        wq = Some(*nbr);
-                    }
+                    wq = Some(*nbr);
                 }
             }
             if wp.is_some() && wq.is_some() {
@@ -666,65 +652,65 @@ fn canonical_ordering(
             }
         }
         let mut wp_wq = vec![];
-        if wp.is_some() && wq.is_some() {
-            wp_wq = vec![wp];
-            let mut nbr = wp.unwrap();
-            while Some(nbr) != wq {
-                let next_nbr = planar_emb.get_edge_weight(v, nbr, false).unwrap();
-                wp_wq.push(Some(next_nbr));
-                outer_face_cw_nbr.insert(nbr, next_nbr);
-                outer_face_ccw_nbr.insert(next_nbr, nbr);
-                nbr = next_nbr;
-            }
-            if wp_wq.len() == 2 {
-                let wp_un = wp.unwrap();
-                if chords.contains_key(&wp_un) {
-                    let chords_wp = chords[&wp_un].clone() - 1;
-                    chords.insert(wp_un, chords_wp);
-                    if chords[&wp_un] == 0 {
-                        ready_to_pick.insert(wp_un);
-                    }
+        if let Some(wp_un) = wp {
+            if let Some(wq_un) = wq {
+                wp_wq = vec![wp];
+                let mut nbr = wp.unwrap();
+                while Some(nbr) != wq {
+                    let next_nbr = planar_emb.get_edge_weight(v, nbr, false).unwrap();
+                    wp_wq.push(Some(next_nbr));
+                    outer_face_cw_nbr.insert(nbr, next_nbr);
+                    outer_face_ccw_nbr.insert(next_nbr, nbr);
+                    nbr = next_nbr;
                 }
-                let wq_un = wq.unwrap();
-                if chords.contains_key(&wq_un) {
-                    let chords_wq = chords[&wq_un].clone() - 1;
-                    chords.insert(wq_un, chords_wq);
-                    if chords[&wq_un] == 0 {
-                        ready_to_pick.insert(wq_un);
+                if wp_wq.len() == 2 {
+                    if chords.contains_key(&wp_un) {
+                        let chords_wp = chords[&wp_un] - 1;
+                        chords.insert(wp_un, chords_wp);
+                        if chords[&wp_un] == 0 {
+                            ready_to_pick.insert(wp_un);
+                        }
                     }
-                }
-            } else {
-                let mut new_face_nodes: HashSet<NodeIndex> = HashSet::new();
-                if wp_wq.len() > 1 {
-                    for w in &wp_wq[1..(wp_wq.len() - 1)] {
-                        let w_un = w.unwrap();
-                        new_face_nodes.insert(w_un);
+                    if chords.contains_key(&wq_un) {
+                        let chords_wq = chords[&wq_un] - 1;
+                        chords.insert(wq_un, chords_wq);
+                        if chords[&wq_un] == 0 {
+                            ready_to_pick.insert(wq_un);
+                        }
                     }
-                    for w in &new_face_nodes {
-                        let w_un = *w;
-                        ready_to_pick.insert(w_un);
-                        for nbr in planar_emb.neighbors_cw_order(w_un) {
-                            if is_on_outer_face(nbr, v1, &marked_nodes, &outer_face_ccw_nbr)
-                                && !is_outer_face_nbr(
-                                    w_un,
-                                    nbr,
-                                    &outer_face_cw_nbr,
-                                    &outer_face_ccw_nbr,
-                                )
-                            {
-                                let mut chords_w_plus = 1;
-                                if chords.contains_key(&w_un) {
-                                    chords_w_plus = chords[&w_un].clone() + 1;
-                                }
-                                chords.insert(w_un, chords_w_plus);
-                                ready_to_pick.shift_remove(&w_un);
-                                if !new_face_nodes.contains(&nbr) {
-                                    let mut chords_plus = 1;
-                                    if chords.contains_key(&nbr) {
-                                        chords_plus = chords[&nbr] + 1
+                } else {
+                    let mut new_face_nodes: HashSet<NodeIndex> = HashSet::new();
+                    if wp_wq.len() > 1 {
+                        for w in &wp_wq[1..(wp_wq.len() - 1)] {
+                            let w_un = w.unwrap();
+                            new_face_nodes.insert(w_un);
+                        }
+                        for w in &new_face_nodes {
+                            let w_un = *w;
+                            ready_to_pick.insert(w_un);
+                            for nbr in planar_emb.neighbors_cw_order(w_un) {
+                                if is_on_outer_face(nbr, v1, &marked_nodes, &outer_face_ccw_nbr)
+                                    && !is_outer_face_nbr(
+                                        w_un,
+                                        nbr,
+                                        &outer_face_cw_nbr,
+                                        &outer_face_ccw_nbr,
+                                    )
+                                {
+                                    let mut chords_w_plus = 1;
+                                    if chords.contains_key(&w_un) {
+                                        chords_w_plus = chords[&w_un] + 1;
                                     }
-                                    chords.insert(nbr, chords_plus);
-                                    ready_to_pick.shift_remove(&nbr);
+                                    chords.insert(w_un, chords_w_plus);
+                                    ready_to_pick.shift_remove(&w_un);
+                                    if !new_face_nodes.contains(&nbr) {
+                                        let mut chords_plus = 1;
+                                        if chords.contains_key(&nbr) {
+                                            chords_plus = chords[&nbr] + 1
+                                        }
+                                        chords.insert(nbr, chords_plus);
+                                        ready_to_pick.shift_remove(&nbr);
+                                    }
                                 }
                             }
                         }
