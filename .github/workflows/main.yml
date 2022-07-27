@@ -125,7 +125,7 @@ jobs:
       - name: 'Run tests'
         run: |
           tox -epy --notest
-          env RUSTWORKX_PKG_NAME="retworkx" tox -epy -- -t ./retworkx_backwards_compat
+          coreutils env RUSTWORKX_PKG_NAME="retworkx" tox -epy -- -t ./retworkx_backwards_compat
   coverage:
     needs: [tests]
     name: Coverage
