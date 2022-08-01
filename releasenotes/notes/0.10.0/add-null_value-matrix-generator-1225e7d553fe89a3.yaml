@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    The :func:`~retworkx.adjacency_matrix` function has a new kwarg
+    The :func:`~rustworkx.adjacency_matrix` function has a new kwarg
     ``null_value`` which is used to adjust the value used in the output matrix
     representing the absence of an edge. This can be set to any float value and
     if not specified the default value of 0.0 is still used. For example:
@@ -9,14 +9,14 @@ features:
     .. jupyter-execute::
 
       import numpy as np
-      import retworkx
+      import rustworkx
 
-      graph = retworkx.generators.cycle_graph(4)
-      distance_matrix = retworkx.adjacency_matrix(graph, null_value=np.inf)
+      graph = rustworkx.generators.cycle_graph(4)
+      distance_matrix = rustworkx.adjacency_matrix(graph, null_value=np.inf)
       print(distance_matrix)
 
   - |
-    The :func:`~retworkx.distance_matrix` function has a new kwarg
+    The :func:`~rustworkx.distance_matrix` function has a new kwarg
     ``null_value`` which is used to adjust the value used in the output matrix
     representing the absence of a path. This can be set to any float value and
     if not specified the default value of 0.0 is still used. For example:
@@ -24,10 +24,10 @@ features:
     .. jupyter-execute::
 
       import numpy as np
-      import retworkx
+      import rustworkx
 
-      graph = retworkx.generators.cycle_graph(4)
+      graph = rustworkx.generators.cycle_graph(4)
       graph.add_node(None)
       graph.add_node(None)
-      distance_matrix = retworkx.distance_matrix(graph, null_value=np.inf)
+      distance_matrix = rustworkx.distance_matrix(graph, null_value=np.inf)
       print(distance_matrix)

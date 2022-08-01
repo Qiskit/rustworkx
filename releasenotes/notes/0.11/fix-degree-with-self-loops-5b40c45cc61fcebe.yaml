@@ -1,7 +1,7 @@
 ---
 fixes:
   - |
-    Fixed the :meth:`retworkx.PyGraph.degree` method when running on a node
+    Fixed the :meth:`rustworkx.PyGraph.degree` method when running on a node
     that has self-loops. Previously, the method would increment the node's
     degree of a self-loop by one instead of two.
-    Fixed `#517 <https://github.com/Qiskit/retworkx/issues/517>`__.
+    Fixed `#517 <https://github.com/Qiskit/rustworkx/issues/517>`__.

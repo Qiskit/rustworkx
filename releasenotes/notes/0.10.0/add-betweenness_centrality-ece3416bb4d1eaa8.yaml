@@ -1,9 +1,9 @@
 ---
 features:
   - |
-    Added a new function, :func:`~retworkx.betweenness_centrality` to compute
-    betweenness centrality of all nodes in a :class:`~retworkx.PyGraph` or
-    :class:`~retworkx.PyDiGraph` object. The algorithm used in this function is
+    Added a new function, :func:`~rustworkx.betweenness_centrality` to compute
+    betweenness centrality of all nodes in a :class:`~rustworkx.PyGraph` or
+    :class:`~rustworkx.PyDiGraph` object. The algorithm used in this function is
     based on:
 
     Ulrik Brandes, "A Faster Algorithm for Betweenness Centrality".
@@ -29,11 +29,11 @@ features:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.grid_graph(5, 5)
-      btw = retworkx.betweenness_centrality(graph)
+      graph = rustworkx.generators.grid_graph(5, 5)
+      btw = rustworkx.betweenness_centrality(graph)
       # Color nodes in graph visualization with betweenness centrality
       colors = []
       for i in range(len(graph)):

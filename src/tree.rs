@@ -33,7 +33,7 @@ use crate::iterators::WeightedEdgeList;
 /// :param PyGraph graph: Undirected graph
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         minimum_spanning_edges(graph, weight_fn: lambda x: 1)
@@ -95,7 +95,7 @@ pub fn minimum_spanning_edges(
 /// :param PyGraph graph: Undirected graph
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)

@@ -1,14 +1,14 @@
 ---
 features:
   - |
-    The :func:`~retworkx.is_isomorphic` function has been expanded so it can
-    now also take in a :class:`~retworkx.PyGraph` in addition to the
-    the :class:`~retworkx.PyDiGraph` already supported.
+    The :func:`~rustworkx.is_isomorphic` function has been expanded so it can
+    now also take in a :class:`~rustworkx.PyGraph` in addition to the
+    the :class:`~rustworkx.PyDiGraph` already supported.
   - |
-    The :func:`~retworkx.is_isomorphic` function now has two new optional
+    The :func:`~rustworkx.is_isomorphic` function now has two new optional
     kwargs ``node_matcher`` and ``edge_matcher`` which can be used to specify
     functions to use for comparing node and edge data payloads.
   - |
-    The :func:`~retworkx.is_isomorphic_node_match` function has been expanded
-    so it can take in a :class:`~retworkx.PyGraph` in addition to the
-    :class:`~retworkx.PyDiGraph` it already supported.
+    The :func:`~rustworkx.is_isomorphic_node_match` function has been expanded
+    so it can take in a :class:`~rustworkx.PyGraph` in addition to the
+    :class:`~rustworkx.PyDiGraph` it already supported.

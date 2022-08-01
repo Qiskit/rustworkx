@@ -22,7 +22,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::visit::EdgeIndexable;
 use petgraph::visit::EdgeRef;
 use pyo3::prelude::*;
-use retworkx_core::centrality;
+use rustworkx_core::centrality;
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
 ///
