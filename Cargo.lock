@@ -84,9 +84,9 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "fixedbitset"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "279fb028e20b3c4c320317955b77c5e0c9701f05a1d309905d6fc702cdc5053e"
+checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 
 [[package]]
 name = "getrandom"
@@ -311,9 +311,9 @@ dependencies = [
 
 [[package]]
 name = "petgraph"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a13a2fa9d0b63e5f22328828741e523766fff0ee9e779316902290dff3f824f"
+checksum = "e6d5014253a1331579ce62aa67443b4a658c5e7dd03d4bc6d302b94474888143"
 dependencies = [
  "fixedbitset",
  "indexmap",
@@ -494,7 +494,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "retworkx"
+name = "rustworkx"
 version = "0.12.0"
 dependencies = [
  "ahash",
@@ -512,11 +512,11 @@ dependencies = [
  "rand",
  "rand_pcg",
  "rayon",
- "retworkx-core",
+ "rustworkx-core",
 ]
 
 [[package]]
-name = "retworkx-core"
+name = "rustworkx-core"
 version = "0.12.0"
 dependencies = [
  "ahash",

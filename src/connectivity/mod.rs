@@ -13,7 +13,6 @@
 #![allow(clippy::float_cmp)]
 
 mod all_pairs_all_simple_paths;
-mod conn_components;
 mod core_number;
 
 use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
@@ -33,7 +32,7 @@ use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
 use crate::iterators::{AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList};
-use retworkx_core::connectivity;
+use rustworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -231,7 +230,7 @@ pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
-    conn_components::number_connected_components(&graph.graph)
+    connectivity::number_connected_components(&graph.graph)
 }
 
 /// Find the connected components in an undirected graph
@@ -244,7 +243,10 @@ pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
-    conn_components::connected_components(&graph.graph)
+    connectivity::connected_components(&graph.graph)
+        .into_iter()
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
+        .collect()
 }
 
 /// Returns the set of nodes in the component of graph containing `node`.
@@ -267,11 +269,12 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
         ));
     }
 
-    Ok(conn_components::bfs_undirected(
-        &graph.graph,
-        node,
-        &mut graph.graph.visit_map(),
-    ))
+    Ok(
+        connectivity::bfs_undirected(&graph.graph, node, &mut graph.graph.visit_map())
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
+    )
 }
 
 /// Check if the graph is connected.
@@ -327,7 +330,10 @@ pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
-    conn_components::connected_components(&graph.graph)
+    connectivity::connected_components(&graph.graph)
+        .into_iter()
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
+        .collect()
 }
 
 /// Check if the graph is weakly connected
@@ -356,7 +362,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     from
 /// :param callable weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         dag_adjacency_matrix(dag, weight_fn: lambda x: 1)
@@ -407,7 +413,7 @@ pub fn digraph_adjacency_matrix(
 /// :param PyGraph graph: The graph used to generate the adjacency matrix from
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         graph_adjacency_matrix(graph, weight_fn: lambda x: 1)
@@ -462,7 +468,7 @@ pub fn graph_adjacency_matrix(
 /// .. note::
 ///
 ///     Parallel edges and self-loops are never created,
-///     even if the :attr:`~retworkx.PyGraph.multigraph`
+///     even if the :attr:`~rustworkx.PyGraph.multigraph`
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
@@ -491,12 +497,12 @@ pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::P
 /// :param PyDiGraph graph: The graph to be used.
 ///
 /// :returns: The complement of the graph.
-/// :rtype: :class:`~retworkx.PyDiGraph`
+/// :rtype: :class:`~rustworkx.PyDiGraph`
 ///
 /// .. note::
 ///
 ///     Parallel edges and self-loops are never created,
-///     even if the :attr:`~retworkx.PyDiGraph.multigraph`
+///     even if the :attr:`~rustworkx.PyDiGraph.multigraph`
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]

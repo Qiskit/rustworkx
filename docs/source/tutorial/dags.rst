@@ -2,7 +2,7 @@
 Directed Acyclic Graphs
 ***********************
 
-This tutorial will explore using retworkx to work with directed acyclic graphs
+This tutorial will explore using rustworkx to work with directed acyclic graphs
 (also known as DAGs).
 
 Directed Graph
@@ -17,8 +17,8 @@ in either direction. For example:
 
 .. jupyter-execute::
 
-    import retworkx as rx
-    from retworkx.visualization import mpl_draw
+    import rustworkx as rx
+    from rustworkx.visualization import mpl_draw
 
     path_graph = rx.generators.directed_path_graph(5)
     mpl_draw(path_graph)
@@ -41,22 +41,22 @@ the trail are the same. For example:
 
 is **not** acyclic. While the earlier path graph is acyclic.
 
-In retworkx you can create a new :class:`.PyDiGraph` object that enforces
+In rustworkx you can create a new :class:`.PyDiGraph` object that enforces
 that no cycle is added by using the ``check_cycle`` constructor property
 
 .. jupyter-execute::
 
     dag = rx.PyDiGraph(check_cycle=True)
 
-or after a :class:`~retworkx.PyDiGraph` object is created with the
-:attr:`~retworkx.PyDiGraph.check_cycle` attribute:
+or after a :class:`~rustworkx.PyDiGraph` object is created with the
+:attr:`~rustworkx.PyDiGraph.check_cycle` attribute:
 
 .. jupyter-execute::
 
     dag.check_cycle = True
 
 You can also check the status of cycle checking by inspecting the
-:attr:`~retworkx.PyDiGraph.check_cycle` attribute:
+:attr:`~rustworkx.PyDiGraph.check_cycle` attribute:
 
 .. jupyter-execute::
 
@@ -95,7 +95,7 @@ jobs. For example:
 
 .. jupyter-execute::
 
-    from retworkx.visualization import graphviz_draw
+    from rustworkx.visualization import graphviz_draw
 
     # Create a job dag
     dependency_dag = rx.PyDiGraph(check_cycle=True)
@@ -111,7 +111,7 @@ jobs. For example:
     graphviz_draw(dependency_dag, node_attr_fn=lambda node: {"label": str(node)})
 
 Above we define a DAG with 6 jobs and dependency relationship between these
-jobs. Now if we run the :func:`~retworkx.topological_sort` function on the
+jobs. Now if we run the :func:`~rustworkx.topological_sort` function on the
 graph it will return a linear order to execute the jobs that will respect
 the dependency releationship.
 
@@ -268,8 +268,8 @@ into a shorter sequence of gates. A simplified example of this analysis is:
 With this we have the DAG nodes that make up a series of 1 qubit gates that
 we can analyze and attempt to simplify.
 
-To perform the simplification, we'll use :meth:`~retworkx.PyDiGraph.contract_nodes` to replace a series of nodes (or gates in our case) with a single equivalent node (gate). For example, if the 3 node sequence
-returned by :func:`~retworkx.collect_runs`, ``['rz(pi/2)', 'sx', 'rz(pi/2)']``,
+To perform the simplification, we'll use :meth:`~rustworkx.PyDiGraph.contract_nodes` to replace a series of nodes (or gates in our case) with a single equivalent node (gate). For example, if the 3 node sequence
+returned by :func:`~rustworkx.collect_runs`, ``['rz(pi/2)', 'sx', 'rz(pi/2)']``,
 were to be simplified to a single gate ``"U"``, it could be done like:
 
 .. jupyter-execute::

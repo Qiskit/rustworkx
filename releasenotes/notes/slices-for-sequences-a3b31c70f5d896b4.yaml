@@ -18,4 +18,4 @@ fixes:
         nodes[0:3]
 
     it would return a new :class:`~.NodeIndices` object containing ``[0, 1, 3]``
-    Fixed `#590 <https://github.com/Qiskit/retworkx/issues/590>`__
+    Fixed `#590 <https://github.com/Qiskit/rustworkx/issues/590>`__
