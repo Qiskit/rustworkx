@@ -935,17 +935,20 @@ class TestAllPairsPathMapping(unittest.TestCase):
 
     def test__eq__match(self):
         self.assertTrue(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {0: {1: [0, 1]}, 1: {}}
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {0: {1: [0, 1]}, 1: {}}
         )
 
     def test__eq__not_match_keys(self):
         self.assertFalse(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {2: {2: [0, 1]}, 1: {}}
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {2: {2: [0, 1]}, 1: {}}
         )
 
     def test__eq__not_match_values(self):
         self.assertFalse(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {0: {1: [0, 2]}, 1: {}}
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            == {0: {1: [0, 2]}, 1: {}}
         )
 
     def test__eq__different_length(self):
@@ -960,7 +963,9 @@ class TestAllPairsPathMapping(unittest.TestCase):
         )
 
     def test__eq__invalid_type(self):
-        self.assertFalse(rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {"a": []})
+        self.assertFalse(
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {"a": []}
+        )
 
     def test__eq__invalid_inner_type(self):
         self.assertFalse(
@@ -969,7 +974,8 @@ class TestAllPairsPathMapping(unittest.TestCase):
 
     def test__ne__match(self):
         self.assertFalse(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) != {0: {1: [0, 1]}, 1: {}}
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
+            != {0: {1: [0, 1]}, 1: {}}
         )
 
     def test__ne__not_match(self):
