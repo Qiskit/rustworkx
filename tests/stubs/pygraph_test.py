@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from retworkx import PyGraph
+from rustworkx import PyGraph
 
 import pytest
 
@@ -37,9 +37,9 @@ def test_custom_return_types() -> None:
     node_indices = graph.node_indexes()
 
     # fmt: off
-    reveal_type(edges)  # R: retworkx.custom_return_types.EdgeList
-    reveal_type(weighted_edges)  # R: retworkx.custom_return_types.WeightedEdgeList[builtins.float]
-    reveal_type(node_indices)  # R: retworkx.custom_return_types.NodeIndices
+    reveal_type(edges)  # R: rustworkx.custom_return_types.EdgeList
+    reveal_type(weighted_edges)  # R: rustworkx.custom_return_types.WeightedEdgeList[builtins.float]
+    reveal_type(node_indices)  # R: rustworkx.custom_return_types.NodeIndices
     # fmt: on
 
     list_of_edges = list(edges)

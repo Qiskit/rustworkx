@@ -11,7 +11,7 @@
 # under the License.
 
 from typing import Optional
-from retworkx import PyGraph, PyDiGraph
+from rustworkx import PyGraph, PyDiGraph
 
 import pytest
 

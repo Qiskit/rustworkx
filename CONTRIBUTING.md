@@ -16,7 +16,7 @@ contributing to rustworkx, these are documented below.
 
 ### Making changes to the code
 
-Retworkx is implemented primarily in Rust with a thin layer of Python.
+Rustworkx is implemented primarily in Rust with a thin layer of Python.
 Because of that, most of your code changes will involve modifications to
 Rust files in `src`. To understand which files you need to change, we invite
 you for an overview of our simplified source tree:
@@ -275,7 +275,7 @@ cargo doc --open
 ### Type Annotations
 
 If you have added new methods or changed method signatures, we encourage you to add annotations for 
-those methods in stub files. The stub files are in the `retworkx` directory and have a `.pyi` file extension.
+those methods in stub files. The stub files are in the `rustworkx` directory and have a `.pyi` file extension.
 They contain annotated signatures for Python functions, stripped of their implementation.
 
 While this step is optional, it is very helpful for end-users. Adding annotations lets users type check

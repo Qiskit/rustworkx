@@ -9,7 +9,7 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and lib.rs
 
-from .retworkx import *
+from .rustworkx import *
 from typing import Generic, TypeVar
 
 S = TypeVar("S")
