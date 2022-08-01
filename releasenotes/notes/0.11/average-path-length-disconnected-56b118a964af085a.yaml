@@ -1,14 +1,14 @@
 ---
 features:
   - |
-    The :func:`~retworkx.unweighted_average_shortest_path_length` function
+    The :func:`~rustworkx.unweighted_average_shortest_path_length` function
     has a new kwarg ``disconnected``. When ``disconnected`` is set to ``True``
     the output value calculated by the function will only account for connected
     node pairs.
 upgrade:
   - |
     The default behavior for how the
-    :func:`~retworkx.unweighted_average_shortest_path_length` function handles
+    :func:`~rustworkx.unweighted_average_shortest_path_length` function handles
     disconnected graphs has been changed. Previously, disconnected pairs of nodes
     was assumed to have zero distance which is arguably incorrect/unexpected
     behavior. To make this more consistent with user expectations this has been
@@ -16,13 +16,13 @@ upgrade:
     was added where, if set to ``True``, the average is taken only over connected
     node pairs. By default, it's set to ``False``. If the previous behavior of
     treating disconnected pairs of nodes as having a distance of zero is desired,
-    it can be reproduced using the rest of retworkx API like:
+    it can be reproduced using the rest of rustworkx API like:
 
     .. code-block:: python
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.undirected_gnm_random_graph(20, 10, seed=42)
+        graph = rustworkx.undirected_gnm_random_graph(20, 10, seed=42)
         n = len(graph)
-        d_mat = retworkx.distance_matrix(graph, null_value=0.0)
+        d_mat = rustworkx.distance_matrix(graph, null_value=0.0)
         avg_shortest_path = d_mat.sum() / (n * (n - 1.0))

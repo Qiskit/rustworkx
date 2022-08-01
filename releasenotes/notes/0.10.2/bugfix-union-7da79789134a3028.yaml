@@ -1,33 +1,33 @@
 ---
 fixes:
   - |
-    Previously, :func:`~retworkx.digraph_union` would incorrectly keep or delete edges
+    Previously, :func:`~rustworkx.digraph_union` would incorrectly keep or delete edges
     if argument ``merge_edges`` is set to true. This has been fixed and an edge from
     the second graph will be skipped if both its endpoints were merged to nodes from
     the first graph and these nodes already share an edge with equal weight data.
-    Fixed `#432 <https://github.com/Qiskit/retworkx/issues/432>`__
+    Fixed `#432 <https://github.com/Qiskit/rustworkx/issues/432>`__
 features:
   - |
-    Add a new function :func:`~retworkx.graph_union` that returns the union
-    of two :class:`~retworkx.PyGraph` objects. This is the equivalent to 
-    :func:`~retworkx.digraph_union` but for a :class:`~retworkx.PyGraph`
-    instead of for a :class:`~retworkx.PyDiGraph`. A new unified function
-    :func:`~retworkx.union` was also added that supports both
-    :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph`.
+    Add a new function :func:`~rustworkx.graph_union` that returns the union
+    of two :class:`~rustworkx.PyGraph` objects. This is the equivalent to 
+    :func:`~rustworkx.digraph_union` but for a :class:`~rustworkx.PyGraph`
+    instead of for a :class:`~rustworkx.PyDiGraph`. A new unified function
+    :func:`~rustworkx.union` was also added that supports both
+    :class:`~rustworkx.PyDiGraph` and :class:`~rustworkx.PyGraph`.
     For example:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      first = retworkx.generators.path_graph(3, weights=["a_0", "node", "a_1"])
-      second = retworkx.generators.cycle_graph(3, weights=["node", "b_0", "b_1"])
-      graph = retworkx.graph_union(first, second, merge_nodes=True)
+      first = rustworkx.generators.path_graph(3, weights=["a_0", "node", "a_1"])
+      second = rustworkx.generators.cycle_graph(3, weights=["node", "b_0", "b_1"])
+      graph = rustworkx.graph_union(first, second, merge_nodes=True)
       mpl_draw(graph)
   - |
-    The kwargs ``merge_nodes`` and ``merge_edges`` of :func:`~retworkx.digraph_union` are
+    The kwargs ``merge_nodes`` and ``merge_edges`` of :func:`~rustworkx.digraph_union` are
     now optional and by default are set `False`.
   - |
-    Add a new :meth:`~retworkx.PyGraph.find_node_by_weight` that finds the index
+    Add a new :meth:`~rustworkx.PyGraph.find_node_by_weight` that finds the index
     of a node given a specific weight.

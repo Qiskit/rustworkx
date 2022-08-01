@@ -1,8 +1,8 @@
-#############################
-retworkx Tutorials and Guides
-#############################
+##############################
+rustworkx Tutorials and Guides
+##############################
 
-This section contains tutorials on using retworkx.
+This section contains tutorials on using rustworkx.
 
 .. toctree::
    :maxdepth: 1
