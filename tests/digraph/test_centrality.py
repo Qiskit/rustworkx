@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import math
 import unittest
 
 import retworkx
@@ -128,3 +129,24 @@ class TestCentralityDiGraphDeletedNode(unittest.TestCase):
         )
         expected = {0: 0.0, 1: 2.0, 2: 2.0, 4: 0.0}
         self.assertEqual(expected, betweenness)
+
+
+class TestEigenvectorCentrality(unittest.TestCase):
+    def test_complete_graph(self):
+        graph = retworkx.generators.directed_mesh_graph(5)
+        centrality = retworkx.eigenvector_centrality(graph)
+        expected_value = math.sqrt(1.0 / 5.0)
+        for value in centrality.values():
+            self.assertAlmostEqual(value, expected_value)
+
+    def test_path_graph(self):
+        graph = retworkx.generators.directed_path_graph(3, bidirectional=True)
+        centrality = retworkx.eigenvector_centrality(graph)
+        expected = [0.5, 0.7071, 0.5]
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k], 4)
+
+    def test_no_convergence(self):
+        graph = retworkx.PyDiGraph()
+        with self.assertRaises(retworkx.FailedToConverge):
+            retworkx.eigenvector_centrality(graph, max_iter=0)

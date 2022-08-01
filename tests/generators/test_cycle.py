@@ -61,3 +61,11 @@ class TestCycleGraph(unittest.TestCase):
     def test_cycle_no_weights_or_num(self):
         with self.assertRaises(IndexError):
             retworkx.generators.cycle_graph()
+
+    def test_zero_length_cycle_graph(self):
+        graph = retworkx.generators.cycle_graph(0)
+        self.assertEqual(0, len(graph))
+
+    def test_zero_length_directed_cycle_graph(self):
+        graph = retworkx.generators.directed_cycle_graph(0)
+        self.assertEqual(0, len(graph))

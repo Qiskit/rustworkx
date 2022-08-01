@@ -34,6 +34,15 @@ where
     left.zip(right)
 }
 
+#[inline]
+fn get_num_nodes(num_nodes: &Option<usize>, weights: &Option<Vec<PyObject>>) -> usize {
+    if weights.is_some() {
+        weights.as_ref().unwrap().len()
+    } else {
+        num_nodes.unwrap()
+    }
+}
+
 /// Generate a cycle graph
 ///
 /// :param int num_node: The number of nodes to generate the graph with. Node
@@ -70,40 +79,48 @@ pub fn directed_cycle_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let node_len: usize;
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    let num_edges = if bidirectional {
+        2 * node_len
+    } else {
+        node_len
+    };
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            node_len = weights.len();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
         None => {
-            node_len = num_nodes.unwrap();
-            (0..num_nodes.unwrap())
-                .map(|_| graph.add_node(py.None()))
-                .collect()
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
         }
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => {
-                if bidirectional {
-                    graph.add_edge(node_b, node_a, py.None());
-                }
-                graph.add_edge(node_a, node_b, py.None());
-            }
-            None => continue,
-        };
+    for a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(a + 1);
+        let node_a = NodeIndex::new(a);
+        graph.add_edge(node_a, node_b, py.None());
+        if bidirectional {
+            graph.add_edge(node_b, node_a, py.None());
+        }
     }
     let last_node_index = NodeIndex::new(node_len - 1);
     let first_node_index = NodeIndex::new(0);
@@ -154,35 +171,37 @@ pub fn cycle_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let node_len: usize;
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            node_len = weights.len();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
         None => {
-            node_len = num_nodes.unwrap();
-            (0..num_nodes.unwrap())
-                .map(|_| graph.add_node(py.None()))
-                .collect()
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
         }
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => graph.add_edge(node_a, node_b, py.None()),
-            None => continue,
-        };
+    for node_a in 0..node_len - 1 {
+        let node_b = node_a + 1;
+        graph.add_edge(NodeIndex::new(node_a), NodeIndex::new(node_b), py.None());
     }
     let last_node_index = NodeIndex::new(node_len - 1);
     let first_node_index = NodeIndex::new(0);
@@ -231,35 +250,46 @@ pub fn directed_path_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-            }
-            node_list
-        }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    let num_edges = if bidirectional {
+        2 * node_len
+    } else {
+        node_len
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => {
-                graph.add_edge(node_a, node_b, py.None());
-                if bidirectional {
-                    graph.add_edge(node_b, node_a, py.None());
-                }
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+
+    match weights {
+        Some(weights) => {
+            for weight in weights {
+                graph.add_node(weight);
             }
-            None => continue,
-        };
+        }
+        None => (0..node_len).for_each(|_| {
+            graph.add_node(py.None());
+        }),
+    };
+    for a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(a + 1);
+        let node_a = NodeIndex::new(a);
+        graph.add_edge(node_a, node_b, py.None());
+        if bidirectional {
+            graph.add_edge(node_b, node_a, py.None());
+        }
     }
     Ok(digraph::PyDiGraph {
         graph,
@@ -304,30 +334,34 @@ pub fn path_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => (0..node_len).for_each(|_| {
+            graph.add_node(py.None());
+        }),
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => graph.add_edge(node_a, node_b, py.None()),
-            None => continue,
-        };
+    for node_a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(node_a + 1);
+        graph.add_edge(NodeIndex::new(node_a), node_b, py.None());
     }
     Ok(graph::PyGraph {
         graph,
@@ -387,34 +421,51 @@ pub fn directed_star_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-            }
-            node_list
-        }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph: StablePyGraph::<Directed>::default(),
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let num_edges = if bidirectional {
+        (2 * node_len) - 2
+    } else {
+        node_len - 1
     };
-    for node in nodes[1..].iter() {
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    match weights {
+        Some(weights) => {
+            for weight in weights {
+                graph.add_node(weight);
+            }
+        }
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
+    };
+    let zero_index = NodeIndex::new(0);
+    for node_index in 1..node_len {
         //Add edges in both directions if bidirection is True
+        let node = NodeIndex::new(node_index);
         if bidirectional {
-            graph.add_edge(*node, nodes[0], py.None());
-            graph.add_edge(nodes[0], *node, py.None());
+            graph.add_edge(node, zero_index, py.None());
+            graph.add_edge(zero_index, node, py.None());
         } else if inward {
-            graph.add_edge(*node, nodes[0], py.None());
+            graph.add_edge(node, zero_index, py.None());
         } else {
-            graph.add_edge(nodes[0], *node, py.None());
+            graph.add_edge(zero_index, node, py.None());
         }
     }
     Ok(digraph::PyDiGraph {
@@ -460,27 +511,36 @@ pub fn star_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph: StablePyGraph::<Undirected>::default(),
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len - 1);
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
-    for node in nodes[1..].iter() {
-        graph.add_edge(nodes[0], *node, py.None());
+    let zero_index = NodeIndex::new(0);
+    for node in 1..node_len {
+        graph.add_edge(zero_index, NodeIndex::new(node), py.None());
     }
     Ok(graph::PyGraph {
         graph,
@@ -522,30 +582,40 @@ pub fn mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph: StablePyGraph::<Undirected>::default(),
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let num_edges = (node_len * (node_len - 1)) / 2;
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, num_edges);
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
 
-    let nodelen = nodes.len();
-    for i in 0..nodelen - 1 {
-        for j in i + 1..nodelen {
-            graph.add_edge(nodes[i], nodes[j], py.None());
+    for i in 0..node_len - 1 {
+        for j in i + 1..node_len {
+            let i_index = NodeIndex::new(i);
+            let j_index = NodeIndex::new(j);
+            graph.add_edge(i_index, j_index, py.None());
         }
     }
     Ok(graph::PyGraph {
@@ -588,30 +658,42 @@ pub fn directed_mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph: StablePyGraph::<Directed>::default(),
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let num_edges = node_len * (node_len - 1);
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
-    let nodelen = nodes.len();
-    for i in 0..nodelen - 1 {
-        for j in i + 1..nodelen {
-            graph.add_edge(nodes[i], nodes[j], py.None());
-            graph.add_edge(nodes[j], nodes[i], py.None());
+    for i in 0..node_len - 1 {
+        for j in i + 1..node_len {
+            let i_index = NodeIndex::new(i);
+            let j_index = NodeIndex::new(j);
+            graph.add_edge(i_index, j_index, py.None());
+            graph.add_edge(j_index, i_index, py.None());
         }
     }
     Ok(digraph::PyDiGraph {
@@ -665,7 +747,6 @@ pub fn grid_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -675,10 +756,23 @@ pub fn grid_graph(
     let mut rowlen = rows.unwrap_or(0);
     let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
+    let mut num_edges = 0;
+    if num_nodes == 0 {
+        if weights.is_none() {
+            return Ok(graph::PyGraph {
+                graph: StablePyGraph::<Undirected>::default(),
+                node_removed: false,
+                multigraph,
+                attrs: py.None(),
+            });
+        }
+    } else {
+        num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    }
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
 
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             if num_nodes < weights.len() && rowlen == 0 {
                 collen = weights.len();
                 rowlen = 1;
@@ -691,30 +785,35 @@ pub fn grid_graph(
                 if node_cnt == 0 {
                     break;
                 }
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
                 node_cnt -= 1;
             }
             for _i in 0..node_cnt {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
+                graph.add_node(py.None());
             }
-            node_list
         }
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+        None => {
+            (0..num_nodes).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
 
     for i in 0..rowlen {
         for j in 0..collen {
             if i + 1 < rowlen {
                 graph.add_edge(
-                    nodes[i * collen + j],
-                    nodes[(i + 1) * collen + j],
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new((i + 1) * collen + j),
                     py.None(),
                 );
             }
             if j + 1 < collen {
-                graph.add_edge(nodes[i * collen + j], nodes[i * collen + j + 1], py.None());
+                graph.add_edge(
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new(i * collen + j + 1),
+                    py.None(),
+                );
             }
         }
     }
@@ -773,7 +872,6 @@ pub fn directed_grid_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -783,10 +881,28 @@ pub fn directed_grid_graph(
     let mut rowlen = rows.unwrap_or(0);
     let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
+    let mut num_edges = 0;
+    if num_nodes == 0 {
+        if weights.is_none() {
+            return Ok(digraph::PyDiGraph {
+                graph: StablePyGraph::<Directed>::default(),
+                node_removed: false,
+                check_cycle: false,
+                cycle_state: algo::DfsSpace::default(),
+                multigraph,
+                attrs: py.None(),
+            });
+        }
+    } else {
+        num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    }
+    if bidirectional {
+        num_edges *= 2;
+    }
+    let mut graph = StablePyGraph::<Directed>::with_capacity(num_nodes, num_edges);
 
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             if num_nodes < weights.len() && rowlen == 0 {
                 collen = weights.len();
                 rowlen = 1;
@@ -799,40 +915,49 @@ pub fn directed_grid_graph(
                 if node_cnt == 0 {
                     break;
                 }
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
                 node_cnt -= 1;
             }
             for _i in 0..node_cnt {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
+                graph.add_node(py.None());
             }
-            node_list
         }
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+        None => {
+            (0..num_nodes).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
 
     for i in 0..rowlen {
         for j in 0..collen {
             if i + 1 < rowlen {
                 graph.add_edge(
-                    nodes[i * collen + j],
-                    nodes[(i + 1) * collen + j],
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new((i + 1) * collen + j),
                     py.None(),
                 );
                 if bidirectional {
                     graph.add_edge(
-                        nodes[(i + 1) * collen + j],
-                        nodes[i * collen + j],
+                        NodeIndex::new((i + 1) * collen + j),
+                        NodeIndex::new(i * collen + j),
                         py.None(),
                     );
                 }
             }
 
             if j + 1 < collen {
-                graph.add_edge(nodes[i * collen + j], nodes[i * collen + j + 1], py.None());
+                graph.add_edge(
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new(i * collen + j + 1),
+                    py.None(),
+                );
                 if bidirectional {
-                    graph.add_edge(nodes[i * collen + j + 1], nodes[i * collen + j], py.None());
+                    graph.add_edge(
+                        NodeIndex::new(i * collen + j + 1),
+                        NodeIndex::new(i * collen + j),
+                        py.None(),
+                    );
                 }
             }
         }
@@ -1152,7 +1277,7 @@ pub fn directed_binomial_tree_graph(
 ///        ...   S       ...
 ///
 /// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 /// This function doesn't support the variant Fig 10.b right.
 ///
 /// Note that if ``d`` is set to ``1`` a :class:`~retworkx.PyGraph` with a
@@ -1171,26 +1296,12 @@ pub fn directed_binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import graphviz_draw
 ///
 ///   graph = retworkx.generators.heavy_square_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(d, /, multigraph=True)")]
@@ -1298,7 +1409,7 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///        ...   S       ...
 ///
 /// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 /// This function doesn't support the variant Fig 10.b right.
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
@@ -1314,26 +1425,12 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import graphviz_draw
 ///
-///   graph = retworkx.generators.heavy_square_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graph = retworkx.generators.directed_heavy_square_graph(3)
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(bidirectional = false, multigraph = true)]
 #[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
@@ -1505,26 +1602,12 @@ pub fn directed_heavy_square_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import graphviz_draw
 ///
 ///   graph = retworkx.generators.heavy_hex_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(d, /, multigraph=True)")]
@@ -1667,26 +1750,12 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
-///
-///   import pydot
-///   from PIL import Image
-///
 ///   import retworkx.generators
+///   from retworkx.visualization import graphviz_draw
 ///
-///   graph = retworkx.generators.heavy_hex_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graph = retworkx.generators.directed_heavy_hex_graph(3)
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(bidirectional = false, multigraph = true)]
 #[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]

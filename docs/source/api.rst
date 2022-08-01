@@ -33,6 +33,8 @@ Shortest Paths
    retworkx.all_pairs_dijkstra_path_lengths
    retworkx.bellman_ford_shortest_paths
    retworkx.bellman_ford_shortest_path_lengths
+   retworkx.all_pairs_bellman_ford_shortest_paths
+   retworkx.all_pairs_bellman_ford_path_lengths
    retworkx.negative_edge_cycle
    retworkx.find_negative_cycle
    retworkx.distance_matrix
@@ -52,6 +54,7 @@ Centrality
    :toctree: apiref
 
    retworkx.betweenness_centrality
+   retworkx.eigenvector_centrality
 
 .. _traversal:
 
@@ -291,6 +294,8 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_all_pairs_dijkstra_path_lengths
    retworkx.digraph_bellman_ford_shortest_path_lengths
    retworkx.digraph_bellman_ford_shortest_path_lengths
+   retworkx.digraph_all_pairs_bellman_ford_shortest_paths
+   retworkx.digraph_all_pairs_bellman_ford_path_lengths
    retworkx.digraph_k_shortest_path_lengths
    retworkx.digraph_dfs_edges
    retworkx.digraph_dfs_search
@@ -309,6 +314,7 @@ the functions from the explicitly typed based on the data type.
    retworkx.digraph_spring_layout
    retworkx.digraph_num_shortest_paths_unweighted
    retworkx.digraph_betweenness_centrality
+   retworkx.digraph_eigenvector_centrality
    retworkx.digraph_unweighted_average_shortest_path_length
    retworkx.digraph_bfs_search
    retworkx.digraph_dijkstra_search
@@ -343,6 +349,8 @@ typed API based on the data type.
    retworkx.graph_all_pairs_dijkstra_path_lengths
    retworkx.graph_bellman_ford_shortest_path_lengths
    retworkx.graph_bellman_ford_shortest_path_lengths
+   retworkx.graph_all_pairs_bellman_ford_shortest_paths
+   retworkx.graph_all_pairs_bellman_ford_path_lengths
    retworkx.graph_dfs_edges
    retworkx.graph_dfs_search
    retworkx.graph_transitivity
@@ -359,6 +367,7 @@ typed API based on the data type.
    retworkx.graph_spring_layout
    retworkx.graph_num_shortest_paths_unweighted
    retworkx.graph_betweenness_centrality
+   retworkx.graph_eigenvector_centrality
    retworkx.graph_unweighted_average_shortest_path_length
    retworkx.graph_bfs_search
    retworkx.graph_dijkstra_search

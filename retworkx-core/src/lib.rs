@@ -34,7 +34,7 @@
 //! let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 //!     (1, 2), (2, 3), (3, 4), (1, 4)
 //! ]);
-//! // Calculate the betweeness centrality
+//! // Calculate the betweenness centrality
 //! let output = betweenness_centrality(&g, false, false, 200);
 //! assert_eq!(
 //!     vec![Some(0.0), Some(0.5), Some(0.5), Some(0.5), Some(0.5)],
@@ -50,6 +50,7 @@
 //! * [`connectivity`](./connectivity/index.html)
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
+//! * [`traversal`](./traversal/index.html)
 //!
 //! ## Release Notes
 //!
@@ -67,10 +68,10 @@ use std::convert::Infallible;
 /// error can happen.
 pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 
-/// Module for centrality algorithms
+/// Module for centrality algorithms.
 pub mod centrality;
 pub mod connectivity;
-/// Module for maximum weight matching algorithmss
+/// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
 pub mod shortest_path;
 pub mod traversal;
