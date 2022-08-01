@@ -81,6 +81,7 @@ pub fn graph_difference(
         graph: out_graph,
         multigraph: true,
         node_removed: false,
+        attrs: py.None(),
     })
 }
 
@@ -110,5 +111,6 @@ pub fn digraph_difference(
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     })
 }
