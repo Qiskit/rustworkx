@@ -15,6 +15,7 @@ import pickle
 import unittest
 
 import rustworkx
+import numpy as np
 
 
 class TestBFSSuccessorsComparisons(unittest.TestCase):
@@ -172,6 +173,10 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         slice_return = indices[-3:-1]
         self.assertEqual([2, 3], slice_return)
         self.assertEqual([], indices[-1:-2])
+
+    def test_numpy_conversion(self):
+        res = self.dag.node_indexes()
+        np.testing.assert_array_equal(np.asarray(res, dtype=np.uintp), np.array([0, 1]))
 
 
 class TestNodesCountMapping(unittest.TestCase):
@@ -405,6 +410,15 @@ class TestEdgeListComparisons(unittest.TestCase):
         slice_return = edges[0:3:2]
         self.assertEqual([(0, 1), (0, 1)], slice_return)
 
+    @staticmethod
+    def test_numpy_conversion():
+        g = rustworkx.generators.directed_star_graph(5)
+        res = g.edge_list()
+
+        np.testing.assert_array_equal(
+            np.asarray(res, dtype=np.uintp), np.array([[0, 1], [0, 2], [0, 3], [0, 4]])
+        )
+
 
 class TestWeightedEdgeListComparisons(unittest.TestCase):
     def setUp(self):
@@ -474,6 +488,11 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
         edges = self.dag.weighted_edge_list()
         slice_return = edges[0:3:2]
         self.assertEqual([(0, 1, "Edgy"), (0, 1, None)], slice_return)
+
+    def test_numpy_conversion(self):
+        np.testing.assert_array_equal(
+            np.asarray(self.dag.weighted_edge_list()), np.array([(0, 1, "Edgy")], dtype=object)
+        )
 
 
 class TestPathMapping(unittest.TestCase):
@@ -916,20 +935,17 @@ class TestAllPairsPathMapping(unittest.TestCase):
 
     def test__eq__match(self):
         self.assertTrue(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {0: {1: [0, 1]}, 1: {}}
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {0: {1: [0, 1]}, 1: {}}
         )
 
     def test__eq__not_match_keys(self):
         self.assertFalse(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {2: {2: [0, 1]}, 1: {}}
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {2: {2: [0, 1]}, 1: {}}
         )
 
     def test__eq__not_match_values(self):
         self.assertFalse(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            == {0: {1: [0, 2]}, 1: {}}
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {0: {1: [0, 2]}, 1: {}}
         )
 
     def test__eq__different_length(self):
@@ -944,9 +960,7 @@ class TestAllPairsPathMapping(unittest.TestCase):
         )
 
     def test__eq__invalid_type(self):
-        self.assertFalse(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {"a": []}
-        )
+        self.assertFalse(rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) == {"a": []})
 
     def test__eq__invalid_inner_type(self):
         self.assertFalse(
@@ -955,8 +969,7 @@ class TestAllPairsPathMapping(unittest.TestCase):
 
     def test__ne__match(self):
         self.assertFalse(
-            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn)
-            != {0: {1: [0, 1]}, 1: {}}
+            rustworkx.all_pairs_dijkstra_shortest_paths(self.dag, self.fn) != {0: {1: [0, 1]}, 1: {}}
         )
 
     def test__ne__not_match(self):
@@ -1357,6 +1370,10 @@ class TestChainsComparisons(unittest.TestCase):
         self.assertIsInstance(hash_res, int)
         # Assert hash is stable
         self.assertEqual(hash_res, hash(self.chains))
+
+    def test_numpy_conversion(self):
+        # this test assumes the array is 1-dimensional which avoids issues with jagged arrays
+        self.assertTrue(np.asarray(self.chains).shape, (1,))
 
 
 class TestProductNodeMap(unittest.TestCase):
