@@ -2339,6 +2339,7 @@ def _digraph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
 def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
     return graph_all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn)
 
+
 @functools.singledispatch
 def difference(
     first,
@@ -2370,4 +2371,3 @@ def _graph_difference(
     second,
 ):
     return graph_difference(first, second)
-
