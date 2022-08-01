@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    The ``retworkx`` package has been renamed to ``rustworkx``. This was done
+    out of respect for a request from the maintainers of the NetworkX library.
+    For the time being the ``retworkx`` name will continue to work, however
+    any package requirements or imports using ``retworkx`` should be renamed
+    to ``rustworkx``.

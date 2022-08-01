@@ -11,7 +11,7 @@
 // under the License.
 
 use hashbrown::HashMap;
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use crate::{get_edge_iter_with_weights, weight_callable};
 

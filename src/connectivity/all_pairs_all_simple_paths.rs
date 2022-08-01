@@ -14,11 +14,11 @@ use rayon::prelude::*;
 
 use petgraph::graph::NodeIndex;
 use petgraph::EdgeType;
-use retworkx_core::connectivity::all_simple_paths_multiple_targets;
+use rustworkx_core::connectivity::all_simple_paths_multiple_targets;
 
 use crate::iterators::{AllPairsMultiplePathMapping, MultiplePathMapping};
 use crate::StablePyGraph;
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 pub fn all_pairs_all_simple_paths<Ty: EdgeType + Sync>(
     graph: &StablePyGraph<Ty>,

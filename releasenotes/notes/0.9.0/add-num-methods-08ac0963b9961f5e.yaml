@@ -1,12 +1,12 @@
 ---
 features:
   - |
-    Added a new method, :meth:`~retworkx.PyDiGraph.num_nodes`, to the
-    :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph`
-    (:meth:`~retworkx.PyGraph.num_nodes`) for returning the number of nodes
+    Added a new method, :meth:`~rustworkx.PyDiGraph.num_nodes`, to the
+    :class:`~rustworkx.PyDiGraph` and :class:`~rustworkx.PyGraph`
+    (:meth:`~rustworkx.PyGraph.num_nodes`) for returning the number of nodes
     in the graph.
   - |
-    Added a new method, :meth:`~retworkx.PyDiGraph.num_edges`, to the
-    :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph`
-    (:meth:`~retworkx.PyGraph.num_edges`) for returning the number of edges
+    Added a new method, :meth:`~rustworkx.PyDiGraph.num_edges`, to the
+    :class:`~rustworkx.PyDiGraph` and :class:`~rustworkx.PyGraph`
+    (:meth:`~rustworkx.PyGraph.num_edges`) for returning the number of edges
     in the graph.

@@ -1,20 +1,20 @@
 ---
 features:
   - |
-    Added a new :func:`~retworkx.dijkstra_search` (and it's per type variants
-    :func:`~retworkx.graph_dijkstra_search` and :func:`~retworkx.digraph_dijkstra_search`)
+    Added a new :func:`~rustworkx.dijkstra_search` (and it's per type variants
+    :func:`~rustworkx.graph_dijkstra_search` and :func:`~rustworkx.digraph_dijkstra_search`)
     that traverses the graph using dijkstra algorithm and emits events at specified
     points. The events are handled by a visitor object that subclasses
-    :class:`~retworkx.visit.DijkstraVisitor` through the appropriate callback functions.
+    :class:`~rustworkx.visit.DijkstraVisitor` through the appropriate callback functions.
     For example:
 
     .. jupyter-execute::
   
-      import retworkx
-      from retworkx.visit import DijkstraVisitor
+      import rustworkx
+      from rustworkx.visit import DijkstraVisitor
 
 
-      class DijkstraTreeEdgesRecorder(retworkx.visit.DijkstraVisitor):
+      class DijkstraTreeEdgesRecorder(rustworkx.visit.DijkstraVisitor):
 
           def __init__(self):
               self.edges = []
@@ -29,8 +29,8 @@ features:
               u, v, _ = edge
               self.parents[v] = u
 
-      graph = retworkx.PyGraph()
+      graph = rustworkx.PyGraph()
       graph.extend_from_weighted_edge_list([(1, 3, 1), (0, 1, 10), (2, 1, 1), (0, 2, 1)])
       vis = DijkstraTreeEdgesRecorder()
-      retworkx.graph_dijkstra_search(graph, [0], float, vis)
+      rustworkx.graph_dijkstra_search(graph, [0], float, vis)
       print('Tree edges:', vis.edges)

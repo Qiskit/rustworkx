@@ -1,8 +1,8 @@
 ---
 features:
   - |
-    Added a new function :func:`~retworkx.chain_decomposition` that finds
-    a chain decomposition of an undirected :class:`~retworkx.PyGraph`.
+    Added a new function :func:`~rustworkx.chain_decomposition` that finds
+    a chain decomposition of an undirected :class:`~rustworkx.PyGraph`.
     A chain decomposition is a set of cycles or paths derived from the
     set of fundamental cycles of a depth-first tree. It's defined in
     https://doi.org/10.1016/j.ipl.2013.01.016
@@ -10,15 +10,15 @@ features:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.PyGraph()
+      graph = rustworkx.PyGraph()
       graph.extend_from_edge_list([
           (0, 1), (0, 2), (1, 2), (2, 3),
           (3, 4), (3, 5), (4, 5),
       ])
-      chains = retworkx.chain_decomposition(graph)
+      chains = rustworkx.chain_decomposition(graph)
 
       def color_edges(graph, chains): 
           COLORS = ['blue', 'red']

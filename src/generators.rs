@@ -54,7 +54,7 @@ fn get_num_nodes(num_nodes: &Option<usize>, weights: &Option<Vec<PyObject>>) -> 
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -64,10 +64,10 @@ fn get_num_nodes(num_nodes: &Option<usize>, weights: &Option<Vec<PyObject>>) -> 
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_cycle_graph(5)
+///   graph = rustworkx.generators.directed_cycle_graph(5)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -147,7 +147,7 @@ pub fn directed_cycle_graph(
 ///     will be the center node of the cycle graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -157,10 +157,10 @@ pub fn directed_cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.cycle_graph(5)
+///   graph = rustworkx.generators.cycle_graph(5)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -225,7 +225,7 @@ pub fn cycle_graph(
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -235,10 +235,10 @@ pub fn cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_path_graph(10)
+///   graph = rustworkx.generators.directed_path_graph(10)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -310,7 +310,7 @@ pub fn directed_path_graph(
 ///     will be the center node of the path graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -320,10 +320,10 @@ pub fn directed_path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.path_graph(10)
+///   graph = rustworkx.generators.path_graph(10)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -385,7 +385,7 @@ pub fn path_graph(
 ///     center node. This parameter is ignored if ``bidirectional`` is set to
 ///     ``True``.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -395,18 +395,18 @@ pub fn path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_star_graph(10)
+///   graph = rustworkx.generators.directed_star_graph(10)
 ///   mpl_draw(graph)
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_star_graph(10, inward=True)
+///   graph = rustworkx.generators.directed_star_graph(10, inward=True)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
@@ -487,7 +487,7 @@ pub fn directed_star_graph(
 ///     will be the center node of the star graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -497,10 +497,10 @@ pub fn directed_star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.star_graph(10)
+///   graph = rustworkx.generators.star_graph(10)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -558,7 +558,7 @@ pub fn star_graph(
 /// :param list weights: A list of node weights. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -568,10 +568,10 @@ pub fn star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.mesh_graph(4)
+///   graph = rustworkx.generators.mesh_graph(4)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -634,7 +634,7 @@ pub fn mesh_graph(
 /// :param list weights: A list of node weights. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -644,10 +644,10 @@ pub fn mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_mesh_graph(4)
+///   graph = rustworkx.generators.directed_mesh_graph(4)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = "true")]
@@ -721,7 +721,7 @@ pub fn directed_mesh_graph(
 ///     If number of nodes(rows*cols) is greater than length of
 ///     weights list, extra nodes with None weight are appended.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -732,10 +732,10 @@ pub fn directed_mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.grid_graph(2, 3)
+///   graph = rustworkx.generators.grid_graph(2, 3)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -843,7 +843,7 @@ pub fn grid_graph(
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -854,10 +854,10 @@ pub fn grid_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_grid_graph(2, 3)
+///   graph = rustworkx.generators.directed_grid_graph(2, 3)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -987,7 +987,7 @@ const MAX_ORDER: u32 = 29;
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -999,10 +999,10 @@ const MAX_ORDER: u32 = 29;
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.binomial_tree_graph(4)
+///   graph = rustworkx.generators.binomial_tree_graph(4)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -1073,7 +1073,7 @@ pub fn binomial_tree_graph(
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than n, extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1083,10 +1083,10 @@ pub fn binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.full_rary_tree(5, 15)
+///   graph = rustworkx.generators.full_rary_tree(5, 15)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -1157,7 +1157,7 @@ pub fn full_rary_tree(
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1169,10 +1169,10 @@ pub fn full_rary_tree(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_binomial_tree_graph(4)
+///   graph = rustworkx.generators.directed_binomial_tree_graph(4)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -1280,13 +1280,13 @@ pub fn directed_binomial_tree_graph(
 /// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// Note that if ``d`` is set to ``1`` a :class:`~retworkx.PyGraph` with a
+/// Note that if ``d`` is set to ``1`` a :class:`~rustworkx.PyGraph` with a
 /// single node will be returned.
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~retworkx.PyGraph` with a single node will be returned.
+///     :class:`~rustworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1296,10 +1296,10 @@ pub fn directed_binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import graphviz_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import graphviz_draw
 ///
-///   graph = retworkx.generators.heavy_square_graph(3)
+///   graph = rustworkx.generators.heavy_square_graph(3)
 ///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
 ///
@@ -1413,9 +1413,9 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 /// This function doesn't support the variant Fig 10.b right.
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
+///     :class:`~rustworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1425,10 +1425,10 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import graphviz_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import graphviz_draw
 ///
-///   graph = retworkx.generators.directed_heavy_square_graph(3)
+///   graph = rustworkx.generators.directed_heavy_square_graph(3)
 ///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
 ///
@@ -1590,9 +1590,9 @@ pub fn directed_heavy_square_graph(
 ///
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~retworkx.PyGraph` with a single node will be returned.
+///     :class:`~rustworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1602,10 +1602,10 @@ pub fn directed_heavy_square_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import graphviz_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import graphviz_draw
 ///
-///   graph = retworkx.generators.heavy_hex_graph(3)
+///   graph = rustworkx.generators.heavy_hex_graph(3)
 ///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
 ///
@@ -1738,9 +1738,9 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
+///     :class:`~rustworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1750,10 +1750,10 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import graphviz_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import graphviz_draw
 ///
-///   graph = retworkx.generators.directed_heavy_hex_graph(3)
+///   graph = rustworkx.generators.directed_heavy_hex_graph(3)
 ///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
 ///
@@ -1898,7 +1898,7 @@ pub fn directed_heavy_hex_graph(
 /// :param int rows: The number of rows to generate the graph with.
 /// :param int cols: The number of columns to generate the graph with.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1910,10 +1910,10 @@ pub fn directed_heavy_hex_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
+///   graph = rustworkx.generators.hexagonal_lattice_graph(2, 2)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -2009,7 +2009,7 @@ pub fn hexagonal_lattice_graph(
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -2021,10 +2021,10 @@ pub fn hexagonal_lattice_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 3)
+///   graph = rustworkx.generators.directed_hexagonal_lattice_graph(2, 3)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -2152,7 +2152,7 @@ pub fn directed_hexagonal_lattice_graph(
 ///
 /// If neither ``num_path_nodes`` nor ``path_weights`` (both described
 /// below) are specified then this is equivalent to
-/// :func:`~retworkx.generators.mesh_graph`
+/// :func:`~rustworkx.generators.mesh_graph`
 ///
 /// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
 ///     with. Node weights will be None if this is specified. If both
@@ -2169,7 +2169,7 @@ pub fn directed_hexagonal_lattice_graph(
 ///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
 ///     be ignored and ``path_weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -2179,10 +2179,10 @@ pub fn directed_hexagonal_lattice_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.lollipop_graph(4, 2)
+///   graph = rustworkx.generators.lollipop_graph(4, 2)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -2240,7 +2240,7 @@ pub fn lollipop_graph(
 /// :param int n: number of nodes in the internal star and external regular polygon.
 /// :param int k: shift that changes the internal star graph.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -2254,19 +2254,19 @@ pub fn lollipop_graph(
 ///
 /// .. jupyter-execute::
 ///   
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///   
 ///   # Petersen Graph is G(5, 2)
-///   graph = retworkx.generators.generalized_petersen_graph(5, 2)
-///   layout = retworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
+///   graph = rustworkx.generators.generalized_petersen_graph(5, 2)
+///   layout = rustworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
 ///   mpl_draw(graph, pos=layout)
 ///   
 /// .. jupyter-execute::
 ///   
 ///   # Möbius–Kantor Graph is G(8, 3)
-///   graph = retworkx.generators.generalized_petersen_graph(8, 3)
-///   layout = retworkx.shell_layout(
+///   graph = rustworkx.generators.generalized_petersen_graph(8, 3)
+///   layout = rustworkx.shell_layout(
 ///     graph, nlist=[[0, 1, 2, 3, 4, 5, 6, 7], [10, 11, 12, 13, 14, 15, 8, 9]]
 ///   )
 ///   mpl_draw(graph, pos=layout)
@@ -2335,7 +2335,7 @@ pub fn generalized_petersen_graph(
 ///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
 ///     ``path_weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -2345,10 +2345,10 @@ pub fn generalized_petersen_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.barbell_graph(4, 2)
+///   graph = rustworkx.generators.barbell_graph(4, 2)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
