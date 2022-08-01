@@ -20,7 +20,7 @@ use std::iter::Iterator;
 use std::marker;
 
 use hashbrown::HashMap;
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use pyo3::class::iter::IterNextOutput;
 use pyo3::gc::PyVisit;
@@ -977,7 +977,7 @@ where
 
 macro_rules! vf2_mapping_impl {
     ($name:ident, $Ty:ty) => {
-        #[pyclass(module = "retworkx")]
+        #[pyclass(module = "rustworkx")]
         pub struct $name {
             vf2: Vf2Algorithm<$Ty, Option<PyObject>, Option<PyObject>>,
         }

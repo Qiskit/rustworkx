@@ -16,7 +16,7 @@ use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::Control;
 
 use crate::{PruneSearch, StopSearch};
-use retworkx_core::traversal::DijkstraEvent;
+use rustworkx_core::traversal::DijkstraEvent;
 
 #[derive(FromPyObject)]
 pub struct PyDijkstraVisitor {

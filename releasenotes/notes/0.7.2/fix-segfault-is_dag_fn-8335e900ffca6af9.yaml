@@ -2,7 +2,7 @@
 fixes:
   - |
     Fixed a potential segfault that could occur when calling
-    :func:`~retworkx.is_directed_acyclic_graph` with a a very deep
-    :class:`~retworkx.PyDiGraph` object as reported in
+    :func:`~rustworkx.is_directed_acyclic_graph` with a a very deep
+    :class:`~rustworkx.PyDiGraph` object as reported in
     `Qiskit/qiskit-terra#5502 <https://github.com/Qiskit/qiskit-terra/issues/5502>`__.
 

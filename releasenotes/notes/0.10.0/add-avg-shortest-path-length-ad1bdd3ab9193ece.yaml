@@ -2,9 +2,9 @@
 features:
   - |
     Added a new algorithm function,
-    :func:`retworkx.unweighted_average_shortest_path_length` for computing
-    the average shortest path length of a :class:`~retworkx.PyDiGraph` or
-    :class:`~retworkx.PyGraph` object. The average shortest path length
+    :func:`rustworkx.unweighted_average_shortest_path_length` for computing
+    the average shortest path length of a :class:`~rustworkx.PyDiGraph` or
+    :class:`~rustworkx.PyGraph` object. The average shortest path length
     is defined as
 
     .. math::

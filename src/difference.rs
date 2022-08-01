@@ -67,7 +67,7 @@ fn difference<Ty: EdgeType>(
 ///     and ``second``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` graph to this new object.
 ///
-/// :rtype: :class:`~retworkx.PyGraph`
+/// :rtype: :class:`~rustworkx.PyGraph`
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
 pub fn graph_difference(
@@ -94,7 +94,7 @@ pub fn graph_difference(
 ///     and ``second``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` graph to this new object.
 ///
-/// :rtype: :class:`~retworkx.PyDiGraph`
+/// :rtype: :class:`~rustworkx.PyDiGraph`
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
 pub fn digraph_difference(

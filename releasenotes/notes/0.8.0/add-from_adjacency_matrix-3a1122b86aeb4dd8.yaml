@@ -1,9 +1,9 @@
 ---
 features:
   - |
-    A new constructor method :meth:`~retworkx.PyDiGraph.from_adjacency_matrix`
-    has been added to the :class:`~retworkx.PyDiGraph` and
-    :class:`~retworkx.PyGraph` (:meth:`~retworkx.PyGraph.from_adjacency_matrix`)
+    A new constructor method :meth:`~rustworkx.PyDiGraph.from_adjacency_matrix`
+    has been added to the :class:`~rustworkx.PyDiGraph` and
+    :class:`~rustworkx.PyGraph` (:meth:`~rustworkx.PyGraph.from_adjacency_matrix`)
     classes. It enables creating a new graph from an input adjacency_matrix.
     For example:
 
@@ -16,7 +16,7 @@ features:
       import pydot
       from PIL import Image
 
-      import retworkx
+      import rustworkx
 
 
       # Adjacency matrix for directed outward star graph:
@@ -27,7 +27,7 @@ features:
           [0., 0., 0., 0., 0.],
           [0., 0., 0., 0., 0.]])
       # Create a graph from the adjacency_matrix:
-      graph = retworkx.PyDiGraph.from_adjacency_matrix(adjacency_matrix)
+      graph = rustworkx.PyDiGraph.from_adjacency_matrix(adjacency_matrix)
       # Draw graph
       dot_str = graph.to_dot(
           lambda node: dict(

@@ -87,16 +87,16 @@ fn cartesian_product<Ty: EdgeType>(
 ///             (0, 1): 1,
 ///         }
 ///
-/// :rtype: Tuple[:class:`~retworkx.PyGraph`, :class:`~retworkx.ProductNodeMap`]
+/// :rtype: Tuple[:class:`~rustworkx.PyGraph`, :class:`~rustworkx.ProductNodeMap`]
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph_1 = retworkx.generators.path_graph(2)
-///   graph_2 = retworkx.generators.path_graph(3)
-///   graph_product, _ = retworkx.graph_cartesian_product(graph_1, graph_2)
+///   graph_1 = rustworkx.generators.path_graph(2)
+///   graph_2 = rustworkx.generators.path_graph(3)
+///   graph_product, _ = rustworkx.graph_cartesian_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
@@ -112,6 +112,7 @@ pub fn graph_cartesian_product(
             graph: out_graph,
             multigraph: true,
             node_removed: false,
+            attrs: py.None(),
         },
         out_node_map,
     )
@@ -136,16 +137,16 @@ pub fn graph_cartesian_product(
 ///             (0, 1): 1,
 ///         }
 ///
-/// :rtype: Tuple[:class:`~retworkx.PyDiGraph`, :class:`~retworkx.ProductNodeMap`]
+/// :rtype: Tuple[:class:`~rustworkx.PyDiGraph`, :class:`~rustworkx.ProductNodeMap`]
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph_1 = retworkx.generators.directed_path_graph(2)
-///   graph_2 = retworkx.generators.directed_path_graph(3)
-///   graph_product, _ = retworkx.digraph_cartesian_product(graph_1, graph_2)
+///   graph_1 = rustworkx.generators.directed_path_graph(2)
+///   graph_2 = rustworkx.generators.directed_path_graph(3)
+///   graph_product, _ = rustworkx.digraph_cartesian_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
@@ -163,6 +164,7 @@ pub fn digraph_cartesian_product(
             check_cycle: false,
             node_removed: false,
             multigraph: true,
+            attrs: py.None(),
         },
         out_node_map,
     )

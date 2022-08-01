@@ -2,13 +2,13 @@
    introduction tutorial in  NetworkX's documentation which can be found here:
    https://networkx.org/documentation/networkx-2.6.2/tutorial.html
 
-########################
-Introduction to retworkx
-########################
+#########################
+Introduction to rustworkx
+#########################
 
-This guide serves as an introduction to working with retworkx. If you're a
+This guide serves as an introduction to working with rustworkx. If you're a
 current or past `NetworkX <https:://networkx.org>`__ user who is looking at
-using retworkx as a replacement for NetworkX, you can also refer to
+using rustworkx as a replacement for NetworkX, you can also refer to
 :ref:`networkx` for a detailed comparison.
 
 Creating a Graph
@@ -19,12 +19,12 @@ can run the following code:
 
 .. jupyter-execute::
 
-    import retworkx as rx
+    import rustworkx as rx
     G = rx.PyGraph()
 
-A :class:`~retworkx.PyGraph` is comprised of nodes (vertices)
+A :class:`~rustworkx.PyGraph` is comprised of nodes (vertices)
 and unordered pairings of nodes (called edges, links, etc). Both nodes and
-edges in retworkx have an assigned data payload (also referred to as a weight
+edges in rustworkx have an assigned data payload (also referred to as a weight
 in the API and documentation) which can be any Python object (e.g. a numeric
 value, a string, an image, an XML object, another graph, a custom node object,
 etc.). Nodes and edges are uniquely identified by an integer ``index``
@@ -45,7 +45,7 @@ To get started we can add a single node:
 
     G.add_node(1)
 
-The :meth:`~retworkx.PyGraph.add_node` method returns an integer. This integer
+The :meth:`~rustworkx.PyGraph.add_node` method returns an integer. This integer
 is the index used to uniquely identify this new node in the graph. You can use
 this index to identify the node as long as node remains in the graph.
 
@@ -60,14 +60,14 @@ elements such as a
     indices = G.add_nodes_from(range(5))
     print(indices)
 
-Just as with :meth:`~retworkx.PyGraph.add_node`, the
-:meth:`~retworkx.PyGraph.add_nodes_from` method returns the indices for the nodes
-added as a :class:`~retworkx.NodeIndices` object, which is a custom sequence
+Just as with :meth:`~rustworkx.PyGraph.add_node`, the
+:meth:`~rustworkx.PyGraph.add_nodes_from` method returns the indices for the nodes
+added as a :class:`~rustworkx.NodeIndices` object, which is a custom sequence
 type that contains the index of each node in the order it's added from the input
 sequence.
 
 In the above cases, we were adding nodes with a data payload of type integer (e.g. ``G.add_node(1)``).
-However, retworkx doesn't place constraints on what the node data payload can
+However, rustworkx doesn't place constraints on what the node data payload can
 be, so you can use more involved objects including types which are not
 `hashable <https://docs.python.org/3/glossary.html#term-hashable>`__. For
 example, we can add a node with a data payload that's a a
@@ -93,17 +93,17 @@ The graph :math:`G` can also be grown by adding one edge at a time
     G.add_edge(1, 2, None)
 
 This will add an edge between node index ``1`` and node index ``2`` with a
-data payload of ``None``. Similarly to :meth:`~retworkx.PyGraph.add_node`, the
-:meth:`~retworkx.PyGraph.add_edge` method returns the new edge's unique
+data payload of ``None``. Similarly to :meth:`~rustworkx.PyGraph.add_node`, the
+:meth:`~rustworkx.PyGraph.add_edge` method returns the new edge's unique
 index.
 
 Examining elements of a graph
 =============================
 
-We can examine the nodes and edges of a graph in retworkx fairly easily. The
+We can examine the nodes and edges of a graph in rustworkx fairly easily. The
 first thing to do is to get a list of node and edge indices using
-:meth:`~retworkx.PyGraph.node_indices` and
-:meth:`~retworkx.PyGraph.edge_indices`:
+:meth:`~rustworkx.PyGraph.node_indices` and
+:meth:`~rustworkx.PyGraph.edge_indices`:
 
 .. jupyter-execute::
 
@@ -116,7 +116,7 @@ Since indices are the unique identifiers for nodes and edges, they're your
 handle to elements in the graph. This is especially important for edges in the
 multigraph case, or where you have identical data payloads between multiple
 nodes. You can use the indices to access the data payload. For nodes, the
-:class:`~retworkx.PyGraph` object behaves like a
+:class:`~rustworkx.PyGraph` object behaves like a
 `mapping <https://docs.python.org/3/glossary.html#term-mapping>`__ with the
 index:
 
@@ -125,9 +125,9 @@ index:
     first_index_data = G[node_indices[0]]
     print(first_index_data)
 
-For edges, you can use the :meth:`~retworkx.PyGraph.get_edge_data_by_index`
+For edges, you can use the :meth:`~rustworkx.PyGraph.get_edge_data_by_index`
 method to access the data payload for a given edge and
-:meth:`~retworkx.PyGraph.get_edge_endpoints_by_index` to get the endpoints
+:meth:`~rustworkx.PyGraph.get_edge_endpoints_by_index` to get the endpoints
 of a given edge from its index:
 
 .. jupyter-execute::
@@ -139,14 +139,14 @@ of a given edge from its index:
 
 We don't implement the mapping protocol for edges, so there is a helper
 method available to get the mapping of edge indices to edge endpoints and
-data payloads, :meth:`~retworkx.PyGraph.edge_index_map`:
+data payloads, :meth:`~rustworkx.PyGraph.edge_index_map`:
 
 .. jupyter-execute::
 
     print(G.edge_index_map())
 
 Additionally, you can access the list of node and edge data payloads directly
-with :meth:`~retworkx.PyGraph.nodes` and :meth:`~retworkx.PyGraph.edges`
+with :meth:`~rustworkx.PyGraph.nodes` and :meth:`~rustworkx.PyGraph.edges`
 
 .. jupyter-execute::
 
@@ -161,19 +161,19 @@ Removing elements from a graph
 ===============================
 
 You can remove a node or edge from a graph in a similar manner to adding
-elements to the graph. There are methods :meth:`~retworkx.PyGraph.remove_node`,
-:meth:`~retworkx.PyGraph.remove_nodes_from`,
-:meth:`~retworkx.PyGraph.remove_edge`,
-:meth:`~retworkx.PyGraph.remove_edge_from_index`, and
-:meth:`~retworkx.PyGraph.remove_edges_from` to remove nodes and edges from
+elements to the graph. There are methods :meth:`~rustworkx.PyGraph.remove_node`,
+:meth:`~rustworkx.PyGraph.remove_nodes_from`,
+:meth:`~rustworkx.PyGraph.remove_edge`,
+:meth:`~rustworkx.PyGraph.remove_edge_from_index`, and
+:meth:`~rustworkx.PyGraph.remove_edges_from` to remove nodes and edges from
 the graph. One thing to note is that removals can introduce holes in the
 lists of indices for nodes and edges in the graph. For example:
 
 .. jupyter-execute::
 
-    import retworkx
+    import rustworkx
 
-    graph = retworkx.PyGraph()
+    graph = rustworkx.PyGraph()
     graph.add_nodes_from(list(range(5)))
     graph.add_nodes_from(list(range(2)))
     graph.remove_node(2)
@@ -189,6 +189,30 @@ subsequent additions. For example, building off the previous example if you ran
 
 this new node is assigned index 2 again.
 
+Modifying elements of a graph
+=============================
+
+The graph classes in rustworkx also allow for in place mutation of the payloads
+for elements in the graph. For nodes you can simply use the mapping protocol to
+change the payload via it's node index. For example:
+
+.. jupyter-execute::
+
+   last_index = graph.node_indices()[-1]
+   graph[last_index] = "New Payload"
+   print(graph[last_index])
+
+You can update the payload of any node in the graph using this interface. For
+edges you can leverage the :class:`~.PyGraph.update_edge` or
+:class:`~.PyGraph.update_edge_by_index` methods to update an edge's payload
+in place. For example:
+
+.. jupyter-execute::
+
+   edge_index = graph.add_edge(0, 1, None)
+   graph.update_edge_by_index(edge_index, "New Edge Payload")
+   print(graph.get_edge_data_by_index(edge_index))
+
 .. _data_payload:
 
 What to use for node and edge data payload
@@ -196,11 +220,11 @@ What to use for node and edge data payload
 
 In the above examples for the most part we use integers, strings, and ``None``
 for the data payload of nodes and edges in graphs (mostly for simplicity).
-However, retworkx allows the use of any Python object as the data payload for
+However, rustworkx allows the use of any Python object as the data payload for
 nodes and edges. This flexibility is very powerful as
 it allows you to create graphs that contain other graphs, graphs that contain
 files, graphs with functions, etc. This means you only need to keep a reference
-to the integer index returned by retworkx for the objects you use as a data
+to the integer index returned by rustworkx for the objects you use as a data
 payloads to find those objects in the graph. For example, one approach you can
 take is to store the index as an attribute on the object you add to the graph:
 
@@ -257,7 +281,7 @@ above example you can update the index references all at once after creation:
 Accessing edges and neighbors
 =============================
 
-You can access edges from a node using the :meth:`~retworkx.PyGraph.incident_edges`
+You can access edges from a node using the :meth:`~rustworkx.PyGraph.incident_edges`
 method:
 
 .. jupyter-execute::
@@ -265,7 +289,7 @@ method:
     print(G.incident_edges(2))
 
 which will return the edge indices of the edges incident to node ``2``. You
-can also find the neighbor nodes using the :meth:`~retworkx.PyGraph.neighbors`
+can also find the neighbor nodes using the :meth:`~rustworkx.PyGraph.neighbors`
 method:
 
 .. jupyter-execute::
@@ -274,19 +298,45 @@ method:
 
 which returns the node indices of any neighbors of node ``2``.
 
+
+Graph Attributes
+================
+
+Graphs in rustworkx have an attribute which can be used to assign
+metadata to a graph object. This can be assigned at object creation or
+accessed and modified after creation with the :attr:`~.PyGraph.attrs` attribute.
+This attribute can be any Python object and defaults to being ``None`` if not
+specified at graph object creation time. For example::
+
+    import rustworkx as rx
+
+    graph = rx.PyGraph(attrs=dict(day="Friday"))
+    graph.attrs['day'] = "Monday"
+
+Or, you could use a custom class like::
+
+    class Day:
+
+        def __init__(self, day):
+            self.day = day
+
+    graph = rx.PyGraph(attrs=Day("Friday"))
+    graph.attrs = Day("Monday")
+
+
 Directed Graphs
 ===============
 
 A directed graph is a graph that is made up of a set of nodes connected by
 directed edges (often called arcs). Edges have a directionality which is
 different from undirected graphs where edges have no notion of a direction to
-them. In retworkx the :class:`~retworkx.PyDiGraph` class is used to create
+them. In rustworkx the :class:`~rustworkx.PyDiGraph` class is used to create
 directed graphs. For example:
 
 .. jupyter-execute::
 
-    import retworkx as rx
-    from retworkx.visualization import mpl_draw
+    import rustworkx as rx
+    from rustworkx.visualization import mpl_draw
 
     path_graph = rx.generators.directed_path_graph(5)
     mpl_draw(path_graph)
@@ -298,10 +348,10 @@ pointing to the target node.
 Multigraphs
 ===========
 
-By default all graphs in retworkx are multigraphs. This means that each
+By default all graphs in rustworkx are multigraphs. This means that each
 graph object can contain parallel edges between nodes. However, you can set
-the ``multigraph`` argument to ``False`` on the :class:`~retworkx.PyGraph` and
-:class:`~retworkx.PyDiGraph` constructors when creating a new graph object to
+the ``multigraph`` argument to ``False`` on the :class:`~rustworkx.PyGraph` and
+:class:`~rustworkx.PyDiGraph` constructors when creating a new graph object to
 prevent parallel edges from being introduced. When ``multigraph`` is set to ``False``
 any method call made that would add a parallel edge will instead update the
 existing edge’s weight/data payload. For example:
@@ -333,7 +383,7 @@ operations on the graph. For example:
     mpl_draw(combined_graph)
 
 Additionally there are alternate constructors such as
-:meth:`~retworkx.PyGraph.read_edge_list` or :meth:`~retworkx.PyGraph.from_adjacency_matrix`
+:meth:`~rustworkx.PyGraph.read_edge_list` or :meth:`~rustworkx.PyGraph.from_adjacency_matrix`
 for building graphs from files or other inputs. For example:
 
 .. jupyter-execute::
@@ -380,13 +430,13 @@ functions and corresponding usage information.
 Drawing graphs
 ==============
 
-There are two visualization functions provided in retworkx for visualizing
-graphs. The first is :func:`~retworkx.visualization.mpl_draw`, which uses the
+There are two visualization functions provided in rustworkx for visualizing
+graphs. The first is :func:`~rustworkx.visualization.mpl_draw`, which uses the
 `matplotlib <https://matplotlib.org/>`__ library to render the
-visualization of the graph. The :func:`~retworkx.visualization.mpl_draw`
-function relies on the :ref:`layout-functions` provided with retworkx to
+visualization of the graph. The :func:`~rustworkx.visualization.mpl_draw`
+function relies on the :ref:`layout-functions` provided with rustworkx to
 generate a layout (the coordinates to draw the nodes of the graph) for the
-graph (by default :func:`~retworkx.spring_layout` is used). For example:
+graph (by default :func:`~rustworkx.spring_layout` is used). For example:
 
 .. jupyter-execute::
 
@@ -399,13 +449,13 @@ graph (by default :func:`~retworkx.spring_layout` is used). For example:
     layout = rx.shell_layout(G, nlist=[[0, 1, 2, 3, 4], [6, 7, 8, 9, 5]])
     mpl_draw(G, pos=layout, with_labels=True, ax=subax2)
 
-The second function is :func:`~retworkx.visualization.graphviz_draw`, which
+The second function is :func:`~rustworkx.visualization.graphviz_draw`, which
 uses `Graphviz <https://graphviz.org/>`__ to generate visualizations. For
 example:
 
 .. jupyter-execute::
 
-    from retworkx.visualization import graphviz_draw
+    from rustworkx.visualization import graphviz_draw
 
     G = rx.generators.heavy_hex_graph(7)
     # set data payload to index
@@ -436,8 +486,8 @@ example:
     graphviz_draw(G, node_attr_fn=node_attr_fn, method="neato")
 
 Generally, when deciding which visualization function to use, there are a few
-considerations to make. :func:`~retworkx.visualization.mpl_draw` is a better
+considerations to make. :func:`~rustworkx.visualization.mpl_draw` is a better
 choice for smaller graphs or cases where you want to integrate your graph
 drawing as part of a larger visualization.
-:func:`~retworkx.visualization.graphviz_draw` is typically a better choice
+:func:`~rustworkx.visualization.graphviz_draw` is typically a better choice
 for larger graphs, because Graphviz is a dedicated tool for drawing graphs.

@@ -12,13 +12,14 @@
 
 #![allow(clippy::float_cmp)]
 
-mod conn_components;
+mod all_pairs_all_simple_paths;
 mod core_number;
 
 use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
 
 use hashbrown::{HashMap, HashSet};
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
@@ -30,8 +31,8 @@ use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Vis
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{BiconnectedComponents, Chains, EdgeList};
-use retworkx_core::connectivity;
+use crate::iterators::{AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList};
+use rustworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -229,7 +230,7 @@ pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
-    conn_components::number_connected_components(&graph.graph)
+    connectivity::number_connected_components(&graph.graph)
 }
 
 /// Find the connected components in an undirected graph
@@ -242,7 +243,10 @@ pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
-    conn_components::connected_components(&graph.graph)
+    connectivity::connected_components(&graph.graph)
+        .into_iter()
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
+        .collect()
 }
 
 /// Returns the set of nodes in the component of graph containing `node`.
@@ -265,11 +269,12 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
         ));
     }
 
-    Ok(conn_components::bfs_undirected(
-        &graph.graph,
-        node,
-        &mut graph.graph.visit_map(),
-    ))
+    Ok(
+        connectivity::bfs_undirected(&graph.graph, node, &mut graph.graph.visit_map())
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
+    )
 }
 
 /// Check if the graph is connected.
@@ -325,7 +330,10 @@ pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
-    conn_components::connected_components(&graph.graph)
+    connectivity::connected_components(&graph.graph)
+        .into_iter()
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
+        .collect()
 }
 
 /// Check if the graph is weakly connected
@@ -354,7 +362,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     from
 /// :param callable weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         dag_adjacency_matrix(dag, weight_fn: lambda x: 1)
@@ -405,7 +413,7 @@ pub fn digraph_adjacency_matrix(
 /// :param PyGraph graph: The graph used to generate the adjacency matrix from
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         graph_adjacency_matrix(graph, weight_fn: lambda x: 1)
@@ -460,7 +468,7 @@ pub fn graph_adjacency_matrix(
 /// .. note::
 ///
 ///     Parallel edges and self-loops are never created,
-///     even if the :attr:`~retworkx.PyGraph.multigraph`
+///     even if the :attr:`~rustworkx.PyGraph.multigraph`
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
@@ -477,7 +485,7 @@ pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::P
                     || !complement_graph.has_edge(node_a.index(), node_b.index()))
             {
                 // avoid creating parallel edges in multigraph
-                complement_graph.add_edge(node_a.index(), node_b.index(), py.None())?;
+                complement_graph.add_edge(node_a.index(), node_b.index(), py.None());
             }
         }
     }
@@ -489,12 +497,12 @@ pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::P
 /// :param PyDiGraph graph: The graph to be used.
 ///
 /// :returns: The complement of the graph.
-/// :rtype: :class:`~retworkx.PyDiGraph`
+/// :rtype: :class:`~rustworkx.PyDiGraph`
 ///
 /// .. note::
 ///
 ///     Parallel edges and self-loops are never created,
-///     even if the :attr:`~retworkx.PyDiGraph.multigraph`
+///     even if the :attr:`~rustworkx.PyDiGraph.multigraph`
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
@@ -623,6 +631,88 @@ pub fn digraph_all_simple_paths(
     .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
     .collect();
     Ok(result)
+}
+
+/// Return all the simple paths between all pairs of nodes in the graph
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyDiGraph graph: The graph to find all simple paths in
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A mapping of source node indices to a mapping of target node
+///     indices to a list of paths between the source and target nodes.
+/// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+pub fn digraph_all_pairs_all_simple_paths(
+    graph: &digraph::PyDiGraph,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth.is_some() && min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff.is_some() && cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
+}
+
+/// Return all the simple paths between all pairs of nodes in the graph
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyGraph graph: The graph to find all simple paths in
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A mapping of node indices to to a mapping of target node
+///     indices to a list of paths between the source and target nodes.
+/// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+pub fn graph_all_pairs_all_simple_paths(
+    graph: &graph::PyGraph,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth.is_some() && min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff.is_some() && cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
 }
 
 /// Return the core number for each node in the graph.
