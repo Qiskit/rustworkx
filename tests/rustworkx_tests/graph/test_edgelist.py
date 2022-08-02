@@ -18,6 +18,7 @@ import rustworkx
 
 from tenacity import retry, stop_after_attempt
 
+
 class TestEdgeList(unittest.TestCase):
     def test_empty_edge_list_graph(self):
         with tempfile.NamedTemporaryFile() as fd:
