@@ -16,6 +16,7 @@ import unittest
 
 import retworkx
 
+from tenacity import retry, stop_after_attempt
 
 class TestEdgeList(unittest.TestCase):
     def test_empty_edge_list_digraph(self):
@@ -147,6 +148,7 @@ class TestEdgeList(unittest.TestCase):
         self.assertTrue(graph.has_edge(0, 2))
         self.assertEqual(graph.edges(), ["0", "1", None])
 
+    @retry(stop=stop_after_attempt(5))
     def test_write_edge_list_empty_digraph(self):
         path = os.path.join(tempfile.gettempdir(), "empty.txt")
         graph = retworkx.PyDiGraph()
@@ -155,6 +157,7 @@ class TestEdgeList(unittest.TestCase):
         with open(path, "rt") as edge_file:
             self.assertEqual("", edge_file.read())
 
+    @retry(stop=stop_after_attempt(5))
     def test_write_edge_list_round_trip(self):
         path = os.path.join(tempfile.gettempdir(), "round_trip.txt")
         graph = retworkx.generators.directed_star_graph(5)
