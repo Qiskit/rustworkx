@@ -1,8 +1,8 @@
 .. _rustworkx:
 
-######################
-Retworkx API Reference
-######################
+#######################
+Rustworkx API Reference
+#######################
 
 Graph Classes
 =============
@@ -323,7 +323,7 @@ API functions for PyGraph
 =========================
 
 These functions are algorithm functions that are type specific for
-:class:`~rustworkx.PyGraph` objects. Universal functions from Retworkx API that
+:class:`~rustworkx.PyGraph` objects. Universal functions from Rustworkx API that
 work for both graph types internally call the functions from the explicitly
 typed API based on the data type.
 
