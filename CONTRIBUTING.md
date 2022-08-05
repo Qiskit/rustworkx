@@ -16,7 +16,7 @@ contributing to rustworkx, these are documented below.
 
 ### Making changes to the code
 
-Retworkx is implemented primarily in Rust with a thin layer of Python.
+Rustworkx is implemented primarily in Rust with a thin layer of Python.
 Because of that, most of your code changes will involve modifications to
 Rust files in `src`. To understand which files you need to change, we invite
 you for an overview of our simplified source tree:

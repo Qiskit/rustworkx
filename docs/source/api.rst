@@ -1,8 +1,8 @@
 .. _rustworkx:
 
-######################
-Retworkx API Reference
-######################
+#######################
+Rustworkx API Reference
+#######################
 
 Graph Classes
 =============
@@ -243,14 +243,15 @@ Layout Functions
    rustworkx.spiral_layout
 
 
-.. _graphml:
+.. _serialization:
 
-GraphML
-==========
+Serialization
+=============
 
 .. autosummary::
    :toctree: apiref
 
+   rustworkx.node_link_json
    rustworkx.read_graphml
 
 .. _converters:
@@ -316,6 +317,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_unweighted_average_shortest_path_length
    rustworkx.digraph_bfs_search
    rustworkx.digraph_dijkstra_search
+   rustworkx.digraph_node_link_json
 
 .. _api-functions-pygraph:
 
@@ -323,7 +325,7 @@ API functions for PyGraph
 =========================
 
 These functions are algorithm functions that are type specific for
-:class:`~rustworkx.PyGraph` objects. Universal functions from Retworkx API that
+:class:`~rustworkx.PyGraph` objects. Universal functions from Rustworkx API that
 work for both graph types internally call the functions from the explicitly
 typed API based on the data type.
 
@@ -369,6 +371,7 @@ typed API based on the data type.
    rustworkx.graph_unweighted_average_shortest_path_length
    rustworkx.graph_bfs_search
    rustworkx.graph_dijkstra_search
+   rustworkx.graph_node_link_json
 
 Exceptions
 ==========
@@ -386,6 +389,7 @@ Exceptions
    rustworkx.NullGraph
    rustworkx.visit.StopSearch
    rustworkx.visit.PruneSearch
+   rustworkx.JSONSerializationError
 
 Custom Return Types
 ===================
