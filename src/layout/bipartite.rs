@@ -19,7 +19,7 @@ use petgraph::EdgeType;
 use super::spring::{recenter, rescale, Point};
 use crate::iterators::Pos2DMapping;
 use crate::StablePyGraph;
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 pub fn bipartite_layout<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,

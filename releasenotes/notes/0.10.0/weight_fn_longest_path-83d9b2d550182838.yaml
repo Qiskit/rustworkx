@@ -1,8 +1,8 @@
 ---
 features:
   - |
-    Added a new kwarg, ``weight_fn``, to the :func:`retworkx.dag_longest_path`
-    and :func:`retworkx.dag_longest_path_length` functions. These kwargs are
+    Added a new kwarg, ``weight_fn``, to the :func:`rustworkx.dag_longest_path`
+    and :func:`rustworkx.dag_longest_path_length` functions. These kwargs are
     used to set a weight function callable that will be called as the function
     traverses the graph to dynamically adjust the weight of an edge. For
     example::

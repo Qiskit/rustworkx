@@ -43,10 +43,10 @@ enum NodeState {
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx
+///   import rustworkx
 ///
-///   graph = retworkx.generators.directed_path_graph(5)
-///   sorter = retworkx.TopologicalSorter(graph)
+///   graph = rustworkx.generators.directed_path_graph(5)
+///   sorter = rustworkx.TopologicalSorter(graph)
 ///   while sorter.is_active():
 ///       nodes = sorter.get_ready()
 ///       print(nodes)
@@ -58,10 +58,10 @@ enum NodeState {
 /// :param PyDiGraph graph: The directed graph to be used.
 /// :param bool check_cycle: When this is set to ``True``, we search
 ///     for cycles in the graph during initialization of topological sorter
-///     and raise :class:`~retworkx.DAGHasCycle` if any cycle is detected. If
+///     and raise :class:`~rustworkx.DAGHasCycle` if any cycle is detected. If
 ///     it's set to ``False``, topological sorter will output as many nodes
 ///     as possible until cycles block more progress. By default is ``True``.
-#[pyclass(module = "retworkx")]
+#[pyclass(module = "rustworkx")]
 #[pyo3(text_signature = "(graph, /, check_cycle=True)")]
 pub struct TopologicalSorter {
     dag: Py<PyDiGraph>,

@@ -4,9 +4,9 @@ features:
     New functions have been added to compute the shortest path and shortest
     path lengths for all nodes in a graph object:
 
-     * :func:`retworkx.all_pairs_dijkstra_shortest_paths`
-     * :func:`retworkx.digraph_all_pairs_dijkstra_shortest_paths`
-     * :func:`retworkx.graph_all_pairs_dijkstra_shortest_paths`
-     * :func:`retworkx.all_pairs_dijkstra_path_lengths`
-     * :func:`retworkx.digraph_all_pairs_dijkstra_path_lengths`
-     * :func:`retworkx.graph_all_pairs_dijkstra_path_lengths`
+     * :func:`rustworkx.all_pairs_dijkstra_shortest_paths`
+     * :func:`rustworkx.digraph_all_pairs_dijkstra_shortest_paths`
+     * :func:`rustworkx.graph_all_pairs_dijkstra_shortest_paths`
+     * :func:`rustworkx.all_pairs_dijkstra_path_lengths`
+     * :func:`rustworkx.digraph_all_pairs_dijkstra_path_lengths`
+     * :func:`rustworkx.graph_all_pairs_dijkstra_path_lengths`

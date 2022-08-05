@@ -110,7 +110,7 @@ pub fn dag_longest_path_length(
 
 /// Find the weighted longest path in a DAG
 ///
-/// This function differs from :func:`retworkx.dag_longest_path` in that
+/// This function differs from :func:`rustworkx.dag_longest_path` in that
 /// this function requires a ``weight_fn`` parameter, and the ``weight_fn`` is
 /// expected to return a ``float`` not an ``int``.
 ///
@@ -152,7 +152,7 @@ pub fn dag_weighted_longest_path(
 
 /// Find the length of the weighted longest path in a DAG
 ///
-/// This function differs from :func:`retworkx.dag_longest_path_length` in that
+/// This function differs from :func:`rustworkx.dag_longest_path_length` in that
 /// this function requires a ``weight_fn`` parameter, and the ``weight_fn`` is
 /// expected to return a ``float`` not an ``int``.
 ///
@@ -302,7 +302,7 @@ pub fn layers(py: Python, dag: &digraph::PyDiGraph, first_layer: Vec<usize>) -> 
 /// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
 /// in the ordering.
 ///
-/// This function differs from :func:`~retworkx.topological_sort` because
+/// This function differs from :func:`~rustworkx.topological_sort` because
 /// when there are ties between nodes in the sort order this function will
 /// use the string returned by the ``key`` argument to determine the output
 /// order used.

@@ -1,9 +1,9 @@
 ---
 features:
   - |
-    The :func:`~retworkx.betweenness_centrality` (and it's per type variants
-    :func:`~retworkx.graph_betweenness_centrality` and
-    :func:`~retworkx.digraph_betweenness_centrality`) is now multithreaded.
+    The :func:`~rustworkx.betweenness_centrality` (and it's per type variants
+    :func:`~rustworkx.graph_betweenness_centrality` and
+    :func:`~rustworkx.digraph_betweenness_centrality`) is now multithreaded.
     For larger graphs this can significantly improve the runtime performance of
     the function. By default any graphs with < 50 nodes will still execute
     in a single thread, while larger graphs will be executed in parallel.
