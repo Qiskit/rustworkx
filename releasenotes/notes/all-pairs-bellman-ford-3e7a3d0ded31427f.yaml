@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Added new functions to compute the all-pairs shortest path
+    in graphs with negative edge weights using the Bellman-Ford
+    algorithm with the SPFA heuristic:
+
+     * :func:`rustworkx.all_pairs_bellman_ford_path_lengths`
+     * :func:`rustworkx.all_pairs_bellman_ford_shortest_paths`

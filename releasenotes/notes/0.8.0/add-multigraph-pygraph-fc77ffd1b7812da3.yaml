@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    The :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
+    The :class:`~rustworkx.PyGraph` and :class:`~rustworkx.PyDiGraph`
     constructors now have a new kwarg ``multigraph`` which can optionally be
     set to ``False`` to disallow adding parallel edges to the graph. With
     ``multigraph=False`` if an edge is attempted to be added where one already
@@ -16,7 +16,7 @@ features:
       import pydot
       from PIL import Image
 
-      import retworkx as rx
+      import rustworkx as rx
 
       graph = rx.PyGraph(multigraph=False)
       graph.extend_from_weighted_edge_list([(0, 1, -1), (1, 2, 0), (2, 0, 1)])
@@ -47,16 +47,16 @@ features:
       image
 
     You can query whether a PyGraph allows multigraphs with the boolean
-    attribute :attr:`~retworkx.PyGraph.multigraph`. The attribute can not
+    attribute :attr:`~rustworkx.PyGraph.multigraph`. The attribute can not
     be set outside of the constructor.
   - |
-    The :mod:`retworkx.generators` module's functions
-    :func:`~retworkx.generators.cycle_graph`,
-    :func:`~retworkx.generators.path_graph`,
-    :func:`~retworkx.generators.star_graph`,
-    :func:`~retworkx.generators.mesh_graph`, and
-    :func:`~retworkx.generators.grid_graph` now have a new kwarg ``multigraph``
+    The :mod:`rustworkx.generators` module's functions
+    :func:`~rustworkx.generators.cycle_graph`,
+    :func:`~rustworkx.generators.path_graph`,
+    :func:`~rustworkx.generators.star_graph`,
+    :func:`~rustworkx.generators.mesh_graph`, and
+    :func:`~rustworkx.generators.grid_graph` now have a new kwarg ``multigraph``
     which takes a boolean and defaults to ``True``. When it is set to ``False``
-    the generated :class:`~retworkx.PyGraph` object will have the
-    :attr:`~retworkx.PyGraph.multigraph` attribute set to ``False`` meaning it
+    the generated :class:`~rustworkx.PyGraph` object will have the
+    :attr:`~rustworkx.PyGraph.multigraph` attribute set to ``False`` meaning it
     will disallow adding parallel edges.

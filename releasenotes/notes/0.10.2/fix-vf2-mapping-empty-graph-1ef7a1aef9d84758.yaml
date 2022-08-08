@@ -1,7 +1,7 @@
 ---
 fixes:
   - |
-    Previously, :func:`~retworkx.vf2_mapping` function when
+    Previously, :func:`~rustworkx.vf2_mapping` function when
     comparing 2 empty graph objects would incorrectly return an
     empty iterator. This has been fixed and now returns an iterator
     over the single valid mapping, i.e the empty mapping.

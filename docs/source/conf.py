@@ -11,7 +11,7 @@
 # under the License.
 
 #
-# retworkx documentation build configuration file
+# rustworkx documentation build configuration file
 #
 
 import sys, os
@@ -19,8 +19,8 @@ import subprocess
 
 # General configuration:
 
-project = u'retworkx'
-copyright = u'2021, retworkx Contributors'
+project = u'rustworkx'
+copyright = u'2021, rustworkx Contributors'
 
 
 # The short X.Y version.
@@ -38,6 +38,7 @@ extensions = ['sphinx.ext.autodoc',
               'jupyter_sphinx',
               'reno.sphinxext',
               'sphinx.ext.intersphinx',
+              'sphinxemoji.sphinxemoji',
               'sphinx_reredirects',
              ]
 html_static_path = ['_static']
@@ -48,7 +49,7 @@ pygments_style = 'colorful'
 
 add_module_names = False
 
-modindex_common_prefix = ['retworkx.']
+modindex_common_prefix = ['rustworkx.']
 
 todo_include_todos = True
 
@@ -86,7 +87,7 @@ else:
 .. note::
 
     This is the documnetation for the current state of the development branch
-    of retworkx. The documentation or APIs here can change prior to being
+    of rustworkx. The documentation or APIs here can change prior to being
     released.
 
 """
@@ -102,7 +103,7 @@ html_theme_options = {
     'style_external_links': True,
 }
 
-htmlhelp_basename = 'retworkx'
+htmlhelp_basename = 'rustworkx'
 
 
 # Latex options
@@ -110,15 +111,15 @@ htmlhelp_basename = 'retworkx'
 latex_elements = {}
 
 latex_documents = [
-  ('index', 'retworkx.tex', u'retworkx Documentation',
-   u'retworkx Contributors', 'manual'),
+  ('index', 'rustworkx.tex', u'rustworkx Documentation',
+   u'rustworkx Contributors', 'manual'),
 ]
 
 # Texinfo options
 
 texinfo_documents = [
-  ('index', 'retworkx', u'retworkx Documentation',
-   u'retworkx Contributors', 'retworkx', '',
+  ('index', 'rustworkx', u'rustworkx Documentation',
+   u'rustworkx Contributors', 'rustworkx', '',
    'Miscellaneous'),
 ]
 
@@ -126,6 +127,11 @@ redirects = {}
 with open("sources.txt", "r") as fd:
     for source_str in fd:
         redirects[f"stubs/{source_str}"] = f"../apiref/{source_str}"
+
+if os.getenv("RETWORKX_LEGACY_DOCS", None) is not None:
+    redirects["*"] = "https://qiskit.org/documentation/rustworkx/$source.html"
+    html_baseurl = "https://qiskit.org/documentation/rustworkx/"
+
 
 # Version extensions
 
@@ -164,7 +170,7 @@ def avoid_duplicate_in_dispatch(app, obj, bound_method):
         # will fail. Hence we just trick the check in sphinx/util/inspect/is_singledispatch_function
         # that checks for obj.dispatch.__module__ == 'functools'. This should be harmless as
         # that property is only used on __repr__ and not to dispatch the function itself
-        obj.dispatch.__module__ = "retworkx"
+        obj.dispatch.__module__ = "rustworkx"
 
 
 def setup(app):

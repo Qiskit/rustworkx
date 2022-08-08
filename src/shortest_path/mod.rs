@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+mod all_pairs_bellman_ford;
 pub mod all_pairs_dijkstra;
 mod average_length;
 mod distance_matrix;
@@ -32,8 +33,8 @@ use pyo3::exceptions::PyValueError;
 
 use numpy::IntoPyArray;
 
-use retworkx_core::dictmap::*;
-use retworkx_core::shortest_path::{
+use rustworkx_core::dictmap::*;
+use rustworkx_core::shortest_path::{
     astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
 };
 
@@ -319,7 +320,7 @@ pub fn digraph_dijkstra_shortest_path_lengths(
 }
 
 /// For each node in the graph, calculates the lengths of the shortest paths
-/// to all others in a :class:`~retworkx.PyDiGraph` object
+/// to all others in a :class:`~rustworkx.PyDiGraph` object
 ///
 /// This function will calculate the shortest path lengths from all nodes in the
 /// graph using Dijkstra's algorithm. This function is multithreaded and will
@@ -328,7 +329,7 @@ pub fn digraph_dijkstra_shortest_path_lengths(
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
 /// limit the thread pool to 4 threads.
 ///
-/// :param graph: The input :class:`~retworkx.PyDiGraph` to use
+/// :param graph: The input :class:`~rustworkx.PyDiGraph` to use
 /// :param edge_cost_fn: A callable object that acts as a weight function for
 ///     an edge. It will accept a single positional argument, the edge's weight
 ///     object and will return a float which will be used to represent the
@@ -358,7 +359,7 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
 }
 
 /// For each node in the graph, finds the shortest paths to all others in a
-/// :class:`~retworkx.PyDiGraph` object
+/// :class:`~rustworkx.PyDiGraph` object
 ///
 /// This function will generate the shortest paths from all nodes in the graph
 /// Dijkstra's algorithm. This function is multithreaded and will run
@@ -367,7 +368,7 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
 /// limit the thread pool to 4 threads.
 ///
-/// :param graph: The input :class:`~retworkx.PyDiGraph` object to use
+/// :param graph: The input :class:`~rustworkx.PyDiGraph` object to use
 /// :param edge_cost_fn: A callable object that acts as a weight function for
 ///     an edge. It will accept a single positional argument, the edge's weight
 ///     object and will return a float which will be used to represent the
@@ -397,12 +398,12 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
 }
 
 /// For each node in the graph, calculates the lengths of the shortest paths
-/// to all others in a :class:`~retworkx.PyGraph` object
+/// to all others in a :class:`~rustworkx.PyGraph` object
 ///
 /// This function will generate the shortest path from a source node using
 /// Dijkstra's algorithm.
 ///
-/// :param graph: The input :class:`~retworkx.PyGraph` to use
+/// :param graph: The input :class:`~rustworkx.PyGraph` to use
 /// :param edge_cost_fn: A callable object that acts as a weight function for
 ///     an edge. It will accept a single positional argument, the edge's weight
 ///     object and will return a float which will be used to represent the
@@ -432,12 +433,12 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
 }
 
 /// For each node in the graph, finds the shortest paths to all others in a
-/// :class:`~retworkx.PyGraph` object
+/// :class:`~rustworkx.PyGraph` object
 ///
 /// This function will generate the shortest path from a source node using
 /// Dijkstra's algorithm.
 ///
-/// :param graph: The input :class:`~retworkx.PyGraph` object to use
+/// :param graph: The input :class:`~rustworkx.PyGraph` object to use
 /// :param edge_cost_fn: A callable object that acts as a weight function for
 ///     an edge. It will accept a single positional argument, the edge's weight
 ///     object and will return a float which will be used to represent the
@@ -717,7 +718,7 @@ pub fn graph_k_shortest_path_lengths(
 /// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         digraph_floyd_warshall(graph, weight_fn= lambda x: 1)
@@ -785,7 +786,7 @@ pub fn digraph_floyd_warshall(
 /// :param PyGraph graph: The graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         graph_floyd_warshall(graph, weight_fn= lambda x: 1)
@@ -845,7 +846,7 @@ pub fn graph_floyd_warshall(
 /// :param PyGraph graph: The graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
@@ -898,7 +899,7 @@ pub fn graph_floyd_warshall_numpy(
 /// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
@@ -1069,7 +1070,7 @@ pub fn graph_distance_matrix(
     matrix.into_pyarray(py).into()
 }
 
-/// Return the average shortest path length for a :class:`~retworkx.PyDiGraph`
+/// Return the average shortest path length for a :class:`~rustworkx.PyDiGraph`
 /// with unweighted edges.
 ///
 /// The average shortest path length is calculated as
@@ -1139,7 +1140,7 @@ pub fn digraph_unweighted_average_shortest_path_length(
     (sum as f64) / (conn_pairs as f64)
 }
 
-/// Return the average shortest path length for a :class:`~retworkx.PyGraph`
+/// Return the average shortest path length for a :class:`~rustworkx.PyGraph`
 /// with unweighted edges.
 ///
 /// The average shortest path length is calculated as
@@ -1217,7 +1218,7 @@ pub fn graph_unweighted_average_shortest_path_length(
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
 ///
-/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+/// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
@@ -1296,7 +1297,7 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
 ///
-/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+/// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
@@ -1377,7 +1378,7 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 ///     the dict values are lists of node indices making the path.
 /// :rtype: PathMapping
 ///
-/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+/// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(text_signature = "(graph, source, /, target=None, weight_fn=None, default_weight=1.0)")]
@@ -1448,7 +1449,7 @@ pub fn graph_bellman_ford_shortest_paths(
 ///     the dict values are lists of node indices making the path.
 /// :rtype: PathMapping
 ///
-/// :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+/// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction(default_weight = "1.0", as_undirected = "false")]
 #[pyo3(
@@ -1587,4 +1588,156 @@ pub fn find_negative_cycle(
     Ok(NodeIndices {
         nodes: cycle.into_iter().map(|x| x.index()).collect(),
     })
+}
+
+/// For each node in the graph, calculates the lengths of the shortest paths
+/// to all others in a :class:`~rustworkx.PyDiGraph` object
+///
+/// This function will calculate the shortest path lengths from all nodes in the
+/// graph using the Bellman-Ford algorithm. This function is multithreaded and will
+/// launch a thread pool with threads equal to the number of CPUs by
+/// default. You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// :param graph: The input :class:`~rustworkx.PyDiGraph` to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {1: 2.0, 2: 2.0},
+///             1: {2: 1.0},
+///             2: {0: 1.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
+///
+/// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
+pub fn digraph_all_pairs_bellman_ford_path_lengths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathLengthMapping> {
+    all_pairs_bellman_ford::all_pairs_bellman_ford_path_lengths(py, &graph.graph, edge_cost_fn)
+}
+
+/// For each node in the graph, finds the shortest paths to all others in a
+/// :class:`~rustworkx.PyDiGraph` object
+///
+/// This function will generate the shortest paths from all nodes in the graph
+/// the Bellman-Ford  algorithm. This function is multithreaded and will run
+/// launch a thread pool with threads equal to the number of CPUs by default.
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads.
+///
+/// :param graph: The input :class:`~rustworkx.PyDiGraph` object to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of paths. The keys are source node indices
+///     and the values are dicts of the target node and the list of the
+///     node indices making up the shortest path to that node. For example::
+///
+///         {
+///             0: {1: [0, 1],  2: [0, 1, 2]},
+///             1: {2: [1, 2]},
+///             2: {0: [2, 0]},
+///         }
+///
+/// :rtype: AllPairsPathMapping
+///
+/// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
+pub fn digraph_all_pairs_bellman_ford_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathMapping> {
+    all_pairs_bellman_ford::all_pairs_bellman_ford_shortest_paths(py, &graph.graph, edge_cost_fn)
+}
+
+/// For each node in the graph, calculates the lengths of the shortest paths
+/// to all others in a :class:`~rustworkx.PyGraph` object
+///
+/// This function will generate the shortest path from a source node using
+/// the Bellman-Ford  algorithm.
+///
+/// :param graph: The input :class:`~rustworkx.PyGraph` to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of path lengths. The keys are source
+///     node indices and the values are dicts of the target node and the length
+///     of the shortest path to that node. For example::
+///
+///         {
+///             0: {1: 2.0, 2: 2.0},
+///             1: {2: 1.0},
+///             2: {0: 1.0},
+///         }
+///
+/// :rtype: AllPairsPathLengthMapping
+///
+/// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
+pub fn graph_all_pairs_bellman_ford_path_lengths(
+    py: Python,
+    graph: &graph::PyGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathLengthMapping> {
+    all_pairs_bellman_ford::all_pairs_bellman_ford_path_lengths(py, &graph.graph, edge_cost_fn)
+}
+
+/// For each node in the graph, finds the shortest paths to all others in a
+/// :class:`~rustworkx.PyGraph` object
+///
+/// This function will generate the shortest path from a source node using
+/// the Bellman-Ford algorithm.
+///
+/// :param graph: The input :class:`~rustworkx.PyGraph` object to use
+/// :param edge_cost_fn: A callable object that acts as a weight function for
+///     an edge. It will accept a single positional argument, the edge's weight
+///     object and will return a float which will be used to represent the
+///     weight/cost of the edge
+///
+/// :return: A read-only dictionary of paths. The keys are destination node
+///     indices and the values are dicts of the target node and the list of the
+///     node indices making up the shortest path to that node. For example::
+///
+///         {
+///             0: {1: [0, 1],  2: [0, 1, 2]},
+///             1: {2: [1, 2]},
+///             2: {0: [2, 0]},
+///         }
+///
+/// :rtype: AllPairsPathMapping
+///
+/// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
+///     path is not defined.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
+pub fn graph_all_pairs_bellman_ford_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<AllPairsPathMapping> {
+    all_pairs_bellman_ford::all_pairs_bellman_ford_shortest_paths(py, &graph.graph, edge_cost_fn)
 }

@@ -34,6 +34,15 @@ where
     left.zip(right)
 }
 
+#[inline]
+fn get_num_nodes(num_nodes: &Option<usize>, weights: &Option<Vec<PyObject>>) -> usize {
+    if weights.is_some() {
+        weights.as_ref().unwrap().len()
+    } else {
+        num_nodes.unwrap()
+    }
+}
+
 /// Generate a cycle graph
 ///
 /// :param int num_node: The number of nodes to generate the graph with. Node
@@ -45,7 +54,7 @@ where
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -55,10 +64,10 @@ where
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_cycle_graph(5)
+///   graph = rustworkx.generators.directed_cycle_graph(5)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -70,40 +79,48 @@ pub fn directed_cycle_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let node_len: usize;
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    let num_edges = if bidirectional {
+        2 * node_len
+    } else {
+        node_len
+    };
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            node_len = weights.len();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
         None => {
-            node_len = num_nodes.unwrap();
-            (0..num_nodes.unwrap())
-                .map(|_| graph.add_node(py.None()))
-                .collect()
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
         }
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => {
-                if bidirectional {
-                    graph.add_edge(node_b, node_a, py.None());
-                }
-                graph.add_edge(node_a, node_b, py.None());
-            }
-            None => continue,
-        };
+    for a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(a + 1);
+        let node_a = NodeIndex::new(a);
+        graph.add_edge(node_a, node_b, py.None());
+        if bidirectional {
+            graph.add_edge(node_b, node_a, py.None());
+        }
     }
     let last_node_index = NodeIndex::new(node_len - 1);
     let first_node_index = NodeIndex::new(0);
@@ -130,7 +147,7 @@ pub fn directed_cycle_graph(
 ///     will be the center node of the cycle graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -140,10 +157,10 @@ pub fn directed_cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.cycle_graph(5)
+///   graph = rustworkx.generators.cycle_graph(5)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -154,35 +171,37 @@ pub fn cycle_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let node_len: usize;
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            node_len = weights.len();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
         None => {
-            node_len = num_nodes.unwrap();
-            (0..num_nodes.unwrap())
-                .map(|_| graph.add_node(py.None()))
-                .collect()
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
         }
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => graph.add_edge(node_a, node_b, py.None()),
-            None => continue,
-        };
+    for node_a in 0..node_len - 1 {
+        let node_b = node_a + 1;
+        graph.add_edge(NodeIndex::new(node_a), NodeIndex::new(node_b), py.None());
     }
     let last_node_index = NodeIndex::new(node_len - 1);
     let first_node_index = NodeIndex::new(0);
@@ -206,7 +225,7 @@ pub fn cycle_graph(
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -216,10 +235,10 @@ pub fn cycle_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_path_graph(10)
+///   graph = rustworkx.generators.directed_path_graph(10)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -231,35 +250,46 @@ pub fn directed_path_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-            }
-            node_list
-        }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    let num_edges = if bidirectional {
+        2 * node_len
+    } else {
+        node_len
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => {
-                graph.add_edge(node_a, node_b, py.None());
-                if bidirectional {
-                    graph.add_edge(node_b, node_a, py.None());
-                }
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph,
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+
+    match weights {
+        Some(weights) => {
+            for weight in weights {
+                graph.add_node(weight);
             }
-            None => continue,
-        };
+        }
+        None => (0..node_len).for_each(|_| {
+            graph.add_node(py.None());
+        }),
+    };
+    for a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(a + 1);
+        let node_a = NodeIndex::new(a);
+        graph.add_edge(node_a, node_b, py.None());
+        if bidirectional {
+            graph.add_edge(node_b, node_a, py.None());
+        }
     }
     Ok(digraph::PyDiGraph {
         graph,
@@ -280,7 +310,7 @@ pub fn directed_path_graph(
 ///     will be the center node of the path graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -290,10 +320,10 @@ pub fn directed_path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.path_graph(10)
+///   graph = rustworkx.generators.path_graph(10)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -304,30 +334,34 @@ pub fn path_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph,
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => (0..node_len).for_each(|_| {
+            graph.add_node(py.None());
+        }),
     };
-    for (node_a, node_b) in pairwise(nodes) {
-        match node_a {
-            Some(node_a) => graph.add_edge(node_a, node_b, py.None()),
-            None => continue,
-        };
+    for node_a in 0..node_len - 1 {
+        let node_b = NodeIndex::new(node_a + 1);
+        graph.add_edge(NodeIndex::new(node_a), node_b, py.None());
     }
     Ok(graph::PyGraph {
         graph,
@@ -351,7 +385,7 @@ pub fn path_graph(
 ///     center node. This parameter is ignored if ``bidirectional`` is set to
 ///     ``True``.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -361,18 +395,18 @@ pub fn path_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_star_graph(10)
+///   graph = rustworkx.generators.directed_star_graph(10)
 ///   mpl_draw(graph)
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_star_graph(10, inward=True)
+///   graph = rustworkx.generators.directed_star_graph(10, inward=True)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
@@ -387,34 +421,51 @@ pub fn directed_star_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-            }
-            node_list
-        }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph: StablePyGraph::<Directed>::default(),
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let num_edges = if bidirectional {
+        (2 * node_len) - 2
+    } else {
+        node_len - 1
     };
-    for node in nodes[1..].iter() {
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    match weights {
+        Some(weights) => {
+            for weight in weights {
+                graph.add_node(weight);
+            }
+        }
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
+    };
+    let zero_index = NodeIndex::new(0);
+    for node_index in 1..node_len {
         //Add edges in both directions if bidirection is True
+        let node = NodeIndex::new(node_index);
         if bidirectional {
-            graph.add_edge(*node, nodes[0], py.None());
-            graph.add_edge(nodes[0], *node, py.None());
+            graph.add_edge(node, zero_index, py.None());
+            graph.add_edge(zero_index, node, py.None());
         } else if inward {
-            graph.add_edge(*node, nodes[0], py.None());
+            graph.add_edge(node, zero_index, py.None());
         } else {
-            graph.add_edge(nodes[0], *node, py.None());
+            graph.add_edge(zero_index, node, py.None());
         }
     }
     Ok(digraph::PyDiGraph {
@@ -436,7 +487,7 @@ pub fn directed_star_graph(
 ///     will be the center node of the star graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -446,10 +497,10 @@ pub fn directed_star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.star_graph(10)
+///   graph = rustworkx.generators.star_graph(10)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -460,27 +511,36 @@ pub fn star_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph: StablePyGraph::<Undirected>::default(),
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len - 1);
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
-    for node in nodes[1..].iter() {
-        graph.add_edge(nodes[0], *node, py.None());
+    let zero_index = NodeIndex::new(0);
+    for node in 1..node_len {
+        graph.add_edge(zero_index, NodeIndex::new(node), py.None());
     }
     Ok(graph::PyGraph {
         graph,
@@ -498,7 +558,7 @@ pub fn star_graph(
 /// :param list weights: A list of node weights. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -508,10 +568,10 @@ pub fn star_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.mesh_graph(4)
+///   graph = rustworkx.generators.mesh_graph(4)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -522,30 +582,40 @@ pub fn mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph: StablePyGraph::<Undirected>::default(),
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let num_edges = (node_len * (node_len - 1)) / 2;
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, num_edges);
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
 
-    let nodelen = nodes.len();
-    for i in 0..nodelen - 1 {
-        for j in i + 1..nodelen {
-            graph.add_edge(nodes[i], nodes[j], py.None());
+    for i in 0..node_len - 1 {
+        for j in i + 1..node_len {
+            let i_index = NodeIndex::new(i);
+            let j_index = NodeIndex::new(j);
+            graph.add_edge(i_index, j_index, py.None());
         }
     }
     Ok(graph::PyGraph {
@@ -564,7 +634,7 @@ pub fn mesh_graph(
 /// :param list weights: A list of node weights. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -574,10 +644,10 @@ pub fn mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_mesh_graph(4)
+///   graph = rustworkx.generators.directed_mesh_graph(4)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = "true")]
@@ -588,30 +658,42 @@ pub fn directed_mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && num_nodes.is_none() {
         return Err(PyIndexError::new_err(
             "num_nodes and weights list not specified",
         ));
     }
-    let nodes: Vec<NodeIndex> = match weights {
+    let node_len = get_num_nodes(&num_nodes, &weights);
+    if node_len == 0 {
+        return Ok(digraph::PyDiGraph {
+            graph: StablePyGraph::<Directed>::default(),
+            node_removed: false,
+            check_cycle: false,
+            cycle_state: algo::DfsSpace::default(),
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let num_edges = node_len * (node_len - 1);
+    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
             }
-            node_list
         }
-        None => (0..num_nodes.unwrap())
-            .map(|_| graph.add_node(py.None()))
-            .collect(),
+        None => {
+            (0..node_len).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
-    let nodelen = nodes.len();
-    for i in 0..nodelen - 1 {
-        for j in i + 1..nodelen {
-            graph.add_edge(nodes[i], nodes[j], py.None());
-            graph.add_edge(nodes[j], nodes[i], py.None());
+    for i in 0..node_len - 1 {
+        for j in i + 1..node_len {
+            let i_index = NodeIndex::new(i);
+            let j_index = NodeIndex::new(j);
+            graph.add_edge(i_index, j_index, py.None());
+            graph.add_edge(j_index, i_index, py.None());
         }
     }
     Ok(digraph::PyDiGraph {
@@ -639,7 +721,7 @@ pub fn directed_mesh_graph(
 ///     If number of nodes(rows*cols) is greater than length of
 ///     weights list, extra nodes with None weight are appended.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -650,10 +732,10 @@ pub fn directed_mesh_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.grid_graph(2, 3)
+///   graph = rustworkx.generators.grid_graph(2, 3)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -665,7 +747,6 @@ pub fn grid_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -675,10 +756,23 @@ pub fn grid_graph(
     let mut rowlen = rows.unwrap_or(0);
     let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
+    let mut num_edges = 0;
+    if num_nodes == 0 {
+        if weights.is_none() {
+            return Ok(graph::PyGraph {
+                graph: StablePyGraph::<Undirected>::default(),
+                node_removed: false,
+                multigraph,
+                attrs: py.None(),
+            });
+        }
+    } else {
+        num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    }
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
 
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             if num_nodes < weights.len() && rowlen == 0 {
                 collen = weights.len();
                 rowlen = 1;
@@ -691,30 +785,35 @@ pub fn grid_graph(
                 if node_cnt == 0 {
                     break;
                 }
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
                 node_cnt -= 1;
             }
             for _i in 0..node_cnt {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
+                graph.add_node(py.None());
             }
-            node_list
         }
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+        None => {
+            (0..num_nodes).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
 
     for i in 0..rowlen {
         for j in 0..collen {
             if i + 1 < rowlen {
                 graph.add_edge(
-                    nodes[i * collen + j],
-                    nodes[(i + 1) * collen + j],
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new((i + 1) * collen + j),
                     py.None(),
                 );
             }
             if j + 1 < collen {
-                graph.add_edge(nodes[i * collen + j], nodes[i * collen + j + 1], py.None());
+                graph.add_edge(
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new(i * collen + j + 1),
+                    py.None(),
+                );
             }
         }
     }
@@ -744,7 +843,7 @@ pub fn grid_graph(
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -755,10 +854,10 @@ pub fn grid_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_grid_graph(2, 3)
+///   graph = rustworkx.generators.directed_grid_graph(2, 3)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -773,7 +872,6 @@ pub fn directed_grid_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
     if weights.is_none() && (rows.is_none() || cols.is_none()) {
         return Err(PyIndexError::new_err(
             "dimensions and weights list not specified",
@@ -783,10 +881,28 @@ pub fn directed_grid_graph(
     let mut rowlen = rows.unwrap_or(0);
     let mut collen = cols.unwrap_or(0);
     let mut num_nodes = rowlen * collen;
+    let mut num_edges = 0;
+    if num_nodes == 0 {
+        if weights.is_none() {
+            return Ok(digraph::PyDiGraph {
+                graph: StablePyGraph::<Directed>::default(),
+                node_removed: false,
+                check_cycle: false,
+                cycle_state: algo::DfsSpace::default(),
+                multigraph,
+                attrs: py.None(),
+            });
+        }
+    } else {
+        num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
+    }
+    if bidirectional {
+        num_edges *= 2;
+    }
+    let mut graph = StablePyGraph::<Directed>::with_capacity(num_nodes, num_edges);
 
-    let nodes: Vec<NodeIndex> = match weights {
+    match weights {
         Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::new();
             if num_nodes < weights.len() && rowlen == 0 {
                 collen = weights.len();
                 rowlen = 1;
@@ -799,40 +915,49 @@ pub fn directed_grid_graph(
                 if node_cnt == 0 {
                     break;
                 }
-                let index = graph.add_node(weight);
-                node_list.push(index);
+                graph.add_node(weight);
                 node_cnt -= 1;
             }
             for _i in 0..node_cnt {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
+                graph.add_node(py.None());
             }
-            node_list
         }
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
+        None => {
+            (0..num_nodes).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
     };
 
     for i in 0..rowlen {
         for j in 0..collen {
             if i + 1 < rowlen {
                 graph.add_edge(
-                    nodes[i * collen + j],
-                    nodes[(i + 1) * collen + j],
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new((i + 1) * collen + j),
                     py.None(),
                 );
                 if bidirectional {
                     graph.add_edge(
-                        nodes[(i + 1) * collen + j],
-                        nodes[i * collen + j],
+                        NodeIndex::new((i + 1) * collen + j),
+                        NodeIndex::new(i * collen + j),
                         py.None(),
                     );
                 }
             }
 
             if j + 1 < collen {
-                graph.add_edge(nodes[i * collen + j], nodes[i * collen + j + 1], py.None());
+                graph.add_edge(
+                    NodeIndex::new(i * collen + j),
+                    NodeIndex::new(i * collen + j + 1),
+                    py.None(),
+                );
                 if bidirectional {
-                    graph.add_edge(nodes[i * collen + j + 1], nodes[i * collen + j], py.None());
+                    graph.add_edge(
+                        NodeIndex::new(i * collen + j + 1),
+                        NodeIndex::new(i * collen + j),
+                        py.None(),
+                    );
                 }
             }
         }
@@ -862,7 +987,7 @@ const MAX_ORDER: u32 = 29;
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than 2**order extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -874,10 +999,10 @@ const MAX_ORDER: u32 = 29;
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.binomial_tree_graph(4)
+///   graph = rustworkx.generators.binomial_tree_graph(4)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -948,7 +1073,7 @@ pub fn binomial_tree_graph(
 /// :param list weights: A list of node weights. If the number of weights is
 ///     less than n, extra nodes with with None will be appended.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -958,10 +1083,10 @@ pub fn binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.full_rary_tree(5, 15)
+///   graph = rustworkx.generators.full_rary_tree(5, 15)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -1032,7 +1157,7 @@ pub fn full_rary_tree(
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1044,10 +1169,10 @@ pub fn full_rary_tree(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_binomial_tree_graph(4)
+///   graph = rustworkx.generators.directed_binomial_tree_graph(4)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -1152,16 +1277,16 @@ pub fn directed_binomial_tree_graph(
 ///        ...   S       ...
 ///
 /// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// Note that if ``d`` is set to ``1`` a :class:`~retworkx.PyGraph` with a
+/// Note that if ``d`` is set to ``1`` a :class:`~rustworkx.PyGraph` with a
 /// single node will be returned.
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~retworkx.PyGraph` with a single node will be returned.
+///     :class:`~rustworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1171,26 +1296,12 @@ pub fn directed_binomial_tree_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
+///   import rustworkx.generators
+///   from rustworkx.visualization import graphviz_draw
 ///
-///   import pydot
-///   from PIL import Image
-///
-///   import retworkx.generators
-///
-///   graph = retworkx.generators.heavy_square_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graph = rustworkx.generators.heavy_square_graph(3)
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(d, /, multigraph=True)")]
@@ -1298,13 +1409,13 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///        ...   S       ...
 ///
 /// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the [paper](https://arxiv.org/abs/1907.09528).
+/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 /// This function doesn't support the variant Fig 10.b right.
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
+///     :class:`~rustworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1314,26 +1425,12 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
+///   import rustworkx.generators
+///   from rustworkx.visualization import graphviz_draw
 ///
-///   import pydot
-///   from PIL import Image
-///
-///   import retworkx.generators
-///
-///   graph = retworkx.generators.heavy_square_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graph = rustworkx.generators.directed_heavy_square_graph(3)
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(bidirectional = false, multigraph = true)]
 #[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
@@ -1493,9 +1590,9 @@ pub fn directed_heavy_square_graph(
 ///
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~retworkx.PyGraph` with a single node will be returned.
+///     :class:`~rustworkx.PyGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1505,26 +1602,12 @@ pub fn directed_heavy_square_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
+///   import rustworkx.generators
+///   from rustworkx.visualization import graphviz_draw
 ///
-///   import pydot
-///   from PIL import Image
-///
-///   import retworkx.generators
-///
-///   graph = retworkx.generators.heavy_hex_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graph = rustworkx.generators.heavy_hex_graph(3)
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(d, /, multigraph=True)")]
@@ -1655,9 +1738,9 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~retworkx.PyDiGraph` with a single node will be returned.
+///     :class:`~rustworkx.PyDiGraph` with a single node will be returned.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1667,26 +1750,12 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///
 /// .. jupyter-execute::
 ///
-///   import os
-///   import tempfile
+///   import rustworkx.generators
+///   from rustworkx.visualization import graphviz_draw
 ///
-///   import pydot
-///   from PIL import Image
-///
-///   import retworkx.generators
-///
-///   graph = retworkx.generators.heavy_hex_graph(3)
-///   dot_str = graph.to_dot(
-///       lambda node: dict(
+///   graph = rustworkx.generators.directed_heavy_hex_graph(3)
+///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
-///   dot = pydot.graph_from_dot_data(dot_str)[0]
-///
-///   with tempfile.TemporaryDirectory() as tmpdirname:
-///       tmp_path = os.path.join(tmpdirname, 'dag.png')
-///       dot.write_png(tmp_path)
-///       image = Image.open(tmp_path)
-///       os.remove(tmp_path)
-///   image
 ///
 #[pyfunction(bidirectional = false, multigraph = true)]
 #[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
@@ -1829,7 +1898,7 @@ pub fn directed_heavy_hex_graph(
 /// :param int rows: The number of rows to generate the graph with.
 /// :param int cols: The number of columns to generate the graph with.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1841,10 +1910,10 @@ pub fn directed_heavy_hex_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
+///   graph = rustworkx.generators.hexagonal_lattice_graph(2, 2)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -1940,7 +2009,7 @@ pub fn hexagonal_lattice_graph(
 /// :param bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -1952,10 +2021,10 @@ pub fn hexagonal_lattice_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.directed_hexagonal_lattice_graph(2, 3)
+///   graph = rustworkx.generators.directed_hexagonal_lattice_graph(2, 3)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(bidirectional = "false", multigraph = "true")]
@@ -2083,7 +2152,7 @@ pub fn directed_hexagonal_lattice_graph(
 ///
 /// If neither ``num_path_nodes`` nor ``path_weights`` (both described
 /// below) are specified then this is equivalent to
-/// :func:`~retworkx.generators.mesh_graph`
+/// :func:`~rustworkx.generators.mesh_graph`
 ///
 /// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
 ///     with. Node weights will be None if this is specified. If both
@@ -2100,7 +2169,7 @@ pub fn directed_hexagonal_lattice_graph(
 ///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
 ///     be ignored and ``path_weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -2110,10 +2179,10 @@ pub fn directed_hexagonal_lattice_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.lollipop_graph(4, 2)
+///   graph = rustworkx.generators.lollipop_graph(4, 2)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
@@ -2171,7 +2240,7 @@ pub fn lollipop_graph(
 /// :param int n: number of nodes in the internal star and external regular polygon.
 /// :param int k: shift that changes the internal star graph.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -2185,19 +2254,19 @@ pub fn lollipop_graph(
 ///
 /// .. jupyter-execute::
 ///   
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///   
 ///   # Petersen Graph is G(5, 2)
-///   graph = retworkx.generators.generalized_petersen_graph(5, 2)
-///   layout = retworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
+///   graph = rustworkx.generators.generalized_petersen_graph(5, 2)
+///   layout = rustworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
 ///   mpl_draw(graph, pos=layout)
 ///   
 /// .. jupyter-execute::
 ///   
 ///   # Möbius–Kantor Graph is G(8, 3)
-///   graph = retworkx.generators.generalized_petersen_graph(8, 3)
-///   layout = retworkx.shell_layout(
+///   graph = rustworkx.generators.generalized_petersen_graph(8, 3)
+///   layout = rustworkx.shell_layout(
 ///     graph, nlist=[[0, 1, 2, 3, 4, 5, 6, 7], [10, 11, 12, 13, 14, 15, 8, 9]]
 ///   )
 ///   mpl_draw(graph, pos=layout)
@@ -2266,7 +2335,7 @@ pub fn generalized_petersen_graph(
 ///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
 ///     ``path_weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~retworkx.PyGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -2276,10 +2345,10 @@ pub fn generalized_petersen_graph(
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = retworkx.generators.barbell_graph(4, 2)
+///   graph = rustworkx.generators.barbell_graph(4, 2)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]

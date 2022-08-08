@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph;
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use hashbrown::{HashMap, HashSet};
 use std::cmp::Reverse;
