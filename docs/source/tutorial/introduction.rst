@@ -6,10 +6,36 @@
 Introduction to rustworkx
 #########################
 
+The rustworkx library is a Python library for working with graphs (or networks)
+and graph theory.
+
 This guide serves as an introduction to working with rustworkx. If you're a
 current or past `NetworkX <https:://networkx.org>`__ user who is looking at
 using rustworkx as a replacement for NetworkX, you can also refer to
 :ref:`networkx` for a detailed comparison.
+
+Installing rustworkx
+====================
+
+To install rustworkx you need a Python installation. Rustworkx works in any
+Python environment. If you already have Python, you can install rustworkx with::
+
+    pip install rustworkx
+
+(if you're running on a supported platform, if you're not you will need to
+refer to the :ref:`install-unsupported` on how to build and install)
+
+How to import rustworkx
+=======================
+
+To access rustworkx and its functions import it into your Python code like this:
+
+.. jupyter-execute::
+
+    import rustworkx as rx
+
+We shorten the name to ``rx`` for better readability of code using Rustworkx.
+This is a widely adopted convention that you can follow.
 
 Creating a Graph
 ================
@@ -19,7 +45,6 @@ can run the following code:
 
 .. jupyter-execute::
 
-    import rustworkx as rx
     G = rx.PyGraph()
 
 A :class:`~rustworkx.PyGraph` is comprised of nodes (vertices)
@@ -171,8 +196,6 @@ lists of indices for nodes and edges in the graph. For example:
 
 .. jupyter-execute::
 
-    import rustworkx
-
     graph = rustworkx.PyGraph()
     graph.add_nodes_from(list(range(5)))
     graph.add_nodes_from(list(range(2)))
@@ -308,8 +331,6 @@ accessed and modified after creation with the :attr:`~.PyGraph.attrs` attribute.
 This attribute can be any Python object and defaults to being ``None`` if not
 specified at graph object creation time. For example::
 
-    import rustworkx as rx
-
     graph = rx.PyGraph(attrs=dict(day="Friday"))
     graph.attrs['day'] = "Monday"
 
@@ -335,7 +356,6 @@ directed graphs. For example:
 
 .. jupyter-execute::
 
-    import rustworkx as rx
     from rustworkx.visualization import mpl_draw
 
     path_graph = rx.generators.directed_path_graph(5)

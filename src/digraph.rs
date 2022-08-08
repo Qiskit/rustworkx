@@ -67,9 +67,9 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///
 /// .. jupyter-execute::
 ///
-///        import rustworkx
+///        import rustworkx as rx
 ///
-///        graph = rustworkx.PyDiGraph()
+///        graph = rx.PyDiGraph()
 ///        graph.add_nodes_from(list(range(5)))
 ///        graph.add_nodes_from(list(range(2)))
 ///        graph.remove_node(2)
@@ -83,9 +83,9 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///
 /// .. jupyter-execute::
 ///
-///     import rustworkx
+///     import rustworkx as rx
 ///
-///     graph = rustworkx.PyDiGraph()
+///     graph = rx.PyDiGraph()
 ///     data_payload = "An arbitrary Python object"
 ///     node_index = graph.add_node(data_payload)
 ///     print("Node Index: %s" % node_index)
@@ -96,9 +96,9 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///
 /// .. jupyter-execute::
 ///
-///     import rustworkx
+///     import rustworkx as rx
 ///
-///     graph = rustworkx.PyDiGraph()
+///     graph = rx.PyDiGraph()
 ///     data_payload = "An arbitrary Python object"
 ///     node_index = graph.add_node(data_payload)
 ///     graph[node_index] = "New Payload"
@@ -111,14 +111,14 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// however you can enable it by setting the ``check_cycle`` attribute to True.
 /// For example::
 ///
-///     import rustworkx
-///     dag = rustworkx.PyDiGraph()
+///     import rustworkx as rx
+///     dag = rx.PyDiGraph()
 ///     dag.check_cycle = True
 ///
 /// or at object creation::
 ///
-///     import rustworkx
-///     dag = rustworkx.PyDiGraph(check_cycle=True)
+///     import rustworkx as rx
+///     dag = rx.PyDiGraph(check_cycle=True)
 ///
 /// With check_cycle set to true any calls to :meth:`PyDiGraph.add_edge` will
 /// ensure that no cycles are added, ensuring that the PyDiGraph class truly
@@ -136,8 +136,8 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// ``multigraph`` kwarg to ``False`` when calling the ``PyDiGraph``
 /// constructor. For example::
 ///
-///     import rustworkx
-///     graph = rustworkx.PyDiGraph(multigraph=False)
+///     import rustworkx as rx
+///     graph = rx.PyDiGraph(multigraph=False)
 ///
 /// This can only be set at ``PyDiGraph`` initialization and not adjusted after
 /// creation. When :attr:`~rustworkx.PyDiGraph.multigraph` is set to ``False``
@@ -1759,9 +1759,9 @@ impl PyDiGraph {
     ///   import pydot
     ///   from PIL import Image
     ///
-    ///   import rustworkx
+    ///   import rustworkx as rx
     ///
-    ///   graph = rustworkx.directed_gnp_random_graph(15, .25)
+    ///   graph = rx.directed_gnp_random_graph(15, .25)
     ///   dot_str = graph.to_dot(
     ///       lambda node: dict(
     ///           color='black', fillcolor='lightblue', style='filled'))
@@ -1823,7 +1823,7 @@ impl PyDiGraph {
     ///
     ///   import tempfile
     ///
-    ///   import rustworkx
+    ///   import rustworkx as rx
     ///   from rustworkx.visualization import mpl_draw
     ///
     ///   with tempfile.NamedTemporaryFile('wt') as fd:
@@ -1834,7 +1834,7 @@ impl PyDiGraph {
     ///       fd.write('1 2\n')
     ///       fd.write('2 3\n')
     ///       fd.flush()
-    ///       graph = rustworkx.PyDiGraph.read_edge_list(path)
+    ///       graph = rx.PyDiGraph.read_edge_list(path)
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
@@ -1943,9 +1943,9 @@ impl PyDiGraph {
     ///     import os
     ///     import tempfile
     ///
-    ///     import rustworkx
+    ///     import rustworkx as rx
     ///
-    ///     graph = rustworkx.generators.directed_path_graph(5)
+    ///     graph = rx.generators.directed_path_graph(5)
     ///     path = os.path.join(tempfile.gettempdir(), "edge_list")
     ///     graph.write_edge_list(path, deliminator=',')
     ///     # Print file contents
@@ -2093,11 +2093,11 @@ impl PyDiGraph {
     ///
     /// .. jupyter-execute::
     ///
-    ///   import rustworkx
+    ///   import rustworkx as rx
     ///   from rustworkx.visualization import mpl_draw
     ///
     ///   # Build first graph and visualize:
-    ///   graph = rustworkx.PyDiGraph()
+    ///   graph = rx.PyDiGraph()
     ///   node_a = graph.add_node('A')
     ///   node_b = graph.add_child(node_a, 'B', 'A to B')
     ///   node_c = graph.add_child(node_b, 'C', 'B to C')
@@ -2108,7 +2108,7 @@ impl PyDiGraph {
     /// .. jupyter-execute::
     ///
     ///   # Build second graph and visualize:
-    ///   other_graph = rustworkx.PyDiGraph()
+    ///   other_graph = rx.PyDiGraph()
     ///   node_d = other_graph.add_node('D')
     ///   other_graph.add_child(node_d, 'E', 'D to E')
     ///   mpl_draw(other_graph, with_labels=True, labels=str, edge_labels=str)
