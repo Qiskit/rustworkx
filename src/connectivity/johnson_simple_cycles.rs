@@ -93,9 +93,7 @@ pub fn simple_cycles(py: Python, graph: &PyDiGraph) -> Vec<Vec<usize>> {
     // from Johnson's algorithm
     let self_cycles: Vec<NodeIndex> = graph_clone
         .node_indices()
-        .filter(|n| {
-            graph_clone.neighbors(*n).any(|x| x == *n)
-        })
+        .filter(|n| graph_clone.neighbors(*n).any(|x| x == *n))
         .collect();
     for node in self_cycles {
         out_cycles.push(vec![node.index()]);
