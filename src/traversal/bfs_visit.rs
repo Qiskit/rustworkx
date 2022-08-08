@@ -16,7 +16,7 @@ use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::Control;
 
 use crate::{PruneSearch, StopSearch};
-use retworkx_core::traversal::BfsEvent;
+use rustworkx_core::traversal::BfsEvent;
 
 #[derive(FromPyObject)]
 pub struct PyBfsVisitor {

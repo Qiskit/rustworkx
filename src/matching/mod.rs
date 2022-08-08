@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph;
-use retworkx_core::max_weight_matching as mwm;
+use rustworkx_core::max_weight_matching as mwm;
 
 use hashbrown::HashSet;
 
@@ -24,7 +24,7 @@ use petgraph::visit::IntoEdgeReferences;
 
 use crate::weight_callable;
 
-/// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
+/// Compute a maximum-weighted matching for a :class:`~rustworkx.PyGraph`
 ///
 /// A matching is a subset of edges in which no node occurs more than once.
 /// The weight of a matching is the sum of the weights of its edges.

@@ -12,8 +12,8 @@
 
 use hashbrown::HashMap;
 
-use retworkx_core::dictmap::*;
-use retworkx_core::shortest_path::dijkstra;
+use rustworkx_core::dictmap::*;
+use rustworkx_core::shortest_path::dijkstra;
 
 use std::sync::RwLock;
 

@@ -33,7 +33,7 @@ use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
 use crate::iterators::{AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList};
-use retworkx_core::connectivity;
+use rustworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -380,7 +380,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     from
 /// :param callable weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         dag_adjacency_matrix(dag, weight_fn: lambda x: 1)
@@ -431,7 +431,7 @@ pub fn digraph_adjacency_matrix(
 /// :param PyGraph graph: The graph used to generate the adjacency matrix from
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         graph_adjacency_matrix(graph, weight_fn: lambda x: 1)
@@ -486,7 +486,7 @@ pub fn graph_adjacency_matrix(
 /// .. note::
 ///
 ///     Parallel edges and self-loops are never created,
-///     even if the :attr:`~retworkx.PyGraph.multigraph`
+///     even if the :attr:`~rustworkx.PyGraph.multigraph`
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
@@ -515,12 +515,12 @@ pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::P
 /// :param PyDiGraph graph: The graph to be used.
 ///
 /// :returns: The complement of the graph.
-/// :rtype: :class:`~retworkx.PyDiGraph`
+/// :rtype: :class:`~rustworkx.PyDiGraph`
 ///
 /// .. note::
 ///
 ///     Parallel edges and self-loops are never created,
-///     even if the :attr:`~retworkx.PyDiGraph.multigraph`
+///     even if the :attr:`~rustworkx.PyDiGraph.multigraph`
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]

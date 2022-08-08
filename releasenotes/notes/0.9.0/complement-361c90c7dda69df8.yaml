@@ -1,5 +1,5 @@
 ---
 features:
   - |
-    Added a new function :func:`~retworkx.complement` to calculate the graph complement
-    of a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    Added a new function :func:`~rustworkx.complement` to calculate the graph complement
+    of a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
