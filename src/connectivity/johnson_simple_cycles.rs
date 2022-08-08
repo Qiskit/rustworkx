@@ -66,16 +66,14 @@ pub fn simple_cycles(py: Python, graph: &PyDiGraph) -> Vec<Vec<usize>> {
                    block: &mut HashMap<NodeIndex, HashSet<NodeIndex>>| {
         let mut stack: HashSet<NodeIndex> = HashSet::new();
         stack.insert(node);
-        while !stack.is_empty() {
-            let stack_node = set_pop(&mut stack).unwrap();
-            if blocked.contains(&stack_node) {
+        while let Some(stack_node) = set_pop(&mut stack) {
+            if blocked.remove(&stack_node) {
                 match block.get_mut(&stack_node) {
                     // stack.update(block[stack_node]):
                     Some(block_set) => {
-                        block_set.iter().copied().for_each(|n| {
+                        block_set.drain().for_each(|n| {
                             stack.insert(n);
                         });
-                        block_set.clear();
                     }
                     // If block doesn't have stack_node treat it as an empty set
                     // (so no updates to stack) and populate it with an empty
@@ -96,8 +94,7 @@ pub fn simple_cycles(py: Python, graph: &PyDiGraph) -> Vec<Vec<usize>> {
     let self_cycles: Vec<NodeIndex> = graph_clone
         .node_indices()
         .filter(|n| {
-            let neigh: HashSet<NodeIndex> = graph_clone.neighbors(*n).collect();
-            neigh.contains(n)
+            graph_clone.neighbors(*n).any(|x| x == *n)
         })
         .collect();
     for node in self_cycles {
@@ -110,17 +107,10 @@ pub fn simple_cycles(py: Python, graph: &PyDiGraph) -> Vec<Vec<usize>> {
 
     let mut strongly_connected_components: Vec<Vec<NodeIndex>> = kosaraju_scc(&graph_clone)
         .into_iter()
-        .filter_map(|component| {
-            if component.len() > 1 {
-                Some(component)
-            } else {
-                None
-            }
-        })
+        .filter(|component| component.len() > 1)
         .collect();
 
-    while !strongly_connected_components.is_empty() {
-        let mut scc = strongly_connected_components.pop().unwrap();
+    while let Some(mut scc) = strongly_connected_components.pop() {
         let (subgraph, node_map) = build_subgraph(py, &graph_clone, &scc);
         let reverse_node_map: HashMap<NodeIndex, NodeIndex> =
             node_map.iter().map(|(k, v)| (*v, *k)).collect();
@@ -137,10 +127,8 @@ pub fn simple_cycles(py: Python, graph: &PyDiGraph) -> Vec<Vec<usize>> {
                 .neighbors(start_node)
                 .collect::<HashSet<NodeIndex>>(),
         )];
-        while !stack.is_empty() {
-            let (this_node, neighbors) = stack.last_mut().unwrap();
-            if !neighbors.is_empty() {
-                let next_node = set_pop(neighbors).unwrap();
+        while let Some((this_node, neighbors)) = stack.last_mut() {
+            if let Some(next_node) = set_pop(neighbors) {
                 if next_node == start_node {
                     // Out path in input graph basis
                     let mut out_path: Vec<usize> = Vec::with_capacity(path.len());
@@ -149,7 +137,7 @@ pub fn simple_cycles(py: Python, graph: &PyDiGraph) -> Vec<Vec<usize>> {
                         closed.insert(*n);
                     }
                     out_cycles.push(out_path);
-                } else if !blocked.contains(&next_node) {
+                } else if blocked.insert(next_node) {
                     path.push(next_node);
                     stack.push((
                         next_node,
@@ -167,20 +155,8 @@ pub fn simple_cycles(py: Python, graph: &PyDiGraph) -> Vec<Vec<usize>> {
                     unblock(*this_node, &mut blocked, &mut block);
                 } else {
                     for neighbor in subgraph.neighbors(*this_node) {
-                        match block.get_mut(&neighbor) {
-                            Some(block_neighbor) => {
-                                if !block_neighbor.contains(this_node) {
-                                    block_neighbor.insert(*this_node);
-                                }
-                            }
-                            // If block[neighbor] doesn't exist we can treat this as not having
-                            // this_node. So set the value with a new set containing this_node.
-                            None => {
-                                let mut block_set: HashSet<NodeIndex> = HashSet::new();
-                                block_set.insert(*this_node);
-                                block.insert(neighbor, block_set);
-                            }
-                        };
+                        let block_neighbor = block.entry(neighbor).or_insert_with(HashSet::new);
+                        block_neighbor.insert(*this_node);
                     }
                 }
                 stack.pop();
