@@ -53,8 +53,8 @@ Contents:
    :maxdepth: 2
 
    Overview and Installation <README>
-   Retworkx Tutorials and Guides <tutorial/index>
-   Retworkx API <api>
+   Rustworkx Tutorials and Guides <tutorial/index>
+   Rustworkx API <api>
    Visualization <visualization>
    Release Notes <release_notes>
    Contributing Guide <CONTRIBUTING>
