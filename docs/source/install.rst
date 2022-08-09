@@ -86,7 +86,7 @@ source.
      - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
    * - Linux
      - s390x
-     - :ref:`tier-3
+     - :ref:`tier-3`
      - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
    * - macOS (10.9 or newer)
      - x86_64
