@@ -18,7 +18,7 @@ simple as running::
 This will install a precompiled version of rustworkx into your python
 environment.
 
-.. install-unsupported::
+.. _install-unsupported::
 
 Installing on a platform without precompiled binaries
 -----------------------------------------------------
@@ -48,7 +48,7 @@ just as it would if there was a prebuilt binary available.
     ``pip install -U pip`` or manually install ``setuptools-rust`` with:
     ``pip install setuptools-rust`` and try again.
 
-.. platform-suppport::
+.. _platform-suppport::
 
 Platform Support
 ================
@@ -105,7 +105,7 @@ source.
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
      -
 
-.. tier-1::
+.. _tier-1::
 
 Tier 1
 ------
@@ -116,7 +116,7 @@ binaries are built, tested, and published to PyPI as part of the release
 process. These platforms are expected to be installable with just a functioning
 Python environment.
 
-.. tier-2::
+.. _tier-2::
 
 Tier 2
 ------
@@ -126,7 +126,7 @@ However, pre-compiled binaries are built, tested, and published to PyPI as part
 of the release process and these packages can be expected to be installed with
 just a functioning Python environment.
 
-.. tier-3::
+.. _tier-3::
 
 Tier 3
 ------
@@ -137,7 +137,7 @@ part of the release process. However, they may not installable with just a
 functioning Python environment and you may be required to build Numpy from
 source, which requires a C/C++ compiler, as part of the installation process.
 
-.. tier-4::
+.. _tier-4::
 
 Tier 4
 ------
