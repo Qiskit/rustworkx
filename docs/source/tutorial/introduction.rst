@@ -196,7 +196,7 @@ lists of indices for nodes and edges in the graph. For example:
 
 .. jupyter-execute::
 
-    graph = rustworkx.PyGraph()
+    graph = rx.PyGraph()
     graph.add_nodes_from(list(range(5)))
     graph.add_nodes_from(list(range(2)))
     graph.remove_node(2)
