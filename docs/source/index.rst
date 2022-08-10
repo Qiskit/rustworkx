@@ -52,7 +52,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   Installation and Getting Started <install.rst>
+   Installation and Getting Started <install>
    Rustworkx Tutorials and Guides <tutorial/index>
    Rustworkx API <api>
    Visualization <visualization>
