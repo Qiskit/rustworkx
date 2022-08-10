@@ -44,6 +44,8 @@ use std::hash::Hasher;
 use num_bigint::BigUint;
 use rustworkx_core::dictmap::*;
 
+use ndarray::prelude::*;
+use numpy::{IntoPyArray, PyArrayDescr};
 use pyo3::class::iter::IterNextOutput;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::PyVisit;
@@ -413,6 +415,63 @@ enum SliceOrInt<'a> {
     Int(isize),
 }
 
+trait PyConvertToPyArray {
+    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject>;
+}
+
+macro_rules! py_convert_to_py_array_impl {
+    ($($t:ty)*) => ($(
+        impl PyConvertToPyArray for Vec<$t> {
+            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+                Ok(self.clone().into_pyarray(py).into())
+            }
+        }
+    )*)
+}
+
+macro_rules! py_convert_to_py_array_obj_impl {
+    ($t:ty) => {
+        impl PyConvertToPyArray for Vec<$t> {
+            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+                let pyobj_vec: Vec<PyObject> = self.iter().map(|x| x.clone().into_py(py)).collect();
+                Ok(pyobj_vec.into_pyarray(py).into())
+            }
+        }
+    };
+}
+
+py_convert_to_py_array_impl! {usize u8 u16 u32 u64 isize i8 i16 i32 i64 f32 f64}
+
+py_convert_to_py_array_obj_impl! {EdgeList}
+py_convert_to_py_array_obj_impl! {(PyObject, Vec<PyObject>)}
+
+impl PyConvertToPyArray for Vec<(usize, usize)> {
+    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+        let mut mat = Array2::<usize>::from_elem((self.len(), 2), 0);
+
+        for (index, element) in self.iter().enumerate() {
+            mat[[index, 0]] = element.0;
+            mat[[index, 1]] = element.1;
+        }
+
+        Ok(mat.into_pyarray(py).into())
+    }
+}
+
+impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
+    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+        let mut mat = Array2::<PyObject>::from_elem((self.len(), 3), py.None());
+
+        for (index, element) in self.iter().enumerate() {
+            mat[[index, 0]] = element.0.into_py(py);
+            mat[[index, 1]] = element.1.into_py(py);
+            mat[[index, 2]] = element.2.clone();
+        }
+
+        Ok(mat.into_pyarray(py).into())
+    }
+}
+
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
@@ -519,6 +578,12 @@ macro_rules! custom_vec_iter_impl {
                         }
                     }
                 }
+            }
+
+            fn __array__(&self, py: Python, _dt: Option<&PyArrayDescr>) -> PyResult<PyObject> {
+                // Note: we accept the dtype argument on the signature but
+                // effictively do nothing with it to let Numpy handle the conversion itself
+                self.$data.convert_to_pyarray(py)
             }
 
             fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
