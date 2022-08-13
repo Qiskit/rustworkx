@@ -42,8 +42,10 @@ use std::convert::TryInto;
 use std::hash::Hasher;
 
 use num_bigint::BigUint;
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
+use ndarray::prelude::*;
+use numpy::{IntoPyArray, PyArrayDescr};
 use pyo3::class::iter::IterNextOutput;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
 use pyo3::gc::PyVisit;
@@ -413,10 +415,67 @@ enum SliceOrInt<'a> {
     Int(isize),
 }
 
+trait PyConvertToPyArray {
+    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject>;
+}
+
+macro_rules! py_convert_to_py_array_impl {
+    ($($t:ty)*) => ($(
+        impl PyConvertToPyArray for Vec<$t> {
+            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+                Ok(self.clone().into_pyarray(py).into())
+            }
+        }
+    )*)
+}
+
+macro_rules! py_convert_to_py_array_obj_impl {
+    ($t:ty) => {
+        impl PyConvertToPyArray for Vec<$t> {
+            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+                let pyobj_vec: Vec<PyObject> = self.iter().map(|x| x.clone().into_py(py)).collect();
+                Ok(pyobj_vec.into_pyarray(py).into())
+            }
+        }
+    };
+}
+
+py_convert_to_py_array_impl! {usize u8 u16 u32 u64 isize i8 i16 i32 i64 f32 f64}
+
+py_convert_to_py_array_obj_impl! {EdgeList}
+py_convert_to_py_array_obj_impl! {(PyObject, Vec<PyObject>)}
+
+impl PyConvertToPyArray for Vec<(usize, usize)> {
+    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+        let mut mat = Array2::<usize>::from_elem((self.len(), 2), 0);
+
+        for (index, element) in self.iter().enumerate() {
+            mat[[index, 0]] = element.0;
+            mat[[index, 1]] = element.1;
+        }
+
+        Ok(mat.into_pyarray(py).into())
+    }
+}
+
+impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
+    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+        let mut mat = Array2::<PyObject>::from_elem((self.len(), 3), py.None());
+
+        for (index, element) in self.iter().enumerate() {
+            mat[[index, 0]] = element.0.into_py(py);
+            mat[[index, 1]] = element.1.into_py(py);
+            mat[[index, 2]] = element.2.clone();
+        }
+
+        Ok(mat.into_pyarray(py).into())
+    }
+}
+
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
-        #[pyclass(module = "retworkx")]
+        #[pyclass(module = "rustworkx")]
         #[derive(Clone)]
         pub struct $name {
             pub $data: Vec<$T>,
@@ -521,6 +580,12 @@ macro_rules! custom_vec_iter_impl {
                 }
             }
 
+            fn __array__(&self, py: Python, _dt: Option<&PyArrayDescr>) -> PyResult<PyObject> {
+                // Note: we accept the dtype argument on the signature but
+                // effictively do nothing with it to let Numpy handle the conversion itself
+                self.$data.convert_to_pyarray(py)
+            }
+
             fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
                 PyGCProtocol::__traverse__(self, vis)
             }
@@ -536,7 +601,7 @@ custom_vec_iter_impl!(
     BFSSuccessors,
     bfs_successors,
     (PyObject, Vec<PyObject>),
-    "A custom class for the return from :func:`retworkx.bfs_successors`
+    "A custom class for the return from :func:`rustworkx.bfs_successors`
 
     The class can is a read-only sequence of tuples of the form::
 
@@ -546,7 +611,7 @@ custom_vec_iter_impl!(
     for the nodes in the graph.
 
     This class is a container class for the results of the
-    :func:`retworkx.bfs_successors` function. It implements the Python
+    :func:`rustworkx.bfs_successors` function. It implements the Python
     sequence protocol. So you can treat the return as read-only
     sequence/list that is integer indexed. If you want to use it as an
     iterator you can by wrapping it in an ``iter()`` that will yield the
@@ -554,10 +619,10 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
-        bfs_succ = retworkx.bfs_successors(0)
+        graph = rustworkx.generators.directed_path_graph(5)
+        bfs_succ = rustworkx.bfs_successors(0)
         # Index based access
         third_element = bfs_succ[2]
         # Use as iterator
@@ -601,10 +666,10 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
-        nodes = retworkx.node_indices(0)
+        graph = rustworkx.generators.directed_path_graph(5)
+        nodes = rustworkx.node_indices(0)
         # Index based access
         third_element = nodes[2]
         # Use as iterator
@@ -639,9 +704,9 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
+        graph = rustworkx.generators.directed_path_graph(5)
         edges = graph.edge_list()
         # Index based access
         third_element = edges[2]
@@ -677,9 +742,9 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
+        graph = rustworkx.generators.directed_path_graph(5)
         edges = graph.weighted_edge_list()
         # Index based access
         third_element = edges[2]
@@ -721,10 +786,10 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
-        edges = retworkx.edge_indices()
+        graph = rustworkx.generators.directed_path_graph(5)
+        edges = rustworkx.edge_indices()
         # Index based access
         third_element = edges[2]
         # Use as iterator
@@ -773,10 +838,10 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.hexagonal_lattice_graph(2, 2)
-        chains = retworkx.chain_decomposition(graph)
+        graph = rustworkx.generators.hexagonal_lattice_graph(2, 2)
+        chains = rustworkx.chain_decomposition(graph)
         # Index based access
         third_chain = chains[2]
         # Use as iterator
@@ -790,7 +855,7 @@ impl PyGCProtocol for Chains {}
 
 macro_rules! py_iter_protocol_impl {
     ($name:ident, $data:ident, $T:ty) => {
-        #[pyclass(module = "retworkx")]
+        #[pyclass(module = "rustworkx")]
         pub struct $name {
             pub $data: Vec<$T>,
             iter_pos: usize,
@@ -821,7 +886,7 @@ macro_rules! custom_hash_map_iter_impl {
         $K:ty, $V:ty, $doc:literal
     ) => {
         #[doc = $doc]
-        #[pyclass(mapping, module = "retworkx")]
+        #[pyclass(mapping, module = "rustworkx")]
         #[derive(Clone)]
         pub struct $name {
             pub $data: DictMap<$K, $V>,
@@ -946,7 +1011,7 @@ custom_hash_map_iter_impl!(
 
         {1: [0, 1], 3: [0.5, 1.2]}
 
-    It is used to efficiently represent a retworkx generated 2D layout for a
+    It is used to efficiently represent a rustworkx generated 2D layout for a
     graph. It behaves as a drop in replacement for a readonly ``dict``.
     "
 );
@@ -970,7 +1035,7 @@ custom_hash_map_iter_impl!(
 
         {1: (0, 1, 'weight'), 3: (2, 3, 1.2)}
 
-    It is used to efficiently represent an edge index map for a retworkx
+    It is used to efficiently represent an edge index map for a rustworkx
     graph. It behaves as a drop in replacement for a readonly ``dict``.
     "
 );
@@ -1006,10 +1071,10 @@ impl PyGCProtocol for EdgeIndexMap {
 ///
 /// For example::
 ///
-///     import retworkx
+///     import rustworkx
 ///
-///     graph = retworkx.generators.directed_path_graph(5)
-///     edges = retworkx.dijkstra_shortest_paths(0)
+///     graph = rustworkx.generators.directed_path_graph(5)
+///     edges = rustworkx.dijkstra_shortest_paths(0)
 ///     # Target node access
 ///     third_element = edges[2]
 ///     # Use as iterator
@@ -1019,7 +1084,7 @@ impl PyGCProtocol for EdgeIndexMap {
 ///     second_target = next(edges_iter)
 ///     second_path = edges[second_target]
 ///
-#[pyclass(mapping, module = "retworkx")]
+#[pyclass(mapping, module = "rustworkx")]
 #[derive(Clone)]
 pub struct PathMapping {
     pub paths: DictMap<usize, Vec<usize>>,
@@ -1165,7 +1230,7 @@ impl PyDisplay for PathMapping {
 /// return a mapping of target nodes and paths. It implements the Python
 /// mapping protocol. So you can treat the return as a read-only
 /// mapping/dict.
-#[pyclass(mapping, module = "retworkx")]
+#[pyclass(mapping, module = "rustworkx")]
 #[derive(Clone)]
 pub struct MultiplePathMapping {
     pub paths: DictMap<usize, Vec<Vec<usize>>>,
@@ -1343,10 +1408,10 @@ custom_hash_map_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
-        edges = retworkx.dijkstra_shortest_path_lengths(0)
+        graph = rustworkx.generators.directed_path_graph(5)
+        edges = rustworkx.dijkstra_shortest_path_lengths(0)
         # Target node access
         third_element = edges[2]
         # Use as iterator
@@ -1428,10 +1493,10 @@ custom_hash_map_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
-        edges = retworkx.num_shortest_paths_unweighted(0)
+        graph = rustworkx.generators.directed_path_graph(5)
+        edges = rustworkx.num_shortest_paths_unweighted(0)
         # Target node access
         third_element = edges[2]
         # Use as iterator
@@ -1494,10 +1559,10 @@ custom_hash_map_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
-        edges = retworkx.all_pairs_dijkstra_shortest_path_lengths(graph)
+        graph = rustworkx.generators.directed_path_graph(5)
+        edges = rustworkx.all_pairs_dijkstra_shortest_path_lengths(graph)
         # Target node access
         third_node_shortest_path_lengths = edges[2]
 
@@ -1530,10 +1595,10 @@ custom_hash_map_iter_impl!(
 
     For example::
 
-        import retworkx
+        import rustworkx
 
-        graph = retworkx.generators.directed_path_graph(5)
-        edges = retworkx.all_pairs_dijkstra_shortest_paths(graph)
+        graph = rustworkx.generators.directed_path_graph(5)
+        edges = rustworkx.all_pairs_dijkstra_shortest_paths(graph)
         # Target node access
         third_node_shortest_paths = edges[2]
 

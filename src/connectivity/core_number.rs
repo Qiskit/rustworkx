@@ -11,7 +11,7 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
