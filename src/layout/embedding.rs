@@ -11,7 +11,7 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::{IndexSet, IndexMap};
+use indexmap::{IndexMap, IndexSet};
 use petgraph::prelude::*;
 use petgraph::visit::NodeIndexable;
 use petgraph::Directed;
@@ -19,8 +19,8 @@ use rayon::prelude::*; // For par_sort
 use std::fmt::Debug;
 
 use crate::StablePyGraph;
-use retworkx_core::connectivity::connected_components;
-use retworkx_core::planar::lr_planar::{LRState, Sign};
+use rustworkx_core::connectivity::connected_components;
+use rustworkx_core::planar::lr_planar::{LRState, Sign};
 
 pub type Point = [f64; 2];
 
@@ -121,7 +121,10 @@ impl PlanarEmbedding {
         if let Some(ref_nbr_node) = ref_nbr {
             if self.embedding.find_edge(start_node, ref_nbr_node).is_none() {
                 // RAISE?
-                println!("Cannot add edge to {:?}. Reference neighbor {:?} does not exist", start_node, ref_nbr_node);
+                println!(
+                    "Cannot add edge to {:?}. Reference neighbor {:?} does not exist",
+                    start_node, ref_nbr_node
+                );
                 panic!();
             }
             let cw_ref = self
@@ -132,8 +135,7 @@ impl PlanarEmbedding {
             self.update_edge_weight(start_node, end_node, cw_ref, true);
             self.update_edge_weight(start_node, cw_ref, end_node, false);
             self.update_edge_weight(start_node, end_node, ref_nbr_node, false);
-        }
-        else {
+        } else {
             // The start node has no neighbors
             self.update_edge_weight(start_node, end_node, end_node, true);
             self.update_edge_weight(start_node, end_node, end_node, false);
@@ -167,7 +169,7 @@ impl PlanarEmbedding {
 
     fn add_half_edge_first(&mut self, start_node: NodeIndex, end_node: NodeIndex) {
         // Add half edge that's first_nbr or None
-        let ref_node: Option<NodeIndex> = if self.embedding.node_count() >= start_node.index()
+        let ref_node: Option<NodeIndex> = if self.embedding.node_bound() >= start_node.index()
             && self.embedding[start_node].first_nbr.is_some()
         {
             self.embedding[start_node].first_nbr
@@ -228,7 +230,8 @@ pub fn create_embedding(
     planar_emb: &mut PlanarEmbedding,
     lr_state: &mut LRState<&StablePyGraph<Undirected>>,
 ) {
-    let mut ordered_adjs: IndexMap<NodeIndex, Vec<NodeIndex>> = IndexMap::with_capacity(lr_state.graph.node_count());
+    let mut ordered_adjs: IndexMap<NodeIndex, Vec<NodeIndex>> =
+        IndexMap::with_capacity(lr_state.graph.node_count());
 
     // Create the adjacency list for each node
     for v in lr_state.dir_graph.node_indices() {
@@ -267,7 +270,7 @@ pub fn create_embedding(
     // Start the DFS traversal for the embedding
     let mut left_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
     let mut right_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
-    let mut idx: Vec<usize> = vec![0; lr_state.graph.node_bound()];//ordered_adjs.len()];
+    let mut idx: Vec<usize> = vec![0; lr_state.graph.node_bound()];
 
     for v in lr_state.roots.iter() {
         // Create the stack with an initial entry of v

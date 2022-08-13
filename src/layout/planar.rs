@@ -17,8 +17,8 @@ use super::spring::{recenter, rescale, Point};
 use crate::iterators::Pos2DMapping;
 use crate::layout::embedding::{create_embedding, embedding_to_pos, PlanarEmbedding};
 use crate::StablePyGraph;
-use retworkx_core::dictmap::*;
-use retworkx_core::planar::{is_planar, LRState};
+use rustworkx_core::dictmap::*;
+use rustworkx_core::planar::{is_planar, LRState};
 
 /// If a graph is planar, create a set of position coordinates for a planar
 /// layout that can be passed to a drawer.
