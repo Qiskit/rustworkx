@@ -10,10 +10,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-//! # retworkx-core
+//! # rustworkx-core
 //!
-//! retworkx-core is a graph algorithm crate built on top of [`petgraph`]. It offers
-//! a set of functions that are used in the larger retworkx project but
+//! rustworkx-core is a graph algorithm crate built on top of [`petgraph`]. It offers
+//! a set of functions that are used in the larger rustworkx project but
 //! implemented in a generic manner for use by downstream rust projects.
 //!
 //! ## Usage
@@ -22,14 +22,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! retworkx-core = "0.11"
+//! rustworkx-core = "0.11"
 //! ```
 //!
 //! Then in your code, it may be used something like this:
 //!
 //! ```rust
-//! use retworkx_core::petgraph;
-//! use retworkx_core::centrality::betweenness_centrality;
+//! use rustworkx_core::petgraph;
+//! use rustworkx_core::centrality::betweenness_centrality;
 //!
 //! let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 //!     (1, 2), (2, 3), (3, 4), (1, 4)
@@ -54,10 +54,10 @@
 //!
 //! ## Release Notes
 //!
-//! The release notes for retworkx-core are included as part of the retworkx
+//! The release notes for rustworkx-core are included as part of the rustworkx
 //! documentation which is hosted at:
 //!
-//! <https://qiskit.org/documentation/retworkx/release_notes.html>
+//! <https://qiskit.org/documentation/rustworkx/release_notes.html>
 
 use std::convert::Infallible;
 
@@ -73,7 +73,6 @@ pub mod centrality;
 pub mod connectivity;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
-pub mod planar;
 pub mod shortest_path;
 pub mod traversal;
 // These modules define additional data structures
@@ -82,5 +81,5 @@ pub mod distancemap;
 mod min_scored;
 
 // re-export petgraph so there is a consistent version available to users and
-// then only need to require retworkx-core in their dependencies
+// then only need to require rustworkx-core in their dependencies
 pub use petgraph;

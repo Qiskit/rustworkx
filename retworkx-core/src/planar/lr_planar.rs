@@ -294,9 +294,9 @@ where
                 for idx in count..gidx {
                     tmp_nodes.push(idx);
                 }
-                count = gidx
+                count = gidx;
             }
-            count += 1
+            count += 1;
         }
         for tmp_node in tmp_nodes {
             self.dir_graph.remove_node(NodeIndex::new(tmp_node));

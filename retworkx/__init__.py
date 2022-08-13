@@ -10,87 +10,68 @@
 import sys
 import functools
 
-from .retworkx import *
+from .rustworkx import *
 
 # flake8: noqa
-import retworkx.visit
+import rustworkx.visit
 
-sys.modules["retworkx.generators"] = generators
+sys.modules["rustworkx.generators"] = generators
 
 
 class PyDAG(PyDiGraph):
     """A class for creating direct acyclic graphs.
-
     PyDAG is just an alias of the PyDiGraph class and behaves identically to
-    the :class:`~retworkx.PyDiGraph` class and can be used interchangably
+    the :class:`~rustworkx.PyDiGraph` class and can be used interchangably
     with ``PyDiGraph``. It currently exists solely as a backwards
-    compatibility alias for users of retworkx from prior to the
+    compatibility alias for users of rustworkx from prior to the
     0.4.0 release when there was no PyDiGraph class.
-
     The PyDAG class is used to create a directed graph. It can be a
     multigraph (have multiple edges between nodes). Each node and edge
     (although rarely used for edges) is indexed by an integer id. These ids
     are stable for the lifetime of the graph object and on node or edge
     deletions you can have holes in the list of indices for the graph.
     Node indices will be reused on additions after removal. For example:
-
     .. jupyter-execute::
-
-        import retworkx
-
-        graph = retworkx.PyDAG()
+        import rustworkx
+        graph = rustworkx.PyDAG()
         graph.add_nodes_from(list(range(5)))
         graph.add_nodes_from(list(range(2)))
         graph.remove_node(2)
         print("After deletion:", graph.node_indices())
         res_manual = graph.add_parent(6, None, None)
         print("After adding a new node:", graph.node_indices())
-
     Additionally, each node and edge contains an arbitrary Python object as a
     weight/data payload.
-
     You can use the index for access to the data payload as in the
     following example:
-
     .. jupyter-execute::
-
-        import retworkx
-
-        graph = retworkx.PyDAG()
+        import rustworkx
+        graph = rustworkx.PyDAG()
         data_payload = "An arbitrary Python object"
         node_index = graph.add_node(data_payload)
         print("Node Index: %s" % node_index)
         print(graph[node_index])
-
     The PyDAG class implements the Python mapping protocol for nodes so in
     addition to access you can also update the data payload with:
-
     .. jupyter-execute::
-
-        import retworkx
-
-        graph = retworkx.PyDAG()
+        import rustworkx
+        graph = rustworkx.PyDAG()
         data_payload = "An arbitrary Python object"
         node_index = graph.add_node(data_payload)
         graph[node_index] = "New Payload"
         print("Node Index: %s" % node_index)
         print(graph[node_index])
-
     The PyDAG class has an option for real time cycle checking which can
     be used to ensure any edges added to the graph does not introduce a cycle.
     By default the real time cycle checking feature is disabled for
     performance, however you can enable it by setting the ``check_cycle``
     attribute to True. For example::
-
-        import retworkx
-        dag = retworkx.PyDAG()
+        import rustworkx
+        dag = rustworkx.PyDAG()
         dag.check_cycle = True
-
     or at object creation::
-
-        import retworkx
-        dag = retworkx.PyDAG(check_cycle=True)
-
+        import rustworkx
+        dag = rustworkx.PyDAG(check_cycle=True)
     With check_cycle set to true any calls to :meth:`PyDAG.add_edge` will
     ensure that no cycles are added, ensuring that the PyDAG class truly
     represents a directed acyclic graph. Do note that this cycle checking on
@@ -101,24 +82,19 @@ class PyDAG(PyDiGraph):
     penalty that grows as the graph does.  If you're adding a node and edge at
     the same time, leveraging :meth:`PyDAG.add_child` or
     :meth:`PyDAG.add_parent` will avoid this overhead.
-
     By default a ``PyDAG`` is a multigraph (meaning there can be parallel
     edges between nodes) however this can be disabled by setting the
     ``multigraph`` kwarg to ``False`` when calling the ``PyDAG`` constructor.
     For example::
-
-        import retworkx
-        dag = retworkx.PyDAG(multigraph=False)
-
+        import rustworkx
+        dag = rustworkx.PyDAG(multigraph=False)
     This can only be set at ``PyDiGraph`` initialization and not adjusted after
-    creation. When :attr:`~retworkx.PyDiGraph.multigraph` is set to ``False``
+    creation. When :attr:`~rustworkx.PyDiGraph.multigraph` is set to ``False``
     if a method call is made that would add a parallel edge it will instead
     update the existing edge's weight/data payload.
-
     The maximum number of nodes and edges allowed on a ``PyGraph`` object is
     :math:`2^{32} - 1` (4,294,967,294) each. Attempting to add more nodes or
     edges than this will result in an exception being raised.
-
     :param bool check_cycle: When this is set to ``True`` the created
         ``PyDAG`` has runtime cycle detection enabled.
     :param bool multgraph: When this is set to ``False`` the created
@@ -133,18 +109,15 @@ class PyDAG(PyDiGraph):
 @functools.singledispatch
 def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
     """Get the distance matrix for a graph
-
-    This differs from functions like :func:`~retworkx.floyd_warshall_numpy` in
+    This differs from functions like :func:`~rustworkx.floyd_warshall_numpy` in
     that the edge weight/data payload is not used and each edge is treated as a
     distance of 1.
-
     This function is also multithreaded and will run in parallel if the number
     of nodes in the graph is above the value of ``parallel_threshold`` (it
     defaults to 300). If the function will be running in parallel the env var
     ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
-
     :param graph: The graph to get the distance matrix for, can be either a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param int parallel_threshold: The number of nodes to calculate the
         the distance matrix in parallel at. It defaults to 300, but this can
         be tuned
@@ -155,7 +128,6 @@ def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_val
         value. This is the default value in the output matrix and it is used
         to indicate the absence of an edge between 2 nodes. By default this
         is ``0.0``.
-
     :returns: The distance matrix
     :rtype: numpy.ndarray
     """
@@ -182,27 +154,21 @@ def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
 @functools.singledispatch
 def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disconnected=False):
     r"""Return the average shortest path length with unweighted edges.
-
     The average shortest path length is calculated as
-
     .. math::
-
         a =\sum_{s,t \in V, s \ne t} \frac{d(s, t)}{n(n-1)}
-
     where :math:`V` is the set of nodes in ``graph``, :math:`d(s, t)` is the
     shortest path length from :math:`s` to :math:`t`, and :math:`n` is the
     number of nodes in ``graph``. If ``disconnected`` is set to ``True``,
     the average will be taken only between connected nodes.
-
     This function is also multithreaded and will run in parallel if the number
     of nodes in the graph is above the value of ``parallel_threshold`` (it
     defaults to 300). If the function will be running in parallel the env var
     ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
     By default it will use all available CPUs if the environment variable is
     not specified.
-
     :param graph: The graph to compute the average shortest path length for,
-        can be either a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        can be either a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param int parallel_threshold: The number of nodes to calculate the
         the distance matrix in parallel at. It defaults to 300, but this can
         be tuned to any number of nodes.
@@ -212,10 +178,8 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disco
     :param bool disconnected: If set to ``True`` only connected vertex pairs
         will be included in the calculation. If ``False``, infinity is returned
         for disconnected graphs. Default: ``False``.
-
     :returns: The average shortest path length. If no vertex pairs can be included
         in the calculation this will return NaN.
-
     :rtype: float
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -243,23 +207,17 @@ def _graph_unweighted_shortest_path_length(graph, parallel_threshold=300, discon
 @functools.singledispatch
 def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     """Return the adjacency matrix for a graph object
-
     In the case where there are multiple edges between nodes the value in the
     output matrix will be the sum of the edges' weights.
-
     :param graph: The graph used to generate the adjacency matrix from. Can
-        either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        either be a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param callable weight_fn: A callable object (function, lambda, etc) which
         will be passed the edge object and expected to return a ``float``. This
-        tells retworkx/rust how to extract a numerical weight as a ``float``
+        tells rustworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
-
             adjacency_matrix(graph, weight_fn: lambda x: 1)
-
         to return a weight of 1 for all edges. Also::
-
             adjacency_matrix(graph, weight_fn: lambda x: float(x))
-
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
         for all edges.
@@ -269,7 +227,6 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
         value. This is the default value in the output matrix and it is used
         to indicate the absence of an edge between 2 nodes. By default this is
         ``0.0``.
-
      :return: The adjacency matrix for the input dag as a numpy array
      :rtype: numpy.ndarray
     """
@@ -299,11 +256,9 @@ def _graph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_valu
 @functools.singledispatch
 def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     """Return all simple paths between 2 nodes in a PyGraph object
-
     A simple path is a path with no repeated nodes.
-
     :param graph: The graph to find the path in. Can either be a
-        class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int from_: The node index to find the paths from
     :param int to: The node index to find the paths to
     :param int min_depth: The minimum depth of the path to include in the
@@ -312,7 +267,6 @@ def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     :param int cutoff: The maximum depth of path to include in the output list
         of paths. By default includes all paths regardless of depth, setting to
         0 will behave like default.
-
     :returns: A list of lists where each inner list is a path of node indices
     :rtype: list
     """
@@ -337,30 +291,23 @@ def floyd_warshall(
     parallel_threshold=300,
 ):
     """Find all-pairs shortest path lengths using Floyd's algorithm
-
     Floyd's algorithm is used for finding shortest paths in dense graphs
     or graphs with negative weights (where Dijkstra's algorithm fails).
-
     This function is multithreaded and will launch a pool with threads equal
     to the number of CPUs by default if the number of nodes in the graph is
     above the value of ``parallel_threshold`` (it defaults to 300).
     You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads if parallelization was enabled.
-
     :param graph: The graph to run Floyd's algorithm on. Can
-        either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        either be a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param callable weight_fn: A callable object (function, lambda, etc) which
         will be passed the edge object and expected to return a ``float``. This
-        tells retworkx/rust how to extract a numerical weight as a ``float``
+        tells rustworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
-
             floyd_warshall(graph, weight_fn= lambda x: 1)
-
         to return a weight of 1 for all edges. Also::
-
             floyd_warshall(graph, weight_fn=float)
-
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
         for all edges.
@@ -369,17 +316,14 @@ def floyd_warshall(
     :param int parallel_threshold: The number of nodes to execute
         the algorithm in parallel at. It defaults to 300, but this can
         be tuned
-
     :return: A read-only dictionary of path lengths. The keys are the source
         node indices and the values are a dict of the target node and the
         length of the shortest path to that node. For example::
-
             {
                 0: {0: 0.0, 1: 2.0, 2: 2.0},
                 1: {1: 0.0, 2: 1.0},
                 2: {0: 1.0, 2: 0.0},
             }
-
     :rtype: AllPairsPathLengthMapping
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -423,30 +367,23 @@ def floyd_warshall_numpy(
     parallel_threshold=300,
 ):
     """Find all-pairs shortest path lengths using Floyd's algorithm
-
     Floyd's algorithm is used for finding shortest paths in dense graphs
     or graphs with negative weights (where Dijkstra's algorithm fails).
-
     This function is multithreaded and will launch a pool with threads equal
     to the number of CPUs by default if the number of nodes in the graph is
     above the value of ``parallel_threshold`` (it defaults to 300).
     You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads if parallelization was enabled.
-
     :param graph: The graph to run Floyd's algorithm on. Can
-        either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        either be a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param callable weight_fn: A callable object (function, lambda, etc) which
         will be passed the edge object and expected to return a ``float``. This
-        tells retworkx/rust how to extract a numerical weight as a ``float``
+        tells rustworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
-
             floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
-
         to return a weight of 1 for all edges. Also::
-
             floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
-
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
         for all edges.
@@ -455,7 +392,6 @@ def floyd_warshall_numpy(
     :param int parallel_threshold: The number of nodes to execute
         the algorithm in parallel at. It defaults to 300, but this can
         be tuned
-
     :returns: A matrix of shortest path distances between nodes. If there is no
         path between two nodes then the corresponding matrix entry will be
         ``np.inf``.
@@ -489,9 +425,8 @@ def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0, paral
 @functools.singledispatch
 def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
     """Compute the A* shortest path for a graph
-
     :param graph: The input graph to use. Can
-        either be a :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        either be a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int node: The node index to compute the path from
     :param goal_fn: A python callable that will take in 1 parameter, a node's
         data object and will return a boolean which will be True if it is the
@@ -505,7 +440,6 @@ def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
         the algorithm to find the actual shortest path, it should be
         admissible, meaning that it should never overestimate the actual cost
         to get to the nearest goal node.
-
     :returns: The computed shortest path between node and finish as a list
         of node indices.
     :rtype: NodeIndices
@@ -533,12 +467,10 @@ def dijkstra_shortest_paths(
     as_undirected=False,
 ):
     """Find the shortest path from a node
-
     This function will generate the shortest path from a source node using
     Dijkstra's algorithm.
-
     :param graph: The input graph to use. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int source: The node index to find paths from
     :param int target: An optional target to find a path to
     :param weight_fn: An optional weight function for an edge. It will accept
@@ -548,8 +480,7 @@ def dijkstra_shortest_paths(
         float value will be used for the weight/cost of each edge.
     :param bool as_undirected: If set to true the graph will be treated as
         undirected for finding the shortest path. This only works with a
-        :class:`~retworkx.PyDiGraph` input for ``graph``
-
+        :class:`~rustworkx.PyDiGraph` input for ``graph``
     :return: Dictionary of paths. The keys are destination node indices and
         the dict values are lists of node indices making the path.
     :rtype: dict
@@ -590,31 +521,26 @@ def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None, de
 @functools.singledispatch
 def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
     """For each node in the graph, finds the shortest paths to all others.
-
     This function will generate the shortest path from all nodes in the graph
     using Dijkstra's algorithm. This function is multithreaded and will run
     launch a thread pool with threads equal to the number of CPUs by default.
     You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads.
-
     :param graph: The input graph to use. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param edge_cost_fn: A callable object that acts as a weight function for
         an edge. It will accept a single positional argument, the edge's weight
         object and will return a float which will be used to represent the
         weight/cost of the edge
-
     :return: A read-only dictionary of paths. The keys are source node
         indices and the values are a dict of target node indices and a list
         of node indices making the path. For example::
-
             {
                 0: {1: [0, 1],  2: [0, 1, 2]},
                 1: {2: [1, 2]},
                 2: {0: [2, 0]},
             }
-
     :rtype: AllPairsPathMapping
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -633,21 +559,18 @@ def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
 @functools.singledispatch
 def all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
     """Return all the simple paths between all pairs of nodes in the graph
-
     This function is multithreaded and will launch a thread pool with threads
     equal to the number of CPUs by default. You can tune the number of threads
     with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
     ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
-
-    :param graph: The graph to find all simple paths in. This can be a :class:`~retworkx.PyGraph`
-        or a :class:`~retworkx.PyDiGraph`
+    :param graph: The graph to find all simple paths in. This can be a :class:`~rustworkx.PyGraph`
+        or a :class:`~rustworkx.PyDiGraph`
     :param int min_depth: The minimum depth of the path to include in the output
         list of paths. By default all paths are included regardless of depth,
         setting to 0 will behave like the default.
     :param int cutoff: The maximum depth of path to include in the output list
         of paths. By default includes all paths regardless of depth, setting to
         0 will behave like default.
-
     :returns: A mapping of source node indices to a mapping of target node
         indices to a list of paths between the source and target nodes.
     :rtype: AllPairsMultiplePathMapping
@@ -668,31 +591,26 @@ def _graph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
 @functools.singledispatch
 def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
     """For each node in the graph, calculates the lengths of the shortest paths to all others.
-
     This function will generate the shortest path lengths from all nodes in the
     graph using Dijkstra's algorithm. This function is multithreaded and will
     launch a thread pool with threads equal to the number of CPUs by
     default. You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads.
-
     :param graph: The input graph to use. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param edge_cost_fn: A callable object that acts as a weight function for
         an edge. It will accept a single positional argument, the edge's weight
         object and will return a float which will be used to represent the
         weight/cost of the edge
-
     :return: A read-only dictionary of path lengths. The keys are the source
         node indices and the values are a dict of the target node and the
         length of the shortest path to that node. For example::
-
             {
                 0: {1: 2.0, 2: 2.0},
                 1: {2: 1.0},
                 2: {0: 1.0},
             }
-
     :rtype: AllPairsPathLengthMapping
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -712,9 +630,8 @@ def _graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
 def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     """Compute the lengths of the shortest paths for a graph object using
     Dijkstra's algorithm.
-
     :param graph: The input graph to use. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int node: The node index to use as the source for finding the
         shortest paths from
     :param edge_cost_fn: A python callable that will take in 1 parameter, an
@@ -724,7 +641,6 @@ def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
         When specified the traversal will stop when the goal is reached and
         the output dictionary will only have a single entry with the length
         of the shortest path to the goal node.
-
     :returns: A dictionary of the shortest paths from the provided node where
         the key is the node index of the end of the path and the value is the
         cost/sum of the weights of path
@@ -746,21 +662,17 @@ def _graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
 @functools.singledispatch
 def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
     """Compute the length of the kth shortest path
-
     Computes the lengths of the kth shortest path from ``start`` to every
     reachable node.
-
     Computes in :math:`O(k * (|E| + |V|*log(|V|)))` time (average).
-
     :param graph: The graph to find the shortest paths in. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int start: The node index to find the shortest paths from
     :param int k: The kth shortest path to find the lengths of
     :param edge_cost: A python callable that will receive an edge payload and
         return a float for the cost of that eedge
     :param int goal: An optional goal node index, if specified the output
         dictionary
-
     :returns: A dict of lengths where the key is the destination node index and
         the value is the length of the path.
     :rtype: dict
@@ -781,12 +693,9 @@ def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
 @functools.singledispatch
 def dfs_edges(graph, source=None):
     """Get an edge list of the tree edges from a depth-first traversal
-
     The pseudo-code for the DFS algorithm is listed below. The output
     contains the tree edges found by the procedure.
-
     ::
-
         DFS(G, v)
           let S be a stack
           label v as discovered
@@ -801,20 +710,16 @@ def dfs_edges(graph, source=None):
               else
                   POP(S)
           end while
-
     .. note::
-
         If the input is an undirected graph with a single connected component,
         the output of this function is a spanning tree.
-
     :param graph: The graph to get the DFS edge list from. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int source: An optional node index to use as the starting node
         for the depth-first search. The edge list will only return edges in
         the components reachable from this index. If this is not specified
         then a source will be chosen arbitrarly and repeated until all
         components of the graph are searched.
-
     :returns: A list of edges as a tuple of the form ``(source, target)`` in
         depth-first order
     :rtype: EdgeList
@@ -842,26 +747,21 @@ def is_isomorphic(
     call_limit=None,
 ):
     """Determine if 2 graphs are isomorphic
-
     This checks if 2 graphs are isomorphic both structurally and also
     comparing the node and edge data using the provided matcher functions.
     The matcher functions take in 2 data objects and will compare them. A
     simple example that checks if they're just equal would be::
-
-            graph_a = retworkx.PyGraph()
-            graph_b = retworkx.PyGraph()
-            retworkx.is_isomorphic(graph_a, graph_b,
+            graph_a = rustworkx.PyGraph()
+            graph_b = rustworkx.PyGraph()
+            rustworkx.is_isomorphic(graph_a, graph_b,
                                 lambda x, y: x == y)
-
     .. note::
-
         For better performance on large graphs, consider setting
         `id_order=False`.
-
     :param first: The first graph to compare. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param second: The second graph to compare. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
         It should be the same type as the first graph.
     :param callable node_matcher: A python callable object that takes 2
         positional one for each node data object. If the return of this
@@ -877,11 +777,9 @@ def is_isomorphic(
     :param int call_limit: An optional bound on the number of states that VF2
         algorithm visits while searching for a solution. If it exceeds this limit,
         the algorithm will stop and return ``False``.
-
     :returns: ``True`` if the 2 graphs are isomorphic, ``False`` if they are
         not.
     :rtype: bool
-
     .. [VF2] VF2++  An Improved Subgraph Isomorphism Algorithm
         by Alpár Jüttner and Péter Madarasi
     """
@@ -915,26 +813,21 @@ def _graph_is_isomorphic(
 @functools.singledispatch
 def is_isomorphic_node_match(first, second, matcher, id_order=True):
     """Determine if 2 graphs are isomorphic
-
     This checks if 2 graphs are isomorphic both structurally and also
     comparing the node data using the provided matcher function. The matcher
     function takes in 2 node data objects and will compare them. A simple
     example that checks if they're just equal would be::
-
-        graph_a = retworkx.PyDAG()
-        graph_b = retworkx.PyDAG()
-        retworkx.is_isomorphic_node_match(graph_a, graph_b,
+        graph_a = rustworkx.PyDAG()
+        graph_b = rustworkx.PyDAG()
+        rustworkx.is_isomorphic_node_match(graph_a, graph_b,
                                         lambda x, y: x == y)
-
     .. note::
-
         For better performance on large graphs, consider setting
         `id_order=False`.
-
     :param first: The first graph to compare. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param second: The second graph to compare. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
         It should be the same type as the first graph.
     :param callable matcher: A python callable object that takes 2 positional
         one for each node data object. If the return of this
@@ -943,7 +836,6 @@ def is_isomorphic_node_match(first, second, matcher, id_order=True):
     :param bool id_order: If set to ``False`` this function will use a
         heuristic matching order based on [VF2]_ paper. Otherwise it will
         default to matching the nodes in order specified by their ids.
-
     :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
         not.
     :rtype: bool
@@ -972,7 +864,6 @@ def is_subgraph_isomorphic(
     call_limit=None,
 ):
     """Determine if 2 graphs are subgraph isomorphic
-
     This checks if 2 graphs are subgraph isomorphic both structurally and also
     comparing the node and edge data using the provided matcher functions.
     The matcher functions take in 2 data objects and will compare them.
@@ -981,17 +872,14 @@ def is_subgraph_isomorphic(
     set to `False`, we check for a non induced subgraph, meaning the second graph
     can have fewer edges than the subgraph of the first. By default it's `True`. A
     simple example that checks if they're just equal would be::
-
-            graph_a = retworkx.PyGraph()
-            graph_b = retworkx.PyGraph()
-            retworkx.is_subgraph_isomorphic(graph_a, graph_b,
+            graph_a = rustworkx.PyGraph()
+            graph_b = rustworkx.PyGraph()
+            rustworkx.is_subgraph_isomorphic(graph_a, graph_b,
                                             lambda x, y: x == y)
-
-
     :param first: The first graph to compare. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param second: The second graph to compare. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
         It should be the same type as the first graph.
     :param callable node_matcher: A python callable object that takes 2
         positional one for each node data object. If the return of this
@@ -1010,7 +898,6 @@ def is_subgraph_isomorphic(
     :param int call_limit: An optional bound on the number of states that VF2
         algorithm visits while searching for a solution. If it exceeds this limit,
         the algorithm will stop and return ``False``.
-
     :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`
         , ``False`` if there is not.
     :rtype: bool
@@ -1051,22 +938,17 @@ def _graph_is_subgraph_isomorphic(
 @functools.singledispatch
 def transitivity(graph):
     """Compute the transitivity of a graph.
-
     This function is multithreaded and will run
     launch a thread pool with threads equal to the number of CPUs by default.
     You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads.
-
     .. note::
-
         The function implicitly assumes that there are no parallel edges
         or self loops. It may produce incorrect/unexpected results if the
         input graph has self loops or parallel edges.
-
     :param graph: The graph to be used. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
-
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :returns: Transitivity of the graph.
     :rtype: float
         raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -1087,18 +969,13 @@ def _graph_transitivity(graph):
 @functools.singledispatch
 def core_number(graph):
     """Return the core number for each node in the graph.
-
     A k-core is a maximal subgraph that contains nodes of degree k or more.
-
     .. note::
-
         The function implicitly assumes that there are no parallel edges
         or self loops. It may produce incorrect/unexpected results if the
         input graph has self loops or parallel edges.
-
     :param graph: The graph to get core numbers. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :returns: A dictionary keyed by node index to the core number
     :rtype: dict
         raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -1119,13 +996,10 @@ def _graph_core_number(graph):
 @functools.singledispatch
 def complement(graph):
     """Compute the complement of a graph.
-
     :param graph: The graph to be used, can be either a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
-
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :returns: The complement of the graph.
-    :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
-
+    :rtype: :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     .. note::
         Parallel edges and self-loops are never created,
         even if the ``multigraph`` is set to ``True``
@@ -1144,40 +1018,12 @@ def _graph_complement(graph):
 
 
 @functools.singledispatch
-def planar_layout(graph, scale=1.0, center=None):
-    """Generate a planar layout
-
-    :param PyGraph|PyDiGraph graph: The graph to generate the layout for
-    :param float|None scale: Scale factor for positions.If scale is ``None``,
-        no re-scaling is performed. (``default=1.0``)
-    :param tuple center: An optional center position. This is a 2 tuple of two
-        ``float`` values for the center position
-
-    :returns: The planar layout of the graph.
-    :rtype: Pos2DMapping
-    """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
-
-
-@planar_layout.register(PyDiGraph)
-def _digraph_planar_layout(graph, scale=1.0, center=None):
-    return digraph_planar_layout(graph, scale=1.0, center=center)
-
-
-@planar_layout.register(PyGraph)
-def _graph_planar_layout(graph, scale=1.0, center=None):
-    return graph_planar_layout(graph, scale=1.0, center=center)
-
-
-@functools.singledispatch
 def random_layout(graph, center=None, seed=None):
     """Generate a random layout
-
     :param PyGraph graph: The graph to generate the layout for
     :param tuple center: An optional center position. This is a 2 tuple of two
         ``float`` values for the center position
     :param int seed: An optional seed to set for the random number generator.
-
     :returns: The random layout of the graph.
     :rtype: Pos2DMapping
     """
@@ -1212,14 +1058,12 @@ def spring_layout(
 ):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
-
     The algorithm simulates a force-directed representation of the network
     treating edges as springs holding nodes close, while treating nodes
     as repelling objects, sometimes called an anti-gravity force.
     Simulation continues until the positions are close to an equilibrium.
-
     :param graph: Graph to be used. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param dict pos:
         Initial node positions as a dictionary with node ids as keys and values
         as a coordinate list. If ``None``, then use random initial positions.
@@ -1252,7 +1096,6 @@ def spring_layout(
     :param list center: Coordinate pair around which to center
         the layout. Not used unless fixed is ``None``. (``default=None``)
     :param int seed: An optional seed to use for the random number generator
-
     :returns: A dictionary of positions keyed by node id.
     :rtype: dict
     """
@@ -1326,27 +1169,23 @@ def _graph_spring_layout(
 
 
 def networkx_converter(graph, keep_attributes: bool = False):
-    """Convert a networkx graph object into a retworkx graph object.
-
+    """Convert a networkx graph object into a rustworkx graph object.
     .. note::
-
-        networkx is **not** a dependency of retworkx and this function
+        networkx is **not** a dependency of rustworkx and this function
         is provided as a convenience method for users of both networkx and
-        retworkx. This function will not work unless you install networkx
+        rustworkx. This function will not work unless you install networkx
         independently.
-
     :param networkx.Graph graph: The networkx graph to convert.
     :param bool keep_attributes: If ``True``, add networkx node attributes to
-        the data payload in the nodes of the output retworkx graph. When set to
-        ``True``, the node data payloads in the output retworkx graph object
+        the data payload in the nodes of the output rustworkx graph. When set to
+        ``True``, the node data payloads in the output rustworkx graph object
         will be dictionaries with the node attributes from the input networkx
         graph where the ``"__networkx_node__"`` key contains the node from the
         input networkx graph.
-
-    :returns: A retworkx graph, either a :class:`~retworkx.PyDiGraph` or a
-        :class:`~retworkx.PyGraph` based on whether the input graph is directed
+    :returns: A rustworkx graph, either a :class:`~rustworkx.PyDiGraph` or a
+        :class:`~rustworkx.PyGraph` based on whether the input graph is directed
         or not.
-    :rtype: :class:`~retworkx.PyDiGraph` or :class:`~retworkx.PyGraph`
+    :rtype: :class:`~rustworkx.PyDiGraph` or :class:`~rustworkx.PyGraph`
     """
     if graph.is_directed():
         new_graph = PyDiGraph(multigraph=graph.is_multigraph())
@@ -1377,9 +1216,8 @@ def bipartite_layout(
     aspect_ratio=4 / 3,
 ):
     """Generate a bipartite layout of the graph
-
     :param graph: The graph to generate the layout for. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param set first_nodes: The set of node indices on the left (or top if
         horitontal is true)
     :param bool horizontal: An optional bool specifying the orientation of the
@@ -1389,7 +1227,6 @@ def bipartite_layout(
         ``float`` values for the center position
     :param float aspect_ratio: An optional number for the ratio of the width to
         the height of the layout.
-
     :returns: The bipartite layout of the graph.
     :rtype: Pos2DMapping
     """
@@ -1437,13 +1274,11 @@ def _graph_bipartite_layout(
 @functools.singledispatch
 def circular_layout(graph, scale=1, center=None):
     """Generate a circular layout of the graph
-
     :param graph: The graph to generate the layout for. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param float scale: An optional scaling factor to scale positions
     :param tuple center: An optional center position. This is a 2 tuple of two
         ``float`` values for the center position
-
     :returns: The circular layout of the graph.
     :rtype: Pos2DMapping
     """
@@ -1464,9 +1299,8 @@ def _graph_circular_layout(graph, scale=1, center=None):
 def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
     """
     Generate a shell layout of the graph
-
     :param graph: The graph to generate the layout for. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param list nlist: The list of lists of indices which represents each shell
     :param float rotate: Angle (in radians) by which to rotate the starting
         position of each shell relative to the starting position of the
@@ -1474,7 +1308,6 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
     :param float scale: An optional scaling factor to scale positions
     :param tuple center: An optional center position. This is a 2 tuple of two
         ``float`` values for the center position
-
     :returns: The shell layout of the graph.
     :rtype: Pos2DMapping
     """
@@ -1495,9 +1328,8 @@ def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
 def spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
     """
     Generate a spiral layout of the graph
-
     :param graph: The graph to generate the layout for. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param float scale: An optional scaling factor to scale positions
     :param tuple center: An optional center position. This is a 2 tuple of two
         ``float`` values for the center position
@@ -1505,7 +1337,6 @@ def spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=Fals
         Lower values result in more compressed spiral layouts.
     :param bool equidistant: If true, nodes will be plotted equidistant from
         each other.
-
     :returns: The spiral layout of the graph.
     :rtype: Pos2DMapping
     """
@@ -1537,10 +1368,8 @@ def _graph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidista
 @functools.singledispatch
 def num_shortest_paths_unweighted(graph, source):
     """Get the number of unweighted shortest paths from a source node
-
     :param PyDiGraph graph: The graph to find the number of shortest paths on
     :param int source: The source node to find the shortest paths from
-
     :returns: A mapping of target node indices to the number of shortest paths
         from ``source`` to that node. If there is no path from ``source`` to
         a node in the graph that node will not be preset in the output mapping.
@@ -1562,30 +1391,22 @@ def _graph_num_shortest_paths_unweighted(graph, source):
 @functools.singledispatch
 def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
     r"""Returns the betweenness centrality of each node in the graph.
-
     Betweenness centrality of a node :math:`v` is the sum of the
     fraction of all-pairs shortest paths that pass through :math`v`
-
     .. math::
-
        c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
-
     where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
     shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
     those paths  passing through some  node :math:`v` other than :math:`s, t`.
     If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
     :math:`\sigma(s, t|v) = 0`
-
     The algorithm used in this function is based on:
-
     Ulrik Brandes, A Faster Algorithm for Betweenness Centrality.
     Journal of Mathematical Sociology 25(2):163-177, 2001.
-
     This function is multithreaded and will run in parallel if the number
     of nodes in the graph is above the value of ``parallel_threshold`` (it
     defaults to 50). If the function will be running in parallel the env var
     ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
-
     :param PyDiGraph graph: The input graph
     :param bool normalized: Whether to normalize the betweenness scores by
         the number of distinct paths between all pairs of nodes.
@@ -1595,7 +1416,6 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
         the betweenness centrality in parallel at if the number of nodes in
         the graph is less than this value it will run in a single thread. The
         default value is 50
-
     :returns: A dictionary mapping each node index to its betweenness centrality.
     :rtype: dict
     """
@@ -1625,13 +1445,10 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, paral
 @functools.singledispatch
 def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6):
     """Compute the eigenvector centrality of a graph.
-
     For details on the eigenvector centrality refer to:
-
     Phillip Bonacich. “Power and Centrality: A Family of Measures.”
     American Journal of Sociology 92(5):1170–1182, 1986
     <https://doi.org/10.1086/228631>
-
     This function uses a power iteration method to compute the eigenvector
     and convergence is not guaranteed. The function will stop when `max_iter`
     iterations is reached or when the computed vector between two iterations
@@ -1639,12 +1456,10 @@ def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=1
     The implementation of this algorithm is based on the NetworkX
     `eigenvector_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality.html>`__
     function.
-
     In the case of multigraphs the weights of any parallel edges will be
     summed when computing the eigenvector centrality.
-
     :param graph: Graph to be used. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param weight_fn: An optional input callable that will be passed the edge's
         payload object and is expected to return a `float` weight for that edge.
         If this is not specified ``default_weight`` will be used as the weight
@@ -1655,7 +1470,6 @@ def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=1
         not specified a default value of 100 is used.
     :param float tol: The error tolerance used when checking for convergence in the
         power method. If this is not specified default value of 1e-6 is used.
-
     :returns: a read-only dict-like object whose keys are the node indices and values are the
          centrality score for that node.
     :rtype: CentralityMapping
@@ -1693,22 +1507,19 @@ def vf2_mapping(
 ):
     """
     Return an iterator over all vf2 mappings between two graphs.
-
     This funcion will run the vf2 algorithm used from
-    :func:`~retworkx.is_isomorphic` and :func:`~retworkx.is_subgraph_isomorphic`
+    :func:`~rustworkx.is_isomorphic` and :func:`~rustworkx.is_subgraph_isomorphic`
     but instead of returning a boolean it will return an iterator over all possible
     mapping of node ids found from ``first`` to ``second``. If the graphs are not
     isomorphic then the iterator will be empty. A simple example that retrieves
     one mapping would be::
-
-            graph_a = retworkx.generators.path_graph(3)
-            graph_b = retworkx.generators.path_graph(2)
-            vf2 = retworkx.vf2_mapping(graph_a, graph_b, subgraph=True)
+            graph_a = rustworkx.generators.path_graph(3)
+            graph_b = rustworkx.generators.path_graph(2)
+            vf2 = rustworkx.vf2_mapping(graph_a, graph_b, subgraph=True)
             try:
                 mapping = next(vf2)
             except StopIteration:
                 pass
-
     :param first: The first graph to find the mapping for
     :param second: The second graph to find the mapping for
     :param node_matcher: An optional python callable object that takes 2
@@ -1730,7 +1541,6 @@ def vf2_mapping(
     :param int call_limit: An optional bound on the number of states that VF2
         algorithm visits while searching for a solution. If it exceeds this limit,
         the algorithm will stop. Default: ``None``.
-
     :returns: An iterator over dicitonaries of node indices from ``first`` to node
         indices in ``second`` representing the mapping found.
     :rtype: Iterable[NodeMap]
@@ -1792,35 +1602,29 @@ def union(
     merge_edges=False,
 ):
     """Return a new graph by forming a union from two input graph objects
-
     The algorithm in this function operates in three phases:
-
     1. Add all the nodes from  ``second`` into ``first``. operates in
     :math:`\\mathcal{O}(n_2)`, with :math:`n_2` being number of nodes in
     ``second``.
     2. Merge nodes from ``second`` over ``first`` given that:
-
        - The ``merge_nodes`` is ``True``. operates in :math:`\\mathcal{O}(n_1 n_2)`,
          with :math:`n_1` being the number of nodes in ``first`` and :math:`n_2`
          the number of nodes in ``second``
        - The respective node in ``second`` and ``first`` share the same
          weight/data payload.
-
     3. Adds all the edges from ``second`` to ``first``. If the ``merge_edges``
        parameter is ``True`` and the respective edge in ``second`` and
        ``first`` share the same weight/data payload they will be merged together.
-
     :param first: The first graph object
     :param second: The second graph object
     :param bool merge_nodes: If set to ``True`` nodes will be merged between
         ``second`` and ``first`` if the weights are equal. Default: ``False``.
     :param bool merge_edges: If set to ``True`` edges will be merged between
         ``second`` and ``first`` if the weights are equal. Default: ``False``.
-
     :returns: A new graph object that is the union of ``second`` and
         ``first``. It's worth noting the weight/data payload objects are
         passed by reference from ``first`` and ``second`` to this new object.
-    :rtype: :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+    :rtype: :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
@@ -1852,10 +1656,8 @@ def tensor_product(
 ):
     """Return a new graph by forming the tensor product
     from two input graph objects
-
     :param first: The first graph object
     :param second: The second graph object
-
     :returns: A new graph object that is the tensor product of ``second`` and
         ``first``. It's worth noting the weight/data payload objects are
         passed by reference from ``first`` and ``second`` to this new object.
@@ -1863,14 +1665,12 @@ def tensor_product(
         are a tuple where the first element is a node of the first graph and the
         second element is a node of the second graph, and the values are the map
         of those elements to node indices in the product graph. For example::
-
             {
                 (0, 0): 0,
                 (0, 1): 1,
             }
-
-    :rtype: Tuple[:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`,
-        :class:`~retworkx.ProductNodeMap`]
+    :rtype: Tuple[:class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`,
+        :class:`~rustworkx.ProductNodeMap`]
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
@@ -1898,10 +1698,8 @@ def cartesian_product(
 ):
     """Return a new graph by forming the cartesian product
     from two input graph objects
-
     :param first: The first graph object
     :param second: The second graph object
-
     :returns: A new graph object that is the union of ``second`` and
         ``first``. It's worth noting the weight/data payload objects are
         passed by reference from ``first`` and ``second`` to this new object.
@@ -1909,14 +1707,12 @@ def cartesian_product(
         are a tuple where the first element is a node of the first graph and the
         second element is a node of the second graph, and the values are the map
         of those elements to node indices in the product graph. For example::
-
             {
                 (0, 0): 0,
                 (0, 1): 1,
             }
-
-    :rtype: Tuple[:class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`,
-        :class:`~retworkx.ProductNodeMap`]
+    :rtype: Tuple[:class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`,
+        :class:`~rustworkx.ProductNodeMap`]
     """
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
@@ -1940,13 +1736,10 @@ def _graph_cartesian_product(
 @functools.singledispatch
 def bfs_search(graph, source, visitor):
     """Breadth-first traversal of a directed/undirected graph.
-
     The pseudo-code for the BFS algorithm is listed below, with the annotated
     event points, for which the given visitor object will be called with the
     appropriate method.
-
     ::
-
         BFS(G, s)
           for each vertex u in V
               color[u] := WHITE
@@ -1966,47 +1759,35 @@ def bfs_search(graph, source, visitor):
               end for
               color[u] := BLACK                    finish vertex u
           end while
-
     If an exception is raised inside the callback function, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
-    :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+    :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
     will return but without raising back the exception. You can also prune part of
-    the search tree by raising :class:`~retworkx.visit.PruneSearch`.
-
+    the search tree by raising :class:`~rustworkx.visit.PruneSearch`.
     In the following example we keep track of the tree edges:
-
     .. jupyter-execute::
-
-        import retworkx
-        from retworkx.visit import BFSVisitor
-
-
+        import rustworkx
+        from rustworkx.visit import BFSVisitor
         class TreeEdgesRecorder(BFSVisitor):
-
             def __init__(self):
                 self.edges = []
-
             def tree_edge(self, edge):
                 self.edges.append(edge)
-
-        graph = retworkx.PyDiGraph()
+        graph = rustworkx.PyDiGraph()
         graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
         vis = TreeEdgesRecorder()
-        retworkx.bfs_search(graph, [0], vis)
+        rustworkx.bfs_search(graph, [0], vis)
         print('Tree edges:', vis.edges)
-
     .. note::
-
         Graph can **not** be mutated while traversing.
-
-    :param graph: The graph to be used. This can be a :class:`~retworkx.PyGraph`
-        or a :class:`~retworkx.PyDiGraph`
+    :param graph: The graph to be used. This can be a :class:`~rustworkx.PyGraph`
+        or a :class:`~rustworkx.PyDiGraph`
     :param List[int] source: An optional list of node indices to use as the starting
         nodes for the breadth-first search. If this is not specified then a source
         will be chosen arbitrarly and repeated until all components of the
         graph are searched.
     :param visitor: A visitor object that is invoked at the event points inside the
-        algorithm. This should be a subclass of :class:`~retworkx.visit.BFSVisitor`.
+        algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
@@ -2024,20 +1805,16 @@ def _graph_bfs_search(graph, source, visitor):
 @functools.singledispatch
 def dfs_search(graph, source, visitor):
     """Depth-first traversal of a directed/undirected graph.
-
     The pseudo-code for the DFS algorithm is listed below, with the annotated
     event points, for which the given visitor object will be called with the
     appropriate method.
-
     ::
-
         DFS(G)
           for each vertex u in V
               color[u] := WHITE                 initialize vertex u
           end for
           time := 0
           call DFS-VISIT(G, source)             start vertex s
-
         DFS-VISIT(G, u)
           color[u] := GRAY                      discover vertex u
           for each v in Adj[u]                  examine edge (u,v)
@@ -2049,44 +1826,33 @@ def dfs_search(graph, source, visitor):
              ...
           end for
           color[u] := BLACK                     finish vertex u
-
     If an exception is raised inside the callback function, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
-    :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
-    search tree by raising :class:`~retworkx.visit.PruneSearch`.
-
+    :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
+    search tree by raising :class:`~rustworkx.visit.PruneSearch`.
     In the following example we keep track of the tree edges:
-
     .. jupyter-execute::
-
-           import retworkx
-           from retworkx.visit import DFSVisitor
-
+           import rustworkx
+           from rustworkx.visit import DFSVisitor
            class TreeEdgesRecorder(DFSVisitor):
-
                def __init__(self):
                    self.edges = []
-
                def tree_edge(self, edge):
                    self.edges.append(edge)
-
-           graph = retworkx.PyGraph()
+           graph = rustworkx.PyGraph()
            graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
            vis = TreeEdgesRecorder()
-           retworkx.dfs_search(graph, [0], vis)
+           rustworkx.dfs_search(graph, [0], vis)
            print('Tree edges:', vis.edges)
-
     .. note::
-
         Graph can *not* be mutated while traversing.
-
     :param PyGraph graph: The graph to be used.
     :param List[int] source: An optional list of node indices to use as the starting
         nodes for the depth-first search. If this is not specified then a source
         will be chosen arbitrarly and repeated until all components of the
         graph are searched.
     :param visitor: A visitor object that is invoked at the event points inside the
-        algorithm. This should be a subclass of :class:`~retworkx.visit.DFSVisitor`.
+        algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
@@ -2104,13 +1870,10 @@ def _graph_dfs_search(graph, source, visitor):
 @functools.singledispatch
 def dijkstra_search(graph, source, weight_fn, visitor):
     """Dijkstra traversal of a graph.
-
     The pseudo-code for the Dijkstra algorithm is listed below, with the annotated
     event points, for which the given visitor object will be called with the
     appropriate method.
-
     ::
-
         DIJKSTRA(G, source, weight)
           for each vertex u in V
               d[u] := infinity
@@ -2131,19 +1894,15 @@ def dijkstra_search(graph, source, weight_fn, visitor):
                       INSERT(Q, v)
               end for                                     finish vertex u
           end while
-
     If an exception is raised inside the callback function, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
-    :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+    :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
     will return but without raising back the exception. You can also prune part of the
-    search tree by raising :class:`~retworkx.visit.PruneSearch`.
-
+    search tree by raising :class:`~rustworkx.visit.PruneSearch`.
     .. note::
-
         Graph can **not** be mutated while traversing.
-
-    :param graph: The graph to be used. This can be a :class:`~retworkx.PyGraph`
-        or a :class:`~retworkx.PyDiGraph`.
+    :param graph: The graph to be used. This can be a :class:`~rustworkx.PyGraph`
+        or a :class:`~rustworkx.PyDiGraph`.
     :param List[int] source: An optional list of node indices to use as the starting nodes
         for the dijkstra search. If this is not specified then a source
         will be chosen arbitrarly and repeated until all components of the
@@ -2153,7 +1912,7 @@ def dijkstra_search(graph, source, weight_fn, visitor):
         will be used to represent the weight/cost of the edge. If not specified,
         a default value of cost ``1.0`` will be used for each edge.
     :param visitor: A visitor object that is invoked at the event points inside the
-        algorithm. This should be a subclass of :class:`~retworkx.visit.DijkstraVisitor`.
+        algorithm. This should be a subclass of :class:`~rustworkx.visit.DijkstraVisitor`.
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
@@ -2178,12 +1937,10 @@ def bellman_ford_shortest_paths(
     as_undirected=False,
 ):
     """Find the shortest path from a node
-
     This function will generate the shortest path from a source node using
     the Bellman-Ford algorithm wit the SPFA heuristic.
-
     :param graph: The input graph to use. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int source: The node index to find paths from
     :param int target: An optional target to find a path to
     :param weight_fn: An optional weight function for an edge. It will accept
@@ -2193,13 +1950,11 @@ def bellman_ford_shortest_paths(
         float value will be used for the weight/cost of each edge.
     :param bool as_undirected: If set to true the graph will be treated as
         undirected for finding the shortest path. This only works with a
-        :class:`~retworkx.PyDiGraph` input for ``graph``
-
+        :class:`~rustworkx.PyDiGraph` input for ``graph``
     :return: A read-only dictionary of paths. The keys are destination node indices
         and the dict values are lists of node indices making the path.
     :rtype: PathMapping
-
-    :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+    :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -2241,9 +1996,8 @@ def _graph_bellman_ford_shortest_path(
 def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     """Compute the lengths of the shortest paths for a graph object using
     the Bellman-Ford algorithm with the SPFA heuristic.
-
     :param graph: The input graph to use. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int node: The node index to use as the source for finding the
         shortest paths from
     :param edge_cost_fn: A python callable that will take in 1 parameter, an
@@ -2252,13 +2006,11 @@ def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     :param int goal: An optional node index to use as the end of the path.
         When specified the output dictionary will only have a single entry with
         the length of the shortest path to the goal node.
-
     :returns: A read-only dictionary of the shortest paths from the provided node
         where the key is the node index of the end of the path and the value is the
         cost/sum of the weights of path
     :rtype: PathLengthMapping
-
-    :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+    :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -2277,34 +2029,28 @@ def _graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=No
 @functools.singledispatch
 def all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
     """For each node in the graph, calculates the lengths of the shortest paths to all others.
-
     This function will generate the shortest path lengths from all nodes in the
     graph using the Bellman-Ford algorithm. This function is multithreaded and will
     launch a thread pool with threads equal to the number of CPUs by
     default. You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads.
-
     :param graph: The input graph to use. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param edge_cost_fn: A callable object that acts as a weight function for
         an edge. It will accept a single positional argument, the edge's weight
         object and will return a float which will be used to represent the
         weight/cost of the edge
-
     :return: A read-only dictionary of path lengths. The keys are the source
         node indices and the values are a dict of the target node and the
         length of the shortest path to that node. For example::
-
             {
                 0: {1: 2.0, 2: 2.0},
                 1: {2: 1.0},
                 2: {0: 1.0},
             }
-
     :rtype: AllPairsPathLengthMapping
-
-    :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+    :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -2323,34 +2069,28 @@ def _graph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
 @functools.singledispatch
 def all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn):
     """For each node in the graph, finds the shortest paths to all others.
-
     This function will generate the shortest path from all nodes in the graph
     using the Bellman-Ford algorithm. This function is multithreaded and will run
     launch a thread pool with threads equal to the number of CPUs by default.
     You can tune the number of threads with the ``RAYON_NUM_THREADS``
     environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
     limit the thread pool to 4 threads.
-
     :param graph: The input graph to use. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param edge_cost_fn: A callable object that acts as a weight function for
         an edge. It will accept a single positional argument, the edge's weight
         object and will return a float which will be used to represent the
         weight/cost of the edge
-
     :return: A read-only dictionary of paths. The keys are source node
         indices and the values are a dict of target node indices and a list
         of node indices making the path. For example::
-
             {
                 0: {1: [0, 1],  2: [0, 1, 2]},
                 1: {2: [1, 2]},
                 2: {0: [2, 0]},
             }
-
     :rtype: AllPairsPathMapping
-
-    :raises: :class:`~retworkx.NegativeCycle`: when there is a negative cycle and the shortest
+    :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
@@ -2364,3 +2104,45 @@ def _digraph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
 @all_pairs_bellman_ford_shortest_paths.register(PyGraph)
 def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
     return graph_all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
+def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    """Generate a JSON object representing a graph in a node-link format
+    :param graph: The graph to generate the JSON for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param str path: An optional path to write the JSON output to. If specified
+        the function will not return anything and instead will write the JSON
+        to the file specified.
+    :param graph_attrs: An optional callable that will be passed the
+        :attr:`~.PyGraph.attrs` attribute of the graph and is expected to
+        return a dictionary of string keys to string values representing the
+        graph attributes. This dictionary will be included as attributes in
+        the output JSON. If anything other than a dictionary with string keys
+        and string values is returned an exception will be raised.
+    :param node_attrs: An optional callable that will be passed the node data
+        payload for each node in the graph and is expected to return a
+        dictionary of string keys to string values representing the data payload.
+        This dictionary will be used as the ``data`` field for each node.
+    :param edge_attrs:  An optional callable that will be passed the edge data
+        payload for each node in the graph and is expected to return a
+        dictionary of string keys to string values representing the data payload.
+        This dictionary will be used as the ``data`` field for each edge.
+    :returns: Either the JSON string for the payload or ``None`` if ``path`` is specified
+    :rtype: str
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@node_link_json.register(PyDiGraph)
+def _digraph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    return digraph_node_link_json(
+        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
+    )
+
+
+@node_link_json.register(PyGraph)
+def _graph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    return graph_node_link_json(
+        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
+    )
