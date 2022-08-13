@@ -16,7 +16,8 @@ use std::vec::IntoIter;
 
 use hashbrown::{hash_map::Entry, HashMap};
 use petgraph::{
-    graph::{Graph, NodeIndex},
+    graph::NodeIndex,
+    stable_graph::StableGraph,
     visit::{
         EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
         NodeIndexable, Visitable,
@@ -240,7 +241,7 @@ where
     /// side of edge, or modifier for side of reference edge.
     pub side: HashMap<Edge<G>, Sign>,
     /// directed graph used to build the embedding
-    pub dir_graph: Graph<(), (), Directed>,
+    pub dir_graph: StableGraph<(), (), Directed>,
 }
 
 impl<G> LRState<G>
@@ -258,7 +259,7 @@ where
         let num_nodes = graph.node_count();
         let num_edges = graph.edge_count();
 
-        let mut lr_state = LRState {
+        let lr_state = LRState {
             graph,
             roots: Vec::new(),
             height: HashMap::with_capacity(num_nodes),
@@ -274,12 +275,32 @@ where
                 .edge_references()
                 .map(|e| ((e.source(), e.target()), Sign::Plus))
                 .collect(),
-            dir_graph: Graph::with_capacity(num_nodes, 0),
+            dir_graph: StableGraph::with_capacity(num_nodes, 0),
         };
-        for _ in graph.node_identifiers() {
-            lr_state.dir_graph.add_node(());
-        }
         lr_state
+    }
+
+    // Create the directed graph for the embedding in stable format
+    // to match the original graph.
+    fn build_dir_graph(&mut self) where <G as GraphBase>::NodeId: Ord {
+        let mut tmp_nodes: Vec<usize> = Vec::new();
+        let mut count: usize = 0;
+        for _ in 0..self.graph.node_bound() {
+            self.dir_graph.add_node(());
+        }
+        for gnode in self.graph.node_identifiers() {
+            let gidx = self.graph.to_index(gnode);
+            if gidx != count {
+                for idx in count..gidx {
+                    tmp_nodes.push(idx);
+                }
+                count = gidx
+            }
+            count += 1
+        }
+        for tmp_node in tmp_nodes {
+            self.dir_graph.remove_node(NodeIndex::new(tmp_node));
+        }
     }
 
     fn lr_orientation_visitor(&mut self, event: DfsEvent<G::NodeId, &G::EdgeWeight>) {
@@ -703,15 +724,19 @@ where
         + NodeIndexable
         + IntoNodeIdentifiers
         + Visitable,
-    G::NodeId: Hash + Eq,
+    G::NodeId: Hash + Eq + Ord,
 {
+    // If None passed for state, create new LRState
     let mut lr_state = LRState::new(graph);
     let lr_state = match state {
         Some(state) => state,
         None => &mut lr_state,
     };
 
-    // // Dfs orientation phase
+    // Build directed graph for the embedding
+    lr_state.build_dir_graph();
+
+    // Dfs orientation phase
     depth_first_search(graph, graph.node_identifiers(), |event| {
         lr_state.lr_orientation_visitor(event)
     });

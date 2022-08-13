@@ -197,13 +197,20 @@ pub fn digraph_spring_layout(
 
 /// Generate a planar layout
 ///
-/// :param PyGraph graph: The graph to generate the layout for
-/// :param float|None scale: Scale factor for positions.If scale is ``None``,
+/// The algorithm first uses Ulrik Brandes: The Left-Right Planarity Test 2009,
+/// http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.217.9208
+/// to determine if the graph is planar. If so, then a planar embedding is created
+/// and the drawing is created using M. Chrobak and T.H. Payne: A Linear-time Algorithm
+/// for Drawing a Planar Graph on a Grid 1989,
+/// http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.51.6677.
+///
+/// :param PyGraph graph: The graph to be used
+/// :param float|None scale: Scale factor for positions. If scale is ``None``,
 ///     no re-scaling is performed. (``default=1.0``)
-/// :param tuple center: An optional center position. This is a 2 tuple of two
+/// :param tuple|None center: An optional center position. This is a 2 tuple of two
 ///     ``float`` values for the center position
 ///
-/// :returns: The planar layout of the graph.
+/// :returns: A dictionary of positions keyed by node id.
 /// :rtype: Pos2DMapping
 #[pyfunction]
 #[pyo3(text_signature = "(graph, / scale=1.0, center=None)")]

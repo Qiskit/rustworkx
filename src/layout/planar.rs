@@ -1,9 +1,21 @@
+// Licensed under the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License. You may obtain
+// a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations
+// under the License.
+
 use petgraph::prelude::*;
+use petgraph::visit::NodeIndexable;
 
 use super::spring::{recenter, rescale, Point};
 use crate::iterators::Pos2DMapping;
 use crate::layout::embedding::{create_embedding, embedding_to_pos, PlanarEmbedding};
-use crate::Graph;
 use crate::StablePyGraph;
 use retworkx_core::dictmap::*;
 use retworkx_core::planar::{is_planar, LRState};
@@ -15,7 +27,7 @@ pub fn planar_layout(
     scale: Option<f64>,
     center: Option<Point>,
 ) -> Pos2DMapping {
-    let node_num = graph.node_count();
+    let node_num = graph.node_bound();
     if node_num == 0 {
         return Pos2DMapping {
             pos_map: DictMap::new(),
@@ -36,7 +48,7 @@ pub fn planar_layout(
     // If planar, create the position coordinates.
     } else {
         let mut planar_emb = PlanarEmbedding::new();
-        planar_emb.embedding = Graph::with_capacity(node_num, 0);
+        planar_emb.embedding = StableGraph::with_capacity(node_num, 0);
 
         // First create the graph embedding
         create_embedding(&mut planar_emb, &mut lr_state);

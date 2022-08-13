@@ -1,11 +1,21 @@
-use hashbrown::hash_map::HashMap;
-use hashbrown::HashSet;
-use indexmap::set::IndexSet;
-use petgraph::graph::Graph;
+// Licensed under the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License. You may obtain
+// a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations
+// under the License.
+
+use hashbrown::{HashMap, HashSet};
+use indexmap::{IndexSet, IndexMap};
 use petgraph::prelude::*;
 use petgraph::visit::NodeIndexable;
 use petgraph::Directed;
-use rayon::prelude::*;
+use rayon::prelude::*; // For par_sort
 use std::fmt::Debug;
 
 use crate::StablePyGraph;
@@ -62,20 +72,20 @@ impl<T> FirstNbr<T> {
 /// The basic embedding to build the structure that will lead to
 /// the position coordinates to display.
 pub struct PlanarEmbedding {
-    pub embedding: Graph<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>,
+    pub embedding: StableGraph<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>,
 }
 
 impl Default for PlanarEmbedding {
     fn default() -> Self {
         PlanarEmbedding {
-            embedding: Graph::<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>::new(),
+            embedding: StableGraph::<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>::new(),
         }
     }
 }
 impl PlanarEmbedding {
     pub fn new() -> Self {
         PlanarEmbedding {
-            embedding: Graph::<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>::new(),
+            embedding: StableGraph::<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>::new(),
         }
     }
 
@@ -107,27 +117,28 @@ impl PlanarEmbedding {
     ) {
         let cw_weight = CwCcw::<NodeIndex>::default();
         self.embedding.add_edge(start_node, end_node, cw_weight);
-        if ref_nbr.is_none() {
+
+        if let Some(ref_nbr_node) = ref_nbr {
+            if self.embedding.find_edge(start_node, ref_nbr_node).is_none() {
+                // RAISE?
+                println!("Cannot add edge to {:?}. Reference neighbor {:?} does not exist", start_node, ref_nbr_node);
+                panic!();
+            }
+            let cw_ref = self
+                .get_edge_weight(start_node, ref_nbr_node, true)
+                .unwrap();
+            // Alter half-edge data structures
+            self.update_edge_weight(start_node, ref_nbr_node, end_node, true);
+            self.update_edge_weight(start_node, end_node, cw_ref, true);
+            self.update_edge_weight(start_node, cw_ref, end_node, false);
+            self.update_edge_weight(start_node, end_node, ref_nbr_node, false);
+        }
+        else {
             // The start node has no neighbors
             self.update_edge_weight(start_node, end_node, end_node, true);
             self.update_edge_weight(start_node, end_node, end_node, false);
             self.embedding[start_node].first_nbr = Some(end_node);
-            return;
         }
-        // if ref_nbr not in self[start_node] error
-        let ref_nbr_node = ref_nbr.unwrap();
-        // RAISE?
-        if self.embedding.find_edge(start_node, ref_nbr_node).is_none() {
-            println!("NO REF NBR in ADD CW {:?} {:?}", start_node, ref_nbr_node);
-        }
-        let cw_ref = self
-            .get_edge_weight(start_node, ref_nbr_node, true)
-            .unwrap();
-        // Alter half-edge data structures
-        self.update_edge_weight(start_node, ref_nbr_node, end_node, true);
-        self.update_edge_weight(start_node, end_node, cw_ref, true);
-        self.update_edge_weight(start_node, cw_ref, end_node, false);
-        self.update_edge_weight(start_node, end_node, ref_nbr_node, false);
     }
 
     fn add_half_edge_ccw(
@@ -147,6 +158,7 @@ impl PlanarEmbedding {
             // Start node has no neighbors
             let cw_weight = CwCcw::<NodeIndex>::default();
             self.embedding.add_edge(start_node, end_node, cw_weight);
+
             self.update_edge_weight(start_node, end_node, end_node, true);
             self.update_edge_weight(start_node, end_node, end_node, false);
             self.embedding[start_node].first_nbr = Some(end_node);
@@ -155,7 +167,7 @@ impl PlanarEmbedding {
 
     fn add_half_edge_first(&mut self, start_node: NodeIndex, end_node: NodeIndex) {
         // Add half edge that's first_nbr or None
-        let ref_node: Option<NodeIndex> = if self.embedding.node_bound() >= start_node.index()
+        let ref_node: Option<NodeIndex> = if self.embedding.node_count() >= start_node.index()
             && self.embedding[start_node].first_nbr.is_some()
         {
             self.embedding[start_node].first_nbr
@@ -211,24 +223,19 @@ impl PlanarEmbedding {
     }
 }
 
-/// Use the LRState data from is_planar to build an
-/// embedding.
+/// Use the LRState data from is_planar to build an embedding.
 pub fn create_embedding(
     planar_emb: &mut PlanarEmbedding,
     lr_state: &mut LRState<&StablePyGraph<Undirected>>,
 ) {
-    let mut ordered_adjs: Vec<Vec<NodeIndex>> = Vec::new();
+    let mut ordered_adjs: IndexMap<NodeIndex, Vec<NodeIndex>> = IndexMap::with_capacity(lr_state.graph.node_count());
 
     // Create the adjacency list for each node
     for v in lr_state.dir_graph.node_indices() {
-        ordered_adjs.push(lr_state.dir_graph.edges(v).map(|e| e.target()).collect());
+        ordered_adjs.insert(v, lr_state.dir_graph.edges(v).map(|e| e.target()).collect());
         // Add empty FirstNbr to the embedding
         let first_nbr = FirstNbr::<NodeIndex>::default();
         planar_emb.embedding.add_node(first_nbr);
-    }
-    // Sort the adjacency list using nesting depth as sort order
-    for (v, adjs) in ordered_adjs.iter_mut().enumerate() {
-        adjs.par_sort_by_key(|x| lr_state.nesting_depth[&(NodeIndex::new(v), *x)]);
     }
     for v in lr_state.dir_graph.node_indices() {
         // Change the sign for nesting_depth
@@ -246,13 +253,13 @@ pub fn create_embedding(
         }
     }
     // Sort the adjacency list using revised nesting depth as sort order
-    for (v, adjs) in ordered_adjs.iter_mut().enumerate() {
-        adjs.par_sort_by_key(|x| lr_state.nesting_depth[&(NodeIndex::new(v), *x)]);
+    for (v, adjs) in ordered_adjs.iter_mut() {
+        adjs.par_sort_by_key(|x| lr_state.nesting_depth[&(*v, *x)]);
     }
     // Add the initial half edge cw to the embedding using the ordered adjacency list
     for v in lr_state.dir_graph.node_indices() {
         let mut prev_node: Option<NodeIndex> = None;
-        for w in &ordered_adjs[v.index()] {
+        for w in ordered_adjs.get(&v).unwrap().iter() {
             planar_emb.add_half_edge_cw(v, *w, prev_node);
             prev_node = Some(*w)
         }
@@ -260,7 +267,7 @@ pub fn create_embedding(
     // Start the DFS traversal for the embedding
     let mut left_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
     let mut right_ref: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(ordered_adjs.len());
-    let mut idx: Vec<usize> = vec![0; ordered_adjs.len()];
+    let mut idx: Vec<usize> = vec![0; lr_state.graph.node_bound()];//ordered_adjs.len()];
 
     for v in lr_state.roots.iter() {
         // Create the stack with an initial entry of v
@@ -271,7 +278,7 @@ pub fn create_embedding(
             let idx2 = idx[v.index()];
 
             // Iterate over the ordered_adjs starting at the saved index until the end
-            for w in ordered_adjs[v.index()][idx2..].iter() {
+            for w in ordered_adjs.get(&v).unwrap()[idx2..].iter() {
                 idx[v.index()] += 1;
                 let ei = (v, *w);
                 if lr_state.eparent.contains_key(w) && ei == lr_state.eparent[w] {
@@ -562,11 +569,10 @@ fn canonical_ordering(
     let v2 = outer_face[1];
     let mut chords: HashMap<NodeIndex, usize> = HashMap::new();
     let mut marked_nodes: HashSet<NodeIndex> = HashSet::new();
-    let mut ready_to_pick: IndexSet<NodeIndex> = IndexSet::new();
 
-    for node in outer_face.iter() {
-        ready_to_pick.insert(*node);
-    }
+    let mut ready_to_pick = outer_face.iter().cloned().collect::<IndexSet<NodeIndex>>();
+    ready_to_pick.par_sort();
+
     let mut outer_face_cw_nbr: HashMap<NodeIndex, NodeIndex> =
         HashMap::with_capacity(outer_face.len());
     let mut outer_face_ccw_nbr: HashMap<NodeIndex, NodeIndex> =
@@ -633,7 +639,8 @@ fn canonical_ordering(
     ready_to_pick.shift_remove(&v2);
 
     for k in (2..(planar_emb.embedding.node_count())).rev() {
-        let v = ready_to_pick.pop().unwrap();
+        let v = ready_to_pick[0];
+        ready_to_pick.shift_remove(&v);
         marked_nodes.insert(v);
 
         let mut wp: Option<NodeIndex> = None;
@@ -685,7 +692,7 @@ fn canonical_ordering(
                         }
                     }
                 } else {
-                    let mut new_face_nodes: HashSet<NodeIndex> = HashSet::new();
+                    let mut new_face_nodes: IndexSet<NodeIndex> = IndexSet::new();
                     if wp_wq.len() > 1 {
                         for w in &wp_wq[1..(wp_wq.len() - 1)] {
                             let w_un = w.unwrap();
