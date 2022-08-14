@@ -127,7 +127,7 @@ def graphviz_draw(
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
         from rustworkx.visualization import graphviz_draw
 
         def node_attr(node):
@@ -138,7 +138,7 @@ def graphviz_draw(
           else:
             return {'color': 'red', 'fillcolor': 'red', 'style': 'filled'}
 
-        graph = rustworkx.generators.directed_star_graph(weights=list(range(32)))
+        graph = rx.generators.directed_star_graph(weights=list(range(32)))
         graphviz_draw(graph, node_attr_fn=node_attr, method='sfdp')
 
     """

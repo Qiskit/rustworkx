@@ -40,8 +40,8 @@ Project history
 
 rustworkx was originally called retworkx and was created to be a high
 performance replacement for the Qiskit project's internal usage of the
-`NetworkX <https://networkx.org/>`__ library (which is where the name comes
-from Rust + NetworkX = rustworkx) but it is not a drop-in replacement for
+`NetworkX <https://networkx.org/>`__ library (which is where the name came
+from: Rust + NetworkX = rustworkx) but it is not a drop-in replacement for
 NetworkX (see :ref:`networkx` for more details). However, since it was
 originally created it has grown to be an independent high performance general
 purpose graph library that can be used for any application that needs to
@@ -52,7 +52,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   Overview and Installation <README>
+   Installation and Getting Started <install>
    Rustworkx Tutorials and Guides <tutorial/index>
    Rustworkx API <api>
    Visualization <visualization>
