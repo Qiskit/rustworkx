@@ -24,7 +24,7 @@ use rustworkx_core::planar::lr_planar::{LRState, Sign};
 
 pub type Point = [f64; 2];
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CwCcw<T> {
     cw: Option<T>,
     ccw: Option<T>,
@@ -49,7 +49,7 @@ impl<T> CwCcw<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FirstNbr<T> {
     pub first_nbr: Option<T>,
 }
@@ -71,6 +71,7 @@ impl<T> FirstNbr<T> {
 
 /// The basic embedding to build the structure that will lead to
 /// the position coordinates to display.
+#[derive(Clone)]
 pub struct PlanarEmbedding {
     pub embedding: StableGraph<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>,
 }
@@ -477,7 +478,8 @@ fn triangulate_embedding(
     let mut face_list = vec![];
     let mut edges_counted: HashSet<(NodeIndex, NodeIndex)> = HashSet::new();
 
-    for v in planar_emb.embedding.node_indices() {
+    let x = planar_emb.clone();//embedding.node_indices().clone();
+    for v in x.embedding.node_indices() {//planar_emb.embedding.node_indices() {
         for w in planar_emb.neighbors_cw_order(v) {
             let new_face = make_bi_connected(planar_emb, &v, &w, &mut edges_counted);
             if !new_face.is_empty() {

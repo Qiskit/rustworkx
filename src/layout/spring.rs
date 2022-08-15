@@ -176,6 +176,7 @@ pub fn rescale(pos: &mut [Point], scale: Nt, indices: Vec<usize>) {
     }
     // find mean in each dimension
     let mut mu: Point = [0.0, 0.0];
+    println!(" pos {:?} indices {:?}", pos, indices);
     for &n in &indices {
         mu[0] += pos[n][0];
         mu[1] += pos[n][1];
