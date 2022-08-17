@@ -24,7 +24,7 @@ use rustworkx_core::planar::lr_planar::{LRState, Sign};
 
 pub type Point = [f64; 2];
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct CwCcw<T> {
     cw: Option<T>,
     ccw: Option<T>,
@@ -49,7 +49,7 @@ impl<T> CwCcw<T> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct FirstNbr<T> {
     pub first_nbr: Option<T>,
 }
@@ -71,7 +71,6 @@ impl<T> FirstNbr<T> {
 
 /// The basic embedding to build the structure that will lead to
 /// the position coordinates to display.
-#[derive(Clone)]
 pub struct PlanarEmbedding {
     pub embedding: StableGraph<FirstNbr<NodeIndex>, CwCcw<NodeIndex>, Directed>,
 }
