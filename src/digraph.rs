@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::borrow_deref_ref)]
+
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
