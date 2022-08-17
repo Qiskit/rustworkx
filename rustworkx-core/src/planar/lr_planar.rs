@@ -259,7 +259,7 @@ where
         let num_nodes = graph.node_count();
         let num_edges = graph.edge_count();
 
-        let lr_state = LRState {
+        LRState {
             graph,
             roots: Vec::new(),
             height: HashMap::with_capacity(num_nodes),
@@ -276,8 +276,7 @@ where
                 .map(|e| ((e.source(), e.target()), Sign::Plus))
                 .collect(),
             dir_graph: StableGraph::with_capacity(num_nodes, 0),
-        };
-        lr_state
+        }
     }
 
     // Create the directed graph for the embedding in stable format
@@ -706,8 +705,8 @@ where
 ///
 /// # Example:
 /// ```rust
-/// use retworkx_core::petgraph::graph::UnGraph;
-/// use retworkx_core::planar::{is_planar, LRState};
+/// use rustworkx_core::petgraph::graph::UnGraph;
+/// use rustworkx_core::planar::{is_planar, LRState};
 ///
 /// let grid = UnGraph::<(), ()>::from_edges(&[
 ///    // row edges

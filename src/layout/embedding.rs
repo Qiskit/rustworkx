@@ -194,6 +194,7 @@ impl PlanarEmbedding {
         let cw_weight = CwCcw::<NodeIndex>::default();
         if found_edge.is_none() {
             // RAISE?
+            println!("update v {:?} w {:?}", v, w);
             self.embedding.add_edge(v, w, cw_weight);
         }
         let mut found_weight = self.embedding.edge_weight_mut(found_edge.unwrap());
@@ -234,12 +235,11 @@ pub fn create_embedding(
     let mut ordered_adjs: IndexMap<NodeIndex, Vec<NodeIndex>> =
         IndexMap::with_capacity(lr_state.graph.node_count());
 
+    add_nodes_to_embedding(planar_emb, &lr_state.dir_graph);
+
     // Create the adjacency list for each node
     for v in lr_state.dir_graph.node_indices() {
         ordered_adjs.insert(v, lr_state.dir_graph.edges(v).map(|e| e.target()).collect());
-        // Add empty FirstNbr to the embedding
-        let first_nbr = FirstNbr::<NodeIndex>::default();
-        planar_emb.embedding.add_node(first_nbr);
     }
     for v in lr_state.dir_graph.node_indices() {
         // Change the sign for nesting_depth
@@ -302,6 +302,31 @@ pub fn create_embedding(
         }
     }
 
+    fn add_nodes_to_embedding(
+        planar_emb: &mut PlanarEmbedding,
+        dir_graph: &StableGraph<(), (), Directed>,
+    ) {
+        let mut tmp_nodes: Vec<usize> = Vec::new();
+        let mut count: usize = 0;
+        for _ in 0..dir_graph.node_bound() {
+            let first_nbr = FirstNbr::<NodeIndex>::default();
+            planar_emb.embedding.add_node(first_nbr);
+        }
+        for gnode in dir_graph.node_indices() {
+            let gidx = gnode.index();
+            if gidx != count {
+                for idx in count..gidx {
+                    tmp_nodes.push(idx);
+                }
+                count = gidx;
+            }
+            count += 1;
+        }
+        for tmp_node in tmp_nodes {
+            planar_emb.embedding.remove_node(NodeIndex::new(tmp_node));
+        }
+    }
+
     fn sign(
         edge: (NodeIndex, NodeIndex),
         eref: &mut HashMap<(NodeIndex, NodeIndex), (NodeIndex, NodeIndex)>,
@@ -335,14 +360,9 @@ pub fn create_embedding(
 /// create a canonical ordering, and convert the embedding to position
 /// coordinates.
 pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
-    let mut pos: Vec<Point> = vec![[0.0, 0.0]; planar_emb.embedding.node_count()];
-    if planar_emb.embedding.node_count() < 4 {
-        let default_pos = [[0.0, 0.0], [2.0, 0.0], [1.0, 1.0]].to_vec();
-        return planar_emb
-            .embedding
-            .node_indices()
-            .map(|n| default_pos[n.index()])
-            .collect();
+    let mut pos: Vec<Point> = vec![[0.0, 0.0]; planar_emb.embedding.node_bound()];
+    if planar_emb.embedding.node_bound() < 4 {
+        return [[0.0, 0.0], [2.0, 0.0], [1.0, 1.0]].to_vec();
     }
     let outer_face = triangulate_embedding(planar_emb, false);
 
@@ -437,7 +457,6 @@ pub fn embedding_to_pos(planar_emb: &mut PlanarEmbedding) -> Vec<Point> {
             remaining_nodes.push(child);
         }
     }
-
     pos[v1.unwrap().index()] = [0.0, y_coord[&v1] as f64];
     let mut remaining_nodes = vec![v1];
 
@@ -478,8 +497,8 @@ fn triangulate_embedding(
     let mut face_list = vec![];
     let mut edges_counted: HashSet<(NodeIndex, NodeIndex)> = HashSet::new();
 
-    let x = planar_emb.clone();//embedding.node_indices().clone();
-    for v in x.embedding.node_indices() {//planar_emb.embedding.node_indices() {
+    let indices: Vec<NodeIndex> = planar_emb.embedding.node_indices().collect();
+    for v in indices {
         for w in planar_emb.neighbors_cw_order(v) {
             let new_face = make_bi_connected(planar_emb, &v, &w, &mut edges_counted);
             if !new_face.is_empty() {

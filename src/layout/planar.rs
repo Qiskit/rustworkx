@@ -56,19 +56,23 @@ pub fn planar_layout(
         // Then convert the embedding to position coordinates.
         let mut pos = embedding_to_pos(&mut planar_emb);
 
-        //let x = pos.len();
         if let Some(scale) = scale {
-            rescale(&mut pos, scale, graph.node_indices().map(|n| n.index()).collect());
+            rescale(
+                &mut pos,
+                scale,
+                graph.node_indices().map(|n| n.index()).collect(),
+            );
         }
         if let Some(center) = center {
             recenter(&mut pos, center);
         }
         Pos2DMapping {
-            pos_map: planar_emb
-                .embedding
+            pos_map: graph
                 .node_indices()
-                .map(|n| n.index())
-                .zip(pos)
+                .map(|n| {
+                    let n = n.index();
+                    (n, pos[n])
+                })
                 .collect(),
         }
     }
