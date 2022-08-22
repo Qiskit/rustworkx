@@ -322,6 +322,8 @@ create_exception!(rustworkx, JSONSerializationError, PyException);
 create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
 create_exception!(rustworkx, FailedToConverge, PyException);
+// Graph is not planar
+create_exception!(rustworkx, GraphNotPlanar, PyException);
 
 #[pymodule]
 fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -339,6 +341,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         py.get_type::<JSONSerializationError>(),
     )?;
     m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
+    m.add("GraphNotPlanar", py.get_type::<GraphNotPlanar>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;

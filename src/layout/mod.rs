@@ -218,7 +218,7 @@ pub fn graph_planar_layout(
     graph: &graph::PyGraph,
     scale: Option<f64>,
     center: Option<[f64; 2]>,
-) -> Pos2DMapping {
+) -> PyResult<Pos2DMapping> {
     planar::planar_layout(&graph.graph, scale, center)
 }
 

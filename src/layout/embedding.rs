@@ -119,14 +119,6 @@ impl PlanarEmbedding {
         self.embedding.add_edge(start_node, end_node, cw_weight);
 
         if let Some(ref_nbr_node) = ref_nbr {
-            if self.embedding.find_edge(start_node, ref_nbr_node).is_none() {
-                // RAISE?
-                println!(
-                    "Cannot add edge to {:?}. Reference neighbor {:?} does not exist",
-                    start_node, ref_nbr_node
-                );
-                panic!();
-            }
             let cw_ref = self
                 .get_edge_weight(start_node, ref_nbr_node, true)
                 .unwrap();
@@ -181,27 +173,12 @@ impl PlanarEmbedding {
 
     fn next_face_half_edge(&mut self, v: NodeIndex, w: NodeIndex) -> (NodeIndex, NodeIndex) {
         let new_node = self.get_edge_weight(w, v, false);
-        if new_node.is_none() {
-            // RAISE?
-            return (w, v);
-        }
         (w, new_node.unwrap())
     }
 
     fn update_edge_weight(&mut self, v: NodeIndex, w: NodeIndex, new_node: NodeIndex, cw: bool) {
         let found_edge = self.embedding.find_edge(v, w);
-        let cw_weight = CwCcw::<NodeIndex>::default();
-        if found_edge.is_none() {
-            // RAISE?
-            println!("update v {:?} w {:?}", v, w);
-            self.embedding.add_edge(v, w, cw_weight);
-        }
-        let mut found_weight = self.embedding.edge_weight_mut(found_edge.unwrap());
-        let mut cw_weight2 = CwCcw::<NodeIndex>::default();
-        if found_weight.is_none() {
-            // RAISE?
-            found_weight = Some(&mut cw_weight2);
-        }
+        let found_weight = self.embedding.edge_weight_mut(found_edge.unwrap());
         if cw {
             found_weight.unwrap().cw = Some(new_node);
         } else {
@@ -539,11 +516,6 @@ fn make_bi_connected(
     let (_, mut v3) = planar_emb.next_face_half_edge(v1, v2);
 
     while v2 != *start_node || v3 != *out_node {
-        if v1 == v2 {
-            // RAISE?
-            println!("BICONNECT V1==V2 should raise");
-        }
-
         if face_list.contains(&v2) {
             planar_emb.add_half_edge_cw(v1, v3, Some(v2));
             planar_emb.add_half_edge_ccw(v3, v1, Some(v2));

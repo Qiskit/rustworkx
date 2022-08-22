@@ -12,7 +12,9 @@
 
 use petgraph::prelude::*;
 use petgraph::visit::NodeIndexable;
+use pyo3::prelude::*;
 
+use super::super::GraphNotPlanar;
 use super::spring::{recenter, rescale, Point};
 use crate::iterators::Pos2DMapping;
 use crate::layout::embedding::{create_embedding, embedding_to_pos, PlanarEmbedding};
@@ -26,24 +28,18 @@ pub fn planar_layout(
     graph: &StablePyGraph<Undirected>,
     scale: Option<f64>,
     center: Option<Point>,
-) -> Pos2DMapping {
+) -> PyResult<Pos2DMapping> {
     let node_num = graph.node_bound();
     if node_num == 0 {
-        return Pos2DMapping {
+        return Ok(Pos2DMapping {
             pos_map: DictMap::new(),
-        };
+        });
     }
 
     // First determine if the graph is planar.
     let mut lr_state = LRState::new(graph);
-    let its_planar = is_planar(graph, Some(&mut lr_state));
-
-    // If not planar, return an empty pos_map
-    if !its_planar {
-        // RAISE?
-        Pos2DMapping {
-            pos_map: DictMap::new(),
-        }
+    if !is_planar(graph, Some(&mut lr_state)) {
+        Err(GraphNotPlanar::new_err("The input graph is not planar."))
 
     // If planar, create the position coordinates.
     } else {
@@ -66,7 +62,7 @@ pub fn planar_layout(
         if let Some(center) = center {
             recenter(&mut pos, center);
         }
-        Pos2DMapping {
+        Ok(Pos2DMapping {
             pos_map: graph
                 .node_indices()
                 .map(|n| {
@@ -74,6 +70,6 @@ pub fn planar_layout(
                     (n, pos[n])
                 })
                 .collect(),
-        }
+        })
     }
 }
