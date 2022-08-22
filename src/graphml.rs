@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::borrow_deref_ref)]
+
 use std::convert::From;
 use std::io::BufRead;
 use std::iter::FromIterator;
@@ -477,12 +479,10 @@ impl GraphML {
                 self.key_for_all.insert(id, key);
                 Ok(Domain::All)
             }
-            _ => {
-                return Err(Error::InvalidDoc(format!(
-                    "Invalid 'for' attribute in key with id={}.",
-                    id,
-                )));
-            }
+            _ => Err(Error::InvalidDoc(format!(
+                "Invalid 'for' attribute in key with id={}.",
+                id,
+            ))),
         }
     }
 

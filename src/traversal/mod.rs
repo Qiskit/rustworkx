@@ -256,7 +256,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///
 /// .. jupyter-execute::
 ///
-///        import rustworkx
+///        import rustworkx as rx
 ///        from rustworkx.visit import BFSVisitor
 ///   
 ///        class TreeEdgesRecorder(BFSVisitor):
@@ -267,10 +267,10 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = rustworkx.PyDiGraph()
+///        graph = rx.PyDiGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rustworkx.bfs_search(graph, [0], vis)
+///        rx.bfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
@@ -342,7 +342,7 @@ pub fn digraph_bfs_search(
 ///
 /// .. jupyter-execute::
 ///
-///        import rustworkx
+///        import rustworkx as rx
 ///        from rustworkx.visit import BFSVisitor
 ///   
 ///        class TreeEdgesRecorder(BFSVisitor):
@@ -353,10 +353,10 @@ pub fn digraph_bfs_search(
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = rustworkx.PyGraph()
+///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rustworkx.bfs_search(graph, [0], vis)
+///        rx.bfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
@@ -426,7 +426,7 @@ pub fn graph_bfs_search(
 ///
 /// .. jupyter-execute::
 ///
-///        import rustworkx
+///        import rustworkx as rx
 ///        from rustworkx.visit import DFSVisitor
 ///   
 ///        class TreeEdgesRecorder(DFSVisitor):
@@ -437,10 +437,10 @@ pub fn graph_bfs_search(
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = rustworkx.PyGraph()
+///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rustworkx.dfs_search(graph, [0], vis)
+///        rx.dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
@@ -510,7 +510,7 @@ pub fn digraph_dfs_search(
 ///
 /// .. jupyter-execute::
 ///
-///        import rustworkx
+///        import rustworkx as rx
 ///        from rustworkx.visit import DFSVisitor
 ///   
 ///        class TreeEdgesRecorder(DFSVisitor):
@@ -521,10 +521,10 @@ pub fn digraph_dfs_search(
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = rustworkx.PyGraph()
+///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rustworkx.dfs_search(graph, [0], vis)
+///        rx.dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::

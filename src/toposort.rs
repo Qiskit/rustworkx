@@ -43,10 +43,10 @@ enum NodeState {
 ///
 /// .. jupyter-execute::
 ///
-///   import rustworkx
+///   import rustworkx as rx
 ///
-///   graph = rustworkx.generators.directed_path_graph(5)
-///   sorter = rustworkx.TopologicalSorter(graph)
+///   graph = rx.generators.directed_path_graph(5)
+///   sorter = rx.TopologicalSorter(graph)
 ///   while sorter.is_active():
 ///       nodes = sorter.get_ready()
 ///       print(nodes)

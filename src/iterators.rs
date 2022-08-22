@@ -619,10 +619,10 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
-        bfs_succ = rustworkx.bfs_successors(0)
+        graph = rx.generators.directed_path_graph(5)
+        bfs_succ = rx.bfs_successors(0)
         # Index based access
         third_element = bfs_succ[2]
         # Use as iterator
@@ -666,10 +666,10 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
-        nodes = rustworkx.node_indices(0)
+        graph = rx.generators.directed_path_graph(5)
+        nodes = rx.node_indices(0)
         # Index based access
         third_element = nodes[2]
         # Use as iterator
@@ -704,9 +704,9 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
+        graph = rx.generators.directed_path_graph(5)
         edges = graph.edge_list()
         # Index based access
         third_element = edges[2]
@@ -742,9 +742,9 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
+        graph = rx.generators.directed_path_graph(5)
         edges = graph.weighted_edge_list()
         # Index based access
         third_element = edges[2]
@@ -786,10 +786,10 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
-        edges = rustworkx.edge_indices()
+        graph = rx.generators.directed_path_graph(5)
+        edges = rx.edge_indices()
         # Index based access
         third_element = edges[2]
         # Use as iterator
@@ -838,10 +838,10 @@ custom_vec_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.hexagonal_lattice_graph(2, 2)
-        chains = rustworkx.chain_decomposition(graph)
+        graph = rx.generators.hexagonal_lattice_graph(2, 2)
+        chains = rx.chain_decomposition(graph)
         # Index based access
         third_chain = chains[2]
         # Use as iterator
@@ -1071,10 +1071,10 @@ impl PyGCProtocol for EdgeIndexMap {
 ///
 /// For example::
 ///
-///     import rustworkx
+///     import rustworkx as rx
 ///
-///     graph = rustworkx.generators.directed_path_graph(5)
-///     edges = rustworkx.dijkstra_shortest_paths(0)
+///     graph = rx.generators.directed_path_graph(5)
+///     edges = rx.dijkstra_shortest_paths(0)
 ///     # Target node access
 ///     third_element = edges[2]
 ///     # Use as iterator
@@ -1408,10 +1408,10 @@ custom_hash_map_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
-        edges = rustworkx.dijkstra_shortest_path_lengths(0)
+        graph = rx.generators.directed_path_graph(5)
+        edges = rx.dijkstra_shortest_path_lengths(0)
         # Target node access
         third_element = edges[2]
         # Use as iterator
@@ -1493,10 +1493,10 @@ custom_hash_map_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
-        edges = rustworkx.num_shortest_paths_unweighted(0)
+        graph = rx.generators.directed_path_graph(5)
+        edges = rx.num_shortest_paths_unweighted(0)
         # Target node access
         third_element = edges[2]
         # Use as iterator
@@ -1559,10 +1559,10 @@ custom_hash_map_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
-        edges = rustworkx.all_pairs_dijkstra_shortest_path_lengths(graph)
+        graph = rx.generators.directed_path_graph(5)
+        edges = rx.all_pairs_dijkstra_shortest_path_lengths(graph)
         # Target node access
         third_node_shortest_path_lengths = edges[2]
 
@@ -1595,10 +1595,10 @@ custom_hash_map_iter_impl!(
 
     For example::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.generators.directed_path_graph(5)
-        edges = rustworkx.all_pairs_dijkstra_shortest_paths(graph)
+        graph = rx.generators.directed_path_graph(5)
+        edges = rx.all_pairs_dijkstra_shortest_paths(graph)
         # Target node access
         third_node_shortest_paths = edges[2]
 
