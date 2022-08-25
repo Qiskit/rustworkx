@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 use petgraph::graph::NodeIndex;
-use super::NullGraph;
+// use super::NullGraph;
 use hashbrown::HashSet;
 use petgraph::algo;
 use std::collections::VecDeque;
@@ -191,7 +191,7 @@ where
     }
 }
 
-pub fn node_connected_component<G>(graph: G, node: usize) -> HashSet<usize>
+pub fn node_connected_component<G>(graph: G, node: usize) -> Result<HashSet<usize>, InvalidNode >
 where
     G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
