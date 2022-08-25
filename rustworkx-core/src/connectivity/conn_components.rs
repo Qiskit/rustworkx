@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 use petgraph::graph::NodeIndex;
-// use rs::NullGraph;
+use super::NullGraph;
 use hashbrown::HashSet;
 use petgraph::algo;
 use std::collections::VecDeque;
@@ -166,7 +166,7 @@ where
     num_components
 }
 
-pub fn strongly_connected_components<G>(graph: G) -> Vec<Vec<usize>>
+pub fn strongly_connected_components<G>(graph: G) -> Vec<Vec<G::NodeId>>
 where
     G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
@@ -177,14 +177,14 @@ where
         .collect()
 }
 
-pub fn is_connected<G>(graph: G) -> Vec<Vec<usize>>
+pub fn is_connected<G>(graph: G) -> Result<bool, NullGraph>
 where
     G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
     match graph.node_identifiers().next() {
         Some(node) => {
-            let component = node_connected_component(graph, node.index())?;
+            let component = node_connected_component(graph, node.index());
             Ok(component.len() == graph.node_count())
         }
         None => Err(NullGraph::new_err("Invalid operation on a NullGraph")),
