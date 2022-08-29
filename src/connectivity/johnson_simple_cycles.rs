@@ -11,6 +11,7 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
 
 use crate::digraph::PyDiGraph;
 use crate::StablePyGraph;
@@ -49,17 +50,6 @@ fn build_subgraph(
         out_graph.add_edge(new_source, new_target, ());
     }
     (out_graph, node_map)
-}
-
-#[inline]
-fn set_pop(set: &mut HashSet<NodeIndex>) -> Option<NodeIndex> {
-    if set.is_empty() {
-        None
-    } else {
-        let set_node = set.iter().next().copied().unwrap();
-        set.remove(&set_node);
-        Some(set_node)
-    }
 }
 
 #[pyclass(module = "rustworkx")]
@@ -122,9 +112,9 @@ impl SimpleCycleIter {
         let unblock = |node: NodeIndex,
                        blocked: &mut HashSet<NodeIndex>,
                        block: &mut HashMap<NodeIndex, HashSet<NodeIndex>>| {
-            let mut stack: HashSet<NodeIndex> = HashSet::new();
+            let mut stack: IndexSet<NodeIndex> = IndexSet::new();
             stack.insert(node);
-            while let Some(stack_node) = set_pop(&mut stack) {
+            while let Some(stack_node) = stack.pop() {
                 if blocked.remove(&stack_node) {
                     match block.get_mut(&stack_node) {
                         // stack.update(block[stack_node]):
@@ -156,14 +146,14 @@ impl SimpleCycleIter {
             // Nodes in cycle all
             let mut closed: HashSet<NodeIndex> = HashSet::new();
             let mut block: HashMap<NodeIndex, HashSet<NodeIndex>> = HashMap::new();
-            let mut stack: Vec<(NodeIndex, HashSet<NodeIndex>)> = vec![(
+            let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex>)> = vec![(
                 start_node,
                 subgraph
                     .neighbors(start_node)
-                    .collect::<HashSet<NodeIndex>>(),
+                    .collect::<IndexSet<NodeIndex>>(),
             )];
             while let Some((this_node, neighbors)) = stack.last_mut() {
-                if let Some(next_node) = set_pop(neighbors) {
+                if let Some(next_node) = neighbors.pop() {
                     if next_node == start_node {
                         // Out path in input graph basis
                         let mut out_path: Vec<usize> = Vec::with_capacity(path.len());
@@ -178,7 +168,7 @@ impl SimpleCycleIter {
                             next_node,
                             subgraph
                                 .neighbors(next_node)
-                                .collect::<HashSet<NodeIndex>>(),
+                                .collect::<IndexSet<NodeIndex>>(),
                         ));
                         closed.remove(&next_node);
                         blocked.insert(next_node);
