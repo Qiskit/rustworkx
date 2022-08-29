@@ -16,15 +16,15 @@ use crate::digraph::PyDiGraph;
 use crate::StablePyGraph;
 use petgraph::algo::kosaraju_scc;
 use petgraph::graph::NodeIndex;
+use petgraph::stable_graph::StableDiGraph;
 use petgraph::visit::EdgeRef;
 use petgraph::visit::IntoEdgeReferences;
 use petgraph::visit::IntoNodeReferences;
 use petgraph::visit::NodeFiltered;
 use petgraph::Directed;
-use petgraph::stable_graph::StableDiGraph;
 
-use pyo3::prelude::*;
 use pyo3::iter::IterNextOutput;
+use pyo3::prelude::*;
 
 use crate::iterators::NodeIndices;
 
@@ -78,7 +78,7 @@ impl SimpleCycleIter {
         // from Johnson's algorithm
         let self_cycles_vec: Vec<NodeIndex> = graph_clone
             .node_indices()
-            .filter(|n| graph_clone.neighbors(*n).any(|x| x == *n))                
+            .filter(|n| graph_clone.neighbors(*n).any(|x| x == *n))
             .collect();
         for node in &self_cycles_vec {
             while let Some(edge_index) = graph_clone.find_edge(*node, *node) {
@@ -116,7 +116,7 @@ impl SimpleCycleIter {
                 slf.self_cycles = None;
             }
             return Ok(IterNextOutput::Yield(NodeIndices {
-                nodes: vec![cycle_node.index()]
+                nodes: vec![cycle_node.index()],
             }));
         }
         let unblock = |node: NodeIndex,
@@ -171,9 +171,7 @@ impl SimpleCycleIter {
                             out_path.push(reverse_node_map[n].index());
                             closed.insert(*n);
                         }
-                        return Ok(IterNextOutput::Yield(NodeIndices {
-                            nodes: out_path
-                        }));
+                        return Ok(IterNextOutput::Yield(NodeIndices { nodes: out_path }));
                     } else if blocked.insert(next_node) {
                         path.push(next_node);
                         stack.push((
@@ -201,17 +199,18 @@ impl SimpleCycleIter {
                 }
             }
             subgraph.remove_node(start_node);
-            slf.scc.extend(kosaraju_scc(&subgraph).into_iter().filter_map(|scc| {
-                if scc.len() > 1 {
-                    let res = scc
-                        .iter()
-                        .map(|n| reverse_node_map[n])
-                        .collect::<Vec<NodeIndex>>();
-                    Some(res)
-                } else {
-                    None
-                }
-            }));
+            slf.scc
+                .extend(kosaraju_scc(&subgraph).into_iter().filter_map(|scc| {
+                    if scc.len() > 1 {
+                        let res = scc
+                            .iter()
+                            .map(|n| reverse_node_map[n])
+                            .collect::<Vec<NodeIndex>>();
+                        Some(res)
+                    } else {
+                        None
+                    }
+                }));
         }
         Ok(IterNextOutput::Return("Ended"))
     }

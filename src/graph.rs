@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::borrow_deref_ref)]
+
 use std::cmp;
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -58,9 +60,9 @@ use petgraph::visit::{
 ///
 /// .. jupyter-execute::
 ///
-///        import rustworkx
+///        import rustworkx as rx
 ///
-///        graph = rustworkx.PyGraph()
+///        graph = rx.PyGraph()
 ///        graph.add_nodes_from(list(range(5)))
 ///        graph.add_nodes_from(list(range(2)))
 ///        graph.remove_node(2)
@@ -74,9 +76,9 @@ use petgraph::visit::{
 ///
 /// .. jupyter-execute::
 ///
-///     import rustworkx
+///     import rustworkx as rx
 ///
-///     graph = rustworkx.PyGraph()
+///     graph = rx.PyGraph()
 ///     data_payload = "An arbitrary Python object"
 ///     node_index = graph.add_node(data_payload)
 ///     print("Node Index: %s" % node_index)
@@ -87,9 +89,9 @@ use petgraph::visit::{
 ///
 /// .. jupyter-execute::
 ///
-///     import rustworkx
+///     import rustworkx as rx
 ///
-///     graph = rustworkx.PyGraph()
+///     graph = rx.PyGraph()
 ///     data_payload = "An arbitrary Python object"
 ///     node_index = graph.add_node(data_payload)
 ///     graph[node_index] = "New Payload"
@@ -101,8 +103,8 @@ use petgraph::visit::{
 /// ``multigraph`` kwarg to ``False`` when calling the ``PyGraph``
 /// constructor. For example::
 ///
-///     import rustworkx
-///     graph = rustworkx.PyGraph(multigraph=False)
+///     import rustworkx as rx
+///     graph = rx.PyGraph(multigraph=False)
 ///
 /// This can only be set at ``PyGraph`` initialization and not adjusted after
 /// creation. When :attr:`~rustworkx.PyGraph.multigraph` is set to ``False``
@@ -1123,9 +1125,9 @@ impl PyGraph {
     ///   import pydot
     ///   from PIL import Image
     ///
-    ///   import rustworkx
+    ///   import rustworkx as rx
     ///
-    ///   graph = rustworkx.undirected_gnp_random_graph(15, .25)
+    ///   graph = rx.undirected_gnp_random_graph(15, .25)
     ///   dot_str = graph.to_dot(
     ///       lambda node: dict(
     ///           color='black', fillcolor='lightblue', style='filled'))
@@ -1187,7 +1189,7 @@ impl PyGraph {
     ///
     ///   import tempfile
     ///
-    ///   import rustworkx
+    ///   import rustworkx as rx
     ///   from rustworkx.visualization import mpl_draw
     ///
     ///   with tempfile.NamedTemporaryFile('wt') as fd:
@@ -1198,7 +1200,7 @@ impl PyGraph {
     ///       fd.write('1 2\n')
     ///       fd.write('2 3\n')
     ///       fd.flush()
-    ///       graph = rustworkx.PyGraph.read_edge_list(path)
+    ///       graph = rx.PyGraph.read_edge_list(path)
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
@@ -1305,9 +1307,9 @@ impl PyGraph {
     ///     import os
     ///     import tempfile
     ///
-    ///     import rustworkx
+    ///     import rustworkx as rx
     ///
-    ///     graph = rustworkx.generators.path_graph(5)
+    ///     graph = rx.generators.path_graph(5)
     ///     path = os.path.join(tempfile.gettempdir(), "edge_list")
     ///     graph.write_edge_list(path, deliminator=',')
     ///     # Print file contents
@@ -1461,11 +1463,11 @@ impl PyGraph {
     ///   import pydot
     ///   from PIL import Image
     ///
-    ///   import rustworkx
+    ///   import rustworkx as rx
     ///   from rustworkx.visualization import mpl_draw
     ///
     ///   # Build first graph and visualize:
-    ///   graph = rustworkx.PyGraph()
+    ///   graph = rx.PyGraph()
     ///   node_a, node_b, node_c = graph.add_nodes_from(['A', 'B', 'C'])
     ///   graph.add_edges_from([(node_a, node_b, 'A to B'),
     ///                         (node_b, node_c, 'B to C')])
@@ -1476,7 +1478,7 @@ impl PyGraph {
     /// .. jupyter-execute::
     ///
     ///   # Build second graph and visualize:
-    ///   other_graph = rustworkx.PyGraph()
+    ///   other_graph = rx.PyGraph()
     ///   node_d, node_e = other_graph.add_nodes_from(['D', 'E'])
     ///   other_graph.add_edge(node_d, node_e, 'D to E')
     ///   mpl_draw(other_graph, with_labels=True, labels=str, edge_labels=str)
