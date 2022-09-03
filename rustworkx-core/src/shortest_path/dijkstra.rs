@@ -174,7 +174,7 @@ mod tests {
     use petgraph::Graph;
 
     #[test]
-    fn dijk() {
+    fn test_dijk() {
         let mut g = Graph::new_undirected();
         let a = g.add_node("A");
         let b = g.add_node("B");
@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn dijk_with_goal() {
+    fn test_dijk_with_goal() {
         let mut g = Graph::new_undirected();
         let a = g.add_node("A");
         let b = g.add_node("B");

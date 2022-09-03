@@ -402,7 +402,7 @@ mod tests {
     use petgraph::Graph;
 
     #[test]
-    fn bell() {
+    fn test_bell() {
         let mut graph = Graph::new_undirected();
         let a = graph.add_node("A");
         let b = graph.add_node("B");

@@ -131,7 +131,7 @@ mod tests {
     use petgraph::Graph;
 
     #[test]
-    fn second_shortest_path() {
+    fn test_second_shortest_path() {
         let mut graph: Graph<(), _> = Graph::new();
         let a = graph.add_node(());
         let b = graph.add_node(());
