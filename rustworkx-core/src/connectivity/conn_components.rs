@@ -9,14 +9,15 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations
 // under the License.
-use petgraph::graph::NodeIndex;
-// use super::NullGraph;
 use hashbrown::HashSet;
 use petgraph::algo;
 use std::collections::VecDeque;
 use std::hash::Hash;
 // use super::digraph;
-use petgraph::visit::{GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, VisitMap, Visitable};
+use petgraph::visit::{
+    GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, NodeIndexable, VisitMap,
+    Visitable,
+};
 use petgraph::{Incoming, Outgoing};
 /// Given an graph, a node in the graph, and a visit_map,
 /// return the set of nodes connected to the given node
@@ -166,48 +167,31 @@ where
     num_components
 }
 
-pub fn strongly_connected_components<G>(graph: G) -> Vec<Vec<G::NodeId>>
+pub fn is_connected<G>(graph: G) -> bool
 where
-    G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
-    G::NodeId: Eq + Hash,
-{
-    algo::kosaraju_scc(&graph)
-        .iter()
-        .map(|x| x.iter().map(|id| id.index()).collect())
-        .collect()
-}
-
-pub fn is_connected<G>(graph: G) -> Result<bool, NullGraph>
-where
-    G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
+    G: GraphProp
+        + IntoNeighborsDirected
+        + Visitable
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + NodeCount,
     G::NodeId: Eq + Hash,
 {
     match graph.node_identifiers().next() {
         Some(node) => {
-            let component = node_connected_component(graph, node.index());
-            Ok(component.len() == graph.node_count())
+            let component = node_connected_component(graph, node.to_index());
+            component.len() == graph.node_count()
         }
-        None => Err(NullGraph::new_err("Invalid operation on a NullGraph")),
+        None => false,
     }
 }
 
-pub fn node_connected_component<G>(graph: G, node: usize) -> Result<HashSet<usize>, InvalidNode >
+pub fn node_connected_component<G>(graph: G, node: G::NodeId) -> HashSet<G::NodeId>
 where
     G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
-    let node = NodeIndex::new(node);
-
-    if !graph.contains_node(node) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'node' is not a valid node index",
-        ));
-    }
-
-    Ok(bfs_undirected(&graph, node, &mut graph.visit_map())
-        .into_iter()
-        .map(|x| x.index())
-        .collect())
+    bfs_undirected(&graph, node, &mut graph.visit_map())
 }
 
 #[cfg(test)]

@@ -23,6 +23,5 @@ pub use chain::chain_decomposition;
 pub use conn_components::bfs_undirected;
 pub use conn_components::connected_components;
 pub use conn_components::is_connected;
-pub use conn_components::node_connected_components;
+// pub use conn_components::node_connected_components;
 pub use conn_components::number_connected_components;
-pub use conn_components::strongly_connected_components;

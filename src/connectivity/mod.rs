@@ -138,7 +138,10 @@ pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usize>> {
-    connectivity::strongly_connected_components(&graph.graph)
+    algo::kosaraju_scc(&graph.graph)
+        .iter()
+        .map(|x| x.iter().map(|id| id.index()).collect())
+        .collect()
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,
