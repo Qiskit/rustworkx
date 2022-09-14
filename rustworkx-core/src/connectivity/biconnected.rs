@@ -182,3 +182,188 @@ where
 
     points
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::connectivity::articulation_points;
+    use hashbrown::{HashMap, HashSet};
+    use petgraph::graph::node_index as nx;
+    use petgraph::prelude::*;
+    use std::iter::FromIterator;
+
+    #[test]
+    fn test_articulation_points_repetitions() {
+        let graph = UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (1, 3)]);
+
+        let a_points = articulation_points(&graph, None);
+
+        assert_eq!(a_points, HashSet::from_iter([nx(1)]));
+    }
+
+    #[test]
+    fn test_articulation_points_cycle() {
+        // create a cycle graph
+        let graph =
+            UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
+
+        let a_points = articulation_points(&graph, None);
+
+        assert_eq!(a_points, HashSet::from_iter([nx(1)]));
+    }
+
+    #[test]
+    fn test_biconnected_components_cycle() {
+        // create a cycle graph
+        let graph =
+            UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
+
+        let mut components = HashMap::new();
+        let _ = articulation_points(&graph, Some(&mut components));
+
+        assert_eq!(
+            components,
+            HashMap::from_iter([
+                ((nx(1), nx(3)), 0),
+                ((nx(3), nx(4)), 0),
+                ((nx(4), nx(1)), 0),
+                ((nx(1), nx(2)), 1),
+                ((nx(2), nx(0)), 1),
+                ((nx(0), nx(1)), 1)
+            ])
+        );
+    }
+
+    #[test]
+    fn test_biconnected_components1() {
+        // exmaple from https://web.archive.org/web/20121229123447/http://www.ibluemojo.com/school/articul_algorithm.html
+        let graph = UnGraph::<(), ()>::from_edges(&[
+            (0, 1),
+            (0, 5),
+            (0, 6),
+            (0, 14),
+            (1, 5),
+            (1, 6),
+            (1, 14),
+            (2, 4),
+            (2, 10),
+            (3, 4),
+            (3, 15),
+            (4, 6),
+            (4, 7),
+            (4, 10),
+            (5, 14),
+            (6, 14),
+            (7, 9),
+            (8, 9),
+            (8, 12),
+            (8, 13),
+            (10, 15),
+            (11, 12),
+            (11, 13),
+            (12, 13),
+        ]);
+
+        let mut components = HashMap::new();
+        let a_points = articulation_points(&graph, Some(&mut components));
+
+        assert_eq!(
+            a_points,
+            HashSet::from_iter([nx(4), nx(6), nx(7), nx(8), nx(9)])
+        );
+        assert_eq!(
+            components,
+            HashMap::from_iter([
+                ((nx(3), nx(4)), 0),
+                ((nx(15), nx(3)), 0),
+                ((nx(10), nx(15)), 0),
+                ((nx(4), nx(10)), 0),
+                ((nx(10), nx(2)), 0),
+                ((nx(2), nx(4)), 0),
+                ((nx(13), nx(12)), 1),
+                ((nx(8), nx(13)), 1),
+                ((nx(11), nx(13)), 1),
+                ((nx(12), nx(11)), 1),
+                ((nx(12), nx(8)), 1),
+                ((nx(9), nx(8)), 2),
+                ((nx(7), nx(9)), 3),
+                ((nx(4), nx(7)), 4),
+                ((nx(6), nx(4)), 5),
+                ((nx(0), nx(14)), 6),
+                ((nx(1), nx(5)), 6),
+                ((nx(5), nx(0)), 6),
+                ((nx(5), nx(14)), 6),
+                ((nx(1), nx(14)), 6),
+                ((nx(14), nx(6)), 6),
+                ((nx(6), nx(0)), 6),
+                ((nx(6), nx(1)), 6),
+                ((nx(1), nx(0)), 6),
+            ])
+        )
+    }
+
+    #[test]
+    fn test_biconnected_components2() {
+        let mut graph: Graph<&str, (), Undirected> = Graph::new_undirected();
+        let a = graph.add_node("A");
+        let b = graph.add_node("B");
+        let c = graph.add_node("C");
+        let d = graph.add_node("D");
+        let e = graph.add_node("E");
+        let f = graph.add_node("F");
+        let g = graph.add_node("G");
+        let h = graph.add_node("H");
+        let i = graph.add_node("I");
+        let j = graph.add_node("J");
+
+        graph.extend_with_edges(&[
+            (a, b),
+            (b, c),
+            (c, a),
+            (c, d),
+            (d, e),
+            (e, c),
+            (f, i),
+            (i, j),
+            (j, h),
+            (h, g),
+            (g, f),
+            (g, i),
+            (g, j),
+            (e, g),
+        ]);
+
+        let mut components = HashMap::new();
+        let _ = articulation_points(&graph, Some(&mut components));
+
+        assert_eq!(
+            components,
+            HashMap::from_iter([
+                ((f, g), 0),
+                ((i, f), 0),
+                ((i, g), 0),
+                ((j, i), 0),
+                ((g, j), 0),
+                ((j, h), 0),
+                ((h, g), 0),
+                ((e, g), 1),
+                ((c, d), 2),
+                ((d, e), 2),
+                ((e, c), 2),
+                ((c, a), 3),
+                ((a, b), 3),
+                ((b, c), 3),
+            ])
+        )
+    }
+
+    #[test]
+    fn test_null_graph() {
+        let graph: Graph<(), (), Undirected> = Graph::new_undirected();
+
+        let mut components = HashMap::new();
+        let a_points = articulation_points(&graph, Some(&mut components));
+
+        assert_eq!(a_points, HashSet::new());
+        assert_eq!(components, HashMap::new());
+    }
+}
