@@ -171,3 +171,43 @@ where
         .flatten()
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use petgraph::graph::node_index as ni;
+    use petgraph::prelude::*;
+
+    #[test]
+    fn test_decomposition() {
+        let graph = UnGraph::<(), ()>::from_edges(&[
+            //  DFS tree edges.
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (3, 5),
+            (5, 6),
+            (6, 7),
+            (7, 8),
+            (5, 9),
+            (9, 10),
+            //  Nontree edges.
+            (1, 3),
+            (1, 4),
+            (2, 5),
+            (5, 10),
+            (6, 8),
+        ]);
+
+        let chains = chain_decomposition(&graph, Some(NodeIndex::new(1)));
+
+        let expected: Vec<Vec<(NodeIndex<usize>, NodeIndex<usize>)>> = vec![
+            vec![(ni(1), ni(3)), (ni(3), ni(2)), (ni(2), ni(1))],
+            vec![(ni(1), ni(4)), (ni(4), ni(3))],
+            vec![(ni(2), ni(5)), (ni(5), ni(3))],
+            vec![(ni(5), ni(10)), (ni(10), ni(9)), (ni(9), ni(5))],
+            vec![(ni(6), ni(8)), (ni(8), ni(7)), (ni(7), ni(6))],
+        ];
+        assert_eq!(chains.len(), expected.len());
+    }
+}
