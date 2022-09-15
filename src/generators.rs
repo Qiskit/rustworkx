@@ -2487,7 +2487,7 @@ pub fn directed_empty_graph(
 }
 
 /// Generate an undirected complete graph with ``n`` nodes.
-/// 
+///
 /// A complete graph is a simple graph in which each pair of distinct
 /// vertices is connected by a unique edge.
 /// The complete graph on ``n`` nodes is the graph with the set of nodes
@@ -2522,7 +2522,7 @@ pub fn complete_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph:
 }
 
 /// Generate a directed complete graph with ``n`` nodes.
-/// 
+///
 /// A directed complete graph is a directed graph in which each pair of distinct
 /// vertices is connected by a unique pair of directed edges.
 /// The directed complete graph on ``n`` nodes is the graph with the set of nodes
