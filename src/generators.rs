@@ -2420,6 +2420,148 @@ pub fn barbell_graph(
     })
 }
 
+/// Generate an undirected empty graph with ``n`` nodes and no edges.
+///
+/// :param int n: The number of nodes to generate the graph with.
+///
+/// :returns: The generated empty graph
+/// :rtype: PyGraph
+///
+/// .. jupyter-execute::
+///
+///  import rustworkx.generators
+///  from rustworkx.visualization import mpl_draw
+///
+///  graph = rustworkx.generators.empty_graph(5)
+///  mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(/, n, multigraph=True)")]
+pub fn empty_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
+    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    for _ in 0..n {
+        graph.add_node(py.None());
+    }
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a directed empty graph with ``n`` nodes and no edges.
+///
+/// :param int n: The number of nodes to generate the graph with.
+///
+/// :returns: The generated empty graph
+/// :rtype: PyDiGraph
+///
+/// .. jupyter-execute::
+///
+///  import rustworkx.generators
+///  from rustworkx.visualization import mpl_draw
+///
+///  graph = rustworkx.generators.directed_empty_graph(5)
+///  mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(/, n, multigraph=True)")]
+pub fn directed_empty_graph(
+    py: Python,
+    n: usize,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    for _ in 0..n {
+        graph.add_node(py.None());
+    }
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Generate an undirected complete graph with ``n`` nodes.
+/// 
+/// A complete graph is a simple graph in which each pair of distinct
+/// vertices is connected by a unique edge.
+/// The complete graph on ``n`` nodes is the graph with the set of nodes
+/// ``{0, 1, ..., n-1}`` and the set of edges ``{(i, j) : i < j, 0 <= i < n, 0 <= j < n}``.
+/// The number of edges in the complete graph is ``n*(n-1)/2``.
+///
+/// :param int n: The number of nodes to generate the graph with.
+///
+/// :returns: The generated complete graph
+/// :rtype: PyGraph
+///
+/// .. jupyter-execute::
+///
+///  import rustworkx.generators
+///  from rustworkx.visualization import mpl_draw
+///
+///  graph = rustworkx.generators.complete_graph(5)
+///  mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(/, n, multigraph=True)")]
+pub fn complete_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
+    let mut graph = empty_graph(py, n, multigraph)?;
+    if n > 1 {
+        for i in 0..n - 1 {
+            for j in i + 1..n {
+                graph.add_edge(i, j, py.None());
+            }
+        }
+    }
+    Ok(graph)
+}
+
+/// Generate a directed complete graph with ``n`` nodes.
+/// 
+/// A directed complete graph is a directed graph in which each pair of distinct
+/// vertices is connected by a unique pair of directed edges.
+/// The directed complete graph on ``n`` nodes is the graph with the set of nodes
+/// ``{0, 1, ..., n-1}`` and the set of edges ``{(i, j) : 0 <= i < n, 0 <= j < n}``.
+/// The number of edges in the directed complete graph is ``n*(n-1)``.
+///
+/// :param int n: The number of nodes to generate the graph with.
+///
+/// :returns: The generated directed complete graph
+/// :rtype: PyDiGraph
+///
+/// .. jupyter-execute::
+///
+///  import rustworkx.generators
+///  from rustworkx.visualization import mpl_draw
+///
+///  graph = rustworkx.generators.directed_complete_graph(5)
+///  mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(/, n, multigraph=True)")]
+pub fn directed_complete_graph(
+    py: Python,
+    n: usize,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut graph = directed_empty_graph(py, n, multigraph)?;
+    if n > 1 {
+        for i in 0..n {
+            for j in 0..n {
+                if i != j {
+                    graph.add_edge(i, j, py.None())?;
+                }
+            }
+        }
+    }
+    Ok(graph)
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -2444,5 +2586,9 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(full_rary_tree))?;
     m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
     m.add_wrapped(wrap_pyfunction!(barbell_graph))?;
+    m.add_wrapped(wrap_pyfunction!(empty_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_empty_graph))?;
+    m.add_wrapped(wrap_pyfunction!(complete_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_complete_graph))?;
     Ok(())
 }
