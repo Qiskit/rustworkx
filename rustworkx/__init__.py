@@ -36,9 +36,9 @@ class PyDAG(PyDiGraph):
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.PyDAG()
+        graph = rx.PyDAG()
         graph.add_nodes_from(list(range(5)))
         graph.add_nodes_from(list(range(2)))
         graph.remove_node(2)
@@ -54,9 +54,9 @@ class PyDAG(PyDiGraph):
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.PyDAG()
+        graph = rx.PyDAG()
         data_payload = "An arbitrary Python object"
         node_index = graph.add_node(data_payload)
         print("Node Index: %s" % node_index)
@@ -67,9 +67,9 @@ class PyDAG(PyDiGraph):
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.PyDAG()
+        graph = rx.PyDAG()
         data_payload = "An arbitrary Python object"
         node_index = graph.add_node(data_payload)
         graph[node_index] = "New Payload"
@@ -82,14 +82,14 @@ class PyDAG(PyDiGraph):
     performance, however you can enable it by setting the ``check_cycle``
     attribute to True. For example::
 
-        import rustworkx
-        dag = rustworkx.PyDAG()
+        import rustworkx as rx
+        dag = rx.PyDAG()
         dag.check_cycle = True
 
     or at object creation::
 
-        import rustworkx
-        dag = rustworkx.PyDAG(check_cycle=True)
+        import rustworkx as rx
+        dag = rx.PyDAG(check_cycle=True)
 
     With check_cycle set to true any calls to :meth:`PyDAG.add_edge` will
     ensure that no cycles are added, ensuring that the PyDAG class truly
@@ -107,8 +107,8 @@ class PyDAG(PyDiGraph):
     ``multigraph`` kwarg to ``False`` when calling the ``PyDAG`` constructor.
     For example::
 
-        import rustworkx
-        dag = rustworkx.PyDAG(multigraph=False)
+        import rustworkx as rx
+        dag = rx.PyDAG(multigraph=False)
 
     This can only be set at ``PyDiGraph`` initialization and not adjusted after
     creation. When :attr:`~rustworkx.PyDiGraph.multigraph` is set to ``False``
@@ -1951,7 +1951,7 @@ def bfs_search(graph, source, visitor):
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
         from rustworkx.visit import BFSVisitor
 
 
@@ -1963,10 +1963,10 @@ def bfs_search(graph, source, visitor):
             def tree_edge(self, edge):
                 self.edges.append(edge)
 
-        graph = rustworkx.PyDiGraph()
+        graph = rx.PyDiGraph()
         graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
         vis = TreeEdgesRecorder()
-        rustworkx.bfs_search(graph, [0], vis)
+        rx.bfs_search(graph, [0], vis)
         print('Tree edges:', vis.edges)
 
     .. note::
@@ -2033,7 +2033,7 @@ def dfs_search(graph, source, visitor):
 
     .. jupyter-execute::
 
-           import rustworkx
+           import rustworkx as rx
            from rustworkx.visit import DFSVisitor
 
            class TreeEdgesRecorder(DFSVisitor):
@@ -2044,10 +2044,10 @@ def dfs_search(graph, source, visitor):
                def tree_edge(self, edge):
                    self.edges.append(edge)
 
-           graph = rustworkx.PyGraph()
+           graph = rx.PyGraph()
            graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
            vis = TreeEdgesRecorder()
-           rustworkx.dfs_search(graph, [0], vis)
+           rx.dfs_search(graph, [0], vis)
            print('Tree edges:', vis.edges)
 
     .. note::
@@ -2338,3 +2338,47 @@ def _digraph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
 @all_pairs_bellman_ford_shortest_paths.register(PyGraph)
 def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
     return graph_all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn)
+
+
+@functools.singledispatch
+def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    """Generate a JSON object representing a graph in a node-link format
+
+    :param graph: The graph to generate the JSON for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param str path: An optional path to write the JSON output to. If specified
+        the function will not return anything and instead will write the JSON
+        to the file specified.
+    :param graph_attrs: An optional callable that will be passed the
+        :attr:`~.PyGraph.attrs` attribute of the graph and is expected to
+        return a dictionary of string keys to string values representing the
+        graph attributes. This dictionary will be included as attributes in
+        the output JSON. If anything other than a dictionary with string keys
+        and string values is returned an exception will be raised.
+    :param node_attrs: An optional callable that will be passed the node data
+        payload for each node in the graph and is expected to return a
+        dictionary of string keys to string values representing the data payload.
+        This dictionary will be used as the ``data`` field for each node.
+    :param edge_attrs:  An optional callable that will be passed the edge data
+        payload for each node in the graph and is expected to return a
+        dictionary of string keys to string values representing the data payload.
+        This dictionary will be used as the ``data`` field for each edge.
+
+    :returns: Either the JSON string for the payload or ``None`` if ``path`` is specified
+    :rtype: str
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@node_link_json.register(PyDiGraph)
+def _digraph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    return digraph_node_link_json(
+        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
+    )
+
+
+@node_link_json.register(PyGraph)
+def _graph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    return graph_node_link_json(
+        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
+    )

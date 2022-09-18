@@ -130,7 +130,7 @@ quantum computing. Qiskit's
 `compiler <https://qiskit.org/documentation/apidoc/transpiler.html>`__
 internally represents a quantum circuit as a
 `directed acyclic graph <https://qiskit.org/documentation/stubs/qiskit.dagcircuit.DAGCircuit.html>`__.
-Retworkx was originally started to accelerate the performance of the Qiskit
+Rustworkx was originally started to accelerate the performance of the Qiskit
 compiler's use of directed acyclic graphs.
 
 To examine how Qiskit uses DAGs, we first need to look at a quantum circuit. A

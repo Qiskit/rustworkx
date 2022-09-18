@@ -22,6 +22,7 @@ mod graph;
 mod graphml;
 mod isomorphism;
 mod iterators;
+mod json;
 mod layout;
 mod matching;
 mod random_graph;
@@ -41,6 +42,7 @@ use connectivity::*;
 use dag_algo::*;
 use graphml::*;
 use isomorphism::*;
+use json::*;
 use layout::*;
 use matching::*;
 use random_graph::*;
@@ -314,6 +316,8 @@ create_exception!(rustworkx, NoPathFound, PyException);
 import_exception!(rustworkx.visit, PruneSearch);
 // Stop graph traversal.
 import_exception!(rustworkx.visit, StopSearch);
+// JSON Error
+create_exception!(rustworkx, JSONSerializationError, PyException);
 // Negative Cycle found on shortest-path algorithm
 create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
@@ -330,6 +334,10 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
+    m.add(
+        "JSONSerializationError",
+        py.get_type::<JSONSerializationError>(),
+    )?;
     m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -461,6 +469,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
