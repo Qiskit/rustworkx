@@ -21,7 +21,7 @@ class TestSimpleCycles(unittest.TestCase):
         graph = rustworkx.PyDiGraph()
         graph.extend_from_edge_list(edges)
         expected = [[0], [0, 1, 2], [0, 2], [1, 2], [2]]
-        res = rustworkx.simple_cycles(graph)
+        res = list(rustworkx.simple_cycles(graph))
         self.assertEqual(len(res), len(expected))
         for cycle in res:
             self.assertIn(sorted(cycle), expected)
@@ -37,12 +37,12 @@ class TestSimpleCycles(unittest.TestCase):
         for n, c in zip(range(2, 9), num_circuits):
             with self.subTest(n=n):
                 graph = rustworkx.generators.directed_mesh_graph(n)
-                res = rustworkx.simple_cycles(graph)
+                res = list(rustworkx.simple_cycles(graph))
                 self.assertEqual(len(res), c)
 
     def test_empty_graph(self):
         self.assertEqual(
-            rustworkx.simple_cycles(rustworkx.PyDiGraph()),
+            list(rustworkx.simple_cycles(rustworkx.PyDiGraph())),
             [],
         )
 
@@ -65,5 +65,5 @@ class TestSimpleCycles(unittest.TestCase):
                     edge_list.append((n, 3 * k + 3))
                 edge_list.append((3 * k + 3, 2 * k + 2))
                 graph.extend_from_edge_list(edge_list)
-                cycles = rustworkx.simple_cycles(graph)
+                cycles = list(rustworkx.simple_cycles(graph))
                 self.assertEqual(len(cycles), 3 * k)

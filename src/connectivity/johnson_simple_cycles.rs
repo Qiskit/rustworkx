@@ -57,6 +57,15 @@ pub struct SimpleCycleIter {
     graph_clone: StablePyGraph<Directed>,
     scc: Vec<Vec<NodeIndex>>,
     self_cycles: Option<Vec<NodeIndex>>,
+    path: Vec<NodeIndex>,
+    blocked: HashSet<NodeIndex>,
+    closed: HashSet<NodeIndex>,
+    block: HashMap<NodeIndex, HashSet<NodeIndex>>,
+    stack: Vec<(NodeIndex, IndexSet<NodeIndex>)>,
+    start_node: NodeIndex,
+    node_map: HashMap<NodeIndex, NodeIndex>,
+    reverse_node_map: HashMap<NodeIndex, NodeIndex>,
+    subgraph: StableDiGraph<(), ()>,
 }
 
 impl SimpleCycleIter {
@@ -88,8 +97,95 @@ impl SimpleCycleIter {
             graph_clone,
             scc: strongly_connected_components,
             self_cycles,
+            path: Vec::new(),
+            blocked: HashSet::new(),
+            closed: HashSet::new(),
+            block: HashMap::new(),
+            stack: Vec::new(),
+            start_node: NodeIndex::new(std::u32::MAX as usize),
+            node_map: HashMap::new(),
+            reverse_node_map: HashMap::new(),
+            subgraph: StableDiGraph::new(),
         }
     }
+}
+
+fn unblock(
+    node: NodeIndex,
+    blocked: &mut HashSet<NodeIndex>,
+    block: &mut HashMap<NodeIndex, HashSet<NodeIndex>>,
+) {
+    let mut stack: IndexSet<NodeIndex> = IndexSet::new();
+    stack.insert(node);
+    while let Some(stack_node) = stack.pop() {
+        if blocked.remove(&stack_node) {
+            match block.get_mut(&stack_node) {
+                // stack.update(block[stack_node]):
+                Some(block_set) => {
+                    block_set.drain().for_each(|n| {
+                        stack.insert(n);
+                    });
+                }
+                // If block doesn't have stack_node treat it as an empty set
+                // (so no updates to stack) and populate it with an empty
+                // set.
+                None => {
+                    block.insert(stack_node, HashSet::new());
+                }
+            }
+            blocked.remove(&stack_node);
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn process_stack(
+    start_node: NodeIndex,
+    stack: &mut Vec<(NodeIndex, IndexSet<NodeIndex>)>,
+    path: &mut Vec<NodeIndex>,
+    closed: &mut HashSet<NodeIndex>,
+    blocked: &mut HashSet<NodeIndex>,
+    block: &mut HashMap<NodeIndex, HashSet<NodeIndex>>,
+    subgraph: &StableDiGraph<(), ()>,
+    reverse_node_map: &HashMap<NodeIndex, NodeIndex>,
+) -> Option<IterNextOutput<NodeIndices, &'static str>> {
+    while let Some((this_node, neighbors)) = stack.last_mut() {
+        if let Some(next_node) = neighbors.pop() {
+            if next_node == start_node {
+                // Out path in input graph basis
+                let mut out_path: Vec<usize> = Vec::with_capacity(path.len());
+                for n in path {
+                    out_path.push(reverse_node_map[n].index());
+                    closed.insert(*n);
+                }
+                return Some(IterNextOutput::Yield(NodeIndices { nodes: out_path }));
+            } else if blocked.insert(next_node) {
+                path.push(next_node);
+                stack.push((
+                    next_node,
+                    subgraph
+                        .neighbors(next_node)
+                        .collect::<IndexSet<NodeIndex>>(),
+                ));
+                closed.remove(&next_node);
+                blocked.insert(next_node);
+                continue;
+            }
+        }
+        if neighbors.is_empty() {
+            if closed.contains(this_node) {
+                unblock(*this_node, blocked, block);
+            } else {
+                for neighbor in subgraph.neighbors(*this_node) {
+                    let block_neighbor = block.entry(neighbor).or_insert_with(HashSet::new);
+                    block_neighbor.insert(*this_node);
+                }
+            }
+            stack.pop();
+            path.pop();
+        }
+    }
+    None
 }
 
 #[pymethods]
@@ -109,86 +205,90 @@ impl SimpleCycleIter {
                 nodes: vec![cycle_node.index()],
             }));
         }
-        let unblock = |node: NodeIndex,
-                       blocked: &mut HashSet<NodeIndex>,
-                       block: &mut HashMap<NodeIndex, HashSet<NodeIndex>>| {
-            let mut stack: IndexSet<NodeIndex> = IndexSet::new();
-            stack.insert(node);
-            while let Some(stack_node) = stack.pop() {
-                if blocked.remove(&stack_node) {
-                    match block.get_mut(&stack_node) {
-                        // stack.update(block[stack_node]):
-                        Some(block_set) => {
-                            block_set.drain().for_each(|n| {
-                                stack.insert(n);
-                            });
-                        }
-                        // If block doesn't have stack_node treat it as an empty set
-                        // (so no updates to stack) and populate it with an empty
-                        // set.
-                        None => {
-                            block.insert(stack_node, HashSet::new());
-                        }
-                    }
-                    blocked.remove(&stack_node);
-                }
-            }
-        };
+        // Restore previous state if it exists
+        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex>)> = slf.stack.drain(..).collect();
+        let mut path: Vec<NodeIndex> = slf.path.drain(..).collect();
+        let mut closed: HashSet<NodeIndex> = slf.closed.drain().collect();
+        let mut blocked: HashSet<NodeIndex> = slf.blocked.drain().collect();
+        let mut block: HashMap<NodeIndex, HashSet<NodeIndex>> = slf.block.drain().collect();
+        let mut subgraph: StableDiGraph<(), ()> = slf.subgraph.clone();
+        let mut reverse_node_map: HashMap<NodeIndex, NodeIndex> =
+            slf.reverse_node_map.drain().collect();
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = slf.node_map.drain().collect();
 
+        if let Some(res) = process_stack(
+            slf.start_node,
+            &mut stack,
+            &mut path,
+            &mut closed,
+            &mut blocked,
+            &mut block,
+            &subgraph,
+            &reverse_node_map,
+        ) {
+            // Store internal state on yield
+            slf.stack = stack;
+            slf.path = path;
+            slf.closed = closed;
+            slf.blocked = blocked;
+            slf.block = block;
+            slf.subgraph = subgraph;
+            slf.reverse_node_map = reverse_node_map;
+            slf.node_map = node_map;
+            return Ok(res);
+        } else {
+            subgraph.remove_node(slf.start_node);
+            slf.scc
+                .extend(kosaraju_scc(&subgraph).into_iter().filter_map(|scc| {
+                    if scc.len() > 1 {
+                        let res = scc
+                            .iter()
+                            .map(|n| reverse_node_map[n])
+                            .collect::<Vec<NodeIndex>>();
+                        Some(res)
+                    } else {
+                        None
+                    }
+                }));
+        }
         while let Some(mut scc) = slf.scc.pop() {
-            let (mut subgraph, node_map) = build_subgraph(&slf.graph_clone, &scc);
-            let reverse_node_map: HashMap<NodeIndex, NodeIndex> =
-                node_map.iter().map(|(k, v)| (*v, *k)).collect();
+            (subgraph, node_map) = build_subgraph(&slf.graph_clone, &scc);
+            reverse_node_map = node_map.iter().map(|(k, v)| (*v, *k)).collect();
             // start_node, path, blocked, closed, block and stack all in subgraph basis
-            let start_node = node_map[&scc.pop().unwrap()];
-            let mut path: Vec<NodeIndex> = vec![start_node];
-            let mut blocked: HashSet<NodeIndex> = path.iter().copied().collect();
+            slf.start_node = node_map[&scc.pop().unwrap()];
+            path = vec![slf.start_node];
+            blocked = path.iter().copied().collect();
             // Nodes in cycle all
-            let mut closed: HashSet<NodeIndex> = HashSet::new();
-            let mut block: HashMap<NodeIndex, HashSet<NodeIndex>> = HashMap::new();
-            let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex>)> = vec![(
-                start_node,
+            closed = HashSet::new();
+            block = HashMap::new();
+            stack = vec![(
+                slf.start_node,
                 subgraph
-                    .neighbors(start_node)
+                    .neighbors(slf.start_node)
                     .collect::<IndexSet<NodeIndex>>(),
             )];
-            while let Some((this_node, neighbors)) = stack.last_mut() {
-                if let Some(next_node) = neighbors.pop() {
-                    if next_node == start_node {
-                        // Out path in input graph basis
-                        let mut out_path: Vec<usize> = Vec::with_capacity(path.len());
-                        for n in &path {
-                            out_path.push(reverse_node_map[n].index());
-                            closed.insert(*n);
-                        }
-                        return Ok(IterNextOutput::Yield(NodeIndices { nodes: out_path }));
-                    } else if blocked.insert(next_node) {
-                        path.push(next_node);
-                        stack.push((
-                            next_node,
-                            subgraph
-                                .neighbors(next_node)
-                                .collect::<IndexSet<NodeIndex>>(),
-                        ));
-                        closed.remove(&next_node);
-                        blocked.insert(next_node);
-                        continue;
-                    }
-                }
-                if neighbors.is_empty() {
-                    if closed.contains(this_node) {
-                        unblock(*this_node, &mut blocked, &mut block);
-                    } else {
-                        for neighbor in subgraph.neighbors(*this_node) {
-                            let block_neighbor = block.entry(neighbor).or_insert_with(HashSet::new);
-                            block_neighbor.insert(*this_node);
-                        }
-                    }
-                    stack.pop();
-                    path.pop();
-                }
+            if let Some(res) = process_stack(
+                slf.start_node,
+                &mut stack,
+                &mut path,
+                &mut closed,
+                &mut blocked,
+                &mut block,
+                &subgraph,
+                &reverse_node_map,
+            ) {
+                // Store internal state on yield
+                slf.stack = stack;
+                slf.path = path;
+                slf.closed = closed;
+                slf.blocked = blocked;
+                slf.block = block;
+                slf.subgraph = subgraph;
+                slf.reverse_node_map = reverse_node_map;
+                slf.node_map = node_map;
+                return Ok(res);
             }
-            subgraph.remove_node(start_node);
+            subgraph.remove_node(slf.start_node);
             slf.scc
                 .extend(kosaraju_scc(&subgraph).into_iter().filter_map(|scc| {
                     if scc.len() > 1 {
