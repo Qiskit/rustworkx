@@ -2338,9 +2338,9 @@ def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
 
 @functools.singledispatch
 def densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
-    """Find densest subgraph in a :class:`~.PyGraph`
+    """Find a connected and dense subgraph of a given size in a graph.
 
-    This method does not provide any guarantees on the approximation as it
+    This method does not provide any guarantees on the approximation of the optimal solution as it
     does a naive search using BFS traversal.
 
     :param graph: The graph to find the densest subgraph in. This can be a

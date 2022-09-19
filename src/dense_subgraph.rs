@@ -48,7 +48,7 @@ where
 {
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
     let float_callback =
-        |callback: PyObject, source_node: usize, target_node: usize| -> PyResult<f64> {
+        |callback: &PyObject, source_node: usize, target_node: usize| -> PyResult<f64> {
             let res = callback.as_ref(py).call1((source_node, target_node))?;
             res.extract()
         };
@@ -61,7 +61,7 @@ where
         for edge in graph.edge_references() {
             let source: NodeIndex = edge.source();
             let target: NodeIndex = edge.target();
-            let weight = float_callback(callback.clone_ref(py), source.index(), target.index())?;
+            let weight = float_callback(callback, source.index(), target.index())?;
             inner_weight_map.insert([source, target], weight);
         }
         weight_map = Some(inner_weight_map);
@@ -108,15 +108,13 @@ where
             }
             let mut connection_count = 0;
             for node in &bfs_vec {
-                for j in graph.node_indices().filter(|j| bfs_set.contains(j)) {
-                    if graph.contains_edge(*node, j) {
-                        connection_count += 1;
-                        subgraph.push([*node, j]);
-                    }
+                for nbr in graph.neighbors(*node).filter(|j| bfs_set.contains(j)) {
+                    connection_count += 1;
+                    subgraph.push([*node, nbr]);
                 }
             }
             let error = match &weight_map {
-                Some(map) => subgraph.iter().map(|edge| map[edge]).sum::<f64>() / num_nodes as f64,
+                Some(map) => subgraph.iter().map(|edge| map[edge]).sum::<f64>() / subgraph.len() as f64,
                 None => 0.,
             };
             SubsetResult {
@@ -161,7 +159,7 @@ where
 ///     output subgraph.
 /// :rtype: (PyGraph, NodeMap)
 #[pyfunction]
-#[pyo3(text_signature = "(graph. num_nodes, /, weight_callback=None)")]
+#[pyo3(text_signature = "(graph, num_nodes, /, weight_callback=None)")]
 pub fn graph_densest_subgraph_of_size(
     py: Python,
     graph: &graph::PyGraph,
@@ -195,7 +193,7 @@ pub fn graph_densest_subgraph_of_size(
 ///     output subgraph.
 /// :rtype: (PyDiGraph, NodeMap)
 #[pyfunction]
-#[pyo3(text_signature = "(graph. num_nodes, /, weight_callback=None)")]
+#[pyo3(text_signature = "(graph, num_nodes, /, weight_callback=None)")]
 pub fn digraph_densest_subgraph_of_size(
     py: Python,
     graph: &digraph::PyDiGraph,
