@@ -252,7 +252,9 @@ impl SimpleCycleIter {
                 }));
         }
         while let Some(mut scc) = slf.scc.pop() {
-            (subgraph, node_map) = build_subgraph(&slf.graph_clone, &scc);
+            let temp = build_subgraph(&slf.graph_clone, &scc);
+            subgraph = temp.0;
+            node_map = temp.1;
             reverse_node_map = node_map.iter().map(|(k, v)| (*v, *k)).collect();
             // start_node, path, blocked, closed, block and stack all in subgraph basis
             slf.start_node = node_map[&scc.pop().unwrap()];
