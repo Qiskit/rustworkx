@@ -1,0 +1,11 @@
+---
+upgrade:
+  - |
+    This release 0.12.0 is the last release that will provide binaries that
+    support the `manylinux2010 <https://peps.python.org/pep-0571/>`__ packaging
+    specification. Starting in Rustworkx 0.13.0 all the precompiled binaries
+    will be built against manylinux2014. This change is required due to
+    changes in the GLIBC versions supported by the Rust compiler. If you need
+    to run Rustworkx on a platform only compatible with manylinux2010 for
+    future releases you will need to build from source and also use a
+    Rust compiler with a version < 1.64.0.
