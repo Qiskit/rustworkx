@@ -6,10 +6,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-import os
 import subprocess
 import tempfile
-import uuid
+import io
 
 try:
     from PIL import Image
@@ -185,20 +184,18 @@ def graphviz_draw(
         prog = method
 
     if not filename:
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            filename = f"graphviz_draw_{str(uuid.uuid4())}.{output_format}"
-            tmp_path = os.path.join(tmpdirname, filename)
-            subprocess.run(
-                [prog, "-T", output_format, "-o", tmp_path],
-                input=dot_str,
-                check=True,
-                encoding="utf8",
-                text=True,
-            )
-            with Image.open(tmp_path) as temp_image:
-                image = temp_image.copy()
-            os.remove(tmp_path)
-            return image
+        dot_result = subprocess.run(
+            [prog, "-T", output_format, "-o"],
+            input=dot_str,
+            stdout=subprocess.PIPE,
+            check=True,
+            encoding="utf8",
+            text=True,
+        )
+        dot_bytes_image = io.BytesIO(dot_result.stdout.decode('utf-8'))
+        with Image.open(dot_bytes_image) as temp_image:
+            image = temp_image.copy()
+        return image
     else:
         subprocess.run(
             [prog, "-T", output_format, "-o", filename],
