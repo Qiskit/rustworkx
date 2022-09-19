@@ -1,5 +1,5 @@
 ---
 prelude: >
   This is a bugfix release that fixes a regression introduced in the previous
-  0.10.0 release. In 0.10.0 the :func:`~retworkx.is_isomorphic` function when
+  0.10.0 release. In 0.10.0 the :func:`~rustworkx.is_isomorphic` function when
   comparing 2 empty graph objects would incorrectly return ``False``.

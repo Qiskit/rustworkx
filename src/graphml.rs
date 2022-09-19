@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::borrow_deref_ref)]
+
 use std::convert::From;
 use std::io::BufRead;
 use std::iter::FromIterator;
@@ -271,7 +273,7 @@ impl IntoPy<PyObject> for Graph {
                 let mut mapping = HashMap::with_capacity(self.nodes.len());
                 for mut node in self.nodes {
                     // Write the node id from GraphML doc into the node data payload
-                    // since in retworkx nodes are indexed by an unsigned integer and
+                    // since in rustworkx nodes are indexed by an unsigned integer and
                     // not by a hashable String.
                     node.data
                         .insert(String::from("id"), Value::String(node.id.clone()));
@@ -282,7 +284,7 @@ impl IntoPy<PyObject> for Graph {
                     match (mapping.get(&edge.source), mapping.get(&edge.target)) {
                         (Some(&source), Some(&target)) => {
                             // Write the edge id from GraphML doc into the edge data payload
-                            // since in retworkx edges are indexed by an unsigned integer and
+                            // since in rustworkx edges are indexed by an unsigned integer and
                             // not by a hashable String.
                             if let Some(id) = edge.id {
                                 edge.data.insert(String::from("id"), Value::String(id));
@@ -477,12 +479,10 @@ impl GraphML {
                 self.key_for_all.insert(id, key);
                 Ok(Domain::All)
             }
-            _ => {
-                return Err(Error::InvalidDoc(format!(
-                    "Invalid 'for' attribute in key with id={}.",
-                    id,
-                )));
-            }
+            _ => Err(Error::InvalidDoc(format!(
+                "Invalid 'for' attribute in key with id={}.",
+                id,
+            ))),
         }
     }
 

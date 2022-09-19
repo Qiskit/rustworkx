@@ -1,7 +1,7 @@
 ---
 fixes:
   - |
-    Previously, the graphs created by :func:`retworkx.generators.directed_hexagonal_lattice_graph`
-    and :func:`retworkx.generators.hexagonal_lattice_graph` contained holes in the node indices.
+    Previously, the graphs created by :func:`rustworkx.generators.directed_hexagonal_lattice_graph`
+    and :func:`rustworkx.generators.hexagonal_lattice_graph` contained holes in the node indices.
     This has been fixed by generating graphs with consecutive node indexes.
-    Fixed `#373 <https://github.com/Qiskit/retworkx/issues/373>`__
+    Fixed `#373 <https://github.com/Qiskit/rustworkx/issues/373>`__

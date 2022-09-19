@@ -2,22 +2,22 @@
 features:
   - |
     Added new generator functions,
-    :func:`retworkx.generators.directed_hexagonal_lattice_graph` and
-    :func:`retworkx.generators.hexagonal_lattice_graph`, for constructing a
+    :func:`rustworkx.generators.directed_hexagonal_lattice_graph` and
+    :func:`rustworkx.generators.hexagonal_lattice_graph`, for constructing a
     hexagonal lattice graph. For example:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.directed_hexagonal_lattice_graph(3, 3)
+      graph = rustworkx.generators.directed_hexagonal_lattice_graph(3, 3)
       mpl_draw(graph)
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.hexagonal_lattice_graph(3, 3)
+      graph = rustworkx.generators.hexagonal_lattice_graph(3, 3)
       mpl_draw(graph)

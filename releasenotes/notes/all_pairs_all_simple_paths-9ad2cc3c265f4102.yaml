@@ -6,8 +6,8 @@ features:
     can also be used with a optional ``min_depth`` and ``cutoff`` parameters to
     filter the results based on path lengths. For example::
 
-        from retworkx.generators import grid_graph
-        from retworkx import all_pairs_all_simple_paths
+        from rustworkx.generators import grid_graph
+        from rustworkx import all_pairs_all_simple_paths
 
         g = grid_graph(2, 3)
         paths = all_pairs_all_simple_paths(g, min_depth=3, cutoff=3)
@@ -16,7 +16,7 @@ features:
     node indices and the inner value is the list of all simple paths of length
     3 between those 2 nodes.
   - |
-    The retworkx-core ``connectivity`` module has a new function
+    The rustworkx-core ``connectivity`` module has a new function
     ``all_simple_paths_multiple_targets`` this is similar to the
     ``all_simple_paths()`` method in petgraph's ``algo`` module but instead of
     returning an iterator that will yield the all the simple path from a source

@@ -23,6 +23,7 @@ mod graph;
 mod graphml;
 mod isomorphism;
 mod iterators;
+mod json;
 mod layout;
 mod matching;
 mod random_graph;
@@ -43,6 +44,7 @@ use dag_algo::*;
 use dense_subgraph::*;
 use graphml::*;
 use isomorphism::*;
+use json::*;
 use layout::*;
 use matching::*;
 use random_graph::*;
@@ -78,7 +80,7 @@ use petgraph::EdgeType;
 use std::convert::TryFrom;
 use std::hash::Hash;
 
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 trait IsNan {
     fn is_nan(&self) -> bool;
@@ -299,30 +301,32 @@ where
 }
 
 // The provided node is invalid.
-create_exception!(retworkx, InvalidNode, PyException);
+create_exception!(rustworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
-create_exception!(retworkx, DAGWouldCycle, PyException);
+create_exception!(rustworkx, DAGWouldCycle, PyException);
 // There is no edge present between the provided nodes.
-create_exception!(retworkx, NoEdgeBetweenNodes, PyException);
+create_exception!(rustworkx, NoEdgeBetweenNodes, PyException);
 // The specified Directed Graph has a cycle and can't be treated as a DAG.
-create_exception!(retworkx, DAGHasCycle, PyException);
+create_exception!(rustworkx, DAGHasCycle, PyException);
 // No neighbors found matching the provided predicate.
-create_exception!(retworkx, NoSuitableNeighbors, PyException);
+create_exception!(rustworkx, NoSuitableNeighbors, PyException);
 // Invalid operation on a null graph
-create_exception!(retworkx, NullGraph, PyException);
+create_exception!(rustworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
-create_exception!(retworkx, NoPathFound, PyException);
+create_exception!(rustworkx, NoPathFound, PyException);
 // Prune part of the search tree while traversing a graph.
-import_exception!(retworkx.visit, PruneSearch);
+import_exception!(rustworkx.visit, PruneSearch);
 // Stop graph traversal.
-import_exception!(retworkx.visit, StopSearch);
+import_exception!(rustworkx.visit, StopSearch);
+// JSON Error
+create_exception!(rustworkx, JSONSerializationError, PyException);
 // Negative Cycle found on shortest-path algorithm
-create_exception!(retworkx, NegativeCycle, PyException);
+create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
-create_exception!(retworkx, FailedToConverge, PyException);
+create_exception!(rustworkx, FailedToConverge, PyException);
 
 #[pymodule]
-fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add("InvalidNode", py.get_type::<InvalidNode>())?;
     m.add("DAGWouldCycle", py.get_type::<DAGWouldCycle>())?;
@@ -332,6 +336,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
+    m.add(
+        "JSONSerializationError",
+        py.get_type::<JSONSerializationError>(),
+    )?;
     m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -465,6 +473,8 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_densest_subgraph_of_size))?;
     m.add_wrapped(wrap_pyfunction!(graph_densest_subgraph_of_size))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;

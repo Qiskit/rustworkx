@@ -7,7 +7,7 @@ features:
     in place. Additionally, they can be set initially when creating the object
     via the constructor. For example::
 
-        import retworkx as rx
+        import rustworkx as rx
 
         graph = rx.PyGraph(attrs=dict(day="Friday"))
         graph.attrs['day'] = "Monday"

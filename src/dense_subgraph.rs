@@ -23,7 +23,7 @@ use rayon::prelude::*;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use crate::digraph;
 use crate::graph;
@@ -114,7 +114,9 @@ where
                 }
             }
             let error = match &weight_map {
-                Some(map) => subgraph.iter().map(|edge| map[edge]).sum::<f64>() / subgraph.len() as f64,
+                Some(map) => {
+                    subgraph.iter().map(|edge| map[edge]).sum::<f64>() / subgraph.len() as f64
+                }
                 None => 0.,
             };
             SubsetResult {

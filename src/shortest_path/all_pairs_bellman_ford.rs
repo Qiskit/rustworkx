@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use retworkx_core::dictmap::*;
-use retworkx_core::shortest_path::bellman_ford;
+use rustworkx_core::dictmap::*;
+use rustworkx_core::shortest_path::bellman_ford;
 
 use std::sync::RwLock;
 
