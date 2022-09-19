@@ -391,3 +391,86 @@ where
     // If we reach this line, it means the graph does not have a negative cycle
     Vec::new()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::dictmap::DictMap;
+    use crate::shortest_path::negative_cycle_finder;
+    use crate::shortest_path::{bellman_ford, dijkstra};
+    use crate::Result;
+    use petgraph::graph::NodeIndex;
+    use petgraph::Graph;
+
+    #[test]
+    fn test_bell() {
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node("A");
+        let b = graph.add_node("B");
+        let c = graph.add_node("C");
+        let d = graph.add_node("D");
+        let e = graph.add_node("E");
+        let f = graph.add_node("F");
+        graph.add_edge(a, b, 7);
+        graph.add_edge(a, c, 9);
+        graph.add_edge(a, d, 14);
+        graph.add_edge(b, c, 10);
+        graph.add_edge(d, c, 2);
+        graph.add_edge(d, e, 9);
+        graph.add_edge(b, f, 15);
+        graph.add_edge(c, f, 11);
+        graph.add_edge(e, f, 6);
+
+        let res: Result<Option<DictMap<NodeIndex, i32>>> =
+            bellman_ford(&graph, a, |e| Ok(*e.weight()), None);
+        let res_dijk: Result<DictMap<NodeIndex, i32>> =
+            dijkstra(&graph, a, None, |e| Ok(*e.weight()), None);
+
+        assert_eq!(res.unwrap(), Some(res_dijk.unwrap()));
+    }
+
+    #[test]
+    fn test_negative_cycle_finder_single_edge() {
+        let mut g = Graph::new_undirected();
+        let a = g.add_node(0);
+        let b = g.add_node(1);
+        g.add_edge(a, b, -1);
+
+        let res: Result<Option<Vec<NodeIndex>>> = negative_cycle_finder(&g, |e| Ok(*e.weight()));
+
+        assert_eq!(res.unwrap(), Some(vec![a, b, a]));
+    }
+
+    #[test]
+    fn test_negative_cycle_finder_no_cycle() {
+        let mut g = Graph::new_undirected();
+        let a = g.add_node(0);
+        let b = g.add_node(1);
+        let c = g.add_node(2);
+        g.add_edge(a, b, 1);
+        g.add_edge(b, c, 1);
+        g.add_edge(a, c, 2);
+
+        let res: Result<Option<Vec<NodeIndex>>> = negative_cycle_finder(&g, |e| Ok(*e.weight()));
+
+        assert_eq!(res.unwrap(), None);
+    }
+
+    #[test]
+    fn test_negative_cycle_finder_longer_cycle() {
+        let mut g = Graph::new();
+        let a = g.add_node(0);
+        let b = g.add_node(1);
+        let c = g.add_node(2);
+        let d = g.add_node(3);
+        let e = g.add_node(4);
+        g.add_edge(a, b, 1);
+        g.add_edge(b, c, 1);
+        g.add_edge(c, d, 1);
+        g.add_edge(d, e, 1);
+        g.add_edge(e, a, -5);
+
+        let res: Result<Option<Vec<NodeIndex>>> = negative_cycle_finder(&g, |e| Ok(*e.weight()));
+
+        assert_eq!(res.unwrap(), Some(vec![a, b, c, d, e, a]));
+    }
+}

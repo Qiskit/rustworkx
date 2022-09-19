@@ -81,7 +81,7 @@ centrality:
         vmin=min(centrality.values()),
         vmax=max(centrality.values())
     ))
-    plt.colorbar(sm)
+    plt.colorbar(sm, ax=ax)
     plt.title("Betweenness Centrality of a 4 x 4 Hexagonal Lattice Graph")
     mpl_draw(graph, node_color=colors, ax=ax)
 
