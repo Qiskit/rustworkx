@@ -8,12 +8,12 @@ features:
 
     .. jupyter-execute::
 
-        import retworkx
-        from retworkx.visualization import mpl_draw
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
 
-        graph = retworkx.generators.hexagonal_lattice_graph(4, 5)
+        graph = rx.generators.hexagonal_lattice_graph(4, 5)
 
-        subgraph, node_map = retworkx.densest_subgraph_of_size(graph, 5)
+        subgraph, node_map = rx.densest_subgraph_of_size(graph, 5)
         subgraph_edge_set = set(subgraph.edge_list())
         node_colors = []
         for node in graph.node_indices():
