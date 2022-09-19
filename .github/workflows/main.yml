@@ -2,9 +2,9 @@
 name: CI Jobs
 on:
   push:
-    branches: [ main, 'stable/*' ]
+    branches: [ 'stable/*' ]
   pull_request:
-    branches: [ main, 'stable/*' ]
+    branches: [ 'stable/*' ]
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.head_ref }}
   cancel-in-progress: true
