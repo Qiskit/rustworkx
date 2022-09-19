@@ -135,3 +135,315 @@ where
     }
     output
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::connectivity::all_simple_paths_multiple_targets;
+    use hashbrown::HashSet;
+    use petgraph::prelude::*;
+
+    #[test]
+    fn test_all_simple_paths() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, None);
+
+        assert_eq!(paths.get(&d).unwrap(), &vec![vec![a, b, c, d]]);
+    }
+
+    #[test]
+    fn test_all_simple_paths_with_two_targets_emits_two_paths() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+        to_set.insert(e);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, None);
+
+        assert_eq!(
+            paths.get(&d).unwrap(),
+            &vec![vec![a, b, c, e, d], vec![a, b, c, d]]
+        );
+        assert_eq!(
+            paths.get(&e).unwrap(),
+            &vec![vec![a, b, c, e], vec![a, b, c, d, e]]
+        );
+    }
+
+    #[test]
+    fn test_digraph_all_simple_paths_with_two_targets_emits_two_paths() {
+        // create a path graph
+        let mut graph = Graph::new();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+        to_set.insert(e);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, None);
+
+        assert_eq!(paths.get(&d).unwrap(), &vec![vec![a, b, c, d]]);
+        assert_eq!(
+            paths.get(&e).unwrap(),
+            &vec![vec![a, b, c, e], vec![a, b, c, d, e]]
+        );
+    }
+
+    #[test]
+    fn test_all_simple_paths_max_nodes() {
+        // create a complete graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges(&[
+            (a, b, 1),
+            (a, c, 1),
+            (a, d, 1),
+            (a, e, 1),
+            (b, c, 1),
+            (b, d, 1),
+            (b, e, 1),
+            (c, d, 1),
+            (c, e, 1),
+            (d, e, 1),
+        ]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(b);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, Some(0));
+
+        assert_eq!(paths.get(&b).unwrap(), &vec![vec![a, b]]);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, Some(1));
+
+        assert_eq!(
+            paths.get(&b).unwrap(),
+            &vec![vec![a, e, b], vec![a, d, b], vec![a, c, b], vec![a, b],]
+        );
+    }
+
+    #[test]
+    fn test_all_simple_paths_with_two_targets_max_nodes() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+        to_set.insert(e);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, Some(2));
+
+        assert_eq!(paths.get(&d).unwrap(), &vec![vec![a, b, c, d]]);
+        assert_eq!(paths.get(&e).unwrap(), &vec![vec![a, b, c, e]]);
+    }
+
+    #[test]
+    fn test_digraph_all_simple_paths_with_two_targets_max_nodes() {
+        // create a path graph
+        let mut graph = Graph::new();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+        to_set.insert(e);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, Some(2));
+
+        assert_eq!(paths.get(&d).unwrap(), &vec![vec![a, b, c, d]]);
+        assert_eq!(paths.get(&e).unwrap(), &vec![vec![a, b, c, e]]);
+    }
+
+    #[test]
+    fn test_all_simple_paths_with_two_targets_in_line_emits_two_paths() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(c);
+        to_set.insert(d);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, None);
+
+        assert_eq!(paths.get(&c).unwrap(), &vec![vec![a, b, c]]);
+        assert_eq!(paths.get(&d).unwrap(), &vec![vec![a, b, c, d]]);
+    }
+
+    #[test]
+    fn test_all_simple_paths_min_nodes() {
+        // create a cycle graph
+        let mut graph = Graph::new();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 2, None);
+
+        assert_eq!(paths.get(&d).unwrap(), &vec![vec![a, b, c, d]]);
+    }
+
+    #[test]
+    fn test_all_simple_paths_with_two_targets_min_nodes() {
+        // create a cycle graph
+        let mut graph = Graph::new();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(c);
+        to_set.insert(d);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 2, None);
+
+        assert_eq!(paths.get(&c), None);
+        assert_eq!(paths.get(&d).unwrap(), &vec![vec![a, b, c, d]]);
+    }
+
+    #[test]
+    fn test_all_simple_paths_source_target() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(a);
+
+        let paths = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, None);
+
+        assert_eq!(paths.get(&a), None);
+    }
+
+    #[test]
+    fn test_all_simple_paths_on_non_trivial_graph() {
+        // create a path graph
+        let mut graph = Graph::new();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+        let f = graph.add_node(5);
+
+        graph.extend_with_edges(&[
+            (a, b, 1),
+            (b, c, 1),
+            (c, d, 1),
+            (d, e, 1),
+            (e, f, 1),
+            (a, f, 1),
+            (b, f, 1),
+            (b, d, 1),
+            (f, e, 1),
+            (e, c, 1),
+            (e, d, 1),
+        ]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(c);
+        to_set.insert(d);
+
+        let paths = all_simple_paths_multiple_targets(&graph, b, &to_set, 0, None);
+
+        assert_eq!(
+            paths.get(&c).unwrap(),
+            &vec![vec![b, d, e, c], vec![b, f, e, c], vec![b, c]]
+        );
+        assert_eq!(
+            paths.get(&d).unwrap(),
+            &vec![
+                vec![b, d],
+                vec![b, f, e, d],
+                vec![b, f, e, c, d],
+                vec![b, c, d]
+            ]
+        );
+
+        let paths = all_simple_paths_multiple_targets(&graph, b, &to_set, 1, None);
+
+        assert_eq!(
+            paths.get(&c).unwrap(),
+            &vec![vec![b, d, e, c], vec![b, f, e, c]]
+        );
+        assert_eq!(
+            paths.get(&d).unwrap(),
+            &vec![vec![b, f, e, d], vec![b, f, e, c, d], vec![b, c, d]]
+        );
+
+        let paths = all_simple_paths_multiple_targets(&graph, b, &to_set, 0, Some(2));
+
+        assert_eq!(
+            paths.get(&c).unwrap(),
+            &vec![vec![b, d, e, c], vec![b, f, e, c], vec![b, c]]
+        );
+        assert_eq!(
+            paths.get(&d).unwrap(),
+            &vec![vec![b, d], vec![b, f, e, d], vec![b, c, d]]
+        );
+    }
+}
