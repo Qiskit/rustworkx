@@ -10,7 +10,7 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
 
   - You can see the full rendered docs at:
-    <https://qiskit.org/documentation/rustworkx>
+    <https://qiskit.org/documentation/rustworkx/dev>
 
 |:warning:| The retworkx project has been renamed to **rustworkx**. The use of the
 retworkx package will still work for the time being but starting in the 1.0.0
