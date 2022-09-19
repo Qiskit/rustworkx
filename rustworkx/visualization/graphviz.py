@@ -185,14 +185,14 @@ def graphviz_draw(
 
     if not filename:
         dot_result = subprocess.run(
-            [prog, "-T", output_format, "-o"],
-            input=dot_str,
-            stdout=subprocess.PIPE,
+            [prog, "-T", output_format],
+            input=dot_str.encode("utf-8"),
+            capture_output=True,
+            encoding=None,
             check=True,
-            encoding="utf8",
-            text=True,
+            text=False,
         )
-        dot_bytes_image = io.BytesIO(dot_result.stdout.decode('utf-8'))
+        dot_bytes_image = io.BytesIO(dot_result.stdout)
         with Image.open(dot_bytes_image) as temp_image:
             image = temp_image.copy()
         return image
