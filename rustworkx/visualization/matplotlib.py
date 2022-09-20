@@ -209,10 +209,10 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=False, **kwds):
         cf = ax.get_figure()
     cf.set_facecolor("w")
     if ax is None:
-        if cf._axstack() is None:
-            ax = cf.add_axes((0, 0, 1, 1))
-        else:
+        if cf.axes:
             ax = cf.gca()
+        else:
+            ax = cf.add_axes((0, 0, 1, 1))
 
     draw_graph(graph, pos=pos, ax=ax, arrows=arrows, with_labels=with_labels, **kwds)
     ax.set_axis_off()
