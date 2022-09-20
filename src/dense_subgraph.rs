@@ -63,6 +63,9 @@ where
             let target: NodeIndex = edge.target();
             let weight = float_callback(callback, source.index(), target.index())?;
             inner_weight_map.insert([source, target], weight);
+            if !graph.is_directed() {
+                inner_weight_map.insert([target, source], weight);
+            }
         }
         weight_map = Some(inner_weight_map);
     }
