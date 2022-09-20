@@ -219,7 +219,7 @@ pub fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
 ///     a list of integer node indices.
 ///
 /// :returns: A list of layers, each layer is a list of node data, or if
-/// ``index_output`` is ``True`` each layer is a list of node indices.
+///     ``index_output`` is ``True`` each layer is a list of node indices.
 /// :rtype: list
 ///
 /// :raises InvalidNode: If a node index in ``first_layer`` is not in the graph
