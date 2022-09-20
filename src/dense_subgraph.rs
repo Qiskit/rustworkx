@@ -91,7 +91,7 @@ where
 
     let best_result = node_indices
         .into_par_iter()
-        .map(|index| {
+        .filter_map(|index| {
             let mut subgraph: Vec<[NodeIndex; 2]> = Vec::with_capacity(num_nodes);
             let mut bfs = Bfs::new(&graph, index);
             let mut bfs_vec: Vec<NodeIndex> = Vec::with_capacity(num_nodes);
@@ -106,6 +106,9 @@ where
                     break;
                 }
             }
+            if bfs_vec.len() < num_nodes {
+                return None;
+            }
             let mut connection_count = 0;
             for node in &bfs_vec {
                 for nbr in graph.neighbors(*node).filter(|j| bfs_set.contains(j)) {
@@ -119,12 +122,12 @@ where
                 }
                 None => 0.,
             };
-            SubsetResult {
+            Some(SubsetResult {
                 count: connection_count,
                 error,
                 map: bfs_vec,
                 subgraph,
-            }
+            })
         })
         .reduce(reduce_identity_fn, reduce_fn);
 
