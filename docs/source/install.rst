@@ -71,11 +71,11 @@ source.
    * - Linux
      - x86_64
      - :ref:`tier-1`
-     - Distributions compatible with the [manylinux 2010](https://peps.python.org/pep-0571/) packaging specification
+     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
    * - Linux
      - i686 
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
-     - Distributions compatible with the [manylinux 2010](https://peps.python.org/pep-0571/) packaging specification
+     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
    * - Linux
      - aarch64
      - :ref:`tier-2`
