@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Fixes a bug where :func:`~retworkx.distance_matrix` and
-    :func:`~retworkx.k_shortest_path` would panic if the input graph
-    contains holes in node indices.

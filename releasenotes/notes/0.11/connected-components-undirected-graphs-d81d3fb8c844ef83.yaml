@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    Adds :func:`~rustworkx.connected_components` for finding connected
+    components in an undirected :class:`~rustworkx.PyGraph` graph.
+  - |
+    Adds :func:`~rustworkx.number_connected_components` for finding the
+    number of connected components in an undirected :class:`~rustworkx.PyGraph`
+    graph.
+  - |
+    Adds :func:`~rustworkx.node_connected_component` for finding the connected
+    component that a node belongs in an undirected :class:`~rustworkx.PyGraph`
+    graph.
+  - |
+    Adds :func:`~rustworkx.is_connected` for checking if an undirected
+    :class:`~rustworkx.PyGraph` graph is connected.

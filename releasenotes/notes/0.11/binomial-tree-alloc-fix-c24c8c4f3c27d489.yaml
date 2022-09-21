@@ -1,0 +1,11 @@
+---
+fixes:
+  - |
+    Fixed an issue with the :func:`~rustworkx.generators.binomial_tree_graph`
+    and :func:`~rustworkx.generators.directed_binomial_tree_graph` generator
+    functions in :mod:`rustworkx.generators` where passing an ``order`` value
+    ``>= 60`` would cause an overflow and raise a ``PanicException`` caused by
+    the internal Rust panic when overflowing or exceeding the max Vec size.
+    Instead the function will raise an ``OverflowError`` and indicate the
+    specified order is too large.
+    Fixed `#457 <https://github.com/Qiskit/rustworkx/issues/457?>`__

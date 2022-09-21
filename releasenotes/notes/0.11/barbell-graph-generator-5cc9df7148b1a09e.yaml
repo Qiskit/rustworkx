@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Added a new generator function, :func:`~rustworkx.generators.barbell_graph`,
+    to the ``rustworkx.generators`` module that will generate a barbell graph.
+    For example:
+
+    .. jupyter-execute::
+
+      import rustworkx.generators
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.generators.barbell_graph(4, 3)
+      mpl_draw(graph)

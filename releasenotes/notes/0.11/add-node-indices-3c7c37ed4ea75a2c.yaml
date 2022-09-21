@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Added a new method, :meth:`~rustworkx.PyDiGraph.node_indices`, to the
+    :class:`~rustworkx.PyDiGraph` and :class:`~rustworkx.PyGraph` classes.
+    This method is identical to the previously existing
+    :meth:`~rustworkx.PyDiGraph.node_indexes` method but changes the name
+    to be consistent with the use of "indices" throughout the rest of
+    rustworkx. The :meth:`~rustworkx.PyDiGraph.node_indexes` will likely
+    be deprecated in a future release prior to it's removal in an eventual
+    1.0 release.

@@ -1,8 +1,8 @@
 ---
 features:
   - |
-    The :func:`~retworkx.is_isomorphic` and
-    :func:`~retworkx.is_isomorphic_node_match` functions have a new kwarg,
+    The :func:`~rustworkx.is_isomorphic` and
+    :func:`~rustworkx.is_isomorphic_node_match` functions have a new kwarg,
     ``id_order`` which is used to adjust the node matching order used.
     If you set ``id_order=False`` then the matching order used is the heuristic
     matching order proposed in the

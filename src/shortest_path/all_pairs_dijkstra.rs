@@ -12,8 +12,8 @@
 
 use hashbrown::HashMap;
 
-use retworkx_core::dictmap::*;
-use retworkx_core::shortest_path::dijkstra;
+use rustworkx_core::dictmap::*;
+use rustworkx_core::shortest_path::dijkstra;
 
 use std::sync::RwLock;
 
@@ -29,8 +29,7 @@ use petgraph::EdgeType;
 use rayon::prelude::*;
 
 use crate::iterators::{
-    AllPairsPathLengthMapping, AllPairsPathMapping, PathLengthMapping,
-    PathMapping,
+    AllPairsPathLengthMapping, AllPairsPathMapping, PathLengthMapping, PathMapping,
 };
 use crate::{CostFn, StablePyGraph};
 
@@ -59,14 +58,11 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
         });
     }
     let edge_cost_callable = CostFn::from(edge_cost_fn);
-    let mut edge_weights: Vec<Option<f64>> =
-        Vec::with_capacity(graph.edge_bound());
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.edge_bound());
     for index in 0..=graph.edge_bound() {
         let raw_weight = graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
-            Some(weight) => {
-                edge_weights.push(Some(edge_cost_callable.call(py, weight)?))
-            }
+            Some(weight) => edge_weights.push(Some(edge_cost_callable.call(py, weight)?)),
             None => edge_weights.push(None),
         };
     }
@@ -80,24 +76,21 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     let out_map: DictMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
+            let path_lenghts: PyResult<Vec<Option<f64>>> =
+                dijkstra(graph, x, None, |e| edge_cost(e.id()), None);
             let out_map = PathLengthMapping {
-                path_lengths: dijkstra(
-                    graph,
-                    x,
-                    None,
-                    |e| edge_cost(e.id()),
-                    None,
-                )
-                .unwrap()
-                .iter()
-                .filter_map(|(index, cost)| {
-                    if *index == x {
-                        None
-                    } else {
-                        Some((index.index(), *cost))
-                    }
-                })
-                .collect(),
+                path_lengths: path_lenghts
+                    .unwrap()
+                    .into_iter()
+                    .enumerate()
+                    .filter_map(|(index, opt_cost)| {
+                        if index != x.index() {
+                            opt_cost.map(|cost| (index, cost))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
             };
             (x.index(), out_map)
         })
@@ -133,14 +126,11 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         });
     }
     let edge_cost_callable = CostFn::from(edge_cost_fn);
-    let mut edge_weights: Vec<Option<f64>> =
-        Vec::with_capacity(graph.edge_bound());
+    let mut edge_weights: Vec<Option<f64>> = Vec::with_capacity(graph.edge_bound());
     for index in 0..=graph.edge_bound() {
         let raw_weight = graph.edge_weight(EdgeIndex::new(index));
         match raw_weight {
-            Some(weight) => {
-                edge_weights.push(Some(edge_cost_callable.call(py, weight)?))
-            }
+            Some(weight) => edge_weights.push(Some(edge_cost_callable.call(py, weight)?)),
             None => edge_weights.push(None),
         };
     }
@@ -151,27 +141,20 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
         }
     };
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
-    let temp_distances: RwLock<HashMap<usize, DictMap<NodeIndex, f64>>> =
-        if distances.is_some() {
-            RwLock::new(HashMap::with_capacity(graph.node_count()))
-        } else {
-            // Avoid extra allocation if HashMap isn't used
-            RwLock::new(HashMap::new())
-        };
+    let temp_distances: RwLock<HashMap<usize, DictMap<NodeIndex, f64>>> = if distances.is_some() {
+        RwLock::new(HashMap::with_capacity(graph.node_count()))
+    } else {
+        // Avoid extra allocation if HashMap isn't used
+        RwLock::new(HashMap::new())
+    };
     let out_map = AllPairsPathMapping {
         paths: node_indices
             .into_par_iter()
             .map(|x| {
                 let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> =
                     DictMap::with_capacity(graph.node_count());
-                let distance = dijkstra(
-                    graph,
-                    x,
-                    None,
-                    |e| edge_cost(e.id()),
-                    Some(&mut paths),
-                )
-                .unwrap();
+                let distance =
+                    dijkstra(graph, x, None, |e| edge_cost(e.id()), Some(&mut paths)).unwrap();
                 if distances.is_some() {
                     temp_distances.write().unwrap().insert(x.index(), distance);
                 }
@@ -184,11 +167,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
                             if index != path_index {
                                 Some((
                                     path_index,
-                                    path_mapping
-                                        .1
-                                        .iter()
-                                        .map(|x| x.index())
-                                        .collect(),
+                                    path_mapping.1.iter().map(|x| x.index()).collect(),
                                 ))
                             } else {
                                 None

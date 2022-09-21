@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Added a new function, :func:`~rustworkx.generators.generalized_petersen_graph` that
+    adds support for generating generalized Petersen graphs. For example:
+
+    .. jupyter-execute::
+
+      import rustworkx.generators
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.generators.generalized_petersen_graph(5, 2)
+      layout = rustworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4], [6, 7, 8, 9, 5]])
+      mpl_draw(graph, pos=layout)

@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    Added a new function, :func:`~rustworkx.generators.lollipop_graph` that adds
+    support for generating lollipop graphs. For example:
+
+    .. jupyter-execute::
+
+        import rustworkx.generators
+        from rustworkx.visualization import mpl_draw
+
+        graph = rustworkx.generators.lollipop_graph(4, 3)
+        mpl_draw(graph)

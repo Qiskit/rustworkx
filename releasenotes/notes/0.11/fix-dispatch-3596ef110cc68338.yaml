@@ -1,0 +1,11 @@
+---
+fixes:
+  - |
+    Fixed the :func:`~rustworkx.dfs_edges` function to have the ``source``
+    argument default to ``None`` as was documented. Previously, the ``source``
+    argument was incorrectly required and had no default value.
+    Fixed `#515 <https://github.com/Qiskit/rustworkx/issues/515>`__.
+  - |
+    Fixed an oversight in the :func:`~rustworkx.union` function where
+    user-defined values for the ``merge_nodes`` and ``merge_edges`` arguments
+    were being ingored.

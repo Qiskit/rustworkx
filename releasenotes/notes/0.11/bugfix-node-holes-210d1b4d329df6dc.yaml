@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed an issue where :func:`~rustworkx.distance_matrix` and
+    :func:`~rustworkx.k_shortest_path_lengths` would previously panic if the
+    input graph contains holes in the node indices.

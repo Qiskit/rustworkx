@@ -33,7 +33,7 @@ use crate::iterators::WeightedEdgeList;
 /// :param PyGraph graph: Undirected graph
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         minimum_spanning_edges(graph, weight_fn: lambda x: 1)
@@ -62,8 +62,7 @@ pub fn minimum_spanning_edges(
     let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> =
         Vec::with_capacity(graph.graph.edge_count());
     for edge in graph.graph.edge_references() {
-        let weight =
-            weight_callable(py, &weight_fn, edge.weight(), default_weight)?;
+        let weight = weight_callable(py, &weight_fn, edge.weight(), default_weight)?;
         if weight.is_nan() {
             return Err(PyValueError::new_err("NaN found as an edge weight"));
         }
@@ -96,7 +95,7 @@ pub fn minimum_spanning_edges(
 /// :param PyGraph graph: Undirected graph
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
@@ -115,7 +114,7 @@ pub fn minimum_spanning_edges(
 ///
 /// .. note::
 ///
-///     The new graph will keep the same node indexes, but edge indexes might differ.
+///     The new graph will keep the same node indices, but edge indices might differ.
 #[pyfunction(weight_fn = "None", default_weight = "1.0")]
 #[pyo3(text_signature = "(graph, weight_fn=None, default_weight=1.0)")]
 pub fn minimum_spanning_tree(
@@ -131,7 +130,7 @@ pub fn minimum_spanning_tree(
         .edges
         .iter()
     {
-        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py))?;
+        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py));
     }
 
     Ok(spanning_tree)

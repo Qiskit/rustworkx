@@ -1,29 +1,29 @@
 ---
 features:
   - |
-    Added a new layout function, :func:`retworkx.random_layout` (and it's
-    equivalent per type variants :func:`retworkx.graph_random_layout` and
-    :func:`retworkx.diraph_random_layout`) to generate a random layout which
+    Added a new layout function, :func:`rustworkx.random_layout` (and it's
+    equivalent per type variants :func:`rustworkx.graph_random_layout` and
+    :func:`rustworkx.diraph_random_layout`) to generate a random layout which
     can be used for visualizations. For example:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.directed_grid_graph(5, 5)
-      layout = retworkx.random_layout(graph)
+      graph = rustworkx.generators.directed_grid_graph(5, 5)
+      layout = rustworkx.random_layout(graph)
       mpl_draw(graph, pos=layout)
 
-    or with the :func:`~retworkx.visualization.graphviz_draw` function:
+    or with the :func:`~rustworkx.visualization.graphviz_draw` function:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import graphviz_draw
+      import rustworkx
+      from rustworkx.visualization import graphviz_draw
 
-      graph = retworkx.generators.directed_grid_graph(5, 5)
-      layout = retworkx.random_layout(graph)
+      graph = rustworkx.generators.directed_grid_graph(5, 5)
+      layout = rustworkx.random_layout(graph)
       for i in range(25):
         graph[i] = i
 
@@ -40,7 +40,7 @@ features:
       graphviz_draw(graph, node_attr_fn=node_attr_fn, method='fdp')
 
   - |
-    A new custom return class, :class:`retworkx.Pos2DMapping`, has been
+    A new custom return class, :class:`rustworkx.Pos2DMapping`, has been
     added. This class will be returned by layout functions and is a drop
     in replacement for an immutable read-only dictionary of the form::
 

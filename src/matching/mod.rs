@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph;
-use retworkx_core::max_weight_matching;
+use rustworkx_core::max_weight_matching as mwm;
 
 use hashbrown::HashSet;
 
@@ -24,7 +24,7 @@ use petgraph::visit::IntoEdgeReferences;
 
 use crate::weight_callable;
 
-/// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
+/// Compute a maximum-weighted matching for a :class:`~rustworkx.PyGraph`
 ///
 /// A matching is a subset of edges in which no node occurs more than once.
 /// The weight of a matching is the sum of the weights of its edges.
@@ -80,7 +80,7 @@ pub fn max_weight_matching(
     default_weight: i128,
     verify_optimum: bool,
 ) -> PyResult<HashSet<(usize, usize)>> {
-    max_weight_matching::max_weight_matching(
+    mwm::max_weight_matching(
         &graph.graph,
         max_cardinality,
         |e| weight_callable(py, &weight_fn, e.weight(), default_weight),
@@ -88,10 +88,7 @@ pub fn max_weight_matching(
     )
 }
 
-fn _inner_is_matching(
-    graph: &graph::PyGraph,
-    matching: &HashSet<(usize, usize)>,
-) -> bool {
+fn _inner_is_matching(graph: &graph::PyGraph, matching: &HashSet<(usize, usize)>) -> bool {
     let has_edge = |e: &(usize, usize)| -> bool {
         graph
             .graph
@@ -125,10 +122,7 @@ fn _inner_is_matching(
 /// :rtype: bool
 #[pyfunction]
 #[pyo3(text_signature = "(graph, matching, /)")]
-pub fn is_matching(
-    graph: &graph::PyGraph,
-    matching: HashSet<(usize, usize)>,
-) -> bool {
+pub fn is_matching(graph: &graph::PyGraph, matching: HashSet<(usize, usize)>) -> bool {
     _inner_is_matching(graph, &matching)
 }
 
@@ -151,10 +145,7 @@ pub fn is_matching(
 /// :rtype: bool
 #[pyfunction]
 #[pyo3(text_signature = "(graph, matching, /)")]
-pub fn is_maximal_matching(
-    graph: &graph::PyGraph,
-    matching: HashSet<(usize, usize)>,
-) -> bool {
+pub fn is_maximal_matching(graph: &graph::PyGraph, matching: HashSet<(usize, usize)>) -> bool {
     if !_inner_is_matching(graph, &matching) {
         return false;
     }

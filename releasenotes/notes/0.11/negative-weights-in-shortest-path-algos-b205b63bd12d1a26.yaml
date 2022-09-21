@@ -1,0 +1,12 @@
+---
+fixes:
+  - |
+    Fixed an oversight in shortest path algorithms functions, such as:
+    :func:`~rustworkx.dijkstra_shortest_paths`,
+    :func:`~rustworkx.dijkstra_shortest_path_lengths`,
+    :func:`~rustworkx.all_pairs_dijkstra_path_lengths`,
+    :func:`~rustworkx.all_pairs_dijkstra_shortest_paths`,
+    :func:`~rustworkx.astar_shortest_path`, and
+    :func:`~rustworkx.k_shortest_path_lengths` which would previously incorrectly
+    accept edge weights with negative or ``NaN`` values.
+    Fixed `#525 <https://github.com/Qiskit/rustworkx/issues/525>`__.

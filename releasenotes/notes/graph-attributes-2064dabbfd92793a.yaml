@@ -1,0 +1,31 @@
+---
+features:
+  - |
+    Added a concept of graph attributes to the :class:`~.PyDiGraph` and
+    :class:`~.PyGraph` classes. The attributes are accessible via the
+    :attr:`~.PyDiGraph.attrs` attribute of the graph objects and can be modified
+    in place. Additionally, they can be set initially when creating the object
+    via the constructor. For example::
+
+        import rustworkx as rx
+
+        graph = rx.PyGraph(attrs=dict(day="Friday"))
+        graph.attrs['day'] = "Monday"
+
+    The attributes can contain any Python object, not just a dictionary. For
+    example::
+
+        class Day:
+
+            def __init__(self, day):
+                self.day = day
+
+        graph = rx.PyGraph(attrs=Day("Friday"))
+        graph.attrs = Day("Monday")
+
+    If :attr:`~.PyDiGraph.attrs` is not set it will default to ``None``.
+  - |
+    The :meth:`.PyGraph.subgraph` and :meth:`.PyDiGraph.subgraph` methods have a
+    new keyword argument ``preserve_attributes`` which can be set to ``True``
+    to copy by reference the contents of the ``attrs`` attribute from the
+    graph to the subgraph's ``attrs`` attribute.

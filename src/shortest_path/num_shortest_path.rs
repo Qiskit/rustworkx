@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
@@ -27,8 +27,7 @@ pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
     source: usize,
 ) -> PyResult<DictMap<usize, BigUint>> {
-    let mut out_map: Vec<BigUint> =
-        vec![0.to_biguint().unwrap(); graph.node_bound()];
+    let mut out_map: Vec<BigUint> = vec![0.to_biguint().unwrap(); graph.node_bound()];
     let node_index = NodeIndex::new(source);
     if graph.node_weight(node_index).is_none() {
         return Err(PyIndexError::new_err(format!(
@@ -43,9 +42,7 @@ pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
     while let Some(current) = bfs.next(graph) {
         let dist_plus_one = distance[current.index()].unwrap_or_default() + 1;
         let count_current = out_map[current.index()].clone();
-        for neighbor_index in
-            graph.neighbors_directed(current, petgraph::Direction::Outgoing)
-        {
+        for neighbor_index in graph.neighbors_directed(current, petgraph::Direction::Outgoing) {
             let neighbor: usize = neighbor_index.index();
             if distance[neighbor].is_none() {
                 distance[neighbor] = Some(dist_plus_one);

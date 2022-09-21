@@ -6,17 +6,17 @@ included in the Qiskit documentation:
 https://qiskit.org/documentation/contributing_to_qiskit.html
 
 While it's not all directly applicable since most of it is about the Qiskit
-project itself and retworkx is an independent library developed in tandem
+project itself and rustworkx is an independent library developed in tandem
 with Qiskit; the general guidelines and advice still apply here.
 
-## Contributing to retworkx
+## Contributing to rustworkx
 
 In addition to the general guidelines there are specific details for
-contributing to retworkx, these are documented below.
+contributing to rustworkx, these are documented below.
 
 ### Making changes to the code
 
-Retworkx is implemented primarily in Rust with a thin layer of Python.
+Rustworkx is implemented primarily in Rust with a thin layer of Python.
 Because of that, most of your code changes will involve modifications to
 Rust files in `src`. To understand which files you need to change, we invite
 you for an overview of our simplified source tree:
@@ -80,27 +80,27 @@ in that file then delegate most of logic by importing and calling pure Rust code
 `pure_rust_code.rs` and `more_pure_rust_code.rs`.
 
 > __NOTE:__ Do you still have questions about making your contribution?
-> Contact us at the [\#retworkx channel in Qiskit Slack](https://qiskit.slack.com/messages/retworkx/)
+> Contact us at the [\#rustworkx channel in Qiskit Slack](https://qiskit.slack.com/messages/rustworkx/)
 
-### retworkx-core
+### rustworkx-core
 
 If you're working on writing a pure rust function and it can be made generic
 such that it works for any petgraph graph (if applicable) and that it has
-no dependency on Python or pyo3, it probably makes sense in `retworkx-core`.
-`retworkx-core` is a standalone rust library that's used to provide a Rust API
-to both retworkx and other rust applications or libraries. Unlike retworkx
+no dependency on Python or pyo3, it probably makes sense in `rustworkx-core`.
+`rustworkx-core` is a standalone rust library that's used to provide a Rust API
+to both rustworkx and other rust applications or libraries. Unlike rustworkx
 it's a Rust library and not a Python library and is designed to be an add-on
 library on top of petgraph that provides additional graph algorithms and
 functionality.
 
-When contributing to retworkx-core the key differences to keep in mind are that
+When contributing to rustworkx-core the key differences to keep in mind are that
 the public rust interface needs to be treated as a stable interface, which is
-different from retworkx where the stable rust interface compatibility doesn't
+different from rustworkx where the stable rust interface compatibility doesn't
 matter only the exported Python API. Additionally documentation and testing
 should be done via cargo doc and cargo test. It is expected that any new
-functionality or changes to retworkx-core is also being used by retworkx so
-test coverage is needed both via python in the retworkx tests and via the
-retworkx-core rust interface.
+functionality or changes to rustworkx-core is also being used by rustworkx so
+test coverage is needed both via python in the rustworkx tests and via the
+rustworkx-core rust interface.
 
 ### Tests
 
@@ -114,17 +114,17 @@ The easiest way to run the test suite is to use
 with pip: `pip install -U tox`. Tox provides several advantages, but the
 biggest one is that it builds an isolated virtualenv for running tests. This
 means it does not pollute your system python when running. However, by default
-tox will recompile retworkx from source every time it is run even if there
+tox will recompile rustworkx from source every time it is run even if there
 are no changes made to the rust code. To avoid this you can use the
 `--skip-pkg-install` package if you'd like to rerun tests without recompiling.
 Note, you only want to use this flag if you recently ran tox and there are no
 rust code (or packaged python code) changes to the repo since then. Otherwise
-the retworkx package tox installs in it's virtualenv will be out of date (or
+the rustworkx package tox installs in it's virtualenv will be out of date (or
 missing).
 
 Note, if you run tests outside of tox that you can **not** run the tests from
-the root of the repo, this is because retworkx packaging shim will conflict
-with imports from retworkx the installed version of retworkx (which contains
+the root of the repo, this is because rustworkx packaging shim will conflict
+with imports from rustworkx the installed version of rustworkx (which contains
 the compiled extension).
 
 #### Running subsets of tests
@@ -183,28 +183,28 @@ RETWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
 will run the visualization tests and preserve the generated image files after
 the run finishes so you can inspect the output.
 
-#### retworkx-core tests
+#### rustworkx-core tests
 
-As retworkx-core is a standalone rust crate with it's own public interface it
+As rustworkx-core is a standalone rust crate with it's own public interface it
 needs it's own testing. These tests can be a combination of doc tests (embedded
 code examples in the docstrings in the rust code) or standalone tests. You
 can refer to the rust book on how to add tests:
 
 https://doc.rust-lang.org/book/ch11-01-writing-tests.html
 
-The retworkx-core tests can be run with:
+The rustworkx-core tests can be run with:
 ```
 cargo test
 ```
 
-from the `retworkx-core` directory.
+from the `rustworkx-core` directory.
 
 ### Style
 
 #### Rust
 
-Rust is the primary language of retworkx and all the functional code in the
-libraries is written in Rust. The Rust code in retworkx uses
+Rust is the primary language of rustworkx and all the functional code in the
+libraries is written in Rust. The Rust code in rustworkx uses
 [rustfmt](https://github.com/rust-lang/rustfmt) to enforce consistent style.
 CI jobs are configured to ensure to check this. Luckily adapting your code is
 as simple as running:
@@ -213,7 +213,7 @@ as simple as running:
 cargo fmt
 ```
 
-locally. This will automatically restyle the rust code in retworkx to match
+locally. This will automatically restyle the rust code in rustworkx to match
 what CI is checking.
 
 ##### Lint
@@ -245,7 +245,7 @@ update the code formatting to conform to the style.
 ### Building documentation
 
 Just like with tests building documentation is done via tox. This will handle
-compiling retworkx, installing the python dependencies, and then building the
+compiling rustworkx, installing the python dependencies, and then building the
 documentation in an isolated venv. You can run just the docs build with:
 ```
 tox -edocs
@@ -253,16 +253,16 @@ tox -edocs
 which will output the html rendered documentation in `docs/build/html` which
 you can view locally in a web browser.
 
-#### retworkx-core documentation
+#### rustworkx-core documentation
 
-To build the retworkx-core documentation you will use rust-doc. You can do this
+To build the rustworkx-core documentation you will use rust-doc. You can do this
 by running:
 ```
 cargo doc
 ```
-from the `retworkx-core` directory (which is the root of the `retworkx-core`
+from the `rustworkx-core` directory (which is the root of the `rustworkx-core`
 crate. After it's built the compiled documentation will be located in
-`target/doc/retworkx_core` (which is off the repo root not the `retworkx-core`
+`target/doc/rustworkx_core` (which is off the repo root not the `rustworkx-core`
 dir)
 
 You can build and open the documentation directly in your configured default
@@ -275,14 +275,14 @@ cargo doc --open
 ### Release Notes
 
 It is important to document any end user facing changes when we release a new
-version of retworkx.  The expectation is that if your code contribution has
+version of rustworkx.  The expectation is that if your code contribution has
 user facing changes that you will write the release documentation for these
 changes. This documentation must explain what was changed, why it was changed,
 and how users can either use or adapt to the change. The idea behind release
 documentation is that when a naive user with limited internal knowledge of the
 project is upgrading from the previous release to the new one, they should be
 able to read the release notes, understand if they need to update their
-program which uses retworkx, and how they would go about doing that. It
+program which uses rustworkx, and how they would go about doing that. It
 ideally should explain why they need to make this change too, to provide the
 necessary context.
 
@@ -322,28 +322,28 @@ look something like::
 ```yaml
 features:
   - |
-    Added a new function, :func:`~retworkx.foo` that adds support for doing
-    something to :class:`~retworkx.PyDiGraph` objects.
+    Added a new function, :func:`~rustworkx.foo` that adds support for doing
+    something to :class:`~rustworkx.PyDiGraph` objects.
   - |
-    The :class:`~retworkx.PyDiGraph` class has a new method
-    :meth:`~retworkx.PyDiGraph.foo``. This is the equivalent of calling the
-    :func:`~retworkx.foo` function to do something to your
-    :class:`~retworkx.PyDiGraph` object, but provides the convenience of running
+    The :class:`~rustworkx.PyDiGraph` class has a new method
+    :meth:`~rustworkx.PyDiGraph.foo``. This is the equivalent of calling the
+    :func:`~rustworkx.foo` function to do something to your
+    :class:`~rustworkx.PyDiGraph` object, but provides the convenience of running
     it natively on an object. For example::
 
-      from retworkx import PyDiGraph
+      from rustworkx import PyDiGraph
 
       g = PyDiGraph.
       g.foo()
 
 deprecations:
   - |
-    The ``retworkx.bar`` function has been deprecated and will be removed in a
+    The ``rustworkx.bar`` function has been deprecated and will be removed in a
     future release. It has been superseded by the
-    :meth:`~retworkx.PyDiGraph.foo` method and :func:`~retworkx.foo` function
+    :meth:`~rustworkx.PyDiGraph.foo` method and :func:`~rustworkx.foo` function
     which provides similar functionality but with more accurate results and
     better performance. You should update your calls
-    ``retworkx.bar()`` calls to use ``retworkx.foo()`` instead.
+    ``rustworkx.bar()`` calls to use ``rustworkx.foo()`` instead.
 ```
 
 You can also look at other release notes for other examples.
@@ -370,7 +370,7 @@ as:
 fixes:
   - |
     Fixes a race condition in the function ``foo()``. Refer to
-    `#12345 <https://github.com/Qiskit/retworkx/issues/12345>`__ for more
+    `#12345 <https://github.com/Qiskit/rustworkx/issues/12345>`__ for more
     details.
 ```
 
@@ -381,7 +381,7 @@ the release notes. Reno is used to combine the release note yaml files into a
 single rst (ReStructuredText) document that
 [sphinx](https://www.sphinx-doc.org/en/master/) will then compile for us as part
 of the documentation builds. If you want to generate the rst file you
-use the ``reno report`` command. If you want to generate the full retworkx
+use the ``reno report`` command. If you want to generate the full rustworkx
 release notes for all releases (since we started using reno during 0.8) you just
 run::
 
@@ -394,8 +394,122 @@ it has been tagged::
 
 #### Building release notes locally
 
-Building the release notes is part of the standard retworkx documentation
+Building the release notes is part of the standard rustworkx documentation
 builds. To check what the rendered html output of the release notes will look
 like for the current state of the repo you can run: `tox -edocs` which will
 build all the documentation into `docs/_build/html` and the release notes in
 particular will be located at `docs/_build/html/release_notes.html`
+
+### Pull request review, CI, and merge queue
+
+After you've submitted a pull request to rustworkx it will need to pass CI and be
+reviewed by an approved by a core team reviewer. CI runs get triggered
+automatically when your pull request is opened and on every subsequent commit
+made to your pull request's branch. Code review however may take some time,
+sometimes even weeks or months, there are many new pull requests opened every
+day and limited number of reviewers available, and while every proposed change
+is a valuable addition to the project not everything is the highest priority.
+You can help this process move more quickly by actively reviewing other open
+PRs. While only members of the rustworkx core team have permission to provide
+final approval and mark a PR as ready for merging, reviewing code is open to
+everyone and all reviews are welcome and extremely valued contributions.
+Helping with code review also helps reduce the burden on the core team and
+enables them to review code faster.
+
+The code review process is a bit of back and forth where you will receive
+feedback and questions about your proposed changes to the project. You will
+likely have multiple rounds of feedback with suggestions or changes requested
+before approval. Please do not get discouraged as this is normal and part of
+ensuring the quality of the rustworkx project and even what first appears as a
+straightforward or simple change might have larger implications that aren't
+obvious at first. If you receive feedback feel free to request re-review from
+reviewers after you've adjusted your PR based on the comments received.
+
+Another thing to keep in mind is that CI time is a constrained resource and not
+infinite. While waiting for review and approval it is not necessary to keep your
+PR branch up to date on every change to the `main` branch. Doing it periodically
+is fine to make sure there are no regressions as the codebase changes, but
+doing it too often will just needlessly waste CI resources. This will contribute
+to resource starvation on CI, slowing down total throughput for the project. If
+possible try to bundle updating your branch to the current HEAD on the `main`
+branch with other changes made to the PR branch (like making adjustments from
+code review). This will result in a single CI run instead of doing standalone
+updates with no code changes.
+
+Once your PR has the necessary approvals it will be tagged with the `automerge`
+tag. This is a signal to the [mergify bot](https://mergify.io/) that the PR has
+been approved and is ready for merging. The mergify bot will then enqueue the
+PR onto its merge queue. At this point the process of updating a PR to the
+current HEAD of the `main` branch is fully automated and once CI passes mergify
+will merge the PR automatically. In an effort to conserve CI resources and
+maximize throughput the mergify bot will only update a PR when it's next in the
+merge queue. It might appear as activity on your PR is idle at this point, but
+this likely just means the mergify merge queue is deep and/or CI has a backlog.
+Do **not** manually update a PR branch to HEAD on the `main` branch after it
+has the necessary approvals and is tagged as `automerge` unless it has a merge
+conflict or has a failed CI run. Doing so will just waste CI resources and
+delay everything from merging, including your PR.
+
+### Stable Branch Policy and Backporting
+
+The stable branch is intended to be a safe source of fixes for high-impact bugs,
+documentation fixes, and security issues that have been fixed on main since a
+release. When reviewing a stable branch PR, we must balance the risk of any given
+patch with the value that it will provide to users of the stable branch. Only a
+limited class of changes are appropriate for inclusion on the stable branch. A
+large, risky patch for a major issue might make sense, as might a trivial fix
+for a fairly obscure error-handling case. A number of factors must be weighed
+when considering a change:
+
+- The risk of regression: even the tiniest changes carry some risk of breaking
+  something, and we really want to avoid regressions on the stable branch.
+- The user visibility benefit: are we fixing something that users might actually
+  notice, and if so, how important is it?
+- How self-contained the fix is: if it fixes a significant issue but also
+  refactors a lot of code, it’s probably worth thinking about what a less risky
+  fix might look like.
+- Whether the fix is already on main: a change must be a backport of a change
+  already merged onto main, unless the change simply does not make sense on
+  main.
+
+Normally only bug fixes or non-code changes are allowed on a stable branch, the
+primary exception to this is adding support for new python versions. If a new
+python version is released backporting that feature change with that new support
+is an acceptable backport.
+
+In rustworkx at least until the 1.0 release we only maintaing a single stable
+branch at a time for the most recent minor version release.
+
+#### Backporting procedure
+
+In the normal case to backport a pull request all that needs to be done is
+to tag it as `stable-backport-potential`, this will signal the
+[mergify bot](https://mergify.io/) that the PR should be backported after it
+merged. Once a PR tagged as `stable-backport-potential` merges mergify will
+automatically open a new PR backporting it to the stable branch.
+
+##### Manual backport procedure
+
+If the mergify approach doesn't work for some reason and you need to manual
+backport a PR this can be done with the following procedure. When backporting a
+patch from main to stable, we want to keep a reference to the change on main.
+When you create the branch for the stable PR, use:
+
+```
+$ git cherry-pick -x $main_commit_id
+```
+
+However, this only works for small self-contained patches from main. If you
+need to backport a subset of a larger commit (from a squashed PR, for example)
+from main, do this manually. In these cases, add:
+
+```
+Backported from: #main pr number
+```
+
+so that we can track the source of the change subset, even if a strict
+cherry-pick doesn't make sense.
+
+If the patch you’re proposing will not cherry-pick cleanly, you can help by
+resolving the conflicts yourself and proposing the resulting patch. Please keep
+Conflicts lines in the commit message to help review of the stable patch.
