@@ -93,8 +93,8 @@ where
 /// use std::collections::HashSet;
 /// use std::iter::FromIterator;
 ///
-/// use retworkx_core::connectivity::stoer_wagner_min_cut;
-/// use retworkx_core::petgraph::graph::{NodeIndex, UnGraph};
+/// use rustworkx_core::connectivity::stoer_wagner_min_cut;
+/// use rustworkx_core::petgraph::graph::{NodeIndex, UnGraph};
 ///
 /// let mut graph : UnGraph<(), ()> = UnGraph::new_undirected();
 /// let a = graph.add_node(()); // node with no weight

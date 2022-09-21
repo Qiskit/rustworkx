@@ -12,10 +12,10 @@
 
 //! `DisjointSet<K>` is a disjoint-set data structure.
 
-extern crate retworkx_core;
+extern crate rustworkx_core;
 
 use rand::{thread_rng, Rng};
-use retworkx_core::disjoint_set::DisjointSet;
+use rustworkx_core::disjoint_set::DisjointSet;
 
 use std::collections::HashSet;
 use std::iter::FromIterator;
