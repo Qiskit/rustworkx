@@ -2494,10 +2494,19 @@ pub fn directed_empty_graph(
 /// ``{0, 1, ..., n-1}`` and the set of edges ``{(i, j) : i < j, 0 <= i < n, 0 <= j < n}``.
 /// The number of edges in the complete graph is ``n*(n-1)/2``.
 ///
-/// :param int n: The number of nodes to generate the graph with.
+/// :param int num_node: The number of nodes to generate the graph with. Node
+///     weights will be None if this is specified. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param list weights: A list of node weights. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated complete graph
 /// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
 ///
 /// .. jupyter-execute::
 ///
@@ -2508,17 +2517,14 @@ pub fn directed_empty_graph(
 ///  mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, n, multigraph=True)")]
-pub fn complete_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
-    let mut graph = empty_graph(py, n, multigraph)?;
-    if n > 1 {
-        for i in 0..n - 1 {
-            for j in i + 1..n {
-                graph.add_edge(i, j, py.None());
-            }
-        }
-    }
-    Ok(graph)
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+pub fn complete_graph(
+    py: Python,
+    num_nodes: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    mesh_graph(py, num_nodes, weights, multigraph)
 }
 
 /// Generate a directed complete graph with ``n`` nodes.
@@ -2529,10 +2535,19 @@ pub fn complete_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph:
 /// ``{0, 1, ..., n-1}`` and the set of edges ``{(i, j) : 0 <= i < n, 0 <= j < n}``.
 /// The number of edges in the directed complete graph is ``n*(n-1)``.
 ///
-/// :param int n: The number of nodes to generate the graph with.
+/// :param int num_node: The number of nodes to generate the graph with. Node
+///     weights will be None if this is specified. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param list weights: A list of node weights. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated directed complete graph
 /// :rtype: PyDiGraph
+/// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
 ///
 /// .. jupyter-execute::
 ///
@@ -2543,23 +2558,14 @@ pub fn complete_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph:
 ///  mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, n, multigraph=True)")]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn directed_complete_graph(
     py: Python,
-    n: usize,
+    num_nodes: Option<usize>,
+    weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = directed_empty_graph(py, n, multigraph)?;
-    if n > 1 {
-        for i in 0..n {
-            for j in 0..n {
-                if i != j {
-                    graph.add_edge(i, j, py.None())?;
-                }
-            }
-        }
-    }
-    Ok(graph)
+    directed_mesh_graph(py, num_nodes, weights, multigraph)
 }
 
 #[pymodule]
