@@ -168,7 +168,6 @@ Graph Operations
    rustworkx.complement
    rustworkx.union
    rustworkx.cartesian_product
->>>>>>> origin/main
 
 .. _other-algorithms:
 
