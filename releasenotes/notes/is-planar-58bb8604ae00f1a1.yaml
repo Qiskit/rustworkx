@@ -6,7 +6,7 @@ features:
 
     .. jupyter-execute::
 
-      import retworkx
+      import rustworkx as rx
 
       graph = retworkx.generators.mesh_graph(5)
-      print('Is K_5 graph planar?', retworkx.is_planar(graph))
+      print('Is K_5 graph planar?', rx.is_planar(graph))
