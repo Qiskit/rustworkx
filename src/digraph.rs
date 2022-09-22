@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::borrow_deref_ref)]
+
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -22,7 +24,7 @@ use std::str;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
@@ -67,9 +69,9 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///
 /// .. jupyter-execute::
 ///
-///        import retworkx
+///        import rustworkx as rx
 ///
-///        graph = retworkx.PyDiGraph()
+///        graph = rx.PyDiGraph()
 ///        graph.add_nodes_from(list(range(5)))
 ///        graph.add_nodes_from(list(range(2)))
 ///        graph.remove_node(2)
@@ -83,9 +85,9 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///
 /// .. jupyter-execute::
 ///
-///     import retworkx
+///     import rustworkx as rx
 ///
-///     graph = retworkx.PyDiGraph()
+///     graph = rx.PyDiGraph()
 ///     data_payload = "An arbitrary Python object"
 ///     node_index = graph.add_node(data_payload)
 ///     print("Node Index: %s" % node_index)
@@ -96,9 +98,9 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///
 /// .. jupyter-execute::
 ///
-///     import retworkx
+///     import rustworkx as rx
 ///
-///     graph = retworkx.PyDiGraph()
+///     graph = rx.PyDiGraph()
 ///     data_payload = "An arbitrary Python object"
 ///     node_index = graph.add_node(data_payload)
 ///     graph[node_index] = "New Payload"
@@ -111,14 +113,14 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// however you can enable it by setting the ``check_cycle`` attribute to True.
 /// For example::
 ///
-///     import retworkx
-///     dag = retworkx.PyDiGraph()
+///     import rustworkx as rx
+///     dag = rx.PyDiGraph()
 ///     dag.check_cycle = True
 ///
 /// or at object creation::
 ///
-///     import retworkx
-///     dag = retworkx.PyDiGraph(check_cycle=True)
+///     import rustworkx as rx
+///     dag = rx.PyDiGraph(check_cycle=True)
 ///
 /// With check_cycle set to true any calls to :meth:`PyDiGraph.add_edge` will
 /// ensure that no cycles are added, ensuring that the PyDiGraph class truly
@@ -136,13 +138,30 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// ``multigraph`` kwarg to ``False`` when calling the ``PyDiGraph``
 /// constructor. For example::
 ///
-///     import retworkx
-///     graph = retworkx.PyDiGraph(multigraph=False)
+///     import rustworkx as rx
+///     graph = rx.PyDiGraph(multigraph=False)
 ///
 /// This can only be set at ``PyDiGraph`` initialization and not adjusted after
-/// creation. When :attr:`~retworkx.PyDiGraph.multigraph` is set to ``False``
+/// creation. When :attr:`~rustworkx.PyDiGraph.multigraph` is set to ``False``
 /// if a method call is made that would add a parallel edge it will instead
 /// update the existing edge's weight/data payload.
+///
+/// Each ``PyDiGraph`` object has an :attr:`~.PyDiGraph.attrs` attribute which is
+/// used to contain additional attributes/metadata of the graph instance. By
+/// default this is set to ``None`` but can optionally be specified by using the
+/// ``attrs`` keyword argument when constructing a new graph::
+///
+///     graph = rustworkx.PyDiGraph(attrs=dict(source_path='/tmp/graph.csv'))
+///
+/// This attribute can be set to any Python object. Additionally, you can access
+/// and modify this attribute after creating an object. For example::
+///
+///     source_path = graph.attrs
+///     graph.attrs = {'new_path': '/tmp/new.csv', 'old_path': source_path}
+///
+/// The maximum number of nodes and edges allowed on a ``PyGraph`` object is
+/// :math:`2^{32} - 1` (4,294,967,294) each. Attempting to add more nodes or
+/// edges than this will result in an exception being raised.
 ///
 /// :param bool check_cycle: When this is set to ``True`` the created
 ///     ``PyDiGraph`` has runtime cycle detection enabled.
@@ -150,8 +169,11 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
 ///     method call is made that would add parallel edges the the weight/weight
 ///     from that method call will be used to update the existing edge in place.
-#[pyclass(module = "retworkx", subclass)]
-#[pyo3(text_signature = "(/, check_cycle=False, multigraph=True)")]
+/// :param attrs: An optional attributes payload to assign to the
+///     :attr:`~.PyDiGraph.attrs` attribute. This can be any Python object. If
+///     it is not specified :attr:`~.PyDiGraph.attrs` will be set to ``None``.
+#[pyclass(mapping, module = "rustworkx", subclass)]
+#[pyo3(text_signature = "(/, check_cycle=False, multigraph=True, attrs=None)")]
 #[derive(Clone)]
 pub struct PyDiGraph {
     pub graph: StablePyGraph<Directed>,
@@ -159,6 +181,8 @@ pub struct PyDiGraph {
     pub check_cycle: bool,
     pub node_removed: bool,
     pub multigraph: bool,
+    #[pyo3(get, set)]
+    pub attrs: PyObject,
 }
 
 impl GraphBase for PyDiGraph {
@@ -262,13 +286,14 @@ impl PyDiGraph {
 impl PyDiGraph {
     #[new]
     #[args(check_cycle = "false", multigraph = "true")]
-    fn new(check_cycle: bool, multigraph: bool) -> Self {
+    fn new(py: Python, check_cycle: bool, multigraph: bool, attrs: Option<PyObject>) -> Self {
         PyDiGraph {
             graph: StablePyGraph::<Directed>::new(),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
             multigraph,
+            attrs: attrs.unwrap_or_else(|| py.None()),
         }
     }
 
@@ -279,6 +304,7 @@ impl PyDiGraph {
         out_dict.set_item("nodes", node_dict)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
         out_dict.set_item("multigraph", self.multigraph)?;
+        out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
         let dir = petgraph::Direction::Incoming;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
@@ -310,6 +336,11 @@ impl PyDiGraph {
             .unwrap()
             .downcast::<PyBool>()?;
         self.multigraph = multigraph_raw.extract()?;
+        let attrs = match dict_state.get_item("attrs") {
+            Some(attr) => attr.into(),
+            None => py.None(),
+        };
+        self.attrs = attrs;
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -696,7 +727,7 @@ impl PyDiGraph {
     /// If there are parallel edges in the graph only one edge will be updated.
     /// if you need to update a specific edge or need to ensure all parallel
     /// edges get updated you should use
-    /// :meth:`~retworkx.PyDiGraph.update_edge_by_index` instead.
+    /// :meth:`~rustworkx.PyDiGraph.update_edge_by_index` instead.
     ///
     /// :param int source: The index for the first node
     /// :param int target: The index for the second node
@@ -1447,8 +1478,8 @@ impl PyDiGraph {
     /// Return the list of edge indices incident to a provided node
     ///
     /// You can later retrieve the data payload of this edge with
-    /// :meth:`~retworkx.PyDiGraph.get_edge_data_by_index` or its
-    /// endpoints with :meth:`~retworkx.PyDiGraph.get_edge_endpoints_by_index`.
+    /// :meth:`~rustworkx.PyDiGraph.get_edge_data_by_index` or its
+    /// endpoints with :meth:`~rustworkx.PyDiGraph.get_edge_endpoints_by_index`.
     ///
     /// By default this method will only return the outgoing edges of
     /// the provided ``node``. If you would like to access both the
@@ -1698,18 +1729,18 @@ impl PyDiGraph {
     /// :param node_attr: A callable that will take in a node data object
     ///     and return a dictionary of attributes to be associated with the
     ///     node in the dot file. The key and value of this dictionary **must**
-    ///     be strings. If they're not strings retworkx will raise TypeError
+    ///     be strings. If they're not strings rustworkx will raise TypeError
     ///     (unfortunately without an error message because of current
     ///     limitations in the PyO3 type checking)
     /// :param edge_attr: A callable that will take in an edge data object
     ///     and return a dictionary of attributes to be associated with the
     ///     node in the dot file. The key and value of this dictionary **must**
-    ///     be a string. If they're not strings retworkx will raise TypeError
+    ///     be a string. If they're not strings rustworkx will raise TypeError
     ///     (unfortunately without an error message because of current
     ///     limitations in the PyO3 type checking)
     /// :param dict graph_attr: An optional dictionary that specifies any graph
     ///     attributes for the output dot file. The key and value of this
-    ///     dictionary **must** be a string. If they're not strings retworkx
+    ///     dictionary **must** be a string. If they're not strings rustworkx
     ///     will raise TypeError (unfortunately without an error message
     ///     because of current limitations in the PyO3 type checking)
     /// :param str filename: An optional path to write the dot file to
@@ -1720,7 +1751,7 @@ impl PyDiGraph {
     /// :rtype: str
     ///
     /// Using this method enables you to leverage graphviz to visualize a
-    /// :class:`retworkx.PyDiGraph` object. For example:
+    /// :class:`rustworkx.PyDiGraph` object. For example:
     ///
     /// .. jupyter-execute::
     ///
@@ -1730,9 +1761,9 @@ impl PyDiGraph {
     ///   import pydot
     ///   from PIL import Image
     ///
-    ///   import retworkx
+    ///   import rustworkx as rx
     ///
-    ///   graph = retworkx.directed_gnp_random_graph(15, .25)
+    ///   graph = rx.directed_gnp_random_graph(15, .25)
     ///   dot_str = graph.to_dot(
     ///       lambda node: dict(
     ///           color='black', fillcolor='lightblue', style='filled'))
@@ -1794,8 +1825,8 @@ impl PyDiGraph {
     ///
     ///   import tempfile
     ///
-    ///   import retworkx
-    ///   from retworkx.visualization import mpl_draw
+    ///   import rustworkx as rx
+    ///   from rustworkx.visualization import mpl_draw
     ///
     ///   with tempfile.NamedTemporaryFile('wt') as fd:
     ///       path = fd.name
@@ -1805,7 +1836,7 @@ impl PyDiGraph {
     ///       fd.write('1 2\n')
     ///       fd.write('2 3\n')
     ///       fd.flush()
-    ///       graph = retworkx.PyDiGraph.read_edge_list(path)
+    ///       graph = rx.PyDiGraph.read_edge_list(path)
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
@@ -1892,6 +1923,7 @@ impl PyDiGraph {
             check_cycle: false,
             node_removed: false,
             multigraph: true,
+            attrs: py.None(),
         })
     }
 
@@ -1913,9 +1945,9 @@ impl PyDiGraph {
     ///     import os
     ///     import tempfile
     ///
-    ///     import retworkx
+    ///     import rustworkx as rx
     ///
-    ///     graph = retworkx.generators.directed_path_graph(5)
+    ///     graph = rx.generators.directed_path_graph(5)
     ///     path = os.path.join(tempfile.gettempdir(), "edge_list")
     ///     graph.write_edge_list(path, deliminator=',')
     ///     # Print file contents
@@ -1956,25 +1988,25 @@ impl PyDiGraph {
         Ok(())
     }
 
-    /// Create a new :class:`~retworkx.PyDiGraph` object from an adjacency matrix
+    /// Create a new :class:`~rustworkx.PyDiGraph` object from an adjacency matrix
     /// with matrix elements of type ``float``
     ///
-    /// This method can be used to construct a new :class:`~retworkx.PyDiGraph`
+    /// This method can be used to construct a new :class:`~rustworkx.PyDiGraph`
     /// object from an input adjacency matrix. The node weights will be the
     /// index from the matrix. The edge weights will be a float value of the
     /// value from the matrix.
     ///
     /// This differs from the
-    /// :meth:`~retworkx.PyDiGraph.from_complex_adjacency_matrix` in that the
+    /// :meth:`~rustworkx.PyDiGraph.from_complex_adjacency_matrix` in that the
     /// type of the elements of input matrix must be a ``float`` (specifically
     /// a ``numpy.float64``) and the output graph edge weights will be ``float``
-    /// too. While in :meth:`~retworkx.PyDiGraph.from_complex_adjacency_matrix`
+    /// too. While in :meth:`~rustworkx.PyDiGraph.from_complex_adjacency_matrix`
     /// the matrix elements are of type ``complex`` (specifically
     /// ``numpy.complex128``) and the edge weights in the output graph will be
     /// ``complex`` too.
     ///
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
-    ///     a new :class:`~retworkx.PyDiGraph` object from. It must be a 2
+    ///     a new :class:`~rustworkx.PyDiGraph` object from. It must be a 2
     ///     dimensional array and be a ``float``/``np.float64`` data type.
     /// :param float null_value: An optional float that will treated as a null
     ///     value. If any element in the input matrix is this value it will be
@@ -1993,25 +2025,25 @@ impl PyDiGraph {
         _from_adjacency_matrix(py, matrix, null_value)
     }
 
-    /// Create a new :class:`~retworkx.PyDiGraph` object from an adjacency matrix
+    /// Create a new :class:`~rustworkx.PyDiGraph` object from an adjacency matrix
     /// with matrix elements of type ``complex``
     ///
-    /// This method can be used to construct a new :class:`~retworkx.PyDiGraph`
+    /// This method can be used to construct a new :class:`~rustworkx.PyDiGraph`
     /// object from an input adjacency matrix. The node weights will be the
     /// index from the matrix. The edge weights will be a complex value of the
     /// value from the matrix.
     ///
     /// This differs from the
-    /// :meth:`~retworkx.PyDiGraph.from_adjacency_matrix` in that the type of
+    /// :meth:`~rustworkx.PyDiGraph.from_adjacency_matrix` in that the type of
     /// the elements of the input matrix in this method must be a ``complex``
     /// (specifically a ``numpy.complex128``) and the output graph edge weights
     /// will be ``complex`` too. While in
-    /// :meth:`~retworkx.PyDiGraph.from_adjacency_matrix` the matrix elements
+    /// :meth:`~rustworkx.PyDiGraph.from_adjacency_matrix` the matrix elements
     /// are of type ``float`` (specifically ``numpy.float64``) and the edge
     /// weights in the output graph will be ``float`` too.
     ///
     /// :param ndarray matrix: The input numpy array adjacency matrix to create
-    ///     a new :class:`~retworkx.PyDiGraph` object from. It must be a 2
+    ///     a new :class:`~rustworkx.PyDiGraph` object from. It must be a 2
     ///     dimensional array and be a ``complex``/``np.complex128`` data type.
     /// :param complex null_value: An optional complex that will treated as a
     ///     null value. If any element in the input matrix is this value it
@@ -2063,11 +2095,11 @@ impl PyDiGraph {
     ///
     /// .. jupyter-execute::
     ///
-    ///   import retworkx
-    ///   from retworkx.visualization import mpl_draw
+    ///   import rustworkx as rx
+    ///   from rustworkx.visualization import mpl_draw
     ///
     ///   # Build first graph and visualize:
-    ///   graph = retworkx.PyDiGraph()
+    ///   graph = rx.PyDiGraph()
     ///   node_a = graph.add_node('A')
     ///   node_b = graph.add_child(node_a, 'B', 'A to B')
     ///   node_c = graph.add_child(node_b, 'C', 'B to C')
@@ -2078,7 +2110,7 @@ impl PyDiGraph {
     /// .. jupyter-execute::
     ///
     ///   # Build second graph and visualize:
-    ///   other_graph = retworkx.PyDiGraph()
+    ///   other_graph = rx.PyDiGraph()
     ///   node_d = other_graph.add_node('D')
     ///   other_graph.add_child(node_d, 'E', 'D to E')
     ///   mpl_draw(other_graph, with_labels=True, labels=str, edge_labels=str)
@@ -2162,7 +2194,7 @@ impl PyDiGraph {
     ///
     /// .. note::
     ///
-    ///    The return type is a :class:`retworkx.NodeMap` which is an unordered
+    ///    The return type is a :class:`rustworkx.NodeMap` which is an unordered
     ///    type. So it does not provide a deterministic ordering between objects
     ///    when iterated over (although the same object will have a consistent
     ///    order when iterated over multiple times).
@@ -2295,14 +2327,14 @@ impl PyDiGraph {
     ///     modifying the graph. If set to ``False``, validation is
     ///     skipped. If not provided, inherits the value
     ///     of ``check_cycle`` from this instance of
-    ///     :class:`~retworkx.PyDiGraph`.
+    ///     :class:`~rustworkx.PyDiGraph`.
     /// :param weight_combo_fn: An optional python callable that, when
     ///     specified, is used to merge parallel edges introduced by the
     ///     contraction, which will occur when multiple nodes in
     ///     ``nodes`` have an incoming edge
     ///     from the same source node or when multiple nodes in
     ///     ``nodes`` have an outgoing edge to the same target node.
-    ///     If this instance of :class:`~retworkx.PyDiGraph` is a multigraph,
+    ///     If this instance of :class:`~rustworkx.PyDiGraph` is a multigraph,
     ///     leave this unspecified to preserve parallel edges. If unspecified
     ///     when not a multigraph, parallel edges and their weights will be
     ///     combined by choosing one of the edge's weights arbitrarily based
@@ -2417,6 +2449,10 @@ impl PyDiGraph {
     /// :param list nodes: A list of node indices to generate the subgraph
     ///     from. If a node index is included that is not present in the graph
     ///     it will silently be ignored.
+    /// :param preserve_attrs: If set to the True the attributes of the PyDiGraph
+    ///     will be copied by reference to be the attributes of the output
+    ///     subgraph. By default this is set to False and the :attr:`~.PyDiGraph.attrs`
+    ///     attribute will be ``None`` in the subgraph.
     ///
     /// :returns: A new PyDiGraph object representing a subgraph of this graph.
     ///     It is worth noting that node and edge weight/data payloads are
@@ -2425,8 +2461,9 @@ impl PyDiGraph {
     ///     the other.
     /// :rtype: PyGraph
     ///
-    #[pyo3(text_signature = "(self, nodes, /)")]
-    pub fn subgraph(&self, py: Python, nodes: Vec<usize>) -> PyDiGraph {
+    #[args(preserve_attrs = "false")]
+    #[pyo3(text_signature = "(self, nodes, /, preserve_attrs=False)")]
+    pub fn subgraph(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> PyDiGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
         let node_filter = |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
@@ -2441,12 +2478,18 @@ impl PyDiGraph {
             let new_target = *node_map.get(&edge.target()).unwrap();
             out_graph.add_edge(new_source, new_target, edge.weight().clone_ref(py));
         }
+        let attrs = if preserve_attrs {
+            self.attrs.clone_ref(py)
+        } else {
+            py.None()
+        };
         PyDiGraph {
             graph: out_graph,
             node_removed: false,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: self.check_cycle,
             multigraph: self.multigraph,
+            attrs,
         }
     }
 
@@ -2532,17 +2575,17 @@ impl PyDiGraph {
 
     /// Generate a new PyGraph object from this graph
     ///
-    /// This will create a new :class:`~retworkx.PyGraph` object from this
+    /// This will create a new :class:`~rustworkx.PyGraph` object from this
     /// graph. All edges in this graph will be created as undirected edges in
     /// the new graph object. For directed graphs with bidirectional edges, you
     /// can set `multigraph=False` to condense them into a single edge and specify
     /// a function to combine the weights/data of the edges.
     /// Do note that the node and edge weights/data payloads will be passed
-    /// by reference to the new :class:`~retworkx.PyGraph` object.
+    /// by reference to the new :class:`~rustworkx.PyGraph` object.
     ///
     /// .. note::
     ///
-    ///     The node indices in the output :class:`~retworkx.PyGraph` may
+    ///     The node indices in the output :class:`~rustworkx.PyGraph` may
     ///     differ if nodes have been removed.
     ///
     /// :param bool multigraph: If set to `False` the output graph will not
@@ -2626,6 +2669,7 @@ impl PyDiGraph {
             graph: new_graph,
             node_removed: false,
             multigraph,
+            attrs: py.None(),
         })
     }
 
@@ -2688,6 +2732,7 @@ impl PyDiGraph {
         {
             visit.call(edge)?;
         }
+        visit.call(&self.attrs)?;
         Ok(())
     }
 
@@ -2697,9 +2742,10 @@ impl PyDiGraph {
     //
     // ]1] https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_clear
     // [2] https://pyo3.rs/v0.12.4/class/protocols.html#garbage-collector-integration
-    fn __clear__(&mut self) {
+    fn __clear__(&mut self, py: Python) {
         self.graph = StablePyGraph::<Directed>::new();
         self.node_removed = false;
+        self.attrs = py.None();
     }
 }
 
@@ -2771,5 +2817,6 @@ where
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     }
 }

@@ -1,0 +1,12 @@
+---
+upgrade:
+  - |
+    The return type for the :class:`~.PyGraph` method
+    :meth:`~.PyGraph.add_edges_from` and
+    :meth:`~.PyGraph.add_edges_from_no_data` has changed from a ``list`` of
+    integer edge indices to an :class:`~.EdgeIndices` object. The
+    :class:`~.EdgeIndices` class is a read-only sequence type of integer
+    edge indices. For the most part this should be fully compatible
+    except if you were mutating the output list or were explicitly type
+    checking the return. In these cases you can simply cast the
+    :class:`~.EdgeIndices` object with ``list()``.

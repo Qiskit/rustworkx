@@ -2,17 +2,17 @@
 features:
   - |
     Added new constructor methods
-    :meth:`retworkx.PyDiGraph.from_complex_adjacency_matrix` and
-    :meth:`retworkx.PyGraph.from_complex_adjacency_matrix` for creating a
-    :class:`~retworkx.PyDiGraph` and a :class:`~retworkx.PyGraph` respectively
+    :meth:`rustworkx.PyDiGraph.from_complex_adjacency_matrix` and
+    :meth:`rustworkx.PyGraph.from_complex_adjacency_matrix` for creating a
+    :class:`~rustworkx.PyDiGraph` and a :class:`~rustworkx.PyGraph` respectively
     from a numpy adjacency matrix with a  ``complex`` ``dtype``. For example:
 
     .. jupyter-execute::
 
       import numpy as np
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
       adj_matrix = np.array([
           [0, 0 - 1j, 0, 1 + 2j],
@@ -20,6 +20,6 @@ features:
           [0, 1 + 0j, 0, 2 + 0.5j],
           [1 + 2j, 0, 2 + 0.5j, 0]
       ], dtype=complex)
-      graph = retworkx.PyDiGraph.from_complex_adjacency_matrix(adj_matrix)
+      graph = rustworkx.PyDiGraph.from_complex_adjacency_matrix(adj_matrix)
 
       mpl_draw(graph, with_labels=True, edge_labels=str)

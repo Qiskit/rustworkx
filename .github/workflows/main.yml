@@ -37,17 +37,17 @@ jobs:
       - name: Clippy
         run: cargo clippy -- -D warnings
       - name: Black Codestyle Format
-        run: black --check --diff retworkx tests
+        run: black --check --diff retworkx rustworkx retworkx tests
       - name: Python Lint
-        run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests
-      - name: retworkx-core Rust Tests
-        run: pushd retworkx-core && cargo test && popd
-      - name: retworkx-core Docs
-        run: pushd retworkx-core && cargo doc && popd
+        run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests rustworkx
+      - name: rustworkx-core Rust Tests
+        run: pushd rustworkx-core && cargo test && popd
+      - name: rustworkx-core Docs
+        run: pushd rustworkx-core && cargo doc && popd
       - uses: actions/upload-artifact@v2
         with:
-          name: retworkx_core_docs
-          path: target/doc/retworkx_core
+          name: rustworkx_core_docs
+          path: target/doc/rustworkx_core
   tests:
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.7, 3.8, 3.9, "3.10", "3.11.0-rc.2"]
         platform: [
           { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
@@ -88,6 +88,45 @@ jobs:
         if: runner.os == 'Linux'
       - name: 'Run tests'
         run: tox -epy
+  tests_retworkx_compat:
+    needs: [build_lint]
+    name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      matrix:
+        rust: [stable]
+        python-version: ["3.10"]
+        platform: [
+          { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
+          { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
+          { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
+        ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.platform.python-architecture }}
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.platform.rust-target }}
+          profile: minimal
+          default: true
+      - name: 'Install dependencies'
+        run: python -m pip install --upgrade tox
+      - name: 'Install binary dependencies'
+        run: sudo apt-get install -y graphviz
+        if: runner.os == 'Linux'
+      - name: 'Build rustworkx'
+        run: |
+          tox -epy --notest
+      - name: 'Run retworkx tests'
+        env:
+          RUSTWORKX_PKG_NAME: "retworkx"
+        run: tox -epy -- -t ./retworkx_backwards_compat
   coverage:
     needs: [tests]
     name: Coverage
@@ -101,19 +140,19 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-08-31
+          toolchain: stable
           override: true
           profile: default
           components: llvm-tools-preview
       - name: Download grcov
-        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -
+        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
       - name: Install deps
         run: pip install -U setuptools-rust networkx testtools fixtures
       - name: Build retworkx
         run: python setup.py develop
         env:
           CARGO_INCREMENTAL: 0
-          RUSTFLAGS: "-Zinstrument-coverage"
+          RUSTFLAGS: "-Cinstrument-coverage"
           LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
       - name: Run tests
         run: cd tests && python -m unittest discover . && cd ..

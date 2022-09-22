@@ -1,16 +1,16 @@
 ---
 features:
   - |
-    New universal functions that can take in a :class:`~retworkx.PyGraph`
-    or :class:`~retworkx.PyDiGraph` instead of being class specific have been
-    to the retworkx API. These new functions are:
+    New universal functions that can take in a :class:`~rustworkx.PyGraph`
+    or :class:`~rustworkx.PyDiGraph` instead of being class specific have been
+    to the rustworkx API. These new functions are:
 
-     * :func:`retworkx.distance_matrix`
-     * :func:`retworkx.floyd_warshall_numpy`
-     * :func:`retworkx.adjacency_matrix`
-     * :func:`retworkx.all_simple_paths`
-     * :func:`retworkx.astar_shortest_path`
-     * :func:`retworkx.dijkstra_shortest_paths`
-     * :func:`retworkx.dijkstra_shortest_path_lengths`
-     * :func:`retworkx.k_shortest_path_lengths`
-     * :func:`retworkx.dfs_edges`
+     * :func:`rustworkx.distance_matrix`
+     * :func:`rustworkx.floyd_warshall_numpy`
+     * :func:`rustworkx.adjacency_matrix`
+     * :func:`rustworkx.all_simple_paths`
+     * :func:`rustworkx.astar_shortest_path`
+     * :func:`rustworkx.dijkstra_shortest_paths`
+     * :func:`rustworkx.dijkstra_shortest_path_lengths`
+     * :func:`rustworkx.k_shortest_path_lengths`
+     * :func:`rustworkx.dfs_edges`

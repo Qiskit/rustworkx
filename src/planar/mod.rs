@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph::PyGraph;
-use retworkx_core::planar;
+use rustworkx_core::planar;
 
 use pyo3::prelude::*;
 

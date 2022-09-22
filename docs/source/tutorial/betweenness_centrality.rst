@@ -30,8 +30,8 @@ To start we need to generate a graph:
 
 .. jupyter-execute::
 
-    import retworkx as rx
-    from retworkx.visualization import mpl_draw
+    import rustworkx as rx
+    from rustworkx.visualization import mpl_draw
 
     graph = rx.generators.hexagonal_lattice_graph(4, 4)
     mpl_draw(graph)
@@ -40,7 +40,7 @@ To start we need to generate a graph:
 Calculate the Betweeness Centrality
 -----------------------------------
 
-The :func:`~retworkx.betweenness_centrality` function can be used to calculate
+The :func:`~rustworkx.betweenness_centrality` function can be used to calculate
 the betweenness centrality for each node in the graph.
 
 .. jupyter-execute::
@@ -51,7 +51,7 @@ the betweenness centrality for each node in the graph.
     # Print the centrality value for the first 5 nodes in the graph
     pprint.pprint({x: centrality[x] for x in range(5)})
 
-The output of :func:`~retworkx.betweenness_centrality` is a
+The output of :func:`~rustworkx.betweenness_centrality` is a
 :class:`.CentralityMapping` which is a custom
 `mapping <https://docs.python.org/3/glossary.html#term-mapping>`__ type that
 maps the node index to the centrality value as a float. This is a mapping and
@@ -81,15 +81,15 @@ centrality:
         vmin=min(centrality.values()),
         vmax=max(centrality.values())
     ))
-    plt.colorbar(sm)
+    plt.colorbar(sm, ax=ax)
     plt.title("Betweenness Centrality of a 4 x 4 Hexagonal Lattice Graph")
     mpl_draw(graph, node_color=colors, ax=ax)
 
-Alternatively, you can use :func:`~retworkx.visualization.graphviz_draw`:
+Alternatively, you can use :func:`~rustworkx.visualization.graphviz_draw`:
 
 .. jupyter-execute::
 
-    from retworkx.visualization import graphviz_draw
+    from rustworkx.visualization import graphviz_draw
     import matplotlib
 
     # For graphviz visualization we need to assign the data payload for each

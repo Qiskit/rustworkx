@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    The rustworkx-core ``connectivity`` module has 3 new functions,
+    ``connected_components``, ``number_connected_components``, and
+    ``bfs_undirected``. These functions are based on the existing
+    :func:`~.connected_components`, :func:`~.number_connected_components`,
+    and :func:`~.bfs_undirected` in rustworkx.

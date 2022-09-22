@@ -1,4 +1,4 @@
-.. _retworkx_visualization:
+.. _rustworkx_visualization:
 
 #############
 Visualization
@@ -9,5 +9,5 @@ Visualization API
 .. autosummary::
    :toctree: apiref
 
-   retworkx.visualization.mpl_draw
-   retworkx.visualization.graphviz_draw
+   rustworkx.visualization.mpl_draw
+   rustworkx.visualization.graphviz_draw

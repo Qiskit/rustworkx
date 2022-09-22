@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    Add a new function, :func:`~retworkx.core_number` for computing the core
-    number of each node in a :class:`~retworkx.PyGraph` or a 
-    :class:`~retworkx.PyDiGraph`, where for directed graphs the degrees are
+    Add a new function, :func:`~rustworkx.core_number` for computing the core
+    number of each node in a :class:`~rustworkx.PyGraph` or a 
+    :class:`~rustworkx.PyDiGraph`, where for directed graphs the degrees are
     calculated as in_degree + out_degree.
