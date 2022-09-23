@@ -206,15 +206,15 @@ impl SimpleCycleIter {
             }));
         }
         // Restore previous state if it exists
-        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex>)> = slf.stack.drain(..).collect();
-        let mut path: Vec<NodeIndex> = slf.path.drain(..).collect();
-        let mut closed: HashSet<NodeIndex> = slf.closed.drain().collect();
-        let mut blocked: HashSet<NodeIndex> = slf.blocked.drain().collect();
-        let mut block: HashMap<NodeIndex, HashSet<NodeIndex>> = slf.block.drain().collect();
-        let mut subgraph: StableDiGraph<(), ()> = slf.subgraph.clone();
+        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex>)> = std::mem::take(&mut slf.stack);
+        let mut path: Vec<NodeIndex> = std::mem::take(&mut slf.path);
+        let mut closed: HashSet<NodeIndex> = std::mem::take(&mut slf.closed);
+        let mut blocked: HashSet<NodeIndex> = std::mem::take(&mut slf.blocked);
+        let mut block: HashMap<NodeIndex, HashSet<NodeIndex>> = std::mem::take(&mut slf.block);
+        let mut subgraph: StableDiGraph<(), ()> = std::mem::take(&mut slf.subgraph);
         let mut reverse_node_map: HashMap<NodeIndex, NodeIndex> =
-            slf.reverse_node_map.drain().collect();
-        let mut node_map: HashMap<NodeIndex, NodeIndex> = slf.node_map.drain().collect();
+            std::mem::take(&mut slf.reverse_node_map);
+        let mut node_map: HashMap<NodeIndex, NodeIndex> = std::mem::take(&mut slf.node_map);
 
         if let Some(res) = process_stack(
             slf.start_node,
