@@ -32,12 +32,11 @@ where
     K: Hash + Eq,
     V: Ord + Copy,
 {
-    xs.entry(key)
-        .and_modify(|e| {
-            if val < *e {
-                *e = val;
-            }
-        });
+    xs.entry(key).and_modify(|e| {
+        if val < *e {
+            *e = val;
+        }
+    });
 }
 
 fn edges_filtered_and_sorted_by<G, P, F, K>(
