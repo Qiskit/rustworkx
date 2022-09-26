@@ -106,6 +106,7 @@ Tree
    rustworkx.minimum_spanning_edges
    rustworkx.minimum_spanning_tree
    rustworkx.steiner_tree
+   rustworkx.bipartition_tree
 
 .. _isomorphism:
 
@@ -182,6 +183,7 @@ Other Algorithm Functions
    rustworkx.core_number
    rustworkx.graph_greedy_color
    rustworkx.metric_closure
+   rustworkx.bipartition_graph_mst
 
 .. _generator_funcs:
 
