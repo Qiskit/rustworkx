@@ -61,7 +61,7 @@ pub struct SimpleCycleIter {
     blocked: HashSet<NodeIndex>,
     closed: HashSet<NodeIndex>,
     block: HashMap<NodeIndex, HashSet<NodeIndex>>,
-    stack: Vec<(NodeIndex, IndexSet<NodeIndex>)>,
+    stack: Vec<(NodeIndex, IndexSet<NodeIndex, ahash::RandomState>)>,
     start_node: NodeIndex,
     node_map: HashMap<NodeIndex, NodeIndex>,
     reverse_node_map: HashMap<NodeIndex, NodeIndex>,
@@ -115,7 +115,8 @@ fn unblock(
     blocked: &mut HashSet<NodeIndex>,
     block: &mut HashMap<NodeIndex, HashSet<NodeIndex>>,
 ) {
-    let mut stack: IndexSet<NodeIndex> = IndexSet::new();
+    let mut stack: IndexSet<NodeIndex, ahash::RandomState> =
+        IndexSet::with_hasher(ahash::RandomState::new());
     stack.insert(node);
     while let Some(stack_node) = stack.pop() {
         if blocked.remove(&stack_node) {
@@ -141,7 +142,7 @@ fn unblock(
 #[allow(clippy::too_many_arguments)]
 fn process_stack(
     start_node: NodeIndex,
-    stack: &mut Vec<(NodeIndex, IndexSet<NodeIndex>)>,
+    stack: &mut Vec<(NodeIndex, IndexSet<NodeIndex, ahash::RandomState>)>,
     path: &mut Vec<NodeIndex>,
     closed: &mut HashSet<NodeIndex>,
     blocked: &mut HashSet<NodeIndex>,
@@ -165,7 +166,7 @@ fn process_stack(
                     next_node,
                     subgraph
                         .neighbors(next_node)
-                        .collect::<IndexSet<NodeIndex>>(),
+                        .collect::<IndexSet<NodeIndex, ahash::RandomState>>(),
                 ));
                 closed.remove(&next_node);
                 blocked.insert(next_node);
@@ -206,7 +207,8 @@ impl SimpleCycleIter {
             }));
         }
         // Restore previous state if it exists
-        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex>)> = std::mem::take(&mut slf.stack);
+        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex, ahash::RandomState>)> =
+            std::mem::take(&mut slf.stack);
         let mut path: Vec<NodeIndex> = std::mem::take(&mut slf.path);
         let mut closed: HashSet<NodeIndex> = std::mem::take(&mut slf.closed);
         let mut blocked: HashSet<NodeIndex> = std::mem::take(&mut slf.blocked);
@@ -267,7 +269,7 @@ impl SimpleCycleIter {
                 slf.start_node,
                 subgraph
                     .neighbors(slf.start_node)
-                    .collect::<IndexSet<NodeIndex>>(),
+                    .collect::<IndexSet<NodeIndex, ahash::RandomState>>(),
             )];
             if let Some(res) = process_stack(
                 slf.start_node,
