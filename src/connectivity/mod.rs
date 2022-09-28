@@ -29,9 +29,7 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::{
-    EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable,
-};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -788,19 +786,14 @@ pub fn stoer_wagner_min_cut(
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
 ) -> PyResult<Option<(f64, NodeIndices)>> {
-    let mut edges_w: Vec<Option<score::Score<f64>>> = vec![None; graph.graph.edge_bound()];
-    for edge in graph.graph.edge_references() {
+    let cut = connectivity::stoer_wagner_min_cut(&graph.graph, |edge| -> PyResult<_> {
         let val: f64 = weight_callable(py, &weight_fn, edge.weight(), 1.0)?;
-        if !val.is_nan() {
-            let ix = edge.id().index();
-            edges_w[ix] = Some(score::Score(val));
+        if val.is_nan() {
+            Ok(score::Score(0.0))
+        } else {
+            Ok(score::Score(val))
         }
-    }
-
-    let cut = connectivity::stoer_wagner_min_cut(&graph.graph, |edge| {
-        let ix = edge.id().index();
-        edges_w[ix].unwrap_or(score::Score(0.0))
-    });
+    })?;
 
     Ok(cut.map(|(value, partition)| {
         (

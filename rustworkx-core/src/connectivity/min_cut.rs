@@ -10,21 +10,20 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use hashbrown::HashMap;
 use num_traits::Zero;
-use std::ops::AddAssign;
+use std::{hash::Hash, ops::AddAssign};
 
 use priority_queue::PriorityQueue;
 
 use petgraph::{
-    graph::IndexType,
-    visit::{EdgeRef, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable},
+    stable_graph::StableUnGraph,
+    visit::{Bfs, EdgeRef, GraphProp, IntoEdges, IntoNodeIdentifiers},
     Undirected,
 };
 
-use crate::disjoint_set::DisjointSet;
-
 type StCut<K, T> = Option<((T, T), K)>;
-type MinCut<K, T> = Option<(K, Vec<T>)>;
+type MinCut<K, T, E> = Result<Option<(K, Vec<T>)>, E>;
 
 fn zip<T, U>(a: Option<T>, b: Option<U>) -> Option<(T, U)> {
     match (a, b) {
@@ -33,27 +32,17 @@ fn zip<T, U>(a: Option<T>, b: Option<U>) -> Option<(T, U)> {
     }
 }
 
-fn stoer_wagner_phase<G, F, K>(
-    graph: G,
-    edge_cost: &mut F,
-    clusters: &DisjointSet<G::NodeId>,
-) -> StCut<K, G::NodeId>
+fn stoer_wagner_phase<G, F, K>(graph: G, mut edge_cost: F) -> StCut<K, G::NodeId>
 where
     G: GraphProp<EdgeType = Undirected> + IntoEdges + IntoNodeIdentifiers,
-    G::NodeId: IndexType,
+    G::NodeId: Hash + Eq,
     F: FnMut(G::EdgeRef) -> K,
     K: Copy + Ord + Zero + AddAssign,
 {
     let mut pq = PriorityQueue::<G::NodeId, K, ahash::RandomState>::from(
         graph
             .node_identifiers()
-            .filter_map(|nx| {
-                if clusters.is_root(nx) {
-                    Some((nx, K::zero()))
-                } else {
-                    None
-                }
-            })
+            .map(|nx| (nx, K::zero()))
             .collect::<Vec<(G::NodeId, K)>>(),
     );
 
@@ -63,13 +52,10 @@ where
         s = t;
         t = Some(nx);
         cut_w = Some(nx_val);
-        for nx_equiv in clusters.set(nx) {
-            for edge in graph.edges(nx_equiv) {
-                let target = clusters.find(edge.target());
-                pq.change_priority_by(&target, |p| {
-                    *p += edge_cost(edge);
-                })
-            }
+        for edge in graph.edges(nx) {
+            pq.change_priority_by(&edge.target(), |x| {
+                *x += edge_cost(edge);
+            })
         }
     }
 
@@ -95,6 +81,7 @@ where
 ///
 /// use rustworkx_core::connectivity::stoer_wagner_min_cut;
 /// use rustworkx_core::petgraph::graph::{NodeIndex, UnGraph};
+/// use rustworkx_core::Result;
 ///
 /// let mut graph : UnGraph<(), ()> = UnGraph::new_undirected();
 /// let a = graph.add_node(()); // node with no weight
@@ -121,37 +108,86 @@ where
 /// // |      |      |      |
 /// // d ---- c      h ---- g
 ///
-/// let (min_cut, partition): (usize, Vec<_>) =
-///     stoer_wagner_min_cut(&graph, |_| 1).unwrap();
+/// let min_cut_res: Result<Option<(usize, Vec<_>)>> =
+///     stoer_wagner_min_cut(&graph, |_| Ok(1));
+///
+/// let (min_cut, partition) = min_cut_res.unwrap().unwrap();
 /// assert_eq!(min_cut, 1);
 /// assert_eq!(
 ///     HashSet::<NodeIndex>::from_iter(partition),
 ///     HashSet::from_iter([e, f, g, h])
 /// );
 /// ```
-pub fn stoer_wagner_min_cut<G, F, K>(graph: G, mut edge_cost: F) -> MinCut<K, G::NodeId>
+pub fn stoer_wagner_min_cut<G, F, K, E>(graph: G, mut edge_cost: F) -> MinCut<K, G::NodeId, E>
 where
-    G: GraphProp<EdgeType = Undirected>
-        + IntoEdges
-        + IntoNodeIdentifiers
-        + NodeCount
-        + NodeIndexable,
-    G::NodeId: IndexType,
-    F: FnMut(G::EdgeRef) -> K,
+    G: GraphProp<EdgeType = Undirected> + IntoEdges + IntoNodeIdentifiers,
+    G::NodeId: Hash + Eq,
+    F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Copy + Ord + Zero + AddAssign,
 {
-    let (mut min_cut, mut min_cut_val) = (None, None);
-    let mut clusters = DisjointSet::<G::NodeId>::new(graph.node_bound());
-    for _ in 1..graph.node_count() {
-        if let Some(((s, t), cut_w)) = stoer_wagner_phase(graph, &mut edge_cost, &clusters) {
+    let mut graph_with_super_nodes = StableUnGraph::default();
+
+    let mut node_map = HashMap::new();
+    let mut rev_node_map = HashMap::new();
+
+    for node in graph.node_identifiers() {
+        let index = graph_with_super_nodes.add_node(());
+        node_map.insert(node, index);
+        rev_node_map.insert(index, node);
+    }
+
+    for edge in graph.edge_references() {
+        let cost = edge_cost(edge)?;
+        let source = node_map[&edge.source()];
+        let target = node_map[&edge.target()];
+        graph_with_super_nodes.add_edge(source, target, cost);
+    }
+
+    if graph_with_super_nodes.node_count() == 0 {
+        return Ok(None);
+    }
+
+    let (mut best_phase, mut min_cut_val) = (None, None);
+
+    let mut contractions = Vec::new();
+    for phase in 0..(graph_with_super_nodes.node_count() - 1) {
+        if let Some(((s, t), cut_w)) =
+            stoer_wagner_phase(&graph_with_super_nodes, |edge| *edge.weight())
+        {
             if min_cut_val.is_none() || Some(cut_w) < min_cut_val {
-                min_cut = Some(clusters.set(t));
+                best_phase = Some(phase);
                 min_cut_val = Some(cut_w);
             }
             // now merge nodes ``s`` and  ``t``.
-            clusters.union(s, t);
+            contractions.push((s, t));
+            let edges = graph_with_super_nodes
+                .edges(t)
+                .map(|edge| (s, edge.target(), *edge.weight()))
+                .collect::<Vec<_>>();
+            for (source, target, cost) in edges {
+                graph_with_super_nodes.add_edge(source, target, cost);
+            }
+            graph_with_super_nodes.remove_node(t);
         }
     }
 
-    zip(min_cut_val, min_cut)
+    // Recover the optimal partitioning from the contractions
+    let min_cut = best_phase.map(|phase| {
+        let mut clustered_graph = StableUnGraph::<(), ()>::default();
+        clustered_graph.extend_with_edges(&contractions[..phase]);
+
+        let node = contractions[phase].1;
+        if clustered_graph.contains_node(node) {
+            let mut cluster = Vec::new();
+            let mut bfs = Bfs::new(&clustered_graph, node);
+            while let Some(nx) = bfs.next(&clustered_graph) {
+                cluster.push(rev_node_map[&nx])
+            }
+            cluster
+        } else {
+            vec![rev_node_map[&node]]
+        }
+    });
+
+    Ok(zip(min_cut_val, min_cut))
 }

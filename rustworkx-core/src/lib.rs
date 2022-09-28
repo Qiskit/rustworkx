@@ -77,7 +77,6 @@ pub mod shortest_path;
 pub mod traversal;
 // These modules define additional data structures
 pub mod dictmap;
-pub mod disjoint_set;
 pub mod distancemap;
 mod min_scored;
 
