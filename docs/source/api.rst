@@ -149,6 +149,7 @@ Connectivity and Cycles
    rustworkx.weakly_connected_components
    rustworkx.is_weakly_connected
    rustworkx.cycle_basis
+   rustworkx.simple_cycles
    rustworkx.digraph_find_cycle
    rustworkx.articulation_points
    rustworkx.biconnected_components
@@ -182,6 +183,7 @@ Other Algorithm Functions
    rustworkx.core_number
    rustworkx.graph_greedy_color
    rustworkx.metric_closure
+   rustworkx.is_planar
 
 .. _generator_funcs:
 
