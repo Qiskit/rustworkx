@@ -165,7 +165,11 @@ where
                 .map(|edge| (s, edge.target(), *edge.weight()))
                 .collect::<Vec<_>>();
             for (source, target, cost) in edges {
-                graph_with_super_nodes.add_edge(source, target, cost);
+                if let Some(edge_index) = graph_with_super_nodes.find_edge(source, target) {
+                    graph_with_super_nodes[edge_index] += cost;
+                } else {
+                    graph_with_super_nodes.add_edge(source, target, cost);
+                }
             }
             graph_with_super_nodes.remove_node(t);
         }
