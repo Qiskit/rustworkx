@@ -182,6 +182,7 @@ Other Algorithm Functions
    rustworkx.core_number
    rustworkx.graph_greedy_color
    rustworkx.metric_closure
+   rustworkx.is_planar
 
 .. _generator_funcs:
 
