@@ -18,7 +18,7 @@ use priority_queue::PriorityQueue;
 
 use petgraph::{
     stable_graph::StableUnGraph,
-    visit::{Bfs, EdgeRef, GraphProp, IntoEdges, IntoNodeIdentifiers},
+    visit::{Bfs, EdgeRef, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount},
     Undirected,
 };
 
@@ -120,7 +120,7 @@ where
 /// ```
 pub fn stoer_wagner_min_cut<G, F, K, E>(graph: G, mut edge_cost: F) -> MinCut<K, G::NodeId, E>
 where
-    G: GraphProp<EdgeType = Undirected> + IntoEdges + IntoNodeIdentifiers,
+    G: GraphProp<EdgeType = Undirected> + IntoEdges + IntoNodeIdentifiers + NodeCount,
     G::NodeId: Hash + Eq,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Copy + Ord + Zero + AddAssign,
