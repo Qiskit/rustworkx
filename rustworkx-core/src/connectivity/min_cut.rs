@@ -127,8 +127,8 @@ where
 {
     let mut graph_with_super_nodes = StableUnGraph::default();
 
-    let mut node_map = HashMap::new();
-    let mut rev_node_map = HashMap::new();
+    let mut node_map = HashMap::with_capacity(graph.node_count());
+    let mut rev_node_map = HashMap::with_capacity(graph.node_count());
 
     for node in graph.node_identifiers() {
         let index = graph_with_super_nodes.add_node(());
