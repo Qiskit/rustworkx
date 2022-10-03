@@ -29,18 +29,16 @@ use crate::traversal::{depth_first_search, DfsEvent};
 
 type Edge<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
 
-fn insert_or_min<K, V>(xs: &mut HashMap<K, V>, key: K, val: V)
+fn modify_if_min<K, V>(xs: &mut HashMap<K, V>, key: K, val: V)
 where
     K: Hash + Eq,
     V: Ord + Copy,
 {
-    xs.entry(key)
-        .and_modify(|e| {
-            if val < *e {
-                *e = val;
-            }
-        })
-        .or_insert(val);
+    xs.entry(key).and_modify(|e| {
+        if val < *e {
+            *e = val;
+        }
+    });
 }
 
 fn edges_filtered_and_sorted_by<G, P, F, K>(
@@ -375,11 +373,11 @@ where
                                 self.lowpt.insert(*e_par, self.lowpt[&ei]);
                             }
                             Ordering::Greater => {
-                                insert_or_min(&mut self.lowpt_2, *e_par, self.lowpt[&ei]);
+                                modify_if_min(&mut self.lowpt_2, *e_par, self.lowpt[&ei]);
                             }
                             _ => {
                                 let val = self.lowpt_2[&ei];
-                                insert_or_min(&mut self.lowpt_2, *e_par, val);
+                                modify_if_min(&mut self.lowpt_2, *e_par, val);
                             }
                         }
                     }
@@ -752,5 +750,6 @@ where
             return false;
         }
     }
+
     true
 }

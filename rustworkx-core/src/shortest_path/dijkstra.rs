@@ -164,3 +164,66 @@ where
 
     Ok(scores)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::dictmap::DictMap;
+    use crate::shortest_path::dijkstra;
+    use crate::Result;
+    use petgraph::prelude::*;
+    use petgraph::Graph;
+
+    #[test]
+    fn test_dijk() {
+        let mut g = Graph::new_undirected();
+        let a = g.add_node("A");
+        let b = g.add_node("B");
+        let c = g.add_node("C");
+        let d = g.add_node("D");
+        let e = g.add_node("E");
+        let f = g.add_node("F");
+        g.add_edge(a, b, 7);
+        g.add_edge(c, a, 9);
+        g.add_edge(a, d, 14);
+        g.add_edge(b, c, 10);
+        g.add_edge(d, c, 2);
+        g.add_edge(d, e, 9);
+        g.add_edge(b, f, 15);
+        g.add_edge(c, f, 11);
+        g.add_edge(e, f, 6);
+        println!("{:?}", g);
+        let scores: Result<DictMap<NodeIndex, usize>> =
+            dijkstra(&g, a, None, |e| Ok(*e.weight()), None);
+        let exp_scores: DictMap<NodeIndex, usize> =
+            [(a, 0), (b, 7), (c, 9), (d, 11), (e, 20), (f, 20)]
+                .iter()
+                .cloned()
+                .collect();
+        assert_eq!(scores.unwrap(), exp_scores);
+    }
+
+    #[test]
+    fn test_dijk_with_goal() {
+        let mut g = Graph::new_undirected();
+        let a = g.add_node("A");
+        let b = g.add_node("B");
+        let c = g.add_node("C");
+        let d = g.add_node("D");
+        let e = g.add_node("E");
+        let f = g.add_node("F");
+        g.add_edge(a, b, 7);
+        g.add_edge(c, a, 9);
+        g.add_edge(a, d, 14);
+        g.add_edge(b, c, 10);
+        g.add_edge(d, c, 2);
+        g.add_edge(d, e, 9);
+        g.add_edge(b, f, 15);
+        g.add_edge(c, f, 11);
+        g.add_edge(e, f, 6);
+        println!("{:?}", g);
+
+        let scores: Result<DictMap<NodeIndex, usize>> =
+            dijkstra(&g, a, Some(c), |e| Ok(*e.weight()), None);
+        assert_eq!(scores.unwrap()[&c], 9);
+    }
+}

@@ -14,6 +14,7 @@
 
 mod all_pairs_all_simple_paths;
 mod core_number;
+mod johnson_simple_cycles;
 
 use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
 
@@ -124,6 +125,23 @@ pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize
         root_node = None;
     }
     cycles
+}
+
+/// Find all simple cycles of a :class:`~.PyDiGraph`
+///
+/// A "simple cycle" (called an elementary circuit in [1]) is a cycle (or closed path)
+/// where no node appears more than once.
+///
+/// This function is a an implementation of Johnson's algorithm [1] also based
+/// on the non-recursive implementation found in NetworkX. [2][3]
+///
+/// [1] https://doi.org/10.1137/0204007
+/// [2] https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.cycles.simple_cycles.html
+/// [3] https://github.com/networkx/networkx/blob/networkx-2.8.4/networkx/algorithms/cycles.py#L98-L222
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn simple_cycles(graph: &digraph::PyDiGraph) -> johnson_simple_cycles::SimpleCycleIter {
+    johnson_simple_cycles::SimpleCycleIter::new(graph)
 }
 
 /// Compute the strongly connected components for a directed graph
