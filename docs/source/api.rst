@@ -156,6 +156,7 @@ Connectivity and Cycles
    rustworkx.chain_decomposition
    rustworkx.all_simple_paths
    rustworkx.all_pairs_all_simple_paths
+   rustworkx.stoer_wagner_min_cut
 
 .. _graph-ops:
 
