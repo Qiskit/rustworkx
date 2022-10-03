@@ -125,7 +125,7 @@ where
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Copy + Ord + Zero + AddAssign,
 {
-    let mut graph_with_super_nodes = StableUnGraph::default();
+    let mut graph_with_super_nodes = StableUnGraph::with_capacity(graph.node_count(), graph.edge_count());
 
     let mut node_map = HashMap::with_capacity(graph.node_count());
     let mut rev_node_map = HashMap::with_capacity(graph.node_count());
