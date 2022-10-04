@@ -27,6 +27,7 @@ mod layout;
 mod matching;
 mod planar;
 mod random_graph;
+mod score;
 mod shortest_path;
 mod steiner_tree;
 mod tensor_product;
@@ -469,6 +470,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         graph_unweighted_average_shortest_path_length
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
+    m.add_wrapped(wrap_pyfunction!(stoer_wagner_min_cut))?;
     m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
