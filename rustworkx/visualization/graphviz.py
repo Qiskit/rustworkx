@@ -193,8 +193,7 @@ def graphviz_draw(
             text=False,
         )
         dot_bytes_image = io.BytesIO(dot_result.stdout)
-        with Image.open(dot_bytes_image) as temp_image:
-            image = temp_image.copy()
+        image = Image.open(dot_bytes_image)
         return image
     else:
         subprocess.run(
