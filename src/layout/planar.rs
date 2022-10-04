@@ -20,7 +20,7 @@ use crate::iterators::Pos2DMapping;
 use crate::layout::embedding::{create_embedding, embedding_to_pos, PlanarEmbedding};
 use crate::StablePyGraph;
 use rustworkx_core::dictmap::*;
-use rustworkx_core::planar::{is_planar, LRState};
+use rustworkx_core::planar::{is_planar_for_layout, LRState};
 
 /// If a graph is planar, create a set of position coordinates for a planar
 /// layout that can be passed to a drawer.
@@ -38,7 +38,7 @@ pub fn planar_layout(
 
     // First determine if the graph is planar.
     let mut lr_state = LRState::new(graph);
-    if !is_planar(graph, Some(&mut lr_state)) {
+    if !is_planar_for_layout(graph, Some(&mut lr_state)) {
         Err(GraphNotPlanar::new_err("The input graph is not planar."))
 
     // If planar, create the position coordinates.

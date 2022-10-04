@@ -704,7 +704,7 @@ where
 /// # Example:
 /// ```rust
 /// use rustworkx_core::petgraph::graph::UnGraph;
-/// use rustworkx_core::planar::{is_planar, LRState};
+/// use rustworkx_core::planar::{is_planar_for_layout, LRState};
 ///
 /// let grid = UnGraph::<(), ()>::from_edges(&[
 ///    // row edges
@@ -713,9 +713,9 @@ where
 ///    (0, 3), (3, 6), (1, 4), (4, 7), (2, 5), (5, 8),
 /// ]);
 /// let mut lr_state = LRState::new(&grid);
-/// assert!(is_planar(&grid, Some(&mut lr_state)))
+/// assert!(is_planar_for_layout(&grid, Some(&mut lr_state)))
 /// ```
-pub fn is_planar<G>(graph: G, state: Option<&mut LRState<G>>) -> bool
+pub fn is_planar_for_layout<G>(graph: G, state: Option<&mut LRState<G>>) -> bool
 where
     G: GraphProp<EdgeType = Undirected>
         + NodeCount
@@ -752,4 +752,41 @@ where
     }
 
     true
+}
+
+/// Check if an undirected graph is planar.
+///
+/// A graph is planar iff it can be drawn in a plane without any edge
+/// intersections.
+///
+/// The planarity check algorithm  is based on the
+/// Left-Right Planarity Test:
+///
+/// [`Ulrik Brandes:  The Left-Right Planarity Test (2009)`](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.217.9208)
+///
+/// # Example:
+/// ```rust
+/// use rustworkx_core::petgraph::graph::UnGraph;
+/// use rustworkx_core::planar::is_planar;
+///
+/// let grid = UnGraph::<(), ()>::from_edges(&[
+///    // row edges
+///    (0, 1), (1, 2), (3, 4), (4, 5), (6, 7), (7, 8),
+///    // col edges
+///    (0, 3), (3, 6), (1, 4), (4, 7), (2, 5), (5, 8),
+/// ]);
+/// assert!(is_planar(&grid))
+/// ```
+pub fn is_planar<G>(graph: G) -> bool
+where
+    G: GraphProp<EdgeType = Undirected>
+        + NodeCount
+        + EdgeCount
+        + IntoEdges
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + Visitable,
+    G::NodeId: Hash + Eq + Ord,
+{
+    is_planar_for_layout(graph, None)
 }

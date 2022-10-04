@@ -14,4 +14,4 @@
 
 pub mod lr_planar;
 
-pub use lr_planar::{is_planar, LRState};
+pub use lr_planar::{is_planar, is_planar_for_layout, LRState};
