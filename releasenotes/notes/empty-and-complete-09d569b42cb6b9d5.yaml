@@ -18,6 +18,8 @@ features:
     Added new generator functions, :func:`~rustworkx.generators.complete_graph`,
     and :func:`~rustworkx.generators.directed_complete_graph` to the 
     ``rustworkx.generators`` module that will generate a complete graph.
+    These functions are equivalent to calling the :func:`~rustworkx.generators.mesh_graph`
+    and :func:`~rustworkx.generators.directed_mesh_graph` functions.
     For example:
 
     .. jupyter-execute::
