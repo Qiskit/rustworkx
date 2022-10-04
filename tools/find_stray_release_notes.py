@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-# This code is part of Qiskit.
-#
-# (C) Copyright IBM 2022
-#
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
 # of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
