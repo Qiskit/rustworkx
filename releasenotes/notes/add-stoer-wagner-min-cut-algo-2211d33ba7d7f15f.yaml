@@ -1,0 +1,21 @@
+---
+features:
+  - |
+    Added a new algorithm function,
+    :func:`rustworkx.stoer_wagner_min_cut` that uses the
+    Stoer Wagner algorithm for computing a weighted minimum cut
+    in an undirected :class:`~rustworkx.PyGraph`.
+    For example:
+
+    .. jupyter-execute::
+
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.generators.grid_graph(2, 2)
+      cut_val, partition = rustworkx.stoer_wagner_min_cut(graph)
+
+      colors = [
+          'orange' if node in partition else 'blue' for node in graph.node_indexes()
+      ]
+      mpl_draw(graph, node_color=colors)
