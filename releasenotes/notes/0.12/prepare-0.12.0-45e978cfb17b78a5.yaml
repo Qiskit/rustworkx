@@ -13,7 +13,7 @@ prelude: |
   library will be released as rustworkx-core.
 
   Additionally this release adds support for Python 3.11 and also moves to
-  manylinux2014 for all precompiled linux binaries we publish to PyPI. The
+  manylinux2014 for all precompiled Linux binaries we publish to PyPI. The
   minimum supported Rust version for building rustworkx from source has
   increased to Rust 1.48.
 
