@@ -19,6 +19,7 @@ prelude: |
 
   This release also includes several new features, some highlights are:
 
-    * Support for graph attributes under the :attr:`~.PyDiGraph.attrs` attribute
-    * New serialization format support (a graphml parser and a node link json generator)
+    * Support for graph attributes under the ``attrs`` attribute
+    * New serialization format support (a graphml parser, :func:`~.read_graphml`,
+      and a node link JSON generator, :func:`~.node_link_json`)
     * New algorithms functions
