@@ -22,4 +22,8 @@ prelude: |
     * Support for graph attributes under the ``attrs`` attribute
     * New serialization format support (a graphml parser, :func:`~.read_graphml`,
       and a node link JSON generator, :func:`~.node_link_json`)
-    * New algorithms functions
+    * New algorithms functions including:
+        * Eigenvector Centrality
+        * Stoer–Wagner Min-Cut algorithm
+        * Bellman-Ford shortest path algorithm
+
