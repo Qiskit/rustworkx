@@ -215,6 +215,10 @@ Generators
     rustworkx.generators.generalized_petersen_graph
     rustworkx.generators.barbell_graph
     rustworkx.generators.full_rary_tree
+    rustworkx.generators.empty_graph
+    rustworkx.generators.directed_empty_graph
+    rustworkx.generators.complete_graph
+    rustworkx.generators.directed_complete_graph
 
 .. _random_generators:
 

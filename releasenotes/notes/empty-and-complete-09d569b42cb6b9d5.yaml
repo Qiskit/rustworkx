@@ -1,0 +1,31 @@
+---
+features:
+  - |
+    Added new generator functions, :func:`~rustworkx.generators.empty_graph`,
+    and :func:`~rustworkx.generators.directed_empty_graph` to the 
+    ``rustworkx.generators`` module that will generate an empty graph.
+    For example:
+
+    .. jupyter-execute::
+
+      import rustworkx.generators
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.generators.empty_graph(4)
+      mpl_draw(graph)
+
+  - |
+    Added new generator functions, :func:`~rustworkx.generators.complete_graph`,
+    and :func:`~rustworkx.generators.directed_complete_graph` to the 
+    ``rustworkx.generators`` module that will generate a complete graph.
+    These functions are equivalent to calling the :func:`~rustworkx.generators.mesh_graph`
+    and :func:`~rustworkx.generators.directed_mesh_graph` functions.
+    For example:
+
+    .. jupyter-execute::
+
+      import rustworkx.generators
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.generators.complete_graph(4)
+      mpl_draw(graph)
