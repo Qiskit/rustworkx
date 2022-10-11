@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.simple_cycles`, which is an implementation of
+    `Johnson's algorithm <https://doi.org/10.1137/0204007>`__ for finding all
+    elementary cycles in a directed graph.

@@ -40,6 +40,8 @@ jobs:
         run: black --check --diff retworkx rustworkx retworkx tests
       - name: Python Lint
         run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests rustworkx
+      - name: Check stray release notes
+        run: python tools/find_stray_release_notes.py
       - name: rustworkx-core Rust Tests
         run: pushd rustworkx-core && cargo test && popd
       - name: rustworkx-core Docs
@@ -55,7 +57,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.7, 3.8, 3.9, "3.10", "3.11.0-rc.2"]
         platform: [
           { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },

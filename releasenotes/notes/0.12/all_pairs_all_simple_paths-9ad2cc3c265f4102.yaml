@@ -16,7 +16,7 @@ features:
     node indices and the inner value is the list of all simple paths of length
     3 between those 2 nodes.
   - |
-    The rustworkx-core ``connectivity`` module has a new function
+    The rustworkx-core ``rustworkx_core::connectivity`` module has a new function
     ``all_simple_paths_multiple_targets`` this is similar to the
     ``all_simple_paths()`` method in petgraph's ``algo`` module but instead of
     returning an iterator that will yield the all the simple path from a source

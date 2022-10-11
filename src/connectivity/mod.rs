@@ -14,8 +14,12 @@
 
 mod all_pairs_all_simple_paths;
 mod core_number;
+mod johnson_simple_cycles;
 
-use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
+use super::{
+    digraph, get_edge_iter_with_weights, graph, iterators::NodeIndices, score, weight_callable,
+    InvalidNode, NullGraph,
+};
 
 use hashbrown::{HashMap, HashSet};
 
@@ -24,7 +28,7 @@ use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
+use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
 
@@ -124,6 +128,23 @@ pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize
         root_node = None;
     }
     cycles
+}
+
+/// Find all simple cycles of a :class:`~.PyDiGraph`
+///
+/// A "simple cycle" (called an elementary circuit in [1]) is a cycle (or closed path)
+/// where no node appears more than once.
+///
+/// This function is a an implementation of Johnson's algorithm [1] also based
+/// on the non-recursive implementation found in NetworkX. [2][3]
+///
+/// [1] https://doi.org/10.1137/0204007
+/// [2] https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.cycles.simple_cycles.html
+/// [3] https://github.com/networkx/networkx/blob/networkx-2.8.4/networkx/algorithms/cycles.py#L98-L222
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn simple_cycles(graph: &digraph::PyDiGraph) -> johnson_simple_cycles::SimpleCycleIter {
+    johnson_simple_cycles::SimpleCycleIter::new(graph)
 }
 
 /// Compute the strongly connected components for a directed graph
@@ -312,7 +333,7 @@ pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     for edge in graph.graph.edge_references() {
         let (a, b) = (edge.source(), edge.target());
         // union the two vertices of the edge
-        if vertex_sets.union(graph.graph.to_index(a), graph.graph.to_index(b)) {
+        if vertex_sets.union(a.index(), b.index()) {
             weak_components -= 1
         };
     }
@@ -754,6 +775,52 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     core_number::core_number(py, &graph.graph)
+}
+
+/// Compute a weighted minimum cut using the Stoer-Wagner algorithm.
+///
+/// Determine the minimum cut of a graph using the Stoer-Wagner algorithm [stoer_simple_1997]_.
+/// All weights must be nonnegative. If the input graph is disconnected,
+/// a cut with zero value will be returned. For graphs with less than
+/// two nodes, this function returns ``None``.
+///
+/// :param PyGraph: The graph to be used
+/// :param Callable weight_fn:  An optional callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``.
+///     Edges with ``NaN`` weights will be ignored, i.e it's conidered to have zero weight.
+///     If ``weight_fn`` is not specified a default value of ``1.0`` will be used for all edges.
+///
+/// :returns: A tuple with the minimum cut value and a list of all
+///     the node indexes contained in one part of the partition
+///     that defines a minimum cut.
+/// :rtype: (usize, NodeIndices)
+///
+/// .. [stoer_simple_1997] Stoer, Mechthild and Frank Wagner, "A simple min-cut
+///     algorithm". Journal of the ACM 44 (4), 585-591, 1997.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+pub fn stoer_wagner_min_cut(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+) -> PyResult<Option<(f64, NodeIndices)>> {
+    let cut = connectivity::stoer_wagner_min_cut(&graph.graph, |edge| -> PyResult<_> {
+        let val: f64 = weight_callable(py, &weight_fn, edge.weight(), 1.0)?;
+        if val.is_nan() {
+            Ok(score::Score(0.0))
+        } else {
+            Ok(score::Score(val))
+        }
+    })?;
+
+    Ok(cut.map(|(value, partition)| {
+        (
+            value.0,
+            NodeIndices {
+                nodes: partition.iter().map(|&nx| nx.index()).collect(),
+            },
+        )
+    }))
 }
 
 /// Return the articulation points of an undirected graph.
