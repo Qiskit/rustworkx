@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::borrow_deref_ref)]
+#![allow(clippy::borrow_as_ptr)]
 
 use std::cmp;
 use std::cmp::Ordering;
@@ -34,8 +34,8 @@ use pyo3::PyTraverseError;
 use pyo3::Python;
 
 use ndarray::prelude::*;
-use numpy::Complex64;
 use num_traits::Zero;
+use numpy::Complex64;
 use numpy::PyReadonlyArray2;
 
 use petgraph::algo;
