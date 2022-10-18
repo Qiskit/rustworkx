@@ -34,7 +34,7 @@ use pyo3::PyTraverseError;
 use pyo3::Python;
 
 use ndarray::prelude::*;
-use num_complex::Complex64;
+use numpy::Complex64;
 use num_traits::Zero;
 use numpy::PyReadonlyArray2;
 

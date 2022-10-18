@@ -295,7 +295,7 @@ where
 
 impl<K, V> PyEq<PyAny> for DictMap<K, V>
 where
-    for<'p> K: PyEq<K> + Clone + pyo3::ToBorrowedObject,
+    for<'p> K: PyEq<K> + Clone + pyo3::ToPyObject,
     for<'p> V: PyEq<PyAny>,
 {
     #[inline]
