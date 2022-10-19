@@ -59,7 +59,7 @@ use union::*;
 
 use hashbrown::HashMap;
 use indexmap::map::Entry::{Occupied, Vacant};
-use num_complex::Complex64;
+use numpy::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
