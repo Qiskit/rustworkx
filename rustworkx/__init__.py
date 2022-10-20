@@ -2382,3 +2382,37 @@ def _graph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, e
     return graph_node_link_json(
         graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
     )
+
+
+@functools.singledispatch
+def descendants_at_distance(graph, source, distance):
+    """Returns all nodes at a fixed distance from ``source`` in ``graph``
+
+    :param graph: The graph to find the descendants in
+    :param int source: The node index to find the descendants from
+    :param int distance: The distance from ``source``
+
+    :returns: The node indices of the nodes ``distance`` from ``source`` in ``graph``.
+    :rtype: NodeIndices
+
+    For example::
+
+        import rustworkx as rx
+
+        graph = rx.generators.path_graph(5)
+        res = rx.descendants_at_distance(graph, 2, 2)
+        print(res)
+
+    will return: ``[0, 4]``
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@descendants_at_distance.register(PyDiGraph)
+def _digraph_descendants_at_distance(graph, source, distance):
+    return digraph_descendants_at_distance(graph, source, distance)
+
+
+@descendants_at_distance.register(PyGraph)
+def _graph_descendants_at_distance(graph, source, distance):
+    return graph_descendants_at_distance(graph, source, distance)

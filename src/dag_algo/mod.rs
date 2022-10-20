@@ -29,6 +29,8 @@ use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::NodeCount;
 
+use rustworkx_core::traversal::descendants_at_distance;
+
 /// Find the longest path in a DAG
 ///
 /// :param PyDiGraph graph: The graph to find the longest path on. The input
@@ -633,4 +635,51 @@ pub fn collect_bicolor_runs(
     }
 
     Ok(block_list)
+}
+
+/// Return the transitive closure of a directed acyclic graph
+///
+/// The transitive closure of :math:`G = (V, E)` is a graph :math:`G+ = (V, E+)`
+/// such that for all pairs of :math:`v, w` in :math:`V` there is an edge
+/// :math:`(v, w) in :math:`E+` if and only if there is a non-null path from
+/// :math:`v` to :math:`w` in :math:`G`.
+///
+/// :param PyDiGraph graph: The input DAG to compute the transitive closure of
+/// :param list topological_order: An optional topological order for ``graph``
+///     which represents the order the graph will be traversed in computing
+///     the transitive closure. If one is not provided (or it is explicitly
+///     set to ``None``) a topological order will be computed by this function.
+///
+/// :returns: The transitive closure of ``graph``
+/// :rtype: PyDiGraph
+///
+/// :raises DAGHasCycle: If the input ``graph`` is not acyclic
+#[pyfunction]
+#[pyo3(text_signature = "(graph, / topological_order=None)")]
+pub fn transitive_closure_dag(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    topological_order: Option<Vec<usize>>,
+) -> PyResult<digraph::PyDiGraph> {
+    let node_order: Vec<NodeIndex> = match topological_order {
+        Some(topo_order) => topo_order.into_iter().map(NodeIndex::new).collect(),
+        None => match algo::toposort(&graph.graph, None) {
+            Ok(nodes) => nodes,
+            Err(_err) => return Err(DAGHasCycle::new_err("Topological Sort encountered a cycle")),
+        },
+    };
+    let mut out_graph = graph.graph.clone();
+    for node in node_order.into_iter().rev() {
+        for descendant in descendants_at_distance(&out_graph, node, 2) {
+            out_graph.add_edge(node, descendant, py.None());
+        }
+    }
+    Ok(digraph::PyDiGraph {
+        graph: out_graph,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
 }

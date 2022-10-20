@@ -79,6 +79,7 @@ Traversal
    rustworkx.visit.BFSVisitor
    rustworkx.visit.DijkstraVisitor
    rustworkx.TopologicalSorter
+   rustworkx.descendants_at_distance
 
 .. _dag-algorithms:
 
@@ -94,6 +95,7 @@ DAG Algorithms
    rustworkx.dag_weighted_longest_path_length
    rustworkx.is_directed_acyclic_graph
    rustworkx.layers
+   rustworkx.transitive_closure_dag
 
 .. _tree:
 
@@ -325,6 +327,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_bfs_search
    rustworkx.digraph_dijkstra_search
    rustworkx.digraph_node_link_json
+   rustworkx.digraph_descendants_at_distance
 
 .. _api-functions-pygraph:
 
@@ -379,6 +382,7 @@ typed API based on the data type.
    rustworkx.graph_bfs_search
    rustworkx.graph_dijkstra_search
    rustworkx.graph_node_link_json
+   rustworkx.graph_descendants_at_distance
 
 Exceptions
 ==========
