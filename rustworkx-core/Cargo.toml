@@ -1,7 +1,7 @@
 [package]
 name = "rustworkx-core"
 version = "0.13.0"
-edition = "2018"
+edition = "2021"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 description = "Rust APIs used for rustworkx algorithms"
 license = "Apache-2.0"
@@ -11,15 +11,15 @@ homepage = "https://github.com/Qiskit/rustworkx/tree/main/rustworkx-core"
 keywords = ["graph"]
 
 [dependencies]
-ahash = { version = "0.7.6", default-features = false }
+ahash = "0.8.0"
 fixedbitset = "0.4.2"
 petgraph = "0.6.2"
 rayon = "1.5"
 num-traits = "0.2"
-priority-queue = "1.2.0"
+priority-queue = "1.2"
 
 [dependencies.hashbrown]
-version = "0.11"
+version = "0.12"
 features = ["rayon"]
 
 [dependencies.indexmap]
