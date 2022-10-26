@@ -29,7 +29,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::NodeCount;
 
-use rustworkx_core::traversal::descendants_at_distance;
+use rustworkx_core::traversal;
 
 /// Find the longest path in a DAG
 ///
@@ -661,25 +661,20 @@ pub fn transitive_closure_dag(
     graph: &digraph::PyDiGraph,
     topological_order: Option<Vec<usize>>,
 ) -> PyResult<digraph::PyDiGraph> {
-    let node_order: Vec<NodeIndex> = match topological_order {
-        Some(topo_order) => topo_order.into_iter().map(NodeIndex::new).collect(),
-        None => match algo::toposort(&graph.graph, None) {
-            Ok(nodes) => nodes,
-            Err(_err) => return Err(DAGHasCycle::new_err("Topological Sort encountered a cycle")),
-        },
-    };
-    let mut out_graph = graph.graph.clone();
-    for node in node_order.into_iter().rev() {
-        for descendant in descendants_at_distance(&out_graph, node, 2) {
-            out_graph.add_edge(node, descendant, py.None());
-        }
+    let default_weight = || -> PyObject { py.None() };
+    match traversal::build_transitive_closure_dag(
+        graph.graph.clone(),
+        topological_order.map(|order| order.into_iter().map(NodeIndex::new).collect()),
+        default_weight,
+    ) {
+        Ok(out_graph) => Ok(digraph::PyDiGraph {
+            graph: out_graph,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
+            node_removed: false,
+            multigraph: true,
+            attrs: py.None(),
+        }),
+        Err(_err) => Err(DAGHasCycle::new_err("Topological Sort encountered a cycle")),
     }
-    Ok(digraph::PyDiGraph {
-        graph: out_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
-        node_removed: false,
-        multigraph: true,
-        attrs: py.None(),
-    })
 }
