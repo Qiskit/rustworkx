@@ -347,7 +347,7 @@ enum State {
 }
 
 macro_rules! matches {
-    ($expression:expr, $( $pattern:pat )|+) => {
+    ($expression:expr, $( $pattern:pat_param )|+) => {
         match $expression {
             $( $pattern )|+  => {},
             _ => {
