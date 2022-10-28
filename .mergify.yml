@@ -13,6 +13,9 @@ queue_rules:
       - check-success=python3.10-x64 windows-latest
       - check-success=python3.10-x64 ubuntu-latest
       - check-success=python3.10-x64 macOS-latest
+      - check-success=python3.11-x64 windows-latest
+      - check-success=python3.11-x64 ubuntu-latest
+      - check-success=python3.11-x64 macOS-latest
       - check-success=Build, rustfmt, and python lint
       - check-success=Coverage
       - check-success=Build Docs
