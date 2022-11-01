@@ -36,9 +36,9 @@ header-includes:
 
 # Statement of need
 
-_rustworkx_ is a general-purpose graph theory library focused on performance. It wraps low-level Rust code [@Matsakis2014] into a flexible Python API, providing fast implementations for graph data structures and popular graph algorithms.
+_rustworkx_ is a general-purpose graph theory library focused on performance. It wraps low-level Rust code [@Matsakis2014] with a flexible Python API, providing fast implementations for graph data structures and popular graph algorithms.
 
-_rustworkx_ is inspired by the _NetworkX_ library [@SciPyProceedings_11], but meets the needs of users that also need performance. Even though _NetworkX_ is the de-facto standard graph and network analysis library for Python, it shows performance concerns. _NetworkX_ prefers pure Python implementations, which leads to bottlenecks in computationally intensive applications that use graph algorithms. 
+_rustworkx_ is inspired by the _NetworkX_ library [@SciPyProceedings_11], but meets the needs of users that also need performance. Even though _NetworkX_ is the de-facto standard graph and network analysis library for Python, it has performance concerns. _NetworkX_ prefers pure Python implementations, which leads to bottlenecks in computationally intensive applications that use graph algorithms. 
 
 _rustworkx_ addresses those performance concerns by switching to a Rust implementation. It has support for shortest paths, isomorphism, matching, multithreading via rayon [@Stone2021], and much more.
 
@@ -48,7 +48,7 @@ The graph and network analysis ecosystem for Python is rich, with many libraries
 
 However, the authors found that no library matched the flexibility that _NetworkX_ provided for interacting with graphs. _igraph_ is efficient for static large graphs, but does not handle graph updates as efficiently. _SNAP_ and _Networkit_ do not support associated edge data with arbitrary Python types. _graph-tool_ supports associated edge data at the cost of maintaing the data in a separate data structure. Thus, the main contribution of _rustworkx_ is keeping the ease of use of _NetworkX_ without sacrificing performance.
 
-We note that existing code using _NetworkX_ needs to be modified to use _rustworkx_. _rustworkx_ is not a drop-in replacement for _NetworkX_, which may be a possible limitation for some users. The authors provide a _NetworkX_ to _rustworkx_ conversion guide on the documentation to aid in those situations.
+We note that existing code using _NetworkX_ needs to be modified to use _rustworkx_. _rustworkx_ is not a drop-in replacement for _NetworkX_, which may be a possible limitation for some users. The authors provide a _NetworkX_ to _rustworkx_ conversion guide in the documentation to aid in those situations.
 
 # Graph data structures
 
@@ -66,23 +66,23 @@ A defining characteristic of _rustworkx_ graphs is that each node maps to a non-
 
 _rustworkx_ is suitable for modeling graphs ranging from a few nodes scaling up to 4 billion. The library is particularly suited for applications that have core routines executing graph algorithms. In those applications, the performance of _rustworkx_ considerably reduces computation time. Examples of applications using _rustworkx_ include the Qiskit compiler [@Qiskit2021], PennyLane [@Bergholm2020], atompack [@Ullberg2021], and qtcodes [@Jha2021].
 
-For common use cases, _rustworkx_ can provide speedups ranging from 3x to 100x faster compared to the same code using _NetworkX_ while staying competitive with other compiled libraries like _igraph_ and _graph-tool_. The gains in performance are application-specific, but as a general rule, the more work that is offloaded to _rustworkx_ and Rust, the larger are the gains.     
+For common use cases, _rustworkx_ can provide speedups ranging from 3x to 100x compared to the same code using _NetworkX_ while staying competitive with other compiled libraries like _igraph_ and _graph-tool_. The gains in performance are application-specific, but as a general rule, the more work that is offloaded to _rustworkx_ and Rust, the larger are the gains.     
 
 We illustrate use cases with examples from the field of quantum computing that motivated the development of the library.
 
 ## Graph Creation, Manipulation, and Traversal
 
-The first use case is based on the manipulation of directed acyclic graphs (DAGs) by Qiskit using _rustworkx_. Qiskit represents quantum circuits as DAGs which the compiler operates on to perform analysis and transformations [@Childs2019].
+The first use case is based on the manipulation of directed acyclic graphs (DAGs) by Qiskit using _rustworkx_. Qiskit represents quantum circuits as DAGs on which the compiler operates to perform analysis and transformations [@Childs2019].
 
 ![Quantum circuit and its equivalent representation as a DAG of instructions built by Qiskit.\label{fig:dagexample}](paper_img/example_dag_circuit.png){ width=100% height==100% }
 
-Qiskit creates a DAG whose nodes represent either instructions or registers present in the quantum circuit [@Cross2021] and whose edges represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulates the graph by adding and removing nodes and edges. _rustworkx_ brings the graph data structure underlying those operations.
+Qiskit creates a DAG with nodes that represent either instructions or registers present in the quantum circuit [@Cross2021] and with edges that represent the registers each instruction operates on. Qiskit also applies transformations to the instructions, which manipulate the graph by adding and removing nodes and edges. _rustworkx_ brings the graph data structure underlying those operations.
 
 In addition, Qiskit needs to traverse the graph. Some transformations, such as greedily merging instructions to reduce circuit depth, require graph traversal. _rustworkx_ offers the methods for traversals such as breadth-first search, depth-first search, and topological sorting.
 
 ## Subgraph Isomorphism
 
-The second use case is based on qubit mapping problem for Noisy Intermediate-Scale Quantum (NISQ) devices [@Bharti2021; @Preskill2018]. NISQ devices do not have full connectivity among qubits, hence Qiskit needs to take into account an undirected graph representing the connectivity of the device when compiling quantum circuits. Qiskit transforms the quantum circuit such that the pairs of qubits executing two-qubit gates respect the device's architectural constraints. There are many proposed solutions to the qubit mapping problem, including algorithms based on subgraph isomorphism [@Li2021].
+The second use case is based on the qubit mapping problem for Noisy Intermediate-Scale Quantum (NISQ) devices [@Bharti2021; @Preskill2018]. NISQ devices do not have full connectivity among qubits, hence Qiskit needs to take into account an undirected graph representing the connectivity of the device when compiling quantum circuits. Qiskit transforms the quantum circuit such that the pairs of qubits executing two-qubit gates respect the device's architectural constraints. There are many proposed solutions to the qubit mapping problem, including algorithms based on subgraph isomorphism [@Li2021].
 
 ![Graph representing the connectivity of the **`ibmq_montreal`** device. Qiskit can check if the required connectivity by a circuit is subgraph isomorphic to the device's connectivity when solving the qubit mapping problem.\label{fig:isomorphismexample}](paper_img/example_coupling_map.png){ width=52.5% height==52.5% }
 
@@ -90,6 +90,6 @@ _rustworkx_ implements the VF2 algorithm [@Cordella2004] and some of the VF2++ h
 
 # Acknowledgements
 
-We thank Kevin Krsulich for his help in getting _rustworkx_ ready for use by Qiskit; Lauren Capelluto and Toshinari Itoko for their continued support and help with code review; and all of the _rustworkx_ contributors who have helped the library improve over time.
+We thank Kevin Krsulich for his help in getting _rustworkx_ ready for use by Qiskit, Lauren Capelluto and Toshinari Itoko for their continued support and help with code review, and all of the _rustworkx_ contributors who have helped the library improve over time.
 
 # References
