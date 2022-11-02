@@ -30,5 +30,12 @@
     ],
     "communities": [
         {"identifier": "qiskit"}
+    ],
+    "related_identifiers": [
+        {
+            "scheme": "doi",
+            "identifier": "10.21105/joss.03968",
+            "relation": "isSupplementTo"
+        }
     ]
  }
