@@ -17,25 +17,26 @@ mod core_number;
 mod johnson_simple_cycles;
 
 use super::{
-    digraph, get_edge_iter_with_weights, graph, iterators::NodeIndices, score, weight_callable,
-    InvalidNode, NullGraph,
+    digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
 };
 
 use hashbrown::{HashMap, HashSet};
-
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::Python;
 
 use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
+use pyo3::Python;
+use rayon::prelude::*;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList};
+use crate::iterators::{
+    AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
+};
 use rustworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -734,6 +735,134 @@ pub fn graph_all_pairs_all_simple_paths(
         min_depth,
         cutoff,
     ))
+}
+
+/// Return a longest simple path in the graph
+///
+/// This function searches computes all pairs of all simple paths and returns
+/// a path of the longest length from that set. It is roughly equivalent to
+/// running something like::
+///
+///     from rustworkx import all_pairs_all_simple_paths
+///
+///     max((y.values for y in all_pairs_all_simple_paths(graph).values()), key=lambda x: len(x))
+///
+/// but this function will be more efficient than using ``max()`` as the search
+/// is evaluated in parallel before returning to Python. In the case of multiple
+/// paths of the same maximum length being present in the graph only one will be
+/// provided. There are no guarantees on which of the multiple longest paths
+/// will be returned (as it is determined by the parallel execution order). This
+/// is a tradeoff to improve runtime performance. If a stable return is required
+/// in such case consider using the ``max()`` equivalent above instead.
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyDiGraph graph: The graph to find the longest path in
+///
+/// :returns: A sequence of node indices that represent the longest simple graph
+///     found in the graph. If the graph is empty ``None`` will be returned instead.
+/// :rtype: NodeIndices
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn digraph_longest_simple_path(graph: &digraph::PyDiGraph) -> Option<NodeIndices> {
+    if graph.graph.node_count() == 0 {
+        return None;
+    } else if graph.graph.edge_count() == 0 {
+        return Some(NodeIndices {
+            nodes: vec![graph.graph.node_indices().next()?.index()],
+        });
+    }
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let node_index_set = node_indices.iter().copied().collect();
+    Some(NodeIndices {
+        nodes: node_indices
+            .par_iter()
+            .flat_map(|u| {
+                connectivity::all_simple_paths_multiple_targets(
+                    &graph.graph,
+                    *u,
+                    &node_index_set,
+                    0,
+                    None,
+                )
+                .values()
+                .flat_map(|paths| {
+                    paths
+                        .iter()
+                        .map(|path| path.iter().map(|v| v.index()).collect::<Vec<usize>>())
+                })
+                .collect::<Vec<Vec<usize>>>()
+            })
+            .max_by_key(|x: &Vec<usize>| x.len())
+            .unwrap(),
+    })
+}
+
+/// Return a longest simple path in the graph
+///
+/// This function searches computes all pairs of all simple paths and returns
+/// a path of the longest length from that set. It is roughly equivalent to
+/// running something like::
+///
+///     from rustworkx import all_pairs_all_simple_paths
+///
+///     max((y.values for y in all_pairs_all_simple_paths(graph).values()), key=lambda x: len(x))
+///
+/// but this function will be more efficient than using ``max()`` as the search
+/// is evaluated in parallel before returning to Python. In the case of multiple
+/// paths of the same maximum length being present in the graph only one will be
+/// provided. There are no guarantees on which of the multiple longest paths
+/// will be returned (as it is determined by the parallel execution order). This
+/// is a tradeoff to improve runtime performance. If a stable return is required
+/// in such case consider using the ``max()`` equivalent above instead.
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyGraph graph: The graph to find the longest path in
+///
+/// :returns: A sequence of node indices that represent the longest simple graph
+///     found in the graph. If the graph is empty ``None`` will be returned instead.
+/// :rtype: NodeIndices
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> {
+    if graph.graph.node_count() == 0 {
+        return None;
+    } else if graph.graph.edge_count() == 0 {
+        return Some(NodeIndices {
+            nodes: vec![graph.graph.node_indices().next()?.index()],
+        });
+    }
+    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let node_index_set = node_indices.iter().copied().collect();
+    Some(NodeIndices {
+        nodes: node_indices
+            .par_iter()
+            .flat_map(|u| {
+                connectivity::all_simple_paths_multiple_targets(
+                    &graph.graph,
+                    *u,
+                    &node_index_set,
+                    0,
+                    None,
+                )
+                .values()
+                .flat_map(|paths| {
+                    paths
+                        .iter()
+                        .map(|path| path.iter().map(|v| v.index()).collect::<Vec<usize>>())
+                })
+                .collect::<Vec<Vec<usize>>>()
+            })
+            .max_by_key(|x: &Vec<usize>| x.len())
+            .unwrap(),
+    })
 }
 
 /// Return the core number for each node in the graph.
