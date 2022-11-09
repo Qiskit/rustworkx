@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::borrow_deref_ref)]
+#![allow(clippy::borrow_as_ptr)]
 
 use std::convert::From;
 use std::io::BufRead;
