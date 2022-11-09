@@ -59,7 +59,7 @@ Contents:
    Release Notes <release_notes>
    Contributing Guide <CONTRIBUTING>
    rustworkx for NetworkX users <networkx>
-   rustworkx Benchmark <benchmarks>
+   Benchmarks <benchmarks>
 
 .. Hiding - Indices and tables
    :ref:`genindex`
