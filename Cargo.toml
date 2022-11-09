@@ -35,7 +35,11 @@ serde_json = "1.0"
 rustworkx-core = { path = "rustworkx-core", version = "=0.12.0" }
 
 [dependencies.pyo3]
+<<<<<<< HEAD
 version = "0.16.6"
+=======
+version = "0.17.3"
+>>>>>>> d91f488 (Bump pyo3 from 0.17.2 to 0.17.3 (#723))
 features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.hashbrown]
