@@ -114,14 +114,17 @@ name = "hashbrown"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
+dependencies = [
+ "ahash 0.7.6",
+]
 
 [[package]]
 name = "hashbrown"
-version = "0.12.3"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+checksum = "33ff8ae62cd3a9102e5637afc8452c55acf3844001bd5374e0b0bd7b6616c038"
 dependencies = [
- "ahash 0.7.6",
+ "ahash 0.8.0",
  "rayon",
 ]
 
@@ -346,7 +349,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "268be0c73583c183f2b14052337465768c07726936a260f480f0857cb95ba543"
 dependencies = [
  "cfg-if",
- "hashbrown 0.12.3",
+ "hashbrown 0.11.2",
  "indexmap",
  "indoc",
  "libc",
@@ -505,7 +508,7 @@ version = "0.13.0"
 dependencies = [
  "ahash 0.8.0",
  "fixedbitset",
- "hashbrown 0.12.3",
+ "hashbrown 0.13.1",
  "indexmap",
  "ndarray",
  "num-bigint",
@@ -529,7 +532,7 @@ version = "0.13.0"
 dependencies = [
  "ahash 0.8.0",
  "fixedbitset",
- "hashbrown 0.12.3",
+ "hashbrown 0.13.1",
  "indexmap",
  "num-traits",
  "petgraph",
