@@ -10,7 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 use hashbrown::HashSet;
-use petgraph::algo;
 use std::collections::VecDeque;
 use std::hash::Hash;
 // use super::digraph;
@@ -179,7 +178,7 @@ where
 {
     match graph.node_identifiers().next() {
         Some(node) => {
-            let component = node_connected_component(graph, node.to_index());
+            let component = node_connected_component(graph, node);
             component.len() == graph.node_count()
         }
         None => false,
