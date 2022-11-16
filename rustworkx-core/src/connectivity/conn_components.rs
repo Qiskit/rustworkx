@@ -204,10 +204,24 @@ mod test_conn_components {
 
     use crate::connectivity::{bfs_undirected, connected_components, number_connected_components};
 
+    use super::is_connected;
+
     #[test]
     fn test_number_connected() {
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (3, 4)]);
         assert_eq!(number_connected_components(&graph), 2);
+    }
+
+    #[test]
+    fn test_is_connected() {
+        let graph = Graph::<(), (), Directed>::from_edges([(0,1), (1,2), (2,3)]);
+        assert_eq!(is_connected(&graph), true);
+    }
+
+    #[test]
+    fn test_is_not_connected(){
+        let disconnected_graph = Graph::<(), (), Directed>::from_edges([(0,1), (3,4)]);
+        assert_eq!(is_connected(&disconnected_graph), false);
     }
 
     #[test]
