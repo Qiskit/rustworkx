@@ -202,7 +202,7 @@ mod test_conn_components {
     use petgraph::{Directed, Undirected};
     use std::iter::FromIterator;
 
-    use crate::connectivity::{bfs_undirected, connected_components, number_connected_components};
+    use crate::connectivity::{bfs_undirected, node_connected_component,connected_components, number_connected_components};
 
     use super::is_connected;
 
@@ -223,6 +223,17 @@ mod test_conn_components {
         let disconnected_graph = Graph::<(), (), Directed>::from_edges([(0,1), (3,4)]);
         assert_eq!(is_connected(&disconnected_graph), false);
     }
+
+    #[test]
+    fn test_node_connected_components(){
+        let graph = Graph::<(), (), Directed>::from_edges(&[(0, 1), (1, 2)]);
+        let node_idx: NodeIndex<u32> = NodeIndex::new(3);
+        let expected = HashSet::from_iter([ndx(0), ndx(1), ndx(2)]);
+        let component = node_connected_component(&graph, node_idx);
+        assert_eq!(component, expected);
+
+    }
+
 
     #[test]
     fn test_number_node_holes() {
