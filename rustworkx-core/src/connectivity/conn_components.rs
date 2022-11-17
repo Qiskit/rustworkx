@@ -226,9 +226,9 @@ mod test_conn_components {
 
     #[test]
     fn test_node_connected_components(){
-        let graph = Graph::<(), (), Directed>::from_edges(&[(0, 1), (1, 2)]);
+        let graph = Graph::<(), (), Directed>::from_edges(&[(0, 1), (1, 2), (2, 3), (4,5)]);
         let node_idx: NodeIndex<u32> = NodeIndex::new(3);
-        let expected = HashSet::from_iter([ndx(0), ndx(1), ndx(2)]);
+        let expected: HashSet<NodeIndex> = HashSet::from_iter([ndx(3),ndx(0),ndx(1),ndx(2)]);
         let component = node_connected_component(&graph, node_idx);
         assert_eq!(component, expected);
 
