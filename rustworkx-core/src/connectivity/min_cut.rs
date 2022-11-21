@@ -55,7 +55,7 @@ where
         for edge in graph.edges(nx) {
             pq.change_priority_by(&edge.target(), |x| {
                 *x += edge_cost(edge);
-            })
+            });
         }
     }
 
