@@ -4,7 +4,7 @@ rustworkx Documentation
 
 .. note::
 
-    The project has been renamed to **rustworkx**. You can still use the legavcy
+    The project has been renamed to **rustworkx**. You can still use the legacy
     retworkx name for now but starting in the 1.0.0 release the retworkx name
     will no longer be supported.
 

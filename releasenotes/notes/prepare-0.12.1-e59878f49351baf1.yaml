@@ -1,0 +1,4 @@
+---
+prelude: |
+    This release is a bugfix release that fixes bugs identified since the
+    0.12.0 release.
