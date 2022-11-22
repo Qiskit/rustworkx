@@ -80,6 +80,7 @@ pub mod traversal;
 pub mod dictmap;
 pub mod distancemap;
 mod min_scored;
+pub mod token_swapper;
 
 // re-export petgraph so there is a consistent version available to users and
 // then only need to require rustworkx-core in their dependencies

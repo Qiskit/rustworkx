@@ -14,6 +14,8 @@ keywords = ["graph"]
 ahash = { version = "0.7.6", default-features = false }
 fixedbitset = "0.4.2"
 petgraph = "0.6.2"
+rand = "0.8"
+rand_pcg = "0.3"
 rayon = "1.5"
 num-traits = "0.2"
 priority-queue = "1.2.0"
