@@ -512,7 +512,7 @@ dependencies = [
 
 [[package]]
 name = "rustworkx"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "ahash",
  "fixedbitset",
@@ -536,7 +536,7 @@ dependencies = [
 
 [[package]]
 name = "rustworkx-core"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "ahash",
  "fixedbitset",
@@ -583,9 +583,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.86"
+version = "1.0.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41feea4228a6f1cd09ec7a3593a682276702cd67b5273544757dae23c096f074"
+checksum = "020ff22c755c2ed3f8cf162dbb41a7268d934702f3ed3631656ea597e08fc3db"
 dependencies = [
  "itoa",
  "ryu",
