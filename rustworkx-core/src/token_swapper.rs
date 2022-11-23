@@ -10,12 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use hashbrown::{HashSet, HashMap};
+use hashbrown::{HashMap, HashSet};
+use petgraph::stable_graph::{NodeIndex, StableGraph};
+use petgraph::visit::{
+    EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
+};
 use petgraph::Directed;
-use petgraph::visit::{NodeCount, EdgeCount, IntoNeighborsDirected, IntoNodeIdentifiers};
-use petgraph::stable_graph::{StableGraph, NodeIndex};
+use rand::prelude::*;
+use rand::distributions::Uniform;
+use rand_pcg::Pcg64;
 use std::hash::Hash;
-use rand::SeedableRng;
+use std::usize::MAX;
 
 //use crate::shortest_path::distance_matrix::compute_distance_matrix;
 
@@ -29,7 +34,7 @@ use rand::SeedableRng;
 /// The inputs are a partial `mapping` to be implemented in swaps, and the number of `trials` to
 /// perform the mapping. It's minimized over the trials.
 ///
-/// It returns a list of tuples representing the swaps to perform. 
+/// It returns a list of tuples representing the swaps to perform.
 ///
 /// # Example
 /// ```
@@ -54,12 +59,15 @@ use rand::SeedableRng;
 /// let d_path = ways.get(&d).unwrap();
 /// assert_eq!(4, d_path.len());
 /// ```
-pub fn token_swapper<G, SeedableRng>(
+
+type Swap<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
+
+pub fn token_swapper<G>(
     graph: G,
     mapping: HashMap<G::NodeId, G::NodeId>,
     trials: Option<usize>,
-    seed: Option<Seed>,
-) -> usize
+    seed: Option<u64>,
+) -> Vec<Swap<G>>
 where
     G: NodeCount,
     G: EdgeCount,
@@ -73,16 +81,16 @@ where
     let mut todo_nodes: HashSet<G::NodeId> = HashSet::new();
     let tokens: HashMap<G::NodeId, G::NodeId> = mapping.into_iter().collect();
 
-    if trials.is_some() {
-        num_trials = trials;
-    } else {
-        num_trials = 4;
-    }
-    if seed.is_some() {
-        trial_seed = seed;
-    } else {
-        trial_seed = Seed::from_seed(99);
-    }
+    let mut trials: usize = match trials {
+        Some(trials) => trials,
+        None => 4,
+    };
+    let mut rng_seed: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let between = Uniform::new(0, graph.node_count());
+    let random: usize = between.sample(&mut rng_seed);
 
     for (node, destination) in tokens.iter() {
         if node != destination {
@@ -99,10 +107,44 @@ where
         rev_node_map.insert(index, node);
     }
     for node in graph.node_identifiers() {
-        add_token_edges::<G>(graph, node, &tokens, &mut digraph, &mut sub_digraph, &node_map, &rev_node_map);
+        add_token_edges::<G>(
+            graph,
+            node,
+            &tokens,
+            &mut digraph,
+            &mut sub_digraph,
+            &node_map,
+        );
     }
-
-    88
+    let mut trial_results: Vec<Vec<Swap<G>>> = Vec::new();
+    for _ in 0..trials {
+        let results = trial_map::<G>(
+            &mut digraph.clone(),
+            &mut sub_digraph.clone(),
+            &mut todo_nodes.clone(),
+            &mut tokens.clone(),
+            &random,
+        );
+        trial_results.push(results);
+    }
+    let mut first_results: Vec<Vec<(G::NodeId, G::NodeId)>> = Vec::new();
+    for result in trial_results {
+        if result.len() == 0 {
+            first_results.push(result);
+            break;
+        }
+        first_results.push(result);
+    }
+    let mut res_min = MAX;
+    let mut final_result: Vec<Swap<G>> = Vec::new();
+    for res in first_results {
+        let res_len = res.len();
+        if res_len < res_min {
+            final_result = res;
+            res_min = res_len;
+        }
+    }
+    final_result
 }
 
 fn add_token_edges<G>(
@@ -112,9 +154,7 @@ fn add_token_edges<G>(
     digraph: &mut StableGraph<(), (), Directed>,
     sub_digraph: &mut StableGraph<(), (), Directed>,
     node_map: &HashMap<G::NodeId, NodeIndex>,
-    rev_node_map: &HashMap<NodeIndex, G::NodeId>,
-)
-where
+) where
     G: IntoNeighborsDirected,
     G::NodeId: Eq + Hash,
 {
@@ -124,7 +164,7 @@ where
     if tokens[&node] == node {
         digraph.add_edge(node_map[&node], node_map[&node], ());
         return;
-    }    
+    }
     for neighbor in graph.neighbors(node) {
         if distance(graph, neighbor, tokens[&node]) < distance(graph, node, tokens[&node]) {
             digraph.add_edge(node_map[&node], node_map[&neighbor], ());
@@ -133,11 +173,7 @@ where
     }
 }
 
-fn distance<G>(
-    graph: G,
-    node0: G::NodeId,
-    node1: G::NodeId,
-) -> usize
+fn distance<G>(graph: G, node0: G::NodeId, node1: G::NodeId) -> usize
 where
     G: IntoNeighborsDirected,
     G::NodeId: Eq + Hash,
@@ -149,14 +185,16 @@ where
 fn trial_map<'a, G>(
     digraph: &mut StableGraph<(), (), Directed>,
     sub_digraph: &mut StableGraph<(), (), Directed>,
-    todo_nodes: &mut HashSet<G::NodeId>,
+    todo_nodes: &'a mut HashSet<G::NodeId>,
     tokens: &'a mut HashMap<G::NodeId, G::NodeId>,
-) -> impl Iterator<Item = &'a (usize, usize)>//G::NodeId, G::NodeId)> 
+    random: &usize,
+) -> Vec<(G::NodeId, G::NodeId)>
 where
     G: IntoNeighborsDirected,
     G::NodeId: Eq + Hash,
 {
-    [(88, 88), (99, 99)].iter()
+    let x = todo_nodes.iter().next().unwrap();
+    vec![(*x, *x)]
 }
 
 fn swap<G>(
@@ -166,8 +204,7 @@ fn swap<G>(
     digraph: &mut StableGraph<(), (), Directed>,
     sub_digraph: &mut StableGraph<(), (), Directed>,
     todo_nodes: &mut HashSet<G::NodeId>,
-)
-where
+) where
     G: IntoNeighborsDirected,
     G::NodeId: Eq + Hash,
 {
