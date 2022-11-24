@@ -11,16 +11,19 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
+use hashbrown::hash_map::Entry;
 use petgraph::stable_graph::{NodeIndex, StableGraph};
 use petgraph::visit::{
     EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
 };
 use petgraph::Directed;
+use petgraph::Direction::Outgoing;
 use rand::prelude::*;
 use rand::distributions::Uniform;
 use rand_pcg::Pcg64;
 use std::hash::Hash;
 use std::usize::MAX;
+//use std::collections::hash_map::Entry;
 
 //use crate::shortest_path::distance_matrix::compute_distance_matrix;
 
@@ -127,7 +130,7 @@ where
         );
         trial_results.push(results);
     }
-    let mut first_results: Vec<Vec<(G::NodeId, G::NodeId)>> = Vec::new();
+    let mut first_results: Vec<Vec<Swap<G>>> = Vec::new();
     for result in trial_results {
         if result.len() == 0 {
             first_results.push(result);
@@ -188,7 +191,7 @@ fn trial_map<'a, G>(
     todo_nodes: &'a mut HashSet<G::NodeId>,
     tokens: &'a mut HashMap<G::NodeId, G::NodeId>,
     random: &usize,
-) -> Vec<(G::NodeId, G::NodeId)>
+) -> Vec<Swap<G>>
 where
     G: IntoNeighborsDirected,
     G::NodeId: Eq + Hash,
@@ -200,13 +203,46 @@ where
 fn swap<G>(
     node1: G::NodeId,
     node2: G::NodeId,
+    graph: G,
     tokens: &mut HashMap<G::NodeId, G::NodeId>,
     digraph: &mut StableGraph<(), (), Directed>,
     sub_digraph: &mut StableGraph<(), (), Directed>,
     todo_nodes: &mut HashSet<G::NodeId>,
+    node_map: &HashMap<G::NodeId, NodeIndex>,
 ) where
     G: IntoNeighborsDirected,
     G::NodeId: Eq + Hash,
 {
-    ()
+    let token1 = tokens.remove_entry(&node1);
+    let token2 = tokens.remove_entry(&node2);
+    if token2.is_some() {
+        tokens.insert(token2.unwrap().0, token2.unwrap().1);
+    }
+    if token1.is_some() {
+        tokens.insert(token1.unwrap().0, token1.unwrap().1);
+    }
+    for node in [node1, node2] {
+        let mut edge_nodes = vec![];
+        for successor in digraph.neighbors_directed(node_map[&node], Outgoing) {
+            edge_nodes.push((node_map[&node], successor));
+        }
+        for (edge_node1, edge_node2) in edge_nodes {
+            let edge = digraph.find_edge(edge_node1, edge_node2).unwrap();
+            digraph.remove_edge(edge);
+        }
+        let mut edge_nodes = vec![];
+        for successor in sub_digraph.neighbors_directed(node_map[&node], Outgoing) {
+            edge_nodes.push((node_map[&node], successor));
+        }
+        for (edge_node1, edge_node2) in edge_nodes {
+            let edge = sub_digraph.find_edge(edge_node1, edge_node2).unwrap();
+            sub_digraph.remove_edge(edge);
+        }
+        add_token_edges::<G>(graph, node, &tokens, digraph, sub_digraph, &node_map);
+        if tokens.contains_key(&node) && tokens[&node] != node {
+            todo_nodes.insert(node);
+        } else if todo_nodes.contains(&node) {
+            todo_nodes.remove(&node);
+        }
+    }
 }
