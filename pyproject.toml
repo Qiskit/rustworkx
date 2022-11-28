@@ -12,7 +12,7 @@ manylinux-i686-image = "manylinux2014"
 skip = "pp* cp36-* *win32 *musllinux*"
 test-requires = "networkx testtools fixtures"
 test-command = "python -m unittest discover {project}/tests/rustworkx_tests"
-before_build = "pip install -U setuptools-rust"
+before-build = "pip install -U setuptools-rust"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"
