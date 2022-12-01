@@ -242,13 +242,14 @@ class TestEdges(unittest.TestCase):
             dag.find_adjacent_node_by_edge(node_a, compare_edges)
 
     def test_find_adjacent_predecessor_node_by_edge(self):
-        from rustworkx.visualization import mpl_draw        
+        from rustworkx.visualization import mpl_draw
+
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
         node_b = dag.add_child(node_a, "b", "a to b")
         node_c = dag.add_child(node_b, "c", "b to c")
         node_d = dag.add_child(node_c, "d", "c to d")
-        mpl_draw(dag, with_labels=True, labels=str, edge_labels=str).savefig('test.png')
+        mpl_draw(dag, with_labels=True, labels=str, edge_labels=str).savefig("test.png")
 
         def compare_edges(edge):
             return "a to b" == edge
