@@ -232,7 +232,7 @@ class TestEdges(unittest.TestCase):
     def test_find_adjacent_node_by_edge_no_match(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
-        node_b = dag.add_child(node_a, "b", {"weights": [1, 2]})
+        dag.add_child(node_a, "b", {"weights": [1, 2]})
         dag.add_child(node_a, "c", {"weights": [3, 4]})
 
         def compare_edges(edge):
@@ -242,13 +242,11 @@ class TestEdges(unittest.TestCase):
             dag.find_adjacent_node_by_edge(node_a, compare_edges)
 
     def test_find_adjacent_predecessor_node_by_edge(self):
-        from rustworkx.visualization import mpl_draw
-
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
         node_b = dag.add_child(node_a, "b", "a to b")
         node_c = dag.add_child(node_b, "c", "b to c")
-        node_d = dag.add_child(node_c, "d", "c to d")
+        dag.add_child(node_c, "d", "c to d")
 
         def compare_edges(edge):
             return "a to b" == edge
