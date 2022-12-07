@@ -1726,7 +1726,7 @@ impl PyDiGraph {
 
     /// Find a source node with a specific edge
     ///
-    /// This method is used to find a target node that is an adjacent predecessor
+    /// This method is used to find an adjacent predecessor
     /// to a given node given an edge condition.
     ///
     /// :param int node: The node to use as the source of the search
