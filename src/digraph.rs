@@ -1724,7 +1724,7 @@ impl PyDiGraph {
         Err(NoSuitableNeighbors::new_err("No suitable neighbor"))
     }
 
-    /// Find a target node with a specific edge
+    /// Find a source node with a specific edge
     ///
     /// This method is used to find a target node that is an adjacent predecessor
     /// to a given node given an edge condition.
