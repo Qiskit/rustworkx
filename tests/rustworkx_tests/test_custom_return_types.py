@@ -174,6 +174,12 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         self.assertEqual([2, 3], slice_return)
         self.assertEqual([], indices[-1:-2])
 
+    def test_reversed(self):
+        indices = self.dag.node_indices()
+        reversed_slice = indices[::-1]
+        reversed_elems = list(reversed(indices))
+        self.assertEqual(reversed_slice, reversed_elems)
+
     def test_numpy_conversion(self):
         res = self.dag.node_indexes()
         np.testing.assert_array_equal(np.asarray(res, dtype=np.uintp), np.array([0, 1]))
