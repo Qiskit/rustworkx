@@ -12,6 +12,7 @@
 
 use crate::dictmap::*;
 use crate::shortest_path::dijkstra;
+use crate::traversal::dfs_edges;
 use hashbrown::{HashMap, HashSet};
 use petgraph::stable_graph::{NodeIndex, StableGraph};
 use petgraph::visit::{
@@ -19,7 +20,7 @@ use petgraph::visit::{
     NodeIndexable, Visitable,
 };
 use petgraph::Directed;
-use petgraph::Direction::Outgoing;
+use petgraph::Direction::{Incoming, Outgoing};
 use rand::distributions::Uniform;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
@@ -64,15 +65,15 @@ use std::usize::MAX;
 /// assert_eq!(4, d_path.len());
 /// ```
 
-type Swap<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
-type Edge<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
+type Swap = (NodeIndex, NodeIndex);
+type Edge = (NodeIndex, NodeIndex);
 
 pub fn token_swapper<G, E>(
     graph: G,
     mapping: HashMap<G::NodeId, G::NodeId>,
     trials: Option<usize>,
     seed: Option<u64>,
-) -> Vec<Swap<G>>
+) -> Vec<Swap>
 where
     G: GraphBase,
     G: NodeCount,
@@ -88,8 +89,8 @@ where
     let mut digraph = StableGraph::with_capacity(graph.node_count(), graph.edge_count());
     // sub_digraph is digraph without self edges
     let mut sub_digraph = StableGraph::with_capacity(graph.node_count(), graph.edge_count());
-    let mut todo_nodes: Vec<G::NodeId> = Vec::new();
-    let tokens: HashMap<G::NodeId, G::NodeId> = mapping.into_iter().collect();
+    let mut todo_nodes: Vec<NodeIndex> = Vec::new();
+    let mut tokens = HashMap::with_capacity(mapping.len());
 
     let trials: usize = match trials {
         Some(trials) => trials,
@@ -116,17 +117,21 @@ where
         node_map.insert(node, index);
         rev_node_map.insert(index, node);
     }
+    for (k, v) in mapping {
+        tokens.insert(node_map[&k], node_map[&v]);
+    }
     for node in graph.node_identifiers() {
         add_token_edges::<G, E>(
             graph,
-            node,
+            node_map[&node],
             &tokens,
             &mut digraph,
             &mut sub_digraph,
             &node_map,
+            &rev_node_map,
         );
     }
-    let mut trial_results: Vec<Vec<Swap<G>>> = Vec::new();
+    let mut trial_results: Vec<Vec<Swap>> = Vec::new();
     for _ in 0..trials {
         let results = trial_map::<G, E>(
             graph,
@@ -140,7 +145,7 @@ where
         );
         trial_results.push(results);
     }
-    let mut first_results: Vec<Vec<Swap<G>>> = Vec::new();
+    let mut first_results: Vec<Vec<Swap>> = Vec::new();
     for result in trial_results {
         if result.len() == 0 {
             first_results.push(result);
@@ -149,7 +154,7 @@ where
         first_results.push(result);
     }
     let mut res_min = MAX;
-    let mut final_result: Vec<Swap<G>> = Vec::new();
+    let mut final_result: Vec<Swap> = Vec::new();
     for res in first_results {
         let res_len = res.len();
         if res_len < res_min {
@@ -162,11 +167,12 @@ where
 
 fn add_token_edges<G, E>(
     graph: G,
-    node: G::NodeId,
-    tokens: &HashMap<G::NodeId, G::NodeId>,
+    node: NodeIndex,
+    tokens: &HashMap<NodeIndex, NodeIndex>,
     digraph: &mut StableGraph<(), (), Directed>,
     sub_digraph: &mut StableGraph<(), (), Directed>,
     node_map: &HashMap<G::NodeId, NodeIndex>,
+    rev_node_map: &HashMap<NodeIndex, G::NodeId>,
 ) where
     G: IntoNeighborsDirected,
     G: IntoEdges,
@@ -175,19 +181,22 @@ fn add_token_edges<G, E>(
     G::NodeId: Eq + Hash,
     E: std::fmt::Debug,
 {
+    let id_node = rev_node_map[&node];
     if !(tokens.contains_key(&node)) {
         return;
     }
     if tokens[&node] == node {
-        digraph.add_edge(node_map[&node], node_map[&node], ());
+        digraph.add_edge(node, node, ());
         return;
     }
-    for neighbor in graph.neighbors(node) {
-        if distance::<G, E>(graph, neighbor, tokens[&node]).unwrap()[&neighbor]
-            < distance::<G, E>(graph, node, tokens[&node]).unwrap()[&node]
+    let id_token = rev_node_map[&tokens[&node]];
+    for id_neighbor in graph.neighbors(id_node) {
+        let neighbor = node_map[&id_neighbor];
+        if distance::<G, E>(graph, id_neighbor, id_token).unwrap()[&id_neighbor]
+            < distance::<G, E>(graph, id_node, id_token).unwrap()[&id_node]
         {
-            digraph.add_edge(node_map[&node], node_map[&neighbor], ());
-            sub_digraph.add_edge(node_map[&node], node_map[&neighbor], ());
+            digraph.add_edge(node, neighbor, ());
+            sub_digraph.add_edge(node, neighbor, ());
         }
     }
 }
@@ -210,12 +219,12 @@ fn trial_map<G, E>(
     graph: G,
     digraph: &mut StableGraph<(), (), Directed>,
     sub_digraph: &mut StableGraph<(), (), Directed>,
-    todo_nodes: &mut Vec<G::NodeId>,
-    tokens: &mut HashMap<G::NodeId, G::NodeId>,
+    todo_nodes: &mut Vec<NodeIndex>,
+    tokens: &mut HashMap<NodeIndex, NodeIndex>,
     node_map: &HashMap<G::NodeId, NodeIndex>,
     rev_node_map: &HashMap<NodeIndex, G::NodeId>,
     random: &usize,
-) -> Vec<Swap<G>>
+) -> Vec<Swap>
 where
     G: EdgeCount,
     G: IntoEdges,
@@ -227,10 +236,17 @@ where
     E: std::fmt::Debug,
 {
     let mut steps = 0;
-    let mut swap_edges: Vec<Swap<G>> = vec![];
+    let mut swap_edges: Vec<Swap> = vec![];
     while todo_nodes.len() > 0 && steps <= 4 * digraph.node_count() ^ 2 {
         let todo_node = todo_nodes[*random];
-        let cycle = digraph_find_cycle(graph, Some(todo_node), node_map, rev_node_map);
+        let cycle = find_cycle(
+            graph,
+            digraph,
+            false,
+            Some(todo_node),
+            node_map,
+            rev_node_map,
+        );
         if cycle.len() > 0 {
             for edge in cycle[1..].iter().rev() {
                 swap_edges.push(*edge);
@@ -239,64 +255,82 @@ where
                     edge.1,
                     graph,
                     tokens,
+                    todo_nodes,
                     digraph,
                     sub_digraph,
-                    todo_nodes,
                     node_map,
+                    rev_node_map,
                 );
                 steps += cycle.len() - 1
-        else:
-                # Try to find a node without a token to swap with.
-                try:
-                    edge = next(
-                        edge
-                        for edge in rx.digraph_dfs_edges(sub_digraph, todo_node)
-                        if edge[1] not in tokens
-                    )
-                    # Swap predecessor and successor, because successor does not have a token
-                    yield edge
-                    swap(edge[0], edge[1])
-                    steps += 1
-                except StopIteration:
-                    # Unhappy swap case
-                    cycle = rx.digraph_find_cycle(digraph, source=todo_node)
-                    assert len(cycle) == 1, "The cycle was not unhappy."
-                    unhappy_node = cycle[0][0]
-                    # Find a node that wants to swap with this node.
-                    try:
-                        predecessor = next(
-                            predecessor
-                            for predecessor in digraph.predecessor_indices(unhappy_node)
-                            if predecessor != unhappy_node
-                        )
-                    except StopIteration:
-                        logger.error(
-                            "Unexpected StopIteration raised when getting predecessors"
-                            "in unhappy swap case."
-                        )
-                        return
-                    yield unhappy_node, predecessor
-                    swap(unhappy_node, predecessor)
-                    steps += 1
-        if todo_nodes:
-            raise RuntimeError("Too many iterations while approximating the Token Swaps.")
+            }
+        } else {
+            let mut found = false;
+            let sub2 = &sub_digraph.clone();
+            for edge in dfs_edges(sub2, Some(todo_node)) {
+                let new_edge = (NodeIndex::new(edge.0), NodeIndex::new(edge.1));
+                if !tokens.contains_key(&new_edge.1) {
+                    swap_edges.push(new_edge);
+                    swap::<G, E>(
+                        new_edge.0,
+                        new_edge.1,
+                        graph,
+                        tokens,
+                        todo_nodes,
+                        digraph,
+                        sub_digraph,
+                        node_map,
+                        rev_node_map,
+                    );
+                    steps += 1;
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                let di2 = &mut digraph.clone();
+                let cycle = find_cycle(graph, di2, true, Some(todo_node), node_map, rev_node_map);
+                let unhappy_node = cycle[0].0;
+                let mut found = false;
+                for predecessor in di2.neighbors_directed(unhappy_node, Incoming) {
+                    if predecessor == unhappy_node {
+                        found = true;
+                        swap_edges.push((unhappy_node, predecessor));
+                        swap::<G, E>(
+                            unhappy_node,
+                            predecessor,
+                            graph,
+                            tokens,
+                            todo_nodes,
+                            digraph,
+                            sub_digraph,
+                            node_map,
+                            rev_node_map,
+                        );
+                        steps += 1
+                    }
+                }
+                if !found {
+                    panic!("unexpected stop")
+                }
             }
         }
-        steps = 10000;
+        if todo_nodes.len() != 0 {
+            panic!("got todo nodes");
+        }
     }
-    let x = todo_nodes.iter().next().unwrap();
-    vec![(*x, *x)]
+    swap_edges
 }
 
 fn swap<G, E>(
-    node1: G::NodeId,
-    node2: G::NodeId,
+    node1: NodeIndex,
+    node2: NodeIndex,
     graph: G,
-    tokens: &mut HashMap<G::NodeId, G::NodeId>,
+    tokens: &mut HashMap<NodeIndex, NodeIndex>,
+    todo_nodes: &mut Vec<NodeIndex>,
     digraph: &mut StableGraph<(), (), Directed>,
     sub_digraph: &mut StableGraph<(), (), Directed>,
-    todo_nodes: &mut Vec<G::NodeId>,
     node_map: &HashMap<G::NodeId, NodeIndex>,
+    rev_node_map: &HashMap<NodeIndex, G::NodeId>,
 ) where
     G: IntoNeighborsDirected,
     G: IntoEdges,
@@ -315,22 +349,30 @@ fn swap<G, E>(
     }
     for node in [node1, node2] {
         let mut edge_nodes = vec![];
-        for successor in digraph.neighbors_directed(node_map[&node], Outgoing) {
-            edge_nodes.push((node_map[&node], successor));
+        for successor in digraph.neighbors_directed(node, Outgoing) {
+            edge_nodes.push((&node, successor));
         }
         for (edge_node1, edge_node2) in edge_nodes {
-            let edge = digraph.find_edge(edge_node1, edge_node2).unwrap();
+            let edge = digraph.find_edge(*edge_node1, edge_node2).unwrap();
             digraph.remove_edge(edge);
         }
         let mut edge_nodes = vec![];
-        for successor in sub_digraph.neighbors_directed(node_map[&node], Outgoing) {
-            edge_nodes.push((node_map[&node], successor));
+        for successor in sub_digraph.neighbors_directed(node, Outgoing) {
+            edge_nodes.push((&node, successor));
         }
         for (edge_node1, edge_node2) in edge_nodes {
-            let edge = sub_digraph.find_edge(edge_node1, edge_node2).unwrap();
+            let edge = sub_digraph.find_edge(*edge_node1, edge_node2).unwrap();
             sub_digraph.remove_edge(edge);
         }
-        add_token_edges::<G, E>(graph, node, &tokens, digraph, sub_digraph, &node_map);
+        add_token_edges::<G, E>(
+            graph,
+            node,
+            &tokens,
+            digraph,
+            sub_digraph,
+            &node_map,
+            &rev_node_map,
+        );
         if tokens.contains_key(&node) && tokens[&node] != node {
             todo_nodes.push(node);
         } else if todo_nodes.contains(&node) {
@@ -339,12 +381,14 @@ fn swap<G, E>(
     }
 }
 
-fn digraph_find_cycle<G>(
+fn find_cycle<G>(
     graph: G,
-    source: Option<G::NodeId>,
+    digraph: &mut StableGraph<(), (), Directed>,
+    use_digraph: bool,
+    source: Option<NodeIndex>,
     node_map: &HashMap<G::NodeId, NodeIndex>,
     rev_node_map: &HashMap<NodeIndex, G::NodeId>,
-) -> Vec<Edge<G>>
+) -> Vec<Edge>
 where
     G: EdgeCount,
     G: IntoNeighborsDirected,
@@ -352,15 +396,21 @@ where
     G::NodeId: Eq + Hash,
 {
     let mut graph_nodes: HashSet<NodeIndex> = HashSet::new();
-    for id in graph.node_identifiers() {
-        graph_nodes.insert(node_map[&id]);
+    if use_digraph {
+        for id in graph.node_identifiers() {
+            graph_nodes.insert(node_map[&id]);
+        }
+    } else {
+        for id in digraph.node_identifiers() {
+            graph_nodes.insert(id);
+        }
     }
-    let mut cycle: Vec<Edge<G>> = Vec::with_capacity(graph.edge_count());
+    let mut cycle: Vec<Edge> = Vec::with_capacity(graph.edge_count());
     let temp_value: NodeIndex;
     // If source is not set get an arbitrary node from the set of graph
     // nodes we've not "examined"
     let source_index = match source {
-        Some(source_value) => node_map[&source_value],
+        Some(source_value) => source_value,
         None => {
             temp_value = *graph_nodes.iter().next().unwrap();
             graph_nodes.remove(&temp_value);
@@ -380,31 +430,55 @@ where
         let mut z = *stack.last().unwrap();
         visiting.insert(z);
 
-        let children = graph.neighbors_directed(rev_node_map[&z], petgraph::Direction::Outgoing);
-
-        for child_id in children {
-            let child = node_map[&child_id];
-            //cycle is found
-            if visiting.contains(&child) {
-                cycle.push((rev_node_map[&z], rev_node_map[&child]));
-                //backtrack
-                loop {
-                    if z == child {
-                        cycle.reverse();
-                        break;
+        if use_digraph {
+            let children = digraph.neighbors_directed(z, petgraph::Direction::Outgoing);
+            for child in children {
+                //cycle is found
+                if visiting.contains(&child) {
+                    cycle.push((z, child));
+                    //backtrack
+                    loop {
+                        if z == child {
+                            cycle.reverse();
+                            break;
+                        }
+                        cycle.push((pred[&z], z));
+                        z = pred[&z];
                     }
-                    cycle.push((rev_node_map[&pred[&z]], rev_node_map[&z]));
-                    z = pred[&z];
+                    return cycle;
                 }
-                return cycle;
+                //if an unexplored node is encountered
+                if !visited.contains(&child) {
+                    stack.push(child);
+                    pred.insert(child, z);
+                }
             }
-            //if an unexplored node is encountered
-            if !visited.contains(&child) {
-                stack.push(child);
-                pred.insert(child, z);
+        } else {
+            let children =
+                graph.neighbors_directed(rev_node_map[&z], petgraph::Direction::Outgoing);
+            for child_id in children {
+                let child = node_map[&child_id];
+                //cycle is found
+                if visiting.contains(&child) {
+                    cycle.push((z, child));
+                    //backtrack
+                    loop {
+                        if z == child {
+                            cycle.reverse();
+                            break;
+                        }
+                        cycle.push((pred[&z], z));
+                        z = pred[&z];
+                    }
+                    return cycle;
+                }
+                //if an unexplored node is encountered
+                if !visited.contains(&child) {
+                    stack.push(child);
+                    pred.insert(child, z);
+                }
             }
         }
-
         let top = *stack.last().unwrap();
         //if no further children and explored, move to visited
         if top.index() == z.index() {
