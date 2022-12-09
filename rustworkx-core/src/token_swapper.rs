@@ -27,8 +27,6 @@ use rand_pcg::Pcg64;
 use std::hash::Hash;
 use std::usize::MAX;
 
-//use crate::shortest_path::distance_matrix::compute_distance_matrix;
-
 /// This module performs an approximately optimal Token Swapping algorithm
 /// Supports partial mappings (i.e. not-permutations) for graphs with missing tokens.
 ///
@@ -42,33 +40,25 @@ use std::usize::MAX;
 /// It returns a list of tuples representing the swaps to perform.
 ///
 /// # Example
-/// ```
-/// use petgraph::prelude::*;
-/// use hashbrown::HashSet;
-/// use rustworkx_core::connectivity::all_simple_paths_multiple_targets;
+/// ```rust
+/// use hashbrown::HashMap;
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::petgraph::graph::NodeIndex;
+/// use rustworkx_core::token_swapper::token_swapper;
 ///
-/// let mut graph = DiGraph::<&str, i32>::new();
-///
-/// let a = graph.add_node("a");
-/// let b = graph.add_node("b");
-/// let c = graph.add_node("c");
-/// let d = graph.add_node("d");
-///
-/// graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (a, b, 1), (b, d, 1)]);
-///
-/// let mut to_set = HashSet::new();
-/// to_set.insert(d);
-///
-/// let ways = all_simple_paths_multiple_targets(&graph, a, &to_set, 0, None);
-///
-/// let d_path = ways.get(&d).unwrap();
-/// assert_eq!(4, d_path.len());
+/// let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+///     (0, 1), (1, 2), (2, 3), (3, 4),
+/// ]);
+/// let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(0)), (NodeIndex::new(1), NodeIndex::new(3)), (NodeIndex::new(3), NodeIndex::new(1)), (NodeIndex::new(2), NodeIndex::new(2))]);
+/// // Do the token swap
+/// let output = token_swapper::<&petgraph::graph::Graph<(), ()>>(&g, mapping, Some(4), Some(4));
+/// assert_eq!(3, output.len());
 /// ```
 
 type Swap = (NodeIndex, NodeIndex);
 type Edge = (NodeIndex, NodeIndex);
 
-pub fn token_swapper<G, E>(
+pub fn token_swapper<G>(
     graph: G,
     mapping: HashMap<G::NodeId, G::NodeId>,
     trials: Option<usize>,
@@ -84,13 +74,11 @@ where
     G: IntoNeighborsDirected,
     G: IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
-    E: std::fmt::Debug,
 {
     let mut digraph = StableGraph::with_capacity(graph.node_count(), graph.edge_count());
     // sub_digraph is digraph without self edges
     let mut sub_digraph = StableGraph::with_capacity(graph.node_count(), graph.edge_count());
-    let mut todo_nodes: Vec<NodeIndex> = Vec::new();
-    let mut tokens = HashMap::with_capacity(mapping.len());
+    //let mut todo_nodes: Vec<NodeIndex> = Vec::new();
 
     let trials: usize = match trials {
         Some(trials) => trials,
@@ -103,11 +91,6 @@ where
     let between = Uniform::new(0, graph.node_count());
     let random: usize = between.sample(&mut rng_seed);
 
-    for (node, destination) in tokens.iter() {
-        if node != destination {
-            todo_nodes.push(*node);
-        }
-    }
     let mut node_map = HashMap::with_capacity(graph.node_count());
     let mut rev_node_map = HashMap::with_capacity(graph.node_count());
 
@@ -117,11 +100,12 @@ where
         node_map.insert(node, index);
         rev_node_map.insert(index, node);
     }
-    for (k, v) in mapping {
-        tokens.insert(node_map[&k], node_map[&v]);
-    }
+    let mut tokens: HashMap<NodeIndex, NodeIndex> = mapping.iter().map(|(k, v)| (node_map[&k], node_map[&v])).collect();
+    print!("\nTOKENS {:?}", tokens);
+    let mut todo_nodes: Vec<NodeIndex> = tokens.iter().map(|(node, dest)| {if node == dest {*node} else {*node}}).collect();
+
     for node in graph.node_identifiers() {
-        add_token_edges::<G, E>(
+        add_token_edges::<G>(
             graph,
             node_map[&node],
             &tokens,
@@ -133,7 +117,7 @@ where
     }
     let mut trial_results: Vec<Vec<Swap>> = Vec::new();
     for _ in 0..trials {
-        let results = trial_map::<G, E>(
+        let results = trial_map::<G>(
             graph,
             &mut digraph.clone(),
             &mut sub_digraph.clone(),
@@ -165,7 +149,7 @@ where
     final_result
 }
 
-fn add_token_edges<G, E>(
+fn add_token_edges<G>(
     graph: G,
     node: NodeIndex,
     tokens: &HashMap<NodeIndex, NodeIndex>,
@@ -179,7 +163,6 @@ fn add_token_edges<G, E>(
     G: Visitable,
     G: NodeIndexable,
     G::NodeId: Eq + Hash,
-    E: std::fmt::Debug,
 {
     let id_node = rev_node_map[&node];
     if !(tokens.contains_key(&node)) {
@@ -192,8 +175,8 @@ fn add_token_edges<G, E>(
     let id_token = rev_node_map[&tokens[&node]];
     for id_neighbor in graph.neighbors(id_node) {
         let neighbor = node_map[&id_neighbor];
-        if distance::<G, E>(graph, id_neighbor, id_token).unwrap()[&id_neighbor]
-            < distance::<G, E>(graph, id_node, id_token).unwrap()[&id_node]
+        if distance::<G>(graph, id_neighbor, id_token)[&id_neighbor]
+            < distance::<G>(graph, id_node, id_token)[&id_node]
         {
             digraph.add_edge(node, neighbor, ());
             sub_digraph.add_edge(node, neighbor, ());
@@ -201,21 +184,18 @@ fn add_token_edges<G, E>(
     }
 }
 
-fn distance<G, E>(
-    graph: G,
-    node0: G::NodeId,
-    node1: G::NodeId,
-) -> Result<DictMap<G::NodeId, usize>, E>
+fn distance<G>(graph: G, node0: G::NodeId, node1: G::NodeId) -> DictMap<G::NodeId, usize>
 where
     G: IntoEdges,
     G: Visitable,
     G: NodeIndexable,
     G::NodeId: Eq + Hash,
 {
-    dijkstra(&graph, node0, Some(node1), |_| Ok(1), None)
+    let res = dijkstra(&graph, node0, Some(node1), |_| Ok::<usize, &str>(1), None).unwrap();
+    res
 }
 
-fn trial_map<G, E>(
+fn trial_map<G>(
     graph: G,
     digraph: &mut StableGraph<(), (), Directed>,
     sub_digraph: &mut StableGraph<(), (), Directed>,
@@ -233,12 +213,13 @@ where
     G: IntoNodeIdentifiers,
     G: Visitable,
     G::NodeId: Eq + Hash,
-    E: std::fmt::Debug,
 {
+    print!("tokens {:?} todo_nodes {:?}", tokens, todo_nodes);
     let mut steps = 0;
     let mut swap_edges: Vec<Swap> = vec![];
     while todo_nodes.len() > 0 && steps <= 4 * digraph.node_count() ^ 2 {
         let todo_node = todo_nodes[*random];
+        print!("\ntodo_node {:?}", todo_node);
         let cycle = find_cycle(
             graph,
             digraph,
@@ -247,10 +228,11 @@ where
             node_map,
             rev_node_map,
         );
+        print!("\nFirst cycle {:?}", cycle);
         if cycle.len() > 0 {
             for edge in cycle[1..].iter().rev() {
                 swap_edges.push(*edge);
-                swap::<G, E>(
+                swap::<G>(
                     edge.0,
                     edge.1,
                     graph,
@@ -270,7 +252,7 @@ where
                 let new_edge = (NodeIndex::new(edge.0), NodeIndex::new(edge.1));
                 if !tokens.contains_key(&new_edge.1) {
                     swap_edges.push(new_edge);
-                    swap::<G, E>(
+                    swap::<G>(
                         new_edge.0,
                         new_edge.1,
                         graph,
@@ -289,13 +271,14 @@ where
             if !found {
                 let di2 = &mut digraph.clone();
                 let cycle = find_cycle(graph, di2, true, Some(todo_node), node_map, rev_node_map);
+                println!("CYCLE {:?}", cycle);
                 let unhappy_node = cycle[0].0;
                 let mut found = false;
                 for predecessor in di2.neighbors_directed(unhappy_node, Incoming) {
                     if predecessor == unhappy_node {
                         found = true;
                         swap_edges.push((unhappy_node, predecessor));
-                        swap::<G, E>(
+                        swap::<G>(
                             unhappy_node,
                             predecessor,
                             graph,
@@ -321,7 +304,7 @@ where
     swap_edges
 }
 
-fn swap<G, E>(
+fn swap<G>(
     node1: NodeIndex,
     node2: NodeIndex,
     graph: G,
@@ -337,7 +320,6 @@ fn swap<G, E>(
     G: Visitable,
     G: NodeIndexable,
     G::NodeId: Eq + Hash,
-    E: std::fmt::Debug,
 {
     let token1 = tokens.remove_entry(&node1);
     let token2 = tokens.remove_entry(&node2);
@@ -364,7 +346,7 @@ fn swap<G, E>(
             let edge = sub_digraph.find_edge(*edge_node1, edge_node2).unwrap();
             sub_digraph.remove_edge(edge);
         }
-        add_token_edges::<G, E>(
+        add_token_edges::<G>(
             graph,
             node,
             &tokens,
@@ -488,4 +470,28 @@ where
         }
     }
     cycle
+}
+
+#[cfg(test)]
+mod test_token_swapper {
+
+    use crate::petgraph;
+    use crate::token_swapper::token_swapper;
+    use hashbrown::HashMap;
+    use petgraph::graph::NodeIndex;
+
+    #[test]
+    fn test_simple_swap() {
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+        let mapping = HashMap::from([
+            (NodeIndex::new(0), NodeIndex::new(0)),
+            (NodeIndex::new(1), NodeIndex::new(3)),
+            (NodeIndex::new(3), NodeIndex::new(1)),
+            (NodeIndex::new(2), NodeIndex::new(2)),
+        ]);
+        // Do the token swap
+        let output =
+            token_swapper::<&petgraph::graph::Graph<(), ()>>(&g, mapping, Some(4), Some(4));
+        assert_eq!(3, output.len());
+    }
 }
