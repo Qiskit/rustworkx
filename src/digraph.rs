@@ -1724,6 +1724,42 @@ impl PyDiGraph {
         Err(NoSuitableNeighbors::new_err("No suitable neighbor"))
     }
 
+    /// Find a source node with a specific edge
+    ///
+    /// This method is used to find a predecessor of
+    /// a given node given an edge condition.
+    ///
+    /// :param int node: The node to use as the source of the search
+    /// :param callable predicate: A python callable that will take a single
+    ///     parameter, the edge object, and will return a boolean if the
+    ///     edge matches or not
+    ///
+    /// :returns: The node object that has an edge from it to the provided
+    ///     node index which matches the provided condition
+    #[pyo3(text_signature = "(self, node, predicate, /)")]
+    pub fn find_predecessor_node_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        predicate: PyObject,
+    ) -> PyResult<&PyObject> {
+        let predicate_callable = |a: &PyObject| -> PyResult<PyObject> {
+            let res = predicate.call1(py, (a,))?;
+            Ok(res.to_object(py))
+        };
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Incoming;
+        let edges = self.graph.edges_directed(index, dir);
+        for edge in edges {
+            let edge_predicate_raw = predicate_callable(edge.weight())?;
+            let edge_predicate: bool = edge_predicate_raw.extract(py)?;
+            if edge_predicate {
+                return Ok(self.graph.node_weight(edge.source()).unwrap());
+            }
+        }
+        Err(NoSuitableNeighbors::new_err("No suitable neighbor"))
+    }
+
     /// Generate a dot file from the graph
     ///
     /// :param node_attr: A callable that will take in a node data object
