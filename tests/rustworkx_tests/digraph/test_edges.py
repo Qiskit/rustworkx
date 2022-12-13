@@ -254,7 +254,7 @@ class TestEdges(unittest.TestCase):
         res = dag.find_predecessor_node_by_edge(node_b, compare_edges)
         self.assertEqual("a", res)
 
-    def test_find_adjacent_predecessor_node_by_edge_no_match(self):
+    def test_find_predecessor_node_by_edge_no_match(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
         node_b = dag.add_child(node_a, "b", "a to b")
