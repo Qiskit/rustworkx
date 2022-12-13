@@ -1737,7 +1737,7 @@ impl PyDiGraph {
     /// :returns: The node object that has an edge from it to the provided
     ///     node index which matches the provided condition
     #[pyo3(text_signature = "(self, node, predicate, /)")]
-    pub fn find_adjacent_predecessor_node_by_edge(
+    pub fn find_predecessor_node_by_edge(
         &self,
         py: Python,
         node: usize,
