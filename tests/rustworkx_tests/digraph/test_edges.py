@@ -241,6 +241,32 @@ class TestEdges(unittest.TestCase):
         with self.assertRaises(rustworkx.NoSuitableNeighbors):
             dag.find_adjacent_node_by_edge(node_a, compare_edges)
 
+    def test_find_predecessor_node_by_edge(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", "a to b")
+        node_c = dag.add_child(node_b, "c", "b to c")
+        dag.add_child(node_c, "d", "c to d")
+
+        def compare_edges(edge):
+            return "a to b" == edge
+
+        res = dag.find_predecessor_node_by_edge(node_b, compare_edges)
+        self.assertEqual("a", res)
+
+    def test_find_predecessor_node_by_edge_no_match(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", "a to b")
+        node_c = dag.add_child(node_b, "c", "b to c")
+        dag.add_child(node_c, "d", "c to d")
+
+        def compare_edges(edge):
+            return "b to c" == edge
+
+        with self.assertRaises(rustworkx.NoSuitableNeighbors):
+            dag.find_predecessor_node_by_edge(node_b, compare_edges)
+
     def test_add_edge_from(self):
         dag = rustworkx.PyDAG()
         nodes = list(range(4))
