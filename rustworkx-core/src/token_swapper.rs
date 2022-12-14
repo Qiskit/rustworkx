@@ -30,50 +30,32 @@ use crate::dictmap::*;
 use crate::shortest_path::dijkstra;
 use crate::traversal::dfs_edges;
 
-/// This module performs an approximately optimal Token Swapping algorithm
-/// Supports partial mappings (i.e. not-permutations) for graphs with missing self.tokens.
-///
-/// Based on the paper: Approximation and Hardness for Token Swapping by Miltzow et al. (2016)
-/// ArXiV: https://arxiv.org/abs/1602.05150
-/// and generalization based on our own work.
-///
-/// The inputs are a partial `mapping` to be implemented in swaps, and the number of `trials` to
-/// perform the mapping. It's minimized over the trials.
-///
-/// It returns a list of tuples representing the swaps to perform.
-///
-/// # Example
-/// ```rust
-/// use hashbrown::HashMap;
-/// use rustworkx_core::petgraph;
-/// use rustworkx_core::petgraph::graph::NodeIndex;
-/// use rustworkx_core::token_swapper::token_swapper;
-///
-/// let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
-///     (0, 1), (1, 2), (2, 3), (3, 4),
-/// ]);
-/// let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(0)), (NodeIndex::new(1), NodeIndex::new(3)), (NodeIndex::new(3), NodeIndex::new(1)), (NodeIndex::new(2), NodeIndex::new(2))]);
-/// // Do the token swap
-/// let output = token_swapper::<&petgraph::graph::Graph<(), ()>>(&g, mapping, Some(4), Some(4));
-/// assert_eq!(3, output.len());
-/// ```
-
 type Swap = (NodeIndex, NodeIndex);
 type Edge = (NodeIndex, NodeIndex);
 
-pub struct TokenSwapper<G: GraphBase>
+struct TokenSwapper<G: GraphBase>
 where
     G::NodeId: Eq + Hash + Debug,
 {
     graph: G,
+    // The user-supplied mapping to use for swapping tokens
     input_mapping: HashMap<G::NodeId, G::NodeId>,
+    // Number of trials
     trials: usize,
+    // Seed for random selection of a node for a trial
     rng_seed: Option<u64>,
+    // Directed graph with nodes matching ``graph`` and
+    // edges for neighbors closer than nodes
     digraph: StableGraph<(), (), Directed>,
+    // Same as digraph with no self edges
     sub_digraph: StableGraph<(), (), Directed>,
+    // The mapping as NodeIndex's
     tokens: HashMap<NodeIndex, NodeIndex>,
+    // A list of nodes that are remaining to be tried
     todo_nodes: Vec<NodeIndex>,
+    // Map of NodeId to NodeIndex
     node_map: HashMap<G::NodeId, NodeIndex>,
+    // Map of NodeIndex to NodeId
     rev_node_map: HashMap<NodeIndex, G::NodeId>,
 }
 
@@ -116,6 +98,59 @@ where
         }
     }
 
+    fn map(&mut self) -> Vec<Swap> {
+        let mut rng_seed: Pcg64 = match self.rng_seed {
+            Some(rng_seed) => Pcg64::seed_from_u64(self.rng_seed.unwrap()),
+            None => Pcg64::from_entropy(),
+        };
+        let between = Uniform::new(0, self.graph.node_count());
+        let random: usize = between.sample(&mut rng_seed);
+
+        for node in self.graph.node_identifiers() {
+            let index = self.digraph.add_node(());
+            self.sub_digraph.add_node(());
+            self.node_map.insert(node, index);
+            self.rev_node_map.insert(index, node);
+        }
+        self.tokens = self
+            .input_mapping
+            .iter()
+            .map(|(k, v)| (self.node_map[&k], self.node_map[&v]))
+            .collect();
+        print!("\nTOKENS {:?}", self.tokens);
+        for (node, dest) in &self.tokens {
+            if node != dest {
+                self.todo_nodes.push(*node);
+            }
+        }
+        for node in self.graph.node_identifiers() {
+            self.add_token_edges(self.node_map[&node]);
+        }
+        let mut trial_results: Vec<Vec<Swap>> = Vec::new();
+        for _ in 0..self.trials {
+            let results = self.trial_map(random);
+            trial_results.push(results);
+        }
+        let mut first_results: Vec<Vec<Swap>> = Vec::new();
+        for result in trial_results {
+            if result.len() == 0 {
+                first_results.push(result);
+                break;
+            }
+            first_results.push(result);
+        }
+        let mut res_min = MAX;
+        let mut final_result: Vec<Swap> = Vec::new();
+        for res in first_results {
+            let res_len = res.len();
+            if res_len < res_min {
+                final_result = res;
+                res_min = res_len;
+            }
+        }
+        final_result
+    }
+
     fn add_token_edges(&mut self, node: NodeIndex) {
         let id_node = self.rev_node_map[&node];
         if !(self.tokens.contains_key(&node)) {
@@ -129,33 +164,29 @@ where
         print!("\ntoken {:?} node {:?}", self.tokens[&node], node);
         for id_neighbor in self.graph.neighbors(id_node) {
             let neighbor = self.node_map[&id_neighbor];
-            // println!("\n node {:?} neigh {:?}", node, neighbor);
-            // println!("\n id_node {:?} id_neigh {:?}", id_node, id_neighbor);
-            // let mut d1 = distance::<G>(self.graph, id_token, id_neighbor);//
-            // let mut d2 = distance::<G>(self.graph, id_token, id_node);//[id_node];
-            // println!("\nd1 {:?} d2 {:?}", d1, d2);
-            // println!("d1 neighbor {:?} id_neighbor {:?} id_token {:?}", d1.get(&id_neighbor), id_neighbor, id_token);
-            // println!("d2 node {:?}", d2[&id_node]);
-            if self.distance(id_neighbor, id_token)[&id_neighbor]
-                < self.distance(id_node, id_token)[&id_node]
-            {
+            println!("\n node {:?} neigh {:?}", node, neighbor);
+            println!("\n id_node {:?} id_neigh {:?}", id_node, id_neighbor);
+            let dist_neighbor: Result<DictMap<G::NodeId, usize>, &str> = dijkstra(
+                &self.graph,
+                id_neighbor,
+                Some(id_token),
+                |_| Ok::<usize, &str>(1),
+                None,
+            );
+            let dist_node: Result<DictMap<G::NodeId, usize>, &str> = dijkstra(
+                &self.graph,
+                id_node,
+                Some(id_token),
+                |_| Ok::<usize, &str>(1),
+                None,
+            );
+            println!("\nd1 {:?} d2 {:?}", dist_neighbor, dist_node);
+            if dist_neighbor.unwrap()[&id_neighbor] < dist_node.unwrap()[&id_node] {
                 println!("Extending edges node {:?} neighbor {:?}", node, neighbor);
                 self.digraph.add_edge(node, neighbor, ());
                 self.sub_digraph.add_edge(node, neighbor, ());
             }
         }
-    }
-
-    fn distance(&mut self, node0: G::NodeId, node1: G::NodeId) -> DictMap<G::NodeId, usize> {
-        let res = dijkstra(
-            &self.graph,
-            node0,
-            Some(node1),
-            |_| Ok::<usize, &str>(1),
-            None,
-        )
-        .unwrap();
-        res
     }
 
     fn trial_map(&mut self, random: usize) -> Vec<Swap> {
@@ -254,54 +285,6 @@ where
                     .remove(self.todo_nodes.iter().position(|x| *x == node).unwrap());
             }
         }
-    }
-
-    pub fn map(&mut self) -> Vec<Swap> {
-        let mut rng_seed: Pcg64 = match self.rng_seed {
-            Some(rng_seed) => Pcg64::seed_from_u64(self.rng_seed.unwrap()),
-            None => Pcg64::from_entropy(),
-        };
-        let between = Uniform::new(0, self.graph.node_count());
-        let random: usize = between.sample(&mut rng_seed);
-
-        for node in self.graph.node_identifiers() {
-            let index = self.digraph.add_node(());
-            self.sub_digraph.add_node(());
-            self.node_map.insert(node, index);
-            self.rev_node_map.insert(index, node);
-        }
-        print!("\nTOKENS {:?}", self.tokens);
-        for (node, dest) in &self.tokens {
-            if node != dest {
-                self.todo_nodes.push(*node);
-            }
-        }
-        for node in self.graph.node_identifiers() {
-            self.add_token_edges(self.node_map[&node]);
-        }
-        let mut trial_results: Vec<Vec<Swap>> = Vec::new();
-        for _ in 0..self.trials {
-            let results = self.trial_map(random);
-            trial_results.push(results);
-        }
-        let mut first_results: Vec<Vec<Swap>> = Vec::new();
-        for result in trial_results {
-            if result.len() == 0 {
-                first_results.push(result);
-                break;
-            }
-            first_results.push(result);
-        }
-        let mut res_min = MAX;
-        let mut final_result: Vec<Swap> = Vec::new();
-        for res in first_results {
-            let res_len = res.len();
-            if res_len < res_min {
-                final_result = res;
-                res_min = res_len;
-            }
-        }
-        final_result
     }
 
     fn find_cycle(&mut self, use_digraph: bool, source: Option<NodeIndex>) -> Vec<Edge> {
@@ -404,11 +387,60 @@ where
     }
 }
 
+/// This module performs an approximately optimal Token Swapping algorithm
+/// Supports partial mappings (i.e. not-permutations) for graphs with missing self.tokens.
+///
+/// Based on the paper: Approximation and Hardness for Token Swapping by Miltzow et al. (2016)
+/// ArXiV: https://arxiv.org/abs/1602.05150
+/// and generalization based on our own work.
+///
+/// The inputs are a partial `mapping` to be implemented in swaps, and the number of `trials` to
+/// perform the mapping. It's minimized over the trials.
+///
+/// It returns a list of tuples representing the swaps to perform.
+///
+/// # Example
+/// ```rust
+/// use hashbrown::HashMap;
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::petgraph::graph::NodeIndex;
+/// use rustworkx_core::token_swapper::token_swapper;
+///
+/// let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+///     (0, 1), (1, 2), (2, 3), (3, 4),
+/// ]);
+/// let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(0)), (NodeIndex::new(1), NodeIndex::new(3)), (NodeIndex::new(3), NodeIndex::new(1)), (NodeIndex::new(2), NodeIndex::new(2))]);
+/// // Do the token swap
+/// let output = token_swapper::<&petgraph::graph::Graph<(), ()>>(&g, mapping, Some(4), Some(4));
+/// assert_eq!(3, output.len());
+/// ```
+
+pub fn token_swapper<G>(
+    graph: G,
+    mapping: HashMap<G::NodeId, G::NodeId>,
+    trials: Option<usize>,
+    seed: Option<u64>,
+) -> Vec<Swap>
+where
+    G: GraphBase
+        + NodeCount
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNeighborsDirected
+        + IntoNodeIdentifiers,
+    G::NodeId: Hash + Eq + Debug,
+{
+    let mut swapper = TokenSwapper::new(graph, mapping, trials, seed);
+    swapper.map()
+}
+
 #[cfg(test)]
 mod test_token_swapper {
 
     use crate::petgraph;
-    use crate::token_swapper::TokenSwapper;
+    use crate::token_swapper::token_swapper;
     use hashbrown::HashMap;
     use petgraph::graph::NodeIndex;
 
@@ -422,11 +454,9 @@ mod test_token_swapper {
             (NodeIndex::new(2), NodeIndex::new(2)),
         ]);
         // Do the token swap
-        let mut token_swapper = TokenSwapper::new(&g, mapping, Some(4), Some(4));
-        let output = token_swapper.map();
+        let output = token_swapper(&g, mapping, Some(4), Some(4));
+        //let output = token_swapper.map();
 
-        // let output =
-        //     token_swapper::<&petgraph::graph::UnGraph<(), ()>>(&g, mapping, Some(4), Some(4));
         assert_eq!(3, output.len());
     }
 }
