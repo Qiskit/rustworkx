@@ -2724,14 +2724,14 @@ impl PyDiGraph {
     }
 
     fn __getitem__(&self, idx: usize) -> PyResult<&PyObject> {
-        match self.graph.node_weight(NodeIndex::new(idx as usize)) {
+        match self.graph.node_weight(NodeIndex::new(idx)) {
             Some(data) => Ok(data),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 
     fn __setitem__(&mut self, idx: usize, value: PyObject) -> PyResult<()> {
-        let data = match self.graph.node_weight_mut(NodeIndex::new(idx as usize)) {
+        let data = match self.graph.node_weight_mut(NodeIndex::new(idx)) {
             Some(node_data) => node_data,
             None => return Err(PyIndexError::new_err("No node found for index")),
         };
@@ -2740,7 +2740,7 @@ impl PyDiGraph {
     }
 
     fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
-        match self.graph.remove_node(NodeIndex::new(idx as usize)) {
+        match self.graph.remove_node(NodeIndex::new(idx)) {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
