@@ -1746,7 +1746,7 @@ impl PyGraph {
     }
 
     fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
-        match self.graph.remove_node(NodeIndex::new(idx as usize)) {
+        match self.graph.remove_node(NodeIndex::new(idx)) {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
