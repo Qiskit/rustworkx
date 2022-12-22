@@ -44,15 +44,6 @@ where
     trials: usize,
     // Seed for random selection of a node for a trial
     rng_seed: Option<u64>,
-    // Directed graph with nodes matching ``graph`` and
-    // edges for neighbors closer than nodes
-    digraph: StableGraph<(), (), Directed>,
-    // Same as digraph with no self edges
-    sub_digraph: StableGraph<(), (), Directed>,
-    // The mapping as NodeIndex's
-    tokens: HashMap<NodeIndex, NodeIndex>,
-    // A list of nodes that are remaining to be tried
-    todo_nodes: Vec<NodeIndex>,
     // Map of NodeId to NodeIndex
     node_map: HashMap<G::NodeId, NodeIndex>,
     // Map of NodeIndex to NodeId
@@ -77,10 +68,6 @@ where
         trials: Option<usize>,
         seed: Option<u64>,
     ) -> Self {
-        let num_nodes = graph.node_count();
-        let num_edges = graph.edge_count();
-        let map_len = mapping.len();
-
         TokenSwapper {
             graph,
             input_mapping: mapping,
@@ -89,59 +76,67 @@ where
                 None => 4,
             },
             rng_seed: seed,
-            digraph: StableGraph::with_capacity(num_nodes, num_edges),
-            sub_digraph: StableGraph::with_capacity(num_nodes, num_edges),
-            tokens: HashMap::with_capacity(map_len),
-            todo_nodes: Vec::with_capacity(map_len),
-            node_map: HashMap::with_capacity(num_nodes),
-            rev_node_map: HashMap::with_capacity(num_nodes),
+            node_map: HashMap::with_capacity(graph.node_count()),
+            rev_node_map: HashMap::with_capacity(graph.node_count()),
         }
     }
 
     fn map(&mut self) -> Vec<Swap> {
+        let num_nodes = self.graph.node_count();
+        let num_edges = self.graph.edge_count();
+
+        // Directed graph with nodes matching ``graph`` and
+        // edges for neighbors closer than nodes
+        let mut digraph = StableGraph::with_capacity(num_nodes, num_edges);
+        // Same as digraph with no self edges
+        let mut sub_digraph = StableGraph::with_capacity(num_nodes, num_edges);
+        // A list of nodes that are remaining to be tried
+        let mut todo_nodes = Vec::with_capacity(self.input_mapping.len());
+
         let mut rng_seed: Pcg64 = match self.rng_seed {
             Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
             None => Pcg64::from_entropy(),
         };
+        // Add nodes to the digraph/sub_digraph and build the node maps
         for node in self.graph.node_identifiers() {
-            let index = self.digraph.add_node(());
-            self.sub_digraph.add_node(());
+            let index = digraph.add_node(());
+            sub_digraph.add_node(());
             self.node_map.insert(node, index);
             self.rev_node_map.insert(index, node);
         }
-        self.tokens = self
+        // The input mapping in HashMap form using NodeIndex
+        let mut tokens: HashMap<NodeIndex, NodeIndex> = self
             .input_mapping
             .iter()
             .map(|(k, v)| (self.node_map[&k], self.node_map[&v]))
             .collect();
-        for (node, dest) in &self.tokens {
+        for (node, dest) in &tokens {
             if node != dest {
-                self.todo_nodes.push(*node);
+                todo_nodes.push(*node);
             }
         }
-        let mut di_dummy = StableGraph::with_capacity(0, 0);
-        let mut sub_di_dummy = StableGraph::with_capacity(0, 0);
-        let mut token_dummy = HashMap::new();
-         for node in self.graph.node_identifiers() {
+        // Add initial edges to the digraph/sub_digraph
+        for node in self.graph.node_identifiers() {
             self.add_token_edges(
                 self.node_map[&node],
-                &mut token_dummy,
-                &mut di_dummy,
-                &mut sub_di_dummy,
-                false,
+                &mut digraph,
+                &mut sub_digraph,
+                &mut tokens,
             );
         }
+        // Do the trials and build a results Vec
         let mut trial_results: Vec<Vec<Swap>> = Vec::new();
         for _ in 0..self.trials {
             let results = self.trial_map(
-                &mut self.digraph.clone(),
-                &mut self.sub_digraph.clone(),
-                &mut self.tokens.clone(),
-                &mut self.todo_nodes.clone(),
+                &mut digraph.clone(),
+                &mut sub_digraph.clone(),
+                &mut tokens.clone(),
+                &mut todo_nodes.clone(),
                 &mut rng_seed,
             );
             trial_results.push(results);
         }
+        // Build the first results Vec until a 0 len result is found
         let mut first_results: Vec<Vec<Swap>> = Vec::new();
         for result in trial_results {
             if result.len() == 0 {
@@ -150,6 +145,7 @@ where
             }
             first_results.push(result);
         }
+        // Return the min of the first results
         let mut res_min = MAX;
         let mut final_result: Vec<Swap> = Vec::new();
         for res in first_results {
@@ -165,30 +161,19 @@ where
     fn add_token_edges(
         &mut self,
         node: NodeIndex,
-        tokens: &mut HashMap<NodeIndex, NodeIndex>,
         digraph: &mut StableGraph<(), (), Directed>,
         sub_digraph: &mut StableGraph<(), (), Directed>,
-        not_self: bool,
+        tokens: &mut HashMap<NodeIndex, NodeIndex>,
     ) {
-        let tokens2: &mut HashMap<NodeIndex, NodeIndex>;
-        if not_self {
-            tokens2 = tokens;
-        } else {
-            tokens2 = &mut self.tokens;
-        }
-        if !(tokens2.contains_key(&node)) {
+        if !(tokens.contains_key(&node)) {
             return;
         }
-        if tokens2[&node] == node {
-            if not_self {
-                digraph.update_edge(node, node, ());
-            } else {
-                self.digraph.update_edge(node, node, ());
-            }
+        if tokens[&node] == node {
+            digraph.update_edge(node, node, ());
             return;
         }
         let id_node = self.rev_node_map[&node];
-        let id_token = self.rev_node_map[&tokens2[&node]];
+        let id_token = self.rev_node_map[&tokens[&node]];
         for id_neighbor in self.graph.neighbors(id_node) {
             let neighbor = self.node_map[&id_neighbor];
             let dist_neighbor: Result<DictMap<G::NodeId, usize>, &str> = dijkstra(
@@ -206,13 +191,8 @@ where
                 None,
             );
             if dist_neighbor.unwrap()[&id_token] < dist_node.unwrap()[&id_token] {
-                if not_self {
-                    digraph.update_edge(node, neighbor, ());
-                    sub_digraph.update_edge(node, neighbor, ());
-                } else {
-                    self.digraph.update_edge(node, neighbor, ());
-                    self.sub_digraph.update_edge(node, neighbor, ());
-                }
+                digraph.update_edge(node, neighbor, ());
+                sub_digraph.update_edge(node, neighbor, ());
             }
         }
     }
@@ -326,14 +306,12 @@ where
                 let edge = sub_digraph.find_edge(edge_node1, edge_node2).unwrap();
                 sub_digraph.remove_edge(edge);
             }
-            self.add_token_edges(node, tokens, digraph, sub_digraph, true);
+            self.add_token_edges(node, digraph, sub_digraph, tokens);
             if tokens.contains_key(&node) && tokens[&node] != node {
                 if !todo_nodes.contains(&node) {
-                    println!("DID PUSH");
                     todo_nodes.push(node);
                 }
             } else if todo_nodes.contains(&node) {
-                println!("DID REMOVE");
                 todo_nodes.swap_remove(todo_nodes.iter().position(|x| *x == node).unwrap());
             }
         }
@@ -476,4 +454,100 @@ mod test_token_swapper {
         let output = token_swapper(&g, mapping, Some(4), Some(4));
         assert_eq!(3, output.len());
     }
+
+    #[test]
+    fn test_small_swap() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]);
+        let mapping = HashMap::from([
+            (NodeIndex::new(0), NodeIndex::new(7)),
+            (NodeIndex::new(1), NodeIndex::new(6)),
+            (NodeIndex::new(2), NodeIndex::new(5)),
+            (NodeIndex::new(3), NodeIndex::new(4)),
+            (NodeIndex::new(4), NodeIndex::new(3)),
+            (NodeIndex::new(5), NodeIndex::new(2)),
+            (NodeIndex::new(6), NodeIndex::new(1)),
+            (NodeIndex::new(7), NodeIndex::new(0)),
+        ]);
+        // let swaps = vec!([
+        //     (NodeIndex::new(0), NodeIndex::new(0)),
+        //     (NodeIndex::new(1), NodeIndex::new(1)),
+        //     (NodeIndex::new(2), NodeIndex::new(2)),
+        //     (NodeIndex::new(3), NodeIndex::new(3)),
+        //     (NodeIndex::new(4), NodeIndex::new(4)),
+        //     (NodeIndex::new(5), NodeIndex::new(5)),
+        //     (NodeIndex::new(6), NodeIndex::new(6)),
+        //     (NodeIndex::new(7), NodeIndex::new(7)),
+        // ]);
+        // Do the token swap
+        let output = token_swapper(&g, mapping, Some(4), Some(4));
+        println!("{:?}", output);
+        assert_eq!(3, 4);
+        //assert_eq!(output, swaps);
+    }
 }
+// def test_small(self) -> None:
+//     """Test an inverting permutation on a small path graph of size 8"""
+//     graph = rx.generators.path_graph(8)
+//     permutation = {i: 7 - i for i in range(8)}
+//     swapper = ApproximateTokenSwapper(graph)  # type: ApproximateTokenSwapper[int]
+
+//     out = list(swapper.map(permutation))
+//     util.swap_permutation([out], permutation)
+//     self.assertEqual({i: i for i in range(8)}, permutation)
+
+// def test_bug1(self) -> None:
+//     """Tests for a bug that occured in happy swap chains of length >2."""
+//     graph = rx.PyGraph()
+//     graph.extend_from_edge_list(
+//         [(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4), (3, 6)]
+//     )
+//     permutation = {0: 4, 1: 0, 2: 3, 3: 6, 4: 2, 6: 1}
+//     swapper = ApproximateTokenSwapper(graph)  # type: ApproximateTokenSwapper[int]
+
+//     out = list(swapper.map(permutation))
+//     util.swap_permutation([out], permutation)
+//     self.assertEqual({i: i for i in permutation}, permutation)
+
+// def test_partial_simple(self) -> None:
+//     """Test a partial mapping on a small graph."""
+//     graph = rx.generators.path_graph(4)
+//     mapping = {0: 3}
+//     swapper = ApproximateTokenSwapper(graph)  # type: ApproximateTokenSwapper[int]
+//     out = list(swapper.map(mapping))
+//     self.assertEqual(3, len(out))
+//     util.swap_permutation([out], mapping, allow_missing_keys=True)
+//     self.assertEqual({3: 3}, mapping)
+
+// def test_partial_small(self) -> None:
+//     """Test an partial inverting permutation on a small path graph of size 5"""
+//     graph = rx.generators.path_graph(4)
+//     permutation = {i: 3 - i for i in range(2)}
+//     swapper = ApproximateTokenSwapper(graph)  # type: ApproximateTokenSwapper[int]
+
+//     out = list(swapper.map(permutation))
+//     self.assertEqual(5, len(out))
+//     util.swap_permutation([out], permutation, allow_missing_keys=True)
+//     self.assertEqual({i: i for i in permutation.values()}, permutation)
+
+// def test_large_partial_random(self) -> None:
+//     """Test a random (partial) mapping on a large randomly generated graph"""
+//     size = 100
+//     # Note that graph may have "gaps" in the node counts, i.e. the numbering is noncontiguous.
+//     graph = rx.undirected_gnm_random_graph(size, size**2 // 10)
+//     for i in graph.node_indexes():
+//         try:
+//             graph.remove_edge(i, i)  # Remove self-loops.
+//         except rx.NoEdgeBetweenNodes:
+//             continue
+//     # Make sure the graph is connected by adding C_n
+//     graph.add_edges_from_no_data([(i, i + 1) for i in range(len(graph) - 1)])
+//     swapper = ApproximateTokenSwapper(graph)  # type: ApproximateTokenSwapper[int]
+
+//     # Generate a randomized permutation.
+//     rand_perm = random.permutation(graph.nodes())
+//     permutation = dict(zip(graph.nodes(), rand_perm))
+//     mapping = dict(itertools.islice(permutation.items(), 0, size, 2))  # Drop every 2nd element.
+
+//     out = list(swapper.map(mapping, trials=40))
+//     util.swap_permutation([out], mapping, allow_missing_keys=True)
+//     self.assertEqual({i: i for i in mapping.values()}, mapping)
