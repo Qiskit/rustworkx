@@ -71,10 +71,7 @@ where
         TokenSwapper {
             graph,
             input_mapping: mapping,
-            trials: match trials {
-                Some(trials) => trials,
-                None => 4,
-            },
+            trials: trials.unwrap_or(4),
             rng_seed: seed,
             node_map: HashMap::with_capacity(graph.node_count()),
             rev_node_map: HashMap::with_capacity(graph.node_count()),
@@ -108,7 +105,7 @@ where
         let mut tokens: HashMap<NodeIndex, NodeIndex> = self
             .input_mapping
             .iter()
-            .map(|(k, v)| (self.node_map[&k], self.node_map[&v]))
+            .map(|(k, v)| (self.node_map[k], self.node_map[v]))
             .collect();
         // todo_nodes are all the mapping entries where left != right
         for (node, dest) in &tokens {
@@ -140,7 +137,7 @@ where
         // Build the first results Vec until a 0 len result is found
         let mut first_results: Vec<Vec<Swap>> = Vec::new();
         for result in trial_results {
-            if result.len() == 0 {
+            if result.is_empty() {
                 first_results.push(result);
                 break;
             }
@@ -212,7 +209,7 @@ where
         // Create a random trial list of swaps to move tokens to optimal positions
         let mut steps = 0;
         let mut swap_edges: Vec<Swap> = vec![];
-        while todo_nodes.len() > 0 && steps <= 4 * digraph.node_count() ^ 2 {
+        while !todo_nodes.is_empty() && steps <= 4 * (digraph.node_count() ^ 2) {
             // Choose a random todo_node
             let between = Uniform::new(0, todo_nodes.len());
             let random: usize = between.sample(rng_seed);
@@ -220,7 +217,7 @@ where
 
             // If there's a cycle in sub_digraph, add it to swap_edges and do swap
             let cycle = find_cycle(sub_digraph, Some(todo_node));
-            if cycle.len() > 0 {
+            if !cycle.is_empty() {
                 for edge in cycle[1..].iter().rev() {
                     swap_edges.push(*edge);
                     self.swap(edge.0, edge.1, digraph, sub_digraph, tokens, todo_nodes);
@@ -278,7 +275,7 @@ where
                 }
             }
         }
-        if todo_nodes.len() != 0 {
+        if !todo_nodes.is_empty() {
             panic!("got todo nodes");
         }
         swap_edges
@@ -298,11 +295,11 @@ where
         let token2 = tokens.remove(&node2);
 
         // Swap the token edge values
-        if token2.is_some() {
-            tokens.insert(node1, token2.unwrap());
+        if let Some(t2) = token2 {
+            tokens.insert(node1, t2);
         }
-        if token1.is_some() {
-            tokens.insert(node2, token1.unwrap());
+        if let Some(t1) = token1 {
+            tokens.insert(node2, t1);
         }
         // For each node, remove the (node, successor) from digraph and
         // sub_digraph. Then add new token edges back in.
@@ -475,11 +472,11 @@ mod test_token_swapper {
                 temp_node2 = Some(mapping[swap2]);
                 mapping.remove(swap2);
             }
-            if temp_node1.is_some() {
-                mapping.insert(*swap2, temp_node1.unwrap());
+            if let Some(t1) = temp_node1 {
+                mapping.insert(*swap2, t1);
             }
-            if temp_node2.is_some() {
-                mapping.insert(*swap1, temp_node2.unwrap());
+            if let Some(t2) = temp_node2 {
+                mapping.insert(*swap1, t2);
             }
         }
     }
