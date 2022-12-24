@@ -453,7 +453,6 @@ where
     swapper.map()
 }
 
-
 #[cfg(test)]
 mod test_token_swapper {
 
@@ -462,10 +461,7 @@ mod test_token_swapper {
     use hashbrown::HashMap;
     use petgraph::graph::NodeIndex;
 
-    fn do_swap(
-        mapping: &mut HashMap<NodeIndex, NodeIndex>,
-        swaps: &Vec<(NodeIndex, NodeIndex)>,
-    ) {
+    fn do_swap(mapping: &mut HashMap<NodeIndex, NodeIndex>, swaps: &Vec<(NodeIndex, NodeIndex)>) {
         // Apply the swaps to the mapping to get final result
         for (swap1, swap2) in swaps {
             //Need to create temp nodes in case of partial mapping
@@ -506,10 +502,17 @@ mod test_token_swapper {
     fn test_small_swap() {
         // Reverse all small swap
         let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
-            (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]);
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+        ]);
         let mut mapping = HashMap::with_capacity(8);
         for i in 0..8 {
-            mapping.insert(NodeIndex::new(i), NodeIndex::new(7-i));
+            mapping.insert(NodeIndex::new(i), NodeIndex::new(7 - i));
         }
         // Do the token swap
         let mut new_map = mapping.clone();
@@ -526,8 +529,18 @@ mod test_token_swapper {
     fn test_happy_swap_chain() {
         // Reverse all small swap
         let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
-            (0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4), (3, 6)]
-        );
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (0, 4),
+            (1, 2),
+            (1, 3),
+            (1, 4),
+            (2, 3),
+            (2, 4),
+            (3, 4),
+            (3, 6),
+        ]);
         let mapping = HashMap::from([
             (NodeIndex::new(0), NodeIndex::new(4)),
             (NodeIndex::new(1), NodeIndex::new(0)),
@@ -551,9 +564,7 @@ mod test_token_swapper {
     fn test_partial_simple() {
         // Simple partial swap
         let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
-        let mapping = HashMap::from([
-            (NodeIndex::new(0), NodeIndex::new(3)),
-        ]);
+        let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(3))]);
         let mut new_map = mapping.clone();
         let swaps = token_swapper(&g, mapping, Some(4), Some(4));
         do_swap(&mut new_map, &swaps);
