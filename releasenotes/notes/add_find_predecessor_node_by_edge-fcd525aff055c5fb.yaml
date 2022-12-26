@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Add a method
+    :meth:`~rustworkx.DiGraph.find_predecessor_node_by_edge` to get
+    the immediate predecessor of a node which is connected by the
+    specified edge.
