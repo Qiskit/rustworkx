@@ -423,8 +423,6 @@ fn find_cycle(graph: &mut StableGraph<(), (), Directed>, source: Option<NodeInde
 ///  ]);
 ///  // Do the token swap
 ///  let output = token_swapper(&g, mapping, Some(4), Some(4));
-///  //let output = token_swapper.map();
-///
 ///  assert_eq!(3, output.len());
 ///
 /// ```
@@ -524,7 +522,7 @@ mod test_token_swapper {
 
     #[test]
     fn test_happy_swap_chain() {
-        // Reverse all small swap
+        // Reverse all happy swap chain > 2
         let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
             (0, 1),
             (0, 2),
