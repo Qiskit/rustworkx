@@ -444,7 +444,6 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(graph_token_swapper))?;
-    //m.add_wrapped(wrap_pyfunction!(digraph_token_swapper))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;

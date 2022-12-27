@@ -37,6 +37,7 @@ struct TokenSwapper<G: GraphBase>
 where
     G::NodeId: Eq + Hash + Debug,
 {
+    // The input graph
     graph: G,
     // The user-supplied mapping to use for swapping tokens
     input_mapping: HashMap<G::NodeId, G::NodeId>,
@@ -209,7 +210,7 @@ where
         // Create a random trial list of swaps to move tokens to optimal positions
         let mut steps = 0;
         let mut swap_edges: Vec<Swap> = vec![];
-        while !todo_nodes.is_empty() && steps <= 4 * (digraph.node_count() ^ 2) {
+        while !todo_nodes.is_empty() && steps <= 4 * digraph.node_count().pow(2) {
             // Choose a random todo_node
             let between = Uniform::new(0, todo_nodes.len());
             let random: usize = between.sample(rng_seed);
