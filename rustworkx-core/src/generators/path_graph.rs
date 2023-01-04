@@ -22,7 +22,7 @@ use super::InvalidInputError;
 ///
 /// * `num_nodes` - The number of nodes to create a path graph for. Either this or
 ///     `weights must be specified. If both this and `weights are specified, weights
-///     will take priorty and this argument will be ignored.
+///     will take priorty and this argument will be ignored
 /// * `weights` - A `Vec` of node weight objects.
 /// * `default_node_weight` - A callable that will return the weight to use
 ///     for newly created nodes. This is ignored if `weights` is specified,
@@ -47,7 +47,7 @@ use super::InvalidInputError;
 ///     false
 /// ).unwrap();
 /// assert_eq!(
-///     vec![(0, 1), (1, 2), (2, 3), (3, 0)],
+///     vec![(0, 1), (1, 2), (2, 3)],
 ///     g.edge_references()
 ///         .map(|edge| (edge.source().index(), edge.target().index()))
 ///         .collect::<Vec<(usize, usize)>>(),
