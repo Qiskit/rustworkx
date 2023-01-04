@@ -96,17 +96,16 @@ where
             }
         }
     };
-    let zero_index = NodeIndex::new(0);
-    for node_index in 1..node_len {
-        //Add edges in both directions if bidirection is True
-        let node = NodeIndex::new(node_index);
+    let zero_index = graph.from_index(0);
+    for a in 1..node_len {
+        let node = graph.from_index(a);
         if bidirectional {
-            graph.add_edge(node, zero_index, py.None());
-            graph.add_edge(zero_index, node, py.None());
+            graph.add_edge(zero_index, node, default_edge_weight());
+            graph.add_edge(node, zero_index, default_edge_weight());
         } else if inward {
-            graph.add_edge(node, zero_index, py.None());
+            graph.add_edge(node, zero_index, default_edge_weight());
         } else {
-            graph.add_edge(zero_index, node, py.None());
+            graph.add_edge(zero_index, node, default_edge_weight());
         }
     }
     Ok(graph)
@@ -122,7 +121,7 @@ mod tests {
     #[test]
     fn test_with_weights() {
         let g: petgraph::graph::UnGraph<usize, ()> =
-            star_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), false).unwrap();
+            star_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), false, false).unwrap();
         assert_eq!(
             vec![(0, 1), (0, 2), (0, 3)],
             g.edge_references()
@@ -136,9 +135,25 @@ mod tests {
     }
 
     #[test]
+    fn test_with_weights_inward() {
+        let g: petgraph::graph::UnGraph<usize, ()> =
+            star_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), false, true).unwrap();
+        assert_eq!(
+            vec![(1, 0), (2, 0), (3, 0)],
+            g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
+        assert_eq!(
+            vec![0, 1, 2, 3],
+            g.node_weights().copied().collect::<Vec<usize>>(),
+        );
+    }
+
+    #[test]
     fn test_bidirectional() {
         let g: petgraph::graph::DiGraph<(), ()> =
-            star_graph(Some(4), None, || (), || (), true).unwrap();
+            star_graph(Some(4), None, || (), || (), true, false).unwrap();
         assert_eq!(
             vec![(0, 1), (1, 0), (0, 2), (2, 0), (0, 3), (3, 0),],
             g.edge_references()
@@ -154,6 +169,7 @@ mod tests {
             None,
             || (),
             || (),
+            false,
             false,
         ) {
             Ok(_) => panic!("Returned a non-error"),
