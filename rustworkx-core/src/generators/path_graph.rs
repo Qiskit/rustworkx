@@ -130,14 +130,7 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             path_graph(Some(4), None, || (), || (), true).unwrap();
         assert_eq!(
-            vec![
-                (0, 1),
-                (1, 0),
-                (1, 2),
-                (2, 1),
-                (2, 3),
-                (3, 2),
-            ],
+            vec![(0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2),],
             g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
