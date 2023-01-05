@@ -193,15 +193,20 @@ pub fn directed_path_graph(
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Directed> =
-        match core_generators::path_graph(num_nodes, weights, default_fn, default_fn, bidirectional) {
-            Ok(graph) => graph,
-            Err(_) => {
-                return Err(PyIndexError::new_err(
-                    "num_nodes and weights list not specified",
-                ))
-            }
-        };
+    let graph: StablePyGraph<Directed> = match core_generators::path_graph(
+        num_nodes,
+        weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
+        }
+    };
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
