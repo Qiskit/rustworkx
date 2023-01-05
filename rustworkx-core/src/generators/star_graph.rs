@@ -100,8 +100,8 @@ where
     for a in 1..node_len {
         let node = graph.from_index(a);
         if bidirectional {
-            graph.add_edge(zero_index, node, default_edge_weight());
             graph.add_edge(node, zero_index, default_edge_weight());
+            graph.add_edge(zero_index, node, default_edge_weight());
         } else if inward {
             graph.add_edge(node, zero_index, default_edge_weight());
         } else {
@@ -155,7 +155,7 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             star_graph(Some(4), None, || (), || (), false, true).unwrap();
         assert_eq!(
-            vec![(0, 1), (1, 0), (0, 2), (2, 0), (0, 3), (3, 0),],
+            vec![(1, 0), (0, 1), (2, 0), (0, 2), (3, 0), (0, 3)],
             g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
