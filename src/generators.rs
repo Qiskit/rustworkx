@@ -25,6 +25,7 @@ use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
 use super::{digraph, graph, StablePyGraph};
+use rustworkx_core::generators::complete_graph as complete_graph_core;
 
 pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
 where
@@ -2524,7 +2525,22 @@ pub fn complete_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    mesh_graph(py, num_nodes, weights, multigraph)
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match complete_graph_core(num_nodes, weights, default_fn, default_fn) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
+            }
+        };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
 }
 
 /// Generate a directed complete graph with ``n`` nodes.
@@ -2557,7 +2573,7 @@ pub fn complete_graph(
 ///  graph = rustworkx.generators.directed_complete_graph(5)
 ///  mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
+#[pyfunction(multigraph = "true")]
 #[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
 pub fn directed_complete_graph(
     py: Python,
@@ -2565,7 +2581,24 @@ pub fn directed_complete_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    directed_mesh_graph(py, num_nodes, weights, multigraph)
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> =
+        match complete_graph_core(num_nodes, weights, default_fn, default_fn) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
+            }
+        };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph,
+        attrs: py.None(),
+    })
 }
 
 #[pymodule]

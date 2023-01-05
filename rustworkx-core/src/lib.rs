@@ -71,6 +71,7 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 /// Module for centrality algorithms.
 pub mod centrality;
 pub mod connectivity;
+pub mod generators;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
 pub mod planar;
