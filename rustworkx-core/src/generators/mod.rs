@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Licensed under the Apache License, Version 2.0 (the "License"); you may
 // not use this file except in compliance with the License. You may obtain
 // a copy of the License at
@@ -12,6 +13,7 @@
 
 //! This module contains generator functions for building graphs
 
+mod cycle_graph;
 mod path_graph;
 
 mod utils;
@@ -31,4 +33,5 @@ impl fmt::Display for InvalidInputError {
     }
 }
 
+pub use cycle_graph::cycle_graph;
 pub use path_graph::path_graph;
