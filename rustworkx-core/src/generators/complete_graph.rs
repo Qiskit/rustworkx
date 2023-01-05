@@ -10,7 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-//use petgraph::GraphProp;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, GraphProp, NodeIndexable};
 
@@ -42,10 +41,9 @@ use super::InvalidInputError;
 ///     None,
 ///     || {()},
 ///     || {()},
-///     false
 /// ).unwrap();
 /// assert_eq!(
-///     vec![(0, 1), (1, 2), (2, 3)],
+///     vec![(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)],
 ///     g.edge_references()
 ///         .map(|edge| (edge.source().index(), edge.target().index()))
 ///         .collect::<Vec<(usize, usize)>>(),
@@ -100,93 +98,99 @@ where
 mod tests {
     use crate::generators::complete_graph;
     use crate::generators::InvalidInputError;
-    use crate::petgraph;
-    use crate::petgraph::visit::EdgeRef;
+    use crate::petgraph::graph::{DiGraph, NodeIndex, UnGraph};
 
     #[test]
     fn test_directed_complete_graph() {
-        let g: petgraph::graph::DiGraph<(), ()> =
-            complete_graph(Some(10), None, || (), || ()).unwrap();
+        let g: DiGraph<(), ()> = complete_graph(Some(10), None, || (), || ()).unwrap();
         assert_eq!(g.node_count(), 10);
         assert_eq!(g.edge_count(), 90);
-        let elist = vec![];
+        let mut elist = vec![];
         for i in 0..10 {
-            for j in 0..19_i32.iter().rev() {
+            for j in i..10 {
                 if i != j {
-                    elist.push((i, j));
+                    elist.push(Some((i, j)));
+                    elist.push(Some((j, i)));
                 }
             }
-            assert_eq!(g.edges(i), elist);
         }
-    //         ls = []
-    //         for j in range(19, -1, -1):
-    //             if i != j:
-    //                 ls.append((i, j, None))
-    //         self.assertEqual(graph.out_edges(i), ls)
+        let mut g_edges = vec![];
+        for e in g.edge_indices() {
+            g_edges.push(g.edge_endpoints(e).map(|(s, t)| (s.index(), t.index())));
+        }
+        assert_eq!(elist, g_edges);
     }
 
     #[test]
     fn test_directed_complete_graph_weights() {
+        let g: DiGraph<usize, ()> =
+            complete_graph(None, Some(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), || 4, || ()).unwrap();
+        assert_eq!(g.node_count(), 10);
+        assert_eq!(g.edge_count(), 90);
+        let mut elist = vec![];
+        for i in 0..10 {
+            for j in i..10 {
+                if i != j {
+                    elist.push(Some((i, j)));
+                    elist.push(Some((j, i)));
+                }
+            }
+            assert_eq!(*g.node_weight(NodeIndex::new(i)).unwrap(), i);
+        }
+        let mut g_edges = vec![];
+        for e in g.edge_indices() {
+            g_edges.push(g.edge_endpoints(e).map(|(s, t)| (s.index(), t.index())));
+        }
+        assert_eq!(elist, g_edges);
     }
 
     #[test]
-    fn test_error() {
-        match complete_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            None,
-            None,
-            || (),
-            || (),
-        ) {
+    fn test_compete_graph_error() {
+        match complete_graph::<DiGraph<(), ()>, (), _, _, ()>(None, None, || (), || ()) {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
         };
     }
+
+    #[test]
+    fn test_complete_graph() {
+        let g: UnGraph<(), ()> = complete_graph(Some(10), None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 10);
+        assert_eq!(g.edge_count(), 45);
+        let mut elist = vec![];
+        for i in 0..10 {
+            for j in i..10 {
+                if i != j {
+                    elist.push(Some((i, j)));
+                }
+            }
+        }
+        let mut g_edges = vec![];
+        for e in g.edge_indices() {
+            g_edges.push(g.edge_endpoints(e).map(|(s, t)| (s.index(), t.index())));
+        }
+        assert_eq!(elist, g_edges);
+    }
+
+    #[test]
+    fn test_complete_graph_weights() {
+        let g: UnGraph<usize, ()> =
+            complete_graph(None, Some(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), || 4, || ()).unwrap();
+        assert_eq!(g.node_count(), 10);
+        assert_eq!(g.edge_count(), 45);
+        let mut elist = vec![];
+        for i in 0..10 {
+            for j in i..10 {
+                if i != j {
+                    elist.push(Some((i, j)));
+                }
+            }
+            assert_eq!(*g.node_weight(NodeIndex::new(i)).unwrap(), i);
+        }
+        let mut g_edges = vec![];
+        for e in g.edge_indices() {
+            g_edges.push(g.edge_endpoints(e).map(|(s, t)| (s.index(), t.index())));
+        }
+        assert_eq!(elist, g_edges);
+    }
 }
-    //     graph = rustworkx.generators.directed_mesh_graph(20)
-    //     self.assertEqual(len(graph), 20)
-    //     self.assertEqual(len(graph.edges()), 380)
-    //     for i in range(20):
-    //         ls = []
-    //         for j in range(19, -1, -1):
-    //             if i != j:
-    //                 ls.append((i, j, None))
-    //         self.assertEqual(graph.out_edges(i), ls)
-
-    // def test_directed_mesh_graph_weights(self):
-    //     graph = rustworkx.generators.directed_mesh_graph(weights=list(range(20)))
-    //     self.assertEqual(len(graph), 20)
-    //     self.assertEqual([x for x in range(20)], graph.nodes())
-    //     self.assertEqual(len(graph.edges()), 380)
-    //     for i in range(20):
-    //         ls = []
-    //         for j in range(19, -1, -1):
-    //             if i != j:
-    //                 ls.append((i, j, None))
-    //         self.assertEqual(graph.out_edges(i), ls)
-
-    // def test_mesh_directed_no_weights_or_num(self):
-    //     with self.assertRaises(IndexError):
-    //         rustworkx.generators.directed_mesh_graph()
-
-    // def test_mesh_graph(self):
-    //     graph = rustworkx.generators.mesh_graph(20)
-    //     self.assertEqual(len(graph), 20)
-    //     self.assertEqual(len(graph.edges()), 190)
-
-    // def test_mesh_graph_weights(self):
-    //     graph = rustworkx.generators.mesh_graph(weights=list(range(20)))
-    //     self.assertEqual(len(graph), 20)
-    //     self.assertEqual([x for x in range(20)], graph.nodes())
-    //     self.assertEqual(len(graph.edges()), 190)
-
-    // def test_mesh_no_weights_or_num(self):
-    //     with self.assertRaises(IndexError):
-    //         rustworkx.generators.mesh_graph()
-
-    // def test_zero_size_mesh_graph(self):
-    //     graph = rustworkx.generators.mesh_graph(0)
-    //     self.assertEqual(0, len(graph))
-
-    // def test_zero_size_directed_mesh_graph(self):
-    //     graph = rustworkx.generators.directed_mesh_graph(0)
-    //     self.assertEqual(0, len(graph))
