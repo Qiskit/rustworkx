@@ -12,6 +12,7 @@
 
 //! This module contains generator functions for building graphs
 
+mod cycle_graph;
 mod complete_graph;
 
 mod utils;
@@ -31,4 +32,5 @@ impl fmt::Display for InvalidInputError {
     }
 }
 
+pub use cycle_graph::cycle_graph;
 pub use complete_graph::complete_graph;
