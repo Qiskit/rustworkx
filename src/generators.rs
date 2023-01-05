@@ -425,7 +425,8 @@ pub fn star_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
-        match core_generators::star_graph(num_nodes, weights, default_fn, default_fn, false, false) {
+        match core_generators::star_graph(num_nodes, weights, default_fn, default_fn, false, false)
+        {
             Ok(graph) => graph,
             Err(_) => {
                 return Err(PyIndexError::new_err(
