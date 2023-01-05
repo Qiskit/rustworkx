@@ -25,7 +25,7 @@ use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
 use super::{digraph, graph, StablePyGraph};
-use rustworkx_core::generators::star_graph as star_graph_core;
+use rustworkx_core::generators as core_generators;
 
 pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
 where
@@ -80,55 +80,21 @@ pub fn directed_cycle_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    if weights.is_none() && num_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_nodes and weights list not specified",
-        ));
-    }
-    let node_len = get_num_nodes(&num_nodes, &weights);
-    let num_edges = if bidirectional {
-        2 * node_len
-    } else {
-        node_len
-    };
-    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
-    if node_len == 0 {
-        return Ok(digraph::PyDiGraph {
-            graph,
-            node_removed: false,
-            check_cycle: false,
-            cycle_state: algo::DfsSpace::default(),
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-
-    match weights {
-        Some(weights) => {
-            for weight in weights {
-                graph.add_node(weight);
-            }
-        }
-        None => {
-            (0..node_len).for_each(|_| {
-                graph.add_node(py.None());
-            });
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::cycle_graph(
+        num_nodes,
+        weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
         }
     };
-    for a in 0..node_len - 1 {
-        let node_b = NodeIndex::new(a + 1);
-        let node_a = NodeIndex::new(a);
-        graph.add_edge(node_a, node_b, py.None());
-        if bidirectional {
-            graph.add_edge(node_b, node_a, py.None());
-        }
-    }
-    let last_node_index = NodeIndex::new(node_len - 1);
-    let first_node_index = NodeIndex::new(0);
-    graph.add_edge(last_node_index, first_node_index, py.None());
-    if bidirectional {
-        graph.add_edge(first_node_index, last_node_index, py.None());
-    }
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -172,41 +138,16 @@ pub fn cycle_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if weights.is_none() && num_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_nodes and weights list not specified",
-        ));
-    }
-    let node_len = get_num_nodes(&num_nodes, &weights);
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
-    if node_len == 0 {
-        return Ok(graph::PyGraph {
-            graph,
-            node_removed: false,
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-
-    match weights {
-        Some(weights) => {
-            for weight in weights {
-                graph.add_node(weight);
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::cycle_graph(num_nodes, weights, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
             }
-        }
-        None => {
-            (0..node_len).for_each(|_| {
-                graph.add_node(py.None());
-            });
-        }
-    };
-    for node_a in 0..node_len - 1 {
-        let node_b = node_a + 1;
-        graph.add_edge(NodeIndex::new(node_a), NodeIndex::new(node_b), py.None());
-    }
-    let last_node_index = NodeIndex::new(node_len - 1);
-    let first_node_index = NodeIndex::new(0);
-    graph.add_edge(last_node_index, first_node_index, py.None());
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -423,7 +364,7 @@ pub fn directed_star_graph(
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Directed> = match star_graph_core(
+    let graph: StablePyGraph<Directed> = match core_generators::star_graph(
         num_nodes,
         weights,
         default_fn,
@@ -484,7 +425,7 @@ pub fn star_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
-        match star_graph_core(num_nodes, weights, default_fn, default_fn, false, false) {
+        match core_generators::star_graph(num_nodes, weights, default_fn, default_fn, false, false) {
             Ok(graph) => graph,
             Err(_) => {
                 return Err(PyIndexError::new_err(

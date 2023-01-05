@@ -51,6 +51,7 @@
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
 //! * [`traversal`](./traversal/index.html)
+//! * [`generators`](./generators/index.html)
 //!
 //! ## Release Notes
 //!
