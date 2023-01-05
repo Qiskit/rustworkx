@@ -104,31 +104,29 @@ mod tests {
     use crate::petgraph::visit::EdgeRef;
 
     #[test]
-    fn test_with_weights() {
-        let g: petgraph::graph::UnGraph<usize, ()> =
-            complete_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), false).unwrap();
-        assert_eq!(
-            vec![(0, 1), (1, 2), (2, 3)],
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
-        assert_eq!(
-            vec![0, 1, 2, 3],
-            g.node_weights().copied().collect::<Vec<usize>>(),
-        );
+    fn test_directed_complete_graph() {
+        let g: petgraph::graph::DiGraph<(), ()> =
+            complete_graph(Some(10), None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 10);
+        assert_eq!(g.edge_count(), 90);
+        let elist = vec![];
+        for i in 0..10 {
+            for j in 0..19_i32.iter().rev() {
+                if i != j {
+                    elist.push((i, j));
+                }
+            }
+            assert_eq!(g.edges(i), elist);
+        }
+    //         ls = []
+    //         for j in range(19, -1, -1):
+    //             if i != j:
+    //                 ls.append((i, j, None))
+    //         self.assertEqual(graph.out_edges(i), ls)
     }
 
     #[test]
-    fn test_bidirectional() {
-        let g: petgraph::graph::DiGraph<(), ()> =
-            complete_graph(Some(4), None, || (), || (), true).unwrap();
-        assert_eq!(
-            vec![(0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2),],
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
+    fn test_directed_complete_graph_weights() {
     }
 
     #[test]
@@ -138,10 +136,57 @@ mod tests {
             None,
             || (),
             || (),
-            false,
         ) {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
         };
     }
 }
+    //     graph = rustworkx.generators.directed_mesh_graph(20)
+    //     self.assertEqual(len(graph), 20)
+    //     self.assertEqual(len(graph.edges()), 380)
+    //     for i in range(20):
+    //         ls = []
+    //         for j in range(19, -1, -1):
+    //             if i != j:
+    //                 ls.append((i, j, None))
+    //         self.assertEqual(graph.out_edges(i), ls)
+
+    // def test_directed_mesh_graph_weights(self):
+    //     graph = rustworkx.generators.directed_mesh_graph(weights=list(range(20)))
+    //     self.assertEqual(len(graph), 20)
+    //     self.assertEqual([x for x in range(20)], graph.nodes())
+    //     self.assertEqual(len(graph.edges()), 380)
+    //     for i in range(20):
+    //         ls = []
+    //         for j in range(19, -1, -1):
+    //             if i != j:
+    //                 ls.append((i, j, None))
+    //         self.assertEqual(graph.out_edges(i), ls)
+
+    // def test_mesh_directed_no_weights_or_num(self):
+    //     with self.assertRaises(IndexError):
+    //         rustworkx.generators.directed_mesh_graph()
+
+    // def test_mesh_graph(self):
+    //     graph = rustworkx.generators.mesh_graph(20)
+    //     self.assertEqual(len(graph), 20)
+    //     self.assertEqual(len(graph.edges()), 190)
+
+    // def test_mesh_graph_weights(self):
+    //     graph = rustworkx.generators.mesh_graph(weights=list(range(20)))
+    //     self.assertEqual(len(graph), 20)
+    //     self.assertEqual([x for x in range(20)], graph.nodes())
+    //     self.assertEqual(len(graph.edges()), 190)
+
+    // def test_mesh_no_weights_or_num(self):
+    //     with self.assertRaises(IndexError):
+    //         rustworkx.generators.mesh_graph()
+
+    // def test_zero_size_mesh_graph(self):
+    //     graph = rustworkx.generators.mesh_graph(0)
+    //     self.assertEqual(0, len(graph))
+
+    // def test_zero_size_directed_mesh_graph(self):
+    //     graph = rustworkx.generators.directed_mesh_graph(0)
+    //     self.assertEqual(0, len(graph))
