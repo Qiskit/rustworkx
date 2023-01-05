@@ -25,7 +25,7 @@ use pyo3::wrap_pyfunction;
 use pyo3::Python;
 
 use super::{digraph, graph, StablePyGraph};
-use rustworkx_core::generators::cycle_graph as cycle_graph_core;
+use rustworkx_core::generators as core_generators;
 
 pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
 where
@@ -82,7 +82,7 @@ pub fn directed_cycle_graph(
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Directed> =
-        match cycle_graph_core(num_nodes, weights, default_fn, default_fn, bidirectional) {
+        match core_generators::cycle_graph(num_nodes, weights, default_fn, default_fn, bidirectional) {
             Ok(graph) => graph,
             Err(_) => {
                 return Err(PyIndexError::new_err(
@@ -135,7 +135,7 @@ pub fn cycle_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
-        match cycle_graph_core(num_nodes, weights, default_fn, default_fn, false) {
+        match core_generators::cycle_graph(num_nodes, weights, default_fn, default_fn, false) {
             Ok(graph) => graph,
             Err(_) => {
                 return Err(PyIndexError::new_err(
