@@ -62,8 +62,8 @@ pub fn star_graph<G, T, F, H, M>(
     weights: Option<Vec<T>>,
     mut default_node_weight: F,
     mut default_edge_weight: H,
-    bidirectional: bool,
     inward: bool,
+    bidirectional: bool,
 ) -> Result<G, InvalidInputError>
 where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn test_with_weights_inward() {
         let g: petgraph::graph::UnGraph<usize, ()> =
-            star_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), false, true).unwrap();
+            star_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), true, false).unwrap();
         assert_eq!(
             vec![(1, 0), (2, 0), (3, 0)],
             g.edge_references()
@@ -153,7 +153,7 @@ mod tests {
     #[test]
     fn test_bidirectional() {
         let g: petgraph::graph::DiGraph<(), ()> =
-            star_graph(Some(4), None, || (), || (), true, false).unwrap();
+            star_graph(Some(4), None, || (), || (), false, true).unwrap();
         assert_eq!(
             vec![(0, 1), (1, 0), (0, 2), (2, 0), (0, 3), (3, 0),],
             g.edge_references()
