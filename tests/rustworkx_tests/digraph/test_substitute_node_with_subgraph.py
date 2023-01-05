@@ -147,17 +147,18 @@ class TestSubstitute(unittest.TestCase):
             (1, 0),  # From graph
             (3, 4),  # From graph
             (4, 3),  # From graph
-            (6, 5),  # From in_graph
             (5, 6),  # From in_graph
-            (7, 5),  # From in_graph
+            (6, 5),  # From in_graph
             (5, 7),  # From in_graph
-            (8, 5),  # From in_graph
+            (7, 5),  # From in_graph
             (5, 8),  # From in_graph
-            (9, 5),  # From in_graph
+            (8, 5),  # From in_graph
             (5, 9),  # From in_graph
+            (9, 5),  # From in_graph
             (3, 5),  # output of res[map_function(3, 2, None)] -> 5
             (1, 5),  # output of res[map_function(1, 2, None)] -> 5
             (8, 3),  # output of res[map_function(2, 3, None)] -> 8
             (6, 1),  # output of res[map_function(2, 1, None)] -> 6
         ]
+        print("\n\nEdgeList\n", graph.edge_list())
         self.assertEqual(expected_edge_list, graph.edge_list())
