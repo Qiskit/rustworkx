@@ -99,6 +99,7 @@ mod tests {
     use crate::generators::complete_graph;
     use crate::generators::InvalidInputError;
     use crate::petgraph::graph::{DiGraph, NodeIndex, UnGraph};
+    use crate::petgraph::visit::EdgeRef;
 
     #[test]
     fn test_directed_complete_graph() {
@@ -109,16 +110,15 @@ mod tests {
         for i in 0..10 {
             for j in i..10 {
                 if i != j {
-                    elist.push(Some((i, j)));
-                    elist.push(Some((j, i)));
+                    elist.push((i, j));
+                    elist.push((j, i));
                 }
             }
         }
-        let mut g_edges = vec![];
-        for e in g.edge_indices() {
-            g_edges.push(g.edge_endpoints(e).map(|(s, t)| (s.index(), t.index())));
-        }
-        assert_eq!(elist, g_edges);
+        assert_eq!(elist, g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
     }
 
     #[test]
@@ -131,17 +131,16 @@ mod tests {
         for i in 0..10 {
             for j in i..10 {
                 if i != j {
-                    elist.push(Some((i, j)));
-                    elist.push(Some((j, i)));
+                    elist.push((i, j));
+                    elist.push((j, i));
                 }
             }
             assert_eq!(*g.node_weight(NodeIndex::new(i)).unwrap(), i);
         }
-        let mut g_edges = vec![];
-        for e in g.edge_indices() {
-            g_edges.push(g.edge_endpoints(e).map(|(s, t)| (s.index(), t.index())));
-        }
-        assert_eq!(elist, g_edges);
+        assert_eq!(elist, g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
     }
 
     #[test]
@@ -161,15 +160,14 @@ mod tests {
         for i in 0..10 {
             for j in i..10 {
                 if i != j {
-                    elist.push(Some((i, j)));
+                    elist.push((i, j));
                 }
             }
         }
-        let mut g_edges = vec![];
-        for e in g.edge_indices() {
-            g_edges.push(g.edge_endpoints(e).map(|(s, t)| (s.index(), t.index())));
-        }
-        assert_eq!(elist, g_edges);
+        assert_eq!(elist, g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
     }
 
     #[test]
@@ -182,15 +180,14 @@ mod tests {
         for i in 0..10 {
             for j in i..10 {
                 if i != j {
-                    elist.push(Some((i, j)));
+                    elist.push((i, j));
                 }
             }
             assert_eq!(*g.node_weight(NodeIndex::new(i)).unwrap(), i);
         }
-        let mut g_edges = vec![];
-        for e in g.edge_indices() {
-            g_edges.push(g.edge_endpoints(e).map(|(s, t)| (s.index(), t.index())));
-        }
-        assert_eq!(elist, g_edges);
+        assert_eq!(elist, g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
     }
 }
