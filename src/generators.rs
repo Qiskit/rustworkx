@@ -640,21 +640,15 @@ pub fn grid_graph(
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> = match core_generators::grid_graph(
-        rows,
-        cols,
-        weights,
-        default_fn,
-        default_fn,
-        false,
-    ) {
-        Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "num_nodes and weights list not specified",
-            ))
-        }
-    };
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::grid_graph(rows, cols, weights, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
+            }
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
