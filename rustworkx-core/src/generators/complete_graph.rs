@@ -115,7 +115,9 @@ mod tests {
                 }
             }
         }
-        assert_eq!(elist, g.edge_references()
+        assert_eq!(
+            elist,
+            g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
         );
@@ -137,7 +139,9 @@ mod tests {
             }
             assert_eq!(*g.node_weight(NodeIndex::new(i)).unwrap(), i);
         }
-        assert_eq!(elist, g.edge_references()
+        assert_eq!(
+            elist,
+            g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
         );
@@ -164,7 +168,9 @@ mod tests {
                 }
             }
         }
-        assert_eq!(elist, g.edge_references()
+        assert_eq!(
+            elist,
+            g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
         );
@@ -185,7 +191,9 @@ mod tests {
             }
             assert_eq!(*g.node_weight(NodeIndex::new(i)).unwrap(), i);
         }
-        assert_eq!(elist, g.edge_references()
+        assert_eq!(
+            elist,
+            g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
         );
