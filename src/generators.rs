@@ -321,11 +321,11 @@ pub fn path_graph(
 /// :param list weights: A list of node weights, the first element in the list
 ///     will be the center node of the star graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param bool bidirectional: Adds edges in both directions between two nodes
-///     if set to ``True``. Default value is ``False``.
 /// :param bool inward: If set ``True`` the nodes will be directed towards the
 ///     center node. This parameter is ignored if ``bidirectional`` is set to
 ///     ``True``.
+/// :param bool bidirectional: Adds edges in both directions between two nodes
+///     if set to ``True``. Default value is ``False``.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
@@ -363,53 +363,22 @@ pub fn directed_star_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    if weights.is_none() && num_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_nodes and weights list not specified",
-        ));
-    }
-    let node_len = get_num_nodes(&num_nodes, &weights);
-    if node_len == 0 {
-        return Ok(digraph::PyDiGraph {
-            graph: StablePyGraph::<Directed>::default(),
-            node_removed: false,
-            check_cycle: false,
-            cycle_state: algo::DfsSpace::default(),
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-    let num_edges = if bidirectional {
-        (2 * node_len) - 2
-    } else {
-        node_len - 1
-    };
-    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
-    match weights {
-        Some(weights) => {
-            for weight in weights {
-                graph.add_node(weight);
-            }
-        }
-        None => {
-            (0..node_len).for_each(|_| {
-                graph.add_node(py.None());
-            });
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::star_graph(
+        num_nodes,
+        weights,
+        default_fn,
+        default_fn,
+        inward,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
         }
     };
-    let zero_index = NodeIndex::new(0);
-    for node_index in 1..node_len {
-        //Add edges in both directions if bidirection is True
-        let node = NodeIndex::new(node_index);
-        if bidirectional {
-            graph.add_edge(node, zero_index, py.None());
-            graph.add_edge(zero_index, node, py.None());
-        } else if inward {
-            graph.add_edge(node, zero_index, py.None());
-        } else {
-            graph.add_edge(zero_index, node, py.None());
-        }
-    }
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -429,9 +398,10 @@ pub fn directed_star_graph(
 ///     will be the center node of the star graph. If both ``num_node`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to False the output
-///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+///
 ///
 /// :returns: The generated star graph
 /// :rtype: PyGraph
@@ -453,37 +423,17 @@ pub fn star_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if weights.is_none() && num_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_nodes and weights list not specified",
-        ));
-    }
-    let node_len = get_num_nodes(&num_nodes, &weights);
-    if node_len == 0 {
-        return Ok(graph::PyGraph {
-            graph: StablePyGraph::<Undirected>::default(),
-            node_removed: false,
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len - 1);
-    match weights {
-        Some(weights) => {
-            for weight in weights {
-                graph.add_node(weight);
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::star_graph(num_nodes, weights, default_fn, default_fn, false, false)
+        {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
             }
-        }
-        None => {
-            (0..node_len).for_each(|_| {
-                graph.add_node(py.None());
-            });
-        }
-    };
-    let zero_index = NodeIndex::new(0);
-    for node in 1..node_len {
-        graph.add_edge(zero_index, NodeIndex::new(node), py.None());
-    }
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
