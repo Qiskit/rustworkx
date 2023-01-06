@@ -474,42 +474,16 @@ pub fn mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if weights.is_none() && num_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_nodes and weights list not specified",
-        ));
-    }
-    let node_len = get_num_nodes(&num_nodes, &weights);
-    if node_len == 0 {
-        return Ok(graph::PyGraph {
-            graph: StablePyGraph::<Undirected>::default(),
-            node_removed: false,
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-    let num_edges = (node_len * (node_len - 1)) / 2;
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, num_edges);
-    match weights {
-        Some(weights) => {
-            for weight in weights {
-                graph.add_node(weight);
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::complete_graph(num_nodes, weights, default_fn, default_fn) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
             }
-        }
-        None => {
-            (0..node_len).for_each(|_| {
-                graph.add_node(py.None());
-            });
-        }
-    };
-
-    for i in 0..node_len - 1 {
-        for j in i + 1..node_len {
-            let i_index = NodeIndex::new(i);
-            let j_index = NodeIndex::new(j);
-            graph.add_edge(i_index, j_index, py.None());
-        }
-    }
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -550,44 +524,16 @@ pub fn directed_mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    if weights.is_none() && num_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_nodes and weights list not specified",
-        ));
-    }
-    let node_len = get_num_nodes(&num_nodes, &weights);
-    if node_len == 0 {
-        return Ok(digraph::PyDiGraph {
-            graph: StablePyGraph::<Directed>::default(),
-            node_removed: false,
-            check_cycle: false,
-            cycle_state: algo::DfsSpace::default(),
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-    let num_edges = node_len * (node_len - 1);
-    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
-    match weights {
-        Some(weights) => {
-            for weight in weights {
-                graph.add_node(weight);
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> =
+        match core_generators::complete_graph(num_nodes, weights, default_fn, default_fn) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
             }
-        }
-        None => {
-            (0..node_len).for_each(|_| {
-                graph.add_node(py.None());
-            });
-        }
-    };
-    for i in 0..node_len - 1 {
-        for j in i + 1..node_len {
-            let i_index = NodeIndex::new(i);
-            let j_index = NodeIndex::new(j);
-            graph.add_edge(i_index, j_index, py.None());
-            graph.add_edge(j_index, i_index, py.None());
-        }
-    }
+        };
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
