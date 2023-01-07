@@ -413,4 +413,4 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
 
     def test_hexagonal_graph_0_0(self):
         with self.assertRaises(IndexError):
-            retworkx.generators.grid_graph(0, 0)
+            retworkx.generators.hexagonal_lattice_graph(0, 0)
