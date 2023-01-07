@@ -14,6 +14,7 @@
 
 mod cycle_graph;
 mod grid_graph;
+mod path_graph;
 mod star_graph;
 
 mod utils;
@@ -35,4 +36,5 @@ impl fmt::Display for InvalidInputError {
 
 pub use cycle_graph::cycle_graph;
 pub use grid_graph::grid_graph;
+pub use path_graph::path_graph;
 pub use star_graph::star_graph;
