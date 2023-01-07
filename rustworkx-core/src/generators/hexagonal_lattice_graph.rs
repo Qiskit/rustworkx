@@ -86,7 +86,7 @@ where
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
-    if rows == 0 && cols == 0 {
+    if rows == 0 || cols == 0 {
         return Err(InvalidInputError {});
     }
 
