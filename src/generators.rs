@@ -598,11 +598,7 @@ pub fn grid_graph(
     let graph: StablePyGraph<Undirected> =
         match core_generators::grid_graph(rows, cols, weights, default_fn, default_fn, false) {
             Ok(graph) => graph,
-            Err(_) => {
-                return Err(PyIndexError::new_err(
-                    "num_nodes and weights list not specified",
-                ))
-            }
+            Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
         };
     Ok(graph::PyGraph {
         graph,
@@ -669,11 +665,7 @@ pub fn directed_grid_graph(
         bidirectional,
     ) {
         Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "num_nodes and weights list not specified",
-            ))
-        }
+        Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
     };
     Ok(digraph::PyDiGraph {
         graph,
@@ -1638,20 +1630,11 @@ pub fn hexagonal_lattice_graph(
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> = match core_generators::hexagonal_lattice_graph(
-        rows,
-        cols,
-        default_fn,
-        default_fn,
-        false,
-    ) {
-        Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "num_nodes and weights list not specified",
-            ))
-        }
-    };
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::hexagonal_lattice_graph(rows, cols, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -1694,116 +1677,26 @@ pub fn directed_hexagonal_lattice_graph(
     cols: usize,
     bidirectional: bool,
     multigraph: bool,
-) -> digraph::PyDiGraph {
-    let mut graph = StablePyGraph::<Directed>::default();
-
-    if rows == 0 || cols == 0 {
-        return digraph::PyDiGraph {
-            graph,
-            node_removed: false,
-            check_cycle: false,
-            cycle_state: algo::DfsSpace::default(),
-            multigraph,
-            attrs: py.None(),
-        };
-    }
-
-    let mut rowlen = rows;
-    let mut collen = cols;
-
-    // Needs two times the number of nodes vertically
-    rowlen = 2 * rowlen + 2;
-    collen += 1;
-    let num_nodes = rowlen * collen - 2;
-
-    let nodes: Vec<NodeIndex> = (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
-
-    // Add column edges
-    // first column
-    for j in 0..(rowlen - 2) {
-        graph.add_edge(nodes[j], nodes[j + 1], py.None());
-        if bidirectional {
-            graph.add_edge(nodes[j + 1], nodes[j], py.None());
-        }
-    }
-
-    for i in 1..(collen - 1) {
-        for j in 0..(rowlen - 1) {
-            graph.add_edge(nodes[i * rowlen + j - 1], nodes[i * rowlen + j], py.None());
-            if bidirectional {
-                graph.add_edge(nodes[i * rowlen + j], nodes[i * rowlen + j - 1], py.None());
-            }
-        }
-    }
-
-    // last column
-    for j in 0..(rowlen - 2) {
-        graph.add_edge(
-            nodes[(collen - 1) * rowlen + j - 1],
-            nodes[(collen - 1) * rowlen + j],
-            py.None(),
-        );
-        if bidirectional {
-            graph.add_edge(
-                nodes[(collen - 1) * rowlen + j],
-                nodes[(collen - 1) * rowlen + j - 1],
-                py.None(),
-            );
-        }
-    }
-
-    // Add row edges
-    for j in (0..(rowlen - 1)).step_by(2) {
-        graph.add_edge(nodes[j], nodes[j + rowlen - 1], py.None());
-        if bidirectional {
-            graph.add_edge(nodes[j + rowlen - 1], nodes[j], py.None());
-        }
-    }
-
-    for i in 1..(collen - 2) {
-        for j in 0..rowlen {
-            if i % 2 == j % 2 {
-                graph.add_edge(
-                    nodes[i * rowlen + j - 1],
-                    nodes[(i + 1) * rowlen + j - 1],
-                    py.None(),
-                );
-                if bidirectional {
-                    graph.add_edge(
-                        nodes[(i + 1) * rowlen + j - 1],
-                        nodes[i * rowlen + j - 1],
-                        py.None(),
-                    );
-                }
-            }
-        }
-    }
-
-    if collen > 2 {
-        for j in ((collen % 2)..rowlen).step_by(2) {
-            graph.add_edge(
-                nodes[(collen - 2) * rowlen + j - 1],
-                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
-                py.None(),
-            );
-            if bidirectional {
-                graph.add_edge(
-                    nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
-                    nodes[(collen - 2) * rowlen + j - 1],
-                    py.None(),
-                );
-            }
-        }
-    }
-
-    digraph::PyDiGraph {
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::hexagonal_lattice_graph(
+        rows,
+        cols,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
+    };
+    Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
         attrs: py.None(),
-    }
+    })
 }
 
 /// Generate an undirected lollipop graph where a mesh graph is connected to a

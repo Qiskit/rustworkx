@@ -15,15 +15,14 @@ use std::hash::Hash;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, NodeIndexable};
 
-use super::utils::get_num_nodes;
 use super::InvalidInputError;
 
 /// Generate a hexagonal lattice graph
 ///
 /// Arguments:
 ///
-/// * rows: The number of rows to generate the graph with.
-/// * cols: The number of columns to generate the graph with.
+/// * `rows` - The number of rows to generate the graph with.
+/// * `cols` - The number of columns to generate the graph with.
 /// * `default_node_weight` - A callable that will return the weight to use
 ///     for newly created nodes. This is ignored if `weights` is specified,
 ///     as the weights from that argument will be used instead.
@@ -40,14 +39,35 @@ use super::InvalidInputError;
 /// use rustworkx_core::petgraph::visit::EdgeRef;
 ///
 /// let g: petgraph::graph::UnGraph<(), ()> = hexagonal_lattice_graph(
-///     Some(4),
-///     None,
+///     2,
+///     2,
 ///     || {()},
 ///     || {()},
 ///     false
 /// ).unwrap();
+/// let expected_edges = vec![
+///      (0, 1),
+///      (1, 2),
+///      (2, 3),
+///      (3, 4),
+///      (5, 6),
+///      (6, 7),
+///      (7, 8),
+///      (8, 9),
+///      (9, 10),
+///      (11, 12),
+///      (12, 13),
+///      (13, 14),
+///      (14, 15),
+///      (0, 5),
+///      (2, 7),
+///      (4, 9),
+///      (6, 11),
+///      (8, 13),
+///      (10, 15),
+/// ];
 /// assert_eq!(
-///     vec![(0, 1), (1, 2), (2, 3), (3, 0)],
+///     expected_edges,
 ///     g.edge_references()
 ///         .map(|edge| (edge.source().index(), edge.target().index()))
 ///         .collect::<Vec<(usize, usize)>>(),
@@ -79,17 +99,33 @@ where
     let num_nodes = rowlen * collen - 2;
 
     let mut graph = G::with_capacity(num_nodes, num_nodes);
-    let nodes: Vec<G::NodeId> = (0..num_nodes).map(|_| graph.add_node(default_node_weight())).collect();
+    let nodes: Vec<G::NodeId> = (0..num_nodes)
+        .map(|_| graph.add_node(default_node_weight()))
+        .collect();
 
     // Add column edges
     // first column
     for j in 0..(rowlen - 2) {
         graph.add_edge(nodes[j], nodes[j + 1], default_edge_weight());
+        if bidirectional {
+            graph.add_edge(nodes[j + 1], nodes[j], default_edge_weight());
+        }
     }
 
     for i in 1..(collen - 1) {
         for j in 0..(rowlen - 1) {
-            graph.add_edge(nodes[i * rowlen + j - 1], nodes[i * rowlen + j], default_edge_weight());
+            graph.add_edge(
+                nodes[i * rowlen + j - 1],
+                nodes[i * rowlen + j],
+                default_edge_weight(),
+            );
+            if bidirectional {
+                graph.add_edge(
+                    nodes[i * rowlen + j],
+                    nodes[i * rowlen + j - 1],
+                    default_edge_weight(),
+                );
+            }
         }
     }
 
@@ -100,11 +136,21 @@ where
             nodes[(collen - 1) * rowlen + j],
             default_edge_weight(),
         );
+        if bidirectional {
+            graph.add_edge(
+                nodes[(collen - 1) * rowlen + j],
+                nodes[(collen - 1) * rowlen + j - 1],
+                default_edge_weight(),
+            );
+        }
     }
 
     // Add row edges
     for j in (0..(rowlen - 1)).step_by(2) {
         graph.add_edge(nodes[j], nodes[j + rowlen - 1], default_edge_weight());
+        if bidirectional {
+            graph.add_edge(nodes[j + rowlen - 1], nodes[j], default_edge_weight());
+        }
     }
 
     for i in 1..(collen - 2) {
@@ -115,6 +161,13 @@ where
                     nodes[(i + 1) * rowlen + j - 1],
                     default_edge_weight(),
                 );
+                if bidirectional {
+                    graph.add_edge(
+                        nodes[(i + 1) * rowlen + j - 1],
+                        nodes[i * rowlen + j - 1],
+                        default_edge_weight(),
+                    );
+                }
             }
         }
     }
@@ -126,45 +179,15 @@ where
                 nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
                 default_edge_weight(),
             );
+            if bidirectional {
+                graph.add_edge(
+                    nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
+                    nodes[(collen - 2) * rowlen + j - 1],
+                    default_edge_weight(),
+                );
+            }
         }
     }
-    // let node_len = get_num_nodes(&num_nodes, &weights);
-    // let num_edges = if bidirectional {
-    //     2 * node_len
-    // } else {
-    //     node_len
-    // };
-    // let mut graph = G::with_capacity(node_len, num_edges);
-    // if node_len == 0 {
-    //     return Ok(graph);
-    // }
-
-    // match weights {
-    //     Some(weights) => {
-    //         for weight in weights {
-    //             graph.add_node(weight);
-    //         }
-    //     }
-    //     None => {
-    //         for _ in 0..node_len {
-    //             graph.add_node(default_node_weight());
-    //         }
-    //     }
-    // };
-    // for a in 0..node_len - 1 {
-    //     let node_a = graph.from_index(a);
-    //     let node_b = graph.from_index(a + 1);
-    //     graph.add_edge(node_a, node_b, default_edge_weight());
-    //     if bidirectional {
-    //         graph.add_edge(node_b, node_a, default_edge_weight());
-    //     }
-    // }
-    // let last_node_index = graph.from_index(node_len - 1);
-    // let first_node_index = graph.from_index(0);
-    // graph.add_edge(last_node_index, first_node_index, default_edge_weight());
-    // if bidirectional {
-    //     graph.add_edge(first_node_index, last_node_index, default_edge_weight());
-    // }
     Ok(graph)
 }
 
@@ -176,36 +199,69 @@ mod tests {
     use crate::petgraph::visit::EdgeRef;
 
     #[test]
-    fn test_with_weights() {
-        let g: petgraph::graph::UnGraph<usize, ()> =
-            hexagonal_lattice_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), false).unwrap();
+    fn test_hexagonal_lattice_graph() {
+        let expected_edges = vec![
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (5, 6),
+            (6, 7),
+            (7, 8),
+            (8, 9),
+            (9, 10),
+            (11, 12),
+            (12, 13),
+            (13, 14),
+            (14, 15),
+            (0, 5),
+            (2, 7),
+            (4, 9),
+            (6, 11),
+            (8, 13),
+            (10, 15),
+        ];
+        let g: petgraph::graph::UnGraph<(), ()> =
+            hexagonal_lattice_graph(2, 2, || (), || (), false).unwrap();
+        assert_eq!(g.node_count(), 16);
+        assert_eq!(g.edge_count(), expected_edges.len());
         assert_eq!(
-            vec![(0, 1), (1, 2), (2, 3), (3, 0)],
+            expected_edges,
             g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
         );
-        assert_eq!(
-            vec![0, 1, 2, 3],
-            g.node_weights().copied().collect::<Vec<usize>>(),
-        );
     }
 
     #[test]
-    fn test_bidirectional() {
+    fn test_directed_hexagonal_lattice_graph() {
+        let expected_edges = vec![
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (5, 6),
+            (6, 7),
+            (7, 8),
+            (8, 9),
+            (9, 10),
+            (11, 12),
+            (12, 13),
+            (13, 14),
+            (14, 15),
+            (0, 5),
+            (2, 7),
+            (4, 9),
+            (6, 11),
+            (8, 13),
+            (10, 15),
+        ];
         let g: petgraph::graph::DiGraph<(), ()> =
-            hexagonal_lattice_graph(Some(4), None, || (), || (), true).unwrap();
+            hexagonal_lattice_graph(2, 2, || (), || (), false).unwrap();
+        assert_eq!(g.node_count(), 16);
+        assert_eq!(g.edge_count(), expected_edges.len());
         assert_eq!(
-            vec![
-                (0, 1),
-                (1, 0),
-                (1, 2),
-                (2, 1),
-                (2, 3),
-                (3, 2),
-                (3, 0),
-                (0, 3)
-            ],
+            expected_edges,
             g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
@@ -213,10 +269,64 @@ mod tests {
     }
 
     #[test]
-    fn test_error() {
-        match hexagonal_lattice_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            None,
-            None,
+    fn test_directed_hexagonal_lattice_graph_bidirectional() {
+        let expected_edges = vec![
+            (0, 1),
+            (1, 0),
+            (1, 2),
+            (2, 1),
+            (2, 3),
+            (3, 2),
+            (3, 4),
+            (4, 3),
+            (5, 6),
+            (6, 5),
+            (6, 7),
+            (7, 6),
+            (7, 8),
+            (8, 7),
+            (8, 9),
+            (9, 8),
+            (9, 10),
+            (10, 9),
+            (11, 12),
+            (12, 11),
+            (12, 13),
+            (13, 12),
+            (13, 14),
+            (14, 13),
+            (14, 15),
+            (15, 14),
+            (0, 5),
+            (5, 0),
+            (2, 7),
+            (7, 2),
+            (4, 9),
+            (9, 4),
+            (6, 11),
+            (11, 6),
+            (8, 13),
+            (13, 8),
+            (10, 15),
+            (15, 10),
+        ];
+        let g: petgraph::graph::DiGraph<(), ()> =
+            hexagonal_lattice_graph(2, 2, || (), || (), true).unwrap();
+        assert_eq!(g.node_count(), 16);
+        assert_eq!(g.edge_count(), expected_edges.len());
+        assert_eq!(
+            expected_edges,
+            g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
+    }
+
+    #[test]
+    fn test_hexagonal_lattice_error() {
+        match hexagonal_lattice_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            0,
+            0,
             || (),
             || (),
             false,
