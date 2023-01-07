@@ -732,51 +732,68 @@ pub fn binomial_tree_graph(
             order
         )));
     }
-    let num_nodes = usize::pow(2, order);
-    let num_edges = usize::pow(2, order) - 1;
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
-    for i in 0..num_nodes {
-        match weights {
-            Some(ref weights) => {
-                if weights.len() > num_nodes {
-                    return Err(PyIndexError::new_err("weights should be <= 2**order"));
-                }
-                if i < weights.len() {
-                    graph.add_node(weights[i].clone_ref(py))
-                } else {
-                    graph.add_node(py.None())
-                }
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::binomial_tree_graph(order, weights, default_fn, default_fn, false)
+        {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
             }
-            None => graph.add_node(py.None()),
         };
-    }
-
-    let mut n = 1;
-    let zero_index = NodeIndex::new(0);
-
-    for _ in 0..order {
-        let edges: Vec<(NodeIndex, NodeIndex)> = graph
-            .edge_references()
-            .map(|e| (e.source(), e.target()))
-            .collect();
-        for (source, target) in edges {
-            let source_index = NodeIndex::new(source.index() + n);
-            let target_index = NodeIndex::new(target.index() + n);
-
-            graph.add_edge(source_index, target_index, py.None());
-        }
-
-        graph.add_edge(zero_index, NodeIndex::new(n), py.None());
-
-        n *= 2;
-    }
-
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
         multigraph,
         attrs: py.None(),
     })
+    // let num_nodes = usize::pow(2, order);
+    // let num_edges = usize::pow(2, order) - 1;
+    // let mut graph = StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
+    // for i in 0..num_nodes {
+    //     match weights {
+    //         Some(ref weights) => {
+    //             if weights.len() > num_nodes {
+    //                 return Err(PyIndexError::new_err("weights should be <= 2**order"));
+    //             }
+    //             if i < weights.len() {
+    //                 graph.add_node(weights[i].clone_ref(py))
+    //             } else {
+    //                 graph.add_node(py.None())
+    //             }
+    //         }
+    //         None => graph.add_node(py.None()),
+    //     };
+    // }
+
+    // let mut n = 1;
+    // let zero_index = NodeIndex::new(0);
+
+    // for _ in 0..order {
+    //     let edges: Vec<(NodeIndex, NodeIndex)> = graph
+    //         .edge_references()
+    //         .map(|e| (e.source(), e.target()))
+    //         .collect();
+    //     for (source, target) in edges {
+    //         let source_index = NodeIndex::new(source.index() + n);
+    //         let target_index = NodeIndex::new(target.index() + n);
+
+    //         graph.add_edge(source_index, target_index, py.None());
+    //     }
+
+    //     graph.add_edge(zero_index, NodeIndex::new(n), py.None());
+
+    //     n *= 2;
+    // }
+
+    // Ok(graph::PyGraph {
+    //     graph,
+    //     node_removed: false,
+    //     multigraph,
+    //     attrs: py.None(),
+    // })
 }
 
 /// Creates a full r-ary tree of `n` nodes.
