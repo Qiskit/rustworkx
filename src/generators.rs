@@ -192,47 +192,21 @@ pub fn directed_path_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    if weights.is_none() && num_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_nodes and weights list not specified",
-        ));
-    }
-    let node_len = get_num_nodes(&num_nodes, &weights);
-    let num_edges = if bidirectional {
-        2 * node_len
-    } else {
-        node_len
-    };
-    let mut graph = StablePyGraph::<Directed>::with_capacity(node_len, num_edges);
-    if node_len == 0 {
-        return Ok(digraph::PyDiGraph {
-            graph,
-            node_removed: false,
-            check_cycle: false,
-            cycle_state: algo::DfsSpace::default(),
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-
-    match weights {
-        Some(weights) => {
-            for weight in weights {
-                graph.add_node(weight);
-            }
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::path_graph(
+        num_nodes,
+        weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
         }
-        None => (0..node_len).for_each(|_| {
-            graph.add_node(py.None());
-        }),
     };
-    for a in 0..node_len - 1 {
-        let node_b = NodeIndex::new(a + 1);
-        let node_a = NodeIndex::new(a);
-        graph.add_edge(node_a, node_b, py.None());
-        if bidirectional {
-            graph.add_edge(node_b, node_a, py.None());
-        }
-    }
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -276,35 +250,16 @@ pub fn path_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if weights.is_none() && num_nodes.is_none() {
-        return Err(PyIndexError::new_err(
-            "num_nodes and weights list not specified",
-        ));
-    }
-    let node_len = get_num_nodes(&num_nodes, &weights);
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len, node_len);
-    if node_len == 0 {
-        return Ok(graph::PyGraph {
-            graph,
-            node_removed: false,
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-    match weights {
-        Some(weights) => {
-            for weight in weights {
-                graph.add_node(weight);
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::path_graph(num_nodes, weights, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
             }
-        }
-        None => (0..node_len).for_each(|_| {
-            graph.add_node(py.None());
-        }),
-    };
-    for node_a in 0..node_len - 1 {
-        let node_b = NodeIndex::new(node_a + 1);
-        graph.add_edge(NodeIndex::new(node_a), node_b, py.None());
-    }
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -548,7 +503,7 @@ pub fn directed_mesh_graph(
 ///
 /// :param int rows: The number of rows to generate the graph with.
 ///     If specified, cols also need to be specified
-/// :param list cols: The number of rows to generate the graph with.
+/// :param int cols: The number of cols to generate the graph with.
 ///     If specified, rows also need to be specified. rows*cols
 ///     defines the number of nodes in the graph
 /// :param list weights: A list of node weights. Nodes are filled row wise.
@@ -585,76 +540,16 @@ pub fn grid_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if weights.is_none() && (rows.is_none() || cols.is_none()) {
-        return Err(PyIndexError::new_err(
-            "dimensions and weights list not specified",
-        ));
-    }
-
-    let mut rowlen = rows.unwrap_or(0);
-    let mut collen = cols.unwrap_or(0);
-    let mut num_nodes = rowlen * collen;
-    let mut num_edges = 0;
-    if num_nodes == 0 {
-        if weights.is_none() {
-            return Ok(graph::PyGraph {
-                graph: StablePyGraph::<Undirected>::default(),
-                node_removed: false,
-                multigraph,
-                attrs: py.None(),
-            });
-        }
-    } else {
-        num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
-    }
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
-
-    match weights {
-        Some(weights) => {
-            if num_nodes < weights.len() && rowlen == 0 {
-                collen = weights.len();
-                rowlen = 1;
-                num_nodes = collen;
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::grid_graph(rows, cols, weights, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
             }
-
-            let mut node_cnt = num_nodes;
-
-            for weight in weights {
-                if node_cnt == 0 {
-                    break;
-                }
-                graph.add_node(weight);
-                node_cnt -= 1;
-            }
-            for _i in 0..node_cnt {
-                graph.add_node(py.None());
-            }
-        }
-        None => {
-            (0..num_nodes).for_each(|_| {
-                graph.add_node(py.None());
-            });
-        }
-    };
-
-    for i in 0..rowlen {
-        for j in 0..collen {
-            if i + 1 < rowlen {
-                graph.add_edge(
-                    NodeIndex::new(i * collen + j),
-                    NodeIndex::new((i + 1) * collen + j),
-                    py.None(),
-                );
-            }
-            if j + 1 < collen {
-                graph.add_edge(
-                    NodeIndex::new(i * collen + j),
-                    NodeIndex::new(i * collen + j + 1),
-                    py.None(),
-                );
-            }
-        }
-    }
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -668,7 +563,7 @@ pub fn grid_graph(
 ///
 /// :param int rows: The number of rows to generate the graph with.
 ///     If specified, cols also need to be specified.
-/// :param list cols: The number of rows to generate the graph with.
+/// :param int cols: The number of cols to generate the graph with.
 ///     If specified, rows also need to be specified. rows*cols
 ///     defines the number of nodes in the graph.
 /// :param list weights: A list of node weights. Nodes are filled row wise.
@@ -710,96 +605,22 @@ pub fn directed_grid_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    if weights.is_none() && (rows.is_none() || cols.is_none()) {
-        return Err(PyIndexError::new_err(
-            "dimensions and weights list not specified",
-        ));
-    }
-
-    let mut rowlen = rows.unwrap_or(0);
-    let mut collen = cols.unwrap_or(0);
-    let mut num_nodes = rowlen * collen;
-    let mut num_edges = 0;
-    if num_nodes == 0 {
-        if weights.is_none() {
-            return Ok(digraph::PyDiGraph {
-                graph: StablePyGraph::<Directed>::default(),
-                node_removed: false,
-                check_cycle: false,
-                cycle_state: algo::DfsSpace::default(),
-                multigraph,
-                attrs: py.None(),
-            });
-        }
-    } else {
-        num_edges = (rowlen - 1) * collen + (collen - 1) * rowlen;
-    }
-    if bidirectional {
-        num_edges *= 2;
-    }
-    let mut graph = StablePyGraph::<Directed>::with_capacity(num_nodes, num_edges);
-
-    match weights {
-        Some(weights) => {
-            if num_nodes < weights.len() && rowlen == 0 {
-                collen = weights.len();
-                rowlen = 1;
-                num_nodes = collen;
-            }
-
-            let mut node_cnt = num_nodes;
-
-            for weight in weights {
-                if node_cnt == 0 {
-                    break;
-                }
-                graph.add_node(weight);
-                node_cnt -= 1;
-            }
-            for _i in 0..node_cnt {
-                graph.add_node(py.None());
-            }
-        }
-        None => {
-            (0..num_nodes).for_each(|_| {
-                graph.add_node(py.None());
-            });
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::grid_graph(
+        rows,
+        cols,
+        weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
         }
     };
-
-    for i in 0..rowlen {
-        for j in 0..collen {
-            if i + 1 < rowlen {
-                graph.add_edge(
-                    NodeIndex::new(i * collen + j),
-                    NodeIndex::new((i + 1) * collen + j),
-                    py.None(),
-                );
-                if bidirectional {
-                    graph.add_edge(
-                        NodeIndex::new((i + 1) * collen + j),
-                        NodeIndex::new(i * collen + j),
-                        py.None(),
-                    );
-                }
-            }
-
-            if j + 1 < collen {
-                graph.add_edge(
-                    NodeIndex::new(i * collen + j),
-                    NodeIndex::new(i * collen + j + 1),
-                    py.None(),
-                );
-                if bidirectional {
-                    graph.add_edge(
-                        NodeIndex::new(i * collen + j + 1),
-                        NodeIndex::new(i * collen + j),
-                        py.None(),
-                    );
-                }
-            }
-        }
-    }
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
