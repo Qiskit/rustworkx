@@ -1636,82 +1636,28 @@ pub fn hexagonal_lattice_graph(
     rows: usize,
     cols: usize,
     multigraph: bool,
-) -> graph::PyGraph {
-    let mut graph = StablePyGraph::<Undirected>::default();
-
-    if rows == 0 || cols == 0 {
-        return graph::PyGraph {
-            graph,
-            node_removed: false,
-            multigraph,
-            attrs: py.None(),
-        };
-    }
-
-    let mut rowlen = rows;
-    let mut collen = cols;
-
-    // Needs two times the number of nodes vertically
-    rowlen = 2 * rowlen + 2;
-    collen += 1;
-    let num_nodes = rowlen * collen - 2;
-
-    let nodes: Vec<NodeIndex> = (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
-
-    // Add column edges
-    // first column
-    for j in 0..(rowlen - 2) {
-        graph.add_edge(nodes[j], nodes[j + 1], py.None());
-    }
-
-    for i in 1..(collen - 1) {
-        for j in 0..(rowlen - 1) {
-            graph.add_edge(nodes[i * rowlen + j - 1], nodes[i * rowlen + j], py.None());
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::hexagonal_lattice_graph(
+        rows,
+        cols,
+        default_fn,
+        default_fn,
+        false,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
         }
-    }
-
-    // last column
-    for j in 0..(rowlen - 2) {
-        graph.add_edge(
-            nodes[(collen - 1) * rowlen + j - 1],
-            nodes[(collen - 1) * rowlen + j],
-            py.None(),
-        );
-    }
-
-    // Add row edges
-    for j in (0..(rowlen - 1)).step_by(2) {
-        graph.add_edge(nodes[j], nodes[j + rowlen - 1], py.None());
-    }
-
-    for i in 1..(collen - 2) {
-        for j in 0..rowlen {
-            if i % 2 == j % 2 {
-                graph.add_edge(
-                    nodes[i * rowlen + j - 1],
-                    nodes[(i + 1) * rowlen + j - 1],
-                    py.None(),
-                );
-            }
-        }
-    }
-
-    if collen > 2 {
-        for j in ((collen % 2)..rowlen).step_by(2) {
-            graph.add_edge(
-                nodes[(collen - 2) * rowlen + j - 1],
-                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
-                py.None(),
-            );
-        }
-    }
-
-    graph::PyGraph {
+    };
+    Ok(graph::PyGraph {
         graph,
         node_removed: false,
         multigraph,
         attrs: py.None(),
-    }
+    })
 }
 
 /// Generate a directed hexagonal lattice graph. The edges propagate towards  
