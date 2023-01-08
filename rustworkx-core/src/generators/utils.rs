@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use std::iter;
+
 #[inline]
 pub fn get_num_nodes<T>(num_nodes: &Option<usize>, weights: &Option<Vec<T>>) -> usize {
     if weights.is_some() {

@@ -18,7 +18,7 @@ use petgraph::visit::{Data, NodeIndexable};
 use super::utils::pairwise;
 use super::InvalidInputError;
 
-/// Generate a llolipop graph
+/// Generate a lollipop graph
 ///
 /// Arguments:
 ///
@@ -52,10 +52,10 @@ use super::InvalidInputError;
 /// # Example
 /// ```rust
 /// use rustworkx_core::petgraph;
-/// use rustworkx_core::generators::llolipop_graph;
+/// use rustworkx_core::generators::lollipop_graph;
 /// use rustworkx_core::petgraph::visit::EdgeRef;
 ///
-/// let g: petgraph::graph::UnGraph<(), ()> = llolipop_graph(
+/// let g: petgraph::graph::UnGraph<(), ()> = lollipop_graph(
 ///     Some(3),
 ///     Some(3),
 ///     None,
@@ -71,11 +71,11 @@ use super::InvalidInputError;
 ///         .collect::<Vec<(usize, usize)>>(),
 /// )
 /// ```
-pub fn llolipop_graph<G, T, F, H, M>(
+pub fn lollipop_graph<G, T, F, H, M>(
     num_mesh_nodes: Option<usize>,
     num_path_nodes: Option<usize>,
-    mesh_weights: Option<Vec<PyObject>>,
-    path_weights: Option<Vec<PyObject>>,
+    mesh_weights: Option<Vec<T>>,
+    path_weights: Option<Vec<T>>,
     mut default_node_weight: F,
     mut default_edge_weight: H,
     bidirectional: bool,
@@ -84,13 +84,13 @@ where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
     F: FnMut() -> T,
     H: FnMut() -> M,
-    G::NodeId: Eq + Hash;
+    G::NodeId: Eq + Hash,
 {
     let mut graph = complete_graph(num_mesh_nodes, mesh_weights);
     if num_path_nodes.is_none() && path_weights.is_none() {
         return Ok(graph);
     }
-    let meshlen = graph.num_nodes();
+    let meshlen = graph.node_count();
 
     let path_nodes: Vec<G::NodeId> = match path_weights {
         Some(path_weights) => path_weights
@@ -98,7 +98,7 @@ where
             .map(|weight| graph.add_node(weight))
             .collect(),
         None => (0..num_path_nodes.unwrap())
-            .map(|_| graph.graph.add_node(default_node_weight()))
+            .map(|_| graph.add_node(default_node_weight()))
             .collect(),
     };
 
@@ -121,14 +121,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::generators::llolipop_graph;
+    use crate::generators::lollipop_graph;
     use crate::generators::InvalidInputError;
     use crate::petgraph::visit::EdgeRef;
 
     #[test]
-    fn test_directed_llolipop_simple_row_col() {
+    fn test_directed_lollipop_simple_row_col() {
         let g: petgraph::graph::DiGraph<(), ()> =
-            llolipop_graph(Some(3), Some(3), None, || (), || (), false).unwrap();
+            lollipop_graph(Some(3), Some(3), None, || (), || (), false).unwrap();
         assert_eq!(
             vec![
                 (0, 3),
@@ -152,9 +152,9 @@ mod tests {
     }
 
     #[test]
-    fn test_llolipop_simple_row_col() {
+    fn test_lollipop_simple_row_col() {
         let g: petgraph::graph::UnGraph<(), ()> =
-            llolipop_graph(Some(3), Some(3), None, || (), || (), false).unwrap();
+            lollipop_graph(Some(3), Some(3), None, || (), || (), false).unwrap();
         assert_eq!(
             vec![
                 (0, 3),
@@ -178,8 +178,8 @@ mod tests {
     }
 
     #[test]
-    fn test_directed_llolipop_weights() {
-        let g: petgraph::graph::DiGraph<usize, ()> = llolipop_graph(
+    fn test_directed_lollipop_weights() {
+        let g: petgraph::graph::DiGraph<usize, ()> = lollipop_graph(
             Some(2),
             Some(3),
             Some(vec![0, 1, 2, 3, 4, 5]),
@@ -202,8 +202,8 @@ mod tests {
     }
 
     #[test]
-    fn test_directed_llolipop_more_weights() {
-        let g: petgraph::graph::DiGraph<usize, ()> = llolipop_graph(
+    fn test_directed_lollipop_more_weights() {
+        let g: petgraph::graph::DiGraph<usize, ()> = lollipop_graph(
             Some(2),
             Some(3),
             Some(vec![0, 1, 2, 3, 4, 5, 6, 7]),
@@ -226,9 +226,9 @@ mod tests {
     }
 
     #[test]
-    fn test_directed_llolipop_less_weights() {
+    fn test_directed_lollipop_less_weights() {
         let g: petgraph::graph::DiGraph<usize, ()> =
-            llolipop_graph(Some(2), Some(3), Some(vec![0, 1, 2, 3]), || 6, || (), false).unwrap();
+            lollipop_graph(Some(2), Some(3), Some(vec![0, 1, 2, 3]), || 6, || (), false).unwrap();
         assert_eq!(
             vec![(0, 3), (0, 1), (1, 4), (1, 2), (2, 5), (3, 4), (4, 5),],
             g.edge_references()
@@ -243,9 +243,9 @@ mod tests {
     }
 
     #[test]
-    fn test_directed_llolipop_bidirectional() {
+    fn test_directed_lollipop_bidirectional() {
         let g: petgraph::graph::DiGraph<(), ()> =
-            llolipop_graph(Some(2), Some(3), None, || (), || (), true).unwrap();
+            lollipop_graph(Some(2), Some(3), None, || (), || (), true).unwrap();
         assert_eq!(
             vec![
                 (0, 3),
@@ -271,8 +271,8 @@ mod tests {
     }
 
     #[test]
-    fn test_llolipop_error() {
-        match llolipop_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+    fn test_lollipop_error() {
+        match lollipop_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
             None,
             None,
             None,
