@@ -112,6 +112,7 @@ where
         }
     }
 
+    // middle columns
     for i in 1..(collen - 1) {
         for j in 0..(rowlen - 1) {
             graph.add_edge(
