@@ -412,5 +412,6 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         self.assertEqual(list(graph.edge_list()), expected_edges)
 
     def test_hexagonal_graph_0_0(self):
-        with self.assertRaises(IndexError):
-            rustworkx.generators.hexagonal_lattice_graph(0, 0)
+        graph = rustworkx.generators.hexagonal_lattice_graph(0, 0)
+        self.assertEqual(len(graph), 0)
+        self.assertEqual(len(graph.edges()), 0)

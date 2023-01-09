@@ -87,9 +87,8 @@ where
     G::NodeId: Eq + Hash,
 {
     if rows == 0 || cols == 0 {
-        return Err(InvalidInputError {});
+        return Ok(G::with_capacity(0, 0));
     }
-
     let mut rowlen = rows;
     let mut collen = cols;
 
@@ -99,20 +98,18 @@ where
     let num_nodes = rowlen * collen - 2;
 
     let mut graph = G::with_capacity(num_nodes, num_nodes);
+
     let nodes: Vec<G::NodeId> = (0..num_nodes)
         .map(|_| graph.add_node(default_node_weight()))
         .collect();
 
     // Add column edges
-    // first column
     for j in 0..(rowlen - 2) {
         graph.add_edge(nodes[j], nodes[j + 1], default_edge_weight());
         if bidirectional {
             graph.add_edge(nodes[j + 1], nodes[j], default_edge_weight());
         }
     }
-
-    // middle columns
     for i in 1..(collen - 1) {
         for j in 0..(rowlen - 1) {
             graph.add_edge(
@@ -129,8 +126,6 @@ where
             }
         }
     }
-
-    // last column
     for j in 0..(rowlen - 2) {
         graph.add_edge(
             nodes[(collen - 1) * rowlen + j - 1],
@@ -153,7 +148,6 @@ where
             graph.add_edge(nodes[j + rowlen - 1], nodes[j], default_edge_weight());
         }
     }
-
     for i in 1..(collen - 2) {
         for j in 0..rowlen {
             if i % 2 == j % 2 {
@@ -172,7 +166,6 @@ where
             }
         }
     }
-
     if collen > 2 {
         for j in ((collen % 2)..rowlen).step_by(2) {
             graph.add_edge(
@@ -195,7 +188,6 @@ where
 #[cfg(test)]
 mod tests {
     use crate::generators::hexagonal_lattice_graph;
-    use crate::generators::InvalidInputError;
     use crate::petgraph;
     use crate::petgraph::visit::EdgeRef;
 
@@ -325,15 +317,9 @@ mod tests {
 
     #[test]
     fn test_hexagonal_lattice_error() {
-        match hexagonal_lattice_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            0,
-            0,
-            || (),
-            || (),
-            false,
-        ) {
-            Ok(_) => panic!("Returned a non-error"),
-            Err(e) => assert_eq!(e, InvalidInputError),
-        };
+        let g: petgraph::graph::UnGraph<(), ()> =
+            hexagonal_lattice_graph(0, 0, || (), || (), false).unwrap();
+        assert_eq!(g.node_count(), 0);
+        assert_eq!(g.edge_count(), 0);
     }
 }
