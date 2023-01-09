@@ -12,7 +12,6 @@
 
 //! This module contains generator functions for building graphs
 
-mod complete_graph;
 mod cycle_graph;
 mod grid_graph;
 mod lollipop_graph;
@@ -36,7 +35,6 @@ impl fmt::Display for InvalidInputError {
     }
 }
 
-pub use complete_graph::complete_graph;
 pub use cycle_graph::cycle_graph;
 pub use grid_graph::grid_graph;
 pub use lollipop_graph::lollipop_graph;
