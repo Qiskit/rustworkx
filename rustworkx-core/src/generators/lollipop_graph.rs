@@ -99,10 +99,10 @@ where
         return Err(InvalidInputError {});
     }
     let num_nodes: usize;
-    if num_mesh_nodes.is_none() {
-        num_nodes = mesh_weights.as_ref().unwrap().len();
+    if let Some(mesh_nodes) = num_mesh_nodes {
+        num_nodes = mesh_nodes;
     } else {
-        num_nodes = num_mesh_nodes.unwrap();
+        num_nodes = mesh_weights.as_ref().unwrap().len();
     }
     let num_edges = (num_nodes * (num_nodes - 1)) / 2;
     let mut graph = G::with_capacity(num_nodes, num_edges);
@@ -129,8 +129,8 @@ where
             .map(|weight| graph.add_node(weight))
             .collect(),
         None => {
-            if num_path_nodes.is_some() {
-                (0..num_path_nodes.unwrap())
+            if let Some(num_path) = num_path_nodes {
+                (0..num_path)
                     .map(|_| graph.add_node(default_node_weight()))
                     .collect()
             } else {
