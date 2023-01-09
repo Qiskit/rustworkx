@@ -16,6 +16,7 @@ mod cycle_graph;
 mod grid_graph;
 mod hexagonal_lattice_graph;
 mod path_graph;
+mod petersen_graph;
 mod star_graph;
 
 mod utils;
@@ -39,4 +40,5 @@ pub use cycle_graph::cycle_graph;
 pub use grid_graph::grid_graph;
 pub use hexagonal_lattice_graph::hexagonal_lattice_graph;
 pub use path_graph::path_graph;
+pub use petersen_graph::petersen_graph;
 pub use star_graph::star_graph;

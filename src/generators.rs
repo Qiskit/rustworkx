@@ -1836,34 +1836,16 @@ pub fn generalized_petersen_graph(
     k: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if n < 3 {
-        return Err(PyIndexError::new_err("n must be at least 3"));
-    }
-
-    if k == 0 || 2 * k >= n {
-        return Err(PyIndexError::new_err(
-            "k is invalid: it must be positive and less than n/2",
-        ));
-    }
-
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(2 * n, 3 * n);
-
-    let star_nodes: Vec<NodeIndex> = (0..n).map(|_| graph.add_node(py.None())).collect();
-
-    let polygon_nodes: Vec<NodeIndex> = (0..n).map(|_| graph.add_node(py.None())).collect();
-
-    for i in 0..n {
-        graph.add_edge(star_nodes[i], star_nodes[(i + k) % n], py.None());
-    }
-
-    for i in 0..n {
-        graph.add_edge(polygon_nodes[i], polygon_nodes[(i + 1) % n], py.None());
-    }
-
-    for i in 0..n {
-        graph.add_edge(polygon_nodes[i], star_nodes[i], py.None());
-    }
-
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::petersen_graph(n, k, default_fn, default_fn) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "n > 2, k > 0, or 2 * k > n not satisfied.",
+                ))
+            }
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
