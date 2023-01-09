@@ -13,10 +13,11 @@
 use std::hash::Hash;
 
 use petgraph::data::{Build, Create};
-use petgraph::visit::{Data, NodeIndexable};
+use petgraph::visit::{Data, GraphProp, NodeIndexable};
 
 use super::utils::pairwise;
 use super::InvalidInputError;
+use crate::generators::complete_graph;
 
 /// Generate a lollipop graph
 ///
@@ -55,17 +56,27 @@ use super::InvalidInputError;
 /// use rustworkx_core::generators::lollipop_graph;
 /// use rustworkx_core::petgraph::visit::EdgeRef;
 ///
+/// let expected_edge_list = vec![
+///     (0, 1),
+///     (0, 2),
+///     (0, 3),
+///     (1, 2),
+///     (1, 3),
+///     (2, 3),
+///     (3, 4),
+///     (4, 5),
+///     (5, 6),
+/// ];
 /// let g: petgraph::graph::UnGraph<(), ()> = lollipop_graph(
+///     Some(4),
 ///     Some(3),
-///     Some(3),
+///     None,
 ///     None,
 ///     || {()},
 ///     || {()},
-///     false
 /// ).unwrap();
 /// assert_eq!(
-///     vec![(0, 3), (0, 1), (1, 4), (1, 2), (2, 5),
-///          (3, 6), (3, 4), (4, 7), (4, 5), (5, 8), (6, 7), (7, 8)],
+///     expected_edge_list,
 ///     g.edge_references()
 ///         .map(|edge| (edge.source().index(), edge.target().index()))
 ///         .collect::<Vec<(usize, usize)>>(),
@@ -78,15 +89,70 @@ pub fn lollipop_graph<G, T, F, H, M>(
     path_weights: Option<Vec<T>>,
     mut default_node_weight: F,
     mut default_edge_weight: H,
-    bidirectional: bool,
 ) -> Result<G, InvalidInputError>
 where
-    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + GraphProp,
     F: FnMut() -> T,
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
-    let mut graph = complete_graph(num_mesh_nodes, mesh_weights);
+    if num_mesh_nodes.is_none() {
+        return Err(PyIndexError::new_err("num_mesh_nodes not specified"));
+    }
+
+    let mut left_mesh = StableUnGraph::<PyObject, PyObject>::default();
+    let mesh_nodes: Vec<NodeIndex> = (0..num_mesh_nodes.unwrap())
+        .map(|_| left_mesh.add_node(py.None()))
+        .collect();
+    let mut nodelen = mesh_nodes.len();
+    for i in 0..nodelen - 1 {
+        for j in i + 1..nodelen {
+            left_mesh.add_edge(mesh_nodes[i], mesh_nodes[j], py.None());
+        }
+    }
+
+    let right_mesh = left_mesh.clone();
+
+    if let Some(num_nodes) = num_path_nodes {
+        let path_nodes: Vec<NodeIndex> = (0..num_nodes)
+            .map(|_| left_mesh.add_node(py.None()))
+            .collect();
+        left_mesh.add_edge(
+            NodeIndex::new(nodelen - 1),
+            NodeIndex::new(nodelen),
+            py.None(),
+        );
+
+        nodelen += path_nodes.len();
+
+        for (node_a, node_b) in pairwise(path_nodes) {
+            match node_a {
+                Some(node_a) => left_mesh.add_edge(node_a, node_b, py.None()),
+                None => continue,
+            };
+        }
+    }
+
+    for node in right_mesh.node_indices() {
+        let new_node = &right_mesh[node];
+        left_mesh.add_node(new_node.clone_ref(py));
+    }
+    left_mesh.add_edge(
+        NodeIndex::new(nodelen - 1),
+        NodeIndex::new(nodelen),
+        py.None(),
+    );
+    for edge in right_mesh.edge_references() {
+        let new_source = NodeIndex::new(nodelen + edge.source().index());
+        let new_target = NodeIndex::new(nodelen + edge.target().index());
+        let weight = edge.weight();
+        left_mesh.add_edge(new_source, new_target, weight.clone_ref(py));
+    }
+
+
+
+
+
     if num_path_nodes.is_none() && path_weights.is_none() {
         return Ok(graph);
     }
@@ -124,164 +190,34 @@ mod tests {
     use crate::generators::lollipop_graph;
     use crate::generators::InvalidInputError;
     use crate::petgraph::visit::EdgeRef;
-
     #[test]
-    fn test_directed_lollipop_simple_row_col() {
-        let g: petgraph::graph::DiGraph<(), ()> =
-            lollipop_graph(Some(3), Some(3), None, || (), || (), false).unwrap();
-        assert_eq!(
-            vec![
-                (0, 3),
-                (0, 1),
-                (1, 4),
-                (1, 2),
-                (2, 5),
-                (3, 6),
-                (3, 4),
-                (4, 7),
-                (4, 5),
-                (5, 8),
-                (6, 7),
-                (7, 8)
-            ],
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
-        assert_eq!(g.edge_count(), 12);
-    }
-
-    #[test]
-    fn test_lollipop_simple_row_col() {
+    fn test_lollipop_mesh_path() {
+        let expected_edge_list = vec![
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (1, 2),
+            (1, 3),
+            (2, 3),
+            (3, 4),
+            (4, 5),
+            (5, 6),
+        ];
         let g: petgraph::graph::UnGraph<(), ()> =
-            lollipop_graph(Some(3), Some(3), None, || (), || (), false).unwrap();
+            lollipop_graph(Some(4), Some(3), None, None, || (), || ()).unwrap();
         assert_eq!(
-            vec![
-                (0, 3),
-                (0, 1),
-                (1, 4),
-                (1, 2),
-                (2, 5),
-                (3, 6),
-                (3, 4),
-                (4, 7),
-                (4, 5),
-                (5, 8),
-                (6, 7),
-                (7, 8)
-            ],
+            expected_edge_list,
             g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
         );
-        assert_eq!(g.edge_count(), 12);
     }
 
     #[test]
-    fn test_directed_lollipop_weights() {
-        let g: petgraph::graph::DiGraph<usize, ()> = lollipop_graph(
-            Some(2),
-            Some(3),
-            Some(vec![0, 1, 2, 3, 4, 5]),
-            || 4,
-            || (),
-            false,
-        )
-        .unwrap();
-        assert_eq!(
-            vec![(0, 3), (0, 1), (1, 4), (1, 2), (2, 5), (3, 4), (4, 5),],
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
-        assert_eq!(g.edge_count(), 7);
-        assert_eq!(
-            vec![0, 1, 2, 3, 4, 5],
-            g.node_weights().copied().collect::<Vec<usize>>(),
-        );
-    }
-
-    #[test]
-    fn test_directed_lollipop_more_weights() {
-        let g: petgraph::graph::DiGraph<usize, ()> = lollipop_graph(
-            Some(2),
-            Some(3),
-            Some(vec![0, 1, 2, 3, 4, 5, 6, 7]),
-            || 4,
-            || (),
-            false,
-        )
-        .unwrap();
-        assert_eq!(
-            vec![(0, 3), (0, 1), (1, 4), (1, 2), (2, 5), (3, 4), (4, 5),],
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
-        assert_eq!(g.edge_count(), 7);
-        assert_eq!(
-            vec![0, 1, 2, 3, 4, 5],
-            g.node_weights().copied().collect::<Vec<usize>>(),
-        );
-    }
-
-    #[test]
-    fn test_directed_lollipop_less_weights() {
-        let g: petgraph::graph::DiGraph<usize, ()> =
-            lollipop_graph(Some(2), Some(3), Some(vec![0, 1, 2, 3]), || 6, || (), false).unwrap();
-        assert_eq!(
-            vec![(0, 3), (0, 1), (1, 4), (1, 2), (2, 5), (3, 4), (4, 5),],
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
-        assert_eq!(g.edge_count(), 7);
-        assert_eq!(
-            vec![0, 1, 2, 3, 6, 6],
-            g.node_weights().copied().collect::<Vec<usize>>(),
-        );
-    }
-
-    #[test]
-    fn test_directed_lollipop_bidirectional() {
-        let g: petgraph::graph::DiGraph<(), ()> =
-            lollipop_graph(Some(2), Some(3), None, || (), || (), true).unwrap();
-        assert_eq!(
-            vec![
-                (0, 3),
-                (3, 0),
-                (0, 1),
-                (1, 0),
-                (1, 4),
-                (4, 1),
-                (1, 2),
-                (2, 1),
-                (2, 5),
-                (5, 2),
-                (3, 4),
-                (4, 3),
-                (4, 5),
-                (5, 4),
-            ],
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
-        assert_eq!(g.edge_count(), 14);
-    }
-
-    #[test]
-    fn test_lollipop_error() {
-        match lollipop_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            None,
-            None,
-            None,
-            || (),
-            || (),
-            false,
-        ) {
-            Ok(_) => panic!("Returned a non-error"),
-            Err(e) => assert_eq!(e, InvalidInputError),
-        };
+    fn test_lollipop_0_mesh_none_path() {
+        let g: petgraph::graph::UnGraph<(), ()> =
+            lollipop_graph(Some(0), None, None, None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 0);
+        assert_eq!(g.edge_count(), 0);
     }
 }
