@@ -13,6 +13,7 @@
 //! This module contains generator functions for building graphs
 
 mod cycle_graph;
+mod full_rary_tree_graph;
 mod grid_graph;
 mod path_graph;
 mod petersen_graph;
@@ -36,6 +37,7 @@ impl fmt::Display for InvalidInputError {
 }
 
 pub use cycle_graph::cycle_graph;
+pub use full_rary_tree_graph::full_rary_tree_graph;
 pub use grid_graph::grid_graph;
 pub use path_graph::path_graph;
 pub use petersen_graph::petersen_graph;

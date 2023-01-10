@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::hash::Hash;
 use std::collections::VecDeque;
+use std::hash::Hash;
 
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, NodeIndexable};
@@ -65,8 +65,8 @@ use super::InvalidInputError;
 ///         .collect::<Vec<(usize, usize)>>(),
 /// )
 /// ```
-pub fn full_rary_graph<G, T, F, H, M>(
-    branching_factor: u32,
+pub fn full_rary_tree_graph<G, T, F, H, M>(
+    branching_factor: usize,
     num_nodes: usize,
     weights: Option<Vec<T>>,
     mut default_node_weight: F,
@@ -79,11 +79,11 @@ where
     G::NodeId: Eq + Hash,
 {
     if weights.is_some() {
-        if weights.len() > num_nodes {
+        if weights.as_ref().unwrap().len() > num_nodes {
             return Err(InvalidInputError {});
         }
     }
-    let mut graph = G::with_capacity(num_nodes, num_nodes * branching_factor - 1);
+    let mut graph = G::with_capacity(num_nodes, num_nodes * branching_factor);
 
     let nodes: Vec<G::NodeId> = match weights {
         Some(weights) => {
@@ -99,17 +99,19 @@ where
             }
             node_list
         }
-        None => (0..num_nodes).map(|_| graph.add_node(default_node_weight())).collect(),
+        None => (0..num_nodes)
+            .map(|_| graph.add_node(default_node_weight()))
+            .collect(),
     };
     if nodes.len() > 0 {
-        let mut parents = VecDeque::from(vec![nodes[0].index()]);
+        let mut parents = VecDeque::from(vec![graph.to_index(nodes[0])]);
         let mut nod_it: usize = 1;
 
         while !parents.is_empty() {
             let source: usize = parents.pop_front().unwrap(); //If is empty it will never try to pop
             for _ in 0..branching_factor {
                 if nod_it < num_nodes {
-                    let target: usize = nodes[nod_it].index();
+                    let target: usize = graph.to_index(nodes[nod_it]);
                     parents.push_back(target);
                     nod_it += 1;
                     graph.add_edge(nodes[source], nodes[target], default_edge_weight());
@@ -140,7 +142,8 @@ mod tests {
             (3, 8),
             (4, 9),
         ];
-        let g: petgraph::graph::UnGraph<(), ()> = full_rary_graph(2, 10, None, || (), || ()).unwrap();
+        let g: petgraph::graph::UnGraph<(), ()> =
+            full_rary_graph(2, 10, None, || (), || ()).unwrap();
         assert_eq!(
             expected_edge_list,
             g.edge_references()
@@ -151,7 +154,13 @@ mod tests {
 
     #[test]
     fn test_full_rary_error() {
-        match full_rary_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(3, 2, vec![0, 1, 2, 3], || (), || ()) {
+        match full_rary_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            3,
+            2,
+            Some(vec![(), (), (), ()]),
+            || (),
+            || (),
+        ) {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
         };
