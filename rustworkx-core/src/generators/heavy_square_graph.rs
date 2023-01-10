@@ -21,10 +21,10 @@ use super::InvalidInputError;
 /// https://arxiv.org/abs/1907.09528.
 /// An ASCII diagram of the graph is given by:
 ///
-/// .. code-block:: console
+/// .. note::
 ///
-///     ...       S   ...
-///        \     / \
+///    ...       S   ...
+///       \     / \
 ///        ... D   D   D ...
 ///            |   |   |
 ///        ... F-S-F-S-F-...
@@ -56,15 +56,38 @@ use super::InvalidInputError;
 /// use rustworkx_core::generators::heavy_square_graph;
 /// use rustworkx_core::petgraph::visit::EdgeRef;
 ///
-/// let g: petgraph::graph::UnGraph<(), ()> = heavy_square_graph(
-///     Some(4),
-///     None,
-///     || {()},
-///     || {()},
-///     false
-/// ).unwrap();
+/// let expected_edge_list = vec![
+///     (0, 15),
+///     (15, 1),
+///     (1, 16),
+///     (16, 2),
+///     (3, 17),
+///     (17, 4),
+///     (4, 18),
+///     (18, 5),
+///     (6, 19),
+///     (19, 7),
+///     (7, 20),
+///     (20, 8),
+///     (2, 11),
+///     (5, 11),
+///     (3, 12),
+///     (6, 12),
+///     (9, 15),
+///     (9, 17),
+///     (10, 16),
+///     (10, 18),
+///     (13, 17),
+///     (13, 19),
+///     (14, 18),
+///     (14, 20),
+/// ];
+/// let d = 3;
+/// let g: petgraph::graph::UnGraph<(), ()> = heavy_square_graph(d, || (), || (), false).unwrap();
+/// assert_eq!(g.node_count(), 3 * d * d - 2 * d);
+/// assert_eq!(g.edge_count(), 2 * d * (d - 1) + 2 * d * (d - 1));
 /// assert_eq!(
-///     vec![(0, 1), (1, 2), (2, 3), (3, 0)],
+///     expected_edge_list,
 ///     g.edge_references()
 ///         .map(|edge| (edge.source().index(), edge.target().index()))
 ///         .collect::<Vec<(usize, usize)>>(),
@@ -85,9 +108,9 @@ where
     if d % 2 == 0 {
         return Err(InvalidInputError {});
     }
-    num_nodes = 3 * d * d - 2 * d;
-    num_edges = 2 * d * (d - 1) + 2 * d * (d - 1);
-    let mut graph = G::with_capacity(node_len, num_edges);
+    let num_nodes = 3 * d * d - 2 * d;
+    let num_edges = 2 * d * (d - 1) + 2 * d * (d - 1);
+    let mut graph = G::with_capacity(num_nodes, num_edges);
 
     if d == 1 {
         graph.add_node(default_node_weight());
@@ -97,11 +120,15 @@ where
     let num_syndrome = d * (d - 1);
     let num_flag = d * (d - 1);
 
-    let nodes_data: Vec<G::NodeId> = (0..num_data).map(|_| graph.add_node(default_node_weight())).collect();
+    let nodes_data: Vec<G::NodeId> = (0..num_data)
+        .map(|_| graph.add_node(default_node_weight()))
+        .collect();
     let nodes_syndrome: Vec<G::NodeId> = (0..num_syndrome)
         .map(|_| graph.add_node(default_node_weight()))
         .collect();
-    let nodes_flag: Vec<G::NodeId> = (0..num_flag).map(|_| graph.add_node(default_node_weight())).collect();
+    let nodes_flag: Vec<G::NodeId> = (0..num_flag)
+        .map(|_| graph.add_node(default_node_weight()))
+        .collect();
 
     // connect data and flags
     for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
@@ -142,10 +169,18 @@ where
             }
         } else if i % 2 == 1 {
             graph.add_edge(nodes_data[i * d], syndrome_chunk[0], default_edge_weight());
-            graph.add_edge(nodes_data[(i + 1) * d], syndrome_chunk[0], default_edge_weight());
+            graph.add_edge(
+                nodes_data[(i + 1) * d],
+                syndrome_chunk[0],
+                default_edge_weight(),
+            );
             if bidirectional {
                 graph.add_edge(syndrome_chunk[0], nodes_data[i * d], default_edge_weight());
-                graph.add_edge(syndrome_chunk[0], nodes_data[(i + 1) * d], default_edge_weight());
+                graph.add_edge(
+                    syndrome_chunk[0],
+                    nodes_data[(i + 1) * d],
+                    default_edge_weight(),
+                );
             }
         }
     }
@@ -155,22 +190,54 @@ where
         if i % 2 == 0 {
             for (j, syndrome) in syndrome_chunk.iter().enumerate() {
                 if j != syndrome_chunk.len() - 1 {
-                    graph.add_edge(*syndrome, nodes_flag[i * (d - 1) + j], default_edge_weight());
-                    graph.add_edge(*syndrome, nodes_flag[(i + 1) * (d - 1) + j], default_edge_weight());
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[i * (d - 1) + j],
+                        default_edge_weight(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j],
+                        default_edge_weight(),
+                    );
                     if bidirectional {
-                        graph.add_edge(nodes_flag[i * (d - 1) + j], *syndrome, default_edge_weight());
-                        graph.add_edge(nodes_flag[(i + 1) * (d - 1) + j], *syndrome, default_edge_weight());
+                        graph.add_edge(
+                            nodes_flag[i * (d - 1) + j],
+                            *syndrome,
+                            default_edge_weight(),
+                        );
+                        graph.add_edge(
+                            nodes_flag[(i + 1) * (d - 1) + j],
+                            *syndrome,
+                            default_edge_weight(),
+                        );
                     }
                 }
             }
         } else if i % 2 == 1 {
             for (j, syndrome) in syndrome_chunk.iter().enumerate() {
                 if j != 0 {
-                    graph.add_edge(*syndrome, nodes_flag[i * (d - 1) + j - 1], default_edge_weight());
-                    graph.add_edge(*syndrome, nodes_flag[(i + 1) * (d - 1) + j - 1], default_edge_weight());
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[i * (d - 1) + j - 1],
+                        default_edge_weight(),
+                    );
+                    graph.add_edge(
+                        *syndrome,
+                        nodes_flag[(i + 1) * (d - 1) + j - 1],
+                        default_edge_weight(),
+                    );
                     if bidirectional {
-                        graph.add_edge(nodes_flag[i * (d - 1) + j - 1], *syndrome, default_edge_weight());
-                        graph.add_edge(nodes_flag[(i + 1) * (d - 1) + j - 1], *syndrome, default_edge_weight());
+                        graph.add_edge(
+                            nodes_flag[i * (d - 1) + j - 1],
+                            *syndrome,
+                            default_edge_weight(),
+                        );
+                        graph.add_edge(
+                            nodes_flag[(i + 1) * (d - 1) + j - 1],
+                            *syndrome,
+                            default_edge_weight(),
+                        );
                     }
                 }
             }
@@ -188,36 +255,40 @@ mod tests {
     use crate::petgraph::visit::EdgeRef;
 
     #[test]
-    fn test_with_weights() {
-        let g: petgraph::graph::UnGraph<usize, ()> =
-            heavy_square_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), false).unwrap();
+    fn test_heavy_square_3() {
+        let expected_edge_list = vec![
+            (0, 15),
+            (15, 1),
+            (1, 16),
+            (16, 2),
+            (3, 17),
+            (17, 4),
+            (4, 18),
+            (18, 5),
+            (6, 19),
+            (19, 7),
+            (7, 20),
+            (20, 8),
+            (2, 11),
+            (5, 11),
+            (3, 12),
+            (6, 12),
+            (9, 15),
+            (9, 17),
+            (10, 16),
+            (10, 18),
+            (13, 17),
+            (13, 19),
+            (14, 18),
+            (14, 20),
+        ];
+        let d = 3;
+        let g: petgraph::graph::UnGraph<(), ()> =
+            heavy_square_graph(d, || (), || (), false).unwrap();
+        assert_eq!(g.node_count(), 3 * d * d - 2 * d);
+        assert_eq!(g.edge_count(), 2 * d * (d - 1) + 2 * d * (d - 1));
         assert_eq!(
-            vec![(0, 1), (1, 2), (2, 3), (3, 0)],
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
-        assert_eq!(
-            vec![0, 1, 2, 3],
-            g.node_weights().copied().collect::<Vec<usize>>(),
-        );
-    }
-
-    #[test]
-    fn test_bidirectional() {
-        let g: petgraph::graph::DiGraph<(), ()> =
-            heavy_square_graph(Some(4), None, || (), || (), true).unwrap();
-        assert_eq!(
-            vec![
-                (0, 1),
-                (1, 0),
-                (1, 2),
-                (2, 1),
-                (2, 3),
-                (3, 2),
-                (3, 0),
-                (0, 3)
-            ],
+            expected_edge_list,
             g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
@@ -226,9 +297,9 @@ mod tests {
 
     #[test]
     fn test_error() {
+        let d = 2;
         match heavy_square_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            None,
-            None,
+            d,
             || (),
             || (),
             false,
