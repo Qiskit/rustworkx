@@ -12,6 +12,7 @@
 
 //! This module contains generator functions for building graphs
 
+mod barbell_graph;
 mod cycle_graph;
 mod grid_graph;
 mod path_graph;
@@ -35,6 +36,7 @@ impl fmt::Display for InvalidInputError {
     }
 }
 
+pub use barbell_graph::barbell_graph;
 pub use cycle_graph::cycle_graph;
 pub use grid_graph::grid_graph;
 pub use path_graph::path_graph;
