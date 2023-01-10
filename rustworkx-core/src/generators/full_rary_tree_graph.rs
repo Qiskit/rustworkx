@@ -37,7 +37,7 @@ use super::InvalidInputError;
 /// # Example
 /// ```rust
 /// use rustworkx_core::petgraph;
-/// use rustworkx_core::generators::full_rary_graph;
+/// use rustworkx_core::generators::full_rary_tree_graph;
 /// use rustworkx_core::petgraph::visit::EdgeRef;
 ///
 /// let expected_edge_list = vec![
@@ -51,7 +51,7 @@ use super::InvalidInputError;
 ///     (3, 8),
 ///     (4, 9),
 /// ];
-/// let g: petgraph::graph::UnGraph<(), ()> = full_rary_graph(
+/// let g: petgraph::graph::UnGraph<(), ()> = full_rary_tree_graph(
 ///     2,
 ///     10,
 ///     None,
@@ -78,8 +78,8 @@ where
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
-    if weights.is_some() {
-        if weights.as_ref().unwrap().len() > num_nodes {
+    if let Some(wt) = weights.as_ref() {
+        if wt.len() > num_nodes {
             return Err(InvalidInputError {});
         }
     }
@@ -124,7 +124,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::generators::full_rary_graph;
+    use crate::generators::full_rary_tree_graph;
     use crate::generators::InvalidInputError;
     use crate::petgraph;
     use crate::petgraph::visit::EdgeRef;
@@ -143,7 +143,7 @@ mod tests {
             (4, 9),
         ];
         let g: petgraph::graph::UnGraph<(), ()> =
-            full_rary_graph(2, 10, None, || (), || ()).unwrap();
+            full_rary_tree_graph(2, 10, None, || (), || ()).unwrap();
         assert_eq!(
             expected_edge_list,
             g.edge_references()
@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn test_full_rary_error() {
-        match full_rary_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+        match full_rary_tree_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
             3,
             2,
             Some(vec![(), (), (), ()]),
