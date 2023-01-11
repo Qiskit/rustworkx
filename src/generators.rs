@@ -734,8 +734,7 @@ pub fn binomial_tree_graph(
     }
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
-        match core_generators::binomial_tree_graph(order, weights, default_fn, default_fn, false)
-        {
+        match core_generators::binomial_tree_graph(order, weights, default_fn, default_fn, false) {
             Ok(graph) => graph,
             Err(_) => {
                 return Err(PyIndexError::new_err(
