@@ -598,11 +598,7 @@ pub fn grid_graph(
     let graph: StablePyGraph<Undirected> =
         match core_generators::grid_graph(rows, cols, weights, default_fn, default_fn, false) {
             Ok(graph) => graph,
-            Err(_) => {
-                return Err(PyIndexError::new_err(
-                    "num_nodes and weights list not specified",
-                ))
-            }
+            Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
         };
     Ok(graph::PyGraph {
         graph,
@@ -669,11 +665,7 @@ pub fn directed_grid_graph(
         bidirectional,
     ) {
         Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "num_nodes and weights list not specified",
-            ))
-        }
+        Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
     };
     Ok(digraph::PyDiGraph {
         graph,
@@ -1035,78 +1027,12 @@ pub fn directed_binomial_tree_graph(
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(d, /, multigraph=True)")]
 pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
-
-    if d % 2 == 0 {
-        return Err(PyIndexError::new_err("d must be odd"));
-    }
-
-    if d == 1 {
-        graph.add_node(py.None());
-        return Ok(graph::PyGraph {
-            graph,
-            node_removed: false,
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-
-    let num_data = d * d;
-    let num_syndrome = d * (d - 1);
-    let num_flag = d * (d - 1);
-
-    let nodes_data: Vec<NodeIndex> = (0..num_data).map(|_| graph.add_node(py.None())).collect();
-    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
-        .map(|_| graph.add_node(py.None()))
-        .collect();
-    let nodes_flag: Vec<NodeIndex> = (0..num_flag).map(|_| graph.add_node(py.None())).collect();
-
-    // connect data and flags
-    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
-        for (j, flag) in flag_chunk.iter().enumerate() {
-            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
-            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
-        }
-    }
-
-    // connect data and syndromes
-    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
-        if i % 2 == 0 {
-            graph.add_edge(
-                nodes_data[i * d + (d - 1)],
-                syndrome_chunk[syndrome_chunk.len() - 1],
-                py.None(),
-            );
-            graph.add_edge(
-                syndrome_chunk[syndrome_chunk.len() - 1],
-                nodes_data[i * d + (2 * d - 1)],
-                py.None(),
-            );
-        } else if i % 2 == 1 {
-            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
-            graph.add_edge(syndrome_chunk[0], nodes_data[(i + 1) * d], py.None());
-        }
-    }
-
-    // connect flag and syndromes
-    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
-        if i % 2 == 0 {
-            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
-                if j != syndrome_chunk.len() - 1 {
-                    graph.add_edge(nodes_flag[i * (d - 1) + j], *syndrome, py.None());
-                    graph.add_edge(*syndrome, nodes_flag[(i + 1) * (d - 1) + j], py.None());
-                }
-            }
-        } else if i % 2 == 1 {
-            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
-                if j != 0 {
-                    graph.add_edge(nodes_flag[i * (d - 1) + j - 1], *syndrome, py.None());
-                    graph.add_edge(*syndrome, nodes_flag[(i + 1) * (d - 1) + j - 1], py.None());
-                }
-            }
-        }
-    }
-
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::heavy_square_graph(d, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyIndexError::new_err("d must be an odd number.")),
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -1169,108 +1095,12 @@ pub fn directed_heavy_square_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
-
-    if d % 2 == 0 {
-        return Err(PyIndexError::new_err("d must be odd"));
-    }
-
-    if d == 1 {
-        graph.add_node(py.None());
-        return Ok(digraph::PyDiGraph {
-            graph,
-            node_removed: false,
-            check_cycle: false,
-            cycle_state: algo::DfsSpace::default(),
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-
-    let num_data = d * d;
-    let num_syndrome = d * (d - 1);
-    let num_flag = d * (d - 1);
-
-    let nodes_data: Vec<NodeIndex> = (0..num_data).map(|_| graph.add_node(py.None())).collect();
-    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
-        .map(|_| graph.add_node(py.None()))
-        .collect();
-    let nodes_flag: Vec<NodeIndex> = (0..num_flag).map(|_| graph.add_node(py.None())).collect();
-
-    // connect data and flags
-    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
-        for (j, flag) in flag_chunk.iter().enumerate() {
-            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
-            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
-            if bidirectional {
-                graph.add_edge(*flag, nodes_data[i * d + j], py.None());
-                graph.add_edge(nodes_data[i * d + j + 1], *flag, py.None());
-            }
-        }
-    }
-
-    // connect data and syndromes
-    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
-        if i % 2 == 0 {
-            graph.add_edge(
-                nodes_data[i * d + (d - 1)],
-                syndrome_chunk[syndrome_chunk.len() - 1],
-                py.None(),
-            );
-            graph.add_edge(
-                nodes_data[i * d + (2 * d - 1)],
-                syndrome_chunk[syndrome_chunk.len() - 1],
-                py.None(),
-            );
-            if bidirectional {
-                graph.add_edge(
-                    syndrome_chunk[syndrome_chunk.len() - 1],
-                    nodes_data[i * d + (d - 1)],
-                    py.None(),
-                );
-                graph.add_edge(
-                    syndrome_chunk[syndrome_chunk.len() - 1],
-                    nodes_data[i * d + (2 * d - 1)],
-                    py.None(),
-                );
-            }
-        } else if i % 2 == 1 {
-            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
-            graph.add_edge(nodes_data[(i + 1) * d], syndrome_chunk[0], py.None());
-            if bidirectional {
-                graph.add_edge(syndrome_chunk[0], nodes_data[i * d], py.None());
-                graph.add_edge(syndrome_chunk[0], nodes_data[(i + 1) * d], py.None());
-            }
-        }
-    }
-
-    // connect flag and syndromes
-    for (i, syndrome_chunk) in nodes_syndrome.chunks(d).enumerate() {
-        if i % 2 == 0 {
-            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
-                if j != syndrome_chunk.len() - 1 {
-                    graph.add_edge(*syndrome, nodes_flag[i * (d - 1) + j], py.None());
-                    graph.add_edge(*syndrome, nodes_flag[(i + 1) * (d - 1) + j], py.None());
-                    if bidirectional {
-                        graph.add_edge(nodes_flag[i * (d - 1) + j], *syndrome, py.None());
-                        graph.add_edge(nodes_flag[(i + 1) * (d - 1) + j], *syndrome, py.None());
-                    }
-                }
-            }
-        } else if i % 2 == 1 {
-            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
-                if j != 0 {
-                    graph.add_edge(*syndrome, nodes_flag[i * (d - 1) + j - 1], py.None());
-                    graph.add_edge(*syndrome, nodes_flag[(i + 1) * (d - 1) + j - 1], py.None());
-                    if bidirectional {
-                        graph.add_edge(nodes_flag[i * (d - 1) + j - 1], *syndrome, py.None());
-                        graph.add_edge(nodes_flag[(i + 1) * (d - 1) + j - 1], *syndrome, py.None());
-                    }
-                }
-            }
-        }
-    }
-
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> =
+        match core_generators::heavy_square_graph(d, default_fn, default_fn, bidirectional) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyIndexError::new_err("d must be an odd number.")),
+        };
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -1341,86 +1171,12 @@ pub fn directed_heavy_square_graph(
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(d, /, multigraph=True)")]
 pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
-
-    if d % 2 == 0 {
-        return Err(PyIndexError::new_err("d must be odd"));
-    }
-
-    if d == 1 {
-        graph.add_node(py.None());
-        return Ok(graph::PyGraph {
-            graph,
-            node_removed: false,
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-
-    let num_data = d * d;
-    let num_syndrome = (d - 1) * (d + 1) / 2;
-    let num_flag = d * (d - 1);
-
-    let nodes_data: Vec<NodeIndex> = (0..num_data).map(|_| graph.add_node(py.None())).collect();
-    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
-        .map(|_| graph.add_node(py.None()))
-        .collect();
-    let nodes_flag: Vec<NodeIndex> = (0..num_flag).map(|_| graph.add_node(py.None())).collect();
-
-    // connect data and flags
-    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
-        for (j, flag) in flag_chunk.iter().enumerate() {
-            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
-            graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
-        }
-    }
-
-    // connect data and syndromes
-    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
-        if i % 2 == 0 {
-            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
-            graph.add_edge(syndrome_chunk[0], nodes_data[(i + 1) * d], py.None());
-        } else if i % 2 == 1 {
-            graph.add_edge(
-                nodes_data[i * d + (d - 1)],
-                syndrome_chunk[syndrome_chunk.len() - 1],
-                py.None(),
-            );
-            graph.add_edge(
-                syndrome_chunk[syndrome_chunk.len() - 1],
-                nodes_data[i * d + (2 * d - 1)],
-                py.None(),
-            );
-        }
-    }
-
-    // connect flag and syndromes
-    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
-        if i % 2 == 0 {
-            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
-                if j != 0 {
-                    graph.add_edge(
-                        nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
-                        *syndrome,
-                        py.None(),
-                    );
-                    graph.add_edge(
-                        *syndrome,
-                        nodes_flag[(i + 1) * (d - 1) + 2 * (j - 1) + 1],
-                        py.None(),
-                    );
-                }
-            }
-        } else if i % 2 == 1 {
-            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
-                if j != syndrome_chunk.len() - 1 {
-                    graph.add_edge(nodes_flag[i * (d - 1) + 2 * j], *syndrome, py.None());
-                    graph.add_edge(*syndrome, nodes_flag[(i + 1) * (d - 1) + 2 * j], py.None());
-                }
-            }
-        }
-    }
-
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::heavy_hex_graph(d, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyIndexError::new_err("d must be an odd number.")),
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -1494,124 +1250,12 @@ pub fn directed_heavy_hex_graph(
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StablePyGraph::<Directed>::default();
-
-    if d % 2 == 0 {
-        return Err(PyIndexError::new_err("d must be odd"));
-    }
-
-    if d == 1 {
-        graph.add_node(py.None());
-        return Ok(digraph::PyDiGraph {
-            graph,
-            node_removed: false,
-            check_cycle: false,
-            cycle_state: algo::DfsSpace::default(),
-            multigraph,
-            attrs: py.None(),
-        });
-    }
-
-    let num_data = d * d;
-    let num_syndrome = (d - 1) * (d + 1) / 2;
-    let num_flag = d * (d - 1);
-
-    let nodes_data: Vec<NodeIndex> = (0..num_data).map(|_| graph.add_node(py.None())).collect();
-    let nodes_syndrome: Vec<NodeIndex> = (0..num_syndrome)
-        .map(|_| graph.add_node(py.None()))
-        .collect();
-    let nodes_flag: Vec<NodeIndex> = (0..num_flag).map(|_| graph.add_node(py.None())).collect();
-
-    // connect data and flags
-    for (i, flag_chunk) in nodes_flag.chunks(d - 1).enumerate() {
-        for (j, flag) in flag_chunk.iter().enumerate() {
-            graph.add_edge(nodes_data[i * d + j], *flag, py.None());
-            graph.add_edge(nodes_data[i * d + j + 1], *flag, py.None());
-            if bidirectional {
-                graph.add_edge(*flag, nodes_data[i * d + j], py.None());
-                graph.add_edge(*flag, nodes_data[i * d + j + 1], py.None());
-            }
-        }
-    }
-
-    // connect data and syndromes
-    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
-        if i % 2 == 0 {
-            graph.add_edge(nodes_data[i * d], syndrome_chunk[0], py.None());
-            graph.add_edge(nodes_data[(i + 1) * d], syndrome_chunk[0], py.None());
-            if bidirectional {
-                graph.add_edge(syndrome_chunk[0], nodes_data[i * d], py.None());
-                graph.add_edge(syndrome_chunk[0], nodes_data[(i + 1) * d], py.None());
-            }
-        } else if i % 2 == 1 {
-            graph.add_edge(
-                nodes_data[i * d + (d - 1)],
-                syndrome_chunk[syndrome_chunk.len() - 1],
-                py.None(),
-            );
-            graph.add_edge(
-                nodes_data[i * d + (2 * d - 1)],
-                syndrome_chunk[syndrome_chunk.len() - 1],
-                py.None(),
-            );
-            if bidirectional {
-                graph.add_edge(
-                    syndrome_chunk[syndrome_chunk.len() - 1],
-                    nodes_data[i * d + (d - 1)],
-                    py.None(),
-                );
-                graph.add_edge(
-                    syndrome_chunk[syndrome_chunk.len() - 1],
-                    nodes_data[i * d + (2 * d - 1)],
-                    py.None(),
-                );
-            }
-        }
-    }
-
-    // connect flag and syndromes
-    for (i, syndrome_chunk) in nodes_syndrome.chunks((d + 1) / 2).enumerate() {
-        if i % 2 == 0 {
-            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
-                if j != 0 {
-                    graph.add_edge(
-                        *syndrome,
-                        nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
-                        py.None(),
-                    );
-                    graph.add_edge(
-                        *syndrome,
-                        nodes_flag[(i + 1) * (d - 1) + 2 * (j - 1) + 1],
-                        py.None(),
-                    );
-                    if bidirectional {
-                        graph.add_edge(
-                            nodes_flag[i * (d - 1) + 2 * (j - 1) + 1],
-                            *syndrome,
-                            py.None(),
-                        );
-                        graph.add_edge(
-                            nodes_flag[(i + 1) * (d - 1) + 2 * (j - 1) + 1],
-                            *syndrome,
-                            py.None(),
-                        );
-                    }
-                }
-            }
-        } else if i % 2 == 1 {
-            for (j, syndrome) in syndrome_chunk.iter().enumerate() {
-                if j != syndrome_chunk.len() - 1 {
-                    graph.add_edge(*syndrome, nodes_flag[i * (d - 1) + 2 * j], py.None());
-                    graph.add_edge(*syndrome, nodes_flag[(i + 1) * (d - 1) + 2 * j], py.None());
-                    if bidirectional {
-                        graph.add_edge(nodes_flag[i * (d - 1) + 2 * j], *syndrome, py.None());
-                        graph.add_edge(nodes_flag[(i + 1) * (d - 1) + 2 * j], *syndrome, py.None());
-                    }
-                }
-            }
-        }
-    }
-
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> =
+        match core_generators::heavy_hex_graph(d, default_fn, default_fn, bidirectional) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyIndexError::new_err("d must be an odd number.")),
+        };
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -1652,82 +1296,19 @@ pub fn hexagonal_lattice_graph(
     rows: usize,
     cols: usize,
     multigraph: bool,
-) -> graph::PyGraph {
-    let mut graph = StablePyGraph::<Undirected>::default();
-
-    if rows == 0 || cols == 0 {
-        return graph::PyGraph {
-            graph,
-            node_removed: false,
-            multigraph,
-            attrs: py.None(),
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::hexagonal_lattice_graph(rows, cols, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
         };
-    }
-
-    let mut rowlen = rows;
-    let mut collen = cols;
-
-    // Needs two times the number of nodes vertically
-    rowlen = 2 * rowlen + 2;
-    collen += 1;
-    let num_nodes = rowlen * collen - 2;
-
-    let nodes: Vec<NodeIndex> = (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
-
-    // Add column edges
-    // first column
-    for j in 0..(rowlen - 2) {
-        graph.add_edge(nodes[j], nodes[j + 1], py.None());
-    }
-
-    for i in 1..(collen - 1) {
-        for j in 0..(rowlen - 1) {
-            graph.add_edge(nodes[i * rowlen + j - 1], nodes[i * rowlen + j], py.None());
-        }
-    }
-
-    // last column
-    for j in 0..(rowlen - 2) {
-        graph.add_edge(
-            nodes[(collen - 1) * rowlen + j - 1],
-            nodes[(collen - 1) * rowlen + j],
-            py.None(),
-        );
-    }
-
-    // Add row edges
-    for j in (0..(rowlen - 1)).step_by(2) {
-        graph.add_edge(nodes[j], nodes[j + rowlen - 1], py.None());
-    }
-
-    for i in 1..(collen - 2) {
-        for j in 0..rowlen {
-            if i % 2 == j % 2 {
-                graph.add_edge(
-                    nodes[i * rowlen + j - 1],
-                    nodes[(i + 1) * rowlen + j - 1],
-                    py.None(),
-                );
-            }
-        }
-    }
-
-    if collen > 2 {
-        for j in ((collen % 2)..rowlen).step_by(2) {
-            graph.add_edge(
-                nodes[(collen - 2) * rowlen + j - 1],
-                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
-                py.None(),
-            );
-        }
-    }
-
-    graph::PyGraph {
+    Ok(graph::PyGraph {
         graph,
         node_removed: false,
         multigraph,
         attrs: py.None(),
-    }
+    })
 }
 
 /// Generate a directed hexagonal lattice graph. The edges propagate towards  
@@ -1764,116 +1345,26 @@ pub fn directed_hexagonal_lattice_graph(
     cols: usize,
     bidirectional: bool,
     multigraph: bool,
-) -> digraph::PyDiGraph {
-    let mut graph = StablePyGraph::<Directed>::default();
-
-    if rows == 0 || cols == 0 {
-        return digraph::PyDiGraph {
-            graph,
-            node_removed: false,
-            check_cycle: false,
-            cycle_state: algo::DfsSpace::default(),
-            multigraph,
-            attrs: py.None(),
-        };
-    }
-
-    let mut rowlen = rows;
-    let mut collen = cols;
-
-    // Needs two times the number of nodes vertically
-    rowlen = 2 * rowlen + 2;
-    collen += 1;
-    let num_nodes = rowlen * collen - 2;
-
-    let nodes: Vec<NodeIndex> = (0..num_nodes).map(|_| graph.add_node(py.None())).collect();
-
-    // Add column edges
-    // first column
-    for j in 0..(rowlen - 2) {
-        graph.add_edge(nodes[j], nodes[j + 1], py.None());
-        if bidirectional {
-            graph.add_edge(nodes[j + 1], nodes[j], py.None());
-        }
-    }
-
-    for i in 1..(collen - 1) {
-        for j in 0..(rowlen - 1) {
-            graph.add_edge(nodes[i * rowlen + j - 1], nodes[i * rowlen + j], py.None());
-            if bidirectional {
-                graph.add_edge(nodes[i * rowlen + j], nodes[i * rowlen + j - 1], py.None());
-            }
-        }
-    }
-
-    // last column
-    for j in 0..(rowlen - 2) {
-        graph.add_edge(
-            nodes[(collen - 1) * rowlen + j - 1],
-            nodes[(collen - 1) * rowlen + j],
-            py.None(),
-        );
-        if bidirectional {
-            graph.add_edge(
-                nodes[(collen - 1) * rowlen + j],
-                nodes[(collen - 1) * rowlen + j - 1],
-                py.None(),
-            );
-        }
-    }
-
-    // Add row edges
-    for j in (0..(rowlen - 1)).step_by(2) {
-        graph.add_edge(nodes[j], nodes[j + rowlen - 1], py.None());
-        if bidirectional {
-            graph.add_edge(nodes[j + rowlen - 1], nodes[j], py.None());
-        }
-    }
-
-    for i in 1..(collen - 2) {
-        for j in 0..rowlen {
-            if i % 2 == j % 2 {
-                graph.add_edge(
-                    nodes[i * rowlen + j - 1],
-                    nodes[(i + 1) * rowlen + j - 1],
-                    py.None(),
-                );
-                if bidirectional {
-                    graph.add_edge(
-                        nodes[(i + 1) * rowlen + j - 1],
-                        nodes[i * rowlen + j - 1],
-                        py.None(),
-                    );
-                }
-            }
-        }
-    }
-
-    if collen > 2 {
-        for j in ((collen % 2)..rowlen).step_by(2) {
-            graph.add_edge(
-                nodes[(collen - 2) * rowlen + j - 1],
-                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
-                py.None(),
-            );
-            if bidirectional {
-                graph.add_edge(
-                    nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
-                    nodes[(collen - 2) * rowlen + j - 1],
-                    py.None(),
-                );
-            }
-        }
-    }
-
-    digraph::PyDiGraph {
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::hexagonal_lattice_graph(
+        rows,
+        cols,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
+    };
+    Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
         multigraph,
         attrs: py.None(),
-    }
+    })
 }
 
 /// Generate an undirected lollipop graph where a mesh graph is connected to a
@@ -2013,34 +1504,16 @@ pub fn generalized_petersen_graph(
     k: usize,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    if n < 3 {
-        return Err(PyIndexError::new_err("n must be at least 3"));
-    }
-
-    if k == 0 || 2 * k >= n {
-        return Err(PyIndexError::new_err(
-            "k is invalid: it must be positive and less than n/2",
-        ));
-    }
-
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(2 * n, 3 * n);
-
-    let star_nodes: Vec<NodeIndex> = (0..n).map(|_| graph.add_node(py.None())).collect();
-
-    let polygon_nodes: Vec<NodeIndex> = (0..n).map(|_| graph.add_node(py.None())).collect();
-
-    for i in 0..n {
-        graph.add_edge(star_nodes[i], star_nodes[(i + k) % n], py.None());
-    }
-
-    for i in 0..n {
-        graph.add_edge(polygon_nodes[i], polygon_nodes[(i + 1) % n], py.None());
-    }
-
-    for i in 0..n {
-        graph.add_edge(polygon_nodes[i], star_nodes[i], py.None());
-    }
-
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::petersen_graph(n, k, default_fn, default_fn) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "n > 2, k > 0, or 2 * k > n not satisfied.",
+                ))
+            }
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
