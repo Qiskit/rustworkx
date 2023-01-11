@@ -103,7 +103,7 @@ where
             .map(|_| graph.add_node(default_node_weight()))
             .collect(),
     };
-    if nodes.len() > 0 {
+    if !nodes.is_empty() {
         let mut parents = VecDeque::from(vec![graph.to_index(nodes[0])]);
         let mut nod_it: usize = 1;
 
