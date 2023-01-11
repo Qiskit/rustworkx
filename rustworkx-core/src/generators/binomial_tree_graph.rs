@@ -59,7 +59,7 @@ pub fn binomial_tree_graph<G, T, F, H, M>(
     bidirectional: bool,
 ) -> Result<G, InvalidInputError>
 where
-    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,// + IntoEdges + IntoNodeIdentifiers,
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + IntoEdges + IntoNodeIdentifiers,
     F: FnMut() -> T,
     H: FnMut() -> M,
     T: Clone,
@@ -87,23 +87,24 @@ where
         };
     }
 
-    // fn find_edge<G>(graph: &mut G, source: usize, target: usize) -> bool
-    // where
-    //     G: NodeIndexable + IntoEdgeReferences + IntoEdges + IntoNodeIdentifiers,
-    // {
-    //     let mut found = false;
-    //     for node in graph.node_identifiers() {
-    //         for e in graph.edges(node) {
-    //             if graph.to_index(e.source()) == source && graph.to_index(e.target()) == target {
-    //                 found = true;
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     found
-    // }
+    fn find_edge<G>(graph: &mut G, source: usize, target: usize) -> bool
+    where
+        G: NodeIndexable + IntoEdgeReferences + IntoEdges + IntoNodeIdentifiers,
+    {
+        let mut found = false;
+        for node in graph.node_identifiers() {
+            for e in graph.edges(node) {
+                if graph.to_index(e.source()) == source && graph.to_index(e.target()) == target {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        found
+    }
     let mut n = 1;
     let zero_index = 0;
+    //let mut edge_map = HashSet<(usize, usize)>.with_capacity(num_edges);
 
     for _ in 0..order {
         let edges: Vec<(usize, usize)> = graph
