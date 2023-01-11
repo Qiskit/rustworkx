@@ -39,8 +39,8 @@ impl fmt::Display for InvalidInputError {
 
 pub use cycle_graph::cycle_graph;
 pub use grid_graph::grid_graph;
-pub use heavy_square_graph::heavy_square_graph;
 pub use heavy_hex_graph::heavy_hex_graph;
+pub use heavy_square_graph::heavy_square_graph;
 pub use path_graph::path_graph;
 pub use petersen_graph::petersen_graph;
 pub use star_graph::star_graph;
