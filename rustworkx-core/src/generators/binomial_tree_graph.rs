@@ -139,14 +139,12 @@ where
                     default_edge_weight(),
                 );
             }
-            if bidirectional {
-                if !find_edge(&mut graph, target_index, source_index) {
-                    graph.add_edge(
-                        graph.from_index(target_index),
-                        graph.from_index(source_index),
-                        default_edge_weight(),
-                    );
-                }
+            if bidirectional && !find_edge(&mut graph, target_index, source_index) {
+                graph.add_edge(
+                    graph.from_index(target_index),
+                    graph.from_index(source_index),
+                    default_edge_weight(),
+                );
             }
         }
         if !find_edge(&mut graph, zero_index, n) {
@@ -156,14 +154,12 @@ where
                 default_edge_weight(),
             );
         }
-        if bidirectional {
-            if !find_edge(&mut graph, n, zero_index) {
-                graph.add_edge(
-                    graph.from_index(n),
-                    graph.from_index(zero_index),
-                    default_edge_weight(),
-                );
-            }
+        if bidirectional && !find_edge(&mut graph, n, zero_index) {
+            graph.add_edge(
+                graph.from_index(n),
+                graph.from_index(zero_index),
+                default_edge_weight(),
+            );
         }
         n *= 2;
     }
