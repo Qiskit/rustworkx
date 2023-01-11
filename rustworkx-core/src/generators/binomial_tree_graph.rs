@@ -11,7 +11,7 @@
 // under the License.
 
 use petgraph::data::{Build, Create};
-use petgraph::visit::{GraphBase, GraphProp, Data, EdgeRef, IntoEdgeReferences, NodeIndexable};
+use petgraph::visit::{Data, EdgeRef, GraphBase, IntoEdgeReferences, NodeIndexable};
 
 use super::InvalidInputError;
 
@@ -37,15 +37,32 @@ use super::InvalidInputError;
 /// use rustworkx_core::generators::binomial_tree_graph;
 /// use rustworkx_core::petgraph::visit::EdgeRef;
 ///
+/// let expected_edge_list = vec![
+///     (0, 1),
+///     (2, 3),
+///     (0, 2),
+///     (4, 5),
+///     (6, 7),
+///     (4, 6),
+///     (0, 4),
+///     (8, 9),
+///     (10, 11),
+///     (8, 10),
+///     (12, 13),
+///     (14, 15),
+///     (12, 14),
+///     (8, 12),
+///     (0, 8),
+/// ];
 /// let g: petgraph::graph::UnGraph<(), ()> = binomial_tree_graph(
-///     Some(4),
+///     4,
 ///     None,
 ///     || {()},
 ///     || {()},
 ///     false
 /// ).unwrap();
 /// assert_eq!(
-///     vec![(0, 1), (1, 2), (2, 3)],
+///     expected_edge_list,
 ///     g.edge_references()
 ///         .map(|edge| (edge.source().index(), edge.target().index()))
 ///         .collect::<Vec<(usize, usize)>>(),
@@ -59,16 +76,15 @@ pub fn binomial_tree_graph<G, T, F, H, M>(
     bidirectional: bool,
 ) -> Result<G, InvalidInputError>
 where
-    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + GraphProp,
-    for<'b> &'b G:
-        GraphBase<NodeId = G::NodeId> + IntoEdgeReferences + Copy,
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+    for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgeReferences + Copy,
     F: FnMut() -> T,
     H: FnMut() -> M,
     T: Clone,
 {
-    // if order >= MAX_ORDER {
-    //     return Err(InvalidInputError {});
-    // }
+    if order >= 60 {
+        return Err(InvalidInputError {});
+    }
     let num_nodes = usize::pow(2, order);
     let num_edges = usize::pow(2, order) - 1;
     let mut graph = G::with_capacity(num_nodes, num_edges);
@@ -91,16 +107,12 @@ where
 
     fn find_edge<G>(graph: &mut G, source: usize, target: usize) -> bool
     where
-        G: NodeIndexable + GraphProp,
+        G: NodeIndexable,
         for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgeReferences,
     {
         let mut found = false;
         for edge in graph.edge_references() {
             if graph.to_index(edge.source()) == source && graph.to_index(edge.target()) == target {
-                found = true;
-                break;
-            }
-            if !graph.is_directed() && graph.to_index(edge.target()) == source && graph.to_index(edge.source()) == target {
                 found = true;
                 break;
             }
@@ -166,27 +178,57 @@ mod tests {
     use crate::petgraph::visit::EdgeRef;
 
     #[test]
-    fn test_with_weights() {
-        let g: petgraph::graph::UnGraph<usize, ()> =
-            binomial_tree_graph(None, Some(vec![0, 1, 2, 3]), || 4, || (), false).unwrap();
+    fn test_binomial_tree_graph() {
+        let expected_edge_list = vec![
+            (0, 1),
+            (2, 3),
+            (0, 2),
+            (4, 5),
+            (6, 7),
+            (4, 6),
+            (0, 4),
+            (8, 9),
+            (10, 11),
+            (8, 10),
+            (12, 13),
+            (14, 15),
+            (12, 14),
+            (8, 12),
+            (0, 8),
+        ];
+        let g: petgraph::graph::UnGraph<(), ()> =
+            binomial_tree_graph(4, None, || (), || (), false).unwrap();
         assert_eq!(
-            vec![(0, 1), (1, 2), (2, 3)],
+            expected_edge_list,
             g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
         );
-        assert_eq!(
-            vec![0, 1, 2, 3],
-            g.node_weights().copied().collect::<Vec<usize>>(),
-        );
     }
 
     #[test]
-    fn test_bidirectional() {
+    fn test_directed_binomial_tree_graph() {
+        let expected_edge_list = vec![
+            (0, 1),
+            (2, 3),
+            (0, 2),
+            (4, 5),
+            (6, 7),
+            (4, 6),
+            (0, 4),
+            (8, 9),
+            (10, 11),
+            (8, 10),
+            (12, 13),
+            (14, 15),
+            (12, 14),
+            (8, 12),
+            (0, 8),
+        ];
         let g: petgraph::graph::DiGraph<(), ()> =
-            binomial_tree_graph(Some(4), None, || (), || (), true).unwrap();
+            binomial_tree_graph(4, None, || (), || (), false).unwrap();
         assert_eq!(
-            vec![(0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2),],
+            expected_edge_list,
             g.edge_references()
                 .map(|edge| (edge.source().index(), edge.target().index()))
                 .collect::<Vec<(usize, usize)>>(),
@@ -194,9 +236,9 @@ mod tests {
     }
 
     #[test]
-    fn test_error() {
+    fn test_binomial_tree_error() {
         match binomial_tree_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            None,
+            75,
             None,
             || (),
             || (),
