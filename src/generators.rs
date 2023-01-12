@@ -16,7 +16,6 @@ use std::iter;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 use petgraph::Undirected;
 
 use pyo3::exceptions::{PyIndexError, PyOverflowError};
