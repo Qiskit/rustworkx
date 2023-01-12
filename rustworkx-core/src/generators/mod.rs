@@ -12,6 +12,7 @@
 
 //! This module contains generator functions for building graphs
 
+mod binomial_tree_graph;
 mod cycle_graph;
 mod grid_graph;
 mod heavy_hex_graph;
@@ -38,6 +39,7 @@ impl fmt::Display for InvalidInputError {
     }
 }
 
+pub use binomial_tree_graph::binomial_tree_graph;
 pub use cycle_graph::cycle_graph;
 pub use grid_graph::grid_graph;
 pub use heavy_hex_graph::heavy_hex_graph;
