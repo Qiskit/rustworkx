@@ -13,8 +13,9 @@
 use std::hash::Hash;
 
 use petgraph::data::{Build, Create};
-use petgraph::visit::{Data, IntoNodeReferences, NodeIndexable, IntoEdgeReferences, NodeRef, EdgeRef};
+use petgraph::visit::{Data, NodeIndexable, NodeRef};
 
+use super::utils::get_num_nodes;
 use super::utils::pairwise;
 use super::InvalidInputError;
 
@@ -92,50 +93,49 @@ pub fn barbell_graph<G, T, F, H, M>(
     mut default_edge_weight: H,
 ) -> Result<G, InvalidInputError>
 where
-    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + IntoNodeReferences + IntoEdgeReferences,
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
     F: FnMut() -> T,
     H: FnMut() -> M,
-    T: Copy,
-    M: Copy,
     G::NodeId: Eq + Hash + NodeRef,
+    T: Clone,
 {
     if num_mesh_nodes.is_none() && mesh_weights.is_none() {
         return Err(InvalidInputError {});
     }
-    let num_nodes: usize;
-    if num_mesh_nodes.is_none() {
-        num_nodes = mesh_weights.as_ref().unwrap().len();
-    } else {
-        num_nodes = num_mesh_nodes.unwrap();
-    }
+    let num_nodes = get_num_nodes(&num_mesh_nodes, &mesh_weights);
     let num_edges = (num_nodes * (num_nodes - 1)) / 2;
-    let mut left_graph = G::with_capacity(num_nodes, num_edges);
+    let mesh_weights_2 = mesh_weights.clone();
 
+    let mut graph = G::with_capacity(num_nodes, num_edges);
+
+    // Create left mesh graph
     let mesh_nodes: Vec<G::NodeId> = match mesh_weights {
         Some(mesh_weights) => mesh_weights
             .into_iter()
-            .map(|weight| left_graph.add_node(weight))
+            .map(|weight| graph.add_node(weight))
             .collect(),
         None => (0..num_mesh_nodes.unwrap())
-            .map(|_| left_graph.add_node(default_node_weight()))
+            .map(|_| graph.add_node(default_node_weight()))
             .collect(),
     };
 
     let meshlen = mesh_nodes.len();
     for i in 0..meshlen - 1 {
         for j in i + 1..meshlen {
-            left_graph.add_edge(mesh_nodes[i], mesh_nodes[j], default_edge_weight());
+            graph.add_edge(mesh_nodes[i], mesh_nodes[j], default_edge_weight());
         }
     }
+
+    // Add path nodes and edges
     let path_nodes: Vec<G::NodeId> = match path_weights {
         Some(path_weights) => path_weights
             .into_iter()
-            .map(|weight| left_graph.add_node(weight))
+            .map(|weight| graph.add_node(weight))
             .collect(),
         None => {
             if num_path_nodes.is_some() {
                 (0..num_path_nodes.unwrap())
-                    .map(|_| left_graph.add_node(default_node_weight()))
+                    .map(|_| graph.add_node(default_node_weight()))
                     .collect()
             } else {
                 vec![]
@@ -144,36 +144,42 @@ where
     };
     let pathlen = path_nodes.len();
     if pathlen > 0 {
-        left_graph.add_edge(
-            left_graph.from_index(meshlen - 1),
-            left_graph.from_index(meshlen),
+        graph.add_edge(
+            graph.from_index(meshlen - 1),
+            graph.from_index(meshlen),
             default_edge_weight(),
         );
         for (node_a, node_b) in pairwise(path_nodes) {
             match node_a {
-                Some(node_a) => left_graph.add_edge(node_a, node_b, default_edge_weight()),
+                Some(node_a) => graph.add_edge(node_a, node_b, default_edge_weight()),
                 None => continue,
             };
         }
     }
-    let right_graph = left_graph.clone();
 
-    for node in right_graph.node_references() {
-        let weight = node.weight();
-        left_graph.add_node(*weight);
-    }
-    left_graph.add_edge(
-        left_graph.from_index(meshlen - 1),
-        left_graph.from_index(meshlen),
+    // Add right mesh graph
+    let mesh_nodes: Vec<G::NodeId> = match mesh_weights_2 {
+        Some(mesh_weights_2) => mesh_weights_2
+            .into_iter()
+            .map(|weight| graph.add_node(weight))
+            .collect(),
+        None => (0..num_mesh_nodes.unwrap())
+            .map(|_| graph.add_node(default_node_weight()))
+            .collect(),
+    };
+    let meshlen = mesh_nodes.len();
+
+    graph.add_edge(
+        graph.from_index(meshlen + pathlen - 1),
+        graph.from_index(meshlen + pathlen),
         default_edge_weight(),
     );
-    for edge in right_graph.edge_references() {
-        let new_source = right_graph.from_index(meshlen + left_graph.to_index(edge.source()));
-        let new_target = right_graph.from_index(meshlen + left_graph.to_index(edge.target()));
-        let weight = edge.weight();
-        left_graph.add_edge(new_source, new_target, *weight);
+    for i in 0..meshlen - 1 {
+        for j in i + 1..meshlen {
+            graph.add_edge(mesh_nodes[i], mesh_nodes[j], default_edge_weight());
+        }
     }
-    Ok(left_graph)
+    Ok(graph)
 }
 
 #[cfg(test)]

@@ -2062,61 +2062,24 @@ pub fn barbell_graph(
     mesh_weights: Option<Vec<PyObject>>,
     path_weights: Option<Vec<PyObject>>,
 ) -> PyResult<graph::PyGraph> {
-    if num_mesh_nodes.is_none() {
-        return Err(PyIndexError::new_err("num_mesh_nodes not specified"));
-    }
-
-    let mut left_mesh = StableUnGraph::<PyObject, PyObject>::default();
-    let mesh_nodes: Vec<NodeIndex> = (0..num_mesh_nodes.unwrap())
-        .map(|_| left_mesh.add_node(py.None()))
-        .collect();
-    let mut nodelen = mesh_nodes.len();
-    for i in 0..nodelen - 1 {
-        for j in i + 1..nodelen {
-            left_mesh.add_edge(mesh_nodes[i], mesh_nodes[j], py.None());
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::barbell_graph(
+        num_mesh_nodes,
+        num_path_nodes,
+        mesh_weights,
+        path_weights,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
         }
-    }
-
-    let right_mesh = left_mesh.clone();
-
-    if let Some(num_nodes) = num_path_nodes {
-        let path_nodes: Vec<NodeIndex> = (0..num_nodes)
-            .map(|_| left_mesh.add_node(py.None()))
-            .collect();
-        left_mesh.add_edge(
-            NodeIndex::new(nodelen - 1),
-            NodeIndex::new(nodelen),
-            py.None(),
-        );
-
-        nodelen += path_nodes.len();
-
-        for (node_a, node_b) in pairwise(path_nodes) {
-            match node_a {
-                Some(node_a) => left_mesh.add_edge(node_a, node_b, py.None()),
-                None => continue,
-            };
-        }
-    }
-
-    for node in right_mesh.node_indices() {
-        let new_node = &right_mesh[node];
-        left_mesh.add_node(new_node.clone_ref(py));
-    }
-    left_mesh.add_edge(
-        NodeIndex::new(nodelen - 1),
-        NodeIndex::new(nodelen),
-        py.None(),
-    );
-    for edge in right_mesh.edge_references() {
-        let new_source = NodeIndex::new(nodelen + edge.source().index());
-        let new_target = NodeIndex::new(nodelen + edge.target().index());
-        let weight = edge.weight();
-        left_mesh.add_edge(new_source, new_target, weight.clone_ref(py));
-    }
-
+    };
     Ok(graph::PyGraph {
-        graph: left_mesh,
+        graph,
         node_removed: false,
         multigraph,
         attrs: py.None(),
