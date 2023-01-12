@@ -25,6 +25,8 @@ use super::InvalidInputError;
 /// If neither `num_path_nodes` nor `path_weights` (described below) is not specified
 /// then this is equivalent to two mesh graphs joined together.
 ///
+/// Arguments:
+///
 /// * `num_mesh_nodes` - The number of nodes to generate the mesh graph
 ///     with. Node weights will be None if this is specified. If both
 ///     `num_mesh_nodes` and `mesh_weights` are set this will be ignored and
@@ -40,7 +42,7 @@ use super::InvalidInputError;
 ///     `num_path_nodes` and `path_weights` are set `num_path_nodes` will
 ///     be ignored and `path_weights` will be used.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if `weights` is specified,
+///     for newly created nodes. This is ignored if weights are specified,
 ///     as the weights from that argument will be used instead.
 /// * `default_edge_weight` - A callable that will return the weight object
 ///     to use for newly created edges.
@@ -187,6 +189,7 @@ mod tests {
     use crate::generators::barbell_graph;
     use crate::generators::InvalidInputError;
     use crate::petgraph::visit::EdgeRef;
+
     #[test]
     fn test_barbell_mesh_path() {
         let expected_edge_list = vec![
