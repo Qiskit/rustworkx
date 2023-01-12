@@ -724,48 +724,89 @@ pub fn binomial_tree_graph(
             order
         )));
     }
-    let num_nodes = usize::pow(2, order);
-    let num_edges = usize::pow(2, order) - 1;
-    let mut graph = StablePyGraph::<Undirected>::with_capacity(num_nodes, num_edges);
-    for i in 0..num_nodes {
-        match weights {
-            Some(ref weights) => {
-                if weights.len() > num_nodes {
-                    return Err(PyIndexError::new_err("weights should be <= 2**order"));
-                }
-                if i < weights.len() {
-                    graph.add_node(weights[i].clone_ref(py))
-                } else {
-                    graph.add_node(py.None())
-                }
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::binomial_tree_graph(order, weights, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
             }
-            None => graph.add_node(py.None()),
         };
-    }
-
-    let mut n = 1;
-    let zero_index = NodeIndex::new(0);
-
-    for _ in 0..order {
-        let edges: Vec<(NodeIndex, NodeIndex)> = graph
-            .edge_references()
-            .map(|e| (e.source(), e.target()))
-            .collect();
-        for (source, target) in edges {
-            let source_index = NodeIndex::new(source.index() + n);
-            let target_index = NodeIndex::new(target.index() + n);
-
-            graph.add_edge(source_index, target_index, py.None());
-        }
-
-        graph.add_edge(zero_index, NodeIndex::new(n), py.None());
-
-        n *= 2;
-    }
-
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a directed binomial tree of order n recursively.
+/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
+///
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 59 and on 32bit systems the max value is 29. Any order
+///     value above these will raise a ``OverflowError``.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than 2**order extra nodes with None will be appended.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes
+/// :param bool multigraph: When set to False the output
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyDiGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.directed_binomial_tree_graph(4)
+///   mpl_draw(graph)
+///
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[pyo3(text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)")]
+pub fn directed_binomial_tree_graph(
+    py: Python,
+    order: u32,
+    weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::binomial_tree_graph(
+        order,
+        weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "order and weights list not specified",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
         multigraph,
         attrs: py.None(),
     })
@@ -845,115 +886,6 @@ pub fn full_rary_tree(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
-        multigraph,
-        attrs: py.None(),
-    })
-}
-
-/// Generate an undirected binomial tree of order n recursively.
-/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``false``
-///
-/// :param int order: Order of the binomial tree. The maximum allowed value
-///     for order on the platform your running on. If it's a 64bit platform
-///     the max value is 59 and on 32bit systems the max value is 29. Any order
-///     value above these will raise a ``OverflowError``.
-/// :param list weights: A list of node weights. If the number of weights is
-///     less than 2**order extra nodes with None will be appended.
-/// :param bidirectional: A parameter to indicate if edges should exist in
-///     both directions between nodes
-/// :param bool multigraph: When set to False the output
-///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't allow parallel edges to be added. Instead
-///     calls which would create a parallel edge will update the existing edge.
-///
-/// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
-/// :rtype: PyDiGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
-/// :raises OverflowError: If the input order exceeds the maximum value for the
-///     current platform.
-///
-/// .. jupyter-execute::
-///
-///   import rustworkx.generators
-///   from rustworkx.visualization import mpl_draw
-///
-///   graph = rustworkx.generators.directed_binomial_tree_graph(4)
-///   mpl_draw(graph)
-///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[pyo3(text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)")]
-pub fn directed_binomial_tree_graph(
-    py: Python,
-    order: u32,
-    weights: Option<Vec<PyObject>>,
-    bidirectional: bool,
-    multigraph: bool,
-) -> PyResult<digraph::PyDiGraph> {
-    if order >= MAX_ORDER {
-        return Err(PyOverflowError::new_err(format!(
-            "An order of {} exceeds the max allowable size",
-            order
-        )));
-    }
-    let num_nodes = usize::pow(2, order);
-    let num_edges = usize::pow(2, order) - 1;
-    let mut graph = StablePyGraph::<Directed>::with_capacity(num_nodes, num_edges);
-
-    for i in 0..num_nodes {
-        match weights {
-            Some(ref weights) => {
-                if weights.len() > num_nodes {
-                    return Err(PyIndexError::new_err("weights should be <= 2**order"));
-                }
-                if i < weights.len() {
-                    graph.add_node(weights[i].clone_ref(py))
-                } else {
-                    graph.add_node(py.None())
-                }
-            }
-            None => graph.add_node(py.None()),
-        };
-    }
-
-    let mut n = 1;
-    let zero_index = NodeIndex::new(0);
-
-    for _ in 0..order {
-        let edges: Vec<(NodeIndex, NodeIndex)> = graph
-            .edge_references()
-            .map(|e| (e.source(), e.target()))
-            .collect();
-
-        for (source, target) in edges {
-            let source_index = NodeIndex::new(source.index() + n);
-            let target_index = NodeIndex::new(target.index() + n);
-
-            if graph.find_edge(source_index, target_index).is_none() {
-                graph.add_edge(source_index, target_index, py.None());
-            }
-
-            if bidirectional && graph.find_edge(target_index, source_index).is_none() {
-                graph.add_edge(target_index, source_index, py.None());
-            }
-        }
-        let n_index = NodeIndex::new(n);
-
-        if graph.find_edge(zero_index, n_index).is_none() {
-            graph.add_edge(zero_index, n_index, py.None());
-        }
-
-        if bidirectional && graph.find_edge(n_index, zero_index).is_none() {
-            graph.add_edge(n_index, zero_index, py.None());
-        }
-
-        n *= 2;
-    }
-
-    Ok(digraph::PyDiGraph {
-        graph,
-        node_removed: false,
-        check_cycle: false,
-        cycle_state: algo::DfsSpace::default(),
         multigraph,
         attrs: py.None(),
     })
