@@ -133,8 +133,8 @@ where
             .map(|weight| graph.add_node(weight))
             .collect(),
         None => {
-            if num_path_nodes.is_some() {
-                (0..num_path_nodes.unwrap())
+            if let Some(num_path) = num_path_nodes {
+                (0..num_path)
                     .map(|_| graph.add_node(default_node_weight()))
                     .collect()
             } else {
