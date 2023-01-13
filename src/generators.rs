@@ -1455,10 +1455,10 @@ pub fn generalized_petersen_graph(
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
-/// :param list mesh_weights - A list of node weights for the mesh graph. If both
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
 ///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
 ///     be ignored and ``mesh_weights`` will be used.
-/// :param list path_weights - A list of node weights for the path. If both
+/// :param list path_weights: A list of node weights for the path. If both
 ///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
 ///     be ignored and ``path_weights`` will be used.
 ///

@@ -22,8 +22,10 @@ use super::InvalidInputError;
 /// Generate an undirected barbell graph where two identical mesh graphs are
 /// connected by a path.
 ///
-/// If neither `num_path_nodes` nor `path_weights` (described below) is not specified
-/// then this is equivalent to two mesh graphs joined together.
+/// .. note::
+///
+///   If neither `num_path_nodes` nor `path_weights` (described below) is not specified
+///   then this is equivalent to two mesh graphs joined together.
 ///
 /// Arguments:
 ///
