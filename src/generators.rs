@@ -429,22 +429,7 @@ pub fn mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> =
-        match core_generators::complete_graph(num_nodes, weights, default_fn, default_fn) {
-            Ok(graph) => graph,
-            Err(_) => {
-                return Err(PyIndexError::new_err(
-                    "num_nodes and weights list not specified",
-                ))
-            }
-        };
-    Ok(graph::PyGraph {
-        graph,
-        node_removed: false,
-        multigraph,
-        attrs: py.None(),
-    })
+    complete_graph(py, num_nodes, weights, multigraph)
 }
 
 /// Generate a directed mesh graph where every node is connected to every other
@@ -479,24 +464,7 @@ pub fn directed_mesh_graph(
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let default_fn = || py.None();
-    let graph: StablePyGraph<Directed> =
-        match core_generators::complete_graph(num_nodes, weights, default_fn, default_fn) {
-            Ok(graph) => graph,
-            Err(_) => {
-                return Err(PyIndexError::new_err(
-                    "num_nodes and weights list not specified",
-                ))
-            }
-        };
-    Ok(digraph::PyDiGraph {
-        graph,
-        node_removed: false,
-        check_cycle: false,
-        cycle_state: algo::DfsSpace::default(),
-        multigraph,
-        attrs: py.None(),
-    })
+    directed_complete_graph(py, num_nodes, weights, multigraph)
 }
 
 /// Generate an undirected grid graph.
