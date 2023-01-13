@@ -34,15 +34,6 @@ where
     left.zip(right)
 }
 
-#[inline]
-fn get_num_nodes(num_nodes: &Option<usize>, weights: &Option<Vec<PyObject>>) -> usize {
-    if weights.is_some() {
-        weights.as_ref().unwrap().len()
-    } else {
-        num_nodes.unwrap()
-    }
-}
-
 /// Generate a cycle graph
 ///
 /// :param int num_node: The number of nodes to generate the graph with. Node
