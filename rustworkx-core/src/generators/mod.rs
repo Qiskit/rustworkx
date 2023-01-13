@@ -12,8 +12,13 @@
 
 //! This module contains generator functions for building graphs
 
+mod barbell_graph;
+mod binomial_tree_graph;
 mod cycle_graph;
 mod grid_graph;
+mod heavy_hex_graph;
+mod heavy_square_graph;
+mod hexagonal_lattice_graph;
 mod lollipop_graph;
 mod path_graph;
 mod petersen_graph;
@@ -36,8 +41,13 @@ impl fmt::Display for InvalidInputError {
     }
 }
 
+pub use barbell_graph::barbell_graph;
+pub use binomial_tree_graph::binomial_tree_graph;
 pub use cycle_graph::cycle_graph;
 pub use grid_graph::grid_graph;
+pub use heavy_hex_graph::heavy_hex_graph;
+pub use heavy_square_graph::heavy_square_graph;
+pub use hexagonal_lattice_graph::hexagonal_lattice_graph;
 pub use lollipop_graph::lollipop_graph;
 pub use path_graph::path_graph;
 pub use petersen_graph::petersen_graph;
