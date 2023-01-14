@@ -54,16 +54,17 @@ use super::InvalidInputError;
 ///     ... D   D-S-D ...
 ///
 ///
-/// * `d` - Distance of the code. If ``d`` is set to ``1`` a graph with a
-///     single node will be returned. d must be an odd number.
+/// Arguments:
+///
+/// * `d` - Distance of the code. If `d` is set to `1` a graph with a
+///     single node will be returned. `d` must be an odd number.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if `weights` is specified,
-///     as the weights from that argument will be used instead.
+///     for newly created nodes. This is ignored if `weights` is specified.
 /// * `default_edge_weight` - A callable that will return the weight object
 ///     to use for newly created edges.
-/// * `bidirectional` - Whether edges are added bidirectionally, if set to
+/// * `bidirectional` - Whether edges are added bidirectionally. If set to
 ///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
-///     If the graph is undirected this will result in a pallel edge.
+///     If the graph is undirected this will result in a parallel edge.
 ///
 /// # Example
 /// ```rust

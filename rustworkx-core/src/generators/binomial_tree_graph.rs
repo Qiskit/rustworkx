@@ -21,15 +21,14 @@ use super::InvalidInputError;
 ///
 /// * `order` - The order of the binomial tree.
 /// * `weights` - A `Vec` of node weight objects. If the number of weights is
-///     less than 2**order extra nodes with None will be appended.
+///     less than 2**order, extra nodes with None will be appended.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if `weights` is specified,
-///     as the weights from that argument will be used instead.
+///     for newly created nodes. This is ignored if `weights` is specified.
 /// * `default_edge_weight` - A callable that will return the weight object
 ///     to use for newly created edges.
-/// * `bidirectional` - Whether edges are added bidirectionally, if set to
+/// * `bidirectional` - Whether edges are added bidirectionally. If set to
 ///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
-///     If the graph is undirected this will result in a pallel edge.
+///     If the graph is undirected this will result in a parallel edge.
 ///
 /// # Example
 /// ```rust

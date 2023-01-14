@@ -43,12 +43,17 @@ use super::InvalidInputError;
 /// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 /// This function doesn't support the variant Fig 10.b right.
 ///
-/// :param int d: distance of the code. If ``d`` is set to ``1`` a
-///     :class:`~rustworkx.PyDiGraph` with a single node will be returned.
-/// :param bool multigraph: When set to False the output
-///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
-///     calls which would create a parallel edge will update the existing edge.
+/// Arguments:
+///
+/// * `d` - Distance of the code. If `d` is set to `1` a graph with a
+///     single node will be returned. `d` must be an odd number.
+/// * `default_node_weight` - A callable that will return the weight to use
+///     for newly created nodes. This is ignored if `weights` is specified.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+/// * `bidirectional` - Whether edges are added bidirectionally. If set to
+///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
+///     If the graph is undirected this will result in a parallel edge.
 ///
 /// # Example
 /// ```rust

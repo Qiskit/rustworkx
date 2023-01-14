@@ -10,10 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::iter;
-
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::Undirected;
 
@@ -24,14 +21,6 @@ use pyo3::Python;
 
 use super::{digraph, graph, StablePyGraph};
 use rustworkx_core::generators as core_generators;
-
-pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
-where
-    I: IntoIterator + Clone,
-{
-    let left = iter::once(None).chain(right.clone().into_iter().map(Some));
-    left.zip(right)
-}
 
 /// Generate a cycle graph
 ///

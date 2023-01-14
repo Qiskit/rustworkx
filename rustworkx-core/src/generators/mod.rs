@@ -26,7 +26,7 @@ mod path_graph;
 mod petersen_graph;
 mod star_graph;
 
-mod utils;
+pub mod utils;
 
 use std::{error::Error, fmt};
 

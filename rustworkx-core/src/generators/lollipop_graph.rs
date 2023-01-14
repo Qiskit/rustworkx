@@ -15,19 +15,18 @@ use std::hash::Hash;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, GraphProp, NodeIndexable};
 
-use super::utils::pairwise;
+use super::utils::{get_num_nodes, pairwise};
 use super::InvalidInputError;
 
-/// Generate a lollipop graph
-///
-/// Arguments:
-///
-/// Generate an undirected lollipop graph where a mesh graph is connected to a
+/// Generate an undirected lollipop graph where a complete graph is connected to a
 /// path.
 ///
-/// If neither `num_path_nodes` nor `path_weights` (both described
-/// below) are specified then this is equivalent to
-/// :func:`~rustworkx.generators.mesh_graph`
+/// .. note::
+///
+///   If neither `num_path_nodes` nor `path_weights` (both described
+///   below) are specified then this is equivalent to a complete graph.
+///
+/// Arguments:
 ///
 /// * `num_mesh_nodes` - The number of nodes to generate the mesh graph
 ///     with. Node weights will be None if this is specified. If both
@@ -44,8 +43,7 @@ use super::InvalidInputError;
 ///     `num_path_nodes` and `path_weights` are set `num_path_nodes` will
 ///     be ignored and `path_weights` will be used.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if `weights` is specified,
-///     as the weights from that argument will be used instead.
+///     for newly created nodes. This is ignored if `weights` is specified.
 /// * `default_edge_weight` - A callable that will return the weight object
 ///     to use for newly created edges.
 ///
@@ -98,12 +96,7 @@ where
     if num_mesh_nodes.is_none() && mesh_weights.is_none() {
         return Err(InvalidInputError {});
     }
-    let num_nodes: usize;
-    if let Some(mesh_nodes) = num_mesh_nodes {
-        num_nodes = mesh_nodes;
-    } else {
-        num_nodes = mesh_weights.as_ref().unwrap().len();
-    }
+    let num_nodes = get_num_nodes(&num_mesh_nodes, &mesh_weights);
     let num_edges = (num_nodes * (num_nodes - 1)) / 2;
     let mut graph = G::with_capacity(num_nodes, num_edges);
 
@@ -138,8 +131,7 @@ where
             }
         }
     };
-    let pathlen = path_nodes.len();
-    if pathlen > 0 {
+    if !path_nodes.is_empty() {
         graph.add_edge(
             graph.from_index(meshlen - 1),
             graph.from_index(meshlen),
