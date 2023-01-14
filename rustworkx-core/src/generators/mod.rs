@@ -14,6 +14,7 @@
 
 mod barbell_graph;
 mod binomial_tree_graph;
+mod complete_graph;
 mod cycle_graph;
 mod grid_graph;
 mod heavy_hex_graph;
@@ -43,6 +44,7 @@ impl fmt::Display for InvalidInputError {
 
 pub use barbell_graph::barbell_graph;
 pub use binomial_tree_graph::binomial_tree_graph;
+pub use complete_graph::complete_graph;
 pub use cycle_graph::cycle_graph;
 pub use grid_graph::grid_graph;
 pub use heavy_hex_graph::heavy_hex_graph;
