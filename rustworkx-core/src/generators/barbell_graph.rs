@@ -24,7 +24,7 @@ use super::InvalidInputError;
 ///
 /// .. note::
 ///
-///   If neither `num_path_nodes` nor `path_weights` (described below) is
+///   If neither `num_path_nodes` nor `path_weights` (described below) are
 ///   specified, then this is equivalent to two complete graphs joined together.
 ///
 /// Arguments:

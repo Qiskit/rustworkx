@@ -23,8 +23,8 @@ use super::InvalidInputError;
 ///
 /// .. note::
 ///
-///   If neither `num_path_nodes` nor `path_weights` (both described
-///   below) are specified then this is equivalent to a complete graph.
+///   If neither `num_path_nodes` nor `path_weights` (described below) are
+///   specified, then this is equivalent to a complete graph.
 ///
 /// Arguments:
 ///
@@ -152,6 +152,7 @@ mod tests {
     use crate::generators::lollipop_graph;
     use crate::generators::InvalidInputError;
     use crate::petgraph::visit::EdgeRef;
+
     #[test]
     fn test_lollipop_mesh_path() {
         let expected_edge_list = vec![
