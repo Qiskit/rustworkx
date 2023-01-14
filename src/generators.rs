@@ -1237,37 +1237,28 @@ pub fn lollipop_graph(
     path_weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = mesh_graph(py, num_mesh_nodes, mesh_weights, multigraph)?;
-    if num_path_nodes.is_none() && path_weights.is_none() {
-        return Ok(graph);
-    }
-    let meshlen = graph.num_nodes();
-
-    let path_nodes: Vec<NodeIndex> = match path_weights {
-        Some(path_weights) => path_weights
-            .into_iter()
-            .map(|node| graph.graph.add_node(node))
-            .collect(),
-        None => (0..num_path_nodes.unwrap())
-            .map(|_| graph.graph.add_node(py.None()))
-            .collect(),
-    };
-
-    let pathlen = path_nodes.len();
-    if pathlen > 0 {
-        graph.graph.add_edge(
-            NodeIndex::new(meshlen - 1),
-            NodeIndex::new(meshlen),
-            py.None(),
-        );
-        for (node_a, node_b) in pairwise(path_nodes) {
-            match node_a {
-                Some(node_a) => graph.graph.add_edge(node_a, node_b, py.None()),
-                None => continue,
-            };
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::lollipop_graph(
+        num_mesh_nodes,
+        num_path_nodes,
+        mesh_weights,
+        path_weights,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
         }
-    }
-    Ok(graph)
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
 }
 
 /// Generate a generalized Petersen graph :math:`G(n, k)` with :math:`2n`
