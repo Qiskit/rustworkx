@@ -22,6 +22,57 @@ use pyo3::Python;
 use super::{digraph, graph, StablePyGraph};
 use rustworkx_core::generators as core_generators;
 
+/// Generate an undirected cycle graph
+///
+/// :param int num_nodes: The number of nodes to generate the graph with. Node
+///     weights will be None if this is specified. If both ``num_nodes`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param list weights: A list of node weights, the first element in the list
+///     will be the center node of the cycle graph. If both ``num_nodes`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated cycle graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.cycle_graph(5)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+pub fn cycle_graph(
+    py: Python,
+    num_nodes: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::cycle_graph(num_nodes, weights, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
+            }
+        };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
 /// Generate a directed cycle graph
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
@@ -83,20 +134,20 @@ pub fn directed_cycle_graph(
     })
 }
 
-/// Generate an undirected cycle graph
+/// Generate an undirected path graph
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param list weights: A list of node weights, the first element in the list
-///     will be the center node of the cycle graph. If both ``num_nodes`` and
+///     will be the center node of the path graph. If both ``num_nodes`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: The generated cycle graph
+/// :returns: The generated path graph
 /// :rtype: PyGraph
 /// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
 ///
@@ -105,12 +156,12 @@ pub fn directed_cycle_graph(
 ///   import rustworkx.generators
 ///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = rustworkx.generators.cycle_graph(5)
+///   graph = rustworkx.generators.path_graph(10)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
-pub fn cycle_graph(
+pub fn path_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
@@ -118,7 +169,7 @@ pub fn cycle_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
-        match core_generators::cycle_graph(num_nodes, weights, default_fn, default_fn, false) {
+        match core_generators::path_graph(num_nodes, weights, default_fn, default_fn, false) {
             Ok(graph) => graph,
             Err(_) => {
                 return Err(PyIndexError::new_err(
@@ -195,20 +246,21 @@ pub fn directed_path_graph(
     })
 }
 
-/// Generate an undirected path graph
+/// Generate an undirected star graph
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param list weights: A list of node weights, the first element in the list
-///     will be the center node of the path graph. If both ``num_nodes`` and
+///     will be the center node of the star graph. If both ``num_nodes`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
-///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: The generated path graph
+///
+/// :returns: The generated star graph
 /// :rtype: PyGraph
 /// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
 ///
@@ -217,12 +269,12 @@ pub fn directed_path_graph(
 ///   import rustworkx.generators
 ///   from rustworkx.visualization import mpl_draw
 ///
-///   graph = rustworkx.generators.path_graph(10)
+///   graph = rustworkx.generators.star_graph(10)
 ///   mpl_draw(graph)
 ///
 #[pyfunction(multigraph = true)]
 #[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
-pub fn path_graph(
+pub fn star_graph(
     py: Python,
     num_nodes: Option<usize>,
     weights: Option<Vec<PyObject>>,
@@ -230,7 +282,8 @@ pub fn path_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
-        match core_generators::path_graph(num_nodes, weights, default_fn, default_fn, false) {
+        match core_generators::star_graph(num_nodes, weights, default_fn, default_fn, false, false)
+        {
             Ok(graph) => graph,
             Err(_) => {
                 return Err(PyIndexError::new_err(
@@ -317,59 +370,6 @@ pub fn directed_star_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph,
-        attrs: py.None(),
-    })
-}
-
-/// Generate an undirected star graph
-///
-/// :param int num_nodes: The number of nodes to generate the graph with. Node
-///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights, the first element in the list
-///     will be the center node of the star graph. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param bool multigraph: When set to ``False`` the output
-///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't allow parallel edges to be added. Instead
-///     calls which would create a parallel edge will update the existing edge.
-///
-///
-/// :returns: The generated star graph
-/// :rtype: PyGraph
-/// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
-///
-/// .. jupyter-execute::
-///
-///   import rustworkx.generators
-///   from rustworkx.visualization import mpl_draw
-///
-///   graph = rustworkx.generators.star_graph(10)
-///   mpl_draw(graph)
-///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
-pub fn star_graph(
-    py: Python,
-    num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
-    multigraph: bool,
-) -> PyResult<graph::PyGraph> {
-    let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> =
-        match core_generators::star_graph(num_nodes, weights, default_fn, default_fn, false, false)
-        {
-            Ok(graph) => graph,
-            Err(_) => {
-                return Err(PyIndexError::new_err(
-                    "num_nodes and weights list not specified",
-                ))
-            }
-        };
-    Ok(graph::PyGraph {
-        graph,
-        node_removed: false,
         multigraph,
         attrs: py.None(),
     })
@@ -564,198 +564,6 @@ pub fn directed_grid_graph(
         node_removed: false,
         check_cycle: false,
         cycle_state: algo::DfsSpace::default(),
-        multigraph,
-        attrs: py.None(),
-    })
-}
-
-// MAX_ORDER is determined based on the pointer width of the target platform
-#[cfg(target_pointer_width = "64")]
-const MAX_ORDER: u32 = 60;
-#[cfg(not(target_pointer_width = "64"))]
-const MAX_ORDER: u32 = 29;
-
-/// Generate an undirected binomial tree of order n recursively.
-///
-/// :param int order: Order of the binomial tree. The maximum allowed value
-///     for order on the platform your running on. If it's a 64bit platform
-///     the max value is 60 and on 32bit systems the max value is 29. Any order
-///     value above these will raise an ``OverflowError``.
-/// :param list weights: A list of node weights. If the number of weights is
-///     less than 2**order, extra nodes with None will be appended.
-/// :param bool multigraph: When set to ``False`` the output
-///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't allow parallel edges to be added. Instead calls which would
-///     create a parallel edge will update the existing edge.
-///
-/// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
-/// :rtype: PyGraph
-/// :raises IndexError: If the length of ``weights`` is greater that 2^n
-/// :raises OverflowError: If the input order exceeds the maximum value for the
-///     current platform.
-///
-/// .. jupyter-execute::
-///
-///   import rustworkx.generators
-///   from rustworkx.visualization import mpl_draw
-///
-///   graph = rustworkx.generators.binomial_tree_graph(4)
-///   mpl_draw(graph)
-///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(order, /, weights=None, multigraph=True)")]
-pub fn binomial_tree_graph(
-    py: Python,
-    order: u32,
-    weights: Option<Vec<PyObject>>,
-    multigraph: bool,
-) -> PyResult<graph::PyGraph> {
-    if order >= MAX_ORDER {
-        return Err(PyOverflowError::new_err(format!(
-            "An order of {} exceeds the max allowable size",
-            order
-        )));
-    }
-    let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> =
-        match core_generators::binomial_tree_graph(order, weights, default_fn, default_fn, false) {
-            Ok(graph) => graph,
-            Err(_) => {
-                return Err(PyIndexError::new_err(
-                    "num_nodes and weights list not specified",
-                ))
-            }
-        };
-    Ok(graph::PyGraph {
-        graph,
-        node_removed: false,
-        multigraph,
-        attrs: py.None(),
-    })
-}
-
-/// Generate a directed binomial tree of order n recursively.
-/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``False``
-///
-/// :param int order: Order of the binomial tree. The maximum allowed value
-///     for order on the platform your running on. If it's a 64bit platform
-///     the max value is 60 and on 32bit systems the max value is 29. Any order
-///     value above these will raise an ``OverflowError``.
-/// :param list weights: A list of node weights. If the number of weights is
-///     less than 2**order, extra nodes with None will be appended.
-/// :param bidirectional: A parameter to indicate if edges should exist in
-///     both directions between nodes. Defaults to ``False``.
-/// :param bool multigraph: When set to ``False`` the output
-///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't allow parallel edges to be added. Instead
-///     calls which would create a parallel edge will update the existing edge.
-///
-/// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
-/// :rtype: PyDiGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
-/// :raises OverflowError: If the input order exceeds the maximum value for the
-///     current platform.
-///
-/// .. jupyter-execute::
-///
-///   import rustworkx.generators
-///   from rustworkx.visualization import mpl_draw
-///
-///   graph = rustworkx.generators.directed_binomial_tree_graph(4)
-///   mpl_draw(graph)
-///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[pyo3(text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)")]
-pub fn directed_binomial_tree_graph(
-    py: Python,
-    order: u32,
-    weights: Option<Vec<PyObject>>,
-    bidirectional: bool,
-    multigraph: bool,
-) -> PyResult<digraph::PyDiGraph> {
-    if order >= MAX_ORDER {
-        return Err(PyOverflowError::new_err(format!(
-            "An order of {} exceeds the max allowable size",
-            order
-        )));
-    }
-    let default_fn = || py.None();
-    let graph: StablePyGraph<Directed> = match core_generators::binomial_tree_graph(
-        order,
-        weights,
-        default_fn,
-        default_fn,
-        bidirectional,
-    ) {
-        Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "order and weights list not specified",
-            ))
-        }
-    };
-    Ok(digraph::PyDiGraph {
-        graph,
-        node_removed: false,
-        check_cycle: false,
-        cycle_state: algo::DfsSpace::default(),
-        multigraph,
-        attrs: py.None(),
-    })
-}
-
-/// Creates a full r-ary tree of `n` nodes.
-/// Sometimes called a k-ary, n-ary, or m-ary tree.
-///
-/// :param int branching factor: The number of children at each node.
-/// :param int num_nodes: The number of nodes in the graph.
-/// :param list weights: A list of node weights. If the number of weights is
-///     less than ``num_nodes``, extra nodes with None will be appended. The
-///     number of weights cannot exceed num_nodes.
-/// :param bool multigraph: When set to ``False`` the output
-///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
-///     calls which would create a parallel edge will update the existing edge.
-///
-/// :returns: A r-ary tree.
-/// :rtype: PyGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that n
-///
-/// .. jupyter-execute::
-///
-///   import rustworkx.generators
-///   from rustworkx.visualization import mpl_draw
-///
-///   graph = rustworkx.generators.full_rary_tree(5, 15)
-///   mpl_draw(graph)
-///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)")]
-pub fn full_rary_tree(
-    py: Python,
-    branching_factor: usize,
-    num_nodes: usize,
-    weights: Option<Vec<PyObject>>,
-    multigraph: bool,
-) -> PyResult<graph::PyGraph> {
-    let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> = match core_generators::full_rary_tree_graph(
-        branching_factor,
-        num_nodes,
-        weights,
-        default_fn,
-        default_fn,
-    ) {
-        Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "The number of weights cannot exceed num_nodes.",
-            ))
-        }
-    };
-    Ok(graph::PyGraph {
-        graph,
-        node_removed: false,
         multigraph,
         attrs: py.None(),
     })
@@ -1056,6 +864,198 @@ pub fn directed_heavy_hex_graph(
     })
 }
 
+// MAX_ORDER is determined based on the pointer width of the target platform
+#[cfg(target_pointer_width = "64")]
+const MAX_ORDER: u32 = 60;
+#[cfg(not(target_pointer_width = "64"))]
+const MAX_ORDER: u32 = 29;
+
+/// Generate an undirected binomial tree of order n recursively.
+///
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 60 and on 32bit systems the max value is 29. Any order
+///     value above these will raise an ``OverflowError``.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than 2**order, extra nodes with None will be appended.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead calls which would
+///     create a parallel edge will update the existing edge.
+///
+/// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyGraph
+/// :raises IndexError: If the length of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.binomial_tree_graph(4)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(order, /, weights=None, multigraph=True)")]
+pub fn binomial_tree_graph(
+    py: Python,
+    order: u32,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::binomial_tree_graph(order, weights, default_fn, default_fn, false) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "num_nodes and weights list not specified",
+                ))
+            }
+        };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a directed binomial tree of order n recursively.
+/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``False``
+///
+/// :param int order: Order of the binomial tree. The maximum allowed value
+///     for order on the platform your running on. If it's a 64bit platform
+///     the max value is 60 and on 32bit systems the max value is 29. Any order
+///     value above these will raise an ``OverflowError``.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than 2**order, extra nodes with None will be appended.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes. Defaults to ``False``.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :rtype: PyDiGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises OverflowError: If the input order exceeds the maximum value for the
+///     current platform.
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.directed_binomial_tree_graph(4)
+///   mpl_draw(graph)
+///
+#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[pyo3(text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)")]
+pub fn directed_binomial_tree_graph(
+    py: Python,
+    order: u32,
+    weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    if order >= MAX_ORDER {
+        return Err(PyOverflowError::new_err(format!(
+            "An order of {} exceeds the max allowable size",
+            order
+        )));
+    }
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::binomial_tree_graph(
+        order,
+        weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "order and weights list not specified",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Creates a full r-ary tree of `n` nodes.
+/// Sometimes called a k-ary, n-ary, or m-ary tree.
+///
+/// :param int branching factor: The number of children at each node.
+/// :param int num_nodes: The number of nodes in the graph.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than ``num_nodes``, extra nodes with None will be appended. The
+///     number of weights cannot exceed num_nodes.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A r-ary tree.
+/// :rtype: PyGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that n
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.full_rary_tree(5, 15)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)")]
+pub fn full_rary_tree(
+    py: Python,
+    branching_factor: usize,
+    num_nodes: usize,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::full_rary_tree_graph(
+        branching_factor,
+        num_nodes,
+        weights,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "The number of weights cannot exceed num_nodes.",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
 /// Generate an undirected hexagonal lattice graph.
 ///
 /// :param int rows: The number of rows to generate the graph with.
@@ -1231,6 +1231,77 @@ pub fn lollipop_graph(
     })
 }
 
+/// Generate an undirected barbell graph where two identical complete graphs are
+/// connected by a path.
+///
+/// If ``num_path_nodes`` (described below) is not specified then this is
+/// equivalent to two complete graphs joined together.
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graphs
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+///     be ignored and ``mesh_weights`` will be used.
+/// :param list path_weights: A list of node weights for the path. If both
+///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+///     be ignored and ``path_weights`` will be used.
+///
+/// :returns: The generated barbell graph
+/// :rtype: PyGraph
+/// :raises IndexError: If ``num_mesh_nodes`` is not specified
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.barbell_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, multigraph=True)")]
+pub fn barbell_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    multigraph: bool,
+    mesh_weights: Option<Vec<PyObject>>,
+    path_weights: Option<Vec<PyObject>>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::barbell_graph(
+        num_mesh_nodes,
+        num_path_nodes,
+        mesh_weights,
+        path_weights,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
 /// Generate a generalized Petersen graph :math:`G(n, k)` with :math:`2n`
 /// nodes and :math:`3n` edges. See Watkins [1]_ for more details.
 ///
@@ -1295,77 +1366,6 @@ pub fn generalized_petersen_graph(
                 ))
             }
         };
-    Ok(graph::PyGraph {
-        graph,
-        node_removed: false,
-        multigraph,
-        attrs: py.None(),
-    })
-}
-
-/// Generate an undirected barbell graph where two identical complete graphs are
-/// connected by a path.
-///
-/// If ``num_path_nodes`` (described below) is not specified then this is
-/// equivalent to two complete graphs joined together.
-///
-/// :param int num_mesh_nodes: The number of nodes to generate the mesh graphs
-///     with. Node weights will be None if this is specified. If both
-///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
-///     ``mesh_weights`` will be used.
-/// :param int num_path_nodes: The number of nodes to generate the path
-///     with. Node weights will be None if this is specified. If both
-///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
-///     ``path_weights`` will be used.
-/// :param bool multigraph: When set to ``False`` the output
-///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
-///     calls which would create a parallel edge will update the existing edge.
-/// :param list mesh_weights: A list of node weights for the mesh graph. If both
-///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
-///     be ignored and ``mesh_weights`` will be used.
-/// :param list path_weights: A list of node weights for the path. If both
-///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
-///     be ignored and ``path_weights`` will be used.
-///
-/// :returns: The generated barbell graph
-/// :rtype: PyGraph
-/// :raises IndexError: If ``num_mesh_nodes`` is not specified
-///
-/// .. jupyter-execute::
-///
-///   import rustworkx.generators
-///   from rustworkx.visualization import mpl_draw
-///
-///   graph = rustworkx.generators.barbell_graph(4, 2)
-///   mpl_draw(graph)
-///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, multigraph=True)")]
-pub fn barbell_graph(
-    py: Python,
-    num_mesh_nodes: Option<usize>,
-    num_path_nodes: Option<usize>,
-    multigraph: bool,
-    mesh_weights: Option<Vec<PyObject>>,
-    path_weights: Option<Vec<PyObject>>,
-) -> PyResult<graph::PyGraph> {
-    let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> = match core_generators::barbell_graph(
-        num_mesh_nodes,
-        num_path_nodes,
-        mesh_weights,
-        path_weights,
-        default_fn,
-        default_fn,
-    ) {
-        Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "num_nodes and weights list not specified",
-            ))
-        }
-    };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -1572,12 +1572,12 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_heavy_hex_graph))?;
     m.add_wrapped(wrap_pyfunction!(binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
+    m.add_wrapped(wrap_pyfunction!(full_rary_tree))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
-    m.add_wrapped(wrap_pyfunction!(full_rary_tree))?;
-    m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
     m.add_wrapped(wrap_pyfunction!(barbell_graph))?;
+    m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
     m.add_wrapped(wrap_pyfunction!(empty_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_empty_graph))?;
     m.add_wrapped(wrap_pyfunction!(complete_graph))?;
