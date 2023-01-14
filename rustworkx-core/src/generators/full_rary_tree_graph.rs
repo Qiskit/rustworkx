@@ -58,6 +58,7 @@ use super::InvalidInputError;
 ///     None,
 ///     || {()},
 ///     || {()},
+///     false,
 /// ).unwrap();
 /// assert_eq!(
 ///     expected_edge_list,
@@ -72,6 +73,7 @@ pub fn full_rary_tree_graph<G, T, F, H, M>(
     weights: Option<Vec<T>>,
     mut default_node_weight: F,
     mut default_edge_weight: H,
+    bidirectional: bool,
 ) -> Result<G, InvalidInputError>
 where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
@@ -116,6 +118,9 @@ where
                     parents.push_back(target);
                     nod_it += 1;
                     graph.add_edge(nodes[source], nodes[target], default_edge_weight());
+                    if bidirectional {
+                        graph.add_edge(nodes[target], nodes[source], default_edge_weight());
+                    }
                 }
             }
         }
@@ -144,7 +149,39 @@ mod tests {
             (4, 9),
         ];
         let g: petgraph::graph::UnGraph<(), ()> =
-            full_rary_tree_graph(2, 10, None, || (), || ()).unwrap();
+            full_rary_tree_graph(2, 10, None, || (), || (), false).unwrap();
+        assert_eq!(
+            expected_edge_list,
+            g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
+    }
+
+    #[test]
+    fn test_full_rary_graph_bidirectional() {
+        let expected_edge_list = vec![
+            (0, 1),
+            (1, 0),
+            (0, 2),
+            (2, 0),
+            (1, 3),
+            (3, 1),
+            (1, 4),
+            (4, 1),
+            (2, 5),
+            (5, 2),
+            (2, 6),
+            (6, 2),
+            (3, 7),
+            (7, 3),
+            (3, 8),
+            (8, 3),
+            (4, 9),
+            (9, 4),
+        ];
+        let g: petgraph::graph::DiGraph<(), ()> =
+            full_rary_tree_graph(2, 10, None, || (), || (), true).unwrap();
         assert_eq!(
             expected_edge_list,
             g.edge_references()
@@ -161,6 +198,7 @@ mod tests {
             Some(vec![(), (), (), ()]),
             || (),
             || (),
+            false,
         ) {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),

@@ -63,6 +63,7 @@ use super::InvalidInputError;
 ///     2,
 ///     || {()},
 ///     || {()},
+///     false,
 /// ).unwrap();
 /// assert_eq!(
 ///     expected_edge_list,
@@ -76,6 +77,7 @@ pub fn petersen_graph<G, T, F, H, M>(
     k: usize,
     mut default_node_weight: F,
     mut default_edge_weight: H,
+    bidirectional: bool,
 ) -> Result<G, InvalidInputError>
 where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
@@ -106,18 +108,33 @@ where
             star_nodes[(i + k) % n],
             default_edge_weight(),
         );
+        if bidirectional {
+            graph.add_edge(
+                star_nodes[(i + k) % n],
+                star_nodes[i],
+                default_edge_weight(),
+            );
+        }
     }
-
     for i in 0..n {
         graph.add_edge(
             polygon_nodes[i],
             polygon_nodes[(i + 1) % n],
             default_edge_weight(),
         );
+        if bidirectional {
+            graph.add_edge(
+                polygon_nodes[(i + 1) % n],
+                polygon_nodes[i],
+                default_edge_weight(),
+            );
+        }
     }
-
     for i in 0..n {
         graph.add_edge(polygon_nodes[i], star_nodes[i], default_edge_weight());
+        if bidirectional {
+            graph.add_edge(star_nodes[i], polygon_nodes[i], default_edge_weight());
+        }
     }
     Ok(graph)
 }
@@ -148,7 +165,51 @@ mod tests {
             (8, 3),
             (9, 4),
         ];
-        let g: petgraph::graph::UnGraph<(), ()> = petersen_graph(5, 2, || (), || ()).unwrap();
+        let g: petgraph::graph::UnGraph<(), ()> =
+            petersen_graph(5, 2, || (), || (), false).unwrap();
+        assert_eq!(
+            expected_edge_list,
+            g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
+    }
+
+    #[test]
+    fn test_petersen_graph_bidirectional() {
+        let expected_edge_list = vec![
+            (0, 2),
+            (2, 0),
+            (1, 3),
+            (3, 1),
+            (2, 4),
+            (4, 2),
+            (3, 0),
+            (0, 3),
+            (4, 1),
+            (1, 4),
+            (5, 6),
+            (6, 5),
+            (6, 7),
+            (7, 6),
+            (7, 8),
+            (8, 7),
+            (8, 9),
+            (9, 8),
+            (9, 5),
+            (5, 9),
+            (5, 0),
+            (0, 5),
+            (6, 1),
+            (1, 6),
+            (7, 2),
+            (2, 7),
+            (8, 3),
+            (3, 8),
+            (9, 4),
+            (4, 9),
+        ];
+        let g: petgraph::graph::DiGraph<(), ()> = petersen_graph(5, 2, || (), || (), true).unwrap();
         assert_eq!(
             expected_edge_list,
             g.edge_references()
@@ -159,7 +220,13 @@ mod tests {
 
     #[test]
     fn test_petersen_error() {
-        match petersen_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(2, 3, || (), || ()) {
+        match petersen_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            2,
+            3,
+            || (),
+            || (),
+            false,
+        ) {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
         };

@@ -1040,6 +1040,7 @@ pub fn full_rary_tree(
         weights,
         default_fn,
         default_fn,
+        false,
     ) {
         Ok(graph) => graph,
         Err(_) => {
@@ -1051,6 +1052,69 @@ pub fn full_rary_tree(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Creates a directed full r-ary tree of `n` nodes.
+/// Sometimes called a k-ary, n-ary, or m-ary tree.
+///
+/// :param int branching factor: The number of children at each node.
+/// :param int num_nodes: The number of nodes in the graph.
+/// :param list weights: A list of node weights. If the number of weights is
+///     less than ``num_nodes``, extra nodes with None will be appended. The
+///     number of weights cannot exceed num_nodes.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes. Defaults to ``False``.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: A r-ary tree.
+/// :rtype: PyGraph
+/// :raises IndexError: If the lenght of ``weights`` is greater that n
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.full_rary_tree(5, 15)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)")]
+pub fn directed_full_rary_tree(
+    py: Python,
+    branching_factor: usize,
+    num_nodes: usize,
+    weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::full_rary_tree_graph(
+        branching_factor,
+        num_nodes,
+        weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_nodes and weights list not specified",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
         multigraph,
         attrs: py.None(),
     })
@@ -1306,7 +1370,7 @@ pub fn barbell_graph(
 /// nodes and :math:`3n` edges. See Watkins [1]_ for more details.
 ///
 /// .. note::
-///   
+///
 ///   The Petersen graph itself is denoted :math:`G(5, 2)`
 ///
 /// :param int n: number of nodes in the internal star and external regular polygon.
@@ -1325,17 +1389,17 @@ pub fn barbell_graph(
 ///      not non-negative integers
 ///
 /// .. jupyter-execute::
-///   
+///
 ///   import rustworkx.generators
 ///   from rustworkx.visualization import mpl_draw
-///   
+///
 ///   # Petersen Graph is G(5, 2)
 ///   graph = rustworkx.generators.generalized_petersen_graph(5, 2)
 ///   layout = rustworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
 ///   mpl_draw(graph, pos=layout)
-///   
+///
 /// .. jupyter-execute::
-///   
+///
 ///   # Möbius–Kantor Graph is G(8, 3)
 ///   graph = rustworkx.generators.generalized_petersen_graph(8, 3)
 ///   layout = rustworkx.shell_layout(
@@ -1358,7 +1422,7 @@ pub fn generalized_petersen_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
-        match core_generators::petersen_graph(n, k, default_fn, default_fn) {
+        match core_generators::petersen_graph(n, k, default_fn, default_fn, false) {
             Ok(graph) => graph,
             Err(_) => {
                 return Err(PyIndexError::new_err(
@@ -1369,6 +1433,88 @@ pub fn generalized_petersen_graph(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a directed generalized Petersen graph :math:`G(n, k)` with :math:`2n`
+/// nodes and :math:`3n` edges. See Watkins [1]_ for more details.
+///
+/// .. note::
+///
+///   The Petersen graph itself is denoted :math:`G(5, 2)`
+///
+/// :param int n: number of nodes in the internal star and external regular polygon.
+/// :param int k: shift that changes the internal star graph.
+/// :param bool bidirectional: Adds edges in both directions between two nodes
+///     if set to ``True``. Default value is ``False``.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated generalized Petersen graph.
+///
+/// :rtype: PyGraph
+/// :raises IndexError: If either ``n`` or ``k`` are
+///      not valid
+/// :raises TypeError: If either ``n`` or ``k`` are
+///      not non-negative integers
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   # Petersen Graph is G(5, 2)
+///   graph = rustworkx.generators.generalized_petersen_graph(5, 2)
+///   layout = rustworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
+///   mpl_draw(graph, pos=layout)
+///
+/// .. jupyter-execute::
+///
+///   # Möbius–Kantor Graph is G(8, 3)
+///   graph = rustworkx.generators.generalized_petersen_graph(8, 3)
+///   layout = rustworkx.shell_layout(
+///     graph, nlist=[[0, 1, 2, 3, 4, 5, 6, 7], [10, 11, 12, 13, 14, 15, 8, 9]]
+///   )
+///   mpl_draw(graph, pos=layout)
+///
+/// .. [1] Watkins, Mark E.
+///    "A theorem on tait colorings with an application to the generalized Petersen graphs"
+///    Journal of Combinatorial Theory 6 (2), 152–164 (1969).
+///    https://doi.org/10.1016/S0021-9800(69)80116-X
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(n, k, /, multigraph=True)")]
+pub fn directed_generalized_petersen_graph(
+    py: Python,
+    n: usize,
+    k: usize,
+    multigraph: bool,
+    bidirectional: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::petersen_graph(
+        n,
+        k,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "Invalid n or k specified",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
         multigraph,
         attrs: py.None(),
     })
@@ -1573,11 +1719,13 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_binomial_tree_graph))?;
     m.add_wrapped(wrap_pyfunction!(full_rary_tree))?;
+    m.add_wrapped(wrap_pyfunction!(directed_full_rary_tree))?;
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
     m.add_wrapped(wrap_pyfunction!(barbell_graph))?;
     m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_generalized_petersen_graph))?;
     m.add_wrapped(wrap_pyfunction!(empty_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_empty_graph))?;
     m.add_wrapped(wrap_pyfunction!(complete_graph))?;
