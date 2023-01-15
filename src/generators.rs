@@ -636,7 +636,7 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
     })
 }
 
-/// Generate an directed heavy square graph. Fig. 6 of
+/// Generate a directed heavy square graph. Fig. 6 of
 /// https://arxiv.org/abs/1907.09528.
 /// An ASCII diagram of the graph is given by:
 ///
@@ -1279,6 +1279,7 @@ pub fn lollipop_graph(
         path_weights,
         default_fn,
         default_fn,
+        false,
     ) {
         Ok(graph) => graph,
         Err(_) => {
@@ -1290,6 +1291,86 @@ pub fn lollipop_graph(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a directed lollipop graph where a mesh (complete) graph is connected to a
+/// path.
+///
+/// If neither ``num_path_nodes`` nor ``path_weights`` (both described
+/// below) are specified then this is equivalent to
+/// :func:`~rustworkx.generators.complete_graph`
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+///     be ignored and ``mesh_weights`` will be used.
+/// :param list path_weights: A list of node weights for the path. If both
+///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+///     be ignored and ``path_weights`` will be used.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes. Defaults to ``False``.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated lollipop graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_mesh_nodes`` or ``mesh_weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.lollipop_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(
+    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=True)"
+)]
+pub fn directed_lollipop_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    mesh_weights: Option<Vec<PyObject>>,
+    path_weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::lollipop_graph(
+        num_mesh_nodes,
+        num_path_nodes,
+        mesh_weights,
+        path_weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_mesh_nodes and mesh_weights not specified",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
         multigraph,
         attrs: py.None(),
     })
@@ -1350,6 +1431,7 @@ pub fn barbell_graph(
         path_weights,
         default_fn,
         default_fn,
+        false,
     ) {
         Ok(graph) => graph,
         Err(_) => {
@@ -1361,6 +1443,83 @@ pub fn barbell_graph(
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a directed barbell graph where two identical complete graphs are
+/// connected by a path.
+///
+/// If ``num_path_nodes`` (described below) is not specified then this is
+/// equivalent to two complete graphs joined together.
+///
+/// :param int num_mesh_nodes: The number of nodes to generate the mesh graphs
+///     with. Node weights will be None if this is specified. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``mesh_weights`` will be used.
+/// :param int num_path_nodes: The number of nodes to generate the path
+///     with. Node weights will be None if this is specified. If both
+///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``path_weights`` will be used.
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't  allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+/// :param list mesh_weights: A list of node weights for the mesh graph. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+///     be ignored and ``mesh_weights`` will be used.
+/// :param list path_weights: A list of node weights for the path. If both
+///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+///     be ignored and ``path_weights`` will be used.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes. Defaults to ``False``.
+///
+/// :returns: The generated barbell graph
+/// :rtype: PyGraph
+/// :raises IndexError: If ``num_mesh_nodes`` is not specified
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.barbell_graph(4, 2)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, multigraph=True)")]
+pub fn directed_barbell_graph(
+    py: Python,
+    num_mesh_nodes: Option<usize>,
+    num_path_nodes: Option<usize>,
+    multigraph: bool,
+    mesh_weights: Option<Vec<PyObject>>,
+    path_weights: Option<Vec<PyObject>>,
+    bidirectional: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::barbell_graph(
+        num_mesh_nodes,
+        num_path_nodes,
+        mesh_weights,
+        path_weights,
+        default_fn,
+        default_fn,
+        bidirectional,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "num_mesh_nodes and mesh_weights not specified",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
         multigraph,
         attrs: py.None(),
     })
@@ -1496,20 +1655,11 @@ pub fn directed_generalized_petersen_graph(
     bidirectional: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Directed> = match core_generators::petersen_graph(
-        n,
-        k,
-        default_fn,
-        default_fn,
-        bidirectional,
-    ) {
-        Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "Invalid n or k specified",
-            ))
-        }
-    };
+    let graph: StablePyGraph<Directed> =
+        match core_generators::petersen_graph(n, k, default_fn, default_fn, bidirectional) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyIndexError::new_err("Invalid n or k specified")),
+        };
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -1723,7 +1873,9 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_hexagonal_lattice_graph))?;
     m.add_wrapped(wrap_pyfunction!(lollipop_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_lollipop_graph))?;
     m.add_wrapped(wrap_pyfunction!(barbell_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_barbell_graph))?;
     m.add_wrapped(wrap_pyfunction!(generalized_petersen_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_generalized_petersen_graph))?;
     m.add_wrapped(wrap_pyfunction!(empty_graph))?;

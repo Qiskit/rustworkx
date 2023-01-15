@@ -47,6 +47,9 @@ use super::InvalidInputError;
 ///     for newly created nodes. This is ignored if node weights are specified.
 /// * `default_edge_weight` - A callable that will return the weight object
 ///     to use for newly created edges.
+/// * `bidirectional` - Whether edges are added bidirectionally. If set to
+///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
+///     If the graph is undirected this will result in a parallel edge.
 ///
 /// # Example
 /// ```rust
@@ -79,6 +82,7 @@ use super::InvalidInputError;
 ///     None,
 ///     || {()},
 ///     || {()},
+///     false,
 /// ).unwrap();
 /// assert_eq!(
 ///     expected_edge_list,
@@ -94,6 +98,7 @@ pub fn barbell_graph<G, T, F, H, M>(
     path_weights: Option<Vec<T>>,
     mut default_node_weight: F,
     mut default_edge_weight: H,
+    bidirectional: bool,
 ) -> Result<G, InvalidInputError>
 where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
@@ -126,6 +131,9 @@ where
     for i in 0..meshlen - 1 {
         for j in i + 1..meshlen {
             graph.add_edge(mesh_nodes[i], mesh_nodes[j], default_edge_weight());
+            if bidirectional {
+                graph.add_edge(mesh_nodes[j], mesh_nodes[i], default_edge_weight());
+            }
         }
     }
 
@@ -152,9 +160,21 @@ where
             graph.from_index(meshlen),
             default_edge_weight(),
         );
+        if bidirectional {
+            graph.add_edge(
+                graph.from_index(meshlen),
+                graph.from_index(meshlen - 1),
+                default_edge_weight(),
+            );
+        }
         for (node_a, node_b) in pairwise(path_nodes) {
             match node_a {
-                Some(node_a) => graph.add_edge(node_a, node_b, default_edge_weight()),
+                Some(node_a) => {
+                    graph.add_edge(node_a, node_b, default_edge_weight());
+                    if bidirectional {
+                        graph.add_edge(node_b, node_a, default_edge_weight());
+                    }
+                }
                 None => continue,
             };
         }
@@ -177,9 +197,19 @@ where
         graph.from_index(meshlen + pathlen),
         default_edge_weight(),
     );
+    if bidirectional {
+        graph.add_edge(
+            graph.from_index(meshlen + pathlen),
+            graph.from_index(meshlen + pathlen - 1),
+            default_edge_weight(),
+        );
+    }
     for i in 0..meshlen - 1 {
         for j in i + 1..meshlen {
             graph.add_edge(mesh_nodes[i], mesh_nodes[j], default_edge_weight());
+            if bidirectional {
+                graph.add_edge(mesh_nodes[j], mesh_nodes[i], default_edge_weight());
+            }
         }
     }
     Ok(graph)
@@ -212,7 +242,53 @@ mod tests {
             (9, 10),
         ];
         let g: petgraph::graph::UnGraph<(), ()> =
-            barbell_graph(Some(4), Some(3), None, None, || (), || ()).unwrap();
+            barbell_graph(Some(4), Some(3), None, None, || (), || (), false).unwrap();
+        assert_eq!(
+            expected_edge_list,
+            g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
+    }
+
+    #[test]
+    fn test_barbell_mesh_path_bidirectional() {
+        let expected_edge_list = vec![
+            (0, 1),
+            (1, 0),
+            (0, 2),
+            (2, 0),
+            (0, 3),
+            (3, 0),
+            (1, 2),
+            (2, 1),
+            (1, 3),
+            (3, 1),
+            (2, 3),
+            (3, 2),
+            (3, 4),
+            (4, 3),
+            (4, 5),
+            (5, 4),
+            (5, 6),
+            (6, 5),
+            (6, 7),
+            (7, 6),
+            (7, 8),
+            (8, 7),
+            (7, 9),
+            (9, 7),
+            (7, 10),
+            (10, 7),
+            (8, 9),
+            (9, 8),
+            (8, 10),
+            (10, 8),
+            (9, 10),
+            (10, 9),
+        ];
+        let g: petgraph::graph::DiGraph<(), ()> =
+            barbell_graph(Some(4), Some(3), None, None, || (), || (), true).unwrap();
         assert_eq!(
             expected_edge_list,
             g.edge_references()
@@ -230,6 +306,7 @@ mod tests {
             None,
             || (),
             || (),
+            false,
         ) {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
