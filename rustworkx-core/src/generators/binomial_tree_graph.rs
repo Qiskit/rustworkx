@@ -103,22 +103,6 @@ where
             None => graph.add_node(default_node_weight()),
         };
     }
-
-    fn find_edge<G>(graph: &mut G, source: usize, target: usize) -> bool
-    where
-        G: NodeIndexable,
-        for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgeReferences,
-    {
-        let mut found = false;
-        for edge in graph.edge_references() {
-            if graph.to_index(edge.source()) == source && graph.to_index(edge.target()) == target {
-                found = true;
-                break;
-            }
-        }
-        found
-    }
-
     let mut n = 1;
     let zero_index = 0;
     for _ in 0..order {
@@ -131,30 +115,26 @@ where
             let source_index = source + n;
             let target_index = target + n;
 
-            if !find_edge(&mut graph, source_index, target_index) {
-                graph.add_edge(
-                    graph.from_index(source_index),
-                    graph.from_index(target_index),
-                    default_edge_weight(),
-                );
-            }
-            if bidirectional && !find_edge(&mut graph, target_index, source_index) {
-                graph.add_edge(
-                    graph.from_index(target_index),
-                    graph.from_index(source_index),
-                    default_edge_weight(),
-                );
-            }
-        }
-        if !find_edge(&mut graph, zero_index, n) {
-            graph.add_edge(
-                graph.from_index(zero_index),
-                graph.from_index(n),
+            graph.update_edge(
+                graph.from_index(source_index),
+                graph.from_index(target_index),
                 default_edge_weight(),
             );
+            if bidirectional {
+                graph.update_edge(
+                    graph.from_index(target_index),
+                    graph.from_index(source_index),
+                    default_edge_weight(),
+                );
+            }
         }
-        if bidirectional && !find_edge(&mut graph, n, zero_index) {
-            graph.add_edge(
+        graph.update_edge(
+            graph.from_index(zero_index),
+            graph.from_index(n),
+            default_edge_weight(),
+        );
+        if bidirectional {
+            graph.update_edge(
                 graph.from_index(n),
                 graph.from_index(zero_index),
                 default_edge_weight(),
