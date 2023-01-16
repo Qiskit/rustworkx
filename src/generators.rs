@@ -10,11 +10,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use std::collections::VecDeque;
 use std::iter;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::Undirected;
 
@@ -719,9 +717,11 @@ pub fn directed_binomial_tree_graph(
 /// Creates a full r-ary tree of `n` nodes.
 /// Sometimes called a k-ary, n-ary, or m-ary tree.
 ///
-/// :param int order: Order of the tree.
+/// :param int branching factor: The number of children at each node.
+/// :param int num_nodes: The number of nodes in the graph.
 /// :param list weights: A list of node weights. If the number of weights is
-///     less than n, extra nodes with with None will be appended.
+///     less than num_nodes, extra nodes with with None will be appended. The
+///     number of weights cannot exceed num_nodes.
 /// :param bool multigraph: When set to False the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -743,50 +743,26 @@ pub fn directed_binomial_tree_graph(
 #[pyo3(text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)")]
 pub fn full_rary_tree(
     py: Python,
-    branching_factor: u32,
+    branching_factor: usize,
     num_nodes: usize,
     weights: Option<Vec<PyObject>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
-    let mut graph = StablePyGraph::<Undirected>::default();
-
-    let nodes: Vec<NodeIndex> = match weights {
-        Some(weights) => {
-            let mut node_list: Vec<NodeIndex> = Vec::with_capacity(num_nodes);
-            if weights.len() > num_nodes {
-                return Err(PyIndexError::new_err("weights can't be greater than nodes"));
-            }
-            let node_count = num_nodes - weights.len();
-            for weight in weights {
-                let index = graph.add_node(weight);
-                node_list.push(index);
-            }
-            for _ in 0..node_count {
-                let index = graph.add_node(py.None());
-                node_list.push(index);
-            }
-            node_list
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::full_rary_tree_graph(
+        branching_factor,
+        num_nodes,
+        weights,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyIndexError::new_err(
+                "The number of weights cannot exceed num_nodes.",
+            ))
         }
-        None => (0..num_nodes).map(|_| graph.add_node(py.None())).collect(),
     };
-
-    if num_nodes > 0 {
-        let mut parents = VecDeque::from(vec![nodes[0].index()]);
-        let mut nod_it: usize = 1;
-
-        while !parents.is_empty() {
-            let source: usize = parents.pop_front().unwrap(); //If is empty it will never try to pop
-            for _ in 0..branching_factor {
-                if nod_it < num_nodes {
-                    let target: usize = nodes[nod_it].index();
-                    parents.push_back(target);
-                    nod_it += 1;
-                    graph.add_edge(nodes[source], nodes[target], py.None());
-                }
-            }
-        }
-    }
-
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
