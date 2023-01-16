@@ -665,6 +665,8 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
 ///     :class:`~rustworkx.PyDiGraph` with a single node will be returned. ``d`` must be
 ///     an odd number.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
@@ -747,6 +749,8 @@ pub fn directed_heavy_square_graph(
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
 ///     :class:`~rustworkx.PyGraph` with a single node will be returned.
 ///     ``d`` must be an odd number.
+/// :param bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't  allow parallel edges to be added. Instead
