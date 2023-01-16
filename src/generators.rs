@@ -13,7 +13,6 @@
 use std::iter;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::Undirected;
 
