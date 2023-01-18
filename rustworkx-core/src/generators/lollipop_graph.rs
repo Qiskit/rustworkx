@@ -18,10 +18,7 @@ use petgraph::visit::{Data, GraphProp, NodeIndexable};
 use super::utils::{get_num_nodes, pairwise};
 use super::InvalidInputError;
 
-/// Generate an undirected lollipop graph where a complete graph is connected to a
-/// path.
-///
-/// .. note::
+/// Generate a lollipop graph where a complete graph is connected to a path.
 ///
 ///   If neither `num_path_nodes` nor `path_weights` (described below) are
 ///   specified, then this is equivalent to a complete graph.

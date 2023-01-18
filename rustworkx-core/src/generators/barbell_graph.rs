@@ -19,10 +19,8 @@ use super::utils::get_num_nodes;
 use super::utils::pairwise;
 use super::InvalidInputError;
 
-/// Generate an undirected barbell graph where two identical complete graphs are
+/// Generate a barbell graph where two identical complete graphs are
 /// connected by a path.
-///
-/// .. note::
 ///
 ///   If neither `num_path_nodes` nor `path_weights` (described below) are
 ///   specified, then this is equivalent to two complete graphs joined together.

@@ -17,12 +17,10 @@ use petgraph::visit::{Data, NodeIndexable};
 
 use super::InvalidInputError;
 
-/// Generate a generalized Petersen graph :math:`G(n, k)` with :math:`2n`
-/// nodes and :math:`3n` edges.
+/// Generate a generalized Petersen graph `G(n, k)` with `2n`
+/// nodes and `3n` edges.
 ///
-/// .. note::
-///   
-///   The Petersen graph itself is denoted :math:`G(5, 2)`
+///   The Petersen graph itself is denoted `G(5, 2)`
 ///
 /// * `n` - Number of nodes in the internal star and external regular polygon.
 ///     n > 2.

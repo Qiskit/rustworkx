@@ -17,13 +17,12 @@ use petgraph::visit::{Data, NodeIndexable};
 
 use super::InvalidInputError;
 
-/// Generate an undirected heavy hex graph. Fig. 2 of
-/// https://arxiv.org/abs/1907.09528
+/// Generate a heavy hex graph.
+///
+/// Fig. 2 of <https://arxiv.org/abs/1907.09528>
 /// An ASCII diagram of the graph is given by:
 ///
-/// .. note::
-///
-///    ... D-S-D   D ...
+///     ... D-S-D   D ...
 ///         |   |   |
 ///     ...-F   F-S-F ...
 ///         |   |   |

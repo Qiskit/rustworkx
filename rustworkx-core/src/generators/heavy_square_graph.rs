@@ -17,14 +17,13 @@ use petgraph::visit::{Data, NodeIndexable};
 
 use super::InvalidInputError;
 
-/// Generate an directed heavy square graph. Fig. 6 of
-/// https://arxiv.org/abs/1907.09528.
+/// Generate a heavy square graph.
+///
+/// Fig. 6 of <https://arxiv.org/abs/1907.09528>
 /// An ASCII diagram of the graph is given by:
 ///
-/// .. note::
-///
-///    ...       S   ...
-///       \     / \
+///        ...        S  ...
+///            |    /  |
 ///        ... D   D   D ...
 ///            |   |   |
 ///        ... F-S-F-S-F-...
@@ -36,11 +35,11 @@ use super::InvalidInputError;
 ///            .........
 ///            |   |   |
 ///        ... D   D   D ...
-///             \ /     \
-///        ...   S       ...
+///            |  /    |
+///        ...  S        ...
 ///
 /// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
+/// This function implements Fig 10.b left of the paper <https://arxiv.org/abs/1907.09528>.
 /// This function doesn't support the variant Fig 10.b right.
 ///
 /// Arguments:
