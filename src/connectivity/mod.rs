@@ -29,8 +29,7 @@ use pyo3::Python;
 
 use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
-use petgraph::unionfind::UnionFind;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use petgraph::visit::{NodeCount, Visitable};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -328,16 +327,7 @@ pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
-    let mut weak_components = graph.node_count();
-    let mut vertex_sets = UnionFind::new(graph.graph.node_bound());
-    for edge in graph.graph.edge_references() {
-        let (a, b) = (edge.source(), edge.target());
-        // union the two vertices of the edge
-        if vertex_sets.union(a.index(), b.index()) {
-            weak_components -= 1
-        };
-    }
-    weak_components
+    connectivity::number_weakly_connected_components(&graph.graph)
 }
 
 /// Find the weakly connected components in a directed graph
@@ -351,7 +341,7 @@ pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
-    connectivity::connected_components(&graph.graph)
+    connectivity::weakly_connected_components(&graph.graph)
         .into_iter()
         .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
         .collect()
@@ -371,7 +361,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     if graph.graph.node_count() == 0 {
         return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
     }
-    Ok(weakly_connected_components(graph)[0].len() == graph.graph.node_count())
+    Ok(connectivity::is_weakly_connected(&graph.graph))
 }
 
 /// Return the adjacency matrix for a PyDiGraph object

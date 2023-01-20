@@ -14,8 +14,10 @@ use hashbrown::HashSet;
 use std::collections::VecDeque;
 use std::hash::Hash;
 
-use petgraph::visit::{GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, VisitMap, Visitable};
-use petgraph::{Incoming, Outgoing};
+use petgraph::visit::{
+    GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, VisitMap, Visitable,
+};
+use petgraph::{Directed, Incoming, Outgoing};
 
 /// Given an graph, a node in the graph, and a visit_map,
 /// return the set of nodes connected to the given node
@@ -165,6 +167,101 @@ where
     num_components
 }
 
+/// Given a graph, return the list of weakly connected components of the graph.
+/// A weakly connected component is a maximal subgraph where all nodes are
+/// reachable from all other nodes in the subgraph.
+/// This function is only defined for directed graphs.
+/// For undirected graphs use the :func:`connected_components` function.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+///
+/// # Example
+/// ```rust
+/// use std::iter::FromIterator;
+/// use hashbrown::HashSet;
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::NodeIndex;
+/// use petgraph::{Directed};
+/// use petgraph::graph::node_index as ndx;
+/// use rustworkx_core::connectivity::weakly_connected_components;
+///
+/// let graph = Graph::<(), (), Directed>::from_edges(&[
+///    (0, 1),
+///    (1, 2),
+///    (2, 3),
+///    (3, 0),
+///    (4, 5),
+///    (5, 6),
+///    (6, 7),
+///    (7, 4),
+/// ]);
+/// let components = weakly_connected_components(&graph);
+/// let exp1 = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
+/// let exp2 = HashSet::from_iter([ndx(7), ndx(5), ndx(4), ndx(6)]);
+/// let expected = vec![exp1, exp2];
+/// assert_eq!(expected, components);
+/// ```
+pub fn weakly_connected_components<G>(graph: G) -> Vec<HashSet<G::NodeId>>
+where
+    G: GraphProp<EdgeType = Directed> + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+{
+    connected_components(graph)
+}
+
+/// Given a graph, return the number of weakly connected components of the graph.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph::{Graph, Directed};
+/// use rustworkx_core::connectivity::number_weakly_connected_components;
+///
+/// let graph = Graph::<(), (), Directed>::from_edges([(0, 1), (1, 2), (3, 4)]);
+/// assert_eq!(number_weakly_connected_components(&graph), 2);
+/// ```
+pub fn number_weakly_connected_components<G>(graph: G) -> usize
+where
+    G: GraphProp<EdgeType = Directed> + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+{
+    number_connected_components(graph)
+}
+
+/// Given a graph, check if the graph is weakly connected.
+///
+/// This function is only defined for directed graphs.
+/// For undirected graphs use the :func:`is_connected` function.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph::{Graph, Directed};
+/// use rustworkx_core::connectivity::is_weakly_connected;
+///
+/// let graph = Graph::<(), (), Directed>::from_edges([(0, 1), (1, 2), (3, 4)]);
+/// assert_eq!(is_weakly_connected(&graph), false);
+/// ```
+pub fn is_weakly_connected<G>(graph: G) -> bool
+where
+    G: GraphProp<EdgeType = Directed>
+        + IntoNeighborsDirected
+        + Visitable
+        + IntoNodeIdentifiers
+        + NodeCount,
+    G::NodeId: Eq + Hash,
+{
+    weakly_connected_components(graph)[0].len() == graph.node_count()
+}
+
 #[cfg(test)]
 mod test_conn_components {
     use hashbrown::HashSet;
@@ -174,7 +271,7 @@ mod test_conn_components {
     use petgraph::{Directed, Undirected};
     use std::iter::FromIterator;
 
-    use crate::connectivity::{bfs_undirected, connected_components, number_connected_components};
+    use super::*;
 
     #[test]
     fn test_number_connected() {
@@ -230,5 +327,39 @@ mod test_conn_components {
         let component = bfs_undirected(&graph, node_idx, &mut graph.visit_map());
         let expected = HashSet::from_iter([ndx(0), ndx(1), ndx(3), ndx(2)]);
         assert_eq!(expected, component);
+    }
+
+    #[test]
+    fn test_weakly_connected() {
+        let graph = Graph::<(), (), Directed>::from_edges(&[
+            (1, 2),
+            (2, 3),
+            (2, 8),
+            (3, 4),
+            (3, 7),
+            (4, 5),
+            (5, 3),
+            (5, 6),
+            (7, 4),
+            (7, 6),
+            (8, 1),
+            (8, 7),
+        ]);
+        let weak_components = weakly_connected_components(&graph);
+        let exp1 = HashSet::from_iter([ndx(0)]);
+        let exp2 = HashSet::from_iter([
+            ndx(1),
+            ndx(2),
+            ndx(3),
+            ndx(4),
+            ndx(5),
+            ndx(6),
+            ndx(7),
+            ndx(8),
+        ]);
+        let expected = vec![exp1, exp2];
+        assert_eq!(expected, weak_components);
+        assert_eq!(number_weakly_connected_components(&graph), 2);
+        assert_eq!(is_weakly_connected(&graph), false);
     }
 }
