@@ -50,6 +50,10 @@ features = ["rayon"]
 version = "1.7"
 features = ["rayon"]
 
+[dependencies.sprs]
+version = "^0.11"
+features = ["multi_thread"]
+
 [profile.release]
 lto = 'fat'
 codegen-units = 1
