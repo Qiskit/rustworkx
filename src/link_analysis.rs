@@ -12,19 +12,24 @@
 
 use pyo3::prelude::*;
 use pyo3::Python;
+
 use crate::digraph::PyDiGraph;
+use crate::iterators::CentralityMapping;
+use crate::FailedToConverge;
+
 use hashbrown::HashMap;
-use indexmap::IndexMap;
 use ndarray::prelude::*;
-use sprs::{CsMat, TriMat};
-use pyo3::exceptions::PyIndexError;
-use petgraph::prelude::*;
-use petgraph::visit::NodeIndexable;
-use petgraph::visit::NodeCount;
 use ndarray_stats::DeviationExt;
+use petgraph::prelude::*;
+use petgraph::visit::NodeCount;
+use petgraph::visit::NodeIndexable;
+use rustworkx_core::dictmap::*;
+use sprs::{CsMat, TriMat};
 
 #[pyfunction]
-#[pyo3(text_signature = "(graph, alpha=0.85, weight_fn=None, personalization=None, tol=1e-6, max_iter=100 /)")]
+#[pyo3(
+    text_signature = "(graph, alpha=0.85, weight_fn=None, personalization=None, tol=1e-6, max_iter=100 /)"
+)]
 pub fn pagerank(
     py: Python,
     graph: &PyDiGraph,
@@ -32,13 +37,13 @@ pub fn pagerank(
     weight_fn: PyObject,
     personalization: Option<HashMap<usize, f64>>,
     tol: f64,
-    max_iter: usize
-) -> PyResult<IndexMap<usize,f64>> {
-    let n = graph.graph.node_count();
+    max_iter: usize,
+) -> PyResult<CentralityMapping> {
     // we use the node bound to make the code work if nodes were removed
+    let n = graph.graph.node_count();
     let mat_size = graph.graph.node_bound();
 
-    // Create sprase matrix
+    // Create sparse Google Matrix that describes the Markov Chain process
     let mut a = TriMat::new((mat_size, mat_size));
     a.add_triplet(0, 0, 3.0_f64);
     //a.add_triplet(1, 2, 2.0);
@@ -58,25 +63,34 @@ pub fn pagerank(
         damping[i] = default_damp;
     }
 
+    // Power Method iteration for the Google Matrix
     let mut has_converged = false;
     for _ in 0..max_iter {
         let new_popularity = alpha * (&a * &popularity) + &damping;
-        // TODO calculate norms
         let norm: f64 = new_popularity.l1_dist(&popularity).unwrap();
         if norm < (n as f64) * tol {
             has_converged = true;
             break;
-        }
-        else {
+        } else {
             popularity = new_popularity;
         }
     }
 
-    // TODO: loop to put probs into an array
+    // Convert to custom return type
     if !has_converged {
-        return Err(PyIndexError::new_err("Did not converge"));
+        return Err(FailedToConverge::new_err(format!(
+            "Function failed to converge on a solution in {} iterations",
+            max_iter
+        )));
     }
 
-    Err(PyIndexError::new_err("Not implemented"))
+    let out_map: DictMap<usize, f64> = graph
+        .graph
+        .node_indices()
+        .map(|x| (x.index(), popularity[x.index()]))
+        .collect();
 
+    Ok(CentralityMapping {
+        centralities: out_map,
+    })
 }
