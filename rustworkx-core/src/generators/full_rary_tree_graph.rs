@@ -18,7 +18,7 @@ use petgraph::visit::{Data, NodeIndexable};
 
 use super::InvalidInputError;
 
-/// Creates a full r-ary tree of `n` nodes.
+/// Generate a full r-ary tree of `n` nodes.
 /// Sometimes called a k-ary, n-ary, or m-ary tree.
 ///
 /// Arguments:
