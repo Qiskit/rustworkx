@@ -47,6 +47,7 @@ use graphml::*;
 use isomorphism::*;
 use json::*;
 use layout::*;
+use link_analysis::*;
 
 use matching::*;
 use planar::*;

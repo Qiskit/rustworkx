@@ -17,45 +17,66 @@ use hashbrown::HashMap;
 use indexmap::IndexMap;
 use ndarray::prelude::*;
 use sprs::{CsMat, TriMat};
+use pyo3::exceptions::PyIndexError;
+use petgraph::prelude::*;
+use petgraph::visit::NodeIndexable;
+use petgraph::visit::NodeCount;
+use ndarray_stats::DeviationExt;
 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, alpha=0.85, weight_fn=None, personalization=None, tol=1e-6, max_iter=100 /)")]
 pub fn pagerank(
-    graph: &graph::PyDiGraph,
+    py: Python,
+    graph: &PyDiGraph,
     alpha: f64,
     weight_fn: PyObject,
     personalization: Option<HashMap<usize, f64>>,
     tol: f64,
     max_iter: usize
 ) -> PyResult<IndexMap<usize,f64>> {
-    let n = graph.node_count();
+    let n = graph.graph.node_count();
     // we use the node bound to make the code work if nodes were removed
     let mat_size = graph.graph.node_bound();
 
     // Create sprase matrix
     let mut a = TriMat::new((mat_size, mat_size));
-    //a.add_triplet(0, 0, 3.0_f64);
+    a.add_triplet(0, 0, 3.0_f64);
     //a.add_triplet(1, 2, 2.0);
     //a.add_triplet(3, 0, -2.0);
     let a: CsMat<_> = a.to_csr();
 
     // Vector with probabilities
     // TODO: loop over nodes
-    let mut popularity = Array1<f64>::zeros(mat_size);
-    let mut damping = Array1<f64>::zeros(mat_size);
+    let mut popularity = Array1::<f64>::zeros(mat_size);
+    let mut damping = Array1::<f64>::zeros(mat_size);
+    let default_pop = (n as f64).recip();
+    let default_damp = (1.0 - alpha) * default_pop;
 
+    for node_index in graph.graph.node_indices() {
+        let i = node_index.index();
+        popularity[i] = default_pop;
+        damping[i] = default_damp;
+    }
+
+    let mut has_converged = false;
     for _ in 0..max_iter {
-        let mut new_popularity = alpha * (a * &popularity) + damping;
+        let new_popularity = alpha * (&a * &popularity) + &damping;
         // TODO calculate norms
-        let norm;
-        if norm < tol {
-
+        let norm: f64 = new_popularity.l1_dist(&popularity).unwrap();
+        if norm < (n as f64) * tol {
+            has_converged = true;
+            break;
         }
         else {
-
+            popularity = new_popularity;
         }
     }
 
     // TODO: loop to put probs into an array
+    if !has_converged {
+        return Err(PyIndexError::new_err("Did not converge"));
+    }
+
+    Err(PyIndexError::new_err("Not implemented"))
 
 }
