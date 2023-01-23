@@ -28,7 +28,7 @@ use sprs::{CsMat, TriMat};
 
 #[pyfunction]
 #[pyo3(
-    text_signature = "(graph, alpha=0.85, weight_fn=None, personalization=None, tol=1.0e-6, max_iter=100 /)"
+    text_signature = "(graph, /, alpha=0.85, weight_fn=None, personalization=None, tol=1.0e-6, max_iter=100)"
 )]
 pub fn pagerank(
     py: Python,

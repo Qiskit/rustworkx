@@ -14,6 +14,7 @@ import unittest
 
 import rustworkx
 
+
 class TestPageRank(unittest.TestCase):
     def setUp(self):
         self.graph = rustworkx.PyDiGraph()
@@ -21,8 +22,8 @@ class TestPageRank(unittest.TestCase):
         self.b = self.graph.add_node("B")
         self.c = self.graph.add_node("C")
         self.d = self.graph.add_node("D")
-        self.d = self.graph.add_node("E")
-        self.d = self.graph.add_node("F")
+        self.e = self.graph.add_node("E")
+        self.f = self.graph.add_node("F")
         edge_list = [
             (self.a, self.b, 1),
             (self.a, self.c, 1),
@@ -36,7 +37,9 @@ class TestPageRank(unittest.TestCase):
             (self.f, self.d, 1),
         ]
         self.graph.add_edges_from(edge_list)
-    
+
     def test_pagerank(self):
-        ranks = rustworkx.pagerank(self.graph)
+        ranks = rustworkx.pagerank(
+            self.graph, alpha=0.85, weight_fn=None, personalization=None, tol=1.0e-6, max_iter=100
+        )
         print(ranks)
