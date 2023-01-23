@@ -15,26 +15,26 @@ use pyo3::Python;
 
 use crate::digraph::PyDiGraph;
 use crate::iterators::CentralityMapping;
-use crate::FailedToConverge;
+use crate::{weight_callable, FailedToConverge};
 
 use hashbrown::HashMap;
 use ndarray::prelude::*;
 use ndarray_stats::DeviationExt;
 use petgraph::prelude::*;
-use petgraph::visit::NodeCount;
+use petgraph::visit::IntoEdgeReferences;
 use petgraph::visit::NodeIndexable;
 use rustworkx_core::dictmap::*;
 use sprs::{CsMat, TriMat};
 
 #[pyfunction]
 #[pyo3(
-    text_signature = "(graph, alpha=0.85, weight_fn=None, personalization=None, tol=1e-6, max_iter=100 /)"
+    text_signature = "(graph, alpha=0.85, weight_fn=None, personalization=None, tol=1.0e-6, max_iter=100 /)"
 )]
 pub fn pagerank(
     py: Python,
     graph: &PyDiGraph,
     alpha: f64,
-    weight_fn: PyObject,
+    weight_fn: Option<PyObject>,
     personalization: Option<HashMap<usize, f64>>,
     tol: f64,
     max_iter: usize,
@@ -43,24 +43,51 @@ pub fn pagerank(
     let n = graph.graph.node_count();
     let mat_size = graph.graph.node_bound();
 
+    // Grab the graph weights from Python to Rust
+    let mut out_weights: HashMap<(usize, usize), f64> =
+        HashMap::with_capacity(graph.graph.edge_count());
+    let mut in_weights: Vec<f64> = vec![0.0; mat_size];
+    let default_weight: f64 = 1.0;
+
+    for edge in graph.graph.edge_references() {
+        let i = NodeIndexable::to_index(&graph.graph, edge.source());
+        let j = NodeIndexable::to_index(&graph.graph, edge.target());
+        let weight = edge.weight().clone();
+
+        let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
+        in_weights[i] += edge_weight;
+        *out_weights.entry((i, j)).or_insert(0.0) += edge_weight;
+    }
+
     // Create sparse Google Matrix that describes the Markov Chain process
     let mut a = TriMat::new((mat_size, mat_size));
     a.add_triplet(0, 0, 3.0_f64);
-    //a.add_triplet(1, 2, 2.0);
-    //a.add_triplet(3, 0, -2.0);
+    for ((i, j), weight) in out_weights.into_iter() {
+        a.add_triplet(j, i, weight / in_weights[i]);
+    }
     let a: CsMat<_> = a.to_csr();
 
-    // Vector with probabilities
-    // TODO: loop over nodes
+    // Vector with probabilities for the Markov Chain process
     let mut popularity = Array1::<f64>::zeros(mat_size);
     let mut damping = Array1::<f64>::zeros(mat_size);
     let default_pop = (n as f64).recip();
     let default_damp = (1.0 - alpha) * default_pop;
 
-    for node_index in graph.graph.node_indices() {
-        let i = node_index.index();
-        popularity[i] = default_pop;
-        damping[i] = default_damp;
+    if personalization.is_none() {
+        for node_index in graph.graph.node_indices() {
+            let i = node_index.index();
+            popularity[i] = default_pop;
+            damping[i] = default_damp;
+        }
+    } else {
+        let personalization = personalization.unwrap();
+        for node_index in graph.graph.node_indices() {
+            let i = node_index.index();
+            popularity[i] = *personalization.get(&i).unwrap_or(&0.0);
+            damping[i] = default_damp;
+        }
+        let p_sum = popularity.sum();
+        popularity /= p_sum;
     }
 
     // Power Method iteration for the Google Matrix
