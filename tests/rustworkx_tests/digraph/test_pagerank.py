@@ -22,8 +22,9 @@ import networkx as nx
 class TestPageRank(unittest.TestCase):
     def setUp(self) -> None:
         try:
-            import scipy  # required for networkx.pagerank to work
-        except:
+            # required for networkx.pagerank to work
+            import scipy  # flake8: noqa
+        except:  # flake8: noqa
             self.skipTest("SciPy is not installed, skipping PageRank tests")
 
     def test_pagerank_with_personalize(self):
