@@ -61,7 +61,6 @@ pub fn pagerank(
 
     // Create sparse Google Matrix that describes the Markov Chain process
     let mut a = TriMat::new((mat_size, mat_size));
-    a.add_triplet(0, 0, 3.0_f64);
     for ((i, j), weight) in out_weights.into_iter() {
         a.add_triplet(j, i, weight / in_weights[i]);
     }
