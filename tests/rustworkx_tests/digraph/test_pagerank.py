@@ -20,6 +20,12 @@ import networkx as nx
 
 
 class TestPageRank(unittest.TestCase):
+    def setUp(self) -> None:
+        try:
+            import scipy  # required for networkx.pagerank to work
+        except:
+            self.skipTest("SciPy is not installed, skipping PageRank tests")
+
     def test_pagerank_with_personalize(self):
         rx_graph = rustworkx.generators.directed_complete_graph(4)
         personalize = {0: 0, 1: 0, 2: 0, 3: 1}
