@@ -26,7 +26,13 @@ use petgraph::visit::NodeIndexable;
 use rustworkx_core::dictmap::*;
 use sprs::{CsMat, TriMat};
 
-#[pyfunction(alpha="0.85", weight_fn = "None", personalization="None", tol="1.0e-6", max_iter="100")]
+#[pyfunction(
+    alpha = "0.85",
+    weight_fn = "None",
+    personalization = "None",
+    tol = "1.0e-6",
+    max_iter = "100"
+)]
 #[pyo3(
     text_signature = "(graph, /, alpha=0.85, weight_fn=None, personalization=None, tol=1.0e-6, max_iter=100)"
 )]
