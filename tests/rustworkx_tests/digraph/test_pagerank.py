@@ -10,36 +10,34 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# These tests are adapated from the networkx test cases:
+# https://github.com/networkx/networkx/blob/cea310f9066efc0d5ff76f63d33dbc3eefe61f6b/networkx/algorithms/link_analysis/tests/test_pagerank.py
+
 import unittest
 
 import rustworkx
+import networkx as nx
 
 
 class TestPageRank(unittest.TestCase):
-    def setUp(self):
-        self.graph = rustworkx.PyDiGraph()
-        self.a = self.graph.add_node("A")
-        self.b = self.graph.add_node("B")
-        self.c = self.graph.add_node("C")
-        self.d = self.graph.add_node("D")
-        self.e = self.graph.add_node("E")
-        self.f = self.graph.add_node("F")
-        edge_list = [
-            (self.a, self.b, 1),
-            (self.a, self.c, 1),
-            (self.c, self.a, 2),
-            (self.c, self.b, 2),
-            (self.c, self.e, 1),
-            (self.d, self.e, 1),
-            (self.d, self.f, 2),
-            (self.e, self.d, 1),
-            (self.e, self.f, 2),
-            (self.f, self.d, 1),
-        ]
-        self.graph.add_edges_from(edge_list)
+    def test_pagerank_with_personalize(self):
+        rx_graph = rustworkx.generators.directed_complete_graph(4)
+        personalize = {0: 0, 1: 0, 2: 0, 3: 1}
+        alpha = 0.85
+        rx_ranks = rustworkx.pagerank(rx_graph, alpha=alpha, personalization=personalize)
+        nx_graph = nx.DiGraph(list(rx_graph.edge_list()))
+        nx_ranks = nx.pagerank(nx_graph, alpha=alpha, personalization=personalize)
 
-    def test_pagerank(self):
-        ranks = rustworkx.pagerank(
-            self.graph, alpha=0.85, weight_fn=None, personalization=None, tol=1.0e-6, max_iter=100
-        )
-        print(ranks)
+        for v in rx_graph.node_indices():
+            self.assertAlmostEqual(rx_ranks[v], nx_ranks[v], delta=1.0e-4)
+
+    def test_pagerank_with_personalize_missing(self):
+        rx_graph = rustworkx.generators.directed_complete_graph(4)
+        personalize = {3: 1}
+        alpha = 0.85
+        rx_ranks = rustworkx.pagerank(rx_graph, alpha=alpha, personalization=personalize)
+        nx_graph = nx.DiGraph(list(rx_graph.edge_list()))
+        nx_ranks = nx.pagerank(nx_graph, alpha=alpha, personalization=personalize)
+
+        for v in rx_graph.node_indices():
+            self.assertAlmostEqual(rx_ranks[v], nx_ranks[v], delta=1.0e-4)

@@ -26,7 +26,7 @@ use petgraph::visit::NodeIndexable;
 use rustworkx_core::dictmap::*;
 use sprs::{CsMat, TriMat};
 
-#[pyfunction]
+#[pyfunction(alpha="0.85", weight_fn = "None", personalization="None", tol="1.0e-6", max_iter="100")]
 #[pyo3(
     text_signature = "(graph, /, alpha=0.85, weight_fn=None, personalization=None, tol=1.0e-6, max_iter=100)"
 )]
@@ -76,7 +76,7 @@ pub fn pagerank(
         for node_index in graph.graph.node_indices() {
             let i = node_index.index();
             popularity[i] = *personalization.get(&i).unwrap_or(&0.0);
-            damping[i] = default_damp;
+            damping[i] = (1.0 - alpha) * popularity[i];
         }
         let p_sum = popularity.sum();
         popularity /= p_sum;
