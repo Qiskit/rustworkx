@@ -72,14 +72,7 @@ pub fn pagerank(
     let default_pop = (n as f64).recip();
     let default_damp = (1.0 - alpha) * default_pop;
 
-    if personalization.is_none() {
-        for node_index in graph.graph.node_indices() {
-            let i = node_index.index();
-            popularity[i] = default_pop;
-            damping[i] = default_damp;
-        }
-    } else {
-        let personalization = personalization.unwrap();
+    if let Some(personalization) = personalization {
         for node_index in graph.graph.node_indices() {
             let i = node_index.index();
             popularity[i] = *personalization.get(&i).unwrap_or(&0.0);
@@ -87,6 +80,12 @@ pub fn pagerank(
         }
         let p_sum = popularity.sum();
         popularity /= p_sum;
+    } else {
+        for node_index in graph.graph.node_indices() {
+            let i = node_index.index();
+            popularity[i] = default_pop;
+            damping[i] = default_damp;
+        }
     }
 
     // Power Method iteration for the Google Matrix
