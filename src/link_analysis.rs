@@ -54,6 +54,13 @@ pub fn pagerank(
     let n = graph.graph.node_count();
     let mat_size = graph.graph.node_bound();
 
+    // Handle empty case
+    if n == 0 {
+        return Ok(CentralityMapping {
+            centralities: DictMap::new(),
+        });
+    }
+
     // Grab the graph weights from Python to Rust
     let mut in_weights: HashMap<(usize, usize), f64> =
         HashMap::with_capacity(graph.graph.edge_count());
