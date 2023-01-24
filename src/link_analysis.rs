@@ -33,7 +33,7 @@ use sprs::{CsMat, TriMat};
 ///
 /// For details on the PageRank, refer to:
 ///
-/// L. Page, S. Brin, R. Motwani, and T. Winograd. “The PageRank Citation Ranking: Bringing order to the Web”
+/// L. Page, S. Brin, R. Motwani, and T. Winograd. “The PageRank Citation Ranking: Bringing order to the Web”.
 /// Stanford Digital Library Technologies Project, (1998).
 /// <http://dbpubs.stanford.edu:8090/pub/showDoc.Fulltext?lang=en&doc=1999-66&format=pdf>
 ///
@@ -42,7 +42,7 @@ use sprs::{CsMat, TriMat};
 /// iterations is reached or when the computed vector between two iterations
 /// is smaller than the error tolerance multiplied by the number of nodes.
 /// The implementation of this algorithm tries to match NetworkX's
-/// `pagerank() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html`__
+/// `pagerank() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html>`__
 /// implementation.
 ///
 /// In the case of multigraphs the weights of any parallel edges will be
