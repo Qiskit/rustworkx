@@ -95,7 +95,7 @@ pub fn pagerank(
     // Handle custom start
     if let Some(nstart) = nstart {
         for i in &node_indices {
-            popularity[*i] = *nstart.get(&i).unwrap_or(&0.0);
+            popularity[*i] = *nstart.get(i).unwrap_or(&0.0);
         }
         let pop_sum = popularity.sum();
         popularity /= pop_sum;
@@ -108,7 +108,7 @@ pub fn pagerank(
     // Handle personalization
     if let Some(personalization) = personalization {
         for i in &node_indices {
-            personalized_array[*i] = *personalization.get(&i).unwrap_or(&0.0);
+            personalized_array[*i] = *personalization.get(i).unwrap_or(&0.0);
         }
         let p_sum = personalized_array.sum();
         personalized_array /= p_sum;
@@ -131,7 +131,7 @@ pub fn pagerank(
 
     if let Some(dangling) = dangling {
         for i in &node_indices {
-            dangling_weights[*i] = *dangling.get(&i).unwrap_or(&0.0);
+            dangling_weights[*i] = *dangling.get(i).unwrap_or(&0.0);
         }
         let d_sum = dangling_weights.sum();
         dangling_weights /= d_sum;
