@@ -135,6 +135,17 @@ class TestPageRank(unittest.TestCase):
         for v in graph.node_indices():
             self.assertAlmostEqual(ranks[v], expected_ranks[v], delta=1.0e-4)
 
+    def test_pagerank_with_nstart(self):
+        rx_graph = rustworkx.generators.directed_complete_graph(4)
+        nstart = {0: 0.5, 1: 0.5, 2: 0, 3: 0}
+        alpha = 0.85
+        rx_ranks = rustworkx.pagerank(rx_graph, alpha=alpha, nstart=nstart)
+        nx_graph = nx.DiGraph(list(rx_graph.edge_list()))
+        nx_ranks = nx.pagerank(nx_graph, alpha=alpha, nstart=nstart)
+
+        for v in rx_graph.node_indices():
+            self.assertAlmostEqual(rx_ranks[v], nx_ranks[v], delta=1.0e-4)
+
     def test_pagerank_with_personalize(self):
         rx_graph = rustworkx.generators.directed_complete_graph(4)
         personalize = {0: 0, 1: 0, 2: 0, 3: 1}

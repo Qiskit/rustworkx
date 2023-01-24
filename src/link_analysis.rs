@@ -32,19 +32,21 @@ use sprs::{CsMat, TriMat};
 #[pyfunction(
     alpha = "0.85",
     weight_fn = "None",
+    nstart = "None",
     personalization = "None",
     tol = "1.0e-6",
     max_iter = "100",
     dangling = "None"
 )]
 #[pyo3(
-    text_signature = "(graph, /, alpha=0.85, weight_fn=None, personalization=None, tol=1.0e-6, max_iter=100)"
+    text_signature = "(graph, /, alpha=0.85, weight_fn=None, nstart=None, personalization=None, tol=1.0e-6, max_iter=100)"
 )]
 pub fn pagerank(
     py: Python,
     graph: &PyDiGraph,
     alpha: f64,
     weight_fn: Option<PyObject>,
+    nstart: Option<HashMap<usize, f64>>,
     personalization: Option<HashMap<usize, f64>>,
     tol: f64,
     max_iter: usize,
@@ -53,6 +55,7 @@ pub fn pagerank(
     // we use the node bound to make the code work if nodes were removed
     let n = graph.graph.node_count();
     let mat_size = graph.graph.node_bound();
+    let node_indices: Vec<usize> = graph.graph.node_indices().map(|x| x.index()).collect();
 
     // Handle empty case
     if n == 0 {
@@ -86,46 +89,54 @@ pub fn pagerank(
 
     // Vector with probabilities for the Markov Chain process
     let mut popularity = Array1::<f64>::zeros(mat_size);
-    let mut damping = Array1::<f64>::zeros(mat_size);
+    let mut personalized_array = Array1::<f64>::zeros(mat_size);
     let default_pop = (n as f64).recip();
-    let default_damp = (1.0 - alpha) * default_pop;
 
-    if let Some(personalization) = personalization {
-        for node_index in graph.graph.node_indices() {
-            let i = node_index.index();
-            popularity[i] = *personalization.get(&i).unwrap_or(&0.0);
-            damping[i] = (1.0 - alpha) * popularity[i];
+    // Handle custom start
+    if let Some(nstart) = nstart {
+        for i in &node_indices {
+            popularity[*i] = *nstart.get(&i).unwrap_or(&0.0);
         }
-        let p_sum = popularity.sum();
-        popularity /= p_sum;
+        let pop_sum = popularity.sum();
+        popularity /= pop_sum;
     } else {
-        for node_index in graph.graph.node_indices() {
-            let i = node_index.index();
-            popularity[i] = default_pop;
-            damping[i] = default_damp;
+        for i in &node_indices {
+            popularity[*i] = default_pop;
         }
     }
+
+    // Handle personalization
+    if let Some(personalization) = personalization {
+        for i in &node_indices {
+            personalized_array[*i] = *personalization.get(&i).unwrap_or(&0.0);
+        }
+        let p_sum = personalized_array.sum();
+        personalized_array /= p_sum;
+    } else {
+        for i in &node_indices {
+            personalized_array[*i] = default_pop;
+        }
+    }
+    let damping = (1.0 - alpha) * &personalized_array;
 
     // Handle dangling nodes i.e. nodes that point nowhere
     let mut is_dangling: Vec<bool> = vec![false; mat_size];
     let mut dangling_weights = Array1::<f64>::zeros(mat_size);
 
-    for node_index in graph.graph.node_indices() {
-        let i = node_index.index();
-        if out_weights[i] == 0.0 {
-            is_dangling[i] = true;
+    for i in &node_indices {
+        if out_weights[*i] == 0.0 {
+            is_dangling[*i] = true;
         }
     }
 
     if let Some(dangling) = dangling {
-        for node_index in graph.graph.node_indices() {
-            let i = node_index.index();
-            dangling_weights[i] = *dangling.get(&i).unwrap_or(&0.0);
+        for i in &node_indices {
+            dangling_weights[*i] = *dangling.get(&i).unwrap_or(&0.0);
         }
         let d_sum = dangling_weights.sum();
         dangling_weights /= d_sum;
     } else {
-        dangling_weights = popularity.clone();
+        dangling_weights = personalized_array.clone();
     }
 
     // Power Method iteration for the Google Matrix
