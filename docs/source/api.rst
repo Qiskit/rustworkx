@@ -56,6 +56,16 @@ Centrality
    rustworkx.betweenness_centrality
    rustworkx.eigenvector_centrality
 
+.. _link-analysis:
+
+Link Analysis
+--------------
+
+.. autosummary::
+   :toctree: apiref
+
+   rustworkx.pagerank
+
 .. _traversal:
 
 Traversal

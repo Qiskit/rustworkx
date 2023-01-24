@@ -29,6 +29,49 @@ use petgraph::visit::NodeIndexable;
 use rustworkx_core::dictmap::*;
 use sprs::{CsMat, TriMat};
 
+/// Computes the PageRank of the nodes in a :class:`~PyDiGraph`.
+///
+/// For details on the PageRank, refer to:
+///
+/// L. Page, S. Brin, R. Motwani, and T. Winograd. “The PageRank Citation Ranking: Bringing order to the Web”
+/// Stanford Digital Library Technologies Project, (1998).
+/// <http://dbpubs.stanford.edu:8090/pub/showDoc.Fulltext?lang=en&doc=1999-66&format=pdf>
+///
+/// This function uses a power iteration method to compute the PageRank
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm tries to match NetworkX's
+/// `pagerank() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html`__
+/// implementation.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the PageRank.
+///
+/// :param PyDiGraph graph: The graph object to run the algorithm on
+/// :param float alpha: Damping parameter for PageRank, default=0.85.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///     payload object and is expected to return a `float` weight for that edge.
+///     If this is not specified ``default_weight`` will be used as the weight
+///     for every edge in ``graph``
+/// :param dict nstart: Optional starting value of PageRank iteration for each node.
+/// :param dict personalization: An optional dictionary representing the personalization
+///     vector for a subset of nodes. At least one personalization entry must be non-zero.
+///     If not specified, a nodes personalization value will be zero. By default,
+///     a uniform distribution is used.
+/// :param float tol: The error tolerance used when checking for convergence in the
+///     power method. If this is not specified default value of 1e-6 is used.
+/// :param int max_iter: The maximum number of iterations in the power method. If
+///     not specified a default value of 100 is used.
+/// :param dict dangling: An optional dictionary for the outedges to be assigned to any "dangling" nodes,
+///     i.e., nodes without any outedges.  The dict key is the node the outedge points to and the dict
+///     value is the weight of that outedge. By default, dangling nodes are given outedges according to
+///     the personalization vector (uniform if not specified). This must be selected to result in an irreducible
+///     transition matrix. It may be common to have the dangling dict to be the same as the personalization dict.
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      PageRank score for that node.
+/// :rtype: CentralityMapping
 #[pyfunction(
     alpha = "0.85",
     weight_fn = "None",
