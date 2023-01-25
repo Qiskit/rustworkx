@@ -220,6 +220,37 @@ pub fn pagerank(
     })
 }
 
+/// Computes the hubs and authorities in a :class:`~PyDiGraph`.
+///
+/// For details on the HITS algorithm, refer to:
+///
+/// J.  Kleinberg. “Authoritative Sources in a Hyperlinked Environment”.
+/// Journal of the ACM, 46 (5), (1999).
+/// <http://www.cs.cornell.edu/home/kleinber/auth.pdf>
+///
+/// This function uses a power iteration method to compute the hubs and authorities
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the hubs and authorities.
+///
+/// :param PyDiGraph graph: The graph object to run the algorithm on
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///     payload object and is expected to return a `float` weight for that edge.
+///     If this is not specified 1.0 will be used as the weight
+///     for every edge in ``graph``
+/// :param dict nstart: Optional starting value for the power iteration for each node.
+/// :param float tol: The error tolerance used when checking for convergence in the
+///     power method. If this is not specified default value of 1e-8 is used.
+/// :param int max_iter: The maximum number of iterations in the power method. If
+///     not specified a default value of 100 is used.
+/// :param boolean normalized: If the scores should be normalized (defaults to True).
+///
+/// :returns: a tuple of read-only dict-like object whose keys are the node indices. The first value in the tuple
+///      contain the hubs scores. The second value contains the authority scores.
+/// :rtype: tuple[CentralityMapping, CentralityMapping]
 #[pyfunction(
     weight_fn = "None",
     nstart = "None",

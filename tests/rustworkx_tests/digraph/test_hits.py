@@ -91,7 +91,7 @@ class TestHits(unittest.TestCase):
 
     def test_nstart(self):
         graph = rustworkx.generators.directed_complete_graph(10)
-        nstart = {5: 1, 6: 1}  # this guess is worse than the uniform guess :)
+        nstart = {5: 1, 6: 1}  # this guess is worse than the uniform guess =)
         h, a = rustworkx.hits(graph, nstart=nstart)
 
         for v in graph.node_indices():
