@@ -65,6 +65,7 @@ Link Analysis
    :toctree: apiref
 
    rustworkx.pagerank
+   rustworkx.hits
 
 .. _traversal:
 

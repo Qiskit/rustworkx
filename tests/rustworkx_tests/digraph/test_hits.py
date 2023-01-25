@@ -22,7 +22,7 @@ import networkx as nx
 class TestHits(unittest.TestCase):
     def setUp(self):
         try:
-            # required for networkx.pagerank to work
+            # required for networkx.hits to work
             import scipy
 
             self.assertIsNotNone(scipy.__version__)
