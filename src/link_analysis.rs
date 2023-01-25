@@ -22,7 +22,7 @@ use crate::{weight_callable, FailedToConverge};
 
 use hashbrown::HashMap;
 use ndarray::prelude::*;
-use ndarray_stats::DeviationExt;
+use ndarray_stats::{DeviationExt, QuantileExt};
 use petgraph::prelude::*;
 use petgraph::visit::IntoEdgeReferences;
 use petgraph::visit::NodeIndexable;
@@ -218,4 +218,129 @@ pub fn pagerank(
     Ok(CentralityMapping {
         centralities: out_map,
     })
+}
+
+#[pyfunction(
+    weight_fn = "None",
+    nstart = "None",
+    tol = "1.0e-8",
+    max_iter = "100",
+    normalized = "true"
+)]
+#[pyo3(
+    text_signature = "(graph, /, weight_fn=None, nstart=None, tol=1.0e-8, max_iter=100, normalized=True)"
+)]
+pub fn hits(
+    py: Python,
+    graph: &PyDiGraph,
+    weight_fn: Option<PyObject>,
+    nstart: Option<HashMap<usize, f64>>,
+    tol: f64,
+    max_iter: usize,
+    normalized: bool,
+) -> PyResult<(CentralityMapping, CentralityMapping)> {
+    // we use the node bound to make the code work if nodes were removed
+    let n = graph.graph.node_count();
+    let mat_size = graph.graph.node_bound();
+    let node_indices: Vec<usize> = graph.graph.node_indices().map(|x| x.index()).collect();
+
+    // Handle empty case
+    if n == 0 {
+        return Ok((
+            CentralityMapping {
+                centralities: DictMap::new(),
+            },
+            CentralityMapping {
+                centralities: DictMap::new(),
+            },
+        ));
+    }
+
+    // Grab the graph weights from Python to Rust
+    let mut adjacent: HashMap<(usize, usize), f64> =
+        HashMap::with_capacity(graph.graph.edge_count());
+    let default_weight: f64 = 1.0;
+
+    for edge in graph.graph.edge_references() {
+        let i = NodeIndexable::to_index(&graph.graph, edge.source());
+        let j = NodeIndexable::to_index(&graph.graph, edge.target());
+        let weight = edge.weight().clone();
+
+        let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
+
+        *adjacent.entry((i, j)).or_insert(0.0) += edge_weight;
+    }
+
+    // Create sparse adjacency matrix and transpose
+    let mut a = TriMat::new((mat_size, mat_size));
+    let mut a_t = TriMat::new((mat_size, mat_size));
+    for ((i, j), weight) in adjacent.into_iter() {
+        a.add_triplet(i, j, weight);
+        a_t.add_triplet(j, i, weight);
+    }
+    let a: CsMat<_> = a.to_csr();
+    let a_t: CsMat<_> = a_t.to_csr();
+
+    // Initial guess of eigenvector of A^T @ A
+    let mut authority = Array1::<f64>::zeros(mat_size);
+    let default_auth = (n as f64).recip();
+
+    // Handle custom start
+    if let Some(nstart) = nstart {
+        for i in &node_indices {
+            authority[*i] = *nstart.get(i).unwrap_or(&0.0);
+        }
+        let a_sum = authority.sum();
+        authority /= a_sum;
+    } else {
+        for i in &node_indices {
+            authority[*i] = default_auth;
+        }
+    }
+
+    // Power Method iteration for A^T @ A
+    let mut has_converged = false;
+    for _ in 0..max_iter {
+        // Instead of evaluating A^T @ A, which might not be sparse
+        // we prefer to calculate A^T (A @ x); A @ x is a vector hence
+        // we don't have to worry about sparsity
+        let temp_hub = &a * &authority;
+        let mut new_authority = &a_t * &temp_hub;
+        new_authority /= *new_authority.max_skipnan();
+        let norm: f64 = new_authority.l1_dist(&authority).unwrap();
+        if norm < tol {
+            has_converged = true;
+            break;
+        } else {
+            authority = new_authority;
+        }
+    }
+
+    // Convert to custom return type
+    if !has_converged {
+        return Err(FailedToConverge::new_err(format!(
+            "Function failed to converge on a solution in {} iterations",
+            max_iter
+        )));
+    }
+
+    let mut hubs = &a * &authority;
+
+    if normalized {
+        hubs /= hubs.sum();
+        authority /= authority.sum();
+    }
+
+    let hubs_map: DictMap<usize, f64> = node_indices.iter().map(|x| (*x, hubs[*x])).collect();
+
+    let auth_map: DictMap<usize, f64> = node_indices.iter().map(|x| (*x, authority[*x])).collect();
+
+    Ok((
+        CentralityMapping {
+            centralities: hubs_map,
+        },
+        CentralityMapping {
+            centralities: auth_map,
+        },
+    ))
 }
