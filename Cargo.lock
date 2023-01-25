@@ -15,9 +15,9 @@ dependencies = [
 
 [[package]]
 name = "ahash"
-version = "0.8.0"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57e6e951cfbb2db8de1828d49073a113a29fd7117b1596caa781a258c7e38d72"
+checksum = "2c99f64d1e06488f620f932677e24bc6e2897582980441ae90a671415bd7ec2f"
 dependencies = [
  "cfg-if",
  "getrandom",
@@ -501,7 +501,7 @@ dependencies = [
 name = "rustworkx"
 version = "0.13.0"
 dependencies = [
- "ahash 0.8.0",
+ "ahash 0.8.3",
  "fixedbitset",
  "hashbrown 0.12.3",
  "indexmap",
@@ -525,7 +525,7 @@ dependencies = [
 name = "rustworkx-core"
 version = "0.13.0"
 dependencies = [
- "ahash 0.8.0",
+ "ahash 0.8.3",
  "fixedbitset",
  "hashbrown 0.12.3",
  "indexmap",
