@@ -16,6 +16,7 @@ mod all_simple_paths;
 mod biconnected;
 mod chain;
 mod conn_components;
+mod core_number;
 mod find_cycle;
 mod min_cut;
 
@@ -25,5 +26,6 @@ pub use chain::chain_decomposition;
 pub use conn_components::bfs_undirected;
 pub use conn_components::connected_components;
 pub use conn_components::number_connected_components;
+pub use core_number::core_number;
 pub use find_cycle::find_cycle;
 pub use min_cut::stoer_wagner_min_cut;

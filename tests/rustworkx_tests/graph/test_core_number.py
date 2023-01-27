@@ -68,14 +68,14 @@ class TestCoreNumber(unittest.TestCase):
 
     def test_undirected_empty(self):
         graph = rustworkx.PyGraph()
-        res = rustworkx.core_number(graph)
+        res = rustworkx.graph_core_number(graph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, {})
 
     def test_undirected_all_0(self):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
-        res = rustworkx.core_number(graph)
+        res = rustworkx.graph_core_number(graph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, {0: 0, 1: 0, 2: 0, 3: 0})
 
@@ -83,7 +83,7 @@ class TestCoreNumber(unittest.TestCase):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
         graph.add_edges_from_no_data([(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)])
-        res = rustworkx.core_number(graph)
+        res = rustworkx.graph_core_number(graph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, {0: 3, 1: 3, 2: 3, 3: 3})
 
@@ -91,6 +91,6 @@ class TestCoreNumber(unittest.TestCase):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(list(range(21)))
         graph.add_edges_from_no_data(self.example_edges)
-        res = rustworkx.core_number(graph)
+        res = rustworkx.graph_core_number(graph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, self.example_core)
