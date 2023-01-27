@@ -17,56 +17,42 @@
 // to add support for returning all simple paths to a list of targets instead
 // of just between a single node pair.
 
-use std::fmt::Debug;
-
 use crate::dictmap::*;
 use hashbrown::{HashMap, HashSet};
 use petgraph::visit::{GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount};
 use petgraph::Direction::{Incoming, Outgoing};
 use std::hash::Hash;
 
-/// Return the first cycle encountered during DFS of a given directed graph.
-/// Empty list is returned if no cycle is found.
+/// Return the core number for each node in the graph.
+///
+/// A k-core is a maximal subgraph that contains nodes of degree k or more.
+///
+/// The function implicitly assumes that there are no parallel edges
+/// or self loops. It may produce incorrect/unexpected results if the
+/// input graph has self loops or parallel edges.
 ///
 /// Arguments:
 ///
-/// * `graph` - The directed graph in which to find the first cycle.
-/// * `source` - Optional node index for starting the search. If not specified,
-///     an arbitrary node is chosen to start the search.
+/// * `graph` - The graph in which to find the core numbers.
 ///
 /// # Example
 /// ```rust
 /// use petgraph::prelude::*;
-/// use rustworkx_core::connectivity::find_cycle;
+/// use rustworkx_core::connectivity::core_number;
 ///
-/// let edge_list = vec![
-///     (0, 1),
-///     (3, 0),
-///     (0, 5),
-///     (8, 0),
-///     (1, 2),
-///     (1, 6),
-///     (2, 3),
-///     (3, 4),
-///     (4, 5),
-///     (6, 7),
-///     (7, 8),
-///     (8, 9),
-/// ];
+/// let edge_list = vec![(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)];
 /// let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
-/// let mut res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
+/// let res: Vec<(usize, usize)> = core_number(graph)
 ///     .iter()
-///     .map(|(s, t)| (s.index(), t.index()))
+///     .map(|(k, v)| (k.index(), *v))
 ///     .collect();
-/// assert_eq!(res, [(0, 1), (1, 2), (2, 3), (3, 0)]);
+/// assert_eq!(res, vec![(0, 3), (1, 3), (2, 3), (3, 3)]);
 /// ```
 pub fn core_number<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
-    G: GraphBase,
-    G: NodeCount,
+    G: GraphBase + NodeCount,
     for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected,
     G::NodeId: Eq + Hash,
-    <G as GraphBase>::NodeId: Debug,
 {
     let node_num = graph.node_count();
     if node_num == 0 {
@@ -124,74 +110,104 @@ where
         }
     }
     cores
-    // let out_dict = PyDict::new(py);
-    // for (v_index, core) in cores {
-    //     out_dict.set_item(v_index.index(), core)?;
-    // }
-    // Ok(out_dict.into())
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::connectivity::find_cycle;
+    use crate::connectivity::core_number;
     use petgraph::prelude::*;
 
     #[test]
-    fn test_find_cycle_source() {
-        let edge_list = vec![
-            (0, 1),
-            (3, 0),
-            (0, 5),
-            (8, 0),
-            (1, 2),
-            (1, 6),
-            (2, 3),
-            (3, 4),
-            (4, 5),
-            (6, 7),
-            (7, 8),
-            (8, 9),
-        ];
-        let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
-        let mut res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
+    fn test_directed_empty() {
+        let graph = DiGraph::<i32, i32>::new();
+        let res: Vec<(usize, usize)> = core_number(graph)
             .iter()
-            .map(|(s, t)| (s.index(), t.index()))
+            .map(|(k, v)| (k.index(), *v))
             .collect();
-        assert_eq!(res, [(0, 1), (1, 2), (2, 3), (3, 0)]);
-        res = find_cycle(&graph, Some(NodeIndex::new(1)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
-        assert_eq!(res, [(1, 2), (2, 3), (3, 0), (0, 1)]);
-        res = find_cycle(&graph, Some(NodeIndex::new(5)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
-        assert_eq!(res, []);
+        assert_eq!(res, vec![]);
     }
 
     #[test]
-    fn test_self_loop() {
-        let edge_list = vec![
-            (0, 1),
-            (3, 0),
-            (0, 5),
-            (8, 0),
-            (1, 2),
-            (1, 6),
-            (2, 3),
-            (3, 4),
-            (4, 5),
-            (6, 7),
-            (7, 8),
-            (8, 9),
-        ];
-        let mut graph = DiGraph::<i32, i32>::from_edges(&edge_list);
-        graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
-        let res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
+    fn test_directed_all_0() {
+        let mut graph = DiGraph::<i32, i32>::new();
+        for _ in 0..4 {
+            graph.add_node(0);
+        }
+        let res: Vec<(usize, usize)> = core_number(graph)
             .iter()
-            .map(|(s, t)| (s.index(), t.index()))
+            .map(|(k, v)| (k.index(), *v))
             .collect();
-        assert_eq!(res, [(1, 1)]);
+        assert_eq!(res, vec![(0, 0), (1, 0), (2, 0), (3, 0)]);
+    }
+
+    #[test]
+    fn test_directed_all_3() {
+        let edge_list = vec![(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)];
+        let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let res: Vec<(usize, usize)> = core_number(graph)
+            .iter()
+            .map(|(k, v)| (k.index(), *v))
+            .collect();
+        assert_eq!(res, vec![(0, 3), (1, 3), (2, 3), (3, 3)]);
+    }
+
+    #[test]
+    fn test_directed_paper_example() {
+        // This is the example graph in Figure 1 from Batagelj and
+        // Zaversnik's paper titled An O(m) Algorithm for Cores
+        // Decomposition of Networks, 2003,
+        // http://arXiv.org/abs/cs/0310049.  With nodes labeled as
+        // shown, the 3-core is given by nodes 0-7, the 2-core by nodes
+        // 8-15, the 1-core by nodes 16-19 and node 20 is in the
+        // 0-core.
+        let edge_list = [
+            (0, 2),
+            (0, 3),
+            (0, 5),
+            (1, 4),
+            (1, 6),
+            (1, 7),
+            (2, 3),
+            (3, 5),
+            (2, 5),
+            (5, 6),
+            (4, 6),
+            (4, 7),
+            (6, 7),
+            (5, 8),
+            (6, 8),
+            (6, 9),
+            (8, 9),
+            (0, 10),
+            (1, 10),
+            (1, 11),
+            (10, 11),
+            (12, 13),
+            (13, 15),
+            (14, 15),
+            (12, 14),
+            (8, 19),
+            (11, 16),
+            (11, 17),
+            (12, 18),
+        ];
+        let mut example_core = vec![];
+        for i in 0..8 {
+            example_core.push((i, 3));
+        }
+        for i in 8..16 {
+            example_core.push((i, 2));
+        }
+        for i in 16..20 {
+            example_core.push((i, 1));
+        }
+        example_core.push((20, 0));
+        let mut graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        graph.add_node(0);
+        let res: Vec<(usize, usize)> = core_number(graph)
+            .iter()
+            .map(|(k, v)| (k.index(), *v))
+            .collect();
+        assert_eq!(res, example_core);
     }
 }

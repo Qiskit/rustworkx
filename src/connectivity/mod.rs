@@ -13,7 +13,6 @@
 #![allow(clippy::float_cmp)]
 
 mod all_pairs_all_simple_paths;
-//mod core_number;
 mod johnson_simple_cycles;
 
 use super::{
@@ -724,10 +723,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_core_number(
-    py: Python,
-    graph: &digraph::PyDiGraph,
-) -> PyResult<PyObject> {
+pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
     let out_dict = PyDict::new(py);
     for (k, v) in cores {
