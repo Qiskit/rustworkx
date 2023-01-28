@@ -296,3 +296,100 @@ pub fn digraph_eigenvector_centrality(
         ))),
     }
 }
+
+#[pyfunction(default_weight = "1.0", max_iter = "100", tol = "1e-6")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)")]
+pub fn graph_katz_centrality(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    max_iter: usize,
+    tol: f64,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+    let ev_centrality = centrality::katz_centrality(
+        &graph.graph,
+        |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
+        None,
+        None,
+        None,
+        Some(max_iter),
+        Some(tol),
+    )?;
+    match ev_centrality {
+        Some(centrality) => Ok(CentralityMapping {
+            centralities: centrality
+                .iter()
+                .enumerate()
+                .filter_map(|(k, v)| {
+                    if graph.graph.contains_node(NodeIndex::new(k)) {
+                        Some((k, *v))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        }),
+        None => Err(FailedToConverge::new_err(format!(
+            "Function failed to converge on a solution in {} iterations",
+            max_iter
+        ))),
+    }
+}
+
+#[pyfunction(default_weight = "1.0", max_iter = "100", tol = "1e-6")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)")]
+pub fn digraph_katz_centrality(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    max_iter: usize,
+    tol: f64,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+    let ev_centrality = centrality::katz_centrality(
+        &graph.graph,
+        |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
+        None,
+        None,
+        None,
+        Some(max_iter),
+        Some(tol),
+    )?;
+
+    match ev_centrality {
+        Some(centrality) => Ok(CentralityMapping {
+            centralities: centrality
+                .iter()
+                .enumerate()
+                .filter_map(|(k, v)| {
+                    if graph.graph.contains_node(NodeIndex::new(k)) {
+                        Some((k, *v))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        }),
+        None => Err(FailedToConverge::new_err(format!(
+            "Function failed to converge on a solution in {} iterations",
+            max_iter
+        ))),
+    }
+}
