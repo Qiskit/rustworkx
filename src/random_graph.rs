@@ -26,6 +26,7 @@ use petgraph::prelude::*;
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
+use rustworkx_core::generators as core_generators;
 
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
@@ -492,4 +493,68 @@ pub fn random_geometric_graph(
         attrs: py.None(),
     };
     Ok(graph)
+}
+
+/// Generate an undirected configuration model graph.
+///
+/// The configuration model is a random graph with a given degree sequence.
+///
+/// The algorithm is based on "M.E.J. Newman, "The structure and function of complex networks",
+///  SIAM REVIEW 45-2, pp 167-256, 2003.".
+///
+/// The graph construction process may insert parallel edges and self-loops.
+/// However, the probability of parallel edges and self-loops tends to
+/// converge towards zero as the number of nodes increases.
+///
+/// This algorithm has a time complexity of :math:`O(n + m)`
+///
+/// :param list degree_sequence: A list of positive integers specifying the degree sequence
+/// :param list weights: An optional list of node weights. If specified, the length of the list
+/// must be equal to the length of the degree sequence
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(degree_sequence, /, weights=None, seed=None)")]
+pub fn undirected_configuration_model(
+    py: Python,
+    degree_sequence: Vec<usize>,
+    weights: Option<Vec<PyObject>>,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let degree_sequence = match core_generators::DegreeSequence::new(degree_sequence) {
+        Ok(degree_sequence) => degree_sequence,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "degree_sequence must sum up to an even number",
+            ));
+        }
+    };
+
+    let graph: StablePyGraph<Undirected> = match core_generators::undirected_configuration_model(
+        &mut rng,
+        &degree_sequence,
+        weights,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "degree_sequence and weights have different lengths",
+            ));
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
 }
