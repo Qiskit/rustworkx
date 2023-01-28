@@ -10,20 +10,21 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-//! Module for connectivity and cut algorithms.
+use std::iter;
 
-mod all_simple_paths;
-mod biconnected;
-mod chain;
-mod conn_components;
-mod find_cycle;
-mod min_cut;
+#[inline]
+pub fn get_num_nodes<T>(num_nodes: &Option<usize>, weights: &Option<Vec<T>>) -> usize {
+    if weights.is_some() {
+        weights.as_ref().unwrap().len()
+    } else {
+        num_nodes.unwrap()
+    }
+}
 
-pub use all_simple_paths::all_simple_paths_multiple_targets;
-pub use biconnected::articulation_points;
-pub use chain::chain_decomposition;
-pub use conn_components::bfs_undirected;
-pub use conn_components::connected_components;
-pub use conn_components::number_connected_components;
-pub use find_cycle::find_cycle;
-pub use min_cut::stoer_wagner_min_cut;
+pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
+where
+    I: IntoIterator + Clone,
+{
+    let left = iter::once(None).chain(right.clone().into_iter().map(Some));
+    left.zip(right)
+}
