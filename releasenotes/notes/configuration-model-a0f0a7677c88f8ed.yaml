@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Added a new generator function, :func:`~rustworkx.undirected_configuration_model`
+    that will generate a random undirected graph from a given degree sequence.
+    For example:
+    
+    .. jupyter-execute::
+    
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
+    
+      graph = rustworkx.undirected_configuration_model([1, 2, 3, 4])
+      mpl_draw(graph)
