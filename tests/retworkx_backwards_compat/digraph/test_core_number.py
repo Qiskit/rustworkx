@@ -68,14 +68,14 @@ class TestCoreNumber(unittest.TestCase):
 
     def test_directed_empty(self):
         digraph = retworkx.PyDiGraph()
-        res = retworkx..digraph_core_number(digraph)
+        res = retworkx.digraph_core_number(digraph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, {})
 
     def test_directed_all_0(self):
         digraph = retworkx.PyDiGraph()
         digraph.add_nodes_from(list(range(4)))
-        res = retworkx..digraph_core_number(digraph)
+        res = retworkx.digraph_core_number(digraph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, {0: 0, 1: 0, 2: 0, 3: 0})
 
@@ -83,7 +83,7 @@ class TestCoreNumber(unittest.TestCase):
         digraph = retworkx.PyDiGraph()
         digraph.add_nodes_from(list(range(4)))
         digraph.add_edges_from_no_data([(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)])
-        res = retworkx..digraph_core_number(digraph)
+        res = retworkx.digraph_core_number(digraph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, {0: 3, 1: 3, 2: 3, 3: 3})
 
@@ -91,6 +91,6 @@ class TestCoreNumber(unittest.TestCase):
         digraph = retworkx.PyDiGraph()
         digraph.add_nodes_from(list(range(21)))
         digraph.add_edges_from_no_data(self.example_edges)
-        res = retworkx..digraph_core_number(digraph)
+        res = retworkx.digraph_core_number(digraph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, self.example_core)
