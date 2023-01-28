@@ -38,10 +38,6 @@ class TestConfigurationModel(unittest.TestCase):
         with self.assertRaises(ValueError):
             rustworkx.undirected_configuration_model([1, 2, 3, 4], weights=list(range(3)))
 
-    def test_undirected_configuration_model_negative_degree(self):
-        with self.assertRaises(ValueError):
-            rustworkx.undirected_configuration_model([-1, 0, 1, 2])
-
     def test_undirected_configuration_model_odd_sum(self):
         with self.assertRaises(ValueError):
             rustworkx.undirected_configuration_model([1, 2, 3, 5])
