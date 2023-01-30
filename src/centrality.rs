@@ -21,8 +21,10 @@ use crate::FailedToConverge;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::EdgeIndexable;
 use petgraph::visit::EdgeRef;
+use petgraph::visit::IntoNodeIdentifiers;
 use pyo3::prelude::*;
 use rustworkx_core::centrality;
+use hashbrown::HashMap;
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
 ///
@@ -297,11 +299,20 @@ pub fn digraph_eigenvector_centrality(
     }
 }
 
-#[pyfunction(default_weight = "1.0", max_iter = "100", tol = "1e-6")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)")]
+#[pyfunction(
+    alpha = "0.1",
+    default_weight = "1.0",
+    max_iter = "100",
+    tol = "1e-6"
+)]
+#[pyo3(
+    text_signature = "(graph, /, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)"
+)]
 pub fn graph_katz_centrality(
     py: Python,
     graph: &graph::PyGraph,
+    alpha: f64,
+    beta: PyObject,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     max_iter: usize,
@@ -315,11 +326,26 @@ pub fn graph_katz_centrality(
                 cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
         }
     }
+
+    let mut beta_map: HashMap<usize, f64> = HashMap::new();
+
+    match beta.extract::<f64>(py) {
+        Ok(beta_scalar) => {
+            // User provided a scalar, populate beta_map with the value
+            for node_index in graph.graph.node_identifiers() {
+                beta_map.insert(node_index.index(), beta_scalar);
+            }
+        }
+        Err(_) => {
+            beta_map = beta.extract::<HashMap<usize, f64>>(py)?;
+        }
+    }
+
     let ev_centrality = centrality::katz_centrality(
         &graph.graph,
         |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
-        None,
-        None,
+        Some(alpha),
+        Some(beta_map),
         None,
         Some(max_iter),
         Some(tol),
@@ -345,11 +371,20 @@ pub fn graph_katz_centrality(
     }
 }
 
-#[pyfunction(default_weight = "1.0", max_iter = "100", tol = "1e-6")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)")]
+#[pyfunction(
+    alpha = "0.1",
+    default_weight = "1.0",
+    max_iter = "100",
+    tol = "1e-6"
+)]
+#[pyo3(
+    text_signature = "(graph, /, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)"
+)]
 pub fn digraph_katz_centrality(
     py: Python,
     graph: &digraph::PyDiGraph,
+    alpha: f64,
+    beta: PyObject,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     max_iter: usize,
@@ -363,11 +398,26 @@ pub fn digraph_katz_centrality(
                 cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
         }
     }
+
+    let mut beta_map: HashMap<usize, f64> = HashMap::new();
+
+    match beta.extract::<f64>(py) {
+        Ok(beta_scalar) => {
+            // User provided a scalar, populate beta_map with the value
+            for node_index in graph.graph.node_identifiers() {
+                beta_map.insert(node_index.index(), beta_scalar);
+            }
+        }
+        Err(_) => {
+            beta_map = beta.extract::<HashMap<usize, f64>>(py)?;
+        }
+    }
+
     let ev_centrality = centrality::katz_centrality(
         &graph.graph,
         |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
-        None,
-        None,
+        Some(alpha),
+        Some(beta_map),
         None,
         Some(max_iter),
         Some(tol),

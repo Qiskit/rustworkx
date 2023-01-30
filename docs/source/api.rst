@@ -55,6 +55,7 @@ Centrality
 
    rustworkx.betweenness_centrality
    rustworkx.eigenvector_centrality
+   rustworkx.katz_centrality
 
 .. _traversal:
 
