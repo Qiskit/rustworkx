@@ -1663,7 +1663,7 @@ def katz_centrality(
 
 @katz_centrality.register(PyDiGraph)
 def _digraph_katz_centrality(
-    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
+    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6
 ):
     return digraph_katz_centrality(
         graph,
@@ -1678,7 +1678,7 @@ def _digraph_katz_centrality(
 
 @katz_centrality.register(PyGraph)
 def _graph_katz_centrality(
-    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
+    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6
 ):
     return graph_katz_centrality(
         graph,

@@ -322,6 +322,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_num_shortest_paths_unweighted
    rustworkx.digraph_betweenness_centrality
    rustworkx.digraph_eigenvector_centrality
+   rustworkx.digraph_katz_centrality
    rustworkx.digraph_unweighted_average_shortest_path_length
    rustworkx.digraph_bfs_search
    rustworkx.digraph_dijkstra_search
@@ -376,6 +377,7 @@ typed API based on the data type.
    rustworkx.graph_num_shortest_paths_unweighted
    rustworkx.graph_betweenness_centrality
    rustworkx.graph_eigenvector_centrality
+   rustworkx.graph_katz_centrality
    rustworkx.graph_unweighted_average_shortest_path_length
    rustworkx.graph_bfs_search
    rustworkx.graph_dijkstra_search

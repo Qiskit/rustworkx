@@ -392,7 +392,7 @@ where
     F: FnMut(G::EdgeRef) -> Result<f64, E>,
 {
     let tol: f64 = tol.unwrap_or(1e-6);
-    let max_iter = max_iter.unwrap_or(100);
+    let max_iter = max_iter.unwrap_or(1000);
     let mut x: Vec<f64> = vec![1.; graph.node_bound()];
     let node_count = graph.node_count();
     for _ in 0..max_iter {
@@ -439,7 +439,7 @@ where
 {
     let alpha: f64 = alpha.unwrap_or(0.1);
 
-    let mut beta: HashMap<usize, f64> = beta_map.unwrap_or_else(|| HashMap::new());
+    let mut beta: HashMap<usize, f64> = beta_map.unwrap_or_else(HashMap::new);
 
     if beta.is_empty() {
         // beta_map was none
@@ -447,7 +447,7 @@ where
         let beta_scalar = beta_scalar.unwrap_or(1.0);
         for node_index in graph.node_identifiers() {
             let node = graph.to_index(node_index);
-            beta.insert(node.clone(), beta_scalar);
+            beta.insert(node, beta_scalar);
         }
     }
 
@@ -466,30 +466,37 @@ where
     let node_count = graph.node_count();
     for _ in 0..max_iter {
         let x_last = x.clone();
+        x = vec![0.; graph.node_bound()];
         for node_index in graph.node_identifiers() {
             let node = graph.to_index(node_index);
-            x[node] += beta.get(&node).unwrap_or(&0.0);
             for edge in graph.edges(node_index) {
                 let w = weight_fn(edge)?;
                 let neighbor = edge.target();
-                x[graph.to_index(neighbor)] += alpha * x_last[node] * w;
+                x[graph.to_index(neighbor)] += x_last[node] * w;
             }
         }
-        let norm: f64 = x.iter().map(|val| val.powi(2)).sum::<f64>().sqrt();
-        if norm == 0. {
-            return Ok(None);
-        }
-        for v in x.iter_mut() {
-            *v /= norm;
+        for node_index in graph.node_identifiers() {
+            let node = graph.to_index(node_index);
+            x[node] = alpha * x[node] + beta.get(&node).unwrap_or(&0.0);
         }
         if (0..x.len())
             .map(|node| (x[node] - x_last[node]).abs())
             .sum::<f64>()
             < node_count as f64 * tol
         {
+            // Normalize vector
+            let norm: f64 = x.iter().map(|val| val.powi(2)).sum::<f64>().sqrt();
+            if norm == 0. {
+                return Ok(None);
+            }
+            for v in x.iter_mut() {
+                *v /= norm;
+            }
+
             return Ok(Some(x));
         }
     }
+
     Ok(None)
 }
 
