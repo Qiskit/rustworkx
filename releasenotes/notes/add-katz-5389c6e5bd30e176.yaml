@@ -1,0 +1,33 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.katz_centrality()` which is used to
+    compute the Katz centrality for all nodes in a given graph. For
+    example:
+
+    .. jupyter-execute::
+
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+
+        graph = rx.generators.hexagonal_lattice_graph(4, 4)
+        centrality = rx.katz_centrality(graph)
+
+        # Generate a color list
+        colors = []
+        for node in graph.node_indices():
+            centrality_score = centrality[node]
+            graph[node] = centrality_score
+            colors.append(centrality_score)
+        mpl_draw(
+            graph,
+            with_labels=True,
+            node_color=colors,
+            node_size=650,
+            labels=lambda x: "{0:.2f}".format(x)
+        )
+
+  - |
+    Added a new function to rustworkx-core ``katz_centrality`` to the
+    ``rustworkx_core::centrality`` modules which is used to compute the
+    Katz centrality for all nodes in a given graph.
