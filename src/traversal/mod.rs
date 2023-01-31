@@ -304,7 +304,9 @@ pub fn digraph_bfs_search(
         None => graph.graph.node_indices().collect(),
     };
 
-    breadth_first_search(&graph.graph, starts, |event| bfs_handler(py, &visitor, event))?;
+    breadth_first_search(&graph.graph, starts, |event| {
+        bfs_handler(py, &visitor, event)
+    })?;
 
     Ok(())
 }
@@ -394,7 +396,9 @@ pub fn graph_bfs_search(
         None => graph.graph.node_indices().collect(),
     };
 
-    breadth_first_search(&graph.graph, starts, |event| bfs_handler(py, &visitor, event))?;
+    breadth_first_search(&graph.graph, starts, |event| {
+        bfs_handler(py, &visitor, event)
+    })?;
 
     Ok(())
 }
@@ -482,7 +486,9 @@ pub fn digraph_dfs_search(
         None => graph.graph.node_indices().collect(),
     };
 
-    depth_first_search(&graph.graph, starts, |event| dfs_handler(py, &visitor, event))?;
+    depth_first_search(&graph.graph, starts, |event| {
+        dfs_handler(py, &visitor, event)
+    })?;
 
     Ok(())
 }
@@ -570,7 +576,9 @@ pub fn graph_dfs_search(
         None => graph.graph.node_indices().collect(),
     };
 
-    depth_first_search(&graph.graph, starts, |event| dfs_handler(py, &visitor, event))?;
+    depth_first_search(&graph.graph, starts, |event| {
+        dfs_handler(py, &visitor, event)
+    })?;
 
     Ok(())
 }
