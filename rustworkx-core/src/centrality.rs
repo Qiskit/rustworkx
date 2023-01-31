@@ -423,6 +423,53 @@ where
     Ok(None)
 }
 
+/// Compute the Katz centrality of a graph
+///
+/// For details on the Katz centrality refer to:
+///
+/// Leo Katz. “A New Status Index Derived from Sociometric Index.”
+/// Psychometrika 18(1):39–43, 1953
+/// <https://link.springer.com/content/pdf/10.1007/BF02289026.pdf>
+///
+/// This function uses a power iteration method to compute the eigenvector
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm is based on the NetworkX
+/// [`eigenvector_centrality()`](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html)
+/// function.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the eigenvector centrality.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `weight_fn` - An input callable that will be passed the `EdgeRef` for
+///     an edge in the graph and is expected to return a `Result<f64>` of
+///     the weight of that edge.
+/// * `alpha` - Attenuation factor. If set to `None`, a default value of 0.1 is used.
+/// * `beta_map` - Immediate neighbourhood weights. Must contain all node indices or be `None`.
+/// * `beta_scalar` - Immediate neighbourhood scalar that replaces `beta_map` in case `beta_map` is None.
+///     Defaults to 1.0 in case `None` is provided.
+/// * `max_iter` - The maximum number of iterations in the power method. If
+///     set to `None` a default value of 100 is used.
+/// * `tol` - The error tolerance used when checking for convergence in the
+///     power method. If set to `None` a default value of 1e-6 is used.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::Result;
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::petgraph::visit::{IntoEdges, IntoNodeIdentifiers};
+/// use rustworkx_core::centrality::katz_centrality;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 1), (1, 2)
+/// ]);
+/// // Calculate the eigenvector centrality
+/// let output: Result<Option<Vec<f64>>> = katz_centrality(&g, |_| {Ok(1.)}, None, None, None, None, None);
+/// ```
 pub fn katz_centrality<G, F, E>(
     graph: G,
     mut weight_fn: F,
