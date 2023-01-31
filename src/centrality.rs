@@ -319,7 +319,7 @@ pub fn digraph_eigenvector_centrality(
 /// function.
 ///
 /// In the case of multigraphs the weights of any parallel edges will be
-/// summed when computing the eigenvector centrality.
+/// summed when computing the Katz centrality.
 ///
 /// :param PyGraph graph: The graph object to run the algorithm on
 /// :param float alpha: Attenuation factor. If this is not specified default value of 0.1 is used.
@@ -446,7 +446,7 @@ pub fn graph_katz_centrality(
 /// function.
 ///
 /// In the case of multigraphs the weights of any parallel edges will be
-/// summed when computing the eigenvector centrality.
+/// summed when computing the Katz centrality.
 ///
 /// :param PyDiGraph graph: The graph object to run the algorithm on
 /// :param float alpha: Attenuation factor. If this is not specified default value of 0.1 is used.
