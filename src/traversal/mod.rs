@@ -298,13 +298,13 @@ pub fn digraph_bfs_search(
     if visitor.is_none() {
         return Err(PyTypeError::new_err("Missing required argument visitor"));
     }
-    let v = visitor.unwrap();
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
 
-    breadth_first_search(&graph.graph, starts, |event| bfs_handler(py, &v, event))?;
+    breadth_first_search(&graph.graph, starts, |event| bfs_handler(py, &visitor, event))?;
 
     Ok(())
 }
@@ -388,13 +388,13 @@ pub fn graph_bfs_search(
     if visitor.is_none() {
         return Err(PyTypeError::new_err("Missing required argument visitor"));
     }
-    let v = visitor.unwrap();
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
 
-    breadth_first_search(&graph.graph, starts, |event| bfs_handler(py, &v, event))?;
+    breadth_first_search(&graph.graph, starts, |event| bfs_handler(py, &visitor, event))?;
 
     Ok(())
 }
@@ -476,13 +476,13 @@ pub fn digraph_dfs_search(
     if visitor.is_none() {
         return Err(PyTypeError::new_err("Missing required argument visitor"));
     }
-    let v = visitor.unwrap();
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
 
-    depth_first_search(&graph.graph, starts, |event| dfs_handler(py, &v, event))?;
+    depth_first_search(&graph.graph, starts, |event| dfs_handler(py, &visitor, event))?;
 
     Ok(())
 }
@@ -564,13 +564,13 @@ pub fn graph_dfs_search(
     if visitor.is_none() {
         return Err(PyTypeError::new_err("Missing required argument visitor"));
     }
-    let v = visitor.unwrap();
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
 
-    depth_first_search(&graph.graph, starts, |event| dfs_handler(py, &v, event))?;
+    depth_first_search(&graph.graph, starts, |event| dfs_handler(py, &visitor, event))?;
 
     Ok(())
 }
@@ -639,7 +639,7 @@ pub fn digraph_dijkstra_search(
     if visitor.is_none() {
         return Err(PyTypeError::new_err("Missing required argument visitor"));
     }
-    let v = visitor.unwrap();
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -650,7 +650,7 @@ pub fn digraph_dijkstra_search(
         &graph.graph,
         starts,
         |e| edge_cost_fn.call(py, e.weight()),
-        |event| dijkstra_handler(py, &v, event),
+        |event| dijkstra_handler(py, &visitor, event),
     )??;
 
     Ok(())
@@ -720,7 +720,7 @@ pub fn graph_dijkstra_search(
     if visitor.is_none() {
         return Err(PyTypeError::new_err("Missing required argument visitor"));
     }
-    let v = visitor.unwrap();
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -731,7 +731,7 @@ pub fn graph_dijkstra_search(
         &graph.graph,
         starts,
         |e| edge_cost_fn.call(py, e.weight()),
-        |event| dijkstra_handler(py, &v, event),
+        |event| dijkstra_handler(py, &visitor, event),
     )??;
 
     Ok(())
