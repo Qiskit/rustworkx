@@ -392,7 +392,7 @@ where
     F: FnMut(G::EdgeRef) -> Result<f64, E>,
 {
     let tol: f64 = tol.unwrap_or(1e-6);
-    let max_iter = max_iter.unwrap_or(1000);
+    let max_iter = max_iter.unwrap_or(100);
     let mut x: Vec<f64> = vec![1.; graph.node_bound()];
     let node_count = graph.node_count();
     for _ in 0..max_iter {
@@ -507,7 +507,7 @@ where
     }
 
     let tol: f64 = tol.unwrap_or(1e-6);
-    let max_iter = max_iter.unwrap_or(100);
+    let max_iter = max_iter.unwrap_or(1000);
 
     let mut x: Vec<f64> = vec![0.; graph.node_bound()];
     let node_count = graph.node_count();
