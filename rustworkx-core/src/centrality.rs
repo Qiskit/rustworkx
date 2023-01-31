@@ -436,7 +436,7 @@ where
 /// iterations is reached or when the computed vector between two iterations
 /// is smaller than the error tolerance multiplied by the number of nodes.
 /// The implementation of this algorithm is based on the NetworkX
-/// [`eigenvector_centrality()`](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html)
+/// [`katz_centrality()`](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html)
 /// function.
 ///
 /// In the case of multigraphs the weights of any parallel edges will be
@@ -631,6 +631,120 @@ mod test_eigenvector_centrality {
             0.25368793, 0.19576478, 0.32817092, 0.40430835, 0.48199885, 0.15724483, 0.51346196,
             0.32475403,
         ];
+        for i in 0..8 {
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_katz_centrality {
+
+    use crate::centrality::katz_centrality;
+    use crate::petgraph;
+    use crate::Result;
+    use hashbrown::HashMap;
+
+    macro_rules! assert_almost_equal {
+        ($x:expr, $y:expr, $d:expr) => {
+            if ($x - $y).abs() >= $d {
+                panic!("{} != {} within delta of {}", $x, $y, $d);
+            }
+        };
+    }
+    #[test]
+    fn test_no_convergence() {
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let output: Result<Option<Vec<f64>>> =
+            katz_centrality(&g, |_| Ok(1.), None, None, None, Some(0), None);
+        let result = output.unwrap();
+        assert_eq!(None, result);
+    }
+
+    #[test]
+    fn test_incomplete_beta() {
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let beta_map: HashMap<usize, f64> = [(0, 1.0)].iter().cloned().collect();
+        let output: Result<Option<Vec<f64>>> =
+            katz_centrality(&g, |_| Ok(1.), None, Some(beta_map), None, None, None);
+        let result = output.unwrap();
+        assert_eq!(None, result);
+    }
+
+    #[test]
+    fn test_complete_beta() {
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let beta_map: HashMap<usize, f64> =
+            [(0, 0.5), (1, 1.0), (2, 0.5)].iter().cloned().collect();
+        let output: Result<Option<Vec<f64>>> =
+            katz_centrality(&g, |_| Ok(1.), None, Some(beta_map), None, None, None);
+        let result = output.unwrap().unwrap();
+        let expected_values: Vec<f64> =
+            vec![0.4318894504492167, 0.791797325823564, 0.4318894504492167];
+        for i in 0..3 {
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_undirected_complete_graph() {
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (0, 4),
+            (1, 2),
+            (1, 3),
+            (1, 4),
+            (2, 3),
+            (2, 4),
+            (3, 4),
+        ]);
+        let output: Result<Option<Vec<f64>>> =
+            katz_centrality(&g, |_| Ok(1.), Some(0.2), None, Some(1.1), None, None);
+        let result = output.unwrap().unwrap();
+        let expected_value: f64 = (1_f64 / 5_f64).sqrt();
+        let expected_values: Vec<f64> = vec![expected_value; 5];
+        for i in 0..5 {
+            assert_almost_equal!(expected_values[i], result[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_directed_graph() {
+        let g = petgraph::graph::DiGraph::<i32, ()>::from_edges([
+            (0, 1),
+            (0, 2),
+            (1, 3),
+            (2, 1),
+            (2, 4),
+            (3, 1),
+            (3, 4),
+            (3, 5),
+            (4, 5),
+            (4, 6),
+            (4, 7),
+            (5, 7),
+            (6, 0),
+            (6, 4),
+            (6, 7),
+            (7, 5),
+            (7, 6),
+        ]);
+        let output: Result<Option<Vec<f64>>> =
+            katz_centrality(&g, |_| Ok(1.), None, None, None, None, None);
+        let result = output.unwrap().unwrap();
+        let expected_values: Vec<f64> = vec![
+            0.3135463087489011,
+            0.3719056758615039,
+            0.3094350787809586,
+            0.31527101632646026,
+            0.3760169058294464,
+            0.38618584417917906,
+            0.35465874858087904,
+            0.38976653416801743,
+        ];
+
         for i in 0..8 {
             assert_almost_equal!(expected_values[i], result[i], 1e-4);
         }

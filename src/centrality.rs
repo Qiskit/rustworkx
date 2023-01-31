@@ -302,6 +302,44 @@ pub fn digraph_eigenvector_centrality(
     }
 }
 
+/// Compute the Katz centrality of a :class:`~PyGraph`.
+///
+/// For details on the eigenvector centrality refer to:
+///
+/// Leo Katz. “A New Status Index Derived from Sociometric Index.”
+/// Psychometrika 18(1):39–43, 1953
+/// <https://link.springer.com/content/pdf/10.1007/BF02289026.pdf>
+///
+/// This function uses a power iteration method to compute the eigenvector
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm is based on the NetworkX
+/// `katz_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html>`__
+/// function.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the eigenvector centrality.
+///
+/// :param PyGraph graph: The graph object to run the algorithm on
+/// :param float alpha: Attenuation factor. If this is not specified default value of 0.1 is used.
+/// :param float | dict beta: Immediate neighbourhood weights. If a float is provided, the neighbourhood
+///     weight is used for all nodes. If a dictionary is provided, it must contain all node indices.
+///     If beta is not specified, a default value of 1.0 is used.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///     payload object and is expected to return a `float` weight for that edge.
+///     If this is not specified ``default_weight`` will be used as the weight
+///     for every edge in ``graph``
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+/// :param int max_iter: The maximum number of iterations in the power method. If
+///     not specified a default value of 1000 is used.
+/// :param float tol: The error tolerance used when checking for convergence in the
+///     power method. If this is not specified default value of 1e-6 is used.
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for that node.
+/// :rtype: CentralityMapping
 #[pyfunction(
     alpha = "0.1",
     beta = "None",
@@ -391,6 +429,44 @@ pub fn graph_katz_centrality(
     }
 }
 
+/// Compute the Katz centrality of a :class:`~PyDiGraph`.
+///
+/// For details on the eigenvector centrality refer to:
+///
+/// Leo Katz. “A New Status Index Derived from Sociometric Index.”
+/// Psychometrika 18(1):39–43, 1953
+/// <https://link.springer.com/content/pdf/10.1007/BF02289026.pdf>
+///
+/// This function uses a power iteration method to compute the eigenvector
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm is based on the NetworkX
+/// `katz_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html>`__
+/// function.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the eigenvector centrality.
+///
+/// :param PyDiGraph graph: The graph object to run the algorithm on
+/// :param float alpha: Attenuation factor. If this is not specified default value of 0.1 is used.
+/// :param float | dict beta: Immediate neighbourhood weights. If a float is provided, the neighbourhood
+///     weight is used for all nodes. If a dictionary is provided, it must contain all node indices.
+///     If beta is not specified, a default value of 1.0 is used.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///     payload object and is expected to return a `float` weight for that edge.
+///     If this is not specified ``default_weight`` will be used as the weight
+///     for every edge in ``graph``
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+/// :param int max_iter: The maximum number of iterations in the power method. If
+///     not specified a default value of 1000 is used.
+/// :param float tol: The error tolerance used when checking for convergence in the
+///     power method. If this is not specified default value of 1e-6 is used.
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for that node.
+/// :rtype: CentralityMapping
 #[pyfunction(
     alpha = "0.1",
     beta = "None",
