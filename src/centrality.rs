@@ -14,7 +14,7 @@ use std::convert::TryFrom;
 
 use crate::digraph;
 use crate::graph;
-use crate::iterators::CentralityMapping;
+use crate::iterators::{CentralityMapping, EdgeCentralityMapping};
 use crate::CostFn;
 use crate::FailedToConverge;
 
@@ -295,4 +295,108 @@ pub fn digraph_eigenvector_centrality(
             max_iter
         ))),
     }
+}
+
+/// Compute the edge betweenness centrality of all edges in a :class:`~PyGraph`.
+///
+/// Edge betweenness centrality of an edge :math:`e` is the sum of the
+/// fraction of all-pairs shortest paths that pass through :math`e`
+///
+/// .. math::
+///
+///   c_B(e) =\sum_{s,t \in V} \frac{\sigma(s, t|e)}{\sigma(s, t)}
+///
+/// where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the
+/// number of shortest :math:`(s, t)`-paths, and :math:`\sigma(s, t|e)` is
+/// the number of those paths passing through edge :math:`e`.
+///
+/// The above definition and the algorithm used in this function is based on:
+///
+/// Ulrik Brandes, On Variants of Shortest-Path Betweenness Centrality
+/// and their Generic Computation. Social Networks 30(2):136-145, 2008.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyGraph graph: The input graph
+/// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
+///    paths between all pairs of nodes.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
+///
+/// :returns: a read-only dict-like object whose keys are the edge indices and values are the
+///      betweenness score for each edge.
+/// :rtype: EdgeCentralityMapping
+#[pyfunction(normalized = "true", parallel_threshold = "50")]
+#[pyo3(text_signature = "(graph, /, normalized=True, parallel_threshold=50)")]
+pub fn graph_edge_betweenness_centrality(
+    graph: &graph::PyGraph,
+    normalized: bool,
+    parallel_threshold: usize,
+) -> PyResult<EdgeCentralityMapping> {
+    let betweenness =
+        centrality::edge_betweenness_centrality(&graph.graph, normalized, parallel_threshold);
+    Ok(EdgeCentralityMapping {
+        centralities: betweenness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    })
+}
+
+/// Compute the edge betweenness centrality of all edges in a :class:`~PyDiGraph`.
+///
+/// Edge betweenness centrality of an edge :math:`e` is the sum of the
+/// fraction of all-pairs shortest paths that pass through :math`e`
+///
+/// .. math::
+///
+///   c_B(e) =\sum_{s,t \in V} \frac{\sigma(s, t|e)}{\sigma(s, t)}
+///
+/// where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the
+/// number of shortest :math:`(s, t)`-paths, and :math:`\sigma(s, t|e)` is
+/// the number of those paths passing through edge :math:`e`.
+///
+/// The above definition and the algorithm used in this function is based on:
+///
+/// Ulrik Brandes, On Variants of Shortest-Path Betweenness Centrality
+/// and their Generic Computation. Social Networks 30(2):136-145, 2008.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyGraph graph: The input graph
+/// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
+///    paths between all pairs of nodes.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
+///
+/// :returns: a read-only dict-like object whose keys are edges and values are the
+///      betweenness score for each node.
+/// :rtype: EdgeCentralityMapping
+#[pyfunction(normalized = "true", parallel_threshold = "50")]
+#[pyo3(text_signature = "(graph, /, normalized=True, parallel_threshold=50)")]
+pub fn digraph_edge_betweenness_centrality(
+    graph: &digraph::PyDiGraph,
+    normalized: bool,
+    parallel_threshold: usize,
+) -> PyResult<EdgeCentralityMapping> {
+    let betweenness =
+        centrality::edge_betweenness_centrality(&graph.graph, normalized, parallel_threshold);
+    Ok(EdgeCentralityMapping {
+        centralities: betweenness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    })
 }

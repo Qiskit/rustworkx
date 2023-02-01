@@ -12,10 +12,13 @@
 
 use std::collections::VecDeque;
 use std::hash::Hash;
+use std::iter::zip;
 use std::sync::RwLock;
 
 use hashbrown::HashMap;
 use petgraph::visit::{
+    EdgeCount,
+    EdgeIndexable,
     EdgeRef,
     GraphBase,
     GraphProp, // allows is_directed
@@ -27,6 +30,7 @@ use petgraph::visit::{
     NodeIndexable,
 };
 use rayon::prelude::*;
+use rayon_cond::CondIterator;
 
 /// Compute the betweenness centrality of all nodes in a graph.
 ///
@@ -178,6 +182,91 @@ where
     betweenness
 }
 
+/// Compute the edge betweenness centrality of all edges in a graph.
+///
+/// The algorithm used in this function is based on:
+///
+/// Ulrik Brandes: On Variants of Shortest-Path Betweenness
+/// Centrality and their Generic Computation.
+/// Social Networks 30(2):136-145, 2008.
+/// https://doi.org/10.1016/j.socnet.2007.11.001.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold``. If the
+/// function will be running in parallel the env var ``RAYON_NUM_THREADS`` can
+/// be used to adjust how many threads will be used.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `normalized` - Whether to normalize the betweenness scores by the number
+///     of distinct paths between all pairs of nodes
+/// * `parallel_threshold` - The number of nodes to calculate the betweenness
+///     centrality in parallel at, if the number of nodes in `graph` is less
+///     than this value it will run in a single thread. A good default to use
+///     here if you're not sure is `50` as that was found to be roughly the
+///     number of nodes where parallelism improves performance
+///
+/// # Example
+/// ```rust
+/// use hashbrown::HashMap;
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::edge_betweenness_centrality;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (1, 3), (2, 3), (3, 4), (1, 4)
+/// ]);
+/// let output = edge_betweenness_centrality(&g, false, 200);
+/// let expected = vec![Some(4.0), Some(2.0), Some(1.0), Some(2.0), Some(3.0), Some(3.0)];
+/// assert_eq!(output, expected);
+/// ```
+pub fn edge_betweenness_centrality<G>(
+    graph: G,
+    normalized: bool,
+    parallel_threshold: usize,
+) -> Vec<Option<f64>>
+where
+    G: NodeIndexable
+        + EdgeIndexable
+        + IntoEdges
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + EdgeCount
+        + GraphProp
+        + Sync,
+    G::NodeId: Eq + Hash + Send,
+    G::EdgeId: Eq + Hash + Send,
+{
+    let max_index = graph.node_bound();
+    let mut betweenness = vec![None; graph.edge_bound()];
+    for edge in graph.edge_references() {
+        let is: usize = EdgeIndexable::to_index(&graph, edge.id());
+        betweenness[is] = Some(0.0);
+    }
+    let locked_betweenness = RwLock::new(&mut betweenness);
+    let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
+    CondIterator::new(node_indices, graph.node_count() >= parallel_threshold)
+        .map(|node_s| shortest_path_for_edge_centrality(&graph, &node_s))
+        .for_each(|mut shortest_path_calc| {
+            accumulate_edges(
+                &locked_betweenness,
+                max_index,
+                &mut shortest_path_calc,
+                &graph,
+            );
+        });
+
+    _rescale(
+        &mut betweenness,
+        graph.node_count(),
+        normalized,
+        graph.is_directed(),
+        true,
+    );
+    betweenness
+}
+
 fn _rescale(
     betweenness: &mut [Option<f64>],
     node_count: usize,
@@ -283,6 +372,33 @@ fn _accumulate_endpoints<G>(
     }
 }
 
+fn accumulate_edges<G>(
+    locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
+    max_index: usize,
+    path_calc: &mut ShortestPathDataWithEdges<G>,
+    graph: G,
+) where
+    G: NodeIndexable + EdgeIndexable + Sync,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    let mut delta = vec![0.0; max_index];
+    for w in &path_calc.verts_sorted_by_distance {
+        let iw = NodeIndexable::to_index(&graph, *w);
+        let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
+        let p_w = path_calc.predecessors.get(w).unwrap();
+        let e_w = path_calc.predecessor_edges.get(w).unwrap();
+        let mut betweenness = locked_betweenness.write().unwrap();
+        for (v, e) in zip(p_w, e_w) {
+            let iv = NodeIndexable::to_index(&graph, *v);
+            let ie = EdgeIndexable::to_index(&graph, *e);
+            let c = path_calc.sigma[v] * coeff;
+            betweenness[ie] = betweenness[ie].map(|x| x + c);
+            delta[iv] += c;
+        }
+    }
+}
+
 struct ShortestPathData<G>
 where
     G: GraphBase,
@@ -333,6 +449,76 @@ where
     ShortestPathData {
         verts_sorted_by_distance,
         predecessors,
+        sigma,
+    }
+}
+
+struct ShortestPathDataWithEdges<G>
+where
+    G: GraphBase,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    verts_sorted_by_distance: Vec<G::NodeId>,
+    predecessors: HashMap<G::NodeId, Vec<G::NodeId>>,
+    predecessor_edges: HashMap<G::NodeId, Vec<G::EdgeId>>,
+    sigma: HashMap<G::NodeId, f64>,
+}
+
+fn shortest_path_for_edge_centrality<G>(
+    graph: G,
+    node_s: &G::NodeId,
+) -> ShortestPathDataWithEdges<G>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphBase
+        + IntoEdges,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
+    let c = graph.node_count();
+    let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
+    let mut predecessor_edges = HashMap::<G::NodeId, Vec<G::EdgeId>>::with_capacity(c);
+    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
+    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
+    #[allow(non_snake_case)]
+    let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
+
+    for node in graph.node_identifiers() {
+        predecessors.insert(node, Vec::new());
+        predecessor_edges.insert(node, Vec::new());
+        sigma.insert(node, 0.0);
+        distance.insert(node, -1);
+    }
+    sigma.insert(*node_s, 1.0);
+    distance.insert(*node_s, 0);
+    Q.push_back(*node_s);
+    while let Some(v) = Q.pop_front() {
+        verts_sorted_by_distance.push(v);
+        let distance_v = distance[&v];
+        for edge in graph.edges(v) {
+            let w = edge.target();
+            if distance[&w] < 0 {
+                Q.push_back(w);
+                distance.insert(w, distance_v + 1);
+            }
+            if distance[&w] == distance_v + 1 {
+                sigma.insert(w, sigma[&w] + sigma[&v]);
+                let e_p = predecessors.get_mut(&w).unwrap();
+                e_p.push(v);
+                predecessor_edges.get_mut(&w).unwrap().push(edge.id());
+            }
+        }
+    }
+    verts_sorted_by_distance.reverse(); // will be effectively popping from the stack
+    ShortestPathDataWithEdges {
+        verts_sorted_by_distance,
+        predecessors,
+        predecessor_edges,
         sigma,
     }
 }
