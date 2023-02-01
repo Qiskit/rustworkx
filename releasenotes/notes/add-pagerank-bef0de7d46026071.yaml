@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    Added a new function, :func:`~.pagerank()` which is used to
+    Added a new function, :func:`~.pagerank` which is used to
     compute the PageRank score for all nodes in a given directed graph.
     For example:
 
