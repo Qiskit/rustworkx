@@ -295,7 +295,7 @@ where
 
 impl<K, V> PyEq<PyAny> for DictMap<K, V>
 where
-    for<'p> K: PyEq<K> + Clone + pyo3::ToBorrowedObject,
+    for<'p> K: PyEq<K> + Clone + pyo3::ToPyObject,
     for<'p> V: PyEq<PyAny>,
 {
     #[inline]
@@ -475,7 +475,7 @@ impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
-        #[pyclass(module = "rustworkx")]
+        #[pyclass(module = "rustworkx", sequence)]
         #[derive(Clone)]
         pub struct $name {
             pub $data: Vec<$T>,

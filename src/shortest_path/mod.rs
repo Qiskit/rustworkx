@@ -64,8 +64,11 @@ use crate::iterators::{
 /// :rtype: dict
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
-#[pyfunction(default_weight = "1.0", as_undirected = "false")]
-#[pyo3(text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, target=None, weight_fn=None, default_weight=1.0),
+    text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0)"
+)]
 pub fn graph_dijkstra_shortest_paths(
     py: Python,
     graph: &graph::PyGraph,
@@ -127,8 +130,9 @@ pub fn graph_dijkstra_shortest_paths(
 /// :rtype: dict
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
-#[pyfunction(default_weight = "1.0", as_undirected = "false")]
+#[pyfunction]
 #[pyo3(
+    signature=(graph, source, target=None, weight_fn=None, default_weight=1.0, as_undirected=false),
     text_signature = "(graph, source, /, target=None weight_fn=None, default_weight=1.0, as_undirected=False)"
 )]
 pub fn digraph_dijkstra_shortest_paths(
@@ -745,12 +749,9 @@ pub fn graph_k_shortest_path_lengths(
 ///         }
 ///
 /// :rtype: AllPairsPathLengthMapping
-#[pyfunction(
-    parallel_threshold = "300",
-    as_undirected = "false",
-    default_weight = "1.0"
-)]
+#[pyfunction]
 #[pyo3(
+    signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
     text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
 pub fn digraph_floyd_warshall(
@@ -811,8 +812,11 @@ pub fn digraph_floyd_warshall(
 ///         }
 ///
 /// :rtype: AllPairsPathLengthMapping
-#[pyfunction(parallel_threshold = "300", default_weight = "1.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
+)]
 pub fn graph_floyd_warshall(
     py: Python,
     graph: &graph::PyGraph,
@@ -864,8 +868,11 @@ pub fn graph_floyd_warshall(
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "300", default_weight = "1.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
+)]
 pub fn graph_floyd_warshall_numpy(
     py: Python,
     graph: &graph::PyGraph,
@@ -919,12 +926,9 @@ pub fn graph_floyd_warshall_numpy(
 ///     path between two nodes then the corresponding matrix entry will be
 ///     ``np.inf``.
 /// :rtype: numpy.ndarray
-#[pyfunction(
-    parallel_threshold = "300",
-    as_undirected = "false",
-    default_weight = "1.0"
-)]
+#[pyfunction]
 #[pyo3(
+    signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
     text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
 pub fn digraph_floyd_warshall_numpy(
@@ -1010,12 +1014,11 @@ pub fn graph_num_shortest_paths_unweighted(
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(
-    parallel_threshold = "300",
-    as_undirected = "false",
-    null_value = "0.0"
+#[pyfunction]
+#[pyo3(
+    signature=(graph, parallel_threshold=300, as_undirected=false, null_value=0.0),
+    text_signature = "(graph, /, parallel_threshold=300, as_undirected=False, null_value=0.0)"
 )]
-#[pyo3(text_signature = "(graph, /, parallel_threshold=300, as_undirected=False, null_value=0.0)")]
 pub fn digraph_distance_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -1039,7 +1042,7 @@ pub fn digraph_distance_matrix(
 /// distance of 1.
 ///
 /// This function is also multithreaded and will run in parallel if the number
-/// of nodes in the graph is above the value of ``paralllel_threshold`` (it
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
 /// defaults to 300). If the function will be running in parallel the env var
 /// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 ///
@@ -1053,8 +1056,11 @@ pub fn digraph_distance_matrix(
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
-#[pyfunction(parallel_threshold = "300", null_value = "0.0")]
-#[pyo3(text_signature = "(graph, /, parallel_threshold=300, null_value=0.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, parallel_threshold=300, null_value=0.0),
+    text_signature = "(graph, /, parallel_threshold=300, null_value=0.0)"
+)]
 pub fn graph_distance_matrix(
     py: Python,
     graph: &graph::PyGraph,
@@ -1106,12 +1112,9 @@ pub fn graph_distance_matrix(
 /// :returns: The average shortest path length. If no vertex pairs can be included
 ///     in the calculation this will return NaN.
 /// :rtype: float
-#[pyfunction(
-    parallel_threshold = "300",
-    as_undirected = "false",
-    disconnected = "false"
-)]
+#[pyfunction]
 #[pyo3(
+    signature=(graph, parallel_threshold=300, as_undirected=false, disconnected=false),
     text_signature = "(graph, /, parallel_threshold=300, as_undirected=False, disconnected=False)"
 )]
 pub fn digraph_unweighted_average_shortest_path_length(
@@ -1173,8 +1176,11 @@ pub fn digraph_unweighted_average_shortest_path_length(
 /// :returns: The average shortest path length. If no vertex pairs can be included
 ///     in the calculation this will return NaN.
 /// :rtype: float
-#[pyfunction(parallel_threshold = "300", disconnected = "false")]
-#[pyo3(text_signature = "(graph, /, parallel_threshold=300, disconnected=False)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, parallel_threshold=300, disconnected=false),
+    text_signature = "(graph, /, parallel_threshold=300, disconnected=False)"
+)]
 pub fn graph_unweighted_average_shortest_path_length(
     graph: &graph::PyGraph,
     parallel_threshold: usize,
@@ -1380,8 +1386,11 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 ///
 /// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
-#[pyfunction(default_weight = "1.0", as_undirected = "false")]
-#[pyo3(text_signature = "(graph, source, /, target=None, weight_fn=None, default_weight=1.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, target=None, weight_fn=None, default_weight=1.0),
+    text_signature = "(graph, source, /, target=None, weight_fn=None, default_weight=1.0)"
+)]
 pub fn graph_bellman_ford_shortest_paths(
     py: Python,
     graph: &graph::PyGraph,
@@ -1451,8 +1460,9 @@ pub fn graph_bellman_ford_shortest_paths(
 ///
 /// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
-#[pyfunction(default_weight = "1.0", as_undirected = "false")]
+#[pyfunction]
 #[pyo3(
+    signature=(graph, source, target=None, weight_fn=None, default_weight=1.0, as_undirected=false),
     text_signature = "(graph, source, /, target=None, weight_fn=None, default_weight=1.0, as_undirected=False)"
 )]
 pub fn digraph_bellman_ford_shortest_paths(

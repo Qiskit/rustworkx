@@ -149,12 +149,14 @@ Connectivity and Cycles
    rustworkx.weakly_connected_components
    rustworkx.is_weakly_connected
    rustworkx.cycle_basis
+   rustworkx.simple_cycles
    rustworkx.digraph_find_cycle
    rustworkx.articulation_points
    rustworkx.biconnected_components
    rustworkx.chain_decomposition
    rustworkx.all_simple_paths
    rustworkx.all_pairs_all_simple_paths
+   rustworkx.stoer_wagner_min_cut
 
 .. _graph-ops:
 
@@ -181,6 +183,7 @@ Other Algorithm Functions
    rustworkx.core_number
    rustworkx.graph_greedy_color
    rustworkx.metric_closure
+   rustworkx.is_planar
 
 .. _generator_funcs:
 
@@ -212,6 +215,10 @@ Generators
     rustworkx.generators.generalized_petersen_graph
     rustworkx.generators.barbell_graph
     rustworkx.generators.full_rary_tree
+    rustworkx.generators.empty_graph
+    rustworkx.generators.directed_empty_graph
+    rustworkx.generators.complete_graph
+    rustworkx.generators.directed_complete_graph
 
 .. _random_generators:
 

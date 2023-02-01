@@ -25,7 +25,7 @@ Installing on a platform without precompiled binaries
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able able to build the package from
-the published source package you need to have Rust >= 1.48.0 installed (and also
+the published source package you need to have Rust >= 1.56.1 installed (and also
 cargo which is normally included with rust) You can use
 `rustup <https://rustup.rs/>`_ (a cross platform installer for rust) to make this
 simpler, or rely on
@@ -71,11 +71,11 @@ source.
    * - Linux
      - x86_64
      - :ref:`tier-1`
-     - Distributions compatible with the [manylinux 2010](https://peps.python.org/pep-0571/) packaging specification
+     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
    * - Linux
      - i686 
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
-     - Distributions compatible with the [manylinux 2010](https://peps.python.org/pep-0571/) packaging specification
+     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
    * - Linux
      - aarch64
      - :ref:`tier-2`
