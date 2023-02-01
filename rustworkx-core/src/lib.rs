@@ -81,8 +81,8 @@ pub mod traversal;
 // These modules define additional data structures
 pub mod dictmap;
 pub mod distancemap;
-pub mod utils;
 mod min_scored;
+pub mod utils;
 
 // re-export petgraph so there is a consistent version available to users and
 // then only need to require rustworkx-core in their dependencies

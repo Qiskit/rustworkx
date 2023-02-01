@@ -28,8 +28,8 @@ use crate::is_valid_weight;
 use crate::shortest_path::all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths;
 
 use rustworkx_core::dictmap::*;
-use rustworkx_core::utils::pairwise;
 use rustworkx_core::shortest_path::dijkstra;
+use rustworkx_core::utils::pairwise;
 
 struct MetricClosureEdge {
     source: usize,
