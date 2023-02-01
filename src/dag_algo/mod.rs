@@ -223,8 +223,11 @@ pub fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
 /// :rtype: list
 ///
 /// :raises InvalidNode: If a node index in ``first_layer`` is not in the graph
-#[pyfunction(index_output = "false")]
-#[pyo3(text_signature = "(dag, first_layer, /, index_output=False)")]
+#[pyfunction]
+#[pyo3(
+    signature=(dag, first_layer, index_output=false),
+    text_signature = "(dag, first_layer, /, index_output=False)"
+)]
 pub fn layers(
     py: Python,
     dag: &digraph::PyDiGraph,
