@@ -7,15 +7,15 @@
 # that they have been altered from the originals.
 
 # This file contains only type annotations for PyO3 functions and classes
-# For implementation details, see __init__.py and lib.rs
+# For implementation details, see __init__.py and src/digraph.rs
 
 import numpy as np
-from .custom_return_types import *
-from .pygraph import PyGraph
+from .iterators import *
+from .graph import PyGraph
 
 from typing import Any, Callable, Dict, Generic, TypeVar, Optional, List, Tuple, Sequence
 
-__all__ = ['PyDiGraph']
+__all__ = ["PyDiGraph"]
 
 S = TypeVar("S")
 T = TypeVar("T")

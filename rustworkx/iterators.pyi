@@ -7,11 +7,24 @@
 # that they have been altered from the originals.
 
 # This file contains only type annotations for PyO3 functions and classes
-# For implementation details, see __init__.py and lib.rs
+# For implementation details, see __init__.py and src/iterators.rs
 
-from typing import Any, Generic, List, ItemsView, KeysView, ValuesView, Iterator, Mapping, TypeVar, Tuple, overload, final
+from typing import (
+    Any,
+    Generic,
+    List,
+    ItemsView,
+    KeysView,
+    ValuesView,
+    Iterator,
+    Mapping,
+    TypeVar,
+    Tuple,
+    overload,
+    final,
+)
 from abc import ABC
-from collections.abc import  Sequence
+from collections.abc import Sequence
 from typing_extensions import Self
 
 import numpy as np
@@ -20,20 +33,20 @@ S = TypeVar("S")
 T_co = TypeVar("T_co", covariant=True)
 
 __all__ = [
-    'NodeIndices',
-    'PathLengthMapping',
-    'PathMapping',
-    'AllPairsPathLengthMapping',
-    'AllPairsPathMapping',
-    'BFSSuccessors',
-    'EdgeIndexMap',
-    'EdgeIndices',
-    'Chains',
-    'EdgeList',
-    'NodeMap',
-    'NodesCountMapping',
-    'Pos2DMapping',
-    'WeightedEdgeList',
+    "NodeIndices",
+    "PathLengthMapping",
+    "PathMapping",
+    "AllPairsPathLengthMapping",
+    "AllPairsPathMapping",
+    "BFSSuccessors",
+    "EdgeIndexMap",
+    "EdgeIndices",
+    "Chains",
+    "EdgeList",
+    "NodeMap",
+    "NodesCountMapping",
+    "Pos2DMapping",
+    "WeightedEdgeList",
 ]
 
 class RustworkxCustomVecIter(Generic[T_co], Sequence[T_co], ABC):
@@ -49,7 +62,7 @@ class RustworkxCustomVecIter(Generic[T_co], Sequence[T_co], ABC):
     def __len__(self) -> int: ...
     def __ne__(self, other: object) -> bool: ...
     def __setstate__(self, state: Sequence[T_co]) -> None: ...
-    def __array__(self, _dt: np.dtype=...) -> np.ndarray: ...
+    def __array__(self, _dt: np.dtype = ...) -> np.ndarray: ...
 
 class RustworkxCustomHashMapIter(Generic[S, T_co], Mapping[S, T_co], ABC):
     def __init__(self) -> None: ...
@@ -69,29 +82,42 @@ class RustworkxCustomHashMapIter(Generic[S, T_co], Mapping[S, T_co], ABC):
 
 @final
 class NodeIndices(RustworkxCustomVecIter[int]): ...
+
 @final
 class PathLengthMapping(RustworkxCustomHashMapIter[int, float]): ...
+
 @final
 class PathMapping(RustworkxCustomHashMapIter[int, NodeIndices]): ...
+
 @final
 class AllPairsPathLengthMapping(RustworkxCustomHashMapIter[int, PathLengthMapping]): ...
+
 @final
 class AllPairsPathMapping(RustworkxCustomHashMapIter[int, PathMapping]): ...
+
 @final
 class BFSSuccessors(Generic[T_co], RustworkxCustomVecIter[Tuple[T_co, List[T_co]]]): ...
+
 @final
 class EdgeIndexMap(Generic[T_co], RustworkxCustomHashMapIter[int, Tuple[int, int, T_co]]): ...
+
 @final
 class EdgeIndices(RustworkxCustomVecIter[int]): ...
+
 @final
 class Chains(RustworkxCustomVecIter[EdgeIndices]): ...
+
 @final
 class EdgeList(RustworkxCustomVecIter[Tuple[int, int]]): ...
+
 @final
 class NodeMap(RustworkxCustomHashMapIter[int, int]): ...
+
 @final
 class NodesCountMapping(RustworkxCustomHashMapIter[int, int]): ...
+
 @final
 class Pos2DMapping(RustworkxCustomHashMapIter[int, Tuple[float, float]]): ...
+
 @final
 class WeightedEdgeList(Generic[T_co], RustworkxCustomVecIter[Tuple[int, int, T_co]]): ...

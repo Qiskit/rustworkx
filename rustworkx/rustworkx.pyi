@@ -7,11 +7,11 @@
 # that they have been altered from the originals.
 
 # This file contains only type annotations for PyO3 functions and classes
-# For implementation details, see __init__.py and lib.rs
+# For implementation details, see __init__.py and src/lib.rs
 
-from .custom_return_types import *
-from .pygraph import PyGraph as PyGraph
-from .pydigraph import PyDiGraph as PyDiGraph
+from .iterators import *
+from .graph import PyGraph as PyGraph
+from .digraph import PyDiGraph as PyDiGraph
 
 class DAGHasCycle(Exception): ...
 class DAGWouldCycle(Exception): ...

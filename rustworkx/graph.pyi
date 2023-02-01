@@ -7,10 +7,10 @@
 # that they have been altered from the originals.
 
 # This file contains only type annotations for PyO3 functions and classes
-# For implementation details, see __init__.py and lib.rs
+# For implementation details, see __init__.py and src/graph.rs
 
 import numpy as np
-from .custom_return_types import *
+from .iterators import *
 
 from typing import (
     Any,
@@ -24,7 +24,7 @@ from typing import (
     Sequence,
 )
 
-__all__ = ['PyGraph']
+__all__ = ["PyGraph"]
 
 S = TypeVar("S")
 T = TypeVar("T")
