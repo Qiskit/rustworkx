@@ -67,7 +67,14 @@ use rustworkx_core::centrality;
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      betweenness score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction(normalized = "true", endpoints = "false", parallel_threshold = "50")]
+#[pyfunction(
+    signature = (
+        graph,
+        normalized=true,
+        endpoints=false,
+        parallel_threshold=50
+    )
+)]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)")]
 pub fn graph_betweenness_centrality(
     graph: &graph::PyGraph,
@@ -124,7 +131,14 @@ pub fn graph_betweenness_centrality(
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      betweenness score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction(normalized = "true", endpoints = "false", parallel_threshold = "50")]
+#[pyfunction(
+    signature = (
+        graph,
+        normalized=true,
+        endpoints=false,
+        parallel_threshold=50
+    )
+)]
 #[pyo3(text_signature = "(graph, /, normalized=True, endpoints=False, parallel_threshold=50)")]
 pub fn digraph_betweenness_centrality(
     graph: &digraph::PyDiGraph,
@@ -177,7 +191,15 @@ pub fn digraph_betweenness_centrality(
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      centrality score for that node.
 /// :rtype: CentralityMapping
-#[pyfunction(default_weight = "1.0", max_iter = "100", tol = "1e-6")]
+#[pyfunction(
+    signature = (
+        graph,
+        weight_fn=None,
+        default_weight=1.0,
+        max_iter=100,
+        tol=1e-6
+    )
+)]
 #[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)")]
 pub fn graph_eigenvector_centrality(
     py: Python,
@@ -256,7 +278,15 @@ pub fn graph_eigenvector_centrality(
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      centrality score for that node.
 /// :rtype: CentralityMapping
-#[pyfunction(default_weight = "1.0", max_iter = "100", tol = "1e-6")]
+#[pyfunction(
+    signature = (
+        graph,
+        weight_fn=None,
+        default_weight=1.0,
+        max_iter=100,
+        tol=1e-6
+    )
+)]
 #[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6)")]
 pub fn digraph_eigenvector_centrality(
     py: Python,
