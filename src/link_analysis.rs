@@ -255,11 +255,14 @@ pub fn pagerank(
 ///      contain the hubs scores. The second value contains the authority scores.
 /// :rtype: tuple[CentralityMapping, CentralityMapping]
 #[pyfunction(
-    weight_fn = "None",
-    nstart = "None",
-    tol = "1.0e-8",
-    max_iter = "100",
-    normalized = "true"
+    signature = (
+        graph,
+        weight_fn=None,
+        nstart=None,
+        tol=1e-6,
+        max_iter=100,
+        normalized=true,
+    )
 )]
 #[pyo3(
     text_signature = "(graph, /, weight_fn=None, nstart=None, tol=1.0e-8, max_iter=100, normalized=True)"
