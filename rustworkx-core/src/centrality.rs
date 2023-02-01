@@ -12,7 +12,6 @@
 
 use std::collections::VecDeque;
 use std::hash::Hash;
-use std::iter::zip;
 use std::sync::RwLock;
 
 use hashbrown::HashMap;
@@ -389,10 +388,11 @@ fn accumulate_edges<G>(
         let p_w = path_calc.predecessors.get(w).unwrap();
         let e_w = path_calc.predecessor_edges.get(w).unwrap();
         let mut betweenness = locked_betweenness.write().unwrap();
-        for (v, e) in zip(p_w, e_w) {
-            let iv = NodeIndexable::to_index(&graph, *v);
-            let ie = EdgeIndexable::to_index(&graph, *e);
-            let c = path_calc.sigma[v] * coeff;
+        for i in 0..p_w.len() {
+            let v = p_w[i];
+            let iv = NodeIndexable::to_index(&graph, v);
+            let ie = EdgeIndexable::to_index(&graph, e_w[i]);
+            let c = path_calc.sigma[&v] * coeff;
             betweenness[ie] = betweenness[ie].map(|x| x + c);
             delta[iv] += c;
         }
