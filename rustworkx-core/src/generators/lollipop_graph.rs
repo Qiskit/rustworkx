@@ -15,7 +15,8 @@ use std::hash::Hash;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, GraphProp, NodeIndexable};
 
-use super::utils::{get_num_nodes, pairwise};
+use crate::utils::pairwise;
+use super::utils::get_num_nodes;
 use super::InvalidInputError;
 
 /// Generate a lollipop graph where a complete graph is connected to a path.

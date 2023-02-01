@@ -15,8 +15,8 @@ use std::hash::Hash;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, NodeIndexable, NodeRef};
 
+use crate::utils::pairwise;
 use super::utils::get_num_nodes;
-use super::utils::pairwise;
 use super::InvalidInputError;
 
 /// Generate a barbell graph where two identical complete graphs are

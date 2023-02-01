@@ -81,6 +81,7 @@ pub mod traversal;
 // These modules define additional data structures
 pub mod dictmap;
 pub mod distancemap;
+pub mod utils;
 mod min_scored;
 
 // re-export petgraph so there is a consistent version available to users and

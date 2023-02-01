@@ -500,8 +500,9 @@ pub fn grid_graph(
     })
 }
 
-/// Generate a directed grid graph. The edges propagate towards right and
-///     bottom direction if ``bidirectional`` is ``False``
+/// Generate a directed grid graph.
+///
+/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``False``
 ///
 /// :param int rows: The number of rows to generate the graph with.
 ///     If specified, ``cols`` also need to be specified.
@@ -569,8 +570,9 @@ pub fn directed_grid_graph(
     })
 }
 
-/// Generate an undirected heavy square graph. Fig. 6 of
-/// https://arxiv.org/abs/1907.09528.
+/// Generate an undirected heavy square graph.
+///
+/// Fig. 6 of https://arxiv.org/abs/1907.09528.
 /// An ASCII diagram of the graph is given by:
 ///
 /// .. code-block:: console
@@ -591,9 +593,12 @@ pub fn directed_grid_graph(
 ///             \ /     \
 ///        ...   S       ...
 ///
-/// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
-/// This function doesn't support the variant Fig 10.b right.
+///
+/// .. note::
+///   
+///   This function generates the four-frequency variant of the heavy square code.
+///   This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
+///   This function doesn't support the variant Fig 10.b right.
 ///
 /// Note that if ``d`` is set to ``1`` a :class:`~rustworkx.PyGraph` with a
 /// single node will be returned.
@@ -636,8 +641,9 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
     })
 }
 
-/// Generate an directed heavy square graph. Fig. 6 of
-/// https://arxiv.org/abs/1907.09528.
+/// Generate an directed heavy square graph.
+///
+/// Fig. 6 of https://arxiv.org/abs/1907.09528.
 /// An ASCII diagram of the graph is given by:
 ///
 /// .. code-block:: console
@@ -658,9 +664,12 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///             \ /     \
 ///        ...   S       ...
 ///
-/// NOTE: This function generates the four-frequency variant of the heavy square code.
-/// This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
-/// This function doesn't support the variant Fig 10.b right.
+///
+/// .. note::
+///   
+///   This function generates the four-frequency variant of the heavy square code.
+///   This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
+///   This function doesn't support the variant Fig 10.b right.
 ///
 /// :param int d: distance of the code. If ``d`` is set to ``1`` a
 ///     :class:`~rustworkx.PyDiGraph` with a single node will be returned. ``d`` must be
@@ -709,8 +718,9 @@ pub fn directed_heavy_square_graph(
     })
 }
 
-/// Generate an undirected heavy hex graph. Fig. 2 of
-/// https://arxiv.org/abs/1907.09528
+/// Generate an undirected heavy hex graph.
+///
+/// Fig. 2 of https://arxiv.org/abs/1907.09528
 /// An ASCII diagram of the graph is given by:
 ///
 /// .. code-block:: text
@@ -786,8 +796,9 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
     })
 }
 
-/// Generate a directed heavy hex graph. Fig. 2 of
-/// https://arxiv.org/abs/1907.09528
+/// Generate a directed heavy hex graph.
+///
+/// Fig. 2 of https://arxiv.org/abs/1907.09528
 /// An ASCII diagram of the graph is given by:
 ///
 /// .. code-block:: text
@@ -934,6 +945,7 @@ pub fn binomial_tree_graph(
 }
 
 /// Generate a directed binomial tree of order n recursively.
+///
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``False``
 ///
 /// :param int order: Order of the binomial tree. The maximum allowed value
@@ -1004,6 +1016,7 @@ pub fn directed_binomial_tree_graph(
 }
 
 /// Creates a full r-ary tree of `n` nodes.
+///
 /// Sometimes called a k-ary, n-ary, or m-ary tree.
 ///
 /// :param int branching factor: The number of children at each node.
@@ -1105,8 +1118,9 @@ pub fn hexagonal_lattice_graph(
     })
 }
 
-/// Generate a directed hexagonal lattice graph. The edges propagate towards  
-///     right and bottom direction if ``bidirectional`` is ``False``
+/// Generate a directed hexagonal lattice graph.
+///
+/// The edges propagate towards right and bottom direction if ``bidirectional`` is ``False``
 ///
 /// :param int rows: The number of rows to generate the graph with.
 /// :param int cols: The number of rows to generate the graph with.
