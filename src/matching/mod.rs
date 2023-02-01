@@ -64,12 +64,9 @@ use crate::weight_callable;
 /// .. [1] "Efficient Algorithms for Finding Maximum Matching in Graphs",
 ///     Zvi Galil, ACM Computing Surveys, 1986.
 ///
-#[pyfunction(
-    max_cardinality = "false",
-    default_weight = 1,
-    verify_optimum = "false"
-)]
+#[pyfunction]
 #[pyo3(
+    signature=(graph, max_cardinality=false, weight_fn=None, default_weight=1, verify_optimum=false),
     text_signature = "(graph, /, max_cardinality=False, weight_fn=None, default_weight=1, verify_optimum=False)"
 )]
 pub fn max_weight_matching(
