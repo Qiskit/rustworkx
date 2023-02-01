@@ -371,12 +371,15 @@ pub fn digraph_eigenvector_centrality(
 ///      centrality score for that node.
 /// :rtype: CentralityMapping
 #[pyfunction(
-    alpha = "0.1",
-    beta = "None",
-    weight_fn = "None",
-    default_weight = "1.0",
-    max_iter = "1000",
-    tol = "1e-6"
+    signature = (
+        graph,
+        alpha=0.1,
+        beta=None,
+        weight_fn=None,
+        default_weight=1.0,
+        max_iter=1000,
+        tol=1e-6
+    )
 )]
 #[pyo3(
     text_signature = "(graph, /, alpha=0.1, beta=None, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6)"
@@ -498,12 +501,15 @@ pub fn graph_katz_centrality(
 ///      centrality score for that node.
 /// :rtype: CentralityMapping
 #[pyfunction(
-    alpha = "0.1",
-    beta = "None",
-    weight_fn = "None",
-    default_weight = "1.0",
-    max_iter = "1000",
-    tol = "1e-6"
+    signature = (
+        graph,
+        alpha=0.1,
+        beta=None,
+        weight_fn=None,
+        default_weight=1.0,
+        max_iter=1000,
+        tol=1e-6
+    )
 )]
 #[pyo3(
     text_signature = "(graph, /, alpha=0.1, beta=None, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6)"
