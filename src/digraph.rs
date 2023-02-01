@@ -1066,7 +1066,7 @@ impl PyDiGraph {
     ///     ``(source, target, weight)`` where source and target are integer
     ///     node indices. If the node index is not present in the graph
     ///     nodes will be added (with a node weight of ``None``) to that index.
-    #[pyo3(text_signature = "(self, edge_lsit, /)")]
+    #[pyo3(text_signature = "(self, edge_list, /)")]
     pub fn extend_from_weighted_edge_list(
         &mut self,
         py: Python,
