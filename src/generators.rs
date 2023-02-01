@@ -59,8 +59,11 @@ where
 ///   graph = rustworkx.generators.directed_cycle_graph(5)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, bidirectional=false, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -118,8 +121,11 @@ pub fn directed_cycle_graph(
 ///   graph = rustworkx.generators.cycle_graph(5)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
+)]
 pub fn cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -171,8 +177,11 @@ pub fn cycle_graph(
 ///   graph = rustworkx.generators.directed_path_graph(10)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, bidirectional=false, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -230,8 +239,11 @@ pub fn directed_path_graph(
 ///   graph = rustworkx.generators.path_graph(10)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
+)]
 pub fn path_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -294,8 +306,9 @@ pub fn path_graph(
 ///   graph = rustworkx.generators.directed_star_graph(10, inward=True)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(inward = "false", bidirectional = "false", multigraph = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(num_nodes=None, weights=None, inward=false, bidirectional=false, multigraph=true),
     text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_star_graph(
@@ -358,8 +371,11 @@ pub fn directed_star_graph(
 ///   graph = rustworkx.generators.star_graph(10)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
+)]
 pub fn star_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -409,8 +425,11 @@ pub fn star_graph(
 ///   graph = rustworkx.generators.mesh_graph(4)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
+)]
 pub fn mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -444,8 +463,11 @@ pub fn mesh_graph(
 ///   graph = rustworkx.generators.directed_mesh_graph(4)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = "true")]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
+)]
 pub fn directed_mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -487,8 +509,11 @@ pub fn directed_mesh_graph(
 ///   graph = rustworkx.generators.grid_graph(2, 3)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(rows=None, cols=None, weights=None, multigraph=true),
+    text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"
+)]
 pub fn grid_graph(
     py: Python,
     rows: Option<usize>,
@@ -545,8 +570,9 @@ pub fn grid_graph(
 ///   graph = rustworkx.generators.directed_grid_graph(2, 3)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(rows=None, cols=None, weights=None, bidirectional=false, multigraph=true),
     text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_grid_graph(
@@ -612,8 +638,11 @@ const MAX_ORDER: u32 = 29;
 ///   graph = rustworkx.generators.binomial_tree_graph(4)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(order, /, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(order, weights=None, multigraph=true),
+    text_signature = "(order, /, weights=None, multigraph=True)"
+)]
 pub fn binomial_tree_graph(
     py: Python,
     order: u32,
@@ -674,8 +703,11 @@ pub fn binomial_tree_graph(
 ///   graph = rustworkx.generators.directed_binomial_tree_graph(4)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[pyo3(text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(order, weights=None, bidirectional=false, multigraph=true),
+    text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
@@ -739,8 +771,11 @@ pub fn directed_binomial_tree_graph(
 ///   graph = rustworkx.generators.full_rary_tree(5, 15)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(branching_factor, num_nodes, weights=None, multigraph=true),
+    text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)"
+)]
 pub fn full_rary_tree(
     py: Python,
     branching_factor: usize,
@@ -820,8 +855,11 @@ pub fn full_rary_tree(
 ///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(d, /, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(d, multigraph=true),
+    text_signature = "(d, /, multigraph=True)"
+)]
 pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
@@ -883,8 +921,11 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
 ///
-#[pyfunction(bidirectional = false, multigraph = true)]
-#[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(d, bidirectional=false, multigraph=true),
+    text_signature = "(d, /, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_heavy_square_graph(
     py: Python,
     d: usize,
@@ -964,8 +1005,11 @@ pub fn directed_heavy_square_graph(
 ///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(d, /, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(d, multigraph=true),
+    text_signature = "(d, /, multigraph=True)"
+)]
 pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
@@ -1038,8 +1082,11 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///   graphviz_draw(graph, lambda node: dict(
 ///           color='black', fillcolor='lightblue', style='filled'))
 ///
-#[pyfunction(bidirectional = false, multigraph = true)]
-#[pyo3(text_signature = "(d, /, bidirectional=False, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(d, bidirectional=false, multigraph=true),
+    text_signature = "(d, /, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_heavy_hex_graph(
     py: Python,
     d: usize,
@@ -1085,8 +1132,11 @@ pub fn directed_heavy_hex_graph(
 ///   graph = rustworkx.generators.hexagonal_lattice_graph(2, 2)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(rows, cols, /, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(rows, cols, multigraph=true),
+    text_signature = "(rows, cols, /, multigraph=True)"
+)]
 pub fn hexagonal_lattice_graph(
     py: Python,
     rows: usize,
@@ -1133,8 +1183,11 @@ pub fn hexagonal_lattice_graph(
 ///   graph = rustworkx.generators.directed_hexagonal_lattice_graph(2, 3)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(bidirectional = "false", multigraph = "true")]
-#[pyo3(text_signature = "(rows, cols, /, bidirectional=False, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(rows, cols, bidirectional=false, multigraph=true),
+    text_signature = "(rows, cols, /, bidirectional=False, multigraph=True)"
+)]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
     rows: usize,
@@ -1201,8 +1254,9 @@ pub fn directed_hexagonal_lattice_graph(
 ///   graph = rustworkx.generators.lollipop_graph(4, 2)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
+#[pyfunction]
 #[pyo3(
+    signature=(num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=true),
     text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=True)"
 )]
 pub fn lollipop_graph(
@@ -1283,8 +1337,11 @@ pub fn lollipop_graph(
 ///    Journal of Combinatorial Theory 6 (2), 152–164 (1969).
 ///    https://doi.org/10.1016/S0021-9800(69)80116-X
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(n, k, /, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(n, k, multigraph=true),
+    text_signature = "(n, k, /, multigraph=True)"
+)]
 pub fn generalized_petersen_graph(
     py: Python,
     n: usize,
@@ -1346,8 +1403,10 @@ pub fn generalized_petersen_graph(
 ///   graph = rustworkx.generators.barbell_graph(4, 2)
 ///   mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_mesh_nodes=None, num_path_nodes=None, multigraph=true, mesh_weights=None, path_weights=None)
+)]
 pub fn barbell_graph(
     py: Python,
     num_mesh_nodes: Option<usize>,
@@ -1395,8 +1454,11 @@ pub fn barbell_graph(
 ///  graph = rustworkx.generators.empty_graph(5)
 ///  mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, n, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(n, multigraph=true),
+    text_signature = "(/, n, multigraph=True)"
+)]
 pub fn empty_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
     for _ in 0..n {
@@ -1425,8 +1487,11 @@ pub fn empty_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::Py
 ///  graph = rustworkx.generators.directed_empty_graph(5)
 ///  mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, n, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(n, multigraph=true),
+    text_signature = "(/, n, multigraph=True)"
+)]
 pub fn directed_empty_graph(
     py: Python,
     n: usize,
@@ -1476,8 +1541,11 @@ pub fn directed_empty_graph(
 ///  graph = rustworkx.generators.complete_graph(5)
 ///  mpl_draw(graph)
 ///
-#[pyfunction(multigraph = true)]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
+)]
 pub fn complete_graph(
     py: Python,
     num_nodes: Option<usize>,
@@ -1532,8 +1600,11 @@ pub fn complete_graph(
 ///  graph = rustworkx.generators.directed_complete_graph(5)
 ///  mpl_draw(graph)
 ///
-#[pyfunction(multigraph = "true")]
-#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes=None, weights=None, multigraph=true),
+    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
+)]
 pub fn directed_complete_graph(
     py: Python,
     num_nodes: Option<usize>,

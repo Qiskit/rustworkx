@@ -290,8 +290,11 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -341,8 +344,11 @@ pub fn digraph_adjacency_matrix(
 ///
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
