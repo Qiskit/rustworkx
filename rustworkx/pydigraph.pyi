@@ -15,6 +15,8 @@ from .pygraph import PyGraph
 
 from typing import Any, Callable, Dict, Generic, TypeVar, Optional, List, Tuple, Sequence
 
+__all__ = ['PyDiGraph']
+
 S = TypeVar("S")
 T = TypeVar("T")
 

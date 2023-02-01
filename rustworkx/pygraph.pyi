@@ -24,6 +24,8 @@ from typing import (
     Sequence,
 )
 
+__all__ = ['PyGraph']
+
 S = TypeVar("S")
 T = TypeVar("T")
 
