@@ -73,13 +73,16 @@ use sprs::{CsMat, TriMat};
 ///      PageRank score for that node.
 /// :rtype: CentralityMapping
 #[pyfunction(
-    alpha = "0.85",
-    weight_fn = "None",
-    nstart = "None",
-    personalization = "None",
-    tol = "1.0e-6",
-    max_iter = "100",
-    dangling = "None"
+    signature = (
+        graph,
+        alpha=0.85,
+        weight_fn=None,
+        nstart=None,
+        personalization=None,
+        tol=1e-6,
+        max_iter=100,
+        dangling=None,
+    )
 )]
 #[pyo3(
     text_signature = "(graph, /, alpha=0.85, weight_fn=None, nstart=None, personalization=None, tol=1.0e-6, max_iter=100)"

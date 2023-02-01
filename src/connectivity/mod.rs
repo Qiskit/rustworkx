@@ -65,69 +65,10 @@ use rustworkx_core::connectivity;
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, root=None)")]
 pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize>> {
-    let mut root_node = root;
-    let mut graph_nodes: HashSet<NodeIndex> = graph.graph.node_indices().collect();
-    let mut cycles: Vec<Vec<usize>> = Vec::new();
-    while !graph_nodes.is_empty() {
-        let temp_value: NodeIndex;
-        // If root_node is not set get an arbitrary node from the set of graph
-        // nodes we've not "examined"
-        let root_index = match root_node {
-            Some(root_value) => NodeIndex::new(root_value),
-            None => {
-                temp_value = *graph_nodes.iter().next().unwrap();
-                graph_nodes.remove(&temp_value);
-                temp_value
-            }
-        };
-        // Stack (ie "pushdown list") of vertices already in the spanning tree
-        let mut stack: Vec<NodeIndex> = vec![root_index];
-        // Map of node index to predecessor node index
-        let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-        pred.insert(root_index, root_index);
-        // Set of examined nodes during this iteration
-        let mut used: HashMap<NodeIndex, HashSet<NodeIndex>> = HashMap::new();
-        used.insert(root_index, HashSet::new());
-        // Walk the spanning tree
-        while !stack.is_empty() {
-            // Use the last element added so that cycles are easier to find
-            let z = stack.pop().unwrap();
-            for neighbor in graph.graph.neighbors(z) {
-                // A new node was encountered:
-                if !used.contains_key(&neighbor) {
-                    pred.insert(neighbor, z);
-                    stack.push(neighbor);
-                    let mut temp_set: HashSet<NodeIndex> = HashSet::new();
-                    temp_set.insert(z);
-                    used.insert(neighbor, temp_set);
-                // A self loop:
-                } else if z == neighbor {
-                    let cycle: Vec<usize> = vec![z.index()];
-                    cycles.push(cycle);
-                // A cycle was found:
-                } else if !used.get(&z).unwrap().contains(&neighbor) {
-                    let pn = used.get(&neighbor).unwrap();
-                    let mut cycle: Vec<NodeIndex> = vec![neighbor, z];
-                    let mut p = pred.get(&z).unwrap();
-                    while !pn.contains(p) {
-                        cycle.push(*p);
-                        p = pred.get(p).unwrap();
-                    }
-                    cycle.push(*p);
-                    cycles.push(cycle.iter().map(|x| x.index()).collect());
-                    let neighbor_set = used.get_mut(&neighbor).unwrap();
-                    neighbor_set.insert(z);
-                }
-            }
-        }
-        let mut temp_hashset: HashSet<NodeIndex> = HashSet::new();
-        for key in pred.keys() {
-            temp_hashset.insert(*key);
-        }
-        graph_nodes = graph_nodes.difference(&temp_hashset).copied().collect();
-        root_node = None;
-    }
-    cycles
+    connectivity::cycle_basis(&graph.graph, root.map(NodeIndex::new))
+        .into_iter()
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
+        .collect()
 }
 
 /// Find all simple cycles of a :class:`~.PyDiGraph`
@@ -178,67 +119,12 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
 pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
-    let mut graph_nodes: HashSet<NodeIndex> = graph.graph.node_indices().collect();
-    let mut cycle: Vec<(usize, usize)> = Vec::with_capacity(graph.graph.edge_count());
-    let temp_value: NodeIndex;
-    // If source is not set get an arbitrary node from the set of graph
-    // nodes we've not "examined"
-    let source_index = match source {
-        Some(source_value) => NodeIndex::new(source_value),
-        None => {
-            temp_value = *graph_nodes.iter().next().unwrap();
-            graph_nodes.remove(&temp_value);
-            temp_value
-        }
-    };
-
-    // Stack (ie "pushdown list") of vertices already in the spanning tree
-    let mut stack: Vec<NodeIndex> = vec![source_index];
-    // map to store parent of a node
-    let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-    // a node is in the visiting set if at least one of its child is unexamined
-    let mut visiting = HashSet::new();
-    // a node is in visited set if all of its children have been examined
-    let mut visited = HashSet::new();
-    while !stack.is_empty() {
-        let mut z = *stack.last().unwrap();
-        visiting.insert(z);
-
-        let children = graph
-            .graph
-            .neighbors_directed(z, petgraph::Direction::Outgoing);
-
-        for child in children {
-            //cycle is found
-            if visiting.contains(&child) {
-                cycle.push((z.index(), child.index()));
-                //backtrack
-                loop {
-                    if z == child {
-                        cycle.reverse();
-                        break;
-                    }
-                    cycle.push((pred[&z].index(), z.index()));
-                    z = pred[&z];
-                }
-                return EdgeList { edges: cycle };
-            }
-            //if an unexplored node is encountered
-            if !visited.contains(&child) {
-                stack.push(child);
-                pred.insert(child, z);
-            }
-        }
-
-        let top = *stack.last().unwrap();
-        //if no further children and explored, move to visited
-        if top.index() == z.index() {
-            stack.pop();
-            visiting.remove(&z);
-            visited.insert(z);
-        }
+    EdgeList {
+        edges: connectivity::find_cycle(&graph.graph, source.map(NodeIndex::new))
+            .iter()
+            .map(|(s, t)| (s.index(), t.index()))
+            .collect(),
     }
-    EdgeList { edges: cycle }
 }
 
 /// Find the number of connected components in an undirected graph.
@@ -404,8 +290,11 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -455,8 +344,11 @@ pub fn digraph_adjacency_matrix(
 ///
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
