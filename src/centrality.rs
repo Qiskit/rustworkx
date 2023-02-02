@@ -361,7 +361,13 @@ pub fn digraph_eigenvector_centrality(
 /// :returns: a read-only dict-like object whose keys are the edge indices and values are the
 ///      betweenness score for each edge.
 /// :rtype: EdgeCentralityMapping
-#[pyfunction(normalized = "true", parallel_threshold = "50")]
+#[pyfunction(
+    signature = (
+        graph,
+        normalized=true,
+        parallel_threshold=50
+    )
+)]
 #[pyo3(text_signature = "(graph, /, normalized=True, parallel_threshold=50)")]
 pub fn graph_edge_betweenness_centrality(
     graph: &graph::PyGraph,
@@ -413,7 +419,13 @@ pub fn graph_edge_betweenness_centrality(
 /// :returns: a read-only dict-like object whose keys are edges and values are the
 ///      betweenness score for each node.
 /// :rtype: EdgeCentralityMapping
-#[pyfunction(normalized = "true", parallel_threshold = "50")]
+#[pyfunction(
+    signature = (
+    graph,
+    normalized=true,
+    parallel_threshold=50
+    )
+)]
 #[pyo3(text_signature = "(graph, /, normalized=True, parallel_threshold=50)")]
 pub fn digraph_edge_betweenness_centrality(
     graph: &digraph::PyDiGraph,
