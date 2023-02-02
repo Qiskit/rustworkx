@@ -10,11 +10,14 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::dictmap::*;
+use std::hash::Hash;
+
 use hashbrown::{HashMap, HashSet};
 use petgraph::visit::{GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount};
 use petgraph::Direction::{Incoming, Outgoing};
-use std::hash::Hash;
+use rayon::prelude::*;
+
+use crate::dictmap::*;
 
 /// Return the core number for each node in the graph.
 ///
@@ -45,7 +48,7 @@ pub fn core_number<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
     G: GraphBase + NodeCount,
     for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected,
-    G::NodeId: Eq + Hash,
+    G::NodeId: Eq + Hash + Send + Sync,
 {
     let node_num = graph.node_count();
     if node_num == 0 {
@@ -69,7 +72,7 @@ where
         cores.insert(*k, k_deg);
         degree_map.insert(*k, k_deg);
     }
-    node_vec.sort_by_key(|k| degree_map.get(k));
+    node_vec.par_sort_by_key(|k| degree_map.get(k));
 
     let mut bin_boundaries: Vec<usize> =
         Vec::with_capacity(degree_map[&node_vec[node_num - 1]] + 1);
