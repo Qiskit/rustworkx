@@ -13,6 +13,7 @@ from typing import (
     Any,
     Generic,
     List,
+    Dict,
     ItemsView,
     KeysView,
     ValuesView,
@@ -47,6 +48,11 @@ __all__ = [
     "NodesCountMapping",
     "Pos2DMapping",
     "WeightedEdgeList",
+    "CentralityMapping",
+    "BiconnectedComponents",
+    "ProductNodeMap",
+    "MultiplePathMapping",
+    "AllPairsMultiplePathMapping",
 ]
 
 class RustworkxCustomVecIter(Generic[T_co], Sequence[T_co], ABC):
@@ -121,3 +127,18 @@ class Pos2DMapping(RustworkxCustomHashMapIter[int, Tuple[float, float]]): ...
 
 @final
 class WeightedEdgeList(Generic[T_co], RustworkxCustomVecIter[Tuple[int, int, T_co]]): ...
+
+@final
+class CentralityMapping(RustworkxCustomHashMapIter[int, float]): ...
+
+@final
+class BiconnectedComponents(RustworkxCustomHashMapIter[Tuple[int, int], int]): ...
+
+@final
+class ProductNodeMap(RustworkxCustomHashMapIter[Tuple[int, int], int]): ...
+
+@final
+class MultiplePathMapping(RustworkxCustomHashMapIter[int, List[List[int]]]): ...
+
+@final
+class AllPairsMultiplePathMapping(RustworkxCustomHashMapIter[int, MultiplePathMapping]): ...

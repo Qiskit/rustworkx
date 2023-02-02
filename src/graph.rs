@@ -579,7 +579,7 @@ impl PyGraph {
     /// :param int target: The index for the second node
     ///
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[pyo3(text_signature = "(self, source, target, edge /)")]
+    #[pyo3(text_signature = "(self, source, target, edge, /)")]
     pub fn update_edge(&mut self, source: usize, target: usize, edge: PyObject) -> PyResult<()> {
         let index_a = NodeIndex::new(source);
         let index_b = NodeIndex::new(target);

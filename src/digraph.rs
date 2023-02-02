@@ -733,7 +733,7 @@ impl PyDiGraph {
     /// :param int target: The index for the second node
     ///
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[pyo3(text_signature = "(self, source, target, edge /)")]
+    #[pyo3(text_signature = "(self, source, target, edge, /)")]
     pub fn update_edge(&mut self, source: usize, target: usize, edge: PyObject) -> PyResult<()> {
         let index_a = NodeIndex::new(source);
         let index_b = NodeIndex::new(target);
@@ -1271,7 +1271,7 @@ impl PyDiGraph {
     ///
     /// :param int u: The source node that is going to be merged
     /// :param int v: The target node that is going to be the new node
-    #[pyo3(text_signature = "(self, u, v /)")]
+    #[pyo3(text_signature = "(self, u, v, /)")]
     pub fn merge_nodes(&mut self, py: Python, u: usize, v: usize) -> PyResult<()> {
         let source_node = NodeIndex::new(u);
         let target_node = NodeIndex::new(v);
