@@ -281,15 +281,11 @@ They contain annotated signatures for Python functions, stripped of their implem
 While this step is optional, it is very helpful for end-users. Adding annotations lets users type check
 their code with [mypy](http://mypy-lang.org/), which can be helpful for finding bugs.
 
-Just like with tests for the code, annotations are also tested via tox. On Linux and Mac OS
-machines, the tests can be executed via:
+Just like with tests for the code, annotations are also tested via tox.
 
 ```
 tox -estubs
 ```
-
-We also encourage type annotation contributions
-to add tests in the `tests/stubs` directory to verify the correctness of the annotations.
 
 ### Release Notes
 
