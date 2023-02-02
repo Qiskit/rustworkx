@@ -13,7 +13,6 @@
 #![allow(clippy::float_cmp)]
 
 mod all_pairs_all_simple_paths;
-mod core_number;
 mod johnson_simple_cycles;
 
 use super::{
@@ -25,6 +24,7 @@ use hashbrown::{HashMap, HashSet};
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use pyo3::Python;
 
 use petgraph::algo;
@@ -645,7 +645,12 @@ pub fn graph_all_pairs_all_simple_paths(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    core_number::core_number(py, &graph.graph)
+    let cores = connectivity::core_number(&graph.graph);
+    let out_dict = PyDict::new(py);
+    for (k, v) in cores {
+        out_dict.set_item(k.index(), v)?;
+    }
+    Ok(out_dict.into())
 }
 
 /// Return the core number for each node in the directed graph.
@@ -666,7 +671,12 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
-    core_number::core_number(py, &graph.graph)
+    let cores = connectivity::core_number(&graph.graph);
+    let out_dict = PyDict::new(py);
+    for (k, v) in cores {
+        out_dict.set_item(k.index(), v)?;
+    }
+    Ok(out_dict.into())
 }
 
 /// Compute a weighted minimum cut using the Stoer-Wagner algorithm.
