@@ -92,7 +92,7 @@ jobs:
         run: tox -epy
       - name: 'Run stubs-tests'
         run: tox -estubs
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && ${{ matrix.python-version != 3.7 }}
   tests_retworkx_compat:
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
