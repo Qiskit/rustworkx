@@ -523,6 +523,120 @@ where
     }
 }
 
+#[cfg(test)]
+mod test_edge_betweenness_centrality {
+
+    use crate::centrality::edge_betweenness_centrality;
+
+    macro_rules! assert_almost_equal {
+        ($x:expr, $y:expr, $d:expr) => {
+            if ($x - $y).abs() >= $d {
+                panic!("{} != {} within delta of {}", $x, $y, $d);
+            }
+        };
+    }
+
+    #[test]
+    fn test_undirected_graph_normalized() {
+        let graph = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+            (0, 6),
+            (0, 4),
+            (0, 1),
+            (0, 5),
+            (1, 6),
+            (1, 7),
+            (1, 3),
+            (1, 4),
+            (2, 6),
+            (2, 3),
+            (3, 5),
+            (3, 7),
+            (3, 6),
+            (4, 5),
+            (5, 6),
+        ]);
+        let output = edge_betweenness_centrality(&graph, true, 50);
+        let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
+        let expected_values = vec![
+            0.1023809, 0.0547619, 0.0922619, 0.05654762, 0.09940476, 0.125, 0.09940476, 0.12440476,
+            0.12857143, 0.12142857, 0.13511905, 0.125, 0.06547619, 0.08869048, 0.08154762,
+        ];
+        for i in 0..15 {
+            assert_almost_equal!(result[i], expected_values[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_undirected_graph_unnormalized() {
+        let graph = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+            (0, 2),
+            (0, 4),
+            (0, 1),
+            (1, 3),
+            (1, 5),
+            (1, 7),
+            (2, 7),
+            (2, 3),
+            (3, 5),
+            (3, 6),
+            (4, 6),
+            (5, 7),
+        ]);
+        let output = edge_betweenness_centrality(&graph, false, 50);
+        let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
+        let expected_values = vec![
+            3.83333, 5.5, 5.33333, 3.5, 2.5, 3.0, 3.5, 4.0, 3.66667, 6.5, 3.5, 2.16667,
+        ];
+        for i in 0..12 {
+            assert_almost_equal!(result[i], expected_values[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_directed_graph_normalized() {
+        let graph = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 1),
+            (1, 0),
+            (1, 3),
+            (1, 2),
+            (1, 4),
+            (2, 3),
+            (2, 4),
+            (2, 1),
+            (3, 2),
+            (4, 3),
+        ]);
+        let output = edge_betweenness_centrality(&graph, true, 50);
+        let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
+        let expected_values = vec![0.2, 0.2, 0.1, 0.1, 0.1, 0.05, 0.1, 0.3, 0.35, 0.2];
+        for i in 0..10 {
+            assert_almost_equal!(result[i], expected_values[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_directed_graph_unnormalized() {
+        let graph = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 4),
+            (1, 0),
+            (1, 3),
+            (2, 3),
+            (2, 4),
+            (2, 0),
+            (3, 4),
+            (3, 2),
+            (3, 1),
+            (4, 1),
+        ]);
+        let output = edge_betweenness_centrality(&graph, false, 50);
+        let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
+        let expected_values = vec![4.5, 3.0, 6.5, 1.5, 1.5, 1.5, 1.5, 4.5, 2.0, 7.5];
+        for i in 0..10 {
+            assert_almost_equal!(result[i], expected_values[i], 1e-4);
+        }
+    }
+}
+
 /// Compute the eigenvector centrality of a graph
 ///
 /// For details on the eigenvector centrality refer to:
