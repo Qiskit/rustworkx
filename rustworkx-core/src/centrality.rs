@@ -525,8 +525,10 @@ where
 
 #[cfg(test)]
 mod test_edge_betweenness_centrality {
-
     use crate::centrality::edge_betweenness_centrality;
+    use petgraph::graph::edge_index;
+    use petgraph::prelude::StableGraph;
+    use petgraph::Undirected;
 
     macro_rules! assert_almost_equal {
         ($x:expr, $y:expr, $d:expr) => {
@@ -634,6 +636,16 @@ mod test_edge_betweenness_centrality {
         for i in 0..10 {
             assert_almost_equal!(result[i], expected_values[i], 1e-4);
         }
+    }
+
+    #[test]
+    fn test_stable_graph_with_removed_edges() {
+        let mut graph: StableGraph<(), (), Undirected> =
+            StableGraph::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 0)]);
+        graph.remove_edge(edge_index(1));
+        let result = edge_betweenness_centrality(&graph, false, 50);
+        let expected_values = vec![Some(3.0), None, Some(3.0), Some(4.0)];
+        assert_eq!(result, expected_values);
     }
 }
 
