@@ -208,13 +208,13 @@ where
 ///
 /// # Example
 /// ```rust
-/// use hashbrown::HashMap;
 /// use rustworkx_core::petgraph;
 /// use rustworkx_core::centrality::edge_betweenness_centrality;
 ///
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (1, 3), (2, 3), (3, 4), (1, 4)
 /// ]);
+///
 /// let output = edge_betweenness_centrality(&g, false, 200);
 /// let expected = vec![Some(4.0), Some(2.0), Some(1.0), Some(2.0), Some(3.0), Some(3.0)];
 /// assert_eq!(output, expected);
