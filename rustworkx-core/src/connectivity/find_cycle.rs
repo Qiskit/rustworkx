@@ -10,13 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// This module was forked from petgraph:
-//
-// https://github.com/petgraph/petgraph/blob/9ff688872b467d3e1b5adef19f5c52f519d3279c/src/algo/simple_paths.rs
-//
-// to add support for returning all simple paths to a list of targets instead
-// of just between a single node pair.
-
 use hashbrown::{HashMap, HashSet};
 use petgraph::visit::{
     EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
