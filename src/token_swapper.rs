@@ -39,8 +39,11 @@ use rustworkx_core::token_swapper;
 /// :returns: A list of tuples which are the swaps to be applied to the mapping to rearrange
 ///      the tokens.
 /// :rtype: EdgeList
-#[pyfunction(trials = "4", seed = "4")]
-#[pyo3(text_signature = "(graph, /, mapping=None, trials=4, seed=4)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, mapping=None, trails=4, seed=4),
+    text_signature = "(graph, /, mapping=None, trails=4, seed=4)"
+)]
 pub fn graph_token_swapper(
     graph: &graph::PyGraph,
     mapping: HashMap<usize, usize>,
