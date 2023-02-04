@@ -75,7 +75,7 @@ pub struct TopologicalSorter {
 #[pymethods]
 impl TopologicalSorter {
     #[new]
-    #[args(check_cycle = "true")]
+    #[pyo3(signature=(dag, check_cycle=true))]
     fn new(py: Python, dag: Py<PyDiGraph>, check_cycle: bool) -> PyResult<Self> {
         {
             let dag = &dag.borrow(py);
