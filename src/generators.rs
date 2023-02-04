@@ -32,7 +32,7 @@ use rustworkx_core::generators as core_generators;
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated cycle graph
@@ -150,7 +150,7 @@ pub fn directed_cycle_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated path graph
@@ -267,7 +267,7 @@ pub fn directed_path_graph(
 ///     will be the center node of the star graph. If both ``num_nodes`` and
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
-///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
@@ -400,7 +400,7 @@ pub fn directed_star_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated mesh graph
@@ -483,7 +483,7 @@ pub fn directed_mesh_graph(
 ///     weights list, extra nodes with None weight are appended.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated grid graph
@@ -634,7 +634,7 @@ pub fn directed_grid_graph(
 ///     an odd number.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated heavy square graph
@@ -707,7 +707,7 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated directed heavy square graph
@@ -795,7 +795,7 @@ pub fn directed_heavy_square_graph(
 ///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated heavy hex graph
@@ -873,8 +873,8 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///     :class:`~rustworkx.PyDiGraph` with a single node will be returned.
 ///     ``d`` must be an odd number.
 /// :param bool multigraph: When set to ``False`` the output
-///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated heavy hex directed graph
@@ -1070,7 +1070,7 @@ pub fn directed_binomial_tree_graph(
 ///     number of weights cannot exceed num_nodes.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: A r-ary tree.
@@ -1126,7 +1126,7 @@ pub fn full_rary_tree(
 /// :param int cols: The number of columns to generate the graph with.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated hexagonal lattice graph.
@@ -1251,7 +1251,7 @@ pub fn directed_hexagonal_lattice_graph(
 ///     be ignored and ``path_weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated lollipop graph
@@ -1319,7 +1319,7 @@ pub fn lollipop_graph(
 ///     ``path_weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 /// :param list mesh_weights: A list of node weights for the mesh graph. If both
 ///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
@@ -1538,7 +1538,7 @@ pub fn directed_empty_graph(
 ///     ``weights`` are set this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
-///     won't  allow parallel edges to be added. Instead
+///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
 /// :returns: The generated complete graph
