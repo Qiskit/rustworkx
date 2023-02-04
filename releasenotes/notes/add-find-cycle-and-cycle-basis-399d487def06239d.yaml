@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Two new functions, ``find_cycle`` and ``cycle_basis``, have been added
+    to the ``rustworkx-core`` crate in the ``connectivity`` module. These
+    functions can be used to find a cycle in a petgraph graph or to find
+    the cycle basis of a graph.

@@ -434,8 +434,11 @@ fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
 ///
 /// :return: A PyGraph object
 /// :rtype: PyGraph
-#[pyfunction(dim = "2", p = "2.0")]
-#[pyo3(text_signature = "(num_nodes, radius, /, dim=2, pos=None, p=2.0, seed=None)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes, radius, dim=2, pos=None, p=2.0, seed=None),
+    text_signature = "(num_nodes, radius, /, dim=2, pos=None, p=2.0, seed=None)"
+)]
 pub fn random_geometric_graph(
     py: Python,
     num_nodes: usize,

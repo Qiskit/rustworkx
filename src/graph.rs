@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::borrow_as_ptr)]
+#![allow(clippy::borrow_as_ptr, clippy::redundant_closure)]
 
 use std::cmp;
 use std::collections::BTreeMap;
@@ -181,7 +181,7 @@ impl PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    #[args(multigraph = "true")]
+    #[pyo3(signature=(multigraph=true, attrs=None))]
     fn new(py: Python, multigraph: bool, attrs: Option<PyObject>) -> Self {
         PyGraph {
             graph: StablePyGraph::<Undirected>::default(),
@@ -217,7 +217,7 @@ impl PyGraph {
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
         self.graph = StablePyGraph::<Undirected>::default();
-        let dict_state = state.cast_as::<PyDict>(py)?;
+        let dict_state = state.downcast::<PyDict>(py)?;
         let nodes_dict = dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
         let edges_list = dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
         let nodes_removed_raw = dict_state
@@ -1204,8 +1204,7 @@ impl PyGraph {
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
-    #[args(labels = "false")]
-    #[pyo3(text_signature = "(path, /, comment=None, deliminator=None, labels=False)")]
+    #[pyo3(signature=(path, comment=None, deliminator=None, labels=false),  text_signature = "(path, /, comment=None, deliminator=None, labels=False)")]
     pub fn read_edge_list(
         py: Python,
         path: &str,
@@ -1377,8 +1376,7 @@ impl PyGraph {
     /// :returns: A new graph object generated from the adjacency matrix
     /// :rtype: PyGraph
     #[staticmethod]
-    #[args(null_value = "0.0")]
-    #[pyo3(text_signature = "(matrix, /, null_value=0.0)")]
+    #[pyo3(signature=(matrix, null_value=0.0), text_signature = "(matrix, /, null_value=0.0)")]
     pub fn from_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
@@ -1413,9 +1411,9 @@ impl PyGraph {
     ///
     /// :returns: A new graph object generated from the adjacency matrix
     /// :rtype: PyGraph
+    ///
     #[staticmethod]
-    #[args(null_value = "Complex64::zero()")]
-    #[pyo3(text_signature = "(matrix, /, null_value=0.0+0.0j)")]
+    #[pyo3(signature=(matrix, null_value=Complex64::zero()), text_signature = "(matrix, /, null_value=0.0+0.0j)")]
     pub fn from_complex_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, Complex64>,
@@ -1629,8 +1627,7 @@ impl PyGraph {
     ///     the other.
     /// :rtype: PyGraph
     ///
-    #[args(preserve_attrs = "false")]
-    #[pyo3(text_signature = "(self, nodes, /, preserve_attrs=False)")]
+    #[pyo3(signature=(nodes, preserve_attrs=false), text_signature = "(self, nodes, /, preserve_attrs=False)")]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> PyGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
@@ -1746,7 +1743,7 @@ impl PyGraph {
     }
 
     fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
-        match self.graph.remove_node(NodeIndex::new(idx as usize)) {
+        match self.graph.remove_node(NodeIndex::new(idx)) {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
