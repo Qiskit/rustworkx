@@ -16,36 +16,33 @@ use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, NodeIndexable, NodeRef};
 
 use super::utils::get_num_nodes;
-use super::utils::pairwise;
 use super::InvalidInputError;
+use crate::utils::pairwise;
 
-/// Generate an undirected barbell graph where two identical mesh graphs are
+/// Generate a barbell graph where two identical complete graphs are
 /// connected by a path.
 ///
-/// .. note::
-///
-///   If neither `num_path_nodes` nor `path_weights` (described below) is not specified
-///   then this is equivalent to two mesh graphs joined together.
+///   If neither `num_path_nodes` nor `path_weights` (described below) are
+///   specified, then this is equivalent to two complete graphs joined together.
 ///
 /// Arguments:
 ///
 /// * `num_mesh_nodes` - The number of nodes to generate the mesh graph
 ///     with. Node weights will be None if this is specified. If both
-///     `num_mesh_nodes` and `mesh_weights` are set this will be ignored and
+///     `num_mesh_nodes` and `mesh_weights` are set, this will be ignored and
 ///     `mesh_weights` will be used.
 /// * `num_path_nodes` - The number of nodes to generate the path
 ///     with. Node weights will be None if this is specified. If both
-///     `num_path_nodes` and `path_weights` are set this will be ignored and
+///     `num_path_nodes` and `path_weights` are set, this will be ignored and
 ///     `path_weights` will be used.
 /// * `mesh_weights` - A list of node weights for the mesh graph. If both
-///     `num_mesh_nodes` and `mesh_weights` are set `num_mesh_nodes` will
+///     `num_mesh_nodes` and `mesh_weights` are set, `num_mesh_nodes` will
 ///     be ignored and `mesh_weights` will be used.
 /// * `path_weights` - A list of node weights for the path. If both
-///     `num_path_nodes` and `path_weights` are set `num_path_nodes` will
+///     `num_path_nodes` and `path_weights` are set, `num_path_nodes` will
 ///     be ignored and `path_weights` will be used.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if weights are specified,
-///     as the weights from that argument will be used instead.
+///     for newly created nodes. This is ignored if node weights are specified.
 /// * `default_edge_weight` - A callable that will return the weight object
 ///     to use for newly created edges.
 ///
@@ -147,7 +144,7 @@ where
         }
     };
     let pathlen = path_nodes.len();
-    if pathlen > 0 {
+    if !path_nodes.is_empty() {
         graph.add_edge(
             graph.from_index(meshlen - 1),
             graph.from_index(meshlen),
