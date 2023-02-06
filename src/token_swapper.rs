@@ -19,7 +19,7 @@ use pyo3::prelude::*;
 use rustworkx_core::token_swapper;
 
 /// This module performs an approximately optimal Token Swapping algorithm
-/// Supports partial mappings (i.e. not-permutations) for graphs with missing self.tokens.
+/// Supports partial mappings (i.e. not-permutations) for graphs with missing tokens.
 ///
 /// Based on the paper: Approximation and Hardness for Token Swapping by Miltzow et al. (2016)
 /// ArXiV: https://arxiv.org/abs/1602.05150

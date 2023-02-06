@@ -16,6 +16,7 @@ import rustworkx as rx
 
 from numpy import random
 
+
 def swap_permutation(
     mapping,
     swaps,
@@ -28,6 +29,7 @@ def swap_permutation(
             mapping[sw2] = val1
         if val2 is not None:
             mapping[sw1] = val2
+
 
 class TestGeneral(unittest.TestCase):
     """The test cases"""
