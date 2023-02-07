@@ -20,7 +20,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 ahash = "0.8.0"
-petgraph = "0.6.3"
+petgraph = "0.6.2"
 fixedbitset = "0.4.2"
 numpy = "0.18.0"
 rand = "0.8"
