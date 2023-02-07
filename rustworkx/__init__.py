@@ -1560,6 +1560,10 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
     defaults to 50). If the function will be running in parallel the env var
     ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 
+    See Also
+    --------
+    edge_betweenness_centrality
+
     :param PyDiGraph graph: The input graph
     :param bool normalized: Whether to normalize the betweenness scores by
         the number of distinct paths between all pairs of nodes.
@@ -1620,6 +1624,10 @@ def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
     of nodes in the graph is above the value of ``parallel_threshold`` (it
     defaults to 50). If the function will be running in parallel the env var
     ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+
+    See Also
+    --------
+    betweenness_centrality
 
     :param PyGraph graph: The input graph
     :param bool normalized: Whether to normalize the betweenness scores by the

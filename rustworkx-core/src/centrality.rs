@@ -71,6 +71,8 @@ use rayon_cond::CondIterator;
 ///     output
 /// );
 /// ```
+/// # See Also
+/// [`edge_betweenness_centrality`]
 pub fn betweenness_centrality<G>(
     graph: G,
     endpoints: bool,
@@ -219,6 +221,8 @@ where
 /// let expected = vec![Some(4.0), Some(2.0), Some(1.0), Some(2.0), Some(3.0), Some(3.0)];
 /// assert_eq!(output, expected);
 /// ```
+/// # See Also
+/// [`betweenness_centrality`]
 pub fn edge_betweenness_centrality<G>(
     graph: G,
     normalized: bool,

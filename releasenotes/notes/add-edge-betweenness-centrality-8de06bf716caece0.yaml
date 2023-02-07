@@ -5,10 +5,8 @@ features:
     edge betweenness centrality of all edges in a :class:`~rustworkx.PyGraph` or
     :class:`~rustworkx.PyDiGraph` object. The algorithm used in this function is
     based on:
-    
     Ulrik Brandes, On Variants of Shortest-Path Betweenness Centrality
     and their Generic Computation. Social Networks 30(2):136-145, 2008.
-    
     Edge betweenness centrality of an edge :math:`e` is the sum of the
     fraction of all-pairs shortest paths that pass through :math`e`
     
@@ -19,9 +17,9 @@ features:
     where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the
     number of shortest :math:`(s, t)`-paths, and :math:`\sigma(s, t|e)` is
     the number of those paths passing through edge :math:`e`.
-    
-    For example, computing the edge betweenness centrality for all edges in a 5x5
-    grid graph and using that to color the edges in a graph visualization:
+    For example, the following computes the edge betweenness centrality for all
+    edges in a 5x5 grid graph and uses the result to color the edges in a graph
+    visualization:
     
     .. jupyter-execute::
     
