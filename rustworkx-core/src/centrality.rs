@@ -109,12 +109,7 @@ where
     let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
 
     CondIterator::new(node_indices, graph.node_count() >= parallel_threshold)
-        .map(|node_s| {
-            (
-                shortest_path_for_centrality(&graph, &node_s),
-                node_s,
-            )
-        })
+        .map(|node_s| (shortest_path_for_centrality(&graph, &node_s), node_s))
         .for_each(|(mut shortest_path_calc, node_s)| {
             _accumulate_vertices(
                 &locked_betweenness,
@@ -200,8 +195,8 @@ fn _accumulate_vertices<G>(
     let mut betweenness = locked_betweenness.write().unwrap();
     if include_endpoints {
         let i_node_s = graph.to_index(node_s);
-        betweenness[i_node_s] =
-            betweenness[i_node_s].map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
+        betweenness[i_node_s] = betweenness[i_node_s]
+            .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
         for w in &path_calc.verts_sorted_by_distance {
             if *w != node_s {
                 let iw = graph.to_index(*w);
