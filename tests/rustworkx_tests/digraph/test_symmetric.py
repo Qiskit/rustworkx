@@ -37,3 +37,37 @@ class TestSymmetric(unittest.TestCase):
         ]
         digraph.extend_from_edge_list(edge_list)
         self.assertTrue(digraph.is_symmetric())
+
+    def test_empty_graph_make_symmetric(self):
+        digraph = rustworkx.PyDiGraph()
+        digraph.make_symmetric()
+        self.assertEqual(0, digraph.num_edges())
+        self.assertEqual(0, digraph.num_nodes())
+
+    def test_path_graph_make_symmetric(self):
+        digraph = rustworkx.generators.directed_path_graph(4)
+        digraph.make_symmetric()
+        expected_edge_list = [
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (1, 0),
+            (2, 1),
+            (3, 2),
+        ]
+        self.assertEqual(digraph.edge_list(), expected_edge_list)
+
+    def test_path_graph_make_symmetric_existing_reverse_edges(self):
+        digraph = rustworkx.generators.directed_path_graph(4)
+        digraph.add_edge(3, 2, None)
+        digraph.add_edge(1, 0, None)
+        digraph.make_symmetric()
+        expected_edge_list = [
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 2),
+            (1, 0),
+            (2, 1),
+        ]
+        self.assertEqual(digraph.edge_list(), expected_edge_list)
