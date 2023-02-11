@@ -2623,24 +2623,21 @@ impl PyDiGraph {
         py: Python,
         edge_payload_fn: Option<PyObject>,
     ) -> PyResult<()> {
-        let edge_iter_vec: Vec<([NodeIndex; 2], EdgeIndex)> = self
+        let edges: HashMap<[NodeIndex; 2], EdgeIndex> = self
             .graph
             .edge_references()
             .map(|edge| ([edge.source(), edge.target()], edge.id()))
             .collect();
-        let mut edges: HashMap<[NodeIndex; 2], EdgeIndex> = edge_iter_vec.iter().copied().collect();
-        for (edge_endpoints, edge_index) in edge_iter_vec {
+        for (edge_endpoints, edge_index) in edges.iter() {
             let reverse_edge = [edge_endpoints[1], edge_endpoints[0]];
             if !edges.contains_key(&reverse_edge) {
-                let forward_weight = self.graph.edge_weight(edge_index).unwrap();
+                let forward_weight = self.graph.edge_weight(*edge_index).unwrap();
                 let weight: PyObject = match edge_payload_fn.as_ref() {
                     Some(callback) => callback.call1(py, (forward_weight,))?,
                     None => forward_weight.clone_ref(py),
                 };
-                let new_index = self
-                    .graph
+                self.graph
                     .add_edge(reverse_edge[0], reverse_edge[1], weight);
-                edges.insert(reverse_edge, new_index);
             }
         }
         Ok(())
