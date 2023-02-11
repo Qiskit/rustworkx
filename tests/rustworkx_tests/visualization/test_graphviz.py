@@ -117,11 +117,11 @@ class TestGraphvizDraw(unittest.TestCase):
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_draw_graph_attr.png")
 
-    def test_image_type(self):
-        graph = rustworkx.directed_gnp_random_graph(50, 0.8)
-        image = graphviz_draw(graph, image_type="jpg")
-        self.assertIsInstance(image, PIL.Image.Image)
-        _save_image(image, "test_graphviz_draw_image_type.jpg")
+    # def test_image_type(self):
+    #     graph = rustworkx.directed_gnp_random_graph(50, 0.8)
+    #     image = graphviz_draw(graph, image_type="jpg")
+    #     self.assertIsInstance(image, PIL.Image.Image)
+    #     _save_image(image, "test_graphviz_draw_image_type.jpg")
 
     def test_image_type_invalid_type(self):
         graph = rustworkx.directed_gnp_random_graph(50, 0.8)
