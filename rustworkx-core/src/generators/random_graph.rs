@@ -15,7 +15,7 @@
 use std::hash::Hash;
 
 use petgraph::data::{Build, Create};
-use petgraph::visit::{Data, NodeIndexable};
+use petgraph::visit::{GraphBase, Data, NodeIndexable, IntoEdgeReferences, EdgeRef};
 
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
@@ -23,37 +23,55 @@ use rand_pcg::Pcg64;
 
 use super::InvalidInputError;
 
-/// Return a :math:`G_{np}` directed random graph, also known as an
+/// Generate a G<sub>np</sub> random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///
-/// For number of nodes :math:`n` and probability :math:`p`, the :math:`G_{n,p}`
-/// graph algorithm creates :math:`n` nodes, and for all the :math:`n (n - 1)` possible edges,
-/// each edge is created independently with probability :math:`p`.
-/// In general, for any probability :math:`p`, the expected number of edges returned
-/// is :math:`m = p n (n - 1)`. If :math:`p = 0` or :math:`p = 1`, the returned
+/// For number of nodes `n` and probability `p`, the G<sub>np</sub>
+/// graph algorithm creates `n` nodes, and for all the `n * (n - 1)` possible edges,
+/// each edge is created independently with probability `p`.
+/// In general, for any probability `p`, the expected number of edges returned
+/// is `m = p * n * (n - 1)`. If `p = 0` or `p = 1`, the returned
 /// graph is not random and will always be an empty or a complete graph respectively.
-/// An empty graph has zero edges and a complete directed graph has :math:`n (n - 1)` edges.
-/// The run time is :math:`O(n + m)` where :math:`m` is the expected number of edges mentioned above.
-/// When :math:`p = 0`, run time always reduces to :math:`O(n)`, as the lower bound.
-/// When :math:`p = 1`, run time always goes to :math:`O(n + n (n - 1))`, as the upper bound.
-/// For other probabilities, this algorithm [1]_ runs in :math:`O(n + m)` time.
+/// An empty graph has zero edges and a complete directed graph has `n (n - 1)` edges.
+/// The run time is `O(n + m)` where `m` is the expected number of edges mentioned above.
+/// When `p = 0`, run time always reduces to `O(n)`, as the lower bound.
+/// When `p = 1`, run time always goes to `O(n + n * (n - 1))`, as the upper bound.
 ///
-// / For :math:`0 < p < 1`, the algorithm is based on the implementation of the networkx function
-// / ``fast_gnp_random_graph`` [2]_
-// /
-// / :param int num_nodes: The number of nodes to create in the graph
-// / :param float probability: The probability of creating an edge between two nodes
-// / :param int seed: An optional seed to use for the random number generator
-// /
-// / :return: A PyDiGraph object
-// / :rtype: PyDiGraph
-// /
-// / .. [1] Vladimir Batagelj and Ulrik Brandes,
-// /    "Efficient generation of large random networks",
-// /    Phys. Rev. E, 71, 036113, 2005.
-// / .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
+/// For `0 < p < 1`, the algorithm is based on the implementation of the networkx function
+/// ``fast_gnp_random_graph``, 
+/// <https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120>
+///
+/// Vladimir Batagelj and Ulrik Brandes,
+///    "Efficient generation of large random networks",
+///    Phys. Rev. E, 71, 036113, 2005.
+/// 
+/// Arguments:
+///
+/// * `num_nodes` - The number of nodes for creating the random graph.
+/// * `probability` - The probability of creating an edge between two nodes as a float.
+/// * `seed` - An optional seed to use for the random number generator.
+/// * `default_node_weight` - A callable that will return the weight to use
+///     for newly created nodes.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::gnp_random_graph;
+///
+/// let g: petgraph::graph::DiGraph<(), ()> = gnp_random_graph(
+///     20,
+///     1.0,
+///     None,
+///     || {()},
+///     || {()},
+/// ).unwrap();
+/// assert_eq!(g.node_count(), 20);
+/// assert_eq!(g.edge_count(), 20 * (20 - 1));
+/// ```
 pub fn gnp_random_graph<G, T, F, H, M>(
-    num_nodes: usize,
+    num_nodes: isize,
     probability: f64,
     seed: Option<u64>,
     mut default_node_weight: F,
@@ -65,16 +83,16 @@ where
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
-    if num_nodes == 0 {
+    if num_nodes <= 0 {
         return Err(InvalidInputError {});
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut inner_graph = G::with_capacity(num_nodes, num_nodes);
+    let mut graph = G::with_capacity(num_nodes as usize, num_nodes as usize);
     for _ in 0..num_nodes {
-        inner_graph.add_node(default_node_weight());
+        graph.add_node(default_node_weight());
     }
     if !(0.0..=1.0).contains(&probability) {
         return Err(InvalidInputError {});
@@ -85,20 +103,19 @@ where
                 for v in 0..num_nodes {
                     if u != v {
                         // exclude self-loops
-                        let u_index = inner_graph.from_index(u as usize);
-                        let v_index = inner_graph.from_index(v as usize);
-                        inner_graph.add_edge(u_index, v_index, default_edge_weight());
+                        let u_index = graph.from_index(u as usize);
+                        let v_index = graph.from_index(v as usize);
+                        graph.add_edge(u_index, v_index, default_edge_weight());
                     }
                 }
             }
         } else {
             let mut v: isize = 0;
             let mut w: isize = -1;
-            let i_nodes = num_nodes as isize;
             let lp: f64 = (1.0 - probability).ln();
 
             let between = Uniform::new(0.0, 1.0);
-            while v < i_nodes {
+            while v < num_nodes {
                 let random: f64 = between.sample(&mut rng);
                 let lr: f64 = (1.0 - random).ln();
                 let ratio: isize = (lr / lp) as isize;
@@ -107,7 +124,7 @@ where
                 if v == w {
                     w += 1;
                 }
-                while v < i_nodes && i_nodes <= w {
+                while v < num_nodes && num_nodes <= w {
                     w -= v;
                     v += 1;
                     // avoid self loops
@@ -116,33 +133,223 @@ where
                         v += 1;
                     }
                 }
-                if v < i_nodes {
-                    let v_index = inner_graph.from_index(v as usize);
-                    let w_index = inner_graph.from_index(w as usize);
-                    inner_graph.add_edge(v_index, w_index, default_edge_weight());
+                if v < num_nodes {
+                    let v_index = graph.from_index(v as usize);
+                    let w_index = graph.from_index(w as usize);
+                    graph.add_edge(v_index, w_index, default_edge_weight());
                 }
             }
         }
     }
-    Ok(inner_graph)
+    Ok(graph)
 }
 
-// /// Return a :math:`G_{np}` random undirected graph, also known as an
+// /// Return a `G_{nm}` directed graph, also known as an
+// /// Erdős-Rényi graph.
+// ///
+// /// Generates a random directed graph out of all the possible graphs with `n` nodes and
+// /// `m` edges. The generated graph will not be a multigraph and will not have self loops.
+// ///
+// /// For `n` nodes, the maximum edges that can be returned is `n (n - 1)`.
+// /// Passing `m` higher than that will still return the maximum number of edges.
+// /// If `m = 0`, the returned graph will always be empty (no edges).
+// /// When a seed is provided, the results are reproducible. Passing a seed when `m = 0`
+// /// or `m >= n (n - 1)` has no effect, as the result will always be an empty or a complete graph respectively.
+// ///
+// /// This algorithm has a time complexity of `O(n + m)`
+
+/// Generate a G<sub>nm</sub> random graph, also known as an
+/// Erdős-Rényi graph.
+///
+/// Generates a random directed graph out of all the possible graphs with `n` nodes and
+/// `m` edges. The generated graph will not be a multigraph and will not have self loops.
+///
+/// For `n` nodes, the maximum edges that can be returned is `n * (n - 1)`.
+/// Passing `m` higher than that will still return the maximum number of edges.
+/// If `m = 0`, the returned graph will always be empty (no edges).
+/// When a seed is provided, the results are reproducible. Passing a seed when `m = 0`
+/// or `m >= n * (n - 1)` has no effect, as the result will always be an empty or a
+/// complete graph respectively.
+///
+/// This algorithm has a time complexity of `O(n + m)`
+///
+/// Arguments:
+///
+/// * `num_nodes` - The number of nodes to create in the graph.
+/// * `num_edges` - The number of edges to create in the graph.
+/// * `seed` - An optional seed to use for the random number generator.
+/// * `default_node_weight` - A callable that will return the weight to use
+///     for newly created nodes.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::gnm_random_graph;
+///
+/// let g: petgraph::graph::DiGraph<(), ()> = gnm_random_graph(
+///     20,
+///     12,
+///     None,
+///     || {()},
+///     || {()},
+/// ).unwrap();
+/// assert_eq!(g.node_count(), 20);
+/// assert_eq!(g.edge_count(), 12);
+/// ```
+pub fn gnm_random_graph<G, T, F, H, M>(
+    num_nodes: isize,
+    num_edges: isize,
+    seed: Option<u64>,
+    mut default_node_weight: F,
+    mut default_edge_weight: H,
+) -> Result<G, InvalidInputError>
+where
+    G: GraphBase + Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+    F: FnMut() -> T,
+    H: FnMut() -> M,
+    for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgeReferences,
+    G::NodeId: Eq + Hash,
+{
+    if num_edges < 0 {
+        return Err(InvalidInputError {});
+    }
+
+    fn find_edge<G>(graph: &G, source: usize, target: usize) -> bool
+    where
+        G: GraphBase + NodeIndexable,
+        for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgeReferences,
+    {
+        let mut found = false;
+        for edge in graph.edge_references() {
+            if graph.to_index(edge.source()) == source && graph.to_index(edge.target()) == target {
+                found = true;
+                break;
+            }
+        }
+        found
+    }
+
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut graph = G::with_capacity(num_nodes as usize, num_edges as usize);
+    for _ in 0..num_nodes {
+        graph.add_node(default_node_weight());
+    }
+    // if number of edges to be created is >= max,
+    // avoid randomly missed trials and directly add edges between every node
+    if num_edges >= num_nodes * (num_nodes - 1) {
+        for u in 0..num_nodes {
+            for v in 0..num_nodes {
+                // avoid self-loops
+                if u != v {
+                    let u_index = graph.from_index(u as usize);
+                    let v_index = graph.from_index(v as usize);
+                    graph.add_edge(u_index, v_index, default_edge_weight());
+                }
+            }
+        }
+    } else {
+        let mut created_edges: isize = 0;
+        let between = Uniform::new(0, num_nodes);
+        while created_edges < num_edges {
+            let u = between.sample(&mut rng);
+            let v = between.sample(&mut rng);
+            let u_index = graph.from_index(u as usize);
+            let v_index = graph.from_index(v as usize);
+            // avoid self-loops and multi-graphs
+            if u != v && !find_edge(&graph, u as usize, v as usize) {
+                graph.add_edge(u_index, v_index, default_edge_weight());
+                created_edges += 1;
+            }
+        }
+    }
+    Ok(graph)
+}
+
+
+
+
+//     if num_nodes <= 0 {
+//         return Err(InvalidInputError {});
+//     }
+//     let mut rng: Pcg64 = match seed {
+//         Some(seed) => Pcg64::seed_from_u64(seed),
+//         None => Pcg64::from_entropy(),
+//     };
+//     let mut graph = G::with_capacity(num_nodes as usize, num_nodes as usize);
+//     for _ in 0..num_nodes {
+//         graph.add_node(default_node_weight());
+//     }
+//     if !(0.0..=1.0).contains(&probability) {
+//         return Err(InvalidInputError {});
+//     }
+//     if probability > 0.0 {
+//         if (probability - 1.0).abs() < std::f64::EPSILON {
+//             for u in 0..num_nodes {
+//                 for v in 0..num_nodes {
+//                     if u != v {
+//                         // exclude self-loops
+//                         let u_index = graph.from_index(u as usize);
+//                         let v_index = graph.from_index(v as usize);
+//                         graph.add_edge(u_index, v_index, default_edge_weight());
+//                     }
+//                 }
+//             }
+//         } else {
+//             let mut v: isize = 0;
+//             let mut w: isize = -1;
+//             let lp: f64 = (1.0 - probability).ln();
+
+//             let between = Uniform::new(0.0, 1.0);
+//             while v < num_nodes {
+//                 let random: f64 = between.sample(&mut rng);
+//                 let lr: f64 = (1.0 - random).ln();
+//                 let ratio: isize = (lr / lp) as isize;
+//                 w = w + 1 + ratio;
+//                 // avoid self loops
+//                 if v == w {
+//                     w += 1;
+//                 }
+//                 while v < num_nodes && num_nodes <= w {
+//                     w -= v;
+//                     v += 1;
+//                     // avoid self loops
+//                     if v == w {
+//                         w -= v;
+//                         v += 1;
+//                     }
+//                 }
+//                 if v < num_nodes {
+//                     let v_index = graph.from_index(v as usize);
+//                     let w_index = graph.from_index(w as usize);
+//                     graph.add_edge(v_index, w_index, default_edge_weight());
+//                 }
+//             }
+//         }
+//     }
+//     Ok(graph)
+// }
+
+// /// Return a `G_{np}` random undirected graph, also known as an
 // /// Erdős-Rényi graph or a binomial graph.
 // ///
-// /// For number of nodes :math:`n` and probability :math:`p`, the :math:`G_{n,p}`
-// /// graph algorithm creates :math:`n` nodes, and for all the :math:`n (n - 1)/2` possible edges,
-// /// each edge is created independently with probability :math:`p`.
-// /// In general, for any probability :math:`p`, the expected number of edges returned
-// /// is :math:`m = p n (n - 1)/2`. If :math:`p = 0` or :math:`p = 1`, the returned
+// /// For number of nodes `n` and probability `p`, the G<sub>np</sub>
+// /// graph algorithm creates `n` nodes, and for all the `n (n - 1)/2` possible edges,
+// /// each edge is created independently with probability `p`.
+// /// In general, for any probability `p`, the expected number of edges returned
+// /// is `m = p n (n - 1)/2`. If `p = 0` or `p = 1`, the returned
 // /// graph is not random and will always be an empty or a complete graph respectively.
-// /// An empty graph has zero edges and a complete undirected graph has :math:`n (n - 1)/2` edges.
-// /// The run time is :math:`O(n + m)` where :math:`m` is the expected number of edges mentioned above.
-// /// When :math:`p = 0`, run time always reduces to :math:`O(n)`, as the lower bound.
-// /// When :math:`p = 1`, run time always goes to :math:`O(n + n (n - 1)/2)`, as the upper bound.
-// /// For other probabilities, this algorithm [1]_ runs in :math:`O(n + m)` time.
+// /// An empty graph has zero edges and a complete undirected graph has `n (n - 1)/2` edges.
+// /// The run time is `O(n + m)` where `m` is the expected number of edges mentioned above.
+// /// When `p = 0`, run time always reduces to `O(n)`, as the lower bound.
+// /// When `p = 1`, run time always goes to `O(n + n (n - 1)/2)`, as the upper bound.
+// /// For other probabilities, this algorithm [1]_ runs in `O(n + m)` time.
 // ///
-// /// For :math:`0 < p < 1`, the algorithm is based on the implementation of the networkx function
+// /// For `0 < p < 1`, the algorithm is based on the implementation of the networkx function
 // /// ``fast_gnp_random_graph`` [2]_
 // ///
 // /// :param int num_nodes: The number of nodes to create in the graph
@@ -171,9 +378,9 @@ where
 //         Some(seed) => Pcg64::seed_from_u64(seed),
 //         None => Pcg64::from_entropy(),
 //     };
-//     let mut inner_graph = StablePyGraph::<Undirected>::default();
+//     let mut graph = StablePyGraph::<Undirected>::default();
 //     for x in 0..num_nodes {
-//         inner_graph.add_node(x.to_object(py));
+//         graph.add_node(x.to_object(py));
 //     }
 //     if !(0.0..=1.0).contains(&probability) {
 //         return Err(PyValueError::new_err(
@@ -186,7 +393,7 @@ where
 //                 for v in u + 1..num_nodes {
 //                     let u_index = NodeIndex::new(u as usize);
 //                     let v_index = NodeIndex::new(v as usize);
-//                     inner_graph.add_edge(u_index, v_index, py.None());
+//                     graph.add_edge(u_index, v_index, py.None());
 //                 }
 //             }
 //         } else {
@@ -207,14 +414,14 @@ where
 //                 if v < num_nodes {
 //                     let v_index = NodeIndex::new(v as usize);
 //                     let w_index = NodeIndex::new(w as usize);
-//                     inner_graph.add_edge(v_index, w_index, py.None());
+//                     graph.add_edge(v_index, w_index, py.None());
 //                 }
 //             }
 //         }
 //     }
 
 //     let graph = graph::PyGraph {
-//         graph: inner_graph,
+//         graph: graph,
 //         node_removed: false,
 //         multigraph: true,
 //         attrs: py.None(),
@@ -222,19 +429,19 @@ where
 //     Ok(graph)
 // }
 
-// /// Return a :math:`G_{nm}` directed graph, also known as an
+// /// Return a `G_{nm}` directed graph, also known as an
 // /// Erdős-Rényi graph.
 // ///
-// /// Generates a random directed graph out of all the possible graphs with :math:`n` nodes and
-// /// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
+// /// Generates a random directed graph out of all the possible graphs with `n` nodes and
+// /// `m` edges. The generated graph will not be a multigraph and will not have self loops.
 // ///
-// /// For :math:`n` nodes, the maximum edges that can be returned is :math:`n (n - 1)`.
-// /// Passing :math:`m` higher than that will still return the maximum number of edges.
-// /// If :math:`m = 0`, the returned graph will always be empty (no edges).
-// /// When a seed is provided, the results are reproducible. Passing a seed when :math:`m = 0`
-// /// or :math:`m >= n (n - 1)` has no effect, as the result will always be an empty or a complete graph respectively.
+// /// For `n` nodes, the maximum edges that can be returned is `n (n - 1)`.
+// /// Passing `m` higher than that will still return the maximum number of edges.
+// /// If `m = 0`, the returned graph will always be empty (no edges).
+// /// When a seed is provided, the results are reproducible. Passing a seed when `m = 0`
+// /// or `m >= n (n - 1)` has no effect, as the result will always be an empty or a complete graph respectively.
 // ///
-// /// This algorithm has a time complexity of :math:`O(n + m)`
+// /// This algorithm has a time complexity of `O(n + m)`
 // ///
 // /// :param int num_nodes: The number of nodes to create in the graph
 // /// :param int num_edges: The number of edges to create in the graph
@@ -261,9 +468,9 @@ where
 //         Some(seed) => Pcg64::seed_from_u64(seed),
 //         None => Pcg64::from_entropy(),
 //     };
-//     let mut inner_graph = StablePyGraph::<Directed>::new();
+//     let mut graph = StablePyGraph::<Directed>::new();
 //     for x in 0..num_nodes {
-//         inner_graph.add_node(x.to_object(py));
+//         graph.add_node(x.to_object(py));
 //     }
 //     // if number of edges to be created is >= max,
 //     // avoid randomly missed trials and directly add edges between every node
@@ -274,7 +481,7 @@ where
 //                 if u != v {
 //                     let u_index = NodeIndex::new(u as usize);
 //                     let v_index = NodeIndex::new(v as usize);
-//                     inner_graph.add_edge(u_index, v_index, py.None());
+//                     graph.add_edge(u_index, v_index, py.None());
 //                 }
 //             }
 //         }
@@ -287,14 +494,14 @@ where
 //             let u_index = NodeIndex::new(u as usize);
 //             let v_index = NodeIndex::new(v as usize);
 //             // avoid self-loops and multi-graphs
-//             if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
-//                 inner_graph.add_edge(u_index, v_index, py.None());
+//             if u != v && graph.find_edge(u_index, v_index).is_none() {
+//                 graph.add_edge(u_index, v_index, py.None());
 //                 created_edges += 1;
 //             }
 //         }
 //     }
 //     let graph = digraph::PyDiGraph {
-//         graph: inner_graph,
+//         graph: graph,
 //         cycle_state: algo::DfsSpace::default(),
 //         check_cycle: false,
 //         node_removed: false,
@@ -304,19 +511,19 @@ where
 //     Ok(graph)
 // }
 
-// /// Return a :math:`G_{nm}` undirected graph, also known as an
+// /// Return a `G_{nm}` undirected graph, also known as an
 // /// Erdős-Rényi graph.
 // ///
-// /// Generates a random undirected graph out of all the possible graphs with :math:`n` nodes and
-// /// :math:`m` edges. The generated graph will not be a multigraph and will not have self loops.
+// /// Generates a random undirected graph out of all the possible graphs with `n` nodes and
+// /// `m` edges. The generated graph will not be a multigraph and will not have self loops.
 // ///
-// /// For :math:`n` nodes, the maximum edges that can be returned is :math:`n (n - 1)/2`.
-// /// Passing :math:`m` higher than that will still return the maximum number of edges.
-// /// If :math:`m = 0`, the returned graph will always be empty (no edges).
-// /// When a seed is provided, the results are reproducible. Passing a seed when :math:`m = 0`
-// /// or :math:`m >= n (n - 1)/2` has no effect, as the result will always be an empty or a complete graph respectively.
+// /// For `n` nodes, the maximum edges that can be returned is `n (n - 1)/2`.
+// /// Passing `m` higher than that will still return the maximum number of edges.
+// /// If `m = 0`, the returned graph will always be empty (no edges).
+// /// When a seed is provided, the results are reproducible. Passing a seed when `m = 0`
+// /// or `m >= n (n - 1)/2` has no effect, as the result will always be an empty or a complete graph respectively.
 // ///
-// /// This algorithm has a time complexity of :math:`O(n + m)`
+// /// This algorithm has a time complexity of `O(n + m)`
 // ///
 // /// :param int num_nodes: The number of nodes to create in the graph
 // /// :param int num_edges: The number of edges to create in the graph
@@ -343,9 +550,9 @@ where
 //         Some(seed) => Pcg64::seed_from_u64(seed),
 //         None => Pcg64::from_entropy(),
 //     };
-//     let mut inner_graph = StablePyGraph::<Undirected>::default();
+//     let mut graph = StablePyGraph::<Undirected>::default();
 //     for x in 0..num_nodes {
-//         inner_graph.add_node(x.to_object(py));
+//         graph.add_node(x.to_object(py));
 //     }
 //     // if number of edges to be created is >= max,
 //     // avoid randomly missed trials and directly add edges between every node
@@ -354,7 +561,7 @@ where
 //             for v in u + 1..num_nodes {
 //                 let u_index = NodeIndex::new(u as usize);
 //                 let v_index = NodeIndex::new(v as usize);
-//                 inner_graph.add_edge(u_index, v_index, py.None());
+//                 graph.add_edge(u_index, v_index, py.None());
 //             }
 //         }
 //     } else {
@@ -366,14 +573,14 @@ where
 //             let u_index = NodeIndex::new(u as usize);
 //             let v_index = NodeIndex::new(v as usize);
 //             // avoid self-loops and multi-graphs
-//             if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
-//                 inner_graph.add_edge(u_index, v_index, py.None());
+//             if u != v && graph.find_edge(u_index, v_index).is_none() {
+//                 graph.add_edge(u_index, v_index, py.None());
 //                 created_edges += 1;
 //             }
 //         }
 //     }
 //     let graph = graph::PyGraph {
-//         graph: inner_graph,
+//         graph: graph,
 //         node_removed: false,
 //         multigraph: true,
 //         attrs: py.None(),
@@ -419,7 +626,7 @@ where
 // /// :param list pos: Optional list with node positions as values
 // /// :param float p: Which Minkowski distance metric to use.  `p` has to meet the condition
 // ///     ``1 <= p <= infinity``.
-// ///     If this argument is not specified, the :math:`L^2` metric
+// ///     If this argument is not specified, the `L^2` metric
 // ///     (the Euclidean distance metric), p = 2 is used.
 // /// :param int seed: An optional seed to use for the random number generator
 // ///
@@ -443,7 +650,7 @@ where
 //         return Err(PyValueError::new_err("num_nodes must be > 0"));
 //     }
 
-//     let mut inner_graph = StablePyGraph::<Undirected>::default();
+//     let mut graph = StablePyGraph::<Undirected>::default();
 
 //     let radius_p = pnorm(radius, p);
 //     let mut rng: Pcg64 = match seed {
@@ -468,19 +675,19 @@ where
 //         let pos_dict = PyDict::new(py);
 //         pos_dict.set_item("pos", pval.to_object(py))?;
 
-//         inner_graph.add_node(pos_dict.into());
+//         graph.add_node(pos_dict.into());
 //     }
 
 //     for u in 0..(num_nodes - 1) {
 //         for v in (u + 1)..num_nodes {
 //             if distance(&pos[u], &pos[v], p) < radius_p {
-//                 inner_graph.add_edge(NodeIndex::new(u), NodeIndex::new(v), py.None());
+//                 graph.add_edge(NodeIndex::new(u), NodeIndex::new(v), py.None());
 //             }
 //         }
 //     }
 
 //     let graph = graph::PyGraph {
-//         graph: inner_graph,
+//         graph: graph,
 //         node_removed: false,
 //         multigraph: true,
 //         attrs: py.None(),
