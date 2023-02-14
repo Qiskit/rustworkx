@@ -14,7 +14,7 @@
 
 use crate::{digraph, graph, StablePyGraph};
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyIndexError, PyValueError, PyOverflowError};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
@@ -26,6 +26,8 @@ use petgraph::prelude::*;
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
+
+use rustworkx_core::generators as core_generators;
 
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
@@ -57,83 +59,36 @@ use rand_pcg::Pcg64;
 ///    Phys. Rev. E, 71, 036113, 2005.
 /// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, probability, seed=None, /)")]
+#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)")]
 pub fn directed_gnp_random_graph(
     py: Python,
     num_nodes: isize,
     probability: f64,
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Directed>::new();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    if !(0.0..=1.0).contains(&probability) {
-        return Err(PyValueError::new_err(
-            "Probability out of range, must be 0 <= p <= 1",
-        ));
-    }
-    if probability > 0.0 {
-        if (probability - 1.0).abs() < std::f64::EPSILON {
-            for u in 0..num_nodes {
-                for v in 0..num_nodes {
-                    if u != v {
-                        // exclude self-loops
-                        let u_index = NodeIndex::new(u as usize);
-                        let v_index = NodeIndex::new(v as usize);
-                        inner_graph.add_edge(u_index, v_index, py.None());
-                    }
-                }
-            }
-        } else {
-            let mut v: isize = 0;
-            let mut w: isize = -1;
-            let lp: f64 = (1.0 - probability).ln();
-
-            let between = Uniform::new(0.0, 1.0);
-            while v < num_nodes {
-                let random: f64 = between.sample(&mut rng);
-                let lr: f64 = (1.0 - random).ln();
-                let ratio: isize = (lr / lp) as isize;
-                w = w + 1 + ratio;
-                // avoid self loops
-                if v == w {
-                    w += 1;
-                }
-                while v < num_nodes && num_nodes <= w {
-                    w -= v;
-                    v += 1;
-                    // avoid self loops
-                    if v == w {
-                        w -= v;
-                        v += 1;
-                    }
-                }
-                if v < num_nodes {
-                    let v_index = NodeIndex::new(v as usize);
-                    let w_index = NodeIndex::new(w as usize);
-                    inner_graph.add_edge(v_index, w_index, py.None());
-                }
-            }
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::gnp_random_graph(
+        num_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "num_nodes or probability invalid input",
+            ))
         }
-    }
-
-    let graph = digraph::PyDiGraph {
-        graph: inner_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
-        node_removed: false,
-        multigraph: true,
-        attrs: py.None(),
     };
-    Ok(graph)
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
 }
 
 /// Return a :math:`G_{np}` random undirected graph, also known as an
