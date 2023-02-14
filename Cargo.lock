@@ -542,6 +542,7 @@ dependencies = [
  "petgraph",
  "priority-queue",
  "rand",
+ "rand_pcg",
  "rayon",
 ]
 
