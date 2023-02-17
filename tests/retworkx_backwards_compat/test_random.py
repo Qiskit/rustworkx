@@ -34,7 +34,7 @@ class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_directed_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            retworkx.directed_gnp_random_graph(-23, 0.5)
+            retworkx.directed_gnp_random_graph(0, 0.5)
 
     def test_random_gnp_directed_invalid_probability(self):
         with self.assertRaises(ValueError):
@@ -57,7 +57,7 @@ class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_undirected_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            retworkx.undirected_gnp_random_graph(-23, 0.5)
+            retworkx.undirected_gnp_random_graph(0, 0.5)
 
     def test_random_gnp_undirected_invalid_probability(self):
         with self.assertRaises(ValueError):
@@ -101,10 +101,10 @@ class TestGNMRandomGraph(unittest.TestCase):
 
     def test_random_gnm_directed_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            retworkx.directed_gnm_random_graph(-23, 5)
+            retworkx.directed_gnm_random_graph(0, 5)
 
     def test_random_gnm_directed_invalid_num_edges(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(OverflowError):
             retworkx.directed_gnm_random_graph(23, -5)
 
     def test_random_gnm_undirected(self):
@@ -143,10 +143,10 @@ class TestGNMRandomGraph(unittest.TestCase):
 
     def test_random_gnm_undirected_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            retworkx.undirected_gnm_random_graph(-23, 5)
+            retworkx.undirected_gnm_random_graph(0, 5)
 
     def test_random_gnm_undirected_invalid_probability(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(OverflowError):
             retworkx.undirected_gnm_random_graph(23, -5)
 
 

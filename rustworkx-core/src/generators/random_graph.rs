@@ -17,7 +17,7 @@ use hashbrown::HashMap;
 use std::hash::Hash;
 
 use petgraph::data::{Build, Create};
-use petgraph::visit::{Data, EdgeRef, GraphBase, IntoEdgeReferences, NodeIndexable};
+use petgraph::visit::{Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, NodeIndexable};
 
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
@@ -73,19 +73,19 @@ use super::InvalidInputError;
 /// assert_eq!(g.edge_count(), 20 * (20 - 1));
 /// ```
 pub fn gnp_random_graph<G, T, F, H, M>(
-    num_nodes: isize,
+    num_nodes: usize,
     probability: f64,
     seed: Option<u64>,
     mut default_node_weight: F,
     mut default_edge_weight: H,
 ) -> Result<G, InvalidInputError>
 where
-    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + GraphProp,
     F: FnMut() -> T,
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
-    if num_nodes <= 0 {
+    if num_nodes == 0 {
         return Err(InvalidInputError {});
     }
     let mut rng: Pcg64 = match seed {
@@ -93,6 +93,8 @@ where
         None => Pcg64::from_entropy(),
     };
     let mut graph = G::with_capacity(num_nodes as usize, num_nodes as usize);
+    let directed = graph.is_directed();
+
     for _ in 0..num_nodes {
         graph.add_node(default_node_weight());
     }
@@ -102,8 +104,9 @@ where
     if probability > 0.0 {
         if (probability - 1.0).abs() < std::f64::EPSILON {
             for u in 0..num_nodes {
-                for v in 0..num_nodes {
-                    if u != v {
+                let start_node = if directed { 0 } else { u + 1 };
+                for v in start_node..num_nodes {
+                    if !directed || u != v {
                         // exclude self-loops
                         let u_index = graph.from_index(u as usize);
                         let v_index = graph.from_index(v as usize);
@@ -112,8 +115,9 @@ where
                 }
             }
         } else {
-            let mut v: isize = 0;
+            let mut v: isize = if directed { 0 } else { 1 };
             let mut w: isize = -1;
+            let num_nodes: isize = num_nodes as isize;
             let lp: f64 = (1.0 - probability).ln();
 
             let between = Uniform::new(0.0, 1.0);
@@ -122,15 +126,18 @@ where
                 let lr: f64 = (1.0 - random).ln();
                 let ratio: isize = (lr / lp) as isize;
                 w = w + 1 + ratio;
-                // avoid self loops
-                if v == w {
-                    w += 1;
+
+                if directed {
+                    // avoid self loops
+                    if v == w {
+                        w += 1;
+                    }
                 }
-                while v < num_nodes && num_nodes <= w {
+                while v < num_nodes && ((directed && num_nodes <= w) || (!directed && v <= w)) {
                     w -= v;
                     v += 1;
                     // avoid self loops
-                    if v == w {
+                    if directed && v == w {
                         w -= v;
                         v += 1;
                     }
@@ -201,20 +208,20 @@ where
 /// assert_eq!(g.edge_count(), 12);
 /// ```
 pub fn gnm_random_graph<G, T, F, H, M>(
-    num_nodes: isize,
-    num_edges: isize,
+    num_nodes: usize,
+    num_edges: usize,
     seed: Option<u64>,
     mut default_node_weight: F,
     mut default_edge_weight: H,
 ) -> Result<G, InvalidInputError>
 where
-    G: GraphBase + Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+    G: GraphProp + Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
     F: FnMut() -> T,
     H: FnMut() -> M,
     for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgeReferences,
     G::NodeId: Eq + Hash,
 {
-    if num_edges < 0 {
+    if num_nodes == 0 {
         return Err(InvalidInputError {});
     }
 
@@ -237,33 +244,37 @@ where
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut graph = G::with_capacity(num_nodes as usize, num_edges as usize);
+    let mut graph = G::with_capacity(num_nodes, num_edges);
+    let directed = graph.is_directed();
+
     for _ in 0..num_nodes {
         graph.add_node(default_node_weight());
     }
     // if number of edges to be created is >= max,
     // avoid randomly missed trials and directly add edges between every node
-    if num_edges >= num_nodes * (num_nodes - 1) {
+    let div_by = if directed { 1 } else { 2 };
+    if num_edges >= num_nodes * (num_nodes - 1) / div_by {
         for u in 0..num_nodes {
-            for v in 0..num_nodes {
+            let start_node = if directed { 0 } else { u + 1 };
+            for v in start_node..num_nodes {
                 // avoid self-loops
-                if u != v {
-                    let u_index = graph.from_index(u as usize);
-                    let v_index = graph.from_index(v as usize);
+                if !directed || u != v {
+                    let u_index = graph.from_index(u);
+                    let v_index = graph.from_index(v);
                     graph.add_edge(u_index, v_index, default_edge_weight());
                 }
             }
         }
     } else {
-        let mut created_edges: isize = 0;
+        let mut created_edges: usize = 0;
         let between = Uniform::new(0, num_nodes);
         while created_edges < num_edges {
             let u = between.sample(&mut rng);
             let v = between.sample(&mut rng);
-            let u_index = graph.from_index(u as usize);
-            let v_index = graph.from_index(v as usize);
+            let u_index = graph.from_index(u);
+            let v_index = graph.from_index(v);
             // avoid self-loops and multi-graphs
-            if u != v && !find_edge(&graph, u as usize, v as usize) {
+            if u != v && !find_edge(&graph, u, v) {
                 graph.add_edge(u_index, v_index, default_edge_weight());
                 created_edges += 1;
             }
@@ -312,8 +323,8 @@ fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
 /// * `pos` - Optional list with node positions as values.
 /// * `p` - Which Minkowski distance metric to use.  `p` has to meet the condition
 ///     ``1 <= p <= infinity``.
-///     If this argument is not specified, the `L^2` metric
-///     (the Euclidean distance metric), p = 2 is used.
+///     If this argument is not specified, the L<sup>2</sup> metric
+///     (the Euclidean distance metric), `p = 2` is used.
 /// * `seed` - An optional seed to use for the random number generator.
 ///
 /// # Example
@@ -350,6 +361,7 @@ where
     H: FnMut() -> M,
     for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgeReferences,
     G::NodeId: Eq + Hash,
+    T: Data + Data<NodeWeight = T>,
 {
     if num_nodes == 0 {
         return Err(InvalidInputError {});
@@ -372,11 +384,19 @@ where
         return Err(InvalidInputError {});
     }
 
+    fn node_weight<T, G>(pval: Vec<f64>) -> <T as Data>::NodeWeight 
+    where 
+    T: Data + Data<NodeWeight = T>,
+    {
+        let val: <T as Data>::NodeWeight = pval;
+        val
+    }
+
     for pval in pos.iter() {
         let mut pos_dict = HashMap::with_capacity(1);
         pos_dict.insert("pos", pval);
 
-        graph.add_node(default_node_weight());
+        graph.add_node(node_weight::<T, G>(*pval));
     }
 
     for u in 0..(num_nodes - 1) {
@@ -597,6 +617,30 @@ mod tests {
     }
 
     #[test]
+    fn test_gnp_random_graph_undirected() {
+        let g: petgraph::graph::UnGraph<(), ()> =
+            gnp_random_graph(20, 0.5, Some(10), || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 20);
+        assert_eq!(g.edge_count(), 105);
+    }
+
+    #[test]
+    fn test_gnp_random_graph_undirected_empty() {
+        let g: petgraph::graph::UnGraph<(), ()> =
+            gnp_random_graph(20, 0.0, None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 20);
+        assert_eq!(g.edge_count(), 0);
+    }
+
+    #[test]
+    fn test_gnp_random_graph_undirected_complete() {
+        let g: petgraph::graph::UnGraph<(), ()> =
+            gnp_random_graph(20, 1.0, None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 20);
+        assert_eq!(g.edge_count(), 20 * (20 - 1) / 2);
+    }
+
+    #[test]
     fn test_gnp_random_graph_error() {
         match gnp_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
             -5,
@@ -637,8 +681,8 @@ mod tests {
     #[test]
     fn test_gnm_random_graph_error() {
         match gnm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            -5,
-            -4,
+            0,
+            0,
             None,
             || (),
             || (),
