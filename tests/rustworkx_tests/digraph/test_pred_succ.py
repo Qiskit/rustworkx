@@ -392,11 +392,10 @@ class TestBfsPredecessors(unittest.TestCase):
         node_c = dag.add_child(node_b, "c", {"a": 2})
         dag.add_child(node_c, "d", {"a": 1})
         res = rustworkx.bfs_predecessors(dag, node_c)
-        breakpoint()
-        if res != [("c", ["b"]), ("b", ["a"])]:
-            res = rustworkx.bfs_predecessors(dag, node_c)
-            for a in res:
-                print(a)
+        print(f'\n res = values? {res == [("c", ["b"]), ("b", ["a"])]}')
+        res = rustworkx.bfs_predecessors(dag, node_c)
+        for a in res:
+            print(a)
             
         #self.assertEqual([("c", ["b"]), ("b", ["a"])], res)
 
