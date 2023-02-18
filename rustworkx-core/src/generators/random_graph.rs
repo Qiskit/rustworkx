@@ -90,7 +90,7 @@ where
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::from_entropy(),
     };
-    let mut graph = G::with_capacity(num_nodes as usize, num_nodes as usize);
+    let mut graph = G::with_capacity(num_nodes, num_nodes);
     let directed = graph.is_directed();
 
     for _ in 0..num_nodes {
@@ -106,8 +106,8 @@ where
                 for v in start_node..num_nodes {
                     if !directed || u != v {
                         // exclude self-loops
-                        let u_index = graph.from_index(u as usize);
-                        let v_index = graph.from_index(v as usize);
+                        let u_index = graph.from_index(u);
+                        let v_index = graph.from_index(v);
                         graph.add_edge(u_index, v_index, default_edge_weight());
                     }
                 }
