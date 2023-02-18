@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Three new random graph generators, ``gnp_random_graph``, ``gnm_random_graph``
+    and ``random_geometric_graph``, have been added to the ``rustworkx-core``
+    crate in the ``generators`` module. The ``gnp_random_graph`` takes inputs of
+    the number of nodes and a probability for adding edges. The ``gnp_random_graph``
+    takes inputs of the number of nodes and number of edges. The
+    ``random_geometric_graph`` creates a random graph within an n-dimensional
+    cube.
