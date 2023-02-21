@@ -187,7 +187,7 @@ pub fn bfs_predecessors(
     node: usize,
 ) -> iterators::BFSPredecessors {
     let index = NodeIndex::new(node);
-    let reverse_graph = Reversed(&graph.graph);    
+    let reverse_graph = Reversed(&graph.graph);
     let mut bfs = Bfs::new(reverse_graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
     while let Some(nx) = bfs.next(reverse_graph) {
