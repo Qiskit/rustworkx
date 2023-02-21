@@ -10,11 +10,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#[inline]
-pub fn get_num_nodes<T>(num_nodes: &Option<usize>, weights: &Option<Vec<T>>) -> usize {
-    if weights.is_some() {
-        weights.as_ref().unwrap().len()
-    } else {
-        num_nodes.unwrap()
-    }
+use std::iter;
+
+pub fn pairwise<I>(right: I) -> impl Iterator<Item = (Option<I::Item>, I::Item)>
+where
+    I: IntoIterator + Clone,
+{
+    let left = iter::once(None).chain(right.clone().into_iter().map(Some));
+    left.zip(right)
 }
