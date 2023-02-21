@@ -25,10 +25,8 @@ jobs:
         with:
           python-version: 3.8
       - run: pip install -U flake8 black~=22.0
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          profile: minimal
           components: rustfmt
       - name: Test Build
         run: cargo build
@@ -77,12 +75,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.platform.rust-target }}
-          profile: minimal
-          default: true
+          targets: ${{ matrix.platform.rust-target }}
       - name: 'Install dependencies'
         run: python -m pip install --upgrade 'tox<4'
       - name: 'Install binary dependencies'
@@ -111,12 +107,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.platform.rust-target }}
-          profile: minimal
-          default: true
+          targets: ${{ matrix.platform.rust-target }}
       - name: 'Install dependencies'
         run: python -m pip install --upgrade 'tox<4'
       - name: 'Install binary dependencies'
@@ -140,11 +134,8 @@ jobs:
         with:
           python-version: 3.8
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
-          profile: default
           components: llvm-tools-preview
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
@@ -187,11 +178,7 @@ jobs:
         with:
           python-version: 3.8
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          profile: minimal
+        uses: dtolnay/rust-toolchain@stable
       - name: Install binary deps
         run: sudo apt-get install -y graphviz
       - name: Install deps
