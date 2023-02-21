@@ -44,7 +44,7 @@ jobs:
         run: pushd rustworkx-core && cargo test && popd
       - name: rustworkx-core Docs
         run: pushd rustworkx-core && cargo doc && popd
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: rustworkx_core_docs
           path: target/doc/rustworkx_core
@@ -156,7 +156,7 @@ jobs:
           set -e
           mv tests/retworkx*profraw .
           ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.info
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: coveralls.info
@@ -185,7 +185,7 @@ jobs:
         run: pip install -U 'tox<4'
       - name: Build Docs
         run: tox -edocs
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: html_docs
           path: docs/build/html
