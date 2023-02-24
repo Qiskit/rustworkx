@@ -51,6 +51,7 @@
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
 //! * [`traversal`](./traversal/index.html)
+//! * [`generators`](./generators/index.html)
 //!
 //! ## Release Notes
 //!
@@ -71,6 +72,7 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 /// Module for centrality algorithms.
 pub mod centrality;
 pub mod connectivity;
+pub mod generators;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
 pub mod planar;
@@ -80,6 +82,7 @@ pub mod traversal;
 pub mod dictmap;
 pub mod distancemap;
 mod min_scored;
+pub mod utils;
 
 // re-export petgraph so there is a consistent version available to users and
 // then only need to require rustworkx-core in their dependencies
