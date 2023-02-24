@@ -1795,7 +1795,8 @@ impl PyGraph {
                     None => {
                         let missing_index = old_source.index();
                         return Err(PyIndexError::new_err(format!(
-                            "Input/Output node {missing_index} not found in io_node_map"
+                            "Input/Output node {} not found in io_node_map",
+                            missing_index
                         )));
                     }
                 }
@@ -1809,7 +1810,8 @@ impl PyGraph {
                     None => {
                         let missing_index = old_target.index();
                         return Err(PyIndexError::new_err(format!(
-                            "Input/Output node {missing_index} not found in io_node_map"
+                            "Input/Output node {} not found in io_node_map",
+                            missing_index
                         )));
                     }
                 }
