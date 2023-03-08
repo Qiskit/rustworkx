@@ -17,7 +17,7 @@ use std::fmt::Debug;
 use std::hash::Hash;
 use std::usize::MAX;
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use petgraph::stable_graph::{NodeIndex, StableGraph};
 use petgraph::visit::{
     EdgeCount, GraphBase, IntoEdges, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
@@ -26,6 +26,7 @@ use petgraph::visit::{
 use petgraph::Directed;
 use petgraph::Direction::{Incoming, Outgoing};
 
+use crate::connectivity::find_cycle;
 use crate::dictmap::*;
 use crate::shortest_path::dijkstra;
 use crate::traversal::dfs_edges;
@@ -217,7 +218,7 @@ where
             let todo_node = todo_nodes[random];
 
             // If there's a cycle in sub_digraph, add it to swap_edges and do swap
-            let cycle = find_cycle(sub_digraph, Some(todo_node));
+            let cycle = find_cycle(&*sub_digraph, Some(todo_node));
             if !cycle.is_empty() {
                 for edge in cycle[1..].iter().rev() {
                     swap_edges.push(*edge);
@@ -250,7 +251,7 @@ where
                 // an unhappy node. Look for a predecessor and add node and pred
                 // to swap_edges and do swap
                 if !found {
-                    let cycle: Vec<Edge> = find_cycle(digraph, Some(todo_node));
+                    let cycle: Vec<Edge> = find_cycle(&*digraph, Some(todo_node));
                     let unhappy_node = cycle[0].0;
                     let mut found = false;
                     let di2 = &mut digraph.clone();
@@ -334,66 +335,6 @@ where
             }
         }
     }
-}
-
-fn find_cycle(graph: &mut StableGraph<(), (), Directed>, source: Option<NodeIndex>) -> Vec<Edge> {
-    // Find a cycle in the given graph and return it as a list of edges
-    let mut graph_nodes: HashSet<NodeIndex> = graph.node_identifiers().collect();
-    let mut cycle: Vec<Edge> = Vec::with_capacity(graph.edge_count());
-    let temp_value: NodeIndex;
-    // If source is not set get an arbitrary node from the set of graph
-    // nodes we've not "examined"
-    let source_index = match source {
-        Some(source_value) => source_value,
-        None => {
-            temp_value = *graph_nodes.iter().next().unwrap();
-            graph_nodes.remove(&temp_value);
-            temp_value
-        }
-    };
-    // Stack (ie "pushdown list") of vertices already in the spanning tree
-    let mut stack: Vec<NodeIndex> = vec![source_index];
-    // map to store parent of a node
-    let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-    // a node is in the visiting set if at least one of its child is unexamined
-    let mut visiting = HashSet::new();
-    // a node is in visited set if all of its children have been examined
-    let mut visited = HashSet::new();
-    while !stack.is_empty() {
-        let mut z = *stack.last().unwrap();
-        visiting.insert(z);
-
-        let children = graph.neighbors_directed(z, Outgoing);
-        for child in children {
-            //cycle is found
-            if visiting.contains(&child) {
-                cycle.push((z, child));
-                //backtrack
-                loop {
-                    if z == child {
-                        cycle.reverse();
-                        break;
-                    }
-                    cycle.push((pred[&z], z));
-                    z = pred[&z];
-                }
-                return cycle;
-            }
-            //if an unexplored node is encountered
-            if !visited.contains(&child) {
-                stack.push(child);
-                pred.insert(child, z);
-            }
-        }
-        let top = *stack.last().unwrap();
-        //if no further children and explored, move to visited
-        if top == z {
-            stack.pop();
-            visiting.remove(&z);
-            visited.insert(z);
-        }
-    }
-    cycle
 }
 
 /// This module performs an approximately optimal Token Swapping algorithm
