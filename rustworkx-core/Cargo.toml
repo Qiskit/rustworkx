@@ -17,6 +17,7 @@ petgraph = "0.6.3"
 rayon = "1.6"
 num-traits = "0.2"
 priority-queue = "1.2"
+rand = "0.8"
 
 [dependencies.hashbrown]
 version = "0.12"
@@ -28,3 +29,4 @@ features = ["rayon"]
 
 [dev-dependencies]
 rand = "0.8"
+rand_distr = "0.4.3"

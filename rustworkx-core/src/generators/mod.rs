@@ -15,6 +15,7 @@
 mod barbell_graph;
 mod binomial_tree_graph;
 mod complete_graph;
+mod configuration_model;
 mod cycle_graph;
 mod full_rary_tree_graph;
 mod grid_graph;
@@ -46,6 +47,7 @@ impl fmt::Display for InvalidInputError {
 pub use barbell_graph::barbell_graph;
 pub use binomial_tree_graph::binomial_tree_graph;
 pub use complete_graph::complete_graph;
+pub use configuration_model::{undirected_configuration_model, DegreeSequence};
 pub use cycle_graph::cycle_graph;
 pub use full_rary_tree_graph::full_rary_tree_graph;
 pub use grid_graph::grid_graph;
