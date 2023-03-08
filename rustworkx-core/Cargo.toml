@@ -14,7 +14,7 @@ keywords = ["graph"]
 ahash = "0.8.0"
 fixedbitset = "0.4.2"
 petgraph = "0.6.3"
-rayon = "1.6"
+rayon = "1.7"
 num-traits = "0.2"
 priority-queue = "1.2"
 
