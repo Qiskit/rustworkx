@@ -150,3 +150,38 @@ class TestEigenvectorCentrality(unittest.TestCase):
         graph = rustworkx.PyDiGraph()
         with self.assertRaises(rustworkx.FailedToConverge):
             rustworkx.eigenvector_centrality(graph, max_iter=0)
+
+
+class TestEdgeBetweennessCentrality(unittest.TestCase):
+    def test_complete_graph(self):
+        graph = rustworkx.generators.directed_mesh_graph(5)
+        centrality = rustworkx.edge_betweenness_centrality(graph)
+        for value in centrality.values():
+            self.assertAlmostEqual(value, 0.05)
+
+    def test_path_graph(self):
+        graph = rustworkx.generators.directed_path_graph(5)
+        centrality = rustworkx.edge_betweenness_centrality(graph)
+        expected = {0: 0.2, 1: 0.3, 2: 0.3, 3: 0.2}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_cycle_graph(self):
+        graph = rustworkx.generators.directed_cycle_graph(5)
+        centrality = rustworkx.edge_betweenness_centrality(graph)
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, 0.5)
+
+    def test_tree_unnormalized(self):
+        graph = rustworkx.generators.full_rary_tree(2, 7).to_directed()
+        centrality = rustworkx.edge_betweenness_centrality(graph, normalized=False)
+        expected = {0: 12, 1: 12, 2: 12, 3: 12, 4: 6, 5: 6, 6: 6, 7: 6, 8: 6, 9: 6, 10: 6, 11: 6}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_path_graph_unnormalized(self):
+        graph = rustworkx.generators.directed_path_graph(5)
+        centrality = rustworkx.edge_betweenness_centrality(graph, normalized=False)
+        expected = {0: 4.0, 1: 6.0, 2: 6.0, 3: 4.0}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
