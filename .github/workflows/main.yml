@@ -86,6 +86,31 @@ jobs:
         if: runner.os == 'Linux'
       - name: 'Run tests'
         run: tox -epy
+  tests_stubs:
+    needs: [tests]
+    name: python-stubs-${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          profile: minimal
+          default: true
+      - name: 'Install dependencies'
+        run: python -m pip install --upgrade 'tox<4'
+      - name: 'Run rustworkx stub tests'
+        run: tox -estubs
   tests_retworkx_compat:
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
