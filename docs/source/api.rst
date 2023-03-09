@@ -320,6 +320,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_spring_layout
    rustworkx.digraph_num_shortest_paths_unweighted
    rustworkx.digraph_betweenness_centrality
+   rustworkx.digraph_edge_betweenness_centrality
    rustworkx.digraph_eigenvector_centrality
    rustworkx.digraph_unweighted_average_shortest_path_length
    rustworkx.digraph_bfs_search
@@ -374,6 +375,7 @@ typed API based on the data type.
    rustworkx.graph_spring_layout
    rustworkx.graph_num_shortest_paths_unweighted
    rustworkx.graph_betweenness_centrality
+   rustworkx.graph_edge_betweenness_centrality
    rustworkx.graph_eigenvector_centrality
    rustworkx.graph_unweighted_average_shortest_path_length
    rustworkx.graph_bfs_search
@@ -416,6 +418,7 @@ Custom Return Types
    rustworkx.AllPairsPathMapping
    rustworkx.AllPairsPathLengthMapping
    rustworkx.CentralityMapping
+   rustworkx.EdgeCentralityMapping
    rustworkx.Chains
    rustworkx.NodeMap
    rustworkx.ProductNodeMap
