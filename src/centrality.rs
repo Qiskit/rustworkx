@@ -160,6 +160,105 @@ pub fn digraph_betweenness_centrality(
     }
 }
 
+/// Compute the closeness centrality of each node in a :class:`~.PyGraph` object.
+///
+/// The closeness centrality of a node :math:`u` is defined as the
+/// reciprocal of the average shortest path distance to :math:`u` over all
+/// :math:`n-1` reachable nodes in the graph. In it's general form this can
+/// be expressed as:
+///
+/// .. math::
+///
+///     C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+///
+/// where:
+///
+///   * :math:`d(v, u)` - the shortest-path distance between :math:`v` and
+///     :math:`u`
+///   * :math:`n` - the number of nodes that can reach :math:`u`.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance" [WF]_. This can be expressed as
+///
+/// .. math::
+///
+///     C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+///
+/// where :math:`N` is the number of nodes in the graph. This alternative
+/// formula can be used with the ``wf_improved`` argument.
+///
+/// :param PyGraph graph: The input graph. Can either be a
+///     :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+/// :param bool wf_improved: This is optional; the default is True. If True,
+///     scale by the fraction of nodes reachable.
+///
+/// :returns: A dictionary mapping each node index to its closeness centrality.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph, wf_improved=true))]
+pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> CentralityMapping {
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
+    CentralityMapping {
+        centralities: closeness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    }
+}
+
+/// Compute the closeness centrality of each node in a :class:`~.PyDiGraph` object.
+///
+/// The closeness centrality of a node :math:`u` is defined as the
+/// reciprocal of the average shortest path distance to :math:`u` over all
+/// :math:`n-1` reachable nodes in the graph. In it's general form this can
+/// be expressed as:
+///
+/// .. math::
+///
+///     C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+///
+/// where:
+///
+///   * :math:`d(v, u)` - the shortest-path distance between :math:`v` and
+///     :math:`u`
+///   * :math:`n` - the number of nodes that can reach :math:`u`.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance" [WF]_. This can be expressed as
+///
+/// .. math::
+///
+///     C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+///
+/// where :math:`N` is the number of nodes in the graph. This alternative
+/// formula can be used with the ``wf_improved`` argument.
+///
+/// :param PyDiGraph graph: The input graph. Can either be a
+///     :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+/// :param bool wf_improved: This is optional; the default is True. If True,
+///     scale by the fraction of nodes reachable.
+///
+/// :returns: A dictionary mapping each node index to its closeness centrality.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph, wf_improved=true))]
+pub fn digraph_closeness_centrality(
+    graph: &digraph::PyDiGraph,
+    wf_improved: bool,
+) -> CentralityMapping {
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
+    CentralityMapping {
+        centralities: closeness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    }
+}
+
 /// Compute the edge betweenness centrality of all edges in a :class:`~PyGraph`.
 ///
 /// Edge betweenness centrality of an edge :math:`e` is the sum of the

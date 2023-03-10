@@ -101,6 +101,16 @@ class TestCentralityGraphDeletedNode(unittest.TestCase):
         expected = {0: 0.0, 1: 2.0, 2: 2.0, 4: 0.0}
         self.assertEqual(expected, betweenness)
 
+    def test_closeness_centrality(self):
+        closeness = rustworkx.graph_closeness_centrality(self.graph)
+        expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
+        self.assertEqual(expected, closeness)
+
+    def test_closeness_centrality_wf_improved(self):
+        closeness = rustworkx.graph_closeness_centrality(self.graph, wf_improved=False)
+        expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
+        self.assertEqual(expected, closeness)
+
 
 class TestEigenvectorCentrality(unittest.TestCase):
     def test_complete_graph(self):
