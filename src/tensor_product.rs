@@ -65,14 +65,31 @@ fn tensor_product<Ty: EdgeType>(
                 )
                     .into_py(py),
             );
+        }
+    }
+    if undirected {
+        for edge_first in first.edge_references() {
+            for edge_second in second.edge_references() {
+                if edge_first.source() == edge_first.target()
+                    || edge_second.source() == edge_second.target()
+                {
+                    continue;
+                }
 
-            if undirected {
+                let source = hash_nodes
+                    .get(&(edge_first.source(), edge_second.target()))
+                    .unwrap();
+
+                let target = hash_nodes
+                    .get(&(edge_first.target(), edge_second.source()))
+                    .unwrap();
+
                 final_graph.add_edge(
-                    *target,
                     *source,
+                    *target,
                     (
-                        edge_second.weight().clone_ref(py),
                         edge_first.weight().clone_ref(py),
+                        edge_second.weight().clone_ref(py),
                     )
                         .into_py(py),
                 );
@@ -108,16 +125,16 @@ fn tensor_product<Ty: EdgeType>(
 ///             (0, 1): 1,
 ///         }
 ///
-/// :rtype: Tuple[:class:`~retworkx.PyGraph`, :class:`~retworkx.ProductNodeMap`]
+/// :rtype: Tuple[:class:`~rustworkx.PyGraph`, :class:`~rustworkx.ProductNodeMap`]
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph_1 = retworkx.generators.path_graph(2)
-///   graph_2 = retworkx.generators.path_graph(3)
-///   graph_product, _ = retworkx.graph_tensor_product(graph_1, graph_2)
+///   graph_1 = rustworkx.generators.path_graph(2)
+///   graph_2 = rustworkx.generators.path_graph(3)
+///   graph_product, _ = rustworkx.graph_tensor_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
@@ -133,6 +150,7 @@ pub fn graph_tensor_product(
             graph: out_graph,
             multigraph: true,
             node_removed: false,
+            attrs: py.None(),
         },
         out_node_map,
     )
@@ -156,16 +174,16 @@ pub fn graph_tensor_product(
 ///             (0, 1): 1,
 ///         }
 ///
-/// :rtype: Tuple[:class:`~retworkx.PyDiGraph`, :class:`~retworkx.ProductNodeMap`]
+/// :rtype: Tuple[:class:`~rustworkx.PyDiGraph`, :class:`~rustworkx.ProductNodeMap`]
 ///
 /// .. jupyter-execute::
 ///
-///   import retworkx.generators
-///   from retworkx.visualization import mpl_draw
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
 ///
-///   graph_1 = retworkx.generators.directed_path_graph(2)
-///   graph_2 = retworkx.generators.directed_path_graph(3)
-///   graph_product, _ = retworkx.digraph_tensor_product(graph_1, graph_2)
+///   graph_1 = rustworkx.generators.directed_path_graph(2)
+///   graph_2 = rustworkx.generators.directed_path_graph(3)
+///   graph_product, _ = rustworkx.digraph_tensor_product(graph_1, graph_2)
 ///   mpl_draw(graph_product)
 #[pyfunction()]
 #[pyo3(text_signature = "(first, second, /)")]
@@ -183,6 +201,7 @@ pub fn digraph_tensor_product(
             check_cycle: false,
             node_removed: false,
             multigraph: true,
+            attrs: py.None(),
         },
         out_node_map,
     )

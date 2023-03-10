@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Implements a new function :func:`~rustworkx.is_planar` that
+    checks whether an undirected :class:`~rustworkx.PyGraph` is planar.
+
+    .. jupyter-execute::
+
+      import rustworkx as rx
+
+      graph = rx.generators.mesh_graph(5)
+      print('Is K_5 graph planar?', rx.is_planar(graph))

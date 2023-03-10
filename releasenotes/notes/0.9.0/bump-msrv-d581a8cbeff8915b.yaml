@@ -2,8 +2,8 @@
 upgrade:
   - |
     The minimum supported Rust version has increased to 1.41.1, you will need
-    rustc >=1.41.1 now to build retworkx. The previous minimum supported Rust
-    version 1.39.0 will no longer be able to compile retworkx. This is due to a
+    rustc >=1.41.1 now to build rustworkx. The previous minimum supported Rust
+    version 1.39.0 will no longer be able to compile rustworkx. This is due to a
     changes in in the new versions of the
     `pyo3 <https://github.com/PyO3/pyo3>`__ and
     `rust-numpy <https://github.com/PyO3/rust-numpy>`__ libraries.

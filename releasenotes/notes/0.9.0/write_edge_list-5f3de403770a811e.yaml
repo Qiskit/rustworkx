@@ -1,10 +1,10 @@
 ---
 features:
   - |
-    A new method, :meth:`~retworkx.PyDiGraph.write_edge_list`, has been added
-    to the :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph`
-    (:meth:`~retworkx.PyDiGraph.write_edge_list`) classes. This method is
+    A new method, :meth:`~rustworkx.PyDiGraph.write_edge_list`, has been added
+    to the :class:`~rustworkx.PyDiGraph` and :class:`~rustworkx.PyGraph`
+    (:meth:`~rustworkx.PyDiGraph.write_edge_list`) classes. This method is
     used to write an edge list file representing the graph object. The output
     format is such that it can be used as an input to
-    :meth:`retworkx.PyDiGraph.read_edge_list` and
-    :meth:`retworkx.PyGraph.read_edge_list`.
+    :meth:`rustworkx.PyDiGraph.read_edge_list` and
+    :meth:`rustworkx.PyGraph.read_edge_list`.

@@ -1,0 +1,21 @@
+---
+fixes:
+  - |
+    The custom sequence return classes:
+
+     * :class:`~.BFSSSuccessors`
+     * :class:`~.NodeIndices`
+     * :class:`~.EdgeList`
+     * :class:`~WeightedEdgeList`
+     * :class:`~EdgeIndices`
+     * :class:`~Chains`
+
+    now correctly handle slice inputs to ``__getitem__``. Previously if you
+    tried to access a slice from one of these objects it would raise a
+    ``TypeError``. For example, if you had a :class:`~.NodeIndices` object named
+    ``nodes`` containing ``[0, 1, 3, 4, 5]`` if you did something like::
+
+        nodes[0:3]
+
+    it would return a new :class:`~.NodeIndices` object containing ``[0, 1, 3]``
+    Fixed `#590 <https://github.com/Qiskit/rustworkx/issues/590>`__

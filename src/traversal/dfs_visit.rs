@@ -16,7 +16,7 @@ use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{Control, Time};
 
 use crate::PruneSearch;
-use retworkx_core::traversal::DfsEvent;
+use rustworkx_core::traversal::DfsEvent;
 
 #[derive(FromPyObject)]
 pub struct PyDfsVisitor {

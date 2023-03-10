@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new keyword arguments, ``index_output``, to the :func:`~.layers`
+    function. When set to ``True`` the output of the function is a list of
+    layers as node indices. The default output is still a list of layers of
+    node data payloads as before.
