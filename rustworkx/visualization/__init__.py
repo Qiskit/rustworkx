@@ -11,7 +11,9 @@
 __all__ = [
     "mpl_draw",
     "graphviz_draw",
+    "have_dot",
+    "is_format_supported",
 ]
 
 from .matplotlib import mpl_draw
-from .graphviz import graphviz_draw
+from .graphviz import graphviz_draw, have_dot, is_format_supported
