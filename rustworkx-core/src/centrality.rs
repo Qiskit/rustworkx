@@ -28,7 +28,6 @@ use petgraph::visit::{
     NodeCount,
     NodeIndexable,
 };
-use rayon::prelude::*;
 use rayon_cond::CondIterator;
 
 /// Compute the betweenness centrality of all nodes in a graph.
