@@ -48,13 +48,15 @@ Shortest Paths
 .. _centrality:
 
 Centrality
---------------
+----------
 
 .. autosummary::
    :toctree: apiref
 
    rustworkx.betweenness_centrality
+   rustworkx.edge_betweenness_centrality
    rustworkx.eigenvector_centrality
+   rustworkx.closeness_centrality
 
 .. _traversal:
 
@@ -321,6 +323,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_num_shortest_paths_unweighted
    rustworkx.digraph_betweenness_centrality
    rustworkx.digraph_edge_betweenness_centrality
+   rustworkx.digraph_closeness_centrality
    rustworkx.digraph_eigenvector_centrality
    rustworkx.digraph_unweighted_average_shortest_path_length
    rustworkx.digraph_bfs_search
@@ -376,6 +379,7 @@ typed API based on the data type.
    rustworkx.graph_num_shortest_paths_unweighted
    rustworkx.graph_betweenness_centrality
    rustworkx.graph_edge_betweenness_centrality
+   rustworkx.graph_closeness_centrality
    rustworkx.graph_eigenvector_centrality
    rustworkx.graph_unweighted_average_shortest_path_length
    rustworkx.graph_bfs_search

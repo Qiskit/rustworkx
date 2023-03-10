@@ -15,6 +15,7 @@ use std::hash::Hash;
 use std::sync::RwLock;
 
 use hashbrown::HashMap;
+use petgraph::algo::dijkstra;
 use petgraph::visit::{
     EdgeCount,
     EdgeIndexable,
@@ -22,11 +23,14 @@ use petgraph::visit::{
     GraphBase,
     GraphProp, // allows is_directed
     IntoEdges,
+    IntoEdgesDirected,
     IntoNeighbors,
     IntoNeighborsDirected,
     IntoNodeIdentifiers,
     NodeCount,
     NodeIndexable,
+    Reversed,
+    Visitable,
 };
 use rayon_cond::CondIterator;
 
@@ -143,7 +147,7 @@ where
 /// Ulrik Brandes: On Variants of Shortest-Path Betweenness
 /// Centrality and their Generic Computation.
 /// Social Networks 30(2):136-145, 2008.
-/// https://doi.org/10.1016/j.socnet.2007.11.001.
+/// <https://doi.org/10.1016/j.socnet.2007.11.001>.
 ///
 /// This function is multithreaded and will run in parallel if the number
 /// of nodes in the graph is above the value of ``parallel_threshold``. If the
@@ -756,4 +760,80 @@ mod test_eigenvector_centrality {
             assert_almost_equal!(expected_values[i], result[i], 1e-4);
         }
     }
+}
+
+/// Compute the closeness centrality of each node in the graph.
+///
+/// The closeness centrality of a node `u` is the reciprocal of the average
+/// shortest path distance to `u` over all `n-1` reachable nodes.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance" [^WF]. You can enable this by setting `wf_improved` to `true`.
+///
+/// [^WF] Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+///     Methods and Applications (Structural Analysis in the Social Sciences).
+///     Cambridge: Cambridge University Press. doi:10.1017/CBO9780511815478
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `wf_improved` - If `true`, scale by the fraction of nodes reachable.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::closeness_centrality;
+///
+/// // Calculate the closeness centrality of Graph
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
+/// ]);
+/// let output = closeness_centrality(&g, true);
+/// assert_eq!(
+///     vec![Some(1./2.), Some(2./3.), Some(4./7.), Some(2./3.), Some(4./5.)],
+///     output
+/// );
+///
+/// // Calculate the closeness centrality of DiGraph
+/// let dg = petgraph::graph::DiGraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
+/// ]);
+/// let output = closeness_centrality(&dg, true);
+/// assert_eq!(
+///     vec![Some(0.), Some(0.), Some(1./4.), Some(1./3.), Some(4./5.)],
+///     output
+/// );
+/// ```
+pub fn closeness_centrality<G>(graph: G, wf_improved: bool) -> Vec<Option<f64>>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + GraphBase
+        + IntoEdges
+        + Visitable
+        + NodeCount
+        + IntoEdgesDirected,
+    G::NodeId: std::hash::Hash + Eq,
+{
+    let max_index = graph.node_bound();
+    let mut closeness: Vec<Option<f64>> = vec![None; max_index];
+    for node_s in graph.node_identifiers() {
+        let is = graph.to_index(node_s);
+        let map = dijkstra(Reversed(&graph), node_s, None, |_| 1);
+        let reachable_nodes_count = map.len();
+        let dists_sum: usize = map.into_values().sum();
+        if reachable_nodes_count == 1 {
+            closeness[is] = Some(0.0);
+            continue;
+        }
+        closeness[is] = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
+        if wf_improved {
+            let node_count = graph.node_count();
+            closeness[is] = closeness[is]
+                .map(|c| c * (reachable_nodes_count - 1) as f64 / (node_count - 1) as f64);
+        }
+    }
+    closeness
 }
