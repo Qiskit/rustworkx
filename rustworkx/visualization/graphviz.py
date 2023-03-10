@@ -169,7 +169,8 @@ def graphviz_draw(
     else:
         output_format = image_type
 
-    if output_format not in (supported_formats := _supported_image_formats()):
+    supported_formats = _supported_image_formats()
+    if output_format not in supported_formats:
         raise ValueError(
             "The specified value for the image_type argument, "
             f"'{output_format}' is not a valid choice. It must be one of: "
