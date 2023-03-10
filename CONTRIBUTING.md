@@ -272,6 +272,21 @@ web browser by running:
 cargo doc --open
 ```
 
+### Type Annotations
+
+If you have added new methods or changed method signatures, we encourage you to add annotations for 
+those methods in stub files. The stub files are in the `rustworkx` directory and have a `.pyi` file extension.
+They contain annotated signatures for Python functions, stripped of their implementation.
+
+While this step is optional, it is very helpful for end-users. Adding annotations lets users type check
+their code with [mypy](http://mypy-lang.org/), which can be helpful for finding bugs.
+
+Just like with tests for the code, annotations are also tested via tox.
+
+```
+tox -estubs
+```
+
 ### Release Notes
 
 It is important to document any end user facing changes when we release a new
