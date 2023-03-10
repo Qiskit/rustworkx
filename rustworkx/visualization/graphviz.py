@@ -28,9 +28,11 @@ instructions.
 
 try:
     import PIL
+
     HAVE_PILLOW = True
 except Exception:
     HAVE_PILLOW = False
+
 
 # Return True if `dot` is found and executes.
 def have_dot():
@@ -45,14 +47,17 @@ def have_dot():
         return False
     return True
 
+
 def _capture_support_string():
     try:
-        res = subprocess.check_output(
+        subprocess.check_output(
             ["dot", "-T", "bogus_format"],
+            cwd=tempfile.gettempdir(),
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as exerr:
         return exerr.output.decode()
+
 
 # Return collection of image formats supported by dot, as
 # a `set` of `str`.
