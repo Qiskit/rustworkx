@@ -50,6 +50,7 @@
 //! * [`connectivity`](./connectivity/index.html)
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
+//! * [`token_swapper`](./token_swapper/index.html)
 //! * [`traversal`](./traversal/index.html)
 //! * [`generators`](./generators/index.html)
 //!
@@ -82,6 +83,7 @@ pub mod traversal;
 pub mod dictmap;
 pub mod distancemap;
 mod min_scored;
+/// Module for swapping tokens
 pub mod token_swapper;
 pub mod utils;
 

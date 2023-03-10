@@ -13,7 +13,6 @@
 use rand::distributions::Uniform;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
-use std::fmt::Debug;
 use std::hash::Hash;
 use std::usize::MAX;
 
@@ -36,7 +35,7 @@ type Edge = (NodeIndex, NodeIndex);
 
 struct TokenSwapper<G: GraphBase>
 where
-    G::NodeId: Eq + Hash + Debug,
+    G::NodeId: Eq + Hash,
 {
     // The input graph
     graph: G,
@@ -60,9 +59,8 @@ where
         + Visitable
         + NodeIndexable
         + IntoNeighborsDirected
-        + IntoNodeIdentifiers
-        + Debug,
-    G::NodeId: Hash + Eq + Debug,
+        + IntoNodeIdentifiers,
+    G::NodeId: Hash + Eq,
 {
     fn new(
         graph: G,
@@ -128,10 +126,10 @@ where
         let mut trial_results: Vec<Vec<Swap>> = Vec::new();
         for _ in 0..self.trials {
             let results = self.trial_map(
-                &mut digraph.clone(),
-                &mut sub_digraph.clone(),
-                &mut tokens.clone(),
-                &mut todo_nodes.clone(),
+                digraph.clone(),
+                sub_digraph.clone(),
+                tokens.clone(),
+                todo_nodes.clone(),
                 &mut rng_seed,
             );
             trial_results.push(results);
@@ -179,21 +177,25 @@ where
         let id_token = self.rev_node_map[&tokens[&node]];
         for id_neighbor in self.graph.neighbors(id_node) {
             let neighbor = self.node_map[&id_neighbor];
-            let dist_neighbor: Result<DictMap<G::NodeId, usize>, &str> = dijkstra(
+            let dist_neighbor: DictMap<G::NodeId, usize> = dijkstra(
                 &self.graph,
                 id_neighbor,
                 Some(id_token),
                 |_| Ok::<usize, &str>(1),
                 None,
-            );
-            let dist_node: Result<DictMap<G::NodeId, usize>, &str> = dijkstra(
+            )
+            .unwrap();
+
+            let dist_node: DictMap<G::NodeId, usize> = dijkstra(
                 &self.graph,
                 id_node,
                 Some(id_token),
                 |_| Ok::<usize, &str>(1),
                 None,
-            );
-            if dist_neighbor.unwrap()[&id_token] < dist_node.unwrap()[&id_token] {
+            )
+            .unwrap();
+
+            if dist_neighbor[&id_token] < dist_node[&id_token] {
                 digraph.update_edge(node, neighbor, ());
                 sub_digraph.update_edge(node, neighbor, ());
             }
@@ -202,10 +204,10 @@ where
 
     fn trial_map(
         &mut self,
-        digraph: &mut StableGraph<(), (), Directed>,
-        sub_digraph: &mut StableGraph<(), (), Directed>,
-        tokens: &mut HashMap<NodeIndex, NodeIndex>,
-        todo_nodes: &mut Vec<NodeIndex>,
+        mut digraph: StableGraph<(), (), Directed>,
+        mut sub_digraph: StableGraph<(), (), Directed>,
+        mut tokens: HashMap<NodeIndex, NodeIndex>,
+        mut todo_nodes: Vec<NodeIndex>,
         rng_seed: &mut Pcg64,
     ) -> Vec<Swap> {
         // Create a random trial list of swaps to move tokens to optimal positions
@@ -218,11 +220,18 @@ where
             let todo_node = todo_nodes[random];
 
             // If there's a cycle in sub_digraph, add it to swap_edges and do swap
-            let cycle = find_cycle(&*sub_digraph, Some(todo_node));
+            let cycle = find_cycle(&sub_digraph, Some(todo_node));
             if !cycle.is_empty() {
                 for edge in cycle[1..].iter().rev() {
                     swap_edges.push(*edge);
-                    self.swap(edge.0, edge.1, digraph, sub_digraph, tokens, todo_nodes);
+                    self.swap(
+                        edge.0,
+                        edge.1,
+                        &mut digraph,
+                        &mut sub_digraph,
+                        &mut tokens,
+                        &mut todo_nodes,
+                    );
                 }
                 steps += cycle.len() - 1;
             // If there's no cycle, see if there's an edge target that matches a token key.
@@ -237,10 +246,10 @@ where
                         self.swap(
                             new_edge.0,
                             new_edge.1,
-                            digraph,
-                            sub_digraph,
-                            tokens,
-                            todo_nodes,
+                            &mut digraph,
+                            &mut sub_digraph,
+                            &mut tokens,
+                            &mut todo_nodes,
                         );
                         steps += 1;
                         found = true;
@@ -251,7 +260,7 @@ where
                 // an unhappy node. Look for a predecessor and add node and pred
                 // to swap_edges and do swap
                 if !found {
-                    let cycle: Vec<Edge> = find_cycle(&*digraph, Some(todo_node));
+                    let cycle: Vec<Edge> = find_cycle(&digraph, Some(todo_node));
                     let unhappy_node = cycle[0].0;
                     let mut found = false;
                     let di2 = &mut digraph.clone();
@@ -261,10 +270,10 @@ where
                             self.swap(
                                 unhappy_node,
                                 predecessor,
-                                digraph,
-                                sub_digraph,
-                                tokens,
-                                todo_nodes,
+                                &mut digraph,
+                                &mut sub_digraph,
+                                &mut tokens,
+                                &mut todo_nodes,
                             );
                             steps += 1;
                             found = true;
@@ -306,18 +315,18 @@ where
         // For each node, remove the (node, successor) from digraph and
         // sub_digraph. Then add new token edges back in.
         for node in [node1, node2] {
-            let mut edge_nodes = vec![];
-            for successor in digraph.neighbors_directed(node, Outgoing) {
-                edge_nodes.push((node, successor));
-            }
+            let edge_nodes: Vec<(NodeIndex, NodeIndex)> = digraph
+                .neighbors_directed(node, Outgoing)
+                .map(|successor| (node, successor))
+                .collect();
             for (edge_node1, edge_node2) in edge_nodes {
                 let edge = digraph.find_edge(edge_node1, edge_node2).unwrap();
                 digraph.remove_edge(edge);
             }
-            let mut edge_nodes = vec![];
-            for successor in sub_digraph.neighbors_directed(node, Outgoing) {
-                edge_nodes.push((node, successor));
-            }
+            let edge_nodes: Vec<(NodeIndex, NodeIndex)> = sub_digraph
+                .neighbors_directed(node, Outgoing)
+                .map(|successor| (node, successor))
+                .collect();
             for (edge_node1, edge_node2) in edge_nodes {
                 let edge = sub_digraph.find_edge(edge_node1, edge_node2).unwrap();
                 sub_digraph.remove_edge(edge);
@@ -337,15 +346,18 @@ where
     }
 }
 
-/// This module performs an approximately optimal Token Swapping algorithm
-/// Supports partial mappings (i.e. not-permutations) for graphs with missing tokens.
+/// Module to perform an approximately optimal Token Swapping algorithm. Supports partial
+/// mappings (i.e. not-permutations) for graphs with missing tokens.
 ///
 /// Based on the paper: Approximation and Hardness for Token Swapping by Miltzow et al. (2016)
-/// ArXiV: https://arxiv.org/abs/1602.05150
-/// and generalization based on our own work.
+/// ArXiV: <https://arxiv.org/abs/1602.05150>
 ///
-/// The inputs are a partial `mapping` to be implemented in swaps, and the number of `trials` to
-/// perform the mapping. It's minimized over the trials.
+/// Arguments:
+///
+/// * `graph` - The graph on which to perform the token swapping.
+/// * `mapping` - A partial mapping to be implemented in swaps.
+/// * `trials` - Optional number of trials. If None, defaults to 4.
+/// * `seed` - Optional integer seed. If None, the internal rng will be initialized from system entropy.
 ///
 /// It returns a list of tuples representing the swaps to perform.
 ///
@@ -382,9 +394,8 @@ where
         + Visitable
         + NodeIndexable
         + IntoNeighborsDirected
-        + IntoNodeIdentifiers
-        + Debug,
-    G::NodeId: Hash + Eq + Debug,
+        + IntoNodeIdentifiers,
+    G::NodeId: Hash + Eq,
 {
     let mut swapper = TokenSwapper::new(graph, mapping, trials, seed);
     swapper.map()
