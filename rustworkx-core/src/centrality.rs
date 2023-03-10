@@ -854,8 +854,8 @@ mod test_eigenvector_centrality {
 ///
 /// # Example
 /// ```rust
-/// use retworkx_core::petgraph;
-/// use retworkx_core::centrality::closeness_centrality;
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::closeness_centrality;
 ///
 /// // Calculate the closeness centrality of Graph
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[

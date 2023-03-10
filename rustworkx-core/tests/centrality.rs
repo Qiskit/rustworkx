@@ -11,8 +11,8 @@
 // under the License.
 
 use petgraph::visit::Reversed;
-use retworkx_core::centrality::closeness_centrality;
-use retworkx_core::petgraph::graph::{DiGraph, UnGraph};
+use rustworkx_core::centrality::closeness_centrality;
+use rustworkx_core::petgraph::graph::{DiGraph, UnGraph};
 
 #[test]
 fn test_simple() {
