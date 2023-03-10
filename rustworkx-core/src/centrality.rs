@@ -194,7 +194,7 @@ where
 /// Ulrik Brandes: On Variants of Shortest-Path Betweenness
 /// Centrality and their Generic Computation.
 /// Social Networks 30(2):136-145, 2008.
-/// https://doi.org/10.1016/j.socnet.2007.11.001.
+/// <https://doi.org/10.1016/j.socnet.2007.11.001>.
 ///
 /// This function is multithreaded and will run in parallel if the number
 /// of nodes in the graph is above the value of ``parallel_threshold``. If the
@@ -838,10 +838,14 @@ mod test_eigenvector_centrality {
 /// The closeness centrality of a node `u` is the reciprocal of the average
 /// shortest path distance to `u` over all `n-1` reachable nodes.
 ///
-/// Wasserman and Faust propose an improved formula for graphs with more than
-/// one connected component. The result is "a ratio of the fraction of actors
-/// in the group who are reachable, to the average distance" from the reachable
-/// actors. You can enable this by setting `wf_improved` to `true`.
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance" [^WF]. You can enable this by setting `wf_improved` to `true`.
+///
+/// [^WF] Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+///     Methods and Applications (Structural Analysis in the Social Sciences).
+///     Cambridge: Cambridge University Press. doi:10.1017/CBO9780511815478
 ///
 /// Arguments:
 ///

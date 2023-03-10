@@ -1602,29 +1602,34 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, paral
 
 @functools.singledispatch
 def closeness_centrality(graph, wf_improved=True):
-    r"""Returns the closeness centrality of each node in the graph.
+    r"""Compute the closeness centrality of each node in a graph object.
 
-    The closeness centrality of a node :math:`u` is the reciprocal of the
-    average shortest path distance to :math:`u` over all :math:`n-1` reachable
-    nodes.
-    
+    The closeness centrality of a node :math:`u` is defined as the
+    reciprocal of the average shortest path distance to :math:`u` over all
+    :math:`n-1` reachable nodes in the graph. In it's general form this can
+    be expressed as:
+
     .. math::
 
         C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
 
-    where :math:`d(v, u)` is the shortest-path distance between :math:`v` and
-    :math:`u`, and :math:`n` is the number of nodes that can reach :math:`u`.
+    where:
 
-    Wasserman and Faust propose an improved formula for graphs with more than
-    one connected component. The result is "a ratio of the fraction of actors
-    in the group who are reachable, to the average distance" from the reachable
-    actors.
+      * :math:`d(v, u)` - the shortest-path distance between :math:`v` and
+        :math:`u`
+      * :math:`n` - the number of nodes that can reach :math:`u`.
+
+    In the case of a graphs with more than one connected component there is
+    an alternative improved formula that calculates the closeness centrality
+    as "a ratio of the fraction of actors in the group who are reachable, to
+    the average distance" [WF]_. This can be expressed as
 
     .. math::
 
         C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
 
-    where :math:`N` is the number of nodes in the graph.
+    where :math:`N` is the number of nodes in the graph. This alternative
+    formula can be used with the ``wf_improved`` argument.
 
     :param graph: The input graph. Can either be a
         :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
@@ -1633,6 +1638,10 @@ def closeness_centrality(graph, wf_improved=True):
 
     :returns: A dictionary mapping each node index to its closeness centrality.
     :rtype: dict
+
+    .. [WF] Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+      Methods and Applications (Structural Analysis in the Social Sciences).
+      Cambridge: Cambridge University Press. doi:10.1017/CBO9780511815478
     """
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
@@ -1649,7 +1658,7 @@ def _graph_closeness_centrality(graph, wf_improved=True):
 
 @functools.singledispatch
 def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
-    """Compute the edge betweenness centrality of all edges in a graph.
+    r"""Compute the edge betweenness centrality of all edges in a graph.
 
     Edge betweenness centrality of an edge :math:`e` is the sum of the
     fraction of all-pairs shortest paths that pass through :math`e`
@@ -1688,6 +1697,7 @@ def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
         betweenness score for each node.
     :rtype: EdgeCentralityMapping
     """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
 @edge_betweenness_centrality.register(PyDiGraph)

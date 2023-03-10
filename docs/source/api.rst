@@ -48,13 +48,13 @@ Shortest Paths
 .. _centrality:
 
 Centrality
---------------
+----------
 
 .. autosummary::
    :toctree: apiref
 
-   retworkx.betweenness_centrality
    rustworkx.betweenness_centrality
+   rustworkx.edge_betweenness_centrality
    rustworkx.eigenvector_centrality
    rustworkx.closeness_centrality
 
