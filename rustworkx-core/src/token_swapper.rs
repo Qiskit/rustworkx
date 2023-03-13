@@ -14,7 +14,6 @@ use rand::distributions::Uniform;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use std::hash::Hash;
-use std::usize::MAX;
 
 use hashbrown::HashMap;
 use petgraph::stable_graph::{NodeIndex, StableGraph};
@@ -107,6 +106,7 @@ where
             .iter()
             .map(|(k, v)| (self.node_map[k], self.node_map[v]))
             .collect();
+
         // todo_nodes are all the mapping entries where left != right
         for (node, dest) in &tokens {
             if node != dest {
@@ -122,38 +122,19 @@ where
                 &mut tokens,
             );
         }
-        // Do the trials and build a results Vec
-        let mut trial_results: Vec<Vec<Swap>> = Vec::new();
-        for _ in 0..self.trials {
-            let results = self.trial_map(
-                digraph.clone(),
-                sub_digraph.clone(),
-                tokens.clone(),
-                todo_nodes.clone(),
-                &mut rng_seed,
-            );
-            trial_results.push(results);
-        }
-        // Build the first results Vec until a 0 len result is found
-        let mut first_results: Vec<Vec<Swap>> = Vec::new();
-        for result in trial_results {
-            if result.is_empty() {
-                first_results.push(result);
-                break;
-            }
-            first_results.push(result);
-        }
-        // Return the min of the first results
-        let mut res_min = MAX;
-        let mut final_result: Vec<Swap> = Vec::new();
-        for res in first_results {
-            let res_len = res.len();
-            if res_len < res_min {
-                final_result = res;
-                res_min = res_len;
-            }
-        }
-        final_result
+        // Do the trials
+        (0..self.trials)
+            .map(|_| {
+                self.trial_map(
+                    digraph.clone(),
+                    sub_digraph.clone(),
+                    tokens.clone(),
+                    todo_nodes.clone(),
+                    &mut rng_seed,
+                )
+            })
+            .min_by_key(|result| result.len())
+            .unwrap()
     }
 
     fn add_token_edges(
