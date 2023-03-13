@@ -2720,6 +2720,19 @@ impl PyDiGraph {
         self.clone()
     }
 
+    /// Reverse All edges in the graph inplace
+    #[pyo3(text_signature = "(self)")]
+    pub fn reverse_inplace(&mut self, py: Python) {
+        let indices = self.graph.edge_indices().collect::<Vec<EdgeIndex>>();
+        for idx in indices {
+            let (source_node, dest_node) = self.graph.edge_endpoints(idx).expect("Edge Index received from iterator");
+            let weight = self.graph.edge_weight(idx).expect("Edge Index received from iterator").clone_ref(py);
+            self.graph.remove_edge(idx);
+            self.graph.add_edge(dest_node, source_node, weight);
+        }
+    }
+
+
     /// Return the number of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
