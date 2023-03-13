@@ -416,6 +416,10 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     ))?;
     m.add_wrapped(wrap_pyfunction!(graph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_edge_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_edge_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
@@ -493,6 +497,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathMapping>()?;
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::CentralityMapping>()?;
+    m.add_class::<iterators::EdgeCentralityMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
     m.add_class::<iterators::MultiplePathMapping>()?;
     m.add_class::<iterators::AllPairsMultiplePathMapping>()?;
