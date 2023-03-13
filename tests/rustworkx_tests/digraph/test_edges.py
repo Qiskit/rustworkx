@@ -962,3 +962,29 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         graph.extend_from_weighted_edge_list(edge_list)
         self.assertEqual(len(graph), 4)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
+
+    def test_reverse_graph(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from([i for i in range(4)])
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.add_edges_from(edge_list)
+        graph.reverse_inplace()
+        self.assertEqual([(1, 0), (2, 1), (2, 0), (3, 2), (3, 0)], graph.edge_list())
+
+    def test_reverse_large_graph(self):
+        LARGE_AMOUNT_OF_NODES = 10000000
+
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(range(LARGE_AMOUNT_OF_NODES))
+        edge_list = list(zip(range(LARGE_AMOUNT_OF_NODES), range(1, LARGE_AMOUNT_OF_NODES)))
+        weighted_edge_list = [(s, d, "a") for s, d in edge_list]
+        graph.add_edges_from(weighted_edge_list)
+        graph.reverse_inplace()
+        reversed_edge_list = [(d, s) for s, d in edge_list]
+        self.assertEqual(reversed_edge_list, graph.edge_list())
