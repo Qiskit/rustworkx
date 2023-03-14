@@ -23,6 +23,7 @@ use petgraph::visit::{
 };
 use petgraph::Directed;
 use petgraph::Direction::{Incoming, Outgoing};
+use rayon::prelude::*;
 
 use crate::connectivity::find_cycle;
 use crate::dictmap::*;
@@ -58,8 +59,10 @@ where
         + Visitable
         + NodeIndexable
         + IntoNeighborsDirected
-        + IntoNodeIdentifiers,
-    G::NodeId: Hash + Eq,
+        + IntoNodeIdentifiers
+        + Send
+        + Sync,
+    G::NodeId: Hash + Eq + Send + Sync,
 {
     fn new(
         graph: G,
@@ -89,10 +92,6 @@ where
         // A list of nodes that are remaining to be tried
         let mut todo_nodes = Vec::with_capacity(self.input_mapping.len());
 
-        let mut rng_seed: Pcg64 = match self.rng_seed {
-            Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
-            None => Pcg64::from_entropy(),
-        };
         // Add nodes to the digraph/sub_digraph and build the node maps
         for node in self.graph.node_identifiers() {
             let index = digraph.add_node(());
@@ -123,14 +122,16 @@ where
             );
         }
         // Do the trials
+        let seed = self.rng_seed;
         (0..self.trials)
+            .into_par_iter()
             .map(|_| {
                 self.trial_map(
                     digraph.clone(),
                     sub_digraph.clone(),
                     tokens.clone(),
                     todo_nodes.clone(),
-                    &mut rng_seed,
+                    seed,
                 )
             })
             .min_by_key(|result| result.len())
@@ -138,7 +139,7 @@ where
     }
 
     fn add_token_edges(
-        &mut self,
+        &self,
         node: NodeIndex,
         digraph: &mut StableGraph<(), (), Directed>,
         sub_digraph: &mut StableGraph<(), (), Directed>,
@@ -184,20 +185,24 @@ where
     }
 
     fn trial_map(
-        &mut self,
+        &self,
         mut digraph: StableGraph<(), (), Directed>,
         mut sub_digraph: StableGraph<(), (), Directed>,
         mut tokens: HashMap<NodeIndex, NodeIndex>,
         mut todo_nodes: Vec<NodeIndex>,
-        rng_seed: &mut Pcg64,
+        seed: Option<u64>,
     ) -> Vec<Swap> {
         // Create a random trial list of swaps to move tokens to optimal positions
         let mut steps = 0;
         let mut swap_edges: Vec<Swap> = vec![];
+        let mut rng_seed: Pcg64 = match seed {
+            Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
+            None => Pcg64::from_entropy(),
+        };
         while !todo_nodes.is_empty() && steps <= 4 * digraph.node_count().pow(2) {
             // Choose a random todo_node
             let between = Uniform::new(0, todo_nodes.len());
-            let random: usize = between.sample(rng_seed);
+            let random: usize = between.sample(&mut rng_seed);
             let todo_node = todo_nodes[random];
 
             // If there's a cycle in sub_digraph, add it to swap_edges and do swap
@@ -274,7 +279,7 @@ where
     }
 
     fn swap(
-        &mut self,
+        &self,
         node1: NodeIndex,
         node2: NodeIndex,
         digraph: &mut StableGraph<(), (), Directed>,
@@ -375,8 +380,10 @@ where
         + Visitable
         + NodeIndexable
         + IntoNeighborsDirected
-        + IntoNodeIdentifiers,
-    G::NodeId: Hash + Eq,
+        + IntoNodeIdentifiers
+        + Send
+        + Sync,
+    G::NodeId: Hash + Eq + Send + Sync,
 {
     let mut swapper = TokenSwapper::new(graph, mapping, trials, seed);
     swapper.map()
