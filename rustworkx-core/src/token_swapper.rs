@@ -122,10 +122,17 @@ where
             );
         }
         // Do the trials
-        let seed = self.rng_seed;
-        (0..self.trials)
+        let outer_rng: Pcg64 = match self.rng_seed {
+            Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
+            None => Pcg64::from_entropy(),
+        };
+        let seed_vec: Vec<u64> = outer_rng
+            .sample_iter(&rand::distributions::Standard)
+            .take(self.trials)
+            .collect();
+        seed_vec
             .into_par_iter()
-            .map(|_| {
+            .map(|seed| {
                 self.trial_map(
                     digraph.clone(),
                     sub_digraph.clone(),
@@ -190,15 +197,12 @@ where
         mut sub_digraph: StableGraph<(), (), Directed>,
         mut tokens: HashMap<NodeIndex, NodeIndex>,
         mut todo_nodes: Vec<NodeIndex>,
-        seed: Option<u64>,
+        seed: u64,
     ) -> Vec<Swap> {
         // Create a random trial list of swaps to move tokens to optimal positions
         let mut steps = 0;
         let mut swap_edges: Vec<Swap> = vec![];
-        let mut rng_seed: Pcg64 = match seed {
-            Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
-            None => Pcg64::from_entropy(),
-        };
+        let mut rng_seed: Pcg64 = Pcg64::seed_from_u64(seed);
         while !todo_nodes.is_empty() && steps <= 4 * digraph.node_count().pow(2) {
             // Choose a random todo_node
             let between = Uniform::new(0, todo_nodes.len());
