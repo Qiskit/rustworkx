@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use rand::distributions::Uniform;
+use rand::distributions::{Standard, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use std::hash::Hash;
@@ -40,11 +40,11 @@ where
     // The input graph
     graph: G,
     // The user-supplied mapping to use for swapping tokens
-    input_mapping: HashMap<G::NodeId, G::NodeId>,
+    mapping: HashMap<G::NodeId, G::NodeId>,
     // Number of trials
     trials: usize,
     // Seed for random selection of a node for a trial
-    rng_seed: Option<u64>,
+    seed: Option<u64>,
     // Map of NodeId to NodeIndex
     node_map: HashMap<G::NodeId, NodeIndex>,
     // Map of NodeIndex to NodeId
@@ -72,9 +72,9 @@ where
     ) -> Self {
         TokenSwapper {
             graph,
-            input_mapping: mapping,
+            mapping,
             trials: trials.unwrap_or(4),
-            rng_seed: seed,
+            seed,
             node_map: HashMap::with_capacity(graph.node_count()),
             rev_node_map: HashMap::with_capacity(graph.node_count()),
         }
@@ -89,8 +89,6 @@ where
         let mut digraph = StableGraph::with_capacity(num_nodes, num_edges);
         // Same as digraph with no self edges
         let mut sub_digraph = StableGraph::with_capacity(num_nodes, num_edges);
-        // A list of nodes that are remaining to be tried
-        let mut todo_nodes = Vec::with_capacity(self.input_mapping.len());
 
         // Add nodes to the digraph/sub_digraph and build the node maps
         for node in self.graph.node_identifiers() {
@@ -99,19 +97,19 @@ where
             self.node_map.insert(node, index);
             self.rev_node_map.insert(index, node);
         }
-        // The input mapping in HashMap form using NodeIndex
+        // The mapping in HashMap form using NodeIndex
         let mut tokens: HashMap<NodeIndex, NodeIndex> = self
-            .input_mapping
+            .mapping
             .iter()
             .map(|(k, v)| (self.node_map[k], self.node_map[v]))
             .collect();
 
         // todo_nodes are all the mapping entries where left != right
-        for (node, dest) in &tokens {
-            if node != dest {
-                todo_nodes.push(*node);
-            }
-        }
+        let todo_nodes: Vec<NodeIndex> = tokens
+            .iter()
+            .filter_map(|(node, dest)| if node != dest { Some(*node) } else { None })
+            .collect();
+
         // Add initial edges to the digraph/sub_digraph
         for node in self.graph.node_identifiers() {
             self.add_token_edges(
@@ -121,24 +119,24 @@ where
                 &mut tokens,
             );
         }
-        // Do the trials
-        let outer_rng: Pcg64 = match self.rng_seed {
+        // First collect the self.trial number of random numbers
+        // into a Vec based on the given seed
+        let outer_rng: Pcg64 = match self.seed {
             Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
             None => Pcg64::from_entropy(),
         };
-        let seed_vec: Vec<u64> = outer_rng
-            .sample_iter(&rand::distributions::Standard)
-            .take(self.trials)
-            .collect();
-        seed_vec
+        let rand_num_vec: Vec<u64> = outer_rng.sample_iter(&Standard).take(self.trials).collect();
+
+        // Iterate over the random numbers and do the trials in parallel
+        rand_num_vec
             .into_par_iter()
-            .map(|seed| {
+            .map(|rand_num| {
                 self.trial_map(
                     digraph.clone(),
                     sub_digraph.clone(),
                     tokens.clone(),
                     todo_nodes.clone(),
-                    seed,
+                    rand_num,
                 )
             })
             .min_by_key(|result| result.len())
@@ -197,16 +195,16 @@ where
         mut sub_digraph: StableGraph<(), (), Directed>,
         mut tokens: HashMap<NodeIndex, NodeIndex>,
         mut todo_nodes: Vec<NodeIndex>,
-        seed: u64,
+        rand_num: u64,
     ) -> Vec<Swap> {
         // Create a random trial list of swaps to move tokens to optimal positions
         let mut steps = 0;
         let mut swap_edges: Vec<Swap> = vec![];
-        let mut rng_seed: Pcg64 = Pcg64::seed_from_u64(seed);
+        let mut rng_rand_num: Pcg64 = Pcg64::seed_from_u64(rand_num);
         while !todo_nodes.is_empty() && steps <= 4 * digraph.node_count().pow(2) {
             // Choose a random todo_node
             let between = Uniform::new(0, todo_nodes.len());
-            let random: usize = between.sample(&mut rng_seed);
+            let random: usize = between.sample(&mut rng_rand_num);
             let todo_node = todo_nodes[random];
 
             // If there's a cycle in sub_digraph, add it to swap_edges and do swap
