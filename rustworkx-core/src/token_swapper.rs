@@ -125,18 +125,19 @@ where
             Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
             None => Pcg64::from_entropy(),
         };
-        let rand_num_vec: Vec<u64> = outer_rng.sample_iter(&Standard).take(self.trials).collect();
+        let trial_seeds_vec: Vec<u64> =
+            outer_rng.sample_iter(&Standard).take(self.trials).collect();
 
-        // Iterate over the random numbers and do the trials in parallel
-        rand_num_vec
+        // Iterate over the trial seeds and do the trials in parallel
+        trial_seeds_vec
             .into_par_iter()
-            .map(|rand_num| {
+            .map(|trial_seed| {
                 self.trial_map(
                     digraph.clone(),
                     sub_digraph.clone(),
                     tokens.clone(),
                     todo_nodes.clone(),
-                    rand_num,
+                    trial_seed,
                 )
             })
             .min_by_key(|result| result.len())
@@ -195,16 +196,16 @@ where
         mut sub_digraph: StableGraph<(), (), Directed>,
         mut tokens: HashMap<NodeIndex, NodeIndex>,
         mut todo_nodes: Vec<NodeIndex>,
-        rand_num: u64,
+        trial_seed: u64,
     ) -> Vec<Swap> {
         // Create a random trial list of swaps to move tokens to optimal positions
         let mut steps = 0;
         let mut swap_edges: Vec<Swap> = vec![];
-        let mut rng_rand_num: Pcg64 = Pcg64::seed_from_u64(rand_num);
+        let mut rng_seed: Pcg64 = Pcg64::seed_from_u64(trial_seed);
         while !todo_nodes.is_empty() && steps <= 4 * digraph.node_count().pow(2) {
             // Choose a random todo_node
             let between = Uniform::new(0, todo_nodes.len());
-            let random: usize = between.sample(&mut rng_rand_num);
+            let random: usize = between.sample(&mut rng_seed);
             let todo_node = todo_nodes[random];
 
             // If there's a cycle in sub_digraph, add it to swap_edges and do swap
