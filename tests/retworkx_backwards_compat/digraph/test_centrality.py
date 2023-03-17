@@ -86,6 +86,16 @@ class TestCentralityDiGraph(unittest.TestCase):
         expected = {0: 0.0, 1: 2.0, 2: 2.0, 3: 0.0}
         self.assertEqual(expected, betweenness)
 
+    def test_closeness_centrality(self):
+        closeness = retworkx.digraph_closeness_centrality(self.graph)
+        expected = {0: 0.0, 1: 1.0 / 3.0, 2: 4.0 / 9.0, 3: 0.5}
+        self.assertEqual(expected, closeness)
+
+    def test_closeness_centrality_wf_improved(self):
+        closeness = retworkx.digraph_closeness_centrality(self.graph, wf_improved=False)
+        expected = {0: 0.0, 1: 1.0, 2: 2.0 / 3.0, 3: 0.5}
+        self.assertEqual(expected, closeness)
+
 
 class TestCentralityDiGraphDeletedNode(unittest.TestCase):
     def setUp(self):
