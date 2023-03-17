@@ -1716,10 +1716,6 @@ impl PyGraph {
 
     /// Substitute a subgraph in the graph with a different subgraph
     ///
-    /// This is used to replace a subgraph in this graph with another graph. A similar result
-    /// can be achieved by combining :meth:`.contract_nodes` abd
-    /// :meth:`.substitute_node_with_subgraph` as it
-    ///
     /// :param list nodes: A list of nodes in this graph representing the subgraph
     ///     to be removed.
     /// :param PyDiGraph subgraph: The subgraph to replace ``nodes`` with
