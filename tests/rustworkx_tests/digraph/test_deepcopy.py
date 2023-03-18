@@ -65,10 +65,8 @@ class TestDeepcopy(unittest.TestCase):
         self.assertEqual(graph_a[node_a], graph_b[node_a])
         self.assertIsNot(graph_a[node_a], graph_b[node_a])
         self.assertEqual(
-                graph_a.get_edge_data(node_a, node_b),
-                graph_b.get_edge_data(node_a, node_b)
-            )
+            graph_a.get_edge_data(node_a, node_b), graph_b.get_edge_data(node_a, node_b)
+        )
         self.assertIsNot(
-                graph_a.get_edge_data(node_a, node_b),
-                graph_b.get_edge_data(node_a, node_b)
-            )
+            graph_a.get_edge_data(node_a, node_b), graph_b.get_edge_data(node_a, node_b)
+        )
