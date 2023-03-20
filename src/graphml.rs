@@ -85,11 +85,7 @@ impl From<Error> for PyErr {
     }
 }
 
-fn xml_attribute<'a, B: BufRead>(
-    _reader: &Reader<B>,
-    element: &'a BytesStart<'a>,
-    key: &[u8],
-) -> Result<String, Error> {
+fn xml_attribute<'a>(element: &'a BytesStart<'a>, key: &[u8]) -> Result<String, Error> {
     element
         .attributes()
         .find_map(|a| {
@@ -215,7 +211,7 @@ impl Graph {
 
     fn add_node<'a, B: BufRead, I>(
         &mut self,
-        reader: &Reader<B>,
+        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
         default_data: I,
     ) -> Result<(), Error>
@@ -223,7 +219,7 @@ impl Graph {
         I: Iterator<Item = &'a Key>,
     {
         self.nodes.push(Node {
-            id: xml_attribute(reader, element, b"id")?,
+            id: xml_attribute(element, b"id")?,
             data: HashMap::from_iter(
                 default_data.map(|key| (key.name.clone(), key.default.clone())),
             ),
@@ -234,7 +230,7 @@ impl Graph {
 
     fn add_edge<'a, B: BufRead, I>(
         &mut self,
-        reader: &Reader<B>,
+        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
         default_data: I,
     ) -> Result<(), Error>
@@ -242,9 +238,9 @@ impl Graph {
         I: Iterator<Item = &'a Key>,
     {
         self.edges.push(Edge {
-            id: xml_attribute(reader, element, b"id").ok(),
-            source: xml_attribute(reader, element, b"source")?,
-            target: xml_attribute(reader, element, b"target")?,
+            id: xml_attribute(element, b"id").ok(),
+            source: xml_attribute(element, b"source")?,
+            target: xml_attribute(element, b"target")?,
             data: HashMap::from_iter(
                 default_data.map(|key| (key.name.clone(), key.default.clone())),
             ),
@@ -387,10 +383,10 @@ impl Default for GraphML {
 impl GraphML {
     fn create_graph<'a, B: BufRead>(
         &mut self,
-        reader: &Reader<B>,
+        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
     ) -> Result<(), Error> {
-        let dir = match xml_attribute(reader, element, b"edgedefault")?.as_bytes() {
+        let dir = match xml_attribute(element, b"edgedefault")?.as_bytes() {
             b"directed" => Direction::Directed,
             b"undirected" => Direction::UnDirected,
             _ => {
@@ -442,11 +438,11 @@ impl GraphML {
 
     fn add_graphml_key<'a, B: BufRead>(
         &mut self,
-        reader: &Reader<B>,
+        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
     ) -> Result<Domain, Error> {
-        let id = xml_attribute(reader, element, b"id")?;
-        let ty = match xml_attribute(reader, element, b"attr.type")?.as_bytes() {
+        let id = xml_attribute(element, b"id")?;
+        let ty = match xml_attribute(element, b"attr.type")?.as_bytes() {
             b"boolean" => Type::Boolean,
             b"int" => Type::Int,
             b"float" => Type::Float,
@@ -461,12 +457,12 @@ impl GraphML {
         };
 
         let key = Key {
-            name: xml_attribute(reader, element, b"attr.name")?,
+            name: xml_attribute(element, b"attr.name")?,
             ty,
             default: Value::UnDefined,
         };
 
-        match xml_attribute(reader, element, b"for")?.as_bytes() {
+        match xml_attribute(element, b"for")?.as_bytes() {
             b"node" => {
                 self.key_for_nodes.insert(id, key);
                 Ok(Domain::Node)
@@ -598,7 +594,7 @@ impl GraphML {
                     }
                     QName(b"data") => {
                         matches!(state, State::Node | State::Edge | State::Graph);
-                        last_data_key = xml_attribute(&reader, e, b"key")?;
+                        last_data_key = xml_attribute(e, b"key")?;
                         match state {
                             State::Node => state = State::DataForNode,
                             State::Edge => state = State::DataForEdge,
