@@ -95,7 +95,10 @@ fn xml_attribute<'a, B: BufRead>(
         .find_map(|a| {
             if let Ok(a) = a {
                 if a.key == QName(key) {
-                    let decoded = a.unescape_value().map_err(Error::from).map(|cow_str| cow_str.into_owned());
+                    let decoded = a
+                        .unescape_value()
+                        .map_err(Error::from)
+                        .map(|cow_str| cow_str.into_owned());
                     return Some(decoded);
                 }
             }
