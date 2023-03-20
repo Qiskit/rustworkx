@@ -13,7 +13,6 @@
 #![allow(clippy::borrow_as_ptr)]
 
 use std::convert::From;
-use std::io::BufRead;
 use std::iter::FromIterator;
 use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
@@ -209,11 +208,7 @@ impl Graph {
         }
     }
 
-    fn add_node<'a, I>(
-        &mut self,
-        element: &'a BytesStart<'a>,
-        default_data: I,
-    ) -> Result<(), Error>
+    fn add_node<'a, I>(&mut self, element: &'a BytesStart<'a>, default_data: I) -> Result<(), Error>
     where
         I: Iterator<Item = &'a Key>,
     {
@@ -227,11 +222,7 @@ impl Graph {
         Ok(())
     }
 
-    fn add_edge<'a, I>(
-        &mut self,
-        element: &'a BytesStart<'a>,
-        default_data: I,
-    ) -> Result<(), Error>
+    fn add_edge<'a, I>(&mut self, element: &'a BytesStart<'a>, default_data: I) -> Result<(), Error>
     where
         I: Iterator<Item = &'a Key>,
     {
@@ -379,10 +370,7 @@ impl Default for GraphML {
 }
 
 impl GraphML {
-    fn create_graph<'a>(
-        &mut self,
-        element: &'a BytesStart<'a>,
-    ) -> Result<(), Error> {
+    fn create_graph<'a>(&mut self, element: &'a BytesStart<'a>) -> Result<(), Error> {
         let dir = match xml_attribute(element, b"edgedefault")?.as_bytes() {
             b"directed" => Direction::Directed,
             b"undirected" => Direction::UnDirected,
@@ -401,11 +389,7 @@ impl GraphML {
         Ok(())
     }
 
-    fn add_node<'a, B: BufRead>(
-        &mut self,
-        _reader: &Reader<B>,
-        element: &'a BytesStart<'a>,
-    ) -> Result<(), Error> {
+    fn add_node<'a>(&mut self, element: &'a BytesStart<'a>) -> Result<(), Error> {
         if let Some(graph) = self.graphs.last_mut() {
             graph.add_node(
                 element,
@@ -416,11 +400,7 @@ impl GraphML {
         Ok(())
     }
 
-    fn add_edge<'a, B: BufRead>(
-        &mut self,
-        _reader: &Reader<B>,
-        element: &'a BytesStart<'a>,
-    ) -> Result<(), Error> {
+    fn add_edge<'a>(&mut self, element: &'a BytesStart<'a>) -> Result<(), Error> {
         if let Some(graph) = self.graphs.last_mut() {
             graph.add_edge(
                 element,
@@ -431,10 +411,7 @@ impl GraphML {
         Ok(())
     }
 
-    fn add_graphml_key<'a>(
-        &mut self,
-        element: &'a BytesStart<'a>,
-    ) -> Result<Domain, Error> {
+    fn add_graphml_key<'a>(&mut self, element: &'a BytesStart<'a>) -> Result<Domain, Error> {
         let id = xml_attribute(element, b"id")?;
         let ty = match xml_attribute(element, b"attr.type")?.as_bytes() {
             b"boolean" => Type::Boolean,
@@ -578,12 +555,12 @@ impl GraphML {
                     }
                     QName(b"node") => {
                         matches!(state, State::Graph);
-                        graphml.add_node(&reader, e)?;
+                        graphml.add_node(e)?;
                         state = State::Node;
                     }
                     QName(b"edge") => {
                         matches!(state, State::Graph);
-                        graphml.add_edge(&reader, e)?;
+                        graphml.add_edge(e)?;
                         state = State::Edge;
                     }
                     QName(b"data") => {
@@ -616,11 +593,11 @@ impl GraphML {
                     }
                     QName(b"node") => {
                         matches!(state, State::Graph);
-                        graphml.add_node(&reader, e)?;
+                        graphml.add_node(e)?;
                     }
                     QName(b"edge") => {
                         matches!(state, State::Graph);
-                        graphml.add_edge(&reader, e)?;
+                        graphml.add_edge(e)?;
                     }
                     QName(b"port") => {
                         return Err(Error::UnSupported(String::from("Ports are not supported.")));
