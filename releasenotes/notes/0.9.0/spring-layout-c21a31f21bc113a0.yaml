@@ -1,34 +1,34 @@
 ---
 features:
   - |
-    Added a new function, :func:`~retworkx.spring_layout` to generate layouts
-    for :class:`~retworkx.PyGraph` and :class:`~retworkx.PyDiGraph`
+    Added a new function, :func:`~rustworkx.spring_layout` to generate layouts
+    for :class:`~rustworkx.PyGraph` and :class:`~rustworkx.PyDiGraph`
     using the `Fruchterman-Reingold force-directed algorithm 
     <https://onlinelibrary.wiley.com/doi/abs/10.1002/spe.4380211102>`__. This
     layout method is used by default for the
-    :func:`~retworkx.visualization.mpl_drawer` visualization function. You
+    :func:`~rustworkx.visualization.mpl_drawer` visualization function. You
     can also explicitly use it when calling
-    :func:`~retworkx.visualization.mpl_drawer` and
-    :func:`~retworkx.visualization.graphviz_drawer`. For example:
+    :func:`~rustworkx.visualization.mpl_drawer` and
+    :func:`~rustworkx.visualization.graphviz_drawer`. For example:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.random_geometric_graph(15, 1.42)
-      layout = retworkx.spring_layout(graph, adaptive_cooling=False)
+      graph = rustworkx.random_geometric_graph(15, 1.42)
+      layout = rustworkx.spring_layout(graph, adaptive_cooling=False)
       mpl_draw(graph, pos=layout)
 
     and with the graphviz drawer:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import graphviz_draw
+      import rustworkx
+      from rustworkx.visualization import graphviz_draw
 
-      graph = retworkx.random_geometric_graph(15, 1.42)
-      layout = retworkx.spring_layout(graph, adaptive_cooling=False)
+      graph = rustworkx.random_geometric_graph(15, 1.42)
+      layout = rustworkx.spring_layout(graph, adaptive_cooling=False)
       for i in range(15):
         graph[i] = i
 

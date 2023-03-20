@@ -2,9 +2,9 @@
 fixes:
   - |
     In previous releases the Python garbage collector did not know how to
-    interact with :class:`~retworkx.PyDiGraph` or :class:`~retworkx.PyGraph`
+    interact with :class:`~rustworkx.PyDiGraph` or :class:`~rustworkx.PyGraph`
     objects and as a result they may never have been freed until Python exited.
-    To fix this issue, the :class:`~retworkx.PyDiGraph` and
-    :class:`~retworkx.PyGraph` classes now are integrated with Python's garbage
+    To fix this issue, the :class:`~rustworkx.PyDiGraph` and
+    :class:`~rustworkx.PyGraph` classes now are integrated with Python's garbage
     collector so they'll properly be cleared when there are no more references
     to a graph object.

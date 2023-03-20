@@ -16,7 +16,7 @@ use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{Control, Time};
 
 use crate::PruneSearch;
-use retworkx_core::traversal::DfsEvent;
+use rustworkx_core::traversal::DfsEvent;
 
 #[derive(FromPyObject)]
 pub struct PyDfsVisitor {
@@ -51,7 +51,7 @@ pub fn dfs_handler(
 
     match res {
         Err(e) => {
-            if e.is_instance::<PruneSearch>(py) {
+            if e.is_instance_of::<PruneSearch>(py) {
                 Ok(Control::Prune)
             } else {
                 Err(e)

@@ -110,7 +110,7 @@ pub fn dag_longest_path_length(
 
 /// Find the weighted longest path in a DAG
 ///
-/// This function differs from :func:`retworkx.dag_longest_path` in that
+/// This function differs from :func:`rustworkx.dag_longest_path` in that
 /// this function requires a ``weight_fn`` parameter, and the ``weight_fn`` is
 /// expected to return a ``float`` not an ``int``.
 ///
@@ -152,7 +152,7 @@ pub fn dag_weighted_longest_path(
 
 /// Find the length of the weighted longest path in a DAG
 ///
-/// This function differs from :func:`retworkx.dag_longest_path_length` in that
+/// This function differs from :func:`rustworkx.dag_longest_path_length` in that
 /// this function requires a ``weight_fn`` parameter, and the ``weight_fn`` is
 /// expected to return a ``float`` not an ``int``.
 ///
@@ -215,14 +215,26 @@ pub fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
 /// :param PyDiGraph graph: The DAG to get the layers from
 /// :param list first_layer: A list of node ids for the first layer. This
 ///     will be the first layer in the output
+/// :param bool index_output: When set to to ``True`` the output layers will be
+///     a list of integer node indices.
 ///
-/// :returns: A list of layers, each layer is a list of node data
+/// :returns: A list of layers, each layer is a list of node data, or if
+///     ``index_output`` is ``True`` each layer is a list of node indices.
 /// :rtype: list
 ///
 /// :raises InvalidNode: If a node index in ``first_layer`` is not in the graph
 #[pyfunction]
-#[pyo3(text_signature = "(dag, first_layer, /)")]
-pub fn layers(py: Python, dag: &digraph::PyDiGraph, first_layer: Vec<usize>) -> PyResult<PyObject> {
+#[pyo3(
+    signature=(dag, first_layer, index_output=false),
+    text_signature = "(dag, first_layer, /, index_output=False)"
+)]
+pub fn layers(
+    py: Python,
+    dag: &digraph::PyDiGraph,
+    first_layer: Vec<usize>,
+    index_output: bool,
+) -> PyResult<PyObject> {
+    let mut output_indices: Vec<Vec<usize>> = Vec::new();
     let mut output: Vec<Vec<&PyObject>> = Vec::new();
     // Convert usize to NodeIndex
     let mut first_layer_index: Vec<NodeIndex> = Vec::new();
@@ -235,19 +247,31 @@ pub fn layers(py: Python, dag: &digraph::PyDiGraph, first_layer: Vec<usize>) -> 
     let mut predecessor_count: HashMap<NodeIndex, usize> = HashMap::new();
 
     let mut layer_node_data: Vec<&PyObject> = Vec::new();
-    for layer_node in &cur_layer {
-        let node_data = match dag.graph.node_weight(*layer_node) {
-            Some(data) => data,
-            None => {
+    if !index_output {
+        for layer_node in &cur_layer {
+            let node_data = match dag.graph.node_weight(*layer_node) {
+                Some(data) => data,
+                None => {
+                    return Err(InvalidNode::new_err(format!(
+                        "An index input in 'first_layer' {} is not a valid node index in the graph",
+                        layer_node.index()
+                    )))
+                }
+            };
+            layer_node_data.push(node_data);
+        }
+        output.push(layer_node_data);
+    } else {
+        for layer_node in &cur_layer {
+            if !dag.graph.contains_node(*layer_node) {
                 return Err(InvalidNode::new_err(format!(
                     "An index input in 'first_layer' {} is not a valid node index in the graph",
                     layer_node.index()
-                )))
+                )));
             }
-        };
-        layer_node_data.push(node_data);
+        }
+        output_indices.push(cur_layer.iter().map(|x| x.index()).collect());
     }
-    output.push(layer_node_data);
 
     // Iterate until there are no more
     while !cur_layer.is_empty() {
@@ -281,17 +305,26 @@ pub fn layers(py: Python, dag: &digraph::PyDiGraph, first_layer: Vec<usize>) -> 
                 }
             }
         }
-        let mut layer_node_data: Vec<&PyObject> = Vec::new();
-        for layer_node in &next_layer {
-            layer_node_data.push(&dag.graph[*layer_node]);
-        }
-        if !layer_node_data.is_empty() {
-            output.push(layer_node_data);
+        if !index_output {
+            let mut layer_node_data: Vec<&PyObject> = Vec::new();
+
+            for layer_node in &next_layer {
+                layer_node_data.push(&dag.graph[*layer_node]);
+            }
+            if !layer_node_data.is_empty() {
+                output.push(layer_node_data);
+            }
+        } else if !next_layer.is_empty() {
+            output_indices.push(next_layer.iter().map(|x| x.index()).collect());
         }
         cur_layer = next_layer;
         next_layer = Vec::new();
     }
-    Ok(PyList::new(py, output).into())
+    if !index_output {
+        Ok(PyList::new(py, output).into())
+    } else {
+        Ok(PyList::new(py, output_indices).into())
+    }
 }
 
 /// Get the lexicographical topological sorted nodes from the provided DAG
@@ -302,7 +335,7 @@ pub fn layers(py: Python, dag: &digraph::PyDiGraph, first_layer: Vec<usize>) -> 
 /// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
 /// in the ordering.
 ///
-/// This function differs from :func:`~retworkx.topological_sort` because
+/// This function differs from :func:`~rustworkx.topological_sort` because
 /// when there are ties between nodes in the sort order this function will
 /// use the string returned by the ``key`` argument to determine the output
 /// order used.
@@ -317,7 +350,7 @@ pub fn layers(py: Python, dag: &digraph::PyDiGraph, first_layer: Vec<usize>) -> 
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(dag, key, /)")]
-fn lexicographical_topological_sort(
+pub fn lexicographical_topological_sort(
     py: Python,
     dag: &digraph::PyDiGraph,
     key: PyObject,
@@ -372,7 +405,7 @@ pub fn collect_multi_blocks(
 /// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
+pub fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
     let nodes = match algo::toposort(&graph.graph, None) {
         Ok(nodes) => nodes,
         Err(_err) => return Err(DAGHasCycle::new_err("Sort encountered a cycle")),
@@ -399,7 +432,7 @@ fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, filter)")]
-fn collect_runs(
+pub fn collect_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
     filter_fn: PyObject,
@@ -471,7 +504,7 @@ fn collect_runs(
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, filter_fn, color_fn)")]
-fn collect_bicolor_runs(
+pub fn collect_bicolor_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
     filter_fn: PyObject,

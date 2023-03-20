@@ -18,7 +18,7 @@ use bfs_visit::{bfs_handler, PyBfsVisitor};
 use dfs_visit::{dfs_handler, PyDfsVisitor};
 use dijkstra_visit::{dijkstra_handler, PyDijkstraVisitor};
 
-use retworkx_core::traversal::{
+use rustworkx_core::traversal::{
     breadth_first_search, depth_first_search, dfs_edges, dijkstra_search,
 };
 
@@ -28,6 +28,7 @@ use std::convert::TryFrom;
 
 use hashbrown::HashSet;
 
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
@@ -71,7 +72,7 @@ use crate::iterators::EdgeList;
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
+pub fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
@@ -116,7 +117,7 @@ fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeL
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
-fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
+pub fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
     }
@@ -137,7 +138,11 @@ fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
 /// :rtype: BFSSuccessors
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-fn bfs_successors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> iterators::BFSSuccessors {
+pub fn bfs_successors(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
     let mut bfs = Bfs::new(&graph.graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
@@ -175,7 +180,7 @@ fn bfs_successors(py: Python, graph: &digraph::PyDiGraph, node: usize) -> iterat
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let reverse_graph = Reversed(&graph.graph);
@@ -202,7 +207,7 @@ fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
     let mut out_set: HashSet<usize> = HashSet::new();
     let res = algo::dijkstra(&graph.graph, index, None, |_| 1);
@@ -244,16 +249,16 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///
 /// If an exception is raised inside the callback function, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
-/// :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+/// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
-/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+/// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
 /// In the following example we keep track of the tree edges:
 ///
 /// .. jupyter-execute::
 ///
-///        import retworkx
-///        from retworkx.visit import BFSVisitor
+///        import rustworkx as rx
+///        from rustworkx.visit import BFSVisitor
 ///   
 ///        class TreeEdgesRecorder(BFSVisitor):
 ///
@@ -263,10 +268,10 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = retworkx.PyDiGraph()
+///        graph = rx.PyDiGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        retworkx.bfs_search(graph, [0], vis)
+///        rx.bfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
@@ -279,15 +284,21 @@ fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///     will be chosen arbitrarly and repeated until all components of the
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
-///     algorithm. This should be a subclass of :class:`~retworkx.visit.BFSVisitor`.
+///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, visitor)")]
 pub fn digraph_bfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
-    visitor: PyBfsVisitor,
+    visitor: Option<PyBfsVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -330,16 +341,16 @@ pub fn digraph_bfs_search(
 ///
 /// If an exception is raised inside the callback function, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
-/// :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+/// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
-/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+/// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
 /// In the following example we keep track of the tree edges:
 ///
 /// .. jupyter-execute::
 ///
-///        import retworkx
-///        from retworkx.visit import BFSVisitor
+///        import rustworkx as rx
+///        from rustworkx.visit import BFSVisitor
 ///   
 ///        class TreeEdgesRecorder(BFSVisitor):
 ///
@@ -349,10 +360,10 @@ pub fn digraph_bfs_search(
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = retworkx.PyGraph()
+///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        retworkx.bfs_search(graph, [0], vis)
+///        rx.bfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
@@ -365,15 +376,21 @@ pub fn digraph_bfs_search(
 ///     will be chosen arbitrarly and repeated until all components of the
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
-///     algorithm. This should be a subclass of :class:`~retworkx.visit.BFSVisitor`.
+///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, visitor)")]
 pub fn graph_bfs_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
-    visitor: PyBfsVisitor,
+    visitor: Option<PyBfsVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -415,15 +432,15 @@ pub fn graph_bfs_search(
 ///
 /// If an exception is raised inside the callback function, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
-/// :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
-/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+/// :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
+/// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
 /// In the following example we keep track of the tree edges:
 ///
 /// .. jupyter-execute::
 ///
-///        import retworkx
-///        from retworkx.visit import DFSVisitor
+///        import rustworkx as rx
+///        from rustworkx.visit import DFSVisitor
 ///   
 ///        class TreeEdgesRecorder(DFSVisitor):
 ///
@@ -433,10 +450,10 @@ pub fn graph_bfs_search(
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = retworkx.PyGraph()
+///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        retworkx.dfs_search(graph, [0], vis)
+///        rx.dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
@@ -449,15 +466,21 @@ pub fn graph_bfs_search(
 ///     will be chosen arbitrarly and repeated until all components of the
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
-///     algorithm. This should be a subclass of :class:`~retworkx.visit.DFSVisitor`.
+///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, visitor)")]
 pub fn digraph_dfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
-    visitor: PyDfsVisitor,
+    visitor: Option<PyDfsVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -499,15 +522,15 @@ pub fn digraph_dfs_search(
 ///
 /// If an exception is raised inside the callback function, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
-/// :class:`~retworkx.visit.StopSearch` exception. You can also prune part of the
-/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+/// :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
+/// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
 /// In the following example we keep track of the tree edges:
 ///
 /// .. jupyter-execute::
 ///
-///        import retworkx
-///        from retworkx.visit import DFSVisitor
+///        import rustworkx as rx
+///        from rustworkx.visit import DFSVisitor
 ///   
 ///        class TreeEdgesRecorder(DFSVisitor):
 ///
@@ -517,10 +540,10 @@ pub fn digraph_dfs_search(
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = retworkx.PyGraph()
+///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        retworkx.dfs_search(graph, [0], vis)
+///        rx.dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
@@ -533,15 +556,21 @@ pub fn digraph_dfs_search(
 ///     will be chosen arbitrarly and repeated until all components of the
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
-///     algorithm. This should be a subclass of :class:`~retworkx.visit.DFSVisitor`.
+///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, visitor)")]
 pub fn graph_dfs_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
-    visitor: PyDfsVisitor,
+    visitor: Option<PyDfsVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -585,9 +614,9 @@ pub fn graph_dfs_search(
 ///
 /// If an exception is raised inside the callback function, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
-/// :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+/// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
-/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+/// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
 /// .. note::
 ///
@@ -603,16 +632,22 @@ pub fn graph_dfs_search(
 ///     will be used to represent the weight/cost of the edge. If not specified,
 ///     a default value of cost ``1.0`` will be used for each edge.
 /// :param visitor: A visitor object that is invoked at the event points inside the
-///     algorithm. This should be a subclass of :class:`~retworkx.visit.DijkstraVisitor`.
+///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DijkstraVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, weight_fn, visitor)")]
 pub fn digraph_dijkstra_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
     weight_fn: Option<PyObject>,
-    visitor: PyDijkstraVisitor,
+    visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -660,9 +695,9 @@ pub fn digraph_dijkstra_search(
 ///
 /// If an exception is raised inside the callback function, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
-/// :class:`~retworkx.visit.StopSearch` exception, in which case the search function
+/// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
-/// search tree by raising :class:`~retworkx.visit.PruneSearch`.
+/// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
 /// .. note::
 ///
@@ -678,16 +713,22 @@ pub fn digraph_dijkstra_search(
 ///     will be used to represent the weight/cost of the edge. If not specified,
 ///     a default value of cost ``1.0`` will be used for each edge.
 /// :param visitor: A visitor object that is invoked at the event points inside the
-///     algorithm. This should be a subclass of :class:`~retworkx.visit.DijkstraVisitor`.
+///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DijkstraVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, weight_fn, visitor)")]
 pub fn graph_dijkstra_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
     weight_fn: Option<PyObject>,
-    visitor: PyDijkstraVisitor,
+    visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),

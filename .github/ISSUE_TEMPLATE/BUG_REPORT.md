@@ -9,7 +9,7 @@ labels: bug
 
 ### Information
 
-- **retworkx version**:
+- **rustworkx version**:
 - **Python version**:
 - **Rust version**:
 - **Operating system**:

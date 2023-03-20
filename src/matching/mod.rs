@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph;
-use retworkx_core::max_weight_matching;
+use rustworkx_core::max_weight_matching as mwm;
 
 use hashbrown::HashSet;
 
@@ -24,7 +24,7 @@ use petgraph::visit::IntoEdgeReferences;
 
 use crate::weight_callable;
 
-/// Compute a maximum-weighted matching for a :class:`~retworkx.PyGraph`
+/// Compute a maximum-weighted matching for a :class:`~rustworkx.PyGraph`
 ///
 /// A matching is a subset of edges in which no node occurs more than once.
 /// The weight of a matching is the sum of the weights of its edges.
@@ -64,12 +64,9 @@ use crate::weight_callable;
 /// .. [1] "Efficient Algorithms for Finding Maximum Matching in Graphs",
 ///     Zvi Galil, ACM Computing Surveys, 1986.
 ///
-#[pyfunction(
-    max_cardinality = "false",
-    default_weight = 1,
-    verify_optimum = "false"
-)]
+#[pyfunction]
 #[pyo3(
+    signature=(graph, max_cardinality=false, weight_fn=None, default_weight=1, verify_optimum=false),
     text_signature = "(graph, /, max_cardinality=False, weight_fn=None, default_weight=1, verify_optimum=False)"
 )]
 pub fn max_weight_matching(
@@ -80,7 +77,7 @@ pub fn max_weight_matching(
     default_weight: i128,
     verify_optimum: bool,
 ) -> PyResult<HashSet<(usize, usize)>> {
-    max_weight_matching::max_weight_matching(
+    mwm::max_weight_matching(
         &graph.graph,
         max_cardinality,
         |e| weight_callable(py, &weight_fn, e.weight(), default_weight),

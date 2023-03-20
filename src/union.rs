@@ -30,7 +30,7 @@ fn extract<T>(x: Entry<T>) -> T {
     match x {
         Entry::Merged(val) => val,
         Entry::Added(val) => val,
-        Entry::None => panic!("Unexpected internal error: called `Entry::extract()` on a `None` value. Please file an issue at https://github.com/Qiskit/retworkx/issues/new/choose with the details on how you encountered this."),
+        Entry::None => panic!("Unexpected internal error: called `Entry::extract()` on a `None` value. Please file an issue at https://github.com/Qiskit/rustworkx/issues/new/choose with the details on how you encountered this."),
     }
 }
 
@@ -124,9 +124,9 @@ fn union<Ty: EdgeType>(
 ///     ``first``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
 /// :rtype: PyGraph
-#[pyfunction(merge_nodes = false, merge_edges = false)]
-#[pyo3(text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
-fn graph_union(
+#[pyfunction]
+#[pyo3(signature=(first, second, merge_nodes=false, merge_edges=false), text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
+pub fn graph_union(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -139,6 +139,7 @@ fn graph_union(
         graph: out_graph,
         node_removed: first.node_removed,
         multigraph: true,
+        attrs: py.None(),
     })
 }
 
@@ -172,9 +173,9 @@ fn graph_union(
 ///     ``first``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
 /// :rtype: PyDiGraph
-#[pyfunction(merge_nodes = false, merge_edges = false)]
-#[pyo3(text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
-fn digraph_union(
+#[pyfunction]
+#[pyo3(signature=(first, second, merge_nodes=false, merge_edges=false), text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
+pub fn digraph_union(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
@@ -189,5 +190,6 @@ fn digraph_union(
         check_cycle: false,
         node_removed: first.node_removed,
         multigraph: true,
+        attrs: py.None(),
     })
 }

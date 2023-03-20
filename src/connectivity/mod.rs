@@ -12,26 +12,31 @@
 
 #![allow(clippy::float_cmp)]
 
-mod connected_components;
-mod core_number;
+mod all_pairs_all_simple_paths;
+mod johnson_simple_cycles;
 
-use super::{digraph, get_edge_iter_with_weights, graph, weight_callable, InvalidNode, NullGraph};
+use super::{
+    digraph, get_edge_iter_with_weights, graph, iterators::NodeIndices, score, weight_callable,
+    InvalidNode, NullGraph,
+};
 
 use hashbrown::{HashMap, HashSet};
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
+use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{BiconnectedComponents, Chains, EdgeList};
-use retworkx_core::connectivity;
+use crate::iterators::{AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList};
+use rustworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -60,69 +65,27 @@ use retworkx_core::connectivity;
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, root=None)")]
 pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize>> {
-    let mut root_node = root;
-    let mut graph_nodes: HashSet<NodeIndex> = graph.graph.node_indices().collect();
-    let mut cycles: Vec<Vec<usize>> = Vec::new();
-    while !graph_nodes.is_empty() {
-        let temp_value: NodeIndex;
-        // If root_node is not set get an arbitrary node from the set of graph
-        // nodes we've not "examined"
-        let root_index = match root_node {
-            Some(root_value) => NodeIndex::new(root_value),
-            None => {
-                temp_value = *graph_nodes.iter().next().unwrap();
-                graph_nodes.remove(&temp_value);
-                temp_value
-            }
-        };
-        // Stack (ie "pushdown list") of vertices already in the spanning tree
-        let mut stack: Vec<NodeIndex> = vec![root_index];
-        // Map of node index to predecessor node index
-        let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-        pred.insert(root_index, root_index);
-        // Set of examined nodes during this iteration
-        let mut used: HashMap<NodeIndex, HashSet<NodeIndex>> = HashMap::new();
-        used.insert(root_index, HashSet::new());
-        // Walk the spanning tree
-        while !stack.is_empty() {
-            // Use the last element added so that cycles are easier to find
-            let z = stack.pop().unwrap();
-            for neighbor in graph.graph.neighbors(z) {
-                // A new node was encountered:
-                if !used.contains_key(&neighbor) {
-                    pred.insert(neighbor, z);
-                    stack.push(neighbor);
-                    let mut temp_set: HashSet<NodeIndex> = HashSet::new();
-                    temp_set.insert(z);
-                    used.insert(neighbor, temp_set);
-                // A self loop:
-                } else if z == neighbor {
-                    let cycle: Vec<usize> = vec![z.index()];
-                    cycles.push(cycle);
-                // A cycle was found:
-                } else if !used.get(&z).unwrap().contains(&neighbor) {
-                    let pn = used.get(&neighbor).unwrap();
-                    let mut cycle: Vec<NodeIndex> = vec![neighbor, z];
-                    let mut p = pred.get(&z).unwrap();
-                    while !pn.contains(p) {
-                        cycle.push(*p);
-                        p = pred.get(p).unwrap();
-                    }
-                    cycle.push(*p);
-                    cycles.push(cycle.iter().map(|x| x.index()).collect());
-                    let neighbor_set = used.get_mut(&neighbor).unwrap();
-                    neighbor_set.insert(z);
-                }
-            }
-        }
-        let mut temp_hashset: HashSet<NodeIndex> = HashSet::new();
-        for key in pred.keys() {
-            temp_hashset.insert(*key);
-        }
-        graph_nodes = graph_nodes.difference(&temp_hashset).copied().collect();
-        root_node = None;
-    }
-    cycles
+    connectivity::cycle_basis(&graph.graph, root.map(NodeIndex::new))
+        .into_iter()
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
+        .collect()
+}
+
+/// Find all simple cycles of a :class:`~.PyDiGraph`
+///
+/// A "simple cycle" (called an elementary circuit in [1]) is a cycle (or closed path)
+/// where no node appears more than once.
+///
+/// This function is a an implementation of Johnson's algorithm [1] also based
+/// on the non-recursive implementation found in NetworkX. [2][3]
+///
+/// [1] https://doi.org/10.1137/0204007
+/// [2] https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.cycles.simple_cycles.html
+/// [3] https://github.com/networkx/networkx/blob/networkx-2.8.4/networkx/algorithms/cycles.py#L98-L222
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn simple_cycles(graph: &digraph::PyDiGraph) -> johnson_simple_cycles::SimpleCycleIter {
+    johnson_simple_cycles::SimpleCycleIter::new(graph)
 }
 
 /// Compute the strongly connected components for a directed graph
@@ -156,67 +119,12 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, source=None)")]
 pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
-    let mut graph_nodes: HashSet<NodeIndex> = graph.graph.node_indices().collect();
-    let mut cycle: Vec<(usize, usize)> = Vec::with_capacity(graph.graph.edge_count());
-    let temp_value: NodeIndex;
-    // If source is not set get an arbitrary node from the set of graph
-    // nodes we've not "examined"
-    let source_index = match source {
-        Some(source_value) => NodeIndex::new(source_value),
-        None => {
-            temp_value = *graph_nodes.iter().next().unwrap();
-            graph_nodes.remove(&temp_value);
-            temp_value
-        }
-    };
-
-    // Stack (ie "pushdown list") of vertices already in the spanning tree
-    let mut stack: Vec<NodeIndex> = vec![source_index];
-    // map to store parent of a node
-    let mut pred: HashMap<NodeIndex, NodeIndex> = HashMap::new();
-    // a node is in the visiting set if at least one of its child is unexamined
-    let mut visiting = HashSet::new();
-    // a node is in visited set if all of its children have been examined
-    let mut visited = HashSet::new();
-    while !stack.is_empty() {
-        let mut z = *stack.last().unwrap();
-        visiting.insert(z);
-
-        let children = graph
-            .graph
-            .neighbors_directed(z, petgraph::Direction::Outgoing);
-
-        for child in children {
-            //cycle is found
-            if visiting.contains(&child) {
-                cycle.push((z.index(), child.index()));
-                //backtrack
-                loop {
-                    if z == child {
-                        cycle.reverse();
-                        break;
-                    }
-                    cycle.push((pred[&z].index(), z.index()));
-                    z = pred[&z];
-                }
-                return EdgeList { edges: cycle };
-            }
-            //if an unexplored node is encountered
-            if !visited.contains(&child) {
-                stack.push(child);
-                pred.insert(child, z);
-            }
-        }
-
-        let top = *stack.last().unwrap();
-        //if no further children and explored, move to visited
-        if top.index() == z.index() {
-            stack.pop();
-            visiting.remove(&z);
-            visited.insert(z);
-        }
+    EdgeList {
+        edges: connectivity::find_cycle(&graph.graph, source.map(NodeIndex::new))
+            .iter()
+            .map(|(s, t)| (s.index(), t.index()))
+            .collect(),
     }
-    EdgeList { edges: cycle }
 }
 
 /// Find the number of connected components in an undirected graph.
@@ -228,8 +136,8 @@ pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> 
 /// :rtype: int
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn number_connected_components(graph: &graph::PyGraph) -> usize {
-    connected_components::number_connected_components(&graph.graph)
+pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
+    connectivity::number_connected_components(&graph.graph)
 }
 
 /// Find the connected components in an undirected graph
@@ -242,7 +150,10 @@ fn number_connected_components(graph: &graph::PyGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
-    connected_components::connected_components(&graph.graph)
+    connectivity::connected_components(&graph.graph)
+        .into_iter()
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
+        .collect()
 }
 
 /// Returns the set of nodes in the component of graph containing `node`.
@@ -265,11 +176,12 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
         ));
     }
 
-    Ok(connected_components::bfs_undirected(
-        &graph.graph,
-        node,
-        &mut graph.graph.visit_map(),
-    ))
+    Ok(
+        connectivity::bfs_undirected(&graph.graph, node, &mut graph.graph.visit_map())
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
+    )
 }
 
 /// Check if the graph is connected.
@@ -301,13 +213,13 @@ pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
 /// :rtype: int
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
+pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
     let mut weak_components = graph.node_count();
     let mut vertex_sets = UnionFind::new(graph.graph.node_bound());
     for edge in graph.graph.edge_references() {
         let (a, b) = (edge.source(), edge.target());
         // union the two vertices of the edge
-        if vertex_sets.union(graph.graph.to_index(a), graph.graph.to_index(b)) {
+        if vertex_sets.union(a.index(), b.index()) {
             weak_components -= 1
         };
     }
@@ -325,7 +237,10 @@ fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
-    connected_components::connected_components(&graph.graph)
+    connectivity::connected_components(&graph.graph)
+        .into_iter()
+        .map(|res_map| res_map.into_iter().map(|x| x.index()).collect())
+        .collect()
 }
 
 /// Check if the graph is weakly connected
@@ -354,7 +269,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     from
 /// :param callable weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         dag_adjacency_matrix(dag, weight_fn: lambda x: 1)
@@ -375,8 +290,11 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn digraph_adjacency_matrix(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -405,7 +323,7 @@ pub fn digraph_adjacency_matrix(
 /// :param PyGraph graph: The graph used to generate the adjacency matrix from
 /// :param weight_fn: A callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``. This
-///     tells retworkx/rust how to extract a numerical weight as a ``float``
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
 ///     for edge object. Some simple examples are::
 ///
 ///         graph_adjacency_matrix(graph, weight_fn: lambda x: 1)
@@ -426,8 +344,11 @@ pub fn digraph_adjacency_matrix(
 ///
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
-#[pyfunction(default_weight = "1.0", null_value = "0.0")]
-#[pyo3(text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)")]
+#[pyfunction]
+#[pyo3(
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+)]
 pub fn graph_adjacency_matrix(
     py: Python,
     graph: &graph::PyGraph,
@@ -460,7 +381,7 @@ pub fn graph_adjacency_matrix(
 /// .. note::
 ///
 ///     Parallel edges and self-loops are never created,
-///     even if the :attr:`~retworkx.PyGraph.multigraph`
+///     even if the :attr:`~rustworkx.PyGraph.multigraph`
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
@@ -477,7 +398,7 @@ pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::P
                     || !complement_graph.has_edge(node_a.index(), node_b.index()))
             {
                 // avoid creating parallel edges in multigraph
-                complement_graph.add_edge(node_a.index(), node_b.index(), py.None())?;
+                complement_graph.add_edge(node_a.index(), node_b.index(), py.None());
             }
         }
     }
@@ -489,12 +410,12 @@ pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::P
 /// :param PyDiGraph graph: The graph to be used.
 ///
 /// :returns: The complement of the graph.
-/// :rtype: :class:`~retworkx.PyDiGraph`
+/// :rtype: :class:`~rustworkx.PyDiGraph`
 ///
 /// .. note::
 ///
 ///     Parallel edges and self-loops are never created,
-///     even if the :attr:`~retworkx.PyDiGraph.multigraph`
+///     even if the :attr:`~rustworkx.PyDiGraph.multigraph`
 ///     attribute is set to ``True``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
@@ -535,7 +456,7 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
-fn graph_all_simple_paths(
+pub fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     from: usize,
     to: usize,
@@ -589,7 +510,7 @@ fn graph_all_simple_paths(
 /// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
-fn digraph_all_simple_paths(
+pub fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
     from: usize,
     to: usize,
@@ -625,6 +546,88 @@ fn digraph_all_simple_paths(
     Ok(result)
 }
 
+/// Return all the simple paths between all pairs of nodes in the graph
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyDiGraph graph: The graph to find all simple paths in
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A mapping of source node indices to a mapping of target node
+///     indices to a list of paths between the source and target nodes.
+/// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+pub fn digraph_all_pairs_all_simple_paths(
+    graph: &digraph::PyDiGraph,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth.is_some() && min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff.is_some() && cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
+}
+
+/// Return all the simple paths between all pairs of nodes in the graph
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyGraph graph: The graph to find all simple paths in
+/// :param int min_depth: The minimum depth of the path to include in the output
+///     list of paths. By default all paths are included regardless of depth,
+///     setting to 0 will behave like the default.
+/// :param int cutoff: The maximum depth of path to include in the output list
+///     of paths. By default includes all paths regardless of depth, setting to
+///     0 will behave like default.
+///
+/// :returns: A mapping of node indices to to a mapping of target node
+///     indices to a list of paths between the source and target nodes.
+/// :rtype: AllPairsMultiplePathMapping
+///
+/// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+pub fn graph_all_pairs_all_simple_paths(
+    graph: &graph::PyGraph,
+    min_depth: Option<usize>,
+    cutoff: Option<usize>,
+) -> PyResult<AllPairsMultiplePathMapping> {
+    if min_depth.is_some() && min_depth < Some(2) {
+        return Err(PyValueError::new_err("Value for min_depth must be >= 2"));
+    }
+    if cutoff.is_some() && cutoff < Some(2) {
+        return Err(PyValueError::new_err("Value for cutoff must be >= 2"));
+    }
+
+    Ok(all_pairs_all_simple_paths::all_pairs_all_simple_paths(
+        &graph.graph,
+        min_depth,
+        cutoff,
+    ))
+}
+
 /// Return the core number for each node in the graph.
 ///
 /// A k-core is a maximal subgraph that contains nodes of degree k or more.
@@ -642,7 +645,12 @@ fn digraph_all_simple_paths(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    core_number::core_number(py, &graph.graph)
+    let cores = connectivity::core_number(&graph.graph);
+    let out_dict = PyDict::new(py);
+    for (k, v) in cores {
+        out_dict.set_item(k.index(), v)?;
+    }
+    Ok(out_dict.into())
 }
 
 /// Return the core number for each node in the directed graph.
@@ -663,7 +671,58 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
-    core_number::core_number(py, &graph.graph)
+    let cores = connectivity::core_number(&graph.graph);
+    let out_dict = PyDict::new(py);
+    for (k, v) in cores {
+        out_dict.set_item(k.index(), v)?;
+    }
+    Ok(out_dict.into())
+}
+
+/// Compute a weighted minimum cut using the Stoer-Wagner algorithm.
+///
+/// Determine the minimum cut of a graph using the Stoer-Wagner algorithm [stoer_simple_1997]_.
+/// All weights must be nonnegative. If the input graph is disconnected,
+/// a cut with zero value will be returned. For graphs with less than
+/// two nodes, this function returns ``None``.
+///
+/// :param PyGraph: The graph to be used
+/// :param Callable weight_fn:  An optional callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``.
+///     Edges with ``NaN`` weights will be ignored, i.e it's conidered to have zero weight.
+///     If ``weight_fn`` is not specified a default value of ``1.0`` will be used for all edges.
+///
+/// :returns: A tuple with the minimum cut value and a list of all
+///     the node indexes contained in one part of the partition
+///     that defines a minimum cut.
+/// :rtype: (usize, NodeIndices)
+///
+/// .. [stoer_simple_1997] Stoer, Mechthild and Frank Wagner, "A simple min-cut
+///     algorithm". Journal of the ACM 44 (4), 585-591, 1997.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+pub fn stoer_wagner_min_cut(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+) -> PyResult<Option<(f64, NodeIndices)>> {
+    let cut = connectivity::stoer_wagner_min_cut(&graph.graph, |edge| -> PyResult<_> {
+        let val: f64 = weight_callable(py, &weight_fn, edge.weight(), 1.0)?;
+        if val.is_nan() {
+            Ok(score::Score(0.0))
+        } else {
+            Ok(score::Score(val))
+        }
+    })?;
+
+    Ok(cut.map(|(value, partition)| {
+        (
+            value.0,
+            NodeIndices {
+                nodes: partition.iter().map(|&nx| nx.index()).collect(),
+            },
+        )
+    }))
 }
 
 /// Return the articulation points of an undirected graph.

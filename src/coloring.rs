@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph;
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use hashbrown::{HashMap, HashSet};
 use std::cmp::Reverse;
@@ -35,7 +35,7 @@ use rayon::prelude::*;
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let mut colors: DictMap<usize, usize> = DictMap::new();
     let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
     let mut sort_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(graph.node_count());

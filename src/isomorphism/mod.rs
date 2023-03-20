@@ -28,9 +28,9 @@ use pyo3::Python;
 /// The matcher function takes in 2 data objects and will compare them. A simple
 /// example that checks if they're just equal would be::
 ///
-///     graph_a = retworkx.PyDiGraph()
-///     graph_b = retworkx.PyDiGraph()
-///     retworkx.is_isomorphic(graph_a, graph_b,
+///     graph_a = rustworkx.PyDiGraph()
+///     graph_b = rustworkx.PyDiGraph()
+///     rustworkx.is_isomorphic(graph_a, graph_b,
 ///                            lambda x, y: x == y)
 ///
 /// .. note::
@@ -57,12 +57,13 @@ use pyo3::Python;
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction(id_order = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, call_limit=None)"
 )]
-fn digraph_is_isomorphic(
+pub fn digraph_is_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
@@ -91,9 +92,9 @@ fn digraph_is_isomorphic(
 /// The matcher function takes in 2 data objects and will compare them. A simple
 /// example that checks if they're just equal would be::
 ///
-///     graph_a = retworkx.PyGraph()
-///     graph_b = retworkx.PyGraph()
-///     retworkx.is_isomorphic(graph_a, graph_b,
+///     graph_a = rustworkx.PyGraph()
+///     graph_b = rustworkx.PyGraph()
+///     rustworkx.is_isomorphic(graph_a, graph_b,
 ///                            lambda x, y: x == y)
 ///
 /// .. note::
@@ -120,12 +121,13 @@ fn digraph_is_isomorphic(
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction(id_order = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, call_limit=None)"
 )]
-fn graph_is_isomorphic(
+pub fn graph_is_isomorphic(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -158,9 +160,9 @@ fn graph_is_isomorphic(
 /// can have fewer edges than the subgraph of the first. By default it's `True`. A
 /// simple example that checks if they're just equal would be::
 ///
-///     graph_a = retworkx.PyDiGraph()
-///     graph_b = retworkx.PyDiGraph()
-///     retworkx.is_subgraph_isomorphic(graph_a, graph_b,
+///     graph_a = rustworkx.PyDiGraph()
+///     graph_b = rustworkx.PyDiGraph()
+///     rustworkx.is_subgraph_isomorphic(graph_a, graph_b,
 ///                                     lambda x, y: x == y)
 ///
 /// .. note::
@@ -190,12 +192,13 @@ fn graph_is_isomorphic(
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false", induced = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=false, induced=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=False, induced=True, call_limit=None)"
 )]
-fn digraph_is_subgraph_isomorphic(
+pub fn digraph_is_subgraph_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
@@ -229,9 +232,9 @@ fn digraph_is_subgraph_isomorphic(
 /// can have fewer edges than the subgraph of the first. By default it's `True`. A
 /// simple example that checks if they're just equal would be::
 ///
-///     graph_a = retworkx.PyGraph()
-///     graph_b = retworkx.PyGraph()
-///     retworkx.is_subgraph_isomorphic(graph_a, graph_b,
+///     graph_a = rustworkx.PyGraph()
+///     graph_b = rustworkx.PyGraph()
+///     rustworkx.is_subgraph_isomorphic(graph_a, graph_b,
 ///                                     lambda x, y: x == y)
 ///
 /// .. note::
@@ -261,12 +264,13 @@ fn digraph_is_subgraph_isomorphic(
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false", induced = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=false, induced=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=False, induced=True, call_limit=None)"
 )]
-fn graph_is_subgraph_isomorphic(
+pub fn graph_is_subgraph_isomorphic(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
@@ -289,18 +293,18 @@ fn graph_is_subgraph_isomorphic(
     )
 }
 
-/// Return an iterator over all vf2 mappings between two :class:`~retworkx.PyDiGraph` objects
+/// Return an iterator over all vf2 mappings between two :class:`~rustworkx.PyDiGraph` objects
 ///
 /// This funcion will run the vf2 algorithm used from
-/// :func:`~retworkx.is_isomorphic` and :func:`~retworkx.is_subgraph_isomorphic`
+/// :func:`~rustworkx.is_isomorphic` and :func:`~rustworkx.is_subgraph_isomorphic`
 /// but instead of returning a boolean it will return an iterator over all possible
 /// mapping of node ids found from ``first`` to ``second``. If the graphs are not
 /// isomorphic then the iterator will be empty. A simple example that retrieves
 /// one mapping would be::
 ///
-///         graph_a = retworkx.generators.directed_path_graph(3)
-///         graph_b = retworkx.generators.direccted_path_graph(2)
-///         vf2 = retworkx.digraph_vf2_mapping(graph_a, graph_b, subgraph=True)
+///         graph_a = rustworkx.generators.directed_path_graph(3)
+///         graph_b = rustworkx.generators.direccted_path_graph(2)
+///         vf2 = rustworkx.digraph_vf2_mapping(graph_a, graph_b, subgraph=True)
 ///         try:
 ///             mapping = next(vf2)
 ///         except StopIteration:
@@ -332,12 +336,13 @@ fn graph_is_subgraph_isomorphic(
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
-#[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=true, subgraph=false, induced=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, subgraph=False, induced=True, call_limit=None)"
 )]
-fn digraph_vf2_mapping(
+pub fn digraph_vf2_mapping(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
@@ -367,18 +372,18 @@ fn digraph_vf2_mapping(
     )
 }
 
-/// Return an iterator over all vf2 mappings between two :class:`~retworkx.PyGraph` objects
+/// Return an iterator over all vf2 mappings between two :class:`~rustworkx.PyGraph` objects
 ///
 /// This funcion will run the vf2 algorithm used from
-/// :func:`~retworkx.is_isomorphic` and :func:`~retworkx.is_subgraph_isomorphic`
+/// :func:`~rustworkx.is_isomorphic` and :func:`~rustworkx.is_subgraph_isomorphic`
 /// but instead of returning a boolean it will return an iterator over all possible
 /// mapping of node ids found from ``first`` to ``second``. If the graphs are not
 /// isomorphic then the iterator will be empty. A simple example that retrieves
 /// one mapping would be::
 ///
-///         graph_a = retworkx.generators.path_graph(3)
-///         graph_b = retworkx.generators.path_graph(2)
-///         vf2 = retworkx.graph_vf2_mapping(graph_a, graph_b, subgraph=True)
+///         graph_a = rustworkx.generators.path_graph(3)
+///         graph_b = rustworkx.generators.path_graph(2)
+///         vf2 = rustworkx.graph_vf2_mapping(graph_a, graph_b, subgraph=True)
 ///         try:
 ///             mapping = next(vf2)
 ///         except StopIteration:
@@ -409,12 +414,13 @@ fn digraph_vf2_mapping(
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
-#[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=true, subgraph=false, induced=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, subgraph=False, induced=True, call_limit=None)"
 )]
-fn graph_vf2_mapping(
+pub fn graph_vf2_mapping(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,

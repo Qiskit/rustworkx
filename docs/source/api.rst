@@ -1,8 +1,8 @@
-.. _retworkx:
+.. _rustworkx:
 
-######################
-Retworkx API Reference
-######################
+#######################
+Rustworkx API Reference
+#######################
 
 Graph Classes
 =============
@@ -10,9 +10,9 @@ Graph Classes
 .. autosummary::
    :toctree: apiref
 
-    retworkx.PyGraph
-    retworkx.PyDiGraph
-    retworkx.PyDAG
+    rustworkx.PyGraph
+    rustworkx.PyDiGraph
+    rustworkx.PyDAG
 
 .. _algorithm_api:
 
@@ -27,27 +27,36 @@ Shortest Paths
 .. autosummary::
    :toctree: apiref
 
-   retworkx.dijkstra_shortest_paths
-   retworkx.dijkstra_shortest_path_lengths
-   retworkx.all_pairs_dijkstra_shortest_paths
-   retworkx.all_pairs_dijkstra_path_lengths
-   retworkx.distance_matrix
-   retworkx.floyd_warshall
-   retworkx.floyd_warshall_numpy
-   retworkx.astar_shortest_path
-   retworkx.k_shortest_path_lengths
-   retworkx.num_shortest_paths_unweighted
-   retworkx.unweighted_average_shortest_path_length
+   rustworkx.dijkstra_shortest_paths
+   rustworkx.dijkstra_shortest_path_lengths
+   rustworkx.all_pairs_dijkstra_shortest_paths
+   rustworkx.all_pairs_dijkstra_path_lengths
+   rustworkx.bellman_ford_shortest_paths
+   rustworkx.bellman_ford_shortest_path_lengths
+   rustworkx.all_pairs_bellman_ford_shortest_paths
+   rustworkx.all_pairs_bellman_ford_path_lengths
+   rustworkx.negative_edge_cycle
+   rustworkx.find_negative_cycle
+   rustworkx.distance_matrix
+   rustworkx.floyd_warshall
+   rustworkx.floyd_warshall_numpy
+   rustworkx.astar_shortest_path
+   rustworkx.k_shortest_path_lengths
+   rustworkx.num_shortest_paths_unweighted
+   rustworkx.unweighted_average_shortest_path_length
 
 .. _centrality:
 
 Centrality
---------------
+----------
 
 .. autosummary::
    :toctree: apiref
 
-   retworkx.betweenness_centrality
+   rustworkx.betweenness_centrality
+   rustworkx.edge_betweenness_centrality
+   rustworkx.eigenvector_centrality
+   rustworkx.closeness_centrality
 
 .. _traversal:
 
@@ -57,21 +66,21 @@ Traversal
 .. autosummary::
    :toctree: apiref
 
-   retworkx.dfs_edges
-   retworkx.dfs_search
-   retworkx.bfs_successors
-   retworkx.bfs_search
-   retworkx.dijkstra_search
-   retworkx.topological_sort
-   retworkx.lexicographical_topological_sort
-   retworkx.descendants
-   retworkx.ancestors
-   retworkx.collect_runs
-   retworkx.collect_bicolor_runs
-   retworkx.visit.DFSVisitor
-   retworkx.visit.BFSVisitor
-   retworkx.visit.DijkstraVisitor
-   retworkx.TopologicalSorter
+   rustworkx.dfs_edges
+   rustworkx.dfs_search
+   rustworkx.bfs_successors
+   rustworkx.bfs_search
+   rustworkx.dijkstra_search
+   rustworkx.topological_sort
+   rustworkx.lexicographical_topological_sort
+   rustworkx.descendants
+   rustworkx.ancestors
+   rustworkx.collect_runs
+   rustworkx.collect_bicolor_runs
+   rustworkx.visit.DFSVisitor
+   rustworkx.visit.BFSVisitor
+   rustworkx.visit.DijkstraVisitor
+   rustworkx.TopologicalSorter
 
 .. _dag-algorithms:
 
@@ -81,12 +90,12 @@ DAG Algorithms
 .. autosummary::
    :toctree: apiref
 
-   retworkx.dag_longest_path
-   retworkx.dag_longest_path_length
-   retworkx.dag_weighted_longest_path
-   retworkx.dag_weighted_longest_path_length
-   retworkx.is_directed_acyclic_graph
-   retworkx.layers
+   rustworkx.dag_longest_path
+   rustworkx.dag_longest_path_length
+   rustworkx.dag_weighted_longest_path
+   rustworkx.dag_weighted_longest_path_length
+   rustworkx.is_directed_acyclic_graph
+   rustworkx.layers
 
 .. _tree:
 
@@ -96,9 +105,9 @@ Tree
 .. autosummary::
    :toctree: apiref
 
-   retworkx.minimum_spanning_edges
-   retworkx.minimum_spanning_tree
-   retworkx.steiner_tree
+   rustworkx.minimum_spanning_edges
+   rustworkx.minimum_spanning_tree
+   rustworkx.steiner_tree
 
 .. _isomorphism:
 
@@ -108,10 +117,10 @@ Isomorphism
 .. autosummary::
    :toctree: apiref
 
-   retworkx.is_isomorphic
-   retworkx.is_subgraph_isomorphic
-   retworkx.is_isomorphic_node_match
-   retworkx.vf2_mapping
+   rustworkx.is_isomorphic
+   rustworkx.is_subgraph_isomorphic
+   rustworkx.is_isomorphic_node_match
+   rustworkx.vf2_mapping
 
 .. _matching:
 
@@ -121,9 +130,9 @@ Matching
 .. autosummary::
    :toctree: apiref
 
-   retworkx.max_weight_matching
-   retworkx.is_matching
-   retworkx.is_maximal_matching
+   rustworkx.max_weight_matching
+   rustworkx.is_matching
+   rustworkx.is_maximal_matching
 
 .. _connectivity-cycle-finding:
 
@@ -133,19 +142,23 @@ Connectivity and Cycles
 .. autosummary::
    :toctree: apiref
 
-   retworkx.number_connected_components
-   retworkx.connected_components
-   retworkx.node_connected_component
-   retworkx.is_connected
-   retworkx.strongly_connected_components
-   retworkx.number_weakly_connected_components
-   retworkx.weakly_connected_components
-   retworkx.is_weakly_connected
-   retworkx.cycle_basis
-   retworkx.digraph_find_cycle
-   retworkx.articulation_points
-   retworkx.biconnected_components
-   retworkx.chain_decomposition
+   rustworkx.number_connected_components
+   rustworkx.connected_components
+   rustworkx.node_connected_component
+   rustworkx.is_connected
+   rustworkx.strongly_connected_components
+   rustworkx.number_weakly_connected_components
+   rustworkx.weakly_connected_components
+   rustworkx.is_weakly_connected
+   rustworkx.cycle_basis
+   rustworkx.simple_cycles
+   rustworkx.digraph_find_cycle
+   rustworkx.articulation_points
+   rustworkx.biconnected_components
+   rustworkx.chain_decomposition
+   rustworkx.all_simple_paths
+   rustworkx.all_pairs_all_simple_paths
+   rustworkx.stoer_wagner_min_cut
 
 .. _graph-ops:
 
@@ -153,11 +166,11 @@ Graph Operations
 ----------------
 
 .. autosummary::
-   :toctree: stubs
+   :toctree: apiref
 
-   retworkx.complement
-   retworkx.union
-   retworkx.cartesian_product
+   rustworkx.complement
+   rustworkx.union
+   rustworkx.cartesian_product
 
 .. _other-algorithms:
 
@@ -167,12 +180,12 @@ Other Algorithm Functions
 .. autosummary::
    :toctree: apiref
 
-   retworkx.adjacency_matrix
-   retworkx.all_simple_paths
-   retworkx.transitivity
-   retworkx.core_number
-   retworkx.graph_greedy_color
-   retworkx.metric_closure
+   rustworkx.adjacency_matrix
+   rustworkx.transitivity
+   rustworkx.core_number
+   rustworkx.graph_greedy_color
+   rustworkx.metric_closure
+   rustworkx.is_planar
 
 .. _generator_funcs:
 
@@ -182,28 +195,32 @@ Generators
 .. autosummary::
    :toctree: apiref
 
-    retworkx.generators.cycle_graph
-    retworkx.generators.directed_cycle_graph
-    retworkx.generators.path_graph
-    retworkx.generators.directed_path_graph
-    retworkx.generators.star_graph
-    retworkx.generators.directed_star_graph
-    retworkx.generators.mesh_graph
-    retworkx.generators.directed_mesh_graph
-    retworkx.generators.grid_graph
-    retworkx.generators.directed_grid_graph
-    retworkx.generators.binomial_tree_graph
-    retworkx.generators.directed_binomial_tree_graph
-    retworkx.generators.hexagonal_lattice_graph
-    retworkx.generators.directed_hexagonal_lattice_graph
-    retworkx.generators.heavy_square_graph
-    retworkx.generators.directed_heavy_square_graph
-    retworkx.generators.heavy_hex_graph
-    retworkx.generators.directed_heavy_hex_graph
-    retworkx.generators.lollipop_graph
-    retworkx.generators.generalized_petersen_graph
-    retworkx.generators.barbell_graph
-    retworkx.generators.full_rary_tree
+    rustworkx.generators.cycle_graph
+    rustworkx.generators.directed_cycle_graph
+    rustworkx.generators.path_graph
+    rustworkx.generators.directed_path_graph
+    rustworkx.generators.star_graph
+    rustworkx.generators.directed_star_graph
+    rustworkx.generators.mesh_graph
+    rustworkx.generators.directed_mesh_graph
+    rustworkx.generators.grid_graph
+    rustworkx.generators.directed_grid_graph
+    rustworkx.generators.binomial_tree_graph
+    rustworkx.generators.directed_binomial_tree_graph
+    rustworkx.generators.hexagonal_lattice_graph
+    rustworkx.generators.directed_hexagonal_lattice_graph
+    rustworkx.generators.heavy_square_graph
+    rustworkx.generators.directed_heavy_square_graph
+    rustworkx.generators.heavy_hex_graph
+    rustworkx.generators.directed_heavy_hex_graph
+    rustworkx.generators.lollipop_graph
+    rustworkx.generators.generalized_petersen_graph
+    rustworkx.generators.barbell_graph
+    rustworkx.generators.full_rary_tree
+    rustworkx.generators.empty_graph
+    rustworkx.generators.directed_empty_graph
+    rustworkx.generators.complete_graph
+    rustworkx.generators.directed_complete_graph
 
 .. _random_generators:
 
@@ -213,11 +230,11 @@ Random Graph Generator Functions
 .. autosummary::
    :toctree: apiref
 
-    retworkx.directed_gnp_random_graph
-    retworkx.undirected_gnp_random_graph
-    retworkx.directed_gnm_random_graph
-    retworkx.undirected_gnm_random_graph
-    retworkx.random_geometric_graph
+    rustworkx.directed_gnp_random_graph
+    rustworkx.undirected_gnp_random_graph
+    rustworkx.directed_gnm_random_graph
+    rustworkx.undirected_gnm_random_graph
+    rustworkx.random_geometric_graph
 
 .. _layout-functions:
 
@@ -227,13 +244,24 @@ Layout Functions
 .. autosummary::
    :toctree: apiref
 
-   retworkx.random_layout
-   retworkx.spring_layout
-   retworkx.bipartite_layout
-   retworkx.circular_layout
-   retworkx.shell_layout
-   retworkx.spiral_layout
+   rustworkx.random_layout
+   rustworkx.spring_layout
+   rustworkx.bipartite_layout
+   rustworkx.circular_layout
+   rustworkx.shell_layout
+   rustworkx.spiral_layout
 
+
+.. _serialization:
+
+Serialization
+=============
+
+.. autosummary::
+   :toctree: apiref
+
+   rustworkx.node_link_json
+   rustworkx.read_graphml
 
 .. _converters:
 
@@ -243,7 +271,7 @@ Converters
 .. autosummary::
    :toctree: apiref
 
-   retworkx.networkx_converter
+   rustworkx.networkx_converter
 
 .. _api-functions-pydigraph:
 
@@ -251,46 +279,56 @@ API functions for PyDigraph
 ===========================
 
 These functions are algorithm functions that are type specific for
-:class:`~retworkx.PyDiGraph` or :class:`~retworkx.PyDAG` objects. Universal
+:class:`~rustworkx.PyDiGraph` or :class:`~rustworkx.PyDAG` objects. Universal
 functions from Retworkx API that work for both graph types internally call
 the functions from the explicitly typed based on the data type.
 
 .. autosummary::
    :toctree: apiref
 
-   retworkx.digraph_is_isomorphic
-   retworkx.digraph_is_subgraph_isomorphic
-   retworkx.digraph_vf2_mapping
-   retworkx.digraph_distance_matrix
-   retworkx.digraph_floyd_warshall
-   retworkx.digraph_floyd_warshall_numpy
-   retworkx.digraph_adjacency_matrix
-   retworkx.digraph_all_simple_paths
-   retworkx.digraph_astar_shortest_path
-   retworkx.digraph_dijkstra_shortest_paths
-   retworkx.digraph_all_pairs_dijkstra_shortest_paths
-   retworkx.digraph_dijkstra_shortest_path_lengths
-   retworkx.digraph_all_pairs_dijkstra_path_lengths
-   retworkx.digraph_k_shortest_path_lengths
-   retworkx.digraph_dfs_edges
-   retworkx.digraph_dfs_search
-   retworkx.digraph_find_cycle
-   retworkx.digraph_transitivity
-   retworkx.digraph_core_number
-   retworkx.digraph_complement
-   retworkx.digraph_union
-   retworkx.digraph_cartesian_product
-   retworkx.digraph_random_layout
-   retworkx.digraph_bipartite_layout
-   retworkx.digraph_circular_layout
-   retworkx.digraph_shell_layout
-   retworkx.digraph_spiral_layout
-   retworkx.digraph_spring_layout
-   retworkx.digraph_num_shortest_paths_unweighted
-   retworkx.digraph_betweenness_centrality
-   retworkx.digraph_unweighted_average_shortest_path_length
-   retworkx.digraph_bfs_search
-   retworkx.digraph_dijkstra_search
+   rustworkx.digraph_is_isomorphic
+   rustworkx.digraph_is_subgraph_isomorphic
+   rustworkx.digraph_vf2_mapping
+   rustworkx.digraph_distance_matrix
+   rustworkx.digraph_floyd_warshall
+   rustworkx.digraph_floyd_warshall_numpy
+   rustworkx.digraph_adjacency_matrix
+   rustworkx.digraph_all_simple_paths
+   rustworkx.digraph_all_pairs_all_simple_paths
+   rustworkx.digraph_astar_shortest_path
+   rustworkx.digraph_dijkstra_shortest_paths
+   rustworkx.digraph_all_pairs_dijkstra_shortest_paths
+   rustworkx.digraph_dijkstra_shortest_path_lengths
+   rustworkx.digraph_all_pairs_dijkstra_path_lengths
+   rustworkx.digraph_bellman_ford_shortest_path_lengths
+   rustworkx.digraph_bellman_ford_shortest_path_lengths
+   rustworkx.digraph_all_pairs_bellman_ford_shortest_paths
+   rustworkx.digraph_all_pairs_bellman_ford_path_lengths
+   rustworkx.digraph_k_shortest_path_lengths
+   rustworkx.digraph_dfs_edges
+   rustworkx.digraph_dfs_search
+   rustworkx.digraph_find_cycle
+   rustworkx.digraph_transitivity
+   rustworkx.digraph_core_number
+   rustworkx.digraph_complement
+   rustworkx.digraph_union
+   rustworkx.digraph_tensor_product
+   rustworkx.digraph_cartesian_product
+   rustworkx.digraph_random_layout
+   rustworkx.digraph_bipartite_layout
+   rustworkx.digraph_circular_layout
+   rustworkx.digraph_shell_layout
+   rustworkx.digraph_spiral_layout
+   rustworkx.digraph_spring_layout
+   rustworkx.digraph_num_shortest_paths_unweighted
+   rustworkx.digraph_betweenness_centrality
+   rustworkx.digraph_edge_betweenness_centrality
+   rustworkx.digraph_closeness_centrality
+   rustworkx.digraph_eigenvector_centrality
+   rustworkx.digraph_unweighted_average_shortest_path_length
+   rustworkx.digraph_bfs_search
+   rustworkx.digraph_dijkstra_search
+   rustworkx.digraph_node_link_json
 
 .. _api-functions-pygraph:
 
@@ -298,45 +336,55 @@ API functions for PyGraph
 =========================
 
 These functions are algorithm functions that are type specific for
-:class:`~retworkx.PyGraph` objects. Universal functions from Retworkx API that
+:class:`~rustworkx.PyGraph` objects. Universal functions from Rustworkx API that
 work for both graph types internally call the functions from the explicitly
 typed API based on the data type.
 
 .. autosummary::
    :toctree: apiref
 
-   retworkx.graph_is_isomorphic
-   retworkx.graph_is_subgraph_isomorphic
-   retworkx.graph_vf2_mapping
-   retworkx.graph_distance_matrix
-   retworkx.graph_floyd_warshall
-   retworkx.graph_floyd_warshall_numpy
-   retworkx.graph_adjacency_matrix
-   retworkx.graph_all_simple_paths
-   retworkx.graph_astar_shortest_path
-   retworkx.graph_dijkstra_shortest_paths
-   retworkx.graph_dijkstra_shortest_path_lengths
-   retworkx.graph_all_pairs_dijkstra_shortest_paths
-   retworkx.graph_k_shortest_path_lengths
-   retworkx.graph_all_pairs_dijkstra_path_lengths
-   retworkx.graph_dfs_edges
-   retworkx.graph_dfs_search
-   retworkx.graph_transitivity
-   retworkx.graph_core_number
-   retworkx.graph_complement
-   retworkx.graph_union
-   retworkx.graph_cartesian_product
-   retworkx.graph_random_layout
-   retworkx.graph_bipartite_layout
-   retworkx.graph_circular_layout
-   retworkx.graph_shell_layout
-   retworkx.graph_spiral_layout
-   retworkx.graph_spring_layout
-   retworkx.graph_num_shortest_paths_unweighted
-   retworkx.graph_betweenness_centrality
-   retworkx.graph_unweighted_average_shortest_path_length
-   retworkx.graph_bfs_search
-   retworkx.graph_dijkstra_search
+   rustworkx.graph_is_isomorphic
+   rustworkx.graph_is_subgraph_isomorphic
+   rustworkx.graph_vf2_mapping
+   rustworkx.graph_distance_matrix
+   rustworkx.graph_floyd_warshall
+   rustworkx.graph_floyd_warshall_numpy
+   rustworkx.graph_adjacency_matrix
+   rustworkx.graph_all_simple_paths
+   rustworkx.graph_all_pairs_all_simple_paths
+   rustworkx.graph_astar_shortest_path
+   rustworkx.graph_dijkstra_shortest_paths
+   rustworkx.graph_dijkstra_shortest_path_lengths
+   rustworkx.graph_all_pairs_dijkstra_shortest_paths
+   rustworkx.graph_k_shortest_path_lengths
+   rustworkx.graph_all_pairs_dijkstra_path_lengths
+   rustworkx.graph_bellman_ford_shortest_path_lengths
+   rustworkx.graph_bellman_ford_shortest_path_lengths
+   rustworkx.graph_all_pairs_bellman_ford_shortest_paths
+   rustworkx.graph_all_pairs_bellman_ford_path_lengths
+   rustworkx.graph_dfs_edges
+   rustworkx.graph_dfs_search
+   rustworkx.graph_transitivity
+   rustworkx.graph_core_number
+   rustworkx.graph_complement
+   rustworkx.graph_union
+   rustworkx.graph_tensor_product
+   rustworkx.graph_cartesian_product
+   rustworkx.graph_random_layout
+   rustworkx.graph_bipartite_layout
+   rustworkx.graph_circular_layout
+   rustworkx.graph_shell_layout
+   rustworkx.graph_spiral_layout
+   rustworkx.graph_spring_layout
+   rustworkx.graph_num_shortest_paths_unweighted
+   rustworkx.graph_betweenness_centrality
+   rustworkx.graph_edge_betweenness_centrality
+   rustworkx.graph_closeness_centrality
+   rustworkx.graph_eigenvector_centrality
+   rustworkx.graph_unweighted_average_shortest_path_length
+   rustworkx.graph_bfs_search
+   rustworkx.graph_dijkstra_search
+   rustworkx.graph_node_link_json
 
 Exceptions
 ==========
@@ -344,15 +392,17 @@ Exceptions
 .. autosummary::
    :toctree: apiref
 
-   retworkx.InvalidNode
-   retworkx.DAGWouldCycle
-   retworkx.NoEdgeBetweenNodes
-   retworkx.DAGHasCycle
-   retworkx.NoSuitableNeighbors
-   retworkx.NoPathFound
-   retworkx.NullGraph
-   retworkx.visit.StopSearch
-   retworkx.visit.PruneSearch
+   rustworkx.InvalidNode
+   rustworkx.DAGWouldCycle
+   rustworkx.NoEdgeBetweenNodes
+   rustworkx.DAGHasCycle
+   rustworkx.NegativeCycle
+   rustworkx.NoSuitableNeighbors
+   rustworkx.NoPathFound
+   rustworkx.NullGraph
+   rustworkx.visit.StopSearch
+   rustworkx.visit.PruneSearch
+   rustworkx.JSONSerializationError
 
 Custom Return Types
 ===================
@@ -360,19 +410,20 @@ Custom Return Types
 .. autosummary::
    :toctree: apiref
 
-   retworkx.BFSSuccessors
-   retworkx.NodeIndices
-   retworkx.EdgeIndices
-   retworkx.EdgeList
-   retworkx.WeightedEdgeList
-   retworkx.EdgeIndexMap
-   retworkx.PathMapping
-   retworkx.PathLengthMapping
-   retworkx.Pos2DMapping
-   retworkx.AllPairsPathMapping
-   retworkx.AllPairsPathLengthMapping
-   retworkx.CentralityMapping
-   retworkx.Chains
-   retworkx.NodeMap
-   retworkx.ProductNodeMap
-   retworkx.BiconnectedComponents
+   rustworkx.BFSSuccessors
+   rustworkx.NodeIndices
+   rustworkx.EdgeIndices
+   rustworkx.EdgeList
+   rustworkx.WeightedEdgeList
+   rustworkx.EdgeIndexMap
+   rustworkx.PathMapping
+   rustworkx.PathLengthMapping
+   rustworkx.Pos2DMapping
+   rustworkx.AllPairsPathMapping
+   rustworkx.AllPairsPathLengthMapping
+   rustworkx.CentralityMapping
+   rustworkx.EdgeCentralityMapping
+   rustworkx.Chains
+   rustworkx.NodeMap
+   rustworkx.ProductNodeMap
+   rustworkx.BiconnectedComponents
