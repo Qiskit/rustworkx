@@ -23,6 +23,7 @@ use hashbrown::HashMap;
 use indexmap::IndexMap;
 
 use quick_xml::events::{BytesStart, Event};
+use quick_xml::name::QName;
 use quick_xml::Error as XmlError;
 use quick_xml::Reader;
 
@@ -85,7 +86,7 @@ impl From<Error> for PyErr {
 }
 
 fn xml_attribute<'a, B: BufRead>(
-    reader: &Reader<B>,
+    _reader: &Reader<B>,
     element: &'a BytesStart<'a>,
     key: &[u8],
 ) -> Result<String, Error> {
@@ -93,8 +94,8 @@ fn xml_attribute<'a, B: BufRead>(
         .attributes()
         .find_map(|a| {
             if let Ok(a) = a {
-                if a.key == key {
-                    let decoded = a.unescape_and_decode_value(reader).map_err(Error::from);
+                if a.key == QName(key) {
+                    let decoded = a.unescape_value().map_err(Error::from).map(|cow_str| cow_str.into_owned());
                     return Some(decoded);
                 }
             }
@@ -566,33 +567,33 @@ impl GraphML {
         let mut last_data_key = String::new();
 
         loop {
-            match reader.read_event(&mut buf)? {
+            match reader.read_event_into(&mut buf)? {
                 Event::Start(ref e) => match e.name() {
-                    b"key" => {
+                    QName(b"key") => {
                         matches!(state, State::Start);
                         domain_of_last_key = graphml.add_graphml_key(&reader, e)?;
                         state = State::Key;
                     }
-                    b"default" => {
+                    QName(b"default") => {
                         matches!(state, State::Key);
                         state = State::DefaultForKey;
                     }
-                    b"graph" => {
+                    QName(b"graph") => {
                         matches!(state, State::Start);
                         graphml.create_graph(&reader, e)?;
                         state = State::Graph;
                     }
-                    b"node" => {
+                    QName(b"node") => {
                         matches!(state, State::Graph);
                         graphml.add_node(&reader, e)?;
                         state = State::Node;
                     }
-                    b"edge" => {
+                    QName(b"edge") => {
                         matches!(state, State::Graph);
                         graphml.add_edge(&reader, e)?;
                         state = State::Edge;
                     }
-                    b"data" => {
+                    QName(b"data") => {
                         matches!(state, State::Node | State::Edge | State::Graph);
                         last_data_key = xml_attribute(&reader, e, b"key")?;
                         match state {
@@ -605,56 +606,56 @@ impl GraphML {
                             }
                         }
                     }
-                    b"hyperedge" => {
+                    QName(b"hyperedge") => {
                         return Err(Error::UnSupported(String::from(
                             "Hyperedges are not supported.",
                         )));
                     }
-                    b"port" => {
+                    QName(b"port") => {
                         return Err(Error::UnSupported(String::from("Ports are not supported.")));
                     }
                     _ => {}
                 },
                 Event::Empty(ref e) => match e.name() {
-                    b"key" => {
+                    QName(b"key") => {
                         matches!(state, State::Start);
                         graphml.add_graphml_key(&reader, e)?;
                     }
-                    b"node" => {
+                    QName(b"node") => {
                         matches!(state, State::Graph);
                         graphml.add_node(&reader, e)?;
                     }
-                    b"edge" => {
+                    QName(b"edge") => {
                         matches!(state, State::Graph);
                         graphml.add_edge(&reader, e)?;
                     }
-                    b"port" => {
+                    QName(b"port") => {
                         return Err(Error::UnSupported(String::from("Ports are not supported.")));
                     }
                     _ => {}
                 },
                 Event::End(ref e) => match e.name() {
-                    b"key" => {
+                    QName(b"key") => {
                         matches!(state, State::Key);
                         state = State::Start;
                     }
-                    b"default" => {
+                    QName(b"default") => {
                         matches!(state, State::DefaultForKey);
                         state = State::Key;
                     }
-                    b"graph" => {
+                    QName(b"graph") => {
                         matches!(state, State::Graph);
                         state = State::Start;
                     }
-                    b"node" => {
+                    QName(b"node") => {
                         matches!(state, State::Node);
                         state = State::Graph;
                     }
-                    b"edge" => {
+                    QName(b"edge") => {
                         matches!(state, State::Edge);
                         state = State::Graph;
                     }
-                    b"data" => {
+                    QName(b"data") => {
                         matches!(
                             state,
                             State::DataForNode | State::DataForEdge | State::DataForGraph
@@ -673,23 +674,19 @@ impl GraphML {
                 },
                 Event::Text(ref e) => match state {
                     State::DefaultForKey => {
-                        graphml.last_key_set_value(
-                            e.unescape_and_decode(&reader)?,
-                            domain_of_last_key,
-                        )?;
+                        graphml
+                            .last_key_set_value((e.unescape()?).to_string(), domain_of_last_key)?;
                     }
                     State::DataForNode => {
-                        graphml
-                            .last_node_set_data(&last_data_key, e.unescape_and_decode(&reader)?)?;
+                        graphml.last_node_set_data(&last_data_key, (e.unescape()?).to_string())?;
                     }
                     State::DataForEdge => {
-                        graphml
-                            .last_edge_set_data(&last_data_key, e.unescape_and_decode(&reader)?)?;
+                        graphml.last_edge_set_data(&last_data_key, (e.unescape()?).to_string())?;
                     }
                     State::DataForGraph => {
                         graphml.last_graph_set_attribute(
                             &last_data_key,
-                            e.unescape_and_decode(&reader)?,
+                            (e.unescape()?).to_string(),
                         )?;
                     }
                     _ => {}
