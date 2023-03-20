@@ -11,12 +11,12 @@
 # under the License.
 
 import unittest
-import retworkx
+import rustworkx
 
 
 class TestCollectMultiBlock(unittest.TestCase):
     def test_blocks_2q_blocks(self):
-        graph = retworkx.PyDiGraph()
+        graph = rustworkx.PyDiGraph()
         q0 = graph.add_node({"type": "in", "name": "q0", "groups": []})
         q1 = graph.add_node({"type": "in", "name": "q1", "groups": []})
         q2 = graph.add_node({"type": "in", "name": "q2", "groups": []})
@@ -56,11 +56,11 @@ class TestCollectMultiBlock(unittest.TestCase):
                 return None
             return True
 
-        blocks = retworkx.collect_multi_blocks(graph, 2, key_fn, group_fn, filter_fn)
+        blocks = rustworkx.collect_multi_blocks(graph, 2, key_fn, group_fn, filter_fn)
         self.assertEqual(blocks, [[4, 5], [3, 6]])
 
     def test_blocks_unprocessed(self):
-        graph = retworkx.PyDiGraph()
+        graph = rustworkx.PyDiGraph()
         q0 = graph.add_node({"type": "in", "name": "q0", "groups": []})
         q1 = graph.add_node({"type": "in", "name": "q1", "groups": []})
         q2 = graph.add_node({"type": "in", "name": "q2", "groups": []})
@@ -113,16 +113,16 @@ class TestCollectMultiBlock(unittest.TestCase):
                 return False
             return True
 
-        blocks = retworkx.collect_multi_blocks(graph, 2, key_fn, group_fn, filter_fn)
+        blocks = rustworkx.collect_multi_blocks(graph, 2, key_fn, group_fn, filter_fn)
         self.assertEqual(blocks, [[4], [5, 7, 8, 9]])
 
     def test_empty_graph(self):
-        graph = retworkx.PyDiGraph()
-        block = retworkx.collect_multi_blocks(graph, 1, lambda x: x, lambda x: x, lambda x: x)
+        graph = rustworkx.PyDiGraph()
+        block = rustworkx.collect_multi_blocks(graph, 1, lambda x: x, lambda x: x, lambda x: x)
         self.assertEqual(block, [])
 
     def test_larger_block(self):
-        graph = retworkx.PyDiGraph()
+        graph = rustworkx.PyDiGraph()
         q0 = graph.add_node({"type": "in", "name": "q0", "groups": []})
         q1 = graph.add_node({"type": "in", "name": "q1", "groups": []})
         q2 = graph.add_node({"type": "in", "name": "q2", "groups": []})
@@ -182,5 +182,5 @@ class TestCollectMultiBlock(unittest.TestCase):
                 return False
             return True
 
-        blocks = retworkx.collect_multi_blocks(graph, 4, key_fn, group_fn, filter_fn)
+        blocks = rustworkx.collect_multi_blocks(graph, 4, key_fn, group_fn, filter_fn)
         self.assertEqual([[cx_1, cx_2, cx_3], [ccx], [cx_4, cx_5]], blocks)
