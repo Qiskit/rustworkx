@@ -18,8 +18,6 @@ use rayon::prelude::*;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::visit::NodeIndexable;
-
 use super::lexicographical_sort::lexicographical_topological_sort;
 use crate::digraph;
 
@@ -29,27 +27,27 @@ use crate::digraph;
 /// my root, saving recursion in the future.
 fn find_set(
     index: usize,
-    parent: &mut Vec<Option<usize>>,
+    parent: &mut HashMap<usize, usize>,
     groups: &mut HashMap<usize, Vec<usize>>,
     op_groups: &mut HashMap<usize, Vec<usize>>,
 ) -> usize {
     let mut update_index: Vec<usize> = Vec::new();
     let mut index_iter = index;
-    while parent[index_iter] != Some(index_iter) {
-        if parent[index_iter].is_none() {
-            parent[index_iter] = Some(index_iter);
+    while parent.get(&index_iter) != Some(&index_iter) {
+        if parent.get(&index_iter).is_none() {
+            parent.insert(index_iter, index_iter);
             groups.insert(index_iter, vec![index_iter]);
             op_groups.insert(index_iter, Vec::new());
         }
-        if parent[index_iter] != Some(index_iter) {
+        if parent.get(&index_iter) != Some(&index_iter) {
             update_index.push(index_iter);
         }
-        index_iter = parent[index_iter].unwrap();
+        index_iter = parent[&index_iter];
     }
     for index in update_index {
-        parent[index] = Some(index_iter);
+        parent.insert(index, index_iter);
     }
-    parent[index_iter].unwrap()
+    parent[&index_iter]
 }
 
 fn combine_sets(op_groups: &mut HashMap<usize, Vec<usize>>, set_a: usize, set_b: usize) {
@@ -65,7 +63,7 @@ fn combine_sets(op_groups: &mut HashMap<usize, Vec<usize>>, set_a: usize, set_b:
 fn union_set(
     set_a_ind: usize,
     set_b_ind: usize,
-    parent: &mut Vec<Option<usize>>,
+    parent: &mut HashMap<usize, usize>,
     groups: &mut HashMap<usize, Vec<usize>>,
     op_groups: &mut HashMap<usize, Vec<usize>>,
 ) {
@@ -78,24 +76,24 @@ fn union_set(
     if op_groups[&set_a].len() < op_groups[&set_b].len() {
         mem::swap(&mut set_a, &mut set_b);
     }
-    parent[set_b] = Some(set_a);
+    parent.insert(set_b, set_a);
     combine_sets(op_groups, set_a, set_b);
     combine_sets(groups, set_a, set_b)
 }
 
 fn update_set(
     group_index: usize,
-    parent: &mut Vec<Option<usize>>,
+    parent: &mut HashMap<usize, usize>,
     groups: &mut HashMap<usize, Vec<usize>>,
     op_groups: &mut HashMap<usize, Vec<usize>>,
     block_list: &mut Vec<Vec<usize>>,
 ) {
     if !op_groups[&group_index].is_empty() {
-        block_list.push(op_groups[&group_index].iter().copied().collect());
+        block_list.push(op_groups[&group_index].to_vec());
     }
     let cur_set: HashSet<usize> = groups[&group_index].iter().copied().collect();
     for v in cur_set {
-        parent[v] = Some(v);
+        parent.insert(v, v);
         groups.insert(v, vec![v]);
         op_groups.insert(v, Vec::new());
     }
@@ -111,7 +109,7 @@ pub fn collect_multi_blocks(
 ) -> PyResult<Vec<Vec<usize>>> {
     let mut block_list: Vec<Vec<usize>> = Vec::new();
 
-    let mut parent: Vec<Option<usize>> = vec![None; dag.graph.node_bound()];
+    let mut parent: HashMap<usize, usize> = HashMap::new();
     let mut groups: HashMap<usize, Vec<usize>> = HashMap::new();
     let mut op_groups: HashMap<usize, Vec<usize>> = HashMap::new();
 
@@ -222,10 +220,10 @@ pub fn collect_multi_blocks(
         }
     }
 
-    for (index, parent) in parent.iter().enumerate().filter(|x| x.1.is_some()) {
-        let parent_index = parent.unwrap();
-        if parent_index == index && !op_groups[&parent.unwrap()].is_empty() {
-            block_list.push(op_groups[&index].iter().copied().collect());
+    for (index, parent) in parent.iter() {
+        let parent_index = parent;
+        if parent_index == index && !op_groups[parent].is_empty() {
+            block_list.push(op_groups[index].to_vec());
         }
     }
     Ok(block_list)
