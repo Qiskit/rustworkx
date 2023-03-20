@@ -209,9 +209,8 @@ impl Graph {
         }
     }
 
-    fn add_node<'a, B: BufRead, I>(
+    fn add_node<'a, I>(
         &mut self,
-        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
         default_data: I,
     ) -> Result<(), Error>
@@ -228,9 +227,8 @@ impl Graph {
         Ok(())
     }
 
-    fn add_edge<'a, B: BufRead, I>(
+    fn add_edge<'a, I>(
         &mut self,
-        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
         default_data: I,
     ) -> Result<(), Error>
@@ -381,9 +379,8 @@ impl Default for GraphML {
 }
 
 impl GraphML {
-    fn create_graph<'a, B: BufRead>(
+    fn create_graph<'a>(
         &mut self,
-        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
     ) -> Result<(), Error> {
         let dir = match xml_attribute(element, b"edgedefault")?.as_bytes() {
@@ -406,12 +403,11 @@ impl GraphML {
 
     fn add_node<'a, B: BufRead>(
         &mut self,
-        reader: &Reader<B>,
+        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
     ) -> Result<(), Error> {
         if let Some(graph) = self.graphs.last_mut() {
             graph.add_node(
-                reader,
                 element,
                 self.key_for_nodes.values().chain(self.key_for_all.values()),
             )?;
@@ -422,12 +418,11 @@ impl GraphML {
 
     fn add_edge<'a, B: BufRead>(
         &mut self,
-        reader: &Reader<B>,
+        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
     ) -> Result<(), Error> {
         if let Some(graph) = self.graphs.last_mut() {
             graph.add_edge(
-                reader,
                 element,
                 self.key_for_edges.values().chain(self.key_for_all.values()),
             )?;
@@ -436,9 +431,8 @@ impl GraphML {
         Ok(())
     }
 
-    fn add_graphml_key<'a, B: BufRead>(
+    fn add_graphml_key<'a>(
         &mut self,
-        _reader: &Reader<B>,
         element: &'a BytesStart<'a>,
     ) -> Result<Domain, Error> {
         let id = xml_attribute(element, b"id")?;
@@ -570,7 +564,7 @@ impl GraphML {
                 Event::Start(ref e) => match e.name() {
                     QName(b"key") => {
                         matches!(state, State::Start);
-                        domain_of_last_key = graphml.add_graphml_key(&reader, e)?;
+                        domain_of_last_key = graphml.add_graphml_key(e)?;
                         state = State::Key;
                     }
                     QName(b"default") => {
@@ -579,7 +573,7 @@ impl GraphML {
                     }
                     QName(b"graph") => {
                         matches!(state, State::Start);
-                        graphml.create_graph(&reader, e)?;
+                        graphml.create_graph(e)?;
                         state = State::Graph;
                     }
                     QName(b"node") => {
@@ -618,7 +612,7 @@ impl GraphML {
                 Event::Empty(ref e) => match e.name() {
                     QName(b"key") => {
                         matches!(state, State::Start);
-                        graphml.add_graphml_key(&reader, e)?;
+                        graphml.add_graphml_key(e)?;
                     }
                     QName(b"node") => {
                         matches!(state, State::Graph);
