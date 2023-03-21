@@ -13,17 +13,18 @@ keywords = ["graph"]
 [dependencies]
 ahash = "0.8.0"
 fixedbitset = "0.4.2"
-petgraph = "0.6.2"
+petgraph = "0.6.3"
 rayon = "1.6"
 num-traits = "0.2"
 priority-queue = "1.2"
+rayon-cond = "0.2"
 
 [dependencies.hashbrown]
 version = "0.12"
 features = ["rayon"]
 
 [dependencies.indexmap]
-version = "1.7"
+version = "1.9"
 features = ["rayon"]
 
 [dev-dependencies]

@@ -1,0 +1,42 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.closeness_centrality` to compute the
+    closeness centrality of all nodes in a :class:`~.PyGraph` or
+    :class:`~.PyDiGraph` object.
+
+    The closeness centrality of a node :math:`u` is defined as the the
+    reciprocal of the average shortest path distance to :math:`u` over all
+    :math:`n-1` reachable nodes. In it's general form this can be expressed as:
+
+    .. math::
+
+        C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+
+    where :math:`d(v, u)` is the shortest-path distance between :math:`v` and
+    :math:`u`, and :math:`n` is the number of nodes that can reach :math:`u`.
+    For example, to visualize the closeness centrality of a graph:
+
+    .. jupyter-execute::
+
+        import matplotlib.pyplot as plt
+
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+
+        graph = rx.generators.hexagonal_lattice_graph(4, 4)
+        centrality = rx.closeness_centrality(graph)
+        # Generate a color list
+        colors = []
+        for node in graph.node_indices():
+            colors.append(centrality[node])
+        # Generate a visualization with a colorbar
+        plt.rcParams['figure.figsize'] = [15, 10]
+        ax = plt.gca()
+        sm = plt.cm.ScalarMappable(norm=plt.Normalize(
+            vmin=min(centrality.values()),
+            vmax=max(centrality.values())
+        ))
+        plt.colorbar(sm, ax=ax)
+        plt.title("Closeness Centrality of a 4 x 4 Hexagonal Lattice Graph")
+        mpl_draw(graph, node_color=colors, ax=ax)

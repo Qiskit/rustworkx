@@ -10,10 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
       - name: Run cargo publish
         run: |
           cd rustworkx-core
@@ -34,7 +31,7 @@ jobs:
         run: pip install -U twine setuptools-rust
       - name: Build sdist
         run: python setup.py sdist
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./dist/*
       - name: Upload to PyPI
@@ -55,9 +52,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - name: Install cibuildwheel
         run: |
           python -m pip install cibuildwheel==2.10.1 twine
@@ -74,7 +69,7 @@ jobs:
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx scipy testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
       - name: Upload to PyPI
@@ -95,9 +90,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -119,7 +112,7 @@ jobs:
           CIBW_TEST_REQUIRES: networkx scipy testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: aarch64
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
       - name: Upload to PyPI
@@ -140,9 +133,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -164,7 +155,7 @@ jobs:
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: ppc64le
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
       - name: Upload to PyPI
@@ -185,9 +176,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -209,7 +198,7 @@ jobs:
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: ppc64le
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
       - name: Upload to PyPI
@@ -230,9 +219,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -254,7 +241,7 @@ jobs:
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: s390x
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
       - name: Upload to PyPI
@@ -275,9 +262,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -299,7 +284,7 @@ jobs:
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: s390x
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
       - name: Upload to PyPI
@@ -319,7 +304,7 @@ jobs:
           CIBW_ARCHS_MACOS: arm64 universal2
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_ENVIRONMENT: CARGO_BUILD_TARGET="aarch64-apple-darwin" PYO3_CROSS_LIB_DIR="/Library/Frameworks/Python.framework/Versions/$(python -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')/lib/python$(python -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
       - uses: actions/setup-python@v4
@@ -344,11 +329,9 @@ jobs:
         with:
           python-version: '3.7'
           architecture: 'x86'
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          target: i686-pc-windows-msvc
-          default: true
+          targets: i686-pc-windows-msvc
       - name: Force win32 rust
         run: rustup default stable-i686-pc-windows-msvc
       - name: Install cibuildwheel
@@ -363,7 +346,7 @@ jobs:
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
       - name: Upload to PyPI
@@ -387,7 +370,7 @@ jobs:
         run: python setup.py bdist_wheel
         env:
           RUSTWORKX_PKG_NAME: retworkx
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./dist/*
       - name: Upload to PyPI
