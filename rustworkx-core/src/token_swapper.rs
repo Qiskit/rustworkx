@@ -23,7 +23,7 @@ use petgraph::visit::{
 };
 use petgraph::Directed;
 use petgraph::Direction::{Incoming, Outgoing};
-use rayon::prelude::*;
+use rayon_cond::CondIterator;
 
 use crate::connectivity::find_cycle;
 use crate::dictmap::*;
@@ -45,6 +45,8 @@ where
     trials: usize,
     // Seed for random selection of a node for a trial
     seed: Option<u64>,
+    // Threshold for how many nodes will trigger parallel iterator
+    parallel_threshold: usize,
     // Map of NodeId to NodeIndex
     node_map: HashMap<G::NodeId, NodeIndex>,
     // Map of NodeIndex to NodeId
@@ -69,12 +71,14 @@ where
         mapping: HashMap<G::NodeId, G::NodeId>,
         trials: Option<usize>,
         seed: Option<u64>,
+        parallel_threshold: Option<usize>,
     ) -> Self {
         TokenSwapper {
             graph,
             mapping,
             trials: trials.unwrap_or(4),
             seed,
+            parallel_threshold: parallel_threshold.unwrap_or(50),
             node_map: HashMap::with_capacity(graph.node_count()),
             rev_node_map: HashMap::with_capacity(graph.node_count()),
         }
@@ -128,20 +132,21 @@ where
         let trial_seeds_vec: Vec<u64> =
             outer_rng.sample_iter(&Standard).take(self.trials).collect();
 
-        // Iterate over the trial seeds and do the trials in parallel
-        trial_seeds_vec
-            .into_par_iter()
-            .map(|trial_seed| {
-                self.trial_map(
-                    digraph.clone(),
-                    sub_digraph.clone(),
-                    tokens.clone(),
-                    todo_nodes.clone(),
-                    trial_seed,
-                )
-            })
-            .min_by_key(|result| result.len())
-            .unwrap()
+        CondIterator::new(
+            trial_seeds_vec,
+            self.graph.node_count() >= self.parallel_threshold,
+        )
+        .map(|trial_seed| {
+            self.trial_map(
+                digraph.clone(),
+                sub_digraph.clone(),
+                tokens.clone(),
+                todo_nodes.clone(),
+                trial_seed,
+            )
+        })
+        .min_by_key(|result| result.len())
+        .unwrap()
     }
 
     fn add_token_edges(
@@ -347,8 +352,16 @@ where
 /// * `mapping` - A partial mapping to be implemented in swaps.
 /// * `trials` - Optional number of trials. If None, defaults to 4.
 /// * `seed` - Optional integer seed. If None, the internal rng will be initialized from system entropy.
+/// * `parallel_threshold` - Optional integer for the number of nodes in the graph that will
+///     trigger the use of parallel threads. If the number of nodes in the graph is less than this value
+///     it will run in a single thread. The default value is 50.
 ///
 /// It returns a list of tuples representing the swaps to perform.
+///
+/// This function is multithreaded and will launch a thread pool with threads equal to
+/// the number of CPUs by default. You can tune the number of threads with
+/// the ``RAYON_NUM_THREADS`` environment variable. For example, setting ``RAYON_NUM_THREADS=4``
+/// would limit the thread pool to 4 threads.
 ///
 /// # Example
 /// ```rust
@@ -365,7 +378,7 @@ where
 ///   (NodeIndex::new(2), NodeIndex::new(2)),
 ///  ]);
 ///  // Do the token swap
-///  let output = token_swapper(&g, mapping, Some(4), Some(4));
+///  let output = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
 ///  assert_eq!(3, output.len());
 ///
 /// ```
@@ -375,6 +388,7 @@ pub fn token_swapper<G>(
     mapping: HashMap<G::NodeId, G::NodeId>,
     trials: Option<usize>,
     seed: Option<u64>,
+    parallel_threshold: Option<usize>,
 ) -> Vec<Swap>
 where
     G: NodeCount
@@ -388,7 +402,7 @@ where
         + Sync,
     G::NodeId: Hash + Eq + Send + Sync,
 {
-    let mut swapper = TokenSwapper::new(graph, mapping, trials, seed);
+    let mut swapper = TokenSwapper::new(graph, mapping, trials, seed, parallel_threshold);
     swapper.map()
 }
 
@@ -433,7 +447,7 @@ mod test_token_swapper {
             (NodeIndex::new(3), NodeIndex::new(1)),
             (NodeIndex::new(2), NodeIndex::new(2)),
         ]);
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4));
+        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
         assert_eq!(3, swaps.len());
     }
 
@@ -455,7 +469,7 @@ mod test_token_swapper {
         }
         // Do the token swap
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4));
+        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
         do_swap(&mut new_map, &swaps);
         let mut expected = HashMap::with_capacity(8);
         for i in 0..8 {
@@ -490,7 +504,7 @@ mod test_token_swapper {
         ]);
         // Do the token swap
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4));
+        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
         do_swap(&mut new_map, &swaps);
         let mut expected = HashMap::with_capacity(6);
         for i in (0..5).chain(6..7) {
@@ -505,7 +519,7 @@ mod test_token_swapper {
         let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
         let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(3))]);
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4));
+        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(1));
         do_swap(&mut new_map, &swaps);
         let mut expected = HashMap::with_capacity(4);
         expected.insert(NodeIndex::new(3), NodeIndex::new(3));
@@ -521,7 +535,7 @@ mod test_token_swapper {
             (NodeIndex::new(1), NodeIndex::new(2)),
         ]);
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4));
+        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
         do_swap(&mut new_map, &swaps);
         let expected = HashMap::from([
             (NodeIndex::new(2), NodeIndex::new(2)),

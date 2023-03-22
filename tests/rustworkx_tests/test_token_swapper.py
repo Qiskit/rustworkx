@@ -43,7 +43,7 @@ class TestGeneral(unittest.TestCase):
         """Test a simple permutation on a path graph of size 4."""
         graph = rx.generators.path_graph(4)
         permutation = {0: 0, 1: 3, 3: 1, 2: 2}
-        swaps = rx.graph_token_swapper(graph, permutation, 4, 4)
+        swaps = rx.graph_token_swapper(graph, permutation, 4, 4, 1)
         swap_permutation(permutation, swaps)
         self.assertEqual(3, len(swaps))
         self.assertEqual({i: i for i in range(4)}, permutation)
@@ -52,7 +52,7 @@ class TestGeneral(unittest.TestCase):
         """Test an inverting permutation on a small path graph of size 8"""
         graph = rx.generators.path_graph(8)
         permutation = {i: 7 - i for i in range(8)}
-        swaps = rx.graph_token_swapper(graph, permutation, 4, 4)
+        swaps = rx.graph_token_swapper(graph, permutation, 4, 4, 1)
         swap_permutation(permutation, swaps)
         self.assertEqual({i: i for i in range(8)}, permutation)
 
@@ -63,7 +63,7 @@ class TestGeneral(unittest.TestCase):
             [(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4), (3, 6)]
         )
         permutation = {0: 4, 1: 0, 2: 3, 3: 6, 4: 2, 6: 1}
-        swaps = rx.graph_token_swapper(graph, permutation, 4, 4)
+        swaps = rx.graph_token_swapper(graph, permutation, 4, 4, 1)
         swap_permutation(permutation, swaps)
         self.assertEqual({i: i for i in permutation}, permutation)
 
@@ -71,7 +71,7 @@ class TestGeneral(unittest.TestCase):
         """Test a partial mapping on a small graph."""
         graph = rx.generators.path_graph(4)
         mapping = {0: 3}
-        swaps = rx.graph_token_swapper(graph, mapping, 4, 4)
+        swaps = rx.graph_token_swapper(graph, mapping, 4, 4, 10)
         swap_permutation(mapping, swaps)
         self.assertEqual(3, len(swaps))
         self.assertEqual({3: 3}, mapping)
@@ -80,7 +80,7 @@ class TestGeneral(unittest.TestCase):
         """Test an partial inverting permutation on a small path graph of size 5"""
         graph = rx.generators.path_graph(4)
         permutation = {i: 3 - i for i in range(2)}
-        swaps = rx.graph_token_swapper(graph, permutation, 4, 4)
+        swaps = rx.graph_token_swapper(graph, permutation, 4, 4, 10)
         swap_permutation(permutation, swaps)
         self.assertEqual(5, len(swaps))
         self.assertEqual({i: i for i in permutation.values()}, permutation)

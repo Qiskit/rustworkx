@@ -23,7 +23,6 @@ use rustworkx_core::token_swapper;
 ///
 /// Based on the paper: Approximation and Hardness for Token Swapping by Miltzow et al. (2016)
 /// ArXiV: https://arxiv.org/abs/1602.05150
-/// and generalization based on our own work.
 ///
 /// The inputs are a partial ``mapping`` to be implemented in swaps, and the number of ``trials``
 /// to perform the mapping. It's minimized over the trials.
@@ -35,23 +34,32 @@ use rustworkx_core::token_swapper;
 /// :param int trials: The number of trials to run
 /// :param int seed: The random seed to be used in producing random ints for selecting
 ///      which nodes to process next
+/// :param int parallel_threshold: The number of nodes in the graph that will
+///     trigger the use of parallel threads. If the number of nodes in the graph is less
+///     than this value it will run in a single thread. The default value is 50.
+///
+/// This function is multithreaded and will launch a thread pool with threads equal to
+/// the number of CPUs by default. You can tune the number of threads with
+/// the ``RAYON_NUM_THREADS`` environment variable. For example, setting ``RAYON_NUM_THREADS=4``
+/// would limit the thread pool to 4 threads.
 ///
 /// :returns: A list of tuples which are the swaps to be applied to the mapping to rearrange
 ///      the tokens.
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, mapping, /, trials=None, seed=None)")]
+#[pyo3(text_signature = "(graph, mapping, /, trials=None, seed=None, parallel_threshold=50)")]
 pub fn graph_token_swapper(
     graph: &graph::PyGraph,
     mapping: HashMap<usize, usize>,
     trials: Option<usize>,
     seed: Option<u64>,
+    parallel_threshold: Option<usize>,
 ) -> EdgeList {
     let map: HashMap<NodeIndex, NodeIndex> = mapping
         .iter()
         .map(|(s, t)| (NodeIndex::new(*s), NodeIndex::new(*t)))
         .collect();
-    let swaps = token_swapper::token_swapper(&graph.graph, map, trials, seed);
+    let swaps = token_swapper::token_swapper(&graph.graph, map, trials, seed, parallel_threshold);
     EdgeList {
         edges: swaps
             .into_iter()
