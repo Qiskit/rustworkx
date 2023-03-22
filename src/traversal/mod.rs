@@ -147,13 +147,11 @@ pub fn bfs_successors(
     let mut bfs = Bfs::new(&graph.graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
     while let Some(nx) = bfs.next(&graph.graph) {
-        let children = graph
+        let successors: Vec<PyObject> = graph
             .graph
-            .neighbors_directed(nx, petgraph::Direction::Outgoing);
-        let mut successors: Vec<PyObject> = Vec::new();
-        for succ in children {
-            successors.push(graph.graph.node_weight(succ).unwrap().clone_ref(py));
-        }
+            .neighbors_directed(nx, petgraph::Direction::Outgoing)
+            .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
+            .collect();
         if !successors.is_empty() {
             out_list.push((
                 graph.graph.node_weight(nx).unwrap().clone_ref(py),
