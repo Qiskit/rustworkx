@@ -1,2 +1,4 @@
 decorator==4.4.2
 importlib-metadata==4.13.0;python_version<'3.8'
+ipykernel==6.21.3
+jupyter-client==8.0.3
