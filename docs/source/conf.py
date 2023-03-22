@@ -176,4 +176,4 @@ def avoid_duplicate_in_dispatch(app, obj, bound_method):
 def setup(app):
     app.connect('config-inited', _get_versions)
     app.connect('autodoc-before-process-signature', avoid_duplicate_in_dispatch)
-    app.add_config_value("jupyter_execute_default_kernel", "python", "env")
+    app.add_config_value("jupyter_execute_default_kernel", "python3", "env")
