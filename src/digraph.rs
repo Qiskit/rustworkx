@@ -305,6 +305,7 @@ impl PyDiGraph {
         out_dict.set_item("nodes_removed", self.node_removed)?;
         out_dict.set_item("multigraph", self.multigraph)?;
         out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
+        out_dict.set_item("check_cycle", self.check_cycle)?;
         let dir = petgraph::Direction::Incoming;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
@@ -341,6 +342,11 @@ impl PyDiGraph {
             None => py.None(),
         };
         self.attrs = attrs;
+        let check_cycle_raw = dict_state
+            .get_item("check_cycle")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.check_cycle = check_cycle_raw.extract()?;
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;

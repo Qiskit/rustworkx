@@ -194,7 +194,6 @@ class TestDijkstraDiGraph(unittest.TestCase):
 
     def test_dijkstra_all_pair_paths(self):
         paths = rustworkx.digraph_all_pairs_dijkstra_shortest_paths(self.graph, float)
-        print(paths)
         expected = {
             0: {1: [0, 1], 2: [0, 3, 2], 3: [0, 3], 4: [0, 3, 4], 5: [0, 1, 5]},
             1: {
