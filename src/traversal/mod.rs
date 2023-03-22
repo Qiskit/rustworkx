@@ -191,13 +191,11 @@ pub fn bfs_predecessors(
     let mut bfs = Bfs::new(reverse_graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
     while let Some(nx) = bfs.next(reverse_graph) {
-        let children = graph
+        let predecessors: Vec<PyObject> = graph
             .graph
-            .neighbors_directed(nx, petgraph::Direction::Incoming);
-        let mut predecessors: Vec<PyObject> = Vec::new();
-        for pred in children {
-            predecessors.push(graph.graph.node_weight(pred).unwrap().clone_ref(py));
-        }
+            .neighbors_directed(nx, petgraph::Direction::Incoming)
+            .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
+            .collect();
         if !predecessors.is_empty() {
             out_list.push((
                 graph.graph.node_weight(nx).unwrap().clone_ref(py),
