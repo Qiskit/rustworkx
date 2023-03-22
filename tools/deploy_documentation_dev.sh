@@ -20,6 +20,9 @@ sudo apt-get install -y ./rclone.deb
 
 RCLONE_CONFIG_PATH=$(rclone config file | tail -1)
 
+# Show available Jupyter kernels
+jupyter kernelspec list
+
 # Build the documentation.
 RETWORKX_DEV_DOCS=1 tox -edocs
 
