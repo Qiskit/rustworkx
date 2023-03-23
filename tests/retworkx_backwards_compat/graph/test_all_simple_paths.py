@@ -227,7 +227,6 @@ class TestGraphAllSimplePathsAllPairs(unittest.TestCase):
 
     def test_all_simple_paths_with_min_depth_and_cutoff(self):
         paths = retworkx.all_pairs_all_simple_paths(self.graph, min_depth=3, cutoff=3)
-        print(paths)
         expected = {
             0: {2: [[0, 1, 2], [0, 3, 2]]},
             1: {3: [[1, 2, 3], [1, 0, 3]]},
