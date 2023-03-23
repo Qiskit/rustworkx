@@ -1519,6 +1519,27 @@ custom_hash_map_iter_impl!(
 impl PyGCProtocol for CentralityMapping {}
 
 custom_hash_map_iter_impl!(
+    EdgeCentralityMapping,
+    EdgeCentralityMappingKeys,
+    EdgeCentralityMappingValues,
+    EdgeCentralityMappingItems,
+    centralities,
+    centralities_keys,
+    centralities_values,
+    centralities_items,
+    usize,
+    f64,
+    "A custom class for the return of edge centralities at target edges
+
+    This class is a container class for the results of functions that
+    return a mapping of integer edge indices to the float betweenness score for
+    that edge. It implements the Python mapping protocol so you can treat the
+    return as a read-only mapping/dict.
+    "
+);
+impl PyGCProtocol for EdgeCentralityMapping {}
+
+custom_hash_map_iter_impl!(
     NodesCountMapping,
     NodesCountMappingKeys,
     NodesCountMappingValues,
