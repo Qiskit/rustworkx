@@ -1,6 +1,7 @@
 ---
 features:
   - |
-    This PR adds a method to return an iterator of predecessors in a
-    bread-first traversal from a specified node. This is analogous to
-    the existing bfs_successors method.
+    Added a new function, :func:`~.bfs_predecessors`, which is used
+    to return a list of predecessors in a reversed bread-first traversal
+    from a specified node. This is analogous to the existing
+    :func:`~.bfs_successors` method.
