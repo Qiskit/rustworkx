@@ -115,6 +115,9 @@ latex_documents = [
    u'rustworkx Contributors', 'manual'),
 ]
 
+# Jupyter Sphinx options
+jupyter_execute_default_kernel = "python3"
+
 # Texinfo options
 
 texinfo_documents = [
