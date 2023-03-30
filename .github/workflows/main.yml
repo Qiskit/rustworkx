@@ -131,18 +131,21 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.platform.rust-target }}
-      - name: 'Install dependencies'
-        run: python -m pip install --upgrade tox
       - name: 'Install binary dependencies'
         run: sudo apt-get install -y graphviz
         if: runner.os == 'Linux'
-      - name: 'Build rustworkx'
+      - name: 'Build rustworkx and test dependencies'
         run: |
-          tox -epy --notest
-      - name: 'Run retworkx tests'
+          pip install -c constraints.txt -U '.[mpl,graphviz]' fixtures testtools>=2.5.0 networkx>=2.5 stestr
+      - name: 'Build retworkx'
         env:
           RUSTWORKX_PKG_NAME: "retworkx"
-        run: tox -epy -- -t ./retworkx_backwards_compat
+        run: |
+          pip install -c constraints.txt -U .
+      - name: 'Run retworkx tests'
+        run: |
+          cd tests
+          stestr run -t ./retworkx_backwards_compat
   coverage:
     needs: [tests]
     name: Coverage
