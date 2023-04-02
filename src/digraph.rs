@@ -2720,18 +2720,55 @@ impl PyDiGraph {
         self.clone()
     }
 
-    /// Reverse All edges in the graph inplace
+    /// Reverse the direction of all edges in the graph, in place.
+    ///
+    /// This method modifies the graph instance to reverse the direction of all edges.
+    /// It does so by iterating over all edges in the graph and removing each edge,
+    /// then adding a new edge in the opposite direction with the same weight.
+    ///
+    /// # Arguments
+    ///
+    /// * `py`: A reference to the Python interpreter.
+    ///
+    /// # Returns
+    ///
+    /// None.
+    ///
+    /// # Panics
+    ///
+    /// This method will panic if the edge indices or weights are not valid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rustworkx::{DiGraph, WeightedGraph};
+    ///
+    /// let mut graph = DiGraph::<(), i32>::new();
+    /// graph.add_edge(0, 1, 3).unwrap();
+    /// graph.add_edge(1, 2, 5).unwrap();
+    /// graph.add_edge(2, 3, 2).unwrap();
+    ///
+    /// graph.reverse_inplace(py);
+    ///
+    /// assert_eq!(graph.edges().collect::<Vec<_>>(), vec![(3, 2), (2, 1), (1, 0)]);
+    /// ```
     #[pyo3(text_signature = "(self)")]
     pub fn reverse_inplace(&mut self, py: Python) {
         let indices = self.graph.edge_indices().collect::<Vec<EdgeIndex>>();
         for idx in indices {
-            let (source_node, dest_node) = self.graph.edge_endpoints(idx).expect("Edge Index received from iterator");
-            let weight = self.graph.edge_weight(idx).expect("Edge Index received from iterator").clone_ref(py);
+            let (source_node, dest_node) = self
+                .graph
+                .edge_endpoints(idx)
+                .expect("Edge Index received from iterator");
+            let weight = self
+                .graph
+                .edge_weight(idx)
+                .expect("Edge Index received from iterator")
+                .clone_ref(py);
             self.graph.remove_edge(idx);
             self.graph.add_edge(dest_node, source_node, weight);
         }
     }
-
 
     /// Return the number of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
