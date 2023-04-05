@@ -305,6 +305,7 @@ impl PyDiGraph {
         out_dict.set_item("nodes_removed", self.node_removed)?;
         out_dict.set_item("multigraph", self.multigraph)?;
         out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
+        out_dict.set_item("check_cycle", self.check_cycle)?;
         let dir = petgraph::Direction::Incoming;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
@@ -341,6 +342,11 @@ impl PyDiGraph {
             None => py.None(),
         };
         self.attrs = attrs;
+        let check_cycle_raw = dict_state
+            .get_item("check_cycle")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.check_cycle = check_cycle_raw.extract()?;
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -733,7 +739,7 @@ impl PyDiGraph {
     /// :param int target: The index for the second node
     ///
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[pyo3(text_signature = "(self, source, target, edge /)")]
+    #[pyo3(text_signature = "(self, source, target, edge, /)")]
     pub fn update_edge(&mut self, source: usize, target: usize, edge: PyObject) -> PyResult<()> {
         let index_a = NodeIndex::new(source);
         let index_b = NodeIndex::new(target);
@@ -1066,7 +1072,7 @@ impl PyDiGraph {
     ///     ``(source, target, weight)`` where source and target are integer
     ///     node indices. If the node index is not present in the graph
     ///     nodes will be added (with a node weight of ``None``) to that index.
-    #[pyo3(text_signature = "(self, edge_lsit, /)")]
+    #[pyo3(text_signature = "(self, edge_list, /)")]
     pub fn extend_from_weighted_edge_list(
         &mut self,
         py: Python,
@@ -1271,7 +1277,7 @@ impl PyDiGraph {
     ///
     /// :param int u: The source node that is going to be merged
     /// :param int v: The target node that is going to be the new node
-    #[pyo3(text_signature = "(self, u, v /)")]
+    #[pyo3(text_signature = "(self, u, v, /)")]
     pub fn merge_nodes(&mut self, py: Python, u: usize, v: usize) -> PyResult<()> {
         let source_node = NodeIndex::new(u);
         let target_node = NodeIndex::new(v);

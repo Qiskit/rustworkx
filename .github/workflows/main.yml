@@ -25,10 +25,8 @@ jobs:
         with:
           python-version: 3.8
       - run: pip install -U flake8 black~=22.0
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          profile: minimal
           components: rustfmt
       - name: Test Build
         run: cargo build
@@ -46,7 +44,7 @@ jobs:
         run: pushd rustworkx-core && cargo test && popd
       - name: rustworkx-core Docs
         run: pushd rustworkx-core && cargo doc && popd
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: rustworkx_core_docs
           path: target/doc/rustworkx_core
@@ -77,19 +75,37 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.platform.rust-target }}
-          profile: minimal
-          default: true
+          targets: ${{ matrix.platform.rust-target }}
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade 'tox<4'
+        run: python -m pip install --upgrade tox
       - name: 'Install binary dependencies'
         run: sudo apt-get install -y graphviz
         if: runner.os == 'Linux'
       - name: 'Run tests'
         run: tox -epy
+  tests_stubs:
+    needs: [tests]
+    name: python-stubs-${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: 'Install dependencies'
+        run: python -m pip install --upgrade tox
+      - name: 'Run rustworkx stub tests'
+        run: tox -estubs
   tests_retworkx_compat:
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
@@ -111,24 +127,25 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.platform.rust-target }}
-          profile: minimal
-          default: true
-      - name: 'Install dependencies'
-        run: python -m pip install --upgrade 'tox<4'
+          targets: ${{ matrix.platform.rust-target }}
       - name: 'Install binary dependencies'
         run: sudo apt-get install -y graphviz
         if: runner.os == 'Linux'
-      - name: 'Build rustworkx'
+      - name: 'Build rustworkx and test dependencies'
         run: |
-          tox -epy --notest
-      - name: 'Run retworkx tests'
+          pip install -c constraints.txt -U '.[mpl,graphviz]' fixtures testtools>=2.5.0 networkx>=2.5 stestr
+      - name: 'Build retworkx'
         env:
           RUSTWORKX_PKG_NAME: "retworkx"
-        run: tox -epy -- -t ./retworkx_backwards_compat
+        run: |
+          pip install -c constraints.txt -U .
+      - name: 'Run retworkx tests'
+        run: |
+          cd tests
+          stestr run -t ./retworkx_backwards_compat
   coverage:
     needs: [tests]
     name: Coverage
@@ -140,11 +157,8 @@ jobs:
         with:
           python-version: 3.8
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
-          profile: default
           components: llvm-tools-preview
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
@@ -165,7 +179,7 @@ jobs:
           set -e
           mv tests/retworkx*profraw .
           ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.info
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: coveralls.info
@@ -187,18 +201,14 @@ jobs:
         with:
           python-version: 3.8
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          profile: minimal
+        uses: dtolnay/rust-toolchain@stable
       - name: Install binary deps
         run: sudo apt-get install -y graphviz
       - name: Install deps
-        run: pip install -U 'tox<4'
+        run: pip install -U tox
       - name: Build Docs
         run: tox -edocs
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: html_docs
           path: docs/build/html

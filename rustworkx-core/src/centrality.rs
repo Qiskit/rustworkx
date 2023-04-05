@@ -15,18 +15,24 @@ use std::hash::Hash;
 use std::sync::RwLock;
 
 use hashbrown::HashMap;
+use petgraph::algo::dijkstra;
 use petgraph::visit::{
+    EdgeCount,
+    EdgeIndexable,
     EdgeRef,
     GraphBase,
     GraphProp, // allows is_directed
     IntoEdges,
+    IntoEdgesDirected,
     IntoNeighbors,
     IntoNeighborsDirected,
     IntoNodeIdentifiers,
     NodeCount,
     NodeIndexable,
+    Reversed,
+    Visitable,
 };
-use rayon::prelude::*;
+use rayon_cond::CondIterator;
 
 /// Compute the betweenness centrality of all nodes in a graph.
 ///
@@ -43,7 +49,7 @@ use rayon::prelude::*;
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on
-/// * `endpoints` - Whether to include the endpoints of paths in the path
+/// * `include_endpoints` - Whether to include the endpoints of paths in the path
 ///     lengths used to compute the betweenness
 /// * `normalized` - Whether to normalize the betweenness scores by the number
 ///     of distinct paths between all pairs of nodes
@@ -68,9 +74,11 @@ use rayon::prelude::*;
 ///     output
 /// );
 /// ```
+/// # See Also
+/// [`edge_betweenness_centrality`]
 pub fn betweenness_centrality<G>(
     graph: G,
-    endpoints: bool,
+    include_endpoints: bool,
     normalized: bool,
     parallel_threshold: usize,
 ) -> Vec<Option<f64>>
@@ -106,75 +114,116 @@ where
         betweenness[is] = Some(0.0);
     }
     let locked_betweenness = RwLock::new(&mut betweenness);
-    let node_indices: Vec<usize> = graph
-        .node_identifiers()
-        .map(|i| graph.to_index(i))
-        .collect();
-    if graph.node_count() < parallel_threshold {
-        node_indices
-            .iter()
-            .map(|node_s| {
-                (
-                    shortest_path_for_centrality(&graph, &graph.from_index(*node_s)),
-                    *node_s,
-                )
-            })
-            .for_each(|(mut shortest_path_calc, is)| {
-                if endpoints {
-                    _accumulate_endpoints(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        is,
-                        &graph,
-                    );
-                } else {
-                    _accumulate_basic(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        is,
-                        &graph,
-                    );
-                }
-            });
-    } else {
-        node_indices
-            .par_iter()
-            .map(|node_s| {
-                (
-                    shortest_path_for_centrality(&graph, &graph.from_index(*node_s)),
-                    node_s,
-                )
-            })
-            .for_each(|(mut shortest_path_calc, is)| {
-                if endpoints {
-                    _accumulate_endpoints(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        *is,
-                        &graph,
-                    );
-                } else {
-                    _accumulate_basic(
-                        &locked_betweenness,
-                        max_index,
-                        &mut shortest_path_calc,
-                        *is,
-                        &graph,
-                    );
-                }
-            });
-    }
+    let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
+
+    CondIterator::new(node_indices, graph.node_count() >= parallel_threshold)
+        .map(|node_s| (shortest_path_for_centrality(&graph, &node_s), node_s))
+        .for_each(|(mut shortest_path_calc, node_s)| {
+            _accumulate_vertices(
+                &locked_betweenness,
+                max_index,
+                &mut shortest_path_calc,
+                node_s,
+                &graph,
+                include_endpoints,
+            );
+        });
+
     _rescale(
         &mut betweenness,
         graph.node_count(),
         normalized,
         graph.is_directed(),
-        endpoints,
+        include_endpoints,
     );
 
+    betweenness
+}
+
+/// Compute the edge betweenness centrality of all edges in a graph.
+///
+/// The algorithm used in this function is based on:
+///
+/// Ulrik Brandes: On Variants of Shortest-Path Betweenness
+/// Centrality and their Generic Computation.
+/// Social Networks 30(2):136-145, 2008.
+/// <https://doi.org/10.1016/j.socnet.2007.11.001>.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold``. If the
+/// function will be running in parallel the env var ``RAYON_NUM_THREADS`` can
+/// be used to adjust how many threads will be used.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `normalized` - Whether to normalize the betweenness scores by the number
+///     of distinct paths between all pairs of nodes
+/// * `parallel_threshold` - The number of nodes to calculate the betweenness
+///     centrality in parallel at, if the number of nodes in `graph` is less
+///     than this value it will run in a single thread. A good default to use
+///     here if you're not sure is `50` as that was found to be roughly the
+///     number of nodes where parallelism improves performance
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::edge_betweenness_centrality;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (1, 3), (2, 3), (3, 4), (1, 4)
+/// ]);
+///
+/// let output = edge_betweenness_centrality(&g, false, 200);
+/// let expected = vec![Some(4.0), Some(2.0), Some(1.0), Some(2.0), Some(3.0), Some(3.0)];
+/// assert_eq!(output, expected);
+/// ```
+/// # See Also
+/// [`betweenness_centrality`]
+pub fn edge_betweenness_centrality<G>(
+    graph: G,
+    normalized: bool,
+    parallel_threshold: usize,
+) -> Vec<Option<f64>>
+where
+    G: NodeIndexable
+        + EdgeIndexable
+        + IntoEdges
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + EdgeCount
+        + GraphProp
+        + Sync,
+    G::NodeId: Eq + Hash + Send,
+    G::EdgeId: Eq + Hash + Send,
+{
+    let max_index = graph.node_bound();
+    let mut betweenness = vec![None; graph.edge_bound()];
+    for edge in graph.edge_references() {
+        let is: usize = EdgeIndexable::to_index(&graph, edge.id());
+        betweenness[is] = Some(0.0);
+    }
+    let locked_betweenness = RwLock::new(&mut betweenness);
+    let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
+    CondIterator::new(node_indices, graph.node_count() >= parallel_threshold)
+        .map(|node_s| shortest_path_for_edge_centrality(&graph, &node_s))
+        .for_each(|mut shortest_path_calc| {
+            accumulate_edges(
+                &locked_betweenness,
+                max_index,
+                &mut shortest_path_calc,
+                &graph,
+            );
+        });
+
+    _rescale(
+        &mut betweenness,
+        graph.node_count(),
+        normalized,
+        graph.is_directed(),
+        true,
+    );
     betweenness
 }
 
@@ -183,12 +232,12 @@ fn _rescale(
     node_count: usize,
     normalized: bool,
     directed: bool,
-    endpoints: bool,
+    include_endpoints: bool,
 ) {
     let mut do_scale = true;
     let mut scale = 1.0;
     if normalized {
-        if endpoints {
+        if include_endpoints {
             if node_count < 2 {
                 do_scale = false;
             } else {
@@ -211,12 +260,13 @@ fn _rescale(
     }
 }
 
-fn _accumulate_basic<G>(
+fn _accumulate_vertices<G>(
     locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
     max_index: usize,
     path_calc: &mut ShortestPathData<G>,
-    is: usize,
+    node_s: <G as GraphBase>::NodeId,
     graph: G,
+    include_endpoints: bool,
 ) where
     G: NodeIndexable
         + IntoNodeIdentifiers
@@ -238,47 +288,50 @@ fn _accumulate_basic<G>(
         }
     }
     let mut betweenness = locked_betweenness.write().unwrap();
-    for w in &path_calc.verts_sorted_by_distance {
-        let iw = graph.to_index(*w);
-        if iw != is {
-            betweenness[iw] = betweenness[iw].map(|x| x + delta[iw]);
+    if include_endpoints {
+        let i_node_s = graph.to_index(node_s);
+        betweenness[i_node_s] = betweenness[i_node_s]
+            .map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
+        for w in &path_calc.verts_sorted_by_distance {
+            if *w != node_s {
+                let iw = graph.to_index(*w);
+                betweenness[iw] = betweenness[iw].map(|x| x + delta[iw] + 1.0);
+            }
+        }
+    } else {
+        for w in &path_calc.verts_sorted_by_distance {
+            if *w != node_s {
+                let iw = graph.to_index(*w);
+                betweenness[iw] = betweenness[iw].map(|x| x + delta[iw]);
+            }
         }
     }
 }
 
-fn _accumulate_endpoints<G>(
+fn accumulate_edges<G>(
     locked_betweenness: &RwLock<&mut Vec<Option<f64>>>,
     max_index: usize,
-    path_calc: &mut ShortestPathData<G>,
-    is: usize,
+    path_calc: &mut ShortestPathDataWithEdges<G>,
     graph: G,
 ) where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNeighborsDirected
-        + NodeCount
-        + GraphProp
-        + GraphBase
-        + std::marker::Sync,
-    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
+    G: NodeIndexable + EdgeIndexable + Sync,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
 {
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
-        let iw = graph.to_index(*w);
+        let iw = NodeIndexable::to_index(&graph, *w);
         let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
         let p_w = path_calc.predecessors.get(w).unwrap();
-        for v in p_w {
-            let iv = graph.to_index(*v);
-            delta[iv] += path_calc.sigma[v] * coeff;
-        }
-    }
-    let mut betweenness = locked_betweenness.write().unwrap();
-    betweenness[is] =
-        betweenness[is].map(|x| x + ((path_calc.verts_sorted_by_distance.len() - 1) as f64));
-    for w in &path_calc.verts_sorted_by_distance {
-        let iw = graph.to_index(*w);
-        if iw != is {
-            betweenness[iw] = betweenness[iw].map(|x| x + delta[iw] + 1.0);
+        let e_w = path_calc.predecessor_edges.get(w).unwrap();
+        let mut betweenness = locked_betweenness.write().unwrap();
+        for i in 0..p_w.len() {
+            let v = p_w[i];
+            let iv = NodeIndexable::to_index(&graph, v);
+            let ie = EdgeIndexable::to_index(&graph, e_w[i]);
+            let c = path_calc.sigma[&v] * coeff;
+            betweenness[ie] = betweenness[ie].map(|x| x + c);
+            delta[iv] += c;
         }
     }
 }
@@ -334,6 +387,202 @@ where
         verts_sorted_by_distance,
         predecessors,
         sigma,
+    }
+}
+
+struct ShortestPathDataWithEdges<G>
+where
+    G: GraphBase,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    verts_sorted_by_distance: Vec<G::NodeId>,
+    predecessors: HashMap<G::NodeId, Vec<G::NodeId>>,
+    predecessor_edges: HashMap<G::NodeId, Vec<G::EdgeId>>,
+    sigma: HashMap<G::NodeId, f64>,
+}
+
+fn shortest_path_for_edge_centrality<G>(
+    graph: G,
+    node_s: &G::NodeId,
+) -> ShortestPathDataWithEdges<G>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphBase
+        + IntoEdges,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
+    let c = graph.node_count();
+    let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
+    let mut predecessor_edges = HashMap::<G::NodeId, Vec<G::EdgeId>>::with_capacity(c);
+    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
+    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
+    #[allow(non_snake_case)]
+    let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
+
+    for node in graph.node_identifiers() {
+        predecessors.insert(node, Vec::new());
+        predecessor_edges.insert(node, Vec::new());
+        sigma.insert(node, 0.0);
+        distance.insert(node, -1);
+    }
+    sigma.insert(*node_s, 1.0);
+    distance.insert(*node_s, 0);
+    Q.push_back(*node_s);
+    while let Some(v) = Q.pop_front() {
+        verts_sorted_by_distance.push(v);
+        let distance_v = distance[&v];
+        for edge in graph.edges(v) {
+            let w = edge.target();
+            if distance[&w] < 0 {
+                Q.push_back(w);
+                distance.insert(w, distance_v + 1);
+            }
+            if distance[&w] == distance_v + 1 {
+                sigma.insert(w, sigma[&w] + sigma[&v]);
+                let e_p = predecessors.get_mut(&w).unwrap();
+                e_p.push(v);
+                predecessor_edges.get_mut(&w).unwrap().push(edge.id());
+            }
+        }
+    }
+    verts_sorted_by_distance.reverse(); // will be effectively popping from the stack
+    ShortestPathDataWithEdges {
+        verts_sorted_by_distance,
+        predecessors,
+        predecessor_edges,
+        sigma,
+    }
+}
+
+#[cfg(test)]
+mod test_edge_betweenness_centrality {
+    use crate::centrality::edge_betweenness_centrality;
+    use petgraph::graph::edge_index;
+    use petgraph::prelude::StableGraph;
+    use petgraph::Undirected;
+
+    macro_rules! assert_almost_equal {
+        ($x:expr, $y:expr, $d:expr) => {
+            if ($x - $y).abs() >= $d {
+                panic!("{} != {} within delta of {}", $x, $y, $d);
+            }
+        };
+    }
+
+    #[test]
+    fn test_undirected_graph_normalized() {
+        let graph = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+            (0, 6),
+            (0, 4),
+            (0, 1),
+            (0, 5),
+            (1, 6),
+            (1, 7),
+            (1, 3),
+            (1, 4),
+            (2, 6),
+            (2, 3),
+            (3, 5),
+            (3, 7),
+            (3, 6),
+            (4, 5),
+            (5, 6),
+        ]);
+        let output = edge_betweenness_centrality(&graph, true, 50);
+        let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
+        let expected_values = vec![
+            0.1023809, 0.0547619, 0.0922619, 0.05654762, 0.09940476, 0.125, 0.09940476, 0.12440476,
+            0.12857143, 0.12142857, 0.13511905, 0.125, 0.06547619, 0.08869048, 0.08154762,
+        ];
+        for i in 0..15 {
+            assert_almost_equal!(result[i], expected_values[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_undirected_graph_unnormalized() {
+        let graph = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+            (0, 2),
+            (0, 4),
+            (0, 1),
+            (1, 3),
+            (1, 5),
+            (1, 7),
+            (2, 7),
+            (2, 3),
+            (3, 5),
+            (3, 6),
+            (4, 6),
+            (5, 7),
+        ]);
+        let output = edge_betweenness_centrality(&graph, false, 50);
+        let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
+        let expected_values = vec![
+            3.83333, 5.5, 5.33333, 3.5, 2.5, 3.0, 3.5, 4.0, 3.66667, 6.5, 3.5, 2.16667,
+        ];
+        for i in 0..12 {
+            assert_almost_equal!(result[i], expected_values[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_directed_graph_normalized() {
+        let graph = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 1),
+            (1, 0),
+            (1, 3),
+            (1, 2),
+            (1, 4),
+            (2, 3),
+            (2, 4),
+            (2, 1),
+            (3, 2),
+            (4, 3),
+        ]);
+        let output = edge_betweenness_centrality(&graph, true, 50);
+        let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
+        let expected_values = vec![0.2, 0.2, 0.1, 0.1, 0.1, 0.05, 0.1, 0.3, 0.35, 0.2];
+        for i in 0..10 {
+            assert_almost_equal!(result[i], expected_values[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_directed_graph_unnormalized() {
+        let graph = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 4),
+            (1, 0),
+            (1, 3),
+            (2, 3),
+            (2, 4),
+            (2, 0),
+            (3, 4),
+            (3, 2),
+            (3, 1),
+            (4, 1),
+        ]);
+        let output = edge_betweenness_centrality(&graph, false, 50);
+        let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
+        let expected_values = vec![4.5, 3.0, 6.5, 1.5, 1.5, 1.5, 1.5, 4.5, 2.0, 7.5];
+        for i in 0..10 {
+            assert_almost_equal!(result[i], expected_values[i], 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_stable_graph_with_removed_edges() {
+        let mut graph: StableGraph<(), (), Undirected> =
+            StableGraph::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 0)]);
+        graph.remove_edge(edge_index(1));
+        let result = edge_betweenness_centrality(&graph, false, 50);
+        let expected_values = vec![Some(3.0), None, Some(3.0), Some(4.0)];
+        assert_eq!(result, expected_values);
     }
 }
 
@@ -511,4 +760,80 @@ mod test_eigenvector_centrality {
             assert_almost_equal!(expected_values[i], result[i], 1e-4);
         }
     }
+}
+
+/// Compute the closeness centrality of each node in the graph.
+///
+/// The closeness centrality of a node `u` is the reciprocal of the average
+/// shortest path distance to `u` over all `n-1` reachable nodes.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance" [^WF]. You can enable this by setting `wf_improved` to `true`.
+///
+/// [^WF] Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+///     Methods and Applications (Structural Analysis in the Social Sciences).
+///     Cambridge: Cambridge University Press. doi:10.1017/CBO9780511815478
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `wf_improved` - If `true`, scale by the fraction of nodes reachable.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::closeness_centrality;
+///
+/// // Calculate the closeness centrality of Graph
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
+/// ]);
+/// let output = closeness_centrality(&g, true);
+/// assert_eq!(
+///     vec![Some(1./2.), Some(2./3.), Some(4./7.), Some(2./3.), Some(4./5.)],
+///     output
+/// );
+///
+/// // Calculate the closeness centrality of DiGraph
+/// let dg = petgraph::graph::DiGraph::<i32, ()>::from_edges(&[
+///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
+/// ]);
+/// let output = closeness_centrality(&dg, true);
+/// assert_eq!(
+///     vec![Some(0.), Some(0.), Some(1./4.), Some(1./3.), Some(4./5.)],
+///     output
+/// );
+/// ```
+pub fn closeness_centrality<G>(graph: G, wf_improved: bool) -> Vec<Option<f64>>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + GraphBase
+        + IntoEdges
+        + Visitable
+        + NodeCount
+        + IntoEdgesDirected,
+    G::NodeId: std::hash::Hash + Eq,
+{
+    let max_index = graph.node_bound();
+    let mut closeness: Vec<Option<f64>> = vec![None; max_index];
+    for node_s in graph.node_identifiers() {
+        let is = graph.to_index(node_s);
+        let map = dijkstra(Reversed(&graph), node_s, None, |_| 1);
+        let reachable_nodes_count = map.len();
+        let dists_sum: usize = map.into_values().sum();
+        if reachable_nodes_count == 1 {
+            closeness[is] = Some(0.0);
+            continue;
+        }
+        closeness[is] = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
+        if wf_improved {
+            let node_count = graph.node_count();
+            closeness[is] = closeness[is]
+                .map(|c| c * (reachable_nodes_count - 1) as f64 / (node_count - 1) as f64);
+        }
+    }
+    closeness
 }

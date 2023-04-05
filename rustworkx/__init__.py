@@ -1560,6 +1560,10 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
     defaults to 50). If the function will be running in parallel the env var
     ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 
+    See Also
+    --------
+    edge_betweenness_centrality
+
     :param PyDiGraph graph: The input graph
     :param bool normalized: Whether to normalize the betweenness scores by
         the number of distinct paths between all pairs of nodes.
@@ -1592,6 +1596,124 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, paral
         graph,
         normalized=normalized,
         endpoints=endpoints,
+        parallel_threshold=parallel_threshold,
+    )
+
+
+@functools.singledispatch
+def closeness_centrality(graph, wf_improved=True):
+    r"""Compute the closeness centrality of each node in a graph object.
+
+    The closeness centrality of a node :math:`u` is defined as the
+    reciprocal of the average shortest path distance to :math:`u` over all
+    :math:`n-1` reachable nodes in the graph. In it's general form this can
+    be expressed as:
+
+    .. math::
+
+        C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+
+    where:
+
+      * :math:`d(v, u)` - the shortest-path distance between :math:`v` and
+        :math:`u`
+      * :math:`n` - the number of nodes that can reach :math:`u`.
+
+    In the case of a graphs with more than one connected component there is
+    an alternative improved formula that calculates the closeness centrality
+    as "a ratio of the fraction of actors in the group who are reachable, to
+    the average distance" [WF]_. This can be expressed as
+
+    .. math::
+
+        C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+
+    where :math:`N` is the number of nodes in the graph. This alternative
+    formula can be used with the ``wf_improved`` argument.
+
+    :param graph: The input graph. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param bool wf_improved: This is optional; the default is True. If True,
+        scale by the fraction of nodes reachable.
+
+    :returns: A dictionary mapping each node index to its closeness centrality.
+    :rtype: dict
+
+    .. [WF] Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+      Methods and Applications (Structural Analysis in the Social Sciences).
+      Cambridge: Cambridge University Press. doi:10.1017/CBO9780511815478
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@closeness_centrality.register(PyDiGraph)
+def _digraph_closeness_centrality(graph, wf_improved=True):
+    return digraph_closeness_centrality(graph, wf_improved=wf_improved)
+
+
+@closeness_centrality.register(PyGraph)
+def _graph_closeness_centrality(graph, wf_improved=True):
+    return graph_closeness_centrality(graph, wf_improved=wf_improved)
+
+
+@functools.singledispatch
+def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
+    r"""Compute the edge betweenness centrality of all edges in a graph.
+
+    Edge betweenness centrality of an edge :math:`e` is the sum of the
+    fraction of all-pairs shortest paths that pass through :math`e`
+
+    .. math::
+
+       c_B(e) = \sum_{s,t \in V} \frac{\sigma(s, t|e)}{\sigma(s, t)}
+
+    where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the
+    number of shortest :math:`(s, t)`-paths, and :math:`\sigma(s, t|e)` is
+    the number of those paths passing through edge :math:`e`.
+
+    The above definition and the algorithm used in this function is based on:
+
+    Ulrik Brandes, On Variants of Shortest-Path Betweenness Centrality
+    and their Generic Computation. Social Networks 30(2):136-145, 2008.
+
+    This function is multithreaded and will run in parallel if the number
+    of nodes in the graph is above the value of ``parallel_threshold`` (it
+    defaults to 50). If the function will be running in parallel the env var
+    ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+
+    See Also
+    --------
+    betweenness_centrality
+
+    :param PyGraph graph: The input graph
+    :param bool normalized: Whether to normalize the betweenness scores by the
+        number of distinct paths between all pairs of nodes.
+    :param int parallel_threshold: The number of nodes to calculate
+        the edge betweenness centrality in parallel at if the number of nodes in
+        the graph is less than this value it will run in a single thread. The
+        default value is 50
+
+    :returns: a read-only dict-like object whose keys are edges and values are the
+        betweenness score for each node.
+    :rtype: EdgeCentralityMapping
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@edge_betweenness_centrality.register(PyDiGraph)
+def _digraph_edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
+    return digraph_edge_betweenness_centrality(
+        graph,
+        normalized=normalized,
+        parallel_threshold=parallel_threshold,
+    )
+
+
+@edge_betweenness_centrality.register(PyGraph)
+def _graph_edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
+    return graph_edge_betweenness_centrality(
+        graph,
+        normalized=normalized,
         parallel_threshold=parallel_threshold,
     )
 
