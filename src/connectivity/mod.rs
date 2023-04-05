@@ -701,7 +701,11 @@ pub fn digraph_longest_simple_path(graph: &digraph::PyDiGraph) -> Option<NodeInd
 ///
 ///     from rustworkx import all_pairs_all_simple_paths
 ///
-///     max((y.values for y in all_pairs_all_simple_paths(graph).values()), key=lambda x: len(x))
+///     simple_path_pairs = rx.all_pairs_all_simple_paths(graph)
+///     longest_path = max(
+///         (u for y in simple_path_pairs.values() for z in y.values() for u in z),
+///         key=lambda x: len(x),
+///     )
 ///
 /// but this function will be more efficient than using ``max()`` as the search
 /// is evaluated in parallel before returning to Python. In the case of multiple
