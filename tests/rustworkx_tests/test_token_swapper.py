@@ -76,6 +76,17 @@ class TestGeneral(unittest.TestCase):
         self.assertEqual(3, len(swaps))
         self.assertEqual({3: 3}, mapping)
 
+    def test_partial_simple_remove_node(self) -> None:
+        """Test a partial mapping on a small graph with a node removed."""
+        graph = rx.generators.path_graph(5)
+        graph.remove_node(2)
+        graph.add_edge(1, 3, None)
+        mapping = {0: 3}
+        swaps = rx.graph_token_swapper(graph, mapping, 4, 4, 10)
+        swap_permutation(mapping, swaps)
+        self.assertEqual(2, len(swaps))
+        self.assertEqual({3: 3}, mapping)
+
     def test_partial_small(self) -> None:
         """Test an partial inverting permutation on a small path graph of size 5"""
         graph = rx.generators.path_graph(4)

@@ -85,22 +85,40 @@ where
     }
 
     fn map(&mut self) -> Vec<Swap> {
-        let num_nodes = self.graph.node_count();
+        let num_nodes = self.graph.node_bound();
         let num_edges = self.graph.edge_count();
 
         // Directed graph with nodes matching ``graph`` and
         // edges for neighbors closer than nodes
         let mut digraph = StableGraph::with_capacity(num_nodes, num_edges);
-        // Same as digraph with no self edges
-        let mut sub_digraph = StableGraph::with_capacity(num_nodes, num_edges);
 
-        // Add nodes to the digraph/sub_digraph and build the node maps
-        for node in self.graph.node_identifiers() {
-            let index = digraph.add_node(());
-            sub_digraph.add_node(());
-            self.node_map.insert(node, index);
-            self.rev_node_map.insert(index, node);
+        // First fill the digraph with nodes. Then since it's a stable graph,
+        // must go through and remove nodes that were removed in original graph
+        for _ in 0..self.graph.node_bound() {
+            digraph.add_node(());
         }
+        let mut count: usize = 0;
+        for gnode in self.graph.node_identifiers() {
+            let gidx = self.graph.to_index(gnode);
+            if gidx != count {
+                for idx in count..gidx {
+                    digraph.remove_node(NodeIndex::new(idx));
+                }
+                count = gidx;
+            }
+            count += 1;
+        }
+
+        // Create maps between NodeId and NodeIndex
+        for node in self.graph.node_identifiers() {
+            self.node_map
+                .insert(node, NodeIndex::new(self.graph.to_index(node)));
+            self.rev_node_map
+                .insert(NodeIndex::new(self.graph.to_index(node)), node);
+        }
+        // sub will become same as digraph but with no self edges in add_token_edges
+        let mut sub_digraph = digraph.clone();
+
         // The mapping in HashMap form using NodeIndex
         let mut tokens: HashMap<NodeIndex, NodeIndex> = self
             .mapping
@@ -274,15 +292,17 @@ where
                             break;
                         }
                     }
-                    if !found {
-                        panic!("unexpected stop")
-                    }
+                    assert!(
+                        found,
+                        "The token swap process has ended unexpectedly, this points to a bug in rustworkx, please open an issue."
+                    );
                 }
             }
         }
-        if !todo_nodes.is_empty() {
-            panic!("got todo nodes");
-        }
+        assert!(
+            todo_nodes.is_empty(),
+            "The output final swap map is incomplete, this points to a bug in rustworkx, please open an issue."
+        );
         swap_edges
     }
 
@@ -518,6 +538,22 @@ mod test_token_swapper {
         // Simple partial swap
         let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
         let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(3))]);
+        let mut new_map = mapping.clone();
+        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(1));
+        do_swap(&mut new_map, &swaps);
+        let mut expected = HashMap::with_capacity(4);
+        expected.insert(NodeIndex::new(3), NodeIndex::new(3));
+        assert_eq!(expected, new_map);
+    }
+
+    #[test]
+    fn test_partial_simple_remove_node() {
+        // Simple partial swap
+        let mut g =
+            petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+        let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(3))]);
+        g.remove_node(NodeIndex::new(2));
+        g.add_edge(NodeIndex::new(1), NodeIndex::new(3), ());
         let mut new_map = mapping.clone();
         let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(1));
         do_swap(&mut new_map, &swaps);
