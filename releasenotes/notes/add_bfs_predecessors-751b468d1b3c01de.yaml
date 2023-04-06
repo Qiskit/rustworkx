@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.bfs_predecessors`, which is used
+    to return a list of predecessors in a reversed bread-first traversal
+    from a specified node. This is analogous to the existing
+    :func:`~.bfs_successors` method.
