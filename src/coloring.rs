@@ -40,8 +40,6 @@ use rayon::prelude::*;
 ///
 /// .. jupyter-execute::
 ///
-///     import matplotlib.pyplot as plt
-///
 ///     import rustworkx as rx
 ///     from rustworkx.visualization import mpl_draw
 ///
