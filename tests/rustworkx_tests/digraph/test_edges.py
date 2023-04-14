@@ -965,4 +965,5 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
 
     def test_add_edge_non_existent(self):
         g = rustworkx.PyDiGraph()
-        self.assertRaises(IndexError, g.add_edge(2, 3, None))
+        with self.assertRaises(IndexError):
+            g.add_edge(2, 3, None)
