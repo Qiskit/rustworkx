@@ -26,6 +26,7 @@ def test(session):
 @nox.session(python=["3"])
 def lint(session):
     session.install(*deps)
+    session.install(".", "-c", "constraints.txt")
     session.install("black~=22.0", "flake8", "setuptools-rust")
     session.run("black", "--check", "--diff", "rustworkx", "tests", "retworkx", *session.posargs)
     session.run("flake8", "--per-file-ignores='rustworkx/__init__.py':F405,F403", "setup.py", "rustworkx", "retworkx", ".")
