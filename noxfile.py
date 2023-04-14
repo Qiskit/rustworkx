@@ -53,6 +53,7 @@ def stubs(session):
     session.install(*deps)
     session.install(".", "-c", "constraints.txt")
     session.install("mypy==1.0.1")
+    session.chdir("tests")
     session.run("python", "-m", "mypy.stubtest", "--concise", "--ignore-missing-stub", "rustworkx.rustworkx")
 
 @nox.session(python=["3"])

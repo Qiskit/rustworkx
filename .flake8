@@ -7,4 +7,4 @@
 max-line-length = 110
 ignore = E125,E123,E129,E711
 extend-ignore = E203, W503
-exclude = .venv,.git,.tox,dist,doc,*egg,build
+exclude = .venv,.git,.nox,dist,doc,*egg,build
