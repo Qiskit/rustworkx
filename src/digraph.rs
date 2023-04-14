@@ -984,6 +984,11 @@ impl PyDiGraph {
     pub fn add_edge(&mut self, parent: usize, child: usize, edge: PyObject) -> PyResult<usize> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
+        if !self.graph.contains_node(p_index) || !self.graph.contains_node(c_index) {
+            return Err(PyIndexError::new_err(
+                "One of the endpoints of the edge does not exist in graph",
+            ));
+        }
         let out_index = self._add_edge(p_index, c_index, edge)?;
         Ok(out_index)
     }

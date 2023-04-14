@@ -748,10 +748,15 @@ impl PyGraph {
     ///     of an existing edge with ``multigraph=False``) edge.
     /// :rtype: int
     #[pyo3(text_signature = "(self, node_a, node_b, edge, /)")]
-    pub fn add_edge(&mut self, node_a: usize, node_b: usize, edge: PyObject) -> usize {
+    pub fn add_edge(&mut self, node_a: usize, node_b: usize, edge: PyObject) -> PyResult<usize> {
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
-        self._add_edge(p_index, c_index, edge)
+        if !self.graph.contains_node(p_index) || !self.graph.contains_node(c_index) {
+            return Err(PyIndexError::new_err(
+                "One of the endpoints of the edge does not exist in graph",
+            ));
+        }
+        Ok(self._add_edge(p_index, c_index, edge))
     }
 
     /// Add new edges to the graph.
@@ -1604,7 +1609,7 @@ impl PyGraph {
         }
 
         for (source, weight) in edges {
-            self.add_edge(source.index(), node_index.index(), weight);
+            self.add_edge(source.index(), node_index.index(), weight)?;
         }
 
         Ok(node_index.index())
