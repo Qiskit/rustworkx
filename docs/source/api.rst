@@ -80,6 +80,7 @@ Traversal
    rustworkx.dfs_edges
    rustworkx.dfs_search
    rustworkx.bfs_successors
+   rustworkx.bfs_predecessors
    rustworkx.bfs_search
    rustworkx.dijkstra_search
    rustworkx.topological_sort
@@ -422,6 +423,7 @@ Custom Return Types
    :toctree: apiref
 
    rustworkx.BFSSuccessors
+   rustworkx.BFSPredecessors   
    rustworkx.NodeIndices
    rustworkx.EdgeIndices
    rustworkx.EdgeList
