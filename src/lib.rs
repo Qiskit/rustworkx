@@ -346,6 +346,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     )?;
     m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
+    m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_search))?;
@@ -489,6 +490,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
+    m.add_class::<iterators::BFSPredecessors>()?;
     m.add_class::<iterators::Chains>()?;
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeIndices>()?;
