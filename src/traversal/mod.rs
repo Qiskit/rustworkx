@@ -147,22 +147,62 @@ pub fn bfs_successors(
     let mut bfs = Bfs::new(&graph.graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
     while let Some(nx) = bfs.next(&graph.graph) {
-        let children = graph
+        let successors: Vec<PyObject> = graph
             .graph
-            .neighbors_directed(nx, petgraph::Direction::Outgoing);
-        let mut succesors: Vec<PyObject> = Vec::new();
-        for succ in children {
-            succesors.push(graph.graph.node_weight(succ).unwrap().clone_ref(py));
-        }
-        if !succesors.is_empty() {
+            .neighbors_directed(nx, petgraph::Direction::Outgoing)
+            .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
+            .collect();
+        if !successors.is_empty() {
             out_list.push((
                 graph.graph.node_weight(nx).unwrap().clone_ref(py),
-                succesors,
+                successors,
             ));
         }
     }
     iterators::BFSSuccessors {
         bfs_successors: out_list,
+    }
+}
+
+/// Return predecessors in a breadth-first-search from a source node.
+///
+/// The return format is ``[(Parent Node, [Children Nodes])]`` in a bfs order
+/// from the source node provided.
+///
+/// :param PyDiGraph graph: The DAG to get the bfs_predecessors from
+/// :param int node: The index of the dag node to get the bfs predecessors for
+///
+/// :returns: A list of nodes's data and their children in bfs order. The
+///     BFSPredecessors class that is returned is a custom container class that
+///     implements the sequence protocol. This can be used as a python list
+///     with index based access.
+/// :rtype: BFSPredecessors
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, /)")]
+pub fn bfs_predecessors(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> iterators::BFSPredecessors {
+    let index = NodeIndex::new(node);
+    let reverse_graph = Reversed(&graph.graph);
+    let mut bfs = Bfs::new(reverse_graph, index);
+    let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
+    while let Some(nx) = bfs.next(reverse_graph) {
+        let predecessors: Vec<PyObject> = graph
+            .graph
+            .neighbors_directed(nx, petgraph::Direction::Incoming)
+            .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
+            .collect();
+        if !predecessors.is_empty() {
+            out_list.push((
+                graph.graph.node_weight(nx).unwrap().clone_ref(py),
+                predecessors,
+            ));
+        }
+    }
+    iterators::BFSPredecessors {
+        bfs_predecessors: out_list,
     }
 }
 
