@@ -28,9 +28,11 @@ mod layout;
 mod matching;
 mod planar;
 mod random_graph;
+mod score;
 mod shortest_path;
 mod steiner_tree;
 mod tensor_product;
+mod token_swapper;
 mod toposort;
 mod transitivity;
 mod traversal;
@@ -53,6 +55,7 @@ use random_graph::*;
 use shortest_path::*;
 use steiner_tree::*;
 use tensor_product::*;
+use token_swapper::*;
 use transitivity::*;
 use traversal::*;
 use tree::*;
@@ -60,7 +63,7 @@ use union::*;
 
 use hashbrown::HashMap;
 use indexmap::map::Entry::{Occupied, Vacant};
-use num_complex::Complex64;
+use numpy::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
@@ -344,6 +347,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     )?;
     m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
+    m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_search))?;
@@ -415,6 +419,10 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     ))?;
     m.add_wrapped(wrap_pyfunction!(graph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_edge_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_edge_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
@@ -442,6 +450,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree))?;
     m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
+    m.add_wrapped(wrap_pyfunction!(graph_token_swapper))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
@@ -467,6 +476,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         graph_unweighted_average_shortest_path_length
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
+    m.add_wrapped(wrap_pyfunction!(stoer_wagner_min_cut))?;
     m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
@@ -483,6 +493,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
+    m.add_class::<iterators::BFSPredecessors>()?;
     m.add_class::<iterators::Chains>()?;
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeIndices>()?;
@@ -492,6 +503,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathMapping>()?;
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::CentralityMapping>()?;
+    m.add_class::<iterators::EdgeCentralityMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
     m.add_class::<iterators::MultiplePathMapping>()?;
     m.add_class::<iterators::AllPairsMultiplePathMapping>()?;

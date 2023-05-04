@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::borrow_deref_ref)]
+#![allow(clippy::borrow_as_ptr, clippy::redundant_closure)]
 
 use std::cmp;
 use std::cmp::Ordering;
@@ -34,8 +34,8 @@ use pyo3::PyTraverseError;
 use pyo3::Python;
 
 use ndarray::prelude::*;
-use num_complex::Complex64;
 use num_traits::Zero;
+use numpy::Complex64;
 use numpy::PyReadonlyArray2;
 
 use petgraph::algo;
@@ -285,7 +285,7 @@ impl PyDiGraph {
 #[pymethods]
 impl PyDiGraph {
     #[new]
-    #[args(check_cycle = "false", multigraph = "true")]
+    #[pyo3(signature=(check_cycle=false, multigraph=true, attrs=None))]
     fn new(py: Python, check_cycle: bool, multigraph: bool, attrs: Option<PyObject>) -> Self {
         PyDiGraph {
             graph: StablePyGraph::<Directed>::new(),
@@ -305,6 +305,7 @@ impl PyDiGraph {
         out_dict.set_item("nodes_removed", self.node_removed)?;
         out_dict.set_item("multigraph", self.multigraph)?;
         out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
+        out_dict.set_item("check_cycle", self.check_cycle)?;
         let dir = petgraph::Direction::Incoming;
         for node_index in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_index).unwrap();
@@ -322,7 +323,7 @@ impl PyDiGraph {
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
         self.graph = StablePyGraph::<Directed>::new();
-        let dict_state = state.cast_as::<PyDict>(py)?;
+        let dict_state = state.downcast::<PyDict>(py)?;
 
         let nodes_dict = dict_state.get_item("nodes").unwrap().downcast::<PyDict>()?;
         let edges_list = dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
@@ -341,6 +342,11 @@ impl PyDiGraph {
             None => py.None(),
         };
         self.attrs = attrs;
+        let check_cycle_raw = dict_state
+            .get_item("check_cycle")
+            .unwrap()
+            .downcast::<PyBool>()?;
+        self.check_cycle = check_cycle_raw.extract()?;
         let mut node_indices: Vec<usize> = Vec::new();
         for raw_index in nodes_dict.keys() {
             let tmp_index = raw_index.downcast::<PyLong>()?;
@@ -733,7 +739,7 @@ impl PyDiGraph {
     /// :param int target: The index for the second node
     ///
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
-    #[pyo3(text_signature = "(self, source, target, edge /)")]
+    #[pyo3(text_signature = "(self, source, target, edge, /)")]
     pub fn update_edge(&mut self, source: usize, target: usize, edge: PyObject) -> PyResult<()> {
         let index_a = NodeIndex::new(source);
         let index_b = NodeIndex::new(target);
@@ -908,7 +914,7 @@ impl PyDiGraph {
     ///     would only retain edges if the input edge to ``node`` had the same
     ///     data payload as the outgoing edge.
     #[pyo3(text_signature = "(self, node, /, use_outgoing=None, condition=None)")]
-    #[args(use_outgoing = "false")]
+    #[pyo3(signature=(node, use_outgoing=false, condition=None))]
     pub fn remove_node_retain_edges(
         &mut self,
         py: Python,
@@ -1066,7 +1072,7 @@ impl PyDiGraph {
     ///     ``(source, target, weight)`` where source and target are integer
     ///     node indices. If the node index is not present in the graph
     ///     nodes will be added (with a node weight of ``None``) to that index.
-    #[pyo3(text_signature = "(self, edge_lsit, /)")]
+    #[pyo3(text_signature = "(self, edge_list, /)")]
     pub fn extend_from_weighted_edge_list(
         &mut self,
         py: Python,
@@ -1271,7 +1277,7 @@ impl PyDiGraph {
     ///
     /// :param int u: The source node that is going to be merged
     /// :param int v: The target node that is going to be the new node
-    #[pyo3(text_signature = "(self, u, v /)")]
+    #[pyo3(text_signature = "(self, u, v, /)")]
     pub fn merge_nodes(&mut self, py: Python, u: usize, v: usize) -> PyResult<()> {
         let source_node = NodeIndex::new(u);
         let target_node = NodeIndex::new(v);
@@ -1495,7 +1501,7 @@ impl PyDiGraph {
     /// :returns: A list of the edge indices incident to a node in the graph
     /// :rtype: EdgeIndices
     #[pyo3(text_signature = "(self, node, /, all_edges=False)")]
-    #[args(all_edges = "false")]
+    #[pyo3(signature=(node, all_edges=false))]
     pub fn incident_edges(&self, node: usize, all_edges: bool) -> EdgeIndices {
         let node_index = NodeIndex::new(node);
         if all_edges {
@@ -1538,7 +1544,7 @@ impl PyDiGraph {
     ///     ``(source, target, data)``
     /// :rtype: EdgeIndexMap
     #[pyo3(text_signature = "(self, node, /, all_edges=False)")]
-    #[args(all_edges = "false")]
+    #[pyo3(signature=(node, all_edges=false))]
     pub fn incident_edge_index_map(
         &self,
         py: Python,
@@ -1724,6 +1730,42 @@ impl PyDiGraph {
         Err(NoSuitableNeighbors::new_err("No suitable neighbor"))
     }
 
+    /// Find a source node with a specific edge
+    ///
+    /// This method is used to find a predecessor of
+    /// a given node given an edge condition.
+    ///
+    /// :param int node: The node to use as the source of the search
+    /// :param callable predicate: A python callable that will take a single
+    ///     parameter, the edge object, and will return a boolean if the
+    ///     edge matches or not
+    ///
+    /// :returns: The node object that has an edge from it to the provided
+    ///     node index which matches the provided condition
+    #[pyo3(text_signature = "(self, node, predicate, /)")]
+    pub fn find_predecessor_node_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        predicate: PyObject,
+    ) -> PyResult<&PyObject> {
+        let predicate_callable = |a: &PyObject| -> PyResult<PyObject> {
+            let res = predicate.call1(py, (a,))?;
+            Ok(res.to_object(py))
+        };
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Incoming;
+        let edges = self.graph.edges_directed(index, dir);
+        for edge in edges {
+            let edge_predicate_raw = predicate_callable(edge.weight())?;
+            let edge_predicate: bool = edge_predicate_raw.extract(py)?;
+            if edge_predicate {
+                return Ok(self.graph.node_weight(edge.source()).unwrap());
+            }
+        }
+        Err(NoSuitableNeighbors::new_err("No suitable neighbor"))
+    }
+
     /// Generate a dot file from the graph
     ///
     /// :param node_attr: A callable that will take in a node data object
@@ -1840,7 +1882,7 @@ impl PyDiGraph {
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
-    #[args(labels = "false")]
+    #[pyo3(signature=(path, comment=None, deliminator=None, labels=false))]
     #[pyo3(text_signature = "(path, /, comment=None, deliminator=None, labels=False)")]
     pub fn read_edge_list(
         py: Python,
@@ -2015,8 +2057,7 @@ impl PyDiGraph {
     /// :returns: A new graph object generated from the adjacency matrix
     /// :rtype: PyDiGraph
     #[staticmethod]
-    #[args(null_value = "0.0")]
-    #[pyo3(text_signature = "(matrix, /, null_value=0.0)")]
+    #[pyo3(signature=(matrix, null_value=0.0), text_signature = "(matrix, /, null_value=0.0)")]
     pub fn from_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
@@ -2052,8 +2093,7 @@ impl PyDiGraph {
     /// :returns: A new graph object generated from the adjacency matrix
     /// :rtype: PyDiGraph
     #[staticmethod]
-    #[args(null_value = "Complex64::zero()")]
-    #[pyo3(text_signature = "(matrix, /, null_value=0.0+0.0j)")]
+    #[pyo3(signature=(matrix, null_value=Complex64::zero()), text_signature = "(matrix, /, null_value=0.0+0.0j)")]
     pub fn from_complex_adjacency_matrix<'p>(
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, Complex64>,
@@ -2461,8 +2501,7 @@ impl PyDiGraph {
     ///     the other.
     /// :rtype: PyGraph
     ///
-    #[args(preserve_attrs = "false")]
-    #[pyo3(text_signature = "(self, nodes, /, preserve_attrs=False)")]
+    #[pyo3(signature=(nodes, preserve_attrs=false),text_signature = "(self, nodes, /, preserve_attrs=False)")]
     pub fn subgraph(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> PyDiGraph {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
@@ -2601,8 +2640,7 @@ impl PyDiGraph {
     /// :returns: A new PyGraph object with an undirected edge for every
     ///     directed edge in this graph
     /// :rtype: PyGraph
-    #[pyo3(text_signature = "(self, /, multigraph=True, weight_combo_fn=None)")]
-    #[args(multigraph = "true", weight_combo_fn = "None")]
+    #[pyo3(signature=(multigraph=true, weight_combo_fn=None), text_signature = "(self, /, multigraph=True, weight_combo_fn=None)")]
     pub fn to_undirected(
         &self,
         py: Python,
@@ -2688,14 +2726,14 @@ impl PyDiGraph {
     }
 
     fn __getitem__(&self, idx: usize) -> PyResult<&PyObject> {
-        match self.graph.node_weight(NodeIndex::new(idx as usize)) {
+        match self.graph.node_weight(NodeIndex::new(idx)) {
             Some(data) => Ok(data),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 
     fn __setitem__(&mut self, idx: usize, value: PyObject) -> PyResult<()> {
-        let data = match self.graph.node_weight_mut(NodeIndex::new(idx as usize)) {
+        let data = match self.graph.node_weight_mut(NodeIndex::new(idx)) {
             Some(node_data) => node_data,
             None => return Err(PyIndexError::new_err("No node found for index")),
         };
@@ -2704,7 +2742,7 @@ impl PyDiGraph {
     }
 
     fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
-        match self.graph.remove_node(NodeIndex::new(idx as usize)) {
+        match self.graph.remove_node(NodeIndex::new(idx)) {
             Some(_) => Ok(()),
             None => Err(PyIndexError::new_err("No node found for index")),
         }

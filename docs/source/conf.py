@@ -24,9 +24,9 @@ copyright = u'2021, rustworkx Contributors'
 
 
 # The short X.Y version.
-version = '0.12.0'
+version = '0.13.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.12.0'
+release = '0.13.0'
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
@@ -114,6 +114,9 @@ latex_documents = [
   ('index', 'rustworkx.tex', u'rustworkx Documentation',
    u'rustworkx Contributors', 'manual'),
 ]
+
+# Jupyter Sphinx options
+jupyter_execute_default_kernel = "python3"
 
 # Texinfo options
 
