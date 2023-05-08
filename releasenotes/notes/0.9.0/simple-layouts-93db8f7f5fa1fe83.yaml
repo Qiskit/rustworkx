@@ -3,58 +3,58 @@ features:
   - |
     Four simple layout functions were added:
 
-      * :func:`~retworkx.bipartite_layout`
-      * :func:`~retworkx.circular_layout`
-      * :func:`~retworkx.shell_layout`
-      * :func:`~retworkx.spiral_layout`
+      * :func:`~rustworkx.bipartite_layout`
+      * :func:`~rustworkx.circular_layout`
+      * :func:`~rustworkx.shell_layout`
+      * :func:`~rustworkx.spiral_layout`
 
     These can be used to adjust the layout used in visualizations, for example:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.path_graph(weights=list(range(24)))
-      layout = retworkx.bipartite_layout(graph, set(range(12)))
+      graph = rustworkx.generators.path_graph(weights=list(range(24)))
+      layout = rustworkx.bipartite_layout(graph, set(range(12)))
       mpl_draw(graph, pos=layout)
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.path_graph(weights=list(range(24)))
-      layout = retworkx.circular_layout(graph)
+      graph = rustworkx.generators.path_graph(weights=list(range(24)))
+      layout = rustworkx.circular_layout(graph)
       mpl_draw(graph, pos=layout)
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.star_graph(25)
-      layout = retworkx.shell_layout(graph)
+      graph = rustworkx.generators.star_graph(25)
+      layout = rustworkx.shell_layout(graph)
       mpl_draw(graph, pos=layout)
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.path_graph(weights=list(range(24)))
-      layout = retworkx.spiral_layout(graph)
+      graph = rustworkx.generators.path_graph(weights=list(range(24)))
+      layout = rustworkx.spiral_layout(graph)
       mpl_draw(graph, pos=layout)
 
-    Or with the :func:`~retworkx.visualization.graphviz_drawer` function:
+    Or with the :func:`~rustworkx.visualization.graphviz_drawer` function:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import graphviz_draw
+      import rustworkx
+      from rustworkx.visualization import graphviz_draw
 
-      graph = retworkx.generators.path_graph(weights=list(range(24)))
-      layout = retworkx.spiral_layout(graph)
+      graph = rustworkx.generators.path_graph(weights=list(range(24)))
+      layout = rustworkx.spiral_layout(graph)
 
       def node_attr_fn(node):
           point = layout[node]

@@ -2,16 +2,16 @@
 features:
   - |
     Added new generator functions,
-    :func:`retworkx.generators.heavy_square_graph` and
-    :func:`retworkx.generators.directed_heavy_square_graph`, for generating
+    :func:`rustworkx.generators.heavy_square_graph` and
+    :func:`rustworkx.generators.directed_heavy_square_graph`, for generating
     heavy square graphs from:
     https://journals.aps.org/prx/abstract/10.1103/PhysRevX.10.011022
     For example:
 
     .. jupyter-execute::
 
-      import retworkx
-      from retworkx.visualization import mpl_draw
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
 
-      graph = retworkx.generators.directed_heavy_square_graph(3)
+      graph = rustworkx.generators.directed_heavy_square_graph(3)
       mpl_draw(graph)

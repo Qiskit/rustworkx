@@ -8,3 +8,5 @@ reno>=3.4.0
 qiskit-sphinx-theme>=1.7
 matplotlib>=3.4
 sphinx-reredirects
+sphinxemoji
+ipykernel

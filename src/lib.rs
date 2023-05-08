@@ -19,14 +19,19 @@ mod digraph;
 mod dot_utils;
 mod generators;
 mod graph;
+mod graphml;
 mod isomorphism;
 mod iterators;
+mod json;
 mod layout;
 mod matching;
+mod planar;
 mod random_graph;
+mod score;
 mod shortest_path;
 mod steiner_tree;
 mod tensor_product;
+mod token_swapper;
 mod toposort;
 mod transitivity;
 mod traversal;
@@ -38,13 +43,17 @@ use centrality::*;
 use coloring::*;
 use connectivity::*;
 use dag_algo::*;
+use graphml::*;
 use isomorphism::*;
+use json::*;
 use layout::*;
 use matching::*;
+use planar::*;
 use random_graph::*;
 use shortest_path::*;
 use steiner_tree::*;
 use tensor_product::*;
+use token_swapper::*;
 use transitivity::*;
 use traversal::*;
 use tree::*;
@@ -52,7 +61,7 @@ use union::*;
 
 use hashbrown::HashMap;
 use indexmap::map::Entry::{Occupied, Vacant};
-use num_complex::Complex64;
+use numpy::Complex64;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
@@ -66,14 +75,15 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
-    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount, NodeIndexable,
+    Data, EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable,
 };
 use petgraph::EdgeType;
 
 use std::convert::TryFrom;
 use std::hash::Hash;
 
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 trait IsNan {
     fn is_nan(&self) -> bool;
@@ -168,6 +178,32 @@ where
         }
         None => Ok(default),
     }
+}
+
+pub fn edge_weights_from_callable<'p, T, Ty: EdgeType>(
+    py: Python<'p>,
+    graph: &StablePyGraph<Ty>,
+    weight_fn: &'p Option<PyObject>,
+    default_weight: T,
+) -> PyResult<Vec<Option<T>>>
+where
+    T: FromPyObject<'p> + Copy,
+{
+    let mut edge_weights: Vec<Option<T>> = Vec::with_capacity(graph.edge_bound());
+    for index in 0..=graph.edge_bound() {
+        let raw_weight = graph.edge_weight(EdgeIndex::new(index));
+        match raw_weight {
+            Some(weight) => edge_weights.push(Some(weight_callable(
+                py,
+                weight_fn,
+                weight,
+                default_weight,
+            )?)),
+            None => edge_weights.push(None),
+        };
+    }
+
+    Ok(edge_weights)
 }
 
 #[inline]
@@ -268,26 +304,32 @@ where
 }
 
 // The provided node is invalid.
-create_exception!(retworkx, InvalidNode, PyException);
+create_exception!(rustworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.
-create_exception!(retworkx, DAGWouldCycle, PyException);
+create_exception!(rustworkx, DAGWouldCycle, PyException);
 // There is no edge present between the provided nodes.
-create_exception!(retworkx, NoEdgeBetweenNodes, PyException);
+create_exception!(rustworkx, NoEdgeBetweenNodes, PyException);
 // The specified Directed Graph has a cycle and can't be treated as a DAG.
-create_exception!(retworkx, DAGHasCycle, PyException);
+create_exception!(rustworkx, DAGHasCycle, PyException);
 // No neighbors found matching the provided predicate.
-create_exception!(retworkx, NoSuitableNeighbors, PyException);
+create_exception!(rustworkx, NoSuitableNeighbors, PyException);
 // Invalid operation on a null graph
-create_exception!(retworkx, NullGraph, PyException);
+create_exception!(rustworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
-create_exception!(retworkx, NoPathFound, PyException);
+create_exception!(rustworkx, NoPathFound, PyException);
 // Prune part of the search tree while traversing a graph.
-import_exception!(retworkx.visit, PruneSearch);
+import_exception!(rustworkx.visit, PruneSearch);
 // Stop graph traversal.
-import_exception!(retworkx.visit, StopSearch);
+import_exception!(rustworkx.visit, StopSearch);
+// JSON Error
+create_exception!(rustworkx, JSONSerializationError, PyException);
+// Negative Cycle found on shortest-path algorithm
+create_exception!(rustworkx, NegativeCycle, PyException);
+// Failed to Converge on a solution
+create_exception!(rustworkx, FailedToConverge, PyException);
 
 #[pymodule]
-fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add("InvalidNode", py.get_type::<InvalidNode>())?;
     m.add("DAGWouldCycle", py.get_type::<DAGWouldCycle>())?;
@@ -296,7 +338,14 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
+    m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
+    m.add(
+        "JSONSerializationError",
+        py.get_type::<JSONSerializationError>(),
+    )?;
+    m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
+    m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_search))?;
@@ -338,18 +387,42 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
     m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bellman_ford_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bellman_ford_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(negative_edge_cycle))?;
+    m.add_wrapped(wrap_pyfunction!(find_negative_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_all_pairs_bellman_ford_path_lengths
+    ))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_all_pairs_bellman_ford_shortest_paths
+    ))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_bellman_ford_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(
+        graph_all_pairs_bellman_ford_shortest_paths
+    ))?;
     m.add_wrapped(wrap_pyfunction!(graph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_edge_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_edge_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
@@ -361,6 +434,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
+    m.add_wrapped(wrap_pyfunction!(simple_cycles))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
@@ -374,6 +448,7 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(minimum_spanning_tree))?;
     m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
     m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
+    m.add_wrapped(wrap_pyfunction!(graph_token_swapper))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
@@ -399,16 +474,22 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         graph_unweighted_average_shortest_path_length
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
+    m.add_wrapped(wrap_pyfunction!(stoer_wagner_min_cut))?;
     m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
+    m.add_wrapped(wrap_pyfunction!(is_planar))?;
+    m.add_wrapped(wrap_pyfunction!(read_graphml))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
+    m.add_class::<iterators::BFSPredecessors>()?;
     m.add_class::<iterators::Chains>()?;
     m.add_class::<iterators::NodeIndices>()?;
     m.add_class::<iterators::EdgeIndices>()?;
@@ -418,7 +499,10 @@ fn retworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::PathMapping>()?;
     m.add_class::<iterators::PathLengthMapping>()?;
     m.add_class::<iterators::CentralityMapping>()?;
+    m.add_class::<iterators::EdgeCentralityMapping>()?;
     m.add_class::<iterators::Pos2DMapping>()?;
+    m.add_class::<iterators::MultiplePathMapping>()?;
+    m.add_class::<iterators::AllPairsMultiplePathMapping>()?;
     m.add_class::<iterators::AllPairsPathLengthMapping>()?;
     m.add_class::<iterators::AllPairsPathMapping>()?;
     m.add_class::<iterators::NodesCountMapping>()?;

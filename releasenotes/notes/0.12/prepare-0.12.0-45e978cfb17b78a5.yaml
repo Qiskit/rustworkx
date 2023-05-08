@@ -1,0 +1,29 @@
+---
+prelude: |
+  This release introduces some major changes to the Rustworkx (formerly
+  retworkx) project. The first change is the library has been renamed from
+  retworkx to rustworkx, and the retworkx-core rust crate has been renamed
+  rustworkx-core. This was done out of respect for a request from the
+  maintainers of the NetworkX library. For the current release the retworkx
+  library will still continue to work as it has without any notification,
+  but starting in the 0.13.0 release a ``DeprecationWarning`` will be emitted
+  when importing from retworkx and in the 1.0.0 release we will drop support
+  for the legacy name. For the retworkx-core crate, there will no longer be
+  any releases under that name on crates.io and all future versions of the
+  library will be released as rustworkx-core.
+
+  Additionally this release adds support for Python 3.11 and also moves to
+  manylinux2014 for all precompiled Linux binaries we publish to PyPI. The
+  minimum supported Rust version for building rustworkx from source has
+  increased to Rust 1.48.
+
+  This release also includes several new features, some highlights are:
+
+    * Support for graph attributes under the ``attrs`` attribute
+    * New serialization format support (a graphml parser, :func:`~.read_graphml`,
+      and a node link JSON generator, :func:`~.node_link_json`)
+    * New algorithms functions including:
+        * Eigenvector Centrality
+        * Stoer–Wagner Min-Cut algorithm
+        * Bellman-Ford shortest path algorithm
+

@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use retworkx_core::dictmap::*;
+use rustworkx_core::dictmap::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
@@ -35,7 +35,7 @@ pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
             source
         )));
     }
-    let mut bfs = Bfs::new(&graph, node_index);
+    let mut bfs = Bfs::new(graph, node_index);
     let mut distance: Vec<Option<usize>> = vec![None; graph.node_bound()];
     distance[node_index.index()] = Some(0);
     out_map[source] = 1.to_biguint().unwrap();

@@ -1,6 +1,6 @@
 {
-    "title":"retworkx",
-    "description":"retworkx is a general-purpose graph theory library focused on performance. It wraps low-level Rust code into a flexible Python API, providing fast implementations for popular graph algorithms.",
+    "title":"rustworkx: A High-Performance Graph Library for Python",
+    "description":"rustworkx is a general-purpose graph theory library focused on performance. It wraps low-level Rust code into a flexible Python API, providing fast implementations for popular graph algorithms.",
     "license":"Apache-2.0",
     "upload_type":"software",
     "access_right":"open",
@@ -22,7 +22,7 @@
           "orcid":"0000-0002-3234-8154"
        }
     ],
-    "notes":"retworkx is the work of many people who contribute to the project at different levels. See the full list of contributors on Github: https://github.com/Qiskit/retworkx/graphs/contributors",
+    "notes":"rustworkx is the work of many people who contribute to the project at different levels. See the full list of contributors on Github: https://github.com/Qiskit/rustworkx/graphs/contributors",
     "keywords":[
        "graph-theory",
        "rust",
@@ -30,5 +30,12 @@
     ],
     "communities": [
         {"identifier": "qiskit"}
+    ],
+    "related_identifiers": [
+        {
+            "scheme": "doi",
+            "identifier": "10.21105/joss.03968",
+            "relation": "isSupplementTo"
+        }
     ]
  }

@@ -131,6 +131,7 @@ pub fn directed_gnp_random_graph(
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }
@@ -225,6 +226,7 @@ pub fn undirected_gnp_random_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }
@@ -306,6 +308,7 @@ pub fn directed_gnm_random_graph(
         check_cycle: false,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }
@@ -382,6 +385,7 @@ pub fn undirected_gnm_random_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }
@@ -430,8 +434,11 @@ fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
 ///
 /// :return: A PyGraph object
 /// :rtype: PyGraph
-#[pyfunction(dim = "2", p = "2.0")]
-#[pyo3(text_signature = "(num_nodes, radius, /, dim=2, pos=None, p=2.0, seed=None)")]
+#[pyfunction]
+#[pyo3(
+    signature=(num_nodes, radius, dim=2, pos=None, p=2.0, seed=None),
+    text_signature = "(num_nodes, radius, /, dim=2, pos=None, p=2.0, seed=None)"
+)]
 pub fn random_geometric_graph(
     py: Python,
     num_nodes: usize,
@@ -485,6 +492,7 @@ pub fn random_geometric_graph(
         graph: inner_graph,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
     };
     Ok(graph)
 }

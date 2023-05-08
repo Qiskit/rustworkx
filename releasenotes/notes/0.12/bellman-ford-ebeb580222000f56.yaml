@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Added new functions to compute negative cycles and the shortest path
+    in graphs with negative edge weights using the Bellman-Ford
+    algorithm with the SPFA heuristic:
+
+     * :func:`rustworkx.find_negative_cycle`
+     * :func:`rustworkx.bellman_ford_shortest_path_lengths`
+     * :func:`rustworkx.bellman_ford_shortest_paths`
+     * :func:`rustworkx.negative_edge_cycle`
