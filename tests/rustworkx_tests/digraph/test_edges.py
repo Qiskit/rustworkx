@@ -974,7 +974,7 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
             (0, 3, "e"),
         ]
         graph.add_edges_from(edge_list)
-        graph.reverse_inplace()
+        graph.reverse()
         self.assertEqual([(1, 0), (2, 1), (2, 0), (3, 2), (3, 0)], graph.edge_list())
 
     def test_reverse_large_graph(self):
@@ -985,6 +985,6 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         edge_list = list(zip(range(LARGE_AMOUNT_OF_NODES), range(1, LARGE_AMOUNT_OF_NODES)))
         weighted_edge_list = [(s, d, "a") for s, d in edge_list]
         graph.add_edges_from(weighted_edge_list)
-        graph.reverse_inplace()
+        graph.reverse()
         reversed_edge_list = [(d, s) for s, d in edge_list]
         self.assertEqual(reversed_edge_list, graph.edge_list())

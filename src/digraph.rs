@@ -2748,12 +2748,12 @@ impl PyDiGraph {
     /// graph.add_edge(1, 2, 5).unwrap();
     /// graph.add_edge(2, 3, 2).unwrap();
     ///
-    /// graph.reverse_inplace(py);
+    /// graph.reverse(py);
     ///
     /// assert_eq!(graph.edges().collect::<Vec<_>>(), vec![(3, 2), (2, 1), (1, 0)]);
     /// ```
     #[pyo3(text_signature = "(self)")]
-    pub fn reverse_inplace(&mut self, py: Python) {
+    pub fn reverse(&mut self, py: Python) {
         let indices = self.graph.edge_indices().collect::<Vec<EdgeIndex>>();
         for idx in indices {
             let (source_node, dest_node) = self
