@@ -19,8 +19,8 @@ import subprocess
 
 # General configuration:
 
-project = u'rustworkx'
-copyright = u'2021, rustworkx Contributors'
+project = 'rustworkx'
+copyright = '2021, rustworkx Contributors'
 
 
 # The short X.Y version.
@@ -40,6 +40,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',
               'sphinxemoji.sphinxemoji',
               'sphinx_reredirects',
+              'qiskit_sphinx_theme',
              ]
 html_static_path = ['_static']
 templates_path = ['_templates']
@@ -86,30 +87,25 @@ else:
 
 .. note::
 
-    This is the documnetation for the current state of the development branch
+    This is the documentation for the current state of the development branch
     of rustworkx. The documentation or APIs here can change prior to being
     released.
 
 """
 
 # HTML Output Options
-
 html_theme = 'qiskit_sphinx_theme'
-
 html_theme_options = {
     'logo_only': False,
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': True,
 }
-
 htmlhelp_basename = 'rustworkx'
 
 
 # Latex options
-
 latex_elements = {}
-
 latex_documents = [
   ('index', 'rustworkx.tex', u'rustworkx Documentation',
    u'rustworkx Contributors', 'manual'),
