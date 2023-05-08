@@ -988,3 +988,18 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         graph.reverse()
         reversed_edge_list = [(d, s) for s, d in edge_list]
         self.assertEqual(reversed_edge_list, graph.edge_list())
+
+    def test_reverse_empty_graph(self):
+        graph = rustworkx.PyDiGraph()
+        edges_before = graph.edge_list()
+        graph.reverse()
+        self.assertEqual(graph.edge_list(), edges_before)
+
+    def test_removed_middle_node_reverse(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(5)))
+        edge_list = [(0, 1), (2, 1), (1, 3), (3, 4), (4, 0)]
+        graph.extend_from_edge_list(edge_list)
+        graph.remove_node(1)
+        graph.reverse()
+        self.assertEqual(graph.edge_list(), [(4, 3), (0, 4)])
