@@ -2759,11 +2759,11 @@ impl PyDiGraph {
             let (source_node, dest_node) = self
                 .graph
                 .edge_endpoints(idx)
-                .expect("Edge Index received from iterator");
+                .unwrap();
             let weight = self
                 .graph
                 .edge_weight(idx)
-                .expect("Edge Index received from iterator")
+                .unwrap()
                 .clone_ref(py);
             self.graph.remove_edge(idx);
             self.graph.add_edge(dest_node, source_node, weight);
