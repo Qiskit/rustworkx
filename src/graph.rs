@@ -316,7 +316,7 @@ impl PyGraph {
                 .extract()
                 .unwrap();
 
-            for i in 0..(second_last_node_idx + 1) {
+            for i in 0..nodes_lst.len() + 1 {
                 if i < next_node_idx {
                     // node does not exist
                     let tmp_node = self.graph.add_node(py.None());
@@ -332,26 +332,21 @@ impl PyGraph {
                     let node_w = item.get_item(1).unwrap().extract().unwrap();
                     self.graph.add_node(node_w);
                     pointer += 1;
-                    next_node_idx = nodes_lst
-                        .get_item(pointer)
-                        .unwrap()
-                        .downcast::<PyTuple>()
-                        .unwrap()
-                        .get_item(0)
-                        .unwrap()
-                        .downcast::<PyLong>()
-                        .unwrap()
-                        .extract()
-                        .unwrap();
+                    if pointer < nodes_lst.len() {
+                        next_node_idx = nodes_lst
+                            .get_item(pointer)
+                            .unwrap()
+                            .downcast::<PyTuple>()
+                            .unwrap()
+                            .get_item(0)
+                            .unwrap()
+                            .downcast::<PyLong>()
+                            .unwrap()
+                            .extract()
+                            .unwrap();
+                    }
                 }
             }
-
-            for _i in (second_last_node_idx + 1)..next_node_idx {
-                let tmp_node = self.graph.add_node(py.None());
-                tmp_nodes.push(tmp_node);
-            }
-            let last_node_w = last_item.get_item(1).unwrap().extract().unwrap();
-            self.graph.add_node(last_node_w);
             for tmp_node in tmp_nodes {
                 self.graph.remove_node(tmp_node);
             }
