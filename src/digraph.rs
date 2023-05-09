@@ -2756,15 +2756,8 @@ impl PyDiGraph {
     pub fn reverse(&mut self, py: Python) {
         let indices = self.graph.edge_indices().collect::<Vec<EdgeIndex>>();
         for idx in indices {
-            let (source_node, dest_node) = self
-                .graph
-                .edge_endpoints(idx)
-                .unwrap();
-            let weight = self
-                .graph
-                .edge_weight(idx)
-                .unwrap()
-                .clone_ref(py);
+            let (source_node, dest_node) = self.graph.edge_endpoints(idx).unwrap();
+            let weight = self.graph.edge_weight(idx).unwrap().clone_ref(py);
             self.graph.remove_edge(idx);
             self.graph.add_edge(dest_node, source_node, weight);
         }
