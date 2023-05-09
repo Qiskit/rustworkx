@@ -304,18 +304,6 @@ impl PyGraph {
             let mut tmp_nodes: Vec<NodeIndex> =
                 Vec::with_capacity(node_bound_1 + 1 - nodes_lst.len());
 
-            let second_last_node_idx: usize = nodes_lst
-                .get_item(nodes_lst.len() - 2)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap()
-                .get_item(0)
-                .unwrap()
-                .downcast::<PyLong>()
-                .unwrap()
-                .extract()
-                .unwrap();
-
             for i in 0..nodes_lst.len() + 1 {
                 if i < next_node_idx {
                     // node does not exist
