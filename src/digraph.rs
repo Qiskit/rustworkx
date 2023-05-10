@@ -2825,32 +2825,22 @@ impl PyDiGraph {
     /// It does so by iterating over all edges in the graph and removing each edge,
     /// then adding a new edge in the opposite direction with the same weight.
     ///
-    /// # Arguments
+    /// For Example::
     ///
-    /// * `py`: A reference to the Python interpreter.
+    ///     import rustworkx as rx
     ///
-    /// # Returns
+    ///     graph = rx.PyDiGraph()
     ///
-    /// None.
+    ///     # Generate a path directed path graph with weights
+    ///     graph.extend_from_weighted_edge_list([
+    ///         (0, 1, 3),
+    ///         (1, 2, 5),
+    ///         (2, 3, 2),
+    ///     ])
+    ///     # Reverse edges
+    ///     graph.reverse()
     ///
-    /// # Panics
-    ///
-    /// This method will panic if the edge indices or weights are not valid.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rustworkx::{DiGraph, WeightedGraph};
-    ///
-    /// let mut graph = DiGraph::<(), i32>::new();
-    /// graph.add_edge(0, 1, 3).unwrap();
-    /// graph.add_edge(1, 2, 5).unwrap();
-    /// graph.add_edge(2, 3, 2).unwrap();
-    ///
-    /// graph.reverse(py);
-    ///
-    /// assert_eq!(graph.edges().collect::<Vec<_>>(), vec![(3, 2), (2, 1), (1, 0)]);
-    /// ```
+    ///     assert graph.weighted_edge_list() == [(3, 2, 2), (2, 1, 5), (1, 0, 3)];
     #[pyo3(text_signature = "(self)")]
     pub fn reverse(&mut self, py: Python) {
         let indices = self.graph.edge_indices().collect::<Vec<EdgeIndex>>();
