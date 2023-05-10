@@ -2714,7 +2714,9 @@ impl PyDiGraph {
     /// Make edges in graph symmetric
     ///
     /// This function iterates over all the edges in the graph, adding for each
-    /// edge the reversed edge, unless one is already present.
+    /// edge the reversed edge, unless one is already present. Note the edge insertion
+    /// is not fixed and the edge indices are not guaranteed to be consistent
+    /// between executions of this method on identical graphs.
     ///
     /// :param callable edge_payload: This optional argument takes in a callable which will
     ///     be passed a single positional argument the data payload for an edge that will
@@ -2741,8 +2743,7 @@ impl PyDiGraph {
                     Some(callback) => callback.call1(py, (forward_weight,))?,
                     None => forward_weight.clone_ref(py),
                 };
-                self.graph
-                    .add_edge(reverse_edge[0], reverse_edge[1], weight);
+                self._add_edge(reverse_edge[0], reverse_edge[1], weight)?;
             }
         }
         Ok(())
