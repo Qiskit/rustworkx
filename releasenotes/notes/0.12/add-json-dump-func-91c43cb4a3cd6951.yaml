@@ -1,0 +1,55 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.retworkx.node_link_json`, which is used to
+    generate JSON node-link data representation of an input :class:`~.PyGraph`
+    or :class:`~.PyDiGraph` object. For example, running::
+
+      import retworkx
+
+      graph = retworkx.generators.path_graph(weights=['a', 'b', 'c'])
+      print(retworkx.node_link_json(graph, node_attrs=lambda n: {'label': n}))
+
+    will output a JSON payload equivalent (identical except for whitespace) to:
+
+    .. code-block:: json
+
+        {
+          "directed": false,
+          "multigraph": true,
+          "attrs": null,
+          "nodes": [
+            {
+              "id": 0,
+              "data": {
+                "label": "a"
+              }
+            },
+            {
+              "id": 1,
+              "data": {
+                "label": "b"
+              }
+            },
+            {
+              "id": 2,
+              "data": {
+                "label": "c"
+              }
+            }
+          ],
+          "links": [
+            {
+              "source": 0,
+              "target": 1,
+              "id": 0,
+              "data": null
+            },
+            {
+              "source": 1,
+              "target": 2,
+              "id": 1,
+              "data": null
+            }
+          ]
+        }

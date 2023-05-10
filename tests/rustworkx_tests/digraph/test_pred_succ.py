@@ -383,3 +383,138 @@ class TestBfsSuccessors(unittest.TestCase):
             next(res)
         with self.assertRaises(StopIteration):
             next(res)
+
+
+class TestBfsPredecessors(unittest.TestCase):
+    def test_single_predecessor(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", {"a": 1})
+        node_c = dag.add_child(node_b, "c", {"a": 2})
+        dag.add_child(node_c, "d", {"a": 1})
+        res = rustworkx.bfs_predecessors(dag, node_c)
+        res = rustworkx.bfs_predecessors(dag, node_c)
+        self.assertEqual([("c", ["b"]), ("b", ["a"])], res)
+
+    def test_many_parents(self):
+        dag = rustworkx.PyDAG()
+        parent_nodes = [dag.add_node({"parent": i}) for i in range(10)]
+        child = dag.add_node("child")
+        for i, parent in enumerate(parent_nodes):
+            dag.add_edge(parent, child, {"edge": i})
+        for i in range(10):
+            dag.add_child(child, {"grand_child": i}, {"gc_edge": i})
+        res = rustworkx.bfs_predecessors(dag, child)
+        self.assertEqual(
+            [
+                (
+                    "child",
+                    [
+                        {"parent": 9},
+                        {"parent": 8},
+                        {"parent": 7},
+                        {"parent": 6},
+                        {"parent": 5},
+                        {"parent": 4},
+                        {"parent": 3},
+                        {"parent": 2},
+                        {"parent": 1},
+                        {"parent": 0},
+                    ],
+                )
+            ],
+            res,
+        )
+
+    def test_breadth_first(self):
+        dag = rustworkx.PyDAG()
+        layers = []
+        parent_cnt = 8
+        layers.append([dag.add_node({"layer1": i}) for i in range(parent_cnt)])
+        child_cnt = parent_cnt / 2
+        layers.append(
+            [
+                dag.add_child(parent1, {"layer2": i}, {})
+                for i, parent1 in enumerate(layers[-1][0::2])
+            ]
+        )
+        for parent2, child in zip(layers[-2][1::2], layers[-1]):
+            dag.add_edge(parent2, child, {})
+
+        parent_cnt = child_cnt
+        child_cnt = parent_cnt / 2
+        layers.append(
+            [
+                dag.add_child(parent1, {"layer3": i}, {})
+                for i, parent1 in enumerate(layers[-1][0::2])
+            ]
+        )
+        for parent2, child in zip(layers[-2][1::2], layers[-1]):
+            dag.add_edge(parent2, child, {})
+
+        parent_cnt = child_cnt
+        child_cnt = parent_cnt / 2
+        layers.append(
+            [
+                dag.add_child(parent1, {"layer4": i}, {})
+                for i, parent1 in enumerate(layers[-1][0::2])
+            ]
+        )
+        for parent2, child in zip(layers[-2][1::2], layers[-1]):
+            dag.add_edge(parent2, child, {})
+
+        res = rustworkx.bfs_predecessors(dag, child)
+        self.assertEqual(
+            res,
+            [
+                (
+                    {"layer4": 0},
+                    [
+                        {"layer3": 1},
+                        {"layer3": 0},
+                    ],
+                ),
+                (
+                    {"layer3": 1},
+                    [
+                        {"layer2": 3},
+                        {"layer2": 2},
+                    ],
+                ),
+                (
+                    {"layer3": 0},
+                    [
+                        {"layer2": 1},
+                        {"layer2": 0},
+                    ],
+                ),
+                (
+                    {"layer2": 3},
+                    [
+                        {"layer1": 7},
+                        {"layer1": 6},
+                    ],
+                ),
+                (
+                    {"layer2": 2},
+                    [
+                        {"layer1": 5},
+                        {"layer1": 4},
+                    ],
+                ),
+                (
+                    {"layer2": 1},
+                    [
+                        {"layer1": 3},
+                        {"layer1": 2},
+                    ],
+                ),
+                (
+                    {"layer2": 0},
+                    [
+                        {"layer1": 1},
+                        {"layer1": 0},
+                    ],
+                ),
+            ],
+        )

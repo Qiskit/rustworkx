@@ -1,9 +1,0 @@
----
-features:
-  - |
-    Added a new function, :func:`~.eigenvector_centrality()` which is used to
-    compute the eigenvector centrality for all nodes in a given graph.
-  - |
-    Added a new function to rustworkx-core ``eigenvector_centrality`` which is
-    used to compute the eigenvector centrality for all nodes in a given graph.
-

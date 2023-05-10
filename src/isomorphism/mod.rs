@@ -57,8 +57,9 @@ use pyo3::Python;
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction(id_order = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, call_limit=None)"
 )]
@@ -120,8 +121,9 @@ pub fn digraph_is_isomorphic(
 /// :returns: ``True`` if the 2 graphs are isomorphic ``False`` if they are
 ///     not.
 /// :rtype: bool
-#[pyfunction(id_order = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, call_limit=None)"
 )]
@@ -190,8 +192,9 @@ pub fn graph_is_isomorphic(
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false", induced = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=false, induced=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=False, induced=True, call_limit=None)"
 )]
@@ -261,8 +264,9 @@ pub fn digraph_is_subgraph_isomorphic(
 /// :returns: ``True`` if there is a subgraph of `first` isomorphic to `second`,
 ///     ``False`` if there is not.
 /// :rtype: bool
-#[pyfunction(id_order = "false", induced = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=false, induced=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=False, induced=True, call_limit=None)"
 )]
@@ -332,8 +336,9 @@ pub fn graph_is_subgraph_isomorphic(
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
-#[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=true, subgraph=false, induced=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, subgraph=False, induced=True, call_limit=None)"
 )]
@@ -409,8 +414,9 @@ pub fn digraph_vf2_mapping(
 /// :returns: An iterator over dicitonaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
-#[pyfunction(id_order = "true", subgraph = "false", induced = "true")]
+#[pyfunction]
 #[pyo3(
+    signature=(first, second, node_matcher=None, edge_matcher=None, id_order=true, subgraph=false, induced=true, call_limit=None),
     text_signature = "(first, second, /, node_matcher=None, edge_matcher=None,
                     id_order=True, subgraph=False, induced=True, call_limit=None)"
 )]

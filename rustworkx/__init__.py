@@ -36,9 +36,9 @@ class PyDAG(PyDiGraph):
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.PyDAG()
+        graph = rx.PyDAG()
         graph.add_nodes_from(list(range(5)))
         graph.add_nodes_from(list(range(2)))
         graph.remove_node(2)
@@ -54,9 +54,9 @@ class PyDAG(PyDiGraph):
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.PyDAG()
+        graph = rx.PyDAG()
         data_payload = "An arbitrary Python object"
         node_index = graph.add_node(data_payload)
         print("Node Index: %s" % node_index)
@@ -67,9 +67,9 @@ class PyDAG(PyDiGraph):
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
 
-        graph = rustworkx.PyDAG()
+        graph = rx.PyDAG()
         data_payload = "An arbitrary Python object"
         node_index = graph.add_node(data_payload)
         graph[node_index] = "New Payload"
@@ -82,14 +82,14 @@ class PyDAG(PyDiGraph):
     performance, however you can enable it by setting the ``check_cycle``
     attribute to True. For example::
 
-        import rustworkx
-        dag = rustworkx.PyDAG()
+        import rustworkx as rx
+        dag = rx.PyDAG()
         dag.check_cycle = True
 
     or at object creation::
 
-        import rustworkx
-        dag = rustworkx.PyDAG(check_cycle=True)
+        import rustworkx as rx
+        dag = rx.PyDAG(check_cycle=True)
 
     With check_cycle set to true any calls to :meth:`PyDAG.add_edge` will
     ensure that no cycles are added, ensuring that the PyDAG class truly
@@ -107,8 +107,8 @@ class PyDAG(PyDiGraph):
     ``multigraph`` kwarg to ``False`` when calling the ``PyDAG`` constructor.
     For example::
 
-        import rustworkx
-        dag = rustworkx.PyDAG(multigraph=False)
+        import rustworkx as rx
+        dag = rx.PyDAG(multigraph=False)
 
     This can only be set at ``PyDiGraph`` initialization and not adjusted after
     creation. When :attr:`~rustworkx.PyDiGraph.multigraph` is set to ``False``
@@ -1560,6 +1560,10 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
     defaults to 50). If the function will be running in parallel the env var
     ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 
+    See Also
+    --------
+    edge_betweenness_centrality
+
     :param PyDiGraph graph: The input graph
     :param bool normalized: Whether to normalize the betweenness scores by
         the number of distinct paths between all pairs of nodes.
@@ -1592,6 +1596,124 @@ def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, paral
         graph,
         normalized=normalized,
         endpoints=endpoints,
+        parallel_threshold=parallel_threshold,
+    )
+
+
+@functools.singledispatch
+def closeness_centrality(graph, wf_improved=True):
+    r"""Compute the closeness centrality of each node in a graph object.
+
+    The closeness centrality of a node :math:`u` is defined as the
+    reciprocal of the average shortest path distance to :math:`u` over all
+    :math:`n-1` reachable nodes in the graph. In it's general form this can
+    be expressed as:
+
+    .. math::
+
+        C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+
+    where:
+
+      * :math:`d(v, u)` - the shortest-path distance between :math:`v` and
+        :math:`u`
+      * :math:`n` - the number of nodes that can reach :math:`u`.
+
+    In the case of a graphs with more than one connected component there is
+    an alternative improved formula that calculates the closeness centrality
+    as "a ratio of the fraction of actors in the group who are reachable, to
+    the average distance" [WF]_. This can be expressed as
+
+    .. math::
+
+        C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
+
+    where :math:`N` is the number of nodes in the graph. This alternative
+    formula can be used with the ``wf_improved`` argument.
+
+    :param graph: The input graph. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param bool wf_improved: This is optional; the default is True. If True,
+        scale by the fraction of nodes reachable.
+
+    :returns: A dictionary mapping each node index to its closeness centrality.
+    :rtype: dict
+
+    .. [WF] Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+      Methods and Applications (Structural Analysis in the Social Sciences).
+      Cambridge: Cambridge University Press. doi:10.1017/CBO9780511815478
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@closeness_centrality.register(PyDiGraph)
+def _digraph_closeness_centrality(graph, wf_improved=True):
+    return digraph_closeness_centrality(graph, wf_improved=wf_improved)
+
+
+@closeness_centrality.register(PyGraph)
+def _graph_closeness_centrality(graph, wf_improved=True):
+    return graph_closeness_centrality(graph, wf_improved=wf_improved)
+
+
+@functools.singledispatch
+def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
+    r"""Compute the edge betweenness centrality of all edges in a graph.
+
+    Edge betweenness centrality of an edge :math:`e` is the sum of the
+    fraction of all-pairs shortest paths that pass through :math`e`
+
+    .. math::
+
+       c_B(e) = \sum_{s,t \in V} \frac{\sigma(s, t|e)}{\sigma(s, t)}
+
+    where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the
+    number of shortest :math:`(s, t)`-paths, and :math:`\sigma(s, t|e)` is
+    the number of those paths passing through edge :math:`e`.
+
+    The above definition and the algorithm used in this function is based on:
+
+    Ulrik Brandes, On Variants of Shortest-Path Betweenness Centrality
+    and their Generic Computation. Social Networks 30(2):136-145, 2008.
+
+    This function is multithreaded and will run in parallel if the number
+    of nodes in the graph is above the value of ``parallel_threshold`` (it
+    defaults to 50). If the function will be running in parallel the env var
+    ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+
+    See Also
+    --------
+    betweenness_centrality
+
+    :param PyGraph graph: The input graph
+    :param bool normalized: Whether to normalize the betweenness scores by the
+        number of distinct paths between all pairs of nodes.
+    :param int parallel_threshold: The number of nodes to calculate
+        the edge betweenness centrality in parallel at if the number of nodes in
+        the graph is less than this value it will run in a single thread. The
+        default value is 50
+
+    :returns: a read-only dict-like object whose keys are edges and values are the
+        betweenness score for each node.
+    :rtype: EdgeCentralityMapping
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@edge_betweenness_centrality.register(PyDiGraph)
+def _digraph_edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
+    return digraph_edge_betweenness_centrality(
+        graph,
+        normalized=normalized,
+        parallel_threshold=parallel_threshold,
+    )
+
+
+@edge_betweenness_centrality.register(PyGraph)
+def _graph_edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
+    return graph_edge_betweenness_centrality(
+        graph,
+        normalized=normalized,
         parallel_threshold=parallel_threshold,
     )
 
@@ -1951,7 +2073,7 @@ def bfs_search(graph, source, visitor):
 
     .. jupyter-execute::
 
-        import rustworkx
+        import rustworkx as rx
         from rustworkx.visit import BFSVisitor
 
 
@@ -1963,10 +2085,10 @@ def bfs_search(graph, source, visitor):
             def tree_edge(self, edge):
                 self.edges.append(edge)
 
-        graph = rustworkx.PyDiGraph()
+        graph = rx.PyDiGraph()
         graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
         vis = TreeEdgesRecorder()
-        rustworkx.bfs_search(graph, [0], vis)
+        rx.bfs_search(graph, [0], vis)
         print('Tree edges:', vis.edges)
 
     .. note::
@@ -2033,7 +2155,7 @@ def dfs_search(graph, source, visitor):
 
     .. jupyter-execute::
 
-           import rustworkx
+           import rustworkx as rx
            from rustworkx.visit import DFSVisitor
 
            class TreeEdgesRecorder(DFSVisitor):
@@ -2044,10 +2166,10 @@ def dfs_search(graph, source, visitor):
                def tree_edge(self, edge):
                    self.edges.append(edge)
 
-           graph = rustworkx.PyGraph()
+           graph = rx.PyGraph()
            graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
            vis = TreeEdgesRecorder()
-           rustworkx.dfs_search(graph, [0], vis)
+           rx.dfs_search(graph, [0], vis)
            print('Tree edges:', vis.edges)
 
     .. note::
@@ -2371,3 +2493,46 @@ def _graph_difference(
     second,
 ):
     return graph_difference(first, second)
+
+@functools.singledispatch
+def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    """Generate a JSON object representing a graph in a node-link format
+
+    :param graph: The graph to generate the JSON for. Can either be a
+        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+    :param str path: An optional path to write the JSON output to. If specified
+        the function will not return anything and instead will write the JSON
+        to the file specified.
+    :param graph_attrs: An optional callable that will be passed the
+        :attr:`~.PyGraph.attrs` attribute of the graph and is expected to
+        return a dictionary of string keys to string values representing the
+        graph attributes. This dictionary will be included as attributes in
+        the output JSON. If anything other than a dictionary with string keys
+        and string values is returned an exception will be raised.
+    :param node_attrs: An optional callable that will be passed the node data
+        payload for each node in the graph and is expected to return a
+        dictionary of string keys to string values representing the data payload.
+        This dictionary will be used as the ``data`` field for each node.
+    :param edge_attrs:  An optional callable that will be passed the edge data
+        payload for each node in the graph and is expected to return a
+        dictionary of string keys to string values representing the data payload.
+        This dictionary will be used as the ``data`` field for each edge.
+
+    :returns: Either the JSON string for the payload or ``None`` if ``path`` is specified
+    :rtype: str
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@node_link_json.register(PyDiGraph)
+def _digraph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    return digraph_node_link_json(
+        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
+    )
+
+
+@node_link_json.register(PyGraph)
+def _graph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
+    return graph_node_link_json(
+        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
+    )

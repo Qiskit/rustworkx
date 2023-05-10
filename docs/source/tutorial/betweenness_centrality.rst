@@ -81,7 +81,7 @@ centrality:
         vmin=min(centrality.values()),
         vmax=max(centrality.values())
     ))
-    plt.colorbar(sm)
+    plt.colorbar(sm, ax=ax)
     plt.title("Betweenness Centrality of a 4 x 4 Hexagonal Lattice Graph")
     mpl_draw(graph, node_color=colors, ax=ax)
 
@@ -98,7 +98,7 @@ Alternatively, you can use :func:`~rustworkx.visualization.graphviz_draw`:
         graph[node] = btw
 
     # Leverage matplotlib for color map
-    colormap = matplotlib.cm.get_cmap("magma")
+    colormap = matplotlib.colormaps["magma"]
     norm = matplotlib.colors.Normalize(
         vmin=min(centrality.values()),
         vmax=max(centrality.values())

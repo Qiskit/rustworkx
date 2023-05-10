@@ -50,7 +50,9 @@
 //! * [`connectivity`](./connectivity/index.html)
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
+//! * [`token_swapper`](./token_swapper/index.html)
 //! * [`traversal`](./traversal/index.html)
+//! * [`generators`](./generators/index.html)
 //!
 //! ## Release Notes
 //!
@@ -71,14 +73,19 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 /// Module for centrality algorithms.
 pub mod centrality;
 pub mod connectivity;
+pub mod generators;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
+pub mod planar;
 pub mod shortest_path;
 pub mod traversal;
 // These modules define additional data structures
 pub mod dictmap;
 pub mod distancemap;
 mod min_scored;
+/// Module for swapping tokens
+pub mod token_swapper;
+pub mod utils;
 
 // re-export petgraph so there is a consistent version available to users and
 // then only need to require rustworkx-core in their dependencies
