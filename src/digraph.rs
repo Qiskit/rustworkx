@@ -2824,6 +2824,39 @@ impl PyDiGraph {
         self.clone()
     }
 
+    /// Reverse the direction of all edges in the graph, in place.
+    ///
+    /// This method modifies the graph instance to reverse the direction of all edges.
+    /// It does so by iterating over all edges in the graph and removing each edge,
+    /// then adding a new edge in the opposite direction with the same weight.
+    ///
+    /// For Example::
+    ///
+    ///     import rustworkx as rx
+    ///
+    ///     graph = rx.PyDiGraph()
+    ///
+    ///     # Generate a path directed path graph with weights
+    ///     graph.extend_from_weighted_edge_list([
+    ///         (0, 1, 3),
+    ///         (1, 2, 5),
+    ///         (2, 3, 2),
+    ///     ])
+    ///     # Reverse edges
+    ///     graph.reverse()
+    ///
+    ///     assert graph.weighted_edge_list() == [(3, 2, 2), (2, 1, 5), (1, 0, 3)];
+    #[pyo3(text_signature = "(self)")]
+    pub fn reverse(&mut self, py: Python) {
+        let indices = self.graph.edge_indices().collect::<Vec<EdgeIndex>>();
+        for idx in indices {
+            let (source_node, dest_node) = self.graph.edge_endpoints(idx).unwrap();
+            let weight = self.graph.edge_weight(idx).unwrap().clone_ref(py);
+            self.graph.remove_edge(idx);
+            self.graph.add_edge(dest_node, source_node, weight);
+        }
+    }
+
     /// Return the number of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
         Ok(self.graph.node_count())
