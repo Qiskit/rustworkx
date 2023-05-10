@@ -373,7 +373,6 @@ class TestHeavyHexGraph(unittest.TestCase):
             (44, 60),
             (44, 64),
         ]
-        print("\n\nEDGE LIST  ", graph.edge_list())
         self.assertEqual(list(graph.edge_list()), expected_edges)
 
     def test_directed_heavy_square_graph_3(self):
