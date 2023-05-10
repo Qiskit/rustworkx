@@ -2608,8 +2608,8 @@ impl PyDiGraph {
 
     /// Make edges in graph symmetric
     ///
-    /// This function iterates over all the edges in the graph and for each edge if a reverse
-    /// edge is not present in the graph one will be added.
+    /// This function iterates over all the edges in the graph, adding for each
+    /// edge the reversed edge, unless one is already present.
     ///
     /// :param callable edge_payload: This optional argument takes in a callable which will
     ///     be passed a single positional argument the data payload for an edge that will
