@@ -71,3 +71,47 @@ class TestSymmetric(unittest.TestCase):
             (2, 1),
         ]
         self.assertEqual(digraph.edge_list(), expected_edge_list)
+
+    def test_empty_graph_make_symmetric_with_function_arg(self):
+        digraph = rustworkx.PyDiGraph()
+        digraph.make_symmetric(lambda _: "Reversi")
+        self.assertEqual(0, digraph.num_edges())
+        self.assertEqual(0, digraph.num_nodes())
+
+    def test_path_graph_make_symmetric_with_function_arg(self):
+        digraph = rustworkx.generators.directed_path_graph(4)
+        digraph.make_symmetric(lambda: _: "Reversi")
+        expected_edge_list = [
+            (0, 1, "Reversi"),
+            (1, 2, "Reversi"),
+            (2, 3, "Reversi"),
+            (1, 0, "Reversi"),
+            (2, 1, "Reversi"),
+            (3, 2, "Reversi"),
+        ]
+        self.assertEqual(digraph.weighted_edge_list(), expected_edge_list)
+
+    def test_path_graph_make_symmetric_existing_reverse_edges_function_arg(self):
+        digraph = rustworkx.generators.directed_path_graph(4)
+        digraph.add_edge(3, 2, None)
+        digraph.add_edge(1, 0, None)
+        digraph.make_symmetric(lambda _: "Reversi")
+        expected_edge_list = [
+            (0, 1, "Reversi"),
+            (1, 2, "Reversi"),
+            (2, 3, "Reversi"),
+            (3, 2, None),
+            (1, 0, None),
+            (2, 1, "Reversi"),
+        ]
+        self.assertEqual(digraph.weighted_edge_list(), expected_edge_list)
+
+    def test_path_graph_make_symmetric_function_arg_raises(self):
+        digraph = rustworkx.generators.directed_path_graph(4)
+
+        def weight_function(edge):
+            if edge is None:
+                raise TypeError("I'm expected")
+
+        with self.assertRaises(TypeError):
+            digraph.make_symmetric(weight_function)
