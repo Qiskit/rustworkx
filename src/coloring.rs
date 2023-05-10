@@ -29,8 +29,12 @@ use rayon::prelude::*;
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm
 ///
 /// This function uses a `largest-first` strategy as described in [1]_ and colors
-/// the nodes with higher degree first. As the coloring problem is NP-hard
-/// this is a heuristic algorithm and may not return an optimal solution.
+/// the nodes with higher degree first.
+///
+/// .. note::
+///
+///     The coloring problem is NP-hard and this is a heuristic algorithm which
+///     may not return an optimal solution.
 ///
 /// :param PyGraph: The input PyGraph object to color
 ///
