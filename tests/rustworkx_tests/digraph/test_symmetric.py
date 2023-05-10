@@ -16,7 +16,6 @@ import rustworkx
 
 
 def default_weight_function(edge):
-    print(edge)
     return "Reversi"
 
 
@@ -85,7 +84,6 @@ class TestSymmetric(unittest.TestCase):
 
     def test_path_graph_make_symmetric_with_function_arg(self):
         digraph = rustworkx.generators.directed_path_graph(4, bidirectional=False)
-        print(digraph.weighted_edge_list())
         digraph.make_symmetric(default_weight_function)
         expected_edge_list = {
             (0, 1, None),
