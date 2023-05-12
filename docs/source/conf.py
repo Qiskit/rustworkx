@@ -42,9 +42,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx_reredirects',
               'qiskit_sphinx_theme',
              ]
-html_static_path = ['_static']
 templates_path = ['_templates']
-html_css_files = ['style.css', 'custom.css']
 
 pygments_style = 'colorful'
 
