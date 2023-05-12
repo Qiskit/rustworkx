@@ -874,14 +874,15 @@ impl PyGraph {
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
-    pub fn add_edges_from(&mut self, obj_list: Vec<(usize, usize, PyObject)>) -> EdgeIndices {
+    pub fn add_edges_from(
+        &mut self,
+        obj_list: Vec<(usize, usize, PyObject)>,
+    ) -> PyResult<EdgeIndices> {
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
-            let p_index = NodeIndex::new(obj.0);
-            let c_index = NodeIndex::new(obj.1);
-            out_list.push(self._add_edge(p_index, c_index, obj.2));
+            out_list.push(self.add_edge(obj.0, obj.1, obj.2)?);
         }
-        EdgeIndices { edges: out_list }
+        Ok(EdgeIndices { edges: out_list })
     }
 
     /// Add new edges to the graph without python data.
@@ -903,14 +904,12 @@ impl PyGraph {
         &mut self,
         py: Python,
         obj_list: Vec<(usize, usize)>,
-    ) -> EdgeIndices {
+    ) -> PyResult<EdgeIndices> {
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
-            let p_index = NodeIndex::new(obj.0);
-            let c_index = NodeIndex::new(obj.1);
-            out_list.push(self._add_edge(p_index, c_index, py.None()));
+            out_list.push(self.add_edge(obj.0, obj.1, py.None())?);
         }
-        EdgeIndices { edges: out_list }
+        Ok(EdgeIndices { edges: out_list })
     }
 
     /// Extend graph from an edge list

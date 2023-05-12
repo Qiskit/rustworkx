@@ -968,6 +968,16 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         with self.assertRaises(IndexError):
             g.add_edge(2, 3, None)
 
+    def test_add_edges_from_non_existent(self):
+        g = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            g.add_edges_from([(2, 3, 5)])
+
+    def test_add_edges_from_no_data_non_existent(self):
+        g = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            g.add_edges_from_no_data([(2, 3)])
+
     def test_reverse_graph(self):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from([i for i in range(4)])
