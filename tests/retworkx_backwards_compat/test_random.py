@@ -145,7 +145,7 @@ class TestGNMRandomGraph(unittest.TestCase):
         with self.assertRaises(ValueError):
             retworkx.undirected_gnm_random_graph(0, 5)
 
-    def test_random_gnm_undirected_invalid_probability(self):
+    def test_random_gnm_undirected_invalid_num_edges(self):
         with self.assertRaises(OverflowError):
             retworkx.undirected_gnm_random_graph(23, -5)
 
