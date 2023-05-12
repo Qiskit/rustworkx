@@ -1083,6 +1083,11 @@ impl PyDiGraph {
     pub fn add_edge(&mut self, parent: usize, child: usize, edge: PyObject) -> PyResult<usize> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
+        if !self.graph.contains_node(p_index) || !self.graph.contains_node(c_index) {
+            return Err(PyIndexError::new_err(
+                "One of the endpoints of the edge does not exist in graph",
+            ));
+        }
         let out_index = self._add_edge(p_index, c_index, edge)?;
         Ok(out_index)
     }
@@ -1103,9 +1108,7 @@ impl PyDiGraph {
     ) -> PyResult<Vec<usize>> {
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
-            let p_index = NodeIndex::new(obj.0);
-            let c_index = NodeIndex::new(obj.1);
-            let edge = self._add_edge(p_index, c_index, obj.2)?;
+            let edge = self.add_edge(obj.0, obj.1, obj.2)?;
             out_list.push(edge);
         }
         Ok(out_list)
@@ -1129,9 +1132,7 @@ impl PyDiGraph {
     ) -> PyResult<Vec<usize>> {
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
-            let p_index = NodeIndex::new(obj.0);
-            let c_index = NodeIndex::new(obj.1);
-            let edge = self._add_edge(p_index, c_index, py.None())?;
+            let edge = self.add_edge(obj.0, obj.1, py.None())?;
             out_list.push(edge);
         }
         Ok(out_list)
