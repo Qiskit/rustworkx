@@ -2735,15 +2735,14 @@ impl PyDiGraph {
             .edge_references()
             .map(|edge| ([edge.source(), edge.target()], edge.id()))
             .collect();
-        for (edge_endpoints, edge_index) in edges.iter() {
-            let reverse_edge = [edge_endpoints[1], edge_endpoints[0]];
-            if !edges.contains_key(&reverse_edge) {
+       for ([edge_source, edge_target], edge_index) in edges.iter() {
+            if !edges.contains_key(&[*edge_target, *edge_source]) {
                 let forward_weight = self.graph.edge_weight(*edge_index).unwrap();
                 let weight: PyObject = match edge_payload_fn.as_ref() {
                     Some(callback) => callback.call1(py, (forward_weight,))?,
                     None => forward_weight.clone_ref(py),
                 };
-                self._add_edge(reverse_edge[0], reverse_edge[1], weight)?;
+                self._add_edge(*edge_target, *edge_source, weight)?;
             }
         }
         Ok(())
