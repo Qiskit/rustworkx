@@ -2735,7 +2735,7 @@ impl PyDiGraph {
             .edge_references()
             .map(|edge| ([edge.source(), edge.target()], edge.id()))
             .collect();
-       for ([edge_source, edge_target], edge_index) in edges.iter() {
+        for ([edge_source, edge_target], edge_index) in edges.iter() {
             if !edges.contains_key(&[*edge_target, *edge_source]) {
                 let forward_weight = self.graph.edge_weight(*edge_index).unwrap();
                 let weight: PyObject = match edge_payload_fn.as_ref() {
