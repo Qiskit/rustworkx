@@ -44,3 +44,31 @@ class TestGraphColoring(unittest.TestCase):
         graph.add_edge(node_a, node_c, 1)
         res = rustworkx.graph_greedy_color(graph)
         self.assertEqual({0: 0, 1: 1, 2: 1}, res)
+
+
+class TestGrapEdgehColoring(unittest.TestCase):
+    def test_simple_graph(self):
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node(1)
+        node_b = graph.add_node(2)
+        node_c = graph.add_node(3)
+        node_d = graph.add_node(4)
+        node_e = graph.add_node(5)
+
+        edge_ab = graph.add_edge(node_a, node_b, 1)
+        edge_ac = graph.add_edge(node_a, node_c, 1)
+        edge_ad = graph.add_edge(node_a, node_d, 1)
+        edge_de = graph.add_edge(node_d, node_e, 1)
+
+        print(edge_ab)
+        print(edge_ac)
+        print(edge_ad)
+        print(edge_de)
+
+        print("============")
+        res = rustworkx.graph_greedy_edge_color(graph)
+        print(res)
+        
+
+if __name__ == "__main__":
+    unittest.main()

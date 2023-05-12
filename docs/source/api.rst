@@ -185,6 +185,7 @@ Other Algorithm Functions
    rustworkx.transitivity
    rustworkx.core_number
    rustworkx.graph_greedy_color
+   rustworkx.graph_greedy_edge_color
    rustworkx.metric_closure
    rustworkx.is_planar
 
