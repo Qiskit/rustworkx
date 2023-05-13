@@ -9,7 +9,6 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations
 // under the License.
-
 use crate::graph;
 use crate::StablePyGraph;
 use rustworkx_core::dictmap::*;
@@ -22,32 +21,26 @@ use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::NodeCount;
+// use petgraph::visit::NodeCount;
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
 use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
-/// Color a PyGraph using a largest_first strategy greedy graph coloring.
-///
-/// :param PyGraph: The input PyGraph object to color
-///
-/// :returns: A dictionary where keys are node indices and the value is
-///     the color
-/// :rtype: dict
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+
+fn greedy_color<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>
+) -> DictMap<usize, usize> {
     let mut colors: DictMap<usize, usize> = DictMap::new();
-    let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
+    let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
     let mut sort_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(graph.node_count());
     for k in node_vec.iter() {
-        sort_map.insert(*k, graph.graph.edges(*k).count());
+        sort_map.insert(*k, graph.edges(*k).count());
     }
     node_vec.par_sort_by_key(|k| Reverse(sort_map.get(k)));
     for u_index in node_vec {
         let mut neighbor_colors: HashSet<usize> = HashSet::new();
-        for edge in graph.graph.edges(u_index) {
+        for edge in graph.edges(u_index) {
             let target = edge.target().index();
             let existing_color = match colors.get(&target) {
                 Some(node) => node,
@@ -64,11 +57,28 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
         }
         colors.insert(u_index.index(), count);
     }
+
+    colors
+
+}
+
+
+/// Color a PyGraph using a largest_first strategy greedy graph coloring.
+///
+/// :param PyGraph: The input PyGraph object to color
+///
+/// :returns: A dictionary where keys are node indices and the value is
+///     the color
+/// :rtype: dict
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+    let colors = greedy_color(&graph.graph);
+
     let out_dict = PyDict::new(py);
     for (index, color) in colors {
         out_dict.set_item(index, color)?;
     }
-
     Ok(out_dict.into())
 }
 
@@ -107,25 +117,32 @@ fn line_graph<Ty: EdgeType>(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+    println!("original graph: {:?}", graph.graph);
+
     let (line_graph, edge_to_node_map) = line_graph(py, &graph.graph);
 
-    let line_graph = graph::PyGraph {
-            graph: line_graph,
-            multigraph: false,
-            node_removed: false,
-            attrs: py.None(),
-        };
+    println!("line_graph: {:?}", line_graph);
+    println!("edge_to_node_map: {:?}", edge_to_node_map);
 
-    let colors = graph_greedy_color(py, &line_graph).unwrap();
+    let colors = greedy_color(&line_graph);
 
     println!("Examining colors of the line graph: {:?}", colors);
 
-    // for a in colors {
-    //     println!("{:?}", a);
+    // for (index, color) in colors {
+    //     println!("{:?}, {:?}", index, color);
     // }
 
-
-
     let out_dict = PyDict::new(py);
+
+    for edge in graph.graph.edge_references() {
+        let e0 = edge.id();
+        let n0 = edge_to_node_map.get(&e0).unwrap();
+        let c0 = colors.get(&n0.index()).unwrap();
+        println!("original edge {:?} corresponds to node {:?} and has color {:?}", e0, n0, c0);
+
+        out_dict.set_item(e0.index(), c0)?;
+
+    }
+
     Ok(out_dict.into())
 }
