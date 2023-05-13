@@ -114,35 +114,34 @@ fn line_graph<Ty: EdgeType>(
     (out_graph, out_edge_map)
 }
 
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    println!("original graph: {:?}", graph.graph);
 
-    let (line_graph, edge_to_node_map) = line_graph(py, &graph.graph);
-
-    println!("line_graph: {:?}", line_graph);
-    println!("edge_to_node_map: {:?}", edge_to_node_map);
-
+fn greedy_edge_color<Ty: EdgeType>(
+    py: Python,
+    graph: &StablePyGraph<Ty>
+) -> DictMap<usize, usize> {
+    let (line_graph, edge_to_node_map) = line_graph(py, &graph);
     let colors = greedy_color(&line_graph);
 
-    println!("Examining colors of the line graph: {:?}", colors);
+    let mut edge_colors: DictMap<usize, usize> = DictMap::new();
 
-    // for (index, color) in colors {
-    //     println!("{:?}, {:?}", index, color);
-    // }
-
-    let out_dict = PyDict::new(py);
-
-    for edge in graph.graph.edge_references() {
+    for edge in graph.edge_references() {
         let e0 = edge.id();
         let n0 = edge_to_node_map.get(&e0).unwrap();
         let c0 = colors.get(&n0.index()).unwrap();
-        println!("original edge {:?} corresponds to node {:?} and has color {:?}", e0, n0, c0);
-
-        out_dict.set_item(e0.index(), c0)?;
-
+        edge_colors.insert(e0.index(), *c0);
     }
+    edge_colors
+}
 
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+    let edge_colors = greedy_edge_color(py, &graph.graph);
+
+    let out_dict = PyDict::new(py);
+    for (index, color) in edge_colors {
+        out_dict.set_item(index, color)?;
+    }
     Ok(out_dict.into())
 }
