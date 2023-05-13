@@ -110,8 +110,8 @@ class TestGeneral(unittest.TestCase):
         graph.add_edges_from_no_data([(i, i + 1) for i in range(len(graph) - 1)])
 
         # Generate a randomized permutation.
-        rand_perm = random.permutation(graph.nodes())
-        permutation = dict(zip(graph.nodes(), rand_perm))
+        rand_perm = random.permutation(graph.node_indexes())
+        permutation = dict(zip(graph.node_indexes(), rand_perm))
         mapping = dict(itertools.islice(permutation.items(), 0, size, 2))  # Drop every 2nd element.
         swaps = rx.graph_token_swapper(graph, permutation, 4, 4)
         swap_permutation(mapping, swaps)
