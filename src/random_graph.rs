@@ -266,7 +266,7 @@ pub fn undirected_gnm_random_graph(
         graph[*node] = node.index().to_object(py);
     }
     Ok(graph::PyGraph {
-        graph: graph,
+        graph,
         node_removed: false,
         multigraph: true,
         attrs: py.None(),
