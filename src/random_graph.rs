@@ -83,7 +83,7 @@ pub fn directed_gnp_random_graph(
     };
     // Core function does not put index into node payload, so for backwards compat
     // in the python interface, we do it here.
-    let nodes = graph.node_indices().collect::<Vec<_>>();
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
         graph[*node] = node.index().to_object(py);
     }
@@ -151,7 +151,7 @@ pub fn undirected_gnp_random_graph(
     };
     // Core function does not put index into node payload, so for backwards compat
     // in the python interface, we do it here.
-    let nodes = graph.node_indices().collect::<Vec<_>>();
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
         graph[*node] = node.index().to_object(py);
     }
@@ -205,7 +205,7 @@ pub fn directed_gnm_random_graph(
         };
     // Core function does not put index into node payload, so for backwards compat
     // in the python interface, we do it here.
-    let nodes = graph.node_indices().collect::<Vec<_>>();
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
         graph[*node] = node.index().to_object(py);
     }
@@ -261,7 +261,7 @@ pub fn undirected_gnm_random_graph(
         };
     // Core function does not put index into node payload, so for backwards compat
     // in the python interface, we do it here.
-    let nodes = graph.node_indices().collect::<Vec<_>>();
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
         graph[*node] = node.index().to_object(py);
     }
