@@ -2712,6 +2712,43 @@ impl PyDiGraph {
         edges.is_empty()
     }
 
+    /// Make edges in graph symmetric
+    ///
+    /// This function iterates over all the edges in the graph, adding for each
+    /// edge the reversed edge, unless one is already present. Note the edge insertion
+    /// is not fixed and the edge indices are not guaranteed to be consistent
+    /// between executions of this method on identical graphs.
+    ///
+    /// :param callable edge_payload: This optional argument takes in a callable which will
+    ///     be passed a single positional argument the data payload for an edge that will
+    ///     have a reverse copied in the graph. The returned value from this callable will
+    ///     be used as the data payload for the new edge created. If this is not specified
+    ///     then by default the data payload will be copied when the reverse edge is added.
+    ///     If there are parallel edges, then one of the edges (typically the one with the lower
+    ///     index, but this is not a guarantee) will be copied.
+    pub fn make_symmetric(
+        &mut self,
+        py: Python,
+        edge_payload_fn: Option<PyObject>,
+    ) -> PyResult<()> {
+        let edges: HashMap<[NodeIndex; 2], EdgeIndex> = self
+            .graph
+            .edge_references()
+            .map(|edge| ([edge.source(), edge.target()], edge.id()))
+            .collect();
+        for ([edge_source, edge_target], edge_index) in edges.iter() {
+            if !edges.contains_key(&[*edge_target, *edge_source]) {
+                let forward_weight = self.graph.edge_weight(*edge_index).unwrap();
+                let weight: PyObject = match edge_payload_fn.as_ref() {
+                    Some(callback) => callback.call1(py, (forward_weight,))?,
+                    None => forward_weight.clone_ref(py),
+                };
+                self._add_edge(*edge_target, *edge_source, weight)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Generate a new PyGraph object from this graph
     ///
     /// This will create a new :class:`~rustworkx.PyGraph` object from this
