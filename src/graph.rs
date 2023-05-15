@@ -847,10 +847,15 @@ impl PyGraph {
     ///     of an existing edge with ``multigraph=False``) edge.
     /// :rtype: int
     #[pyo3(text_signature = "(self, node_a, node_b, edge, /)")]
-    pub fn add_edge(&mut self, node_a: usize, node_b: usize, edge: PyObject) -> usize {
+    pub fn add_edge(&mut self, node_a: usize, node_b: usize, edge: PyObject) -> PyResult<usize> {
         let p_index = NodeIndex::new(node_a);
         let c_index = NodeIndex::new(node_b);
-        self._add_edge(p_index, c_index, edge)
+        if !self.graph.contains_node(p_index) || !self.graph.contains_node(c_index) {
+            return Err(PyIndexError::new_err(
+                "One of the endpoints of the edge does not exist in graph",
+            ));
+        }
+        Ok(self._add_edge(p_index, c_index, edge))
     }
 
     /// Add new edges to the graph.
@@ -869,14 +874,15 @@ impl PyGraph {
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
-    pub fn add_edges_from(&mut self, obj_list: Vec<(usize, usize, PyObject)>) -> EdgeIndices {
+    pub fn add_edges_from(
+        &mut self,
+        obj_list: Vec<(usize, usize, PyObject)>,
+    ) -> PyResult<EdgeIndices> {
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
-            let p_index = NodeIndex::new(obj.0);
-            let c_index = NodeIndex::new(obj.1);
-            out_list.push(self._add_edge(p_index, c_index, obj.2));
+            out_list.push(self.add_edge(obj.0, obj.1, obj.2)?);
         }
-        EdgeIndices { edges: out_list }
+        Ok(EdgeIndices { edges: out_list })
     }
 
     /// Add new edges to the graph without python data.
@@ -898,14 +904,12 @@ impl PyGraph {
         &mut self,
         py: Python,
         obj_list: Vec<(usize, usize)>,
-    ) -> EdgeIndices {
+    ) -> PyResult<EdgeIndices> {
         let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
         for obj in obj_list {
-            let p_index = NodeIndex::new(obj.0);
-            let c_index = NodeIndex::new(obj.1);
-            out_list.push(self._add_edge(p_index, c_index, py.None()));
+            out_list.push(self.add_edge(obj.0, obj.1, py.None())?);
         }
-        EdgeIndices { edges: out_list }
+        Ok(EdgeIndices { edges: out_list })
     }
 
     /// Extend graph from an edge list
@@ -1703,7 +1707,7 @@ impl PyGraph {
         }
 
         for (source, weight) in edges {
-            self.add_edge(source.index(), node_index.index(), weight);
+            self.add_edge(source.index(), node_index.index(), weight)?;
         }
 
         Ok(node_index.index())
