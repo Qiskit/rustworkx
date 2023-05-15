@@ -67,7 +67,7 @@ pub fn directed_gnp_random_graph(
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Directed> = match core_generators::gnp_random_graph(
+    let mut graph: StablePyGraph<Directed> = match core_generators::gnp_random_graph(
         num_nodes,
         probability,
         seed,
@@ -81,6 +81,12 @@ pub fn directed_gnp_random_graph(
             ))
         }
     };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes = graph.node_indices().collect::<Vec<_>>();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
+    }
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -129,7 +135,7 @@ pub fn undirected_gnp_random_graph(
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> = match core_generators::gnp_random_graph(
+    let mut graph: StablePyGraph<Undirected> = match core_generators::gnp_random_graph(
         num_nodes,
         probability,
         seed,
@@ -143,6 +149,12 @@ pub fn undirected_gnp_random_graph(
             ))
         }
     };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes = graph.node_indices().collect::<Vec<_>>();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
+    }
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -181,7 +193,7 @@ pub fn directed_gnm_random_graph(
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Directed> =
+    let mut graph: StablePyGraph<Directed> =
         match core_generators::gnm_random_graph(num_nodes, num_edges, seed, default_fn, default_fn)
         {
             Ok(graph) => graph,
@@ -191,6 +203,12 @@ pub fn directed_gnm_random_graph(
                 ))
             }
         };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes = graph.node_indices().collect::<Vec<_>>();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
+    }
     Ok(digraph::PyDiGraph {
         graph,
         node_removed: false,
@@ -231,7 +249,7 @@ pub fn undirected_gnm_random_graph(
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> =
+    let mut graph: StablePyGraph<Undirected> =
         match core_generators::gnm_random_graph(num_nodes, num_edges, seed, default_fn, default_fn)
         {
             Ok(graph) => graph,
@@ -241,8 +259,14 @@ pub fn undirected_gnm_random_graph(
                 ))
             }
         };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes = graph.node_indices().collect::<Vec<_>>();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
+    }
     Ok(graph::PyGraph {
-        graph,
+        graph: graph,
         node_removed: false,
         multigraph: true,
         attrs: py.None(),

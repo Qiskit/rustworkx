@@ -13,4 +13,6 @@ upgrade:
     Passing a negative value to the ``probability`` argument to the
     :func:`~rustworkx.gnp_directed_random_graph` or the
     :func:`~rustworkx.gnp_undirected_random_graph` function will now cause
-    an OverflowError to be raised.
+    an ``OverflowError`` to be raised. Previously, a ``ValueError`` would be
+    raised in this situation. This was changed to be consistent with other similar
+    error conditions in other functions in the library.
