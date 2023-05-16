@@ -74,7 +74,7 @@ fn line_graph<Ty: EdgeType>(
 }
 
 fn greedy_edge_color<Ty: EdgeType>(py: Python, graph: &StablePyGraph<Ty>) -> DictMap<usize, usize> {
-    let (line_graph, edge_to_node_map) = line_graph(py, &graph);
+    let (line_graph, edge_to_node_map) = line_graph(py, graph);
     let colors = greedy_color(&line_graph);
 
     let mut edge_colors: DictMap<usize, usize> = DictMap::new();
