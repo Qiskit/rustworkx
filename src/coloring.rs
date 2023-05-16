@@ -11,20 +11,11 @@
 // under the License.
 
 use crate::graph;
-use rustworkx_core::dictmap::*;
-
-use hashbrown::{HashMap, HashSet};
-use std::cmp::Reverse;
+use rustworkx_core::coloring::greedy_color;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
-
-use petgraph::graph::NodeIndex;
-use petgraph::prelude::*;
-use petgraph::visit::NodeCount;
-
-use rayon::prelude::*;
 
 /// Color a PyGraph using a largest_first strategy greedy graph coloring.
 ///
@@ -36,35 +27,10 @@ use rayon::prelude::*;
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    let mut colors: DictMap<usize, usize> = DictMap::new();
-    let mut node_vec: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let mut sort_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(graph.node_count());
-    for k in node_vec.iter() {
-        sort_map.insert(*k, graph.graph.edges(*k).count());
-    }
-    node_vec.par_sort_by_key(|k| Reverse(sort_map.get(k)));
-    for u_index in node_vec {
-        let mut neighbor_colors: HashSet<usize> = HashSet::new();
-        for edge in graph.graph.edges(u_index) {
-            let target = edge.target().index();
-            let existing_color = match colors.get(&target) {
-                Some(node) => node,
-                None => continue,
-            };
-            neighbor_colors.insert(*existing_color);
-        }
-        let mut count: usize = 0;
-        loop {
-            if !neighbor_colors.contains(&count) {
-                break;
-            }
-            count += 1;
-        }
-        colors.insert(u_index.index(), count);
-    }
+    let colors = greedy_color(&graph.graph);
     let out_dict = PyDict::new(py);
-    for (index, color) in colors {
-        out_dict.set_item(index, color)?;
+    for (node, color) in colors {
+        out_dict.set_item(node.index(), color)?;
     }
     Ok(out_dict.into())
 }
