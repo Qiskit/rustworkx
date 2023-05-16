@@ -17,15 +17,8 @@ use std::cmp::Reverse;
 use std::hash::Hash;
 
 use petgraph::visit::{
-    NodeCount,
-    EdgeCount,
-    IntoEdges,
-    IntoNeighborsDirected,
-    IntoNodeIdentifiers,
-    NodeIndexable,
-    Visitable,
-    EdgeRef,
-    IntoEdgeReferences,
+    EdgeCount, EdgeRef, IntoEdgeReferences, IntoEdges, IntoNeighborsDirected, IntoNodeIdentifiers,
+    NodeCount, NodeIndexable, Visitable,
 };
 
 use rayon::prelude::*;
@@ -39,10 +32,8 @@ where
         + NodeIndexable
         + IntoNeighborsDirected
         + IntoNodeIdentifiers
-        + IntoEdgeReferences
-    ,
+        + IntoEdgeReferences,
     G::NodeId: Hash + Eq + Send + Sync,
-
 {
     let mut colors: DictMap<G::NodeId, usize> = DictMap::new();
     let mut node_vec: Vec<G::NodeId> = graph.node_identifiers().collect();

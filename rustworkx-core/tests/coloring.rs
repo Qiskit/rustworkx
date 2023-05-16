@@ -10,7 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-
 use hashbrown::HashSet;
 use petgraph::graph::Graph;
 use petgraph::graph::NodeIndex;

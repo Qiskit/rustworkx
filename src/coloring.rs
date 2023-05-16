@@ -11,8 +11,8 @@
 // under the License.
 use crate::graph;
 use crate::StablePyGraph;
-use rustworkx_core::dictmap::*;
 use hashbrown::HashMap;
+use rustworkx_core::dictmap::*;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -23,7 +23,6 @@ use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
 use petgraph::EdgeType;
 use rustworkx_core::coloring::greedy_color;
-
 
 /// Color a PyGraph using a largest_first strategy greedy graph coloring.
 ///
@@ -44,12 +43,10 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
     Ok(out_dict.into())
 }
 
-
 fn line_graph<Ty: EdgeType>(
     py: Python,
-    graph: &StablePyGraph<Ty>
+    graph: &StablePyGraph<Ty>,
 ) -> (StablePyGraph<Ty>, HashMap<EdgeIndex, NodeIndex>) {
-
     let mut out_graph = StablePyGraph::<Ty>::with_capacity(graph.edge_count(), 0);
     let mut out_edge_map = HashMap::<EdgeIndex, NodeIndex>::with_capacity(graph.edge_count());
 
@@ -76,11 +73,7 @@ fn line_graph<Ty: EdgeType>(
     (out_graph, out_edge_map)
 }
 
-
-fn greedy_edge_color<Ty: EdgeType>(
-    py: Python,
-    graph: &StablePyGraph<Ty>
-) -> DictMap<usize, usize> {
+fn greedy_edge_color<Ty: EdgeType>(py: Python, graph: &StablePyGraph<Ty>) -> DictMap<usize, usize> {
     let (line_graph, edge_to_node_map) = line_graph(py, &graph);
     let colors = greedy_color(&line_graph);
 
@@ -106,5 +99,3 @@ pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<P
     }
     Ok(out_dict.into())
 }
-
-

@@ -80,13 +80,13 @@ pub mod planar;
 pub mod shortest_path;
 pub mod traversal;
 // These modules define additional data structures
+/// Module for coloring algorithms.
+pub mod coloring;
 pub mod dictmap;
 pub mod distancemap;
 mod min_scored;
 /// Module for swapping tokens
 pub mod token_swapper;
-/// Module for coloring algorithms.
-pub mod coloring;
 pub mod utils;
 
 // re-export petgraph so there is a consistent version available to users and
