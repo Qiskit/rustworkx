@@ -34,7 +34,7 @@ use rayon::prelude::*;
 /// use rustworkx_core::coloring::greedy_color;
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_color(&graph);
+/// let colors = greedy_color(&g);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 0);
 /// expected_colors.insert(NodeIndex::new(1), 1);
