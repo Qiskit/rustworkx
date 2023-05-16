@@ -10,25 +10,42 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use hashbrown::HashSet;
+//! Test module for coloring algorithms.
+
 use petgraph::graph::Graph;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::Visitable;
 use petgraph::Undirected;
+use rustworkx_core::dictmap::*;
 
 use rustworkx_core::coloring::greedy_color;
 
 #[test]
-fn test_blah() {
-    let graph = Graph::<(), (), Undirected>::from_edges(&[
-        (0, 1),
-        (1, 2),
-        (2, 3),
-        (3, 4),
-        (4, 5),
-        (5, 6),
-        (6, 7),
-        (7, 4),
-    ]);
-    let coloring = greedy_color(&graph);
+fn test_greedy_color_empty_graph() {
+    let graph = Graph::<(), (), Undirected>::new_undirected();
+    let colors = greedy_color(&graph);
+    let expected_colors = DictMap::new();
+    assert_eq!(colors, expected_colors);
+}
+
+#[test]
+fn test_greedy_color_simple_graph() {
+    let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
+    let colors = greedy_color(&graph);
+    let mut expected_colors = DictMap::new();
+    expected_colors.insert(NodeIndex::new(0), 0);
+    expected_colors.insert(NodeIndex::new(1), 1);
+    expected_colors.insert(NodeIndex::new(2), 1);
+    assert_eq!(colors, expected_colors);
+}
+
+#[test]
+fn test_greedy_color_simple_graph_large_degree() {
+    let graph =
+        Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2), (0, 2), (0, 2), (0, 2), (0, 2)]);
+    let colors = greedy_color(&graph);
+    let mut expected_colors = DictMap::new();
+    expected_colors.insert(NodeIndex::new(0), 0);
+    expected_colors.insert(NodeIndex::new(1), 1);
+    expected_colors.insert(NodeIndex::new(2), 1);
+    assert_eq!(colors, expected_colors);
 }

@@ -10,29 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::dictmap::*;
-use hashbrown::{HashMap, HashSet};
 use std::cmp::Reverse;
-
 use std::hash::Hash;
 
-use petgraph::visit::{
-    EdgeCount, EdgeRef, IntoEdgeReferences, IntoEdges, IntoNeighborsDirected, IntoNodeIdentifiers,
-    NodeCount, NodeIndexable, Visitable,
-};
-
+use crate::dictmap::*;
+use hashbrown::{HashMap, HashSet};
+use petgraph::visit::{EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount};
 use rayon::prelude::*;
 
 pub fn greedy_color<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
-    G: NodeCount
-        + EdgeCount
-        + IntoEdges
-        + Visitable
-        + NodeIndexable
-        + IntoNeighborsDirected
-        + IntoNodeIdentifiers
-        + IntoEdgeReferences,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
 {
     let mut colors: DictMap<G::NodeId, usize> = DictMap::new();
