@@ -18,7 +18,7 @@ use hashbrown::{HashMap, HashSet};
 use petgraph::visit::{EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount};
 use rayon::prelude::*;
 
-/// Color a PyGraph using a largest_first strategy greedy graph coloring.
+/// Vertex-color a graph using the "largest first" greedy strategy.
 ///
 /// Arguments:
 ///
