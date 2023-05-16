@@ -67,8 +67,10 @@ class TestGrapEdgehColoring(unittest.TestCase):
 
         print("============")
         res = rustworkx.graph_greedy_edge_color(graph)
+        print("=====RESULT=======")
         print(res)
-        
+        print(graph.edge_indices()[2])
+
 
 if __name__ == "__main__":
     unittest.main()

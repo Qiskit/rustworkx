@@ -12,8 +12,7 @@
 use crate::graph;
 use crate::StablePyGraph;
 use rustworkx_core::dictmap::*;
-use hashbrown::{HashMap, HashSet};
-use std::cmp::Reverse;
+use hashbrown::HashMap;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -21,46 +20,9 @@ use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-// use petgraph::visit::NodeCount;
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
 use petgraph::EdgeType;
-
-use rayon::prelude::*;
-
-
-fn greedy_color<Ty: EdgeType>(
-    graph: &StablePyGraph<Ty>
-) -> DictMap<usize, usize> {
-    let mut colors: DictMap<usize, usize> = DictMap::new();
-    let mut node_vec: Vec<NodeIndex> = graph.node_indices().collect();
-    let mut sort_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(graph.node_count());
-    for k in node_vec.iter() {
-        sort_map.insert(*k, graph.edges(*k).count());
-    }
-    node_vec.par_sort_by_key(|k| Reverse(sort_map.get(k)));
-    for u_index in node_vec {
-        let mut neighbor_colors: HashSet<usize> = HashSet::new();
-        for edge in graph.edges(u_index) {
-            let target = edge.target().index();
-            let existing_color = match colors.get(&target) {
-                Some(node) => node,
-                None => continue,
-            };
-            neighbor_colors.insert(*existing_color);
-        }
-        let mut count: usize = 0;
-        loop {
-            if !neighbor_colors.contains(&count) {
-                break;
-            }
-            count += 1;
-        }
-        colors.insert(u_index.index(), count);
-    }
-
-    colors
-
-}
+use rustworkx_core::coloring::greedy_color;
 
 
 /// Color a PyGraph using a largest_first strategy greedy graph coloring.
@@ -77,7 +39,7 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
 
     let out_dict = PyDict::new(py);
     for (index, color) in colors {
-        out_dict.set_item(index, color)?;
+        out_dict.set_item(index.index(), color)?;
     }
     Ok(out_dict.into())
 }
@@ -127,12 +89,11 @@ fn greedy_edge_color<Ty: EdgeType>(
     for edge in graph.edge_references() {
         let e0 = edge.id();
         let n0 = edge_to_node_map.get(&e0).unwrap();
-        let c0 = colors.get(&n0.index()).unwrap();
+        let c0 = colors.get(n0).unwrap();
         edge_colors.insert(e0.index(), *c0);
     }
     edge_colors
 }
-
 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
@@ -145,3 +106,5 @@ pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<P
     }
     Ok(out_dict.into())
 }
+
+
