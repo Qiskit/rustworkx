@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    :meth:`rustworkx.PyGraph.add_edge` and :meth:`rustworkx.PyDiGraph.add_edge` and now raises an 
+    ``IndexError`` when one of the nodes does not exist in the graph. Previously, it caused the Python 
+    interpreter to exit with a ``PanicException``
