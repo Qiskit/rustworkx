@@ -26,7 +26,7 @@ use petgraph::visit::NodeCount;
 
 use rayon::prelude::*;
 
-/// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm
+/// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
 /// This function uses a `largest-first` strategy as described in [1]_ and colors
 /// the nodes with higher degree first.
