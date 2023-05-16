@@ -31,6 +31,7 @@ use rayon::prelude::*;
 /// use petgraph::graph::NodeIndex;
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
+/// use rustworkx_core::coloring::greedy_color;
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
 /// let colors = greedy_color(&graph);
