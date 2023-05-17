@@ -17,12 +17,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
-use petgraph::prelude::*;
-use petgraph::visit::NodeCount;
-
-use rayon::prelude::*;
-
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
 /// This function uses a `largest-first` strategy as described in [1]_ and colors

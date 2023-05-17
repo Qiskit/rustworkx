@@ -18,7 +18,10 @@ use hashbrown::{HashMap, HashSet};
 use petgraph::visit::{EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount};
 use rayon::prelude::*;
 
-/// Vertex-color a graph using the "largest first" greedy strategy.
+/// Color a graph using a greedy graph coloring algorithm.
+///
+/// This function uses a `largest-first` strategy as described in [1]_ and colors
+/// the nodes with higher degree first.
 ///
 /// Arguments:
 ///
@@ -41,6 +44,10 @@ use rayon::prelude::*;
 /// expected_colors.insert(NodeIndex::new(2), 1);
 /// assert_eq!(colors, expected_colors);
 /// ```
+///
+///
+/// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
+///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 pub fn greedy_color<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges,

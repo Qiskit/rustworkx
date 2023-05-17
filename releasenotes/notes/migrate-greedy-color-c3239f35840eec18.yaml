@@ -2,5 +2,5 @@
 features:
   - |
     The function ``greedy_color``has been migrated to the ``rustworkx-core``
-    crate in the ``coloring`` module. It vertex-color a graph using the 
-    "largest first" greedy strategy.
+    crate in the ``coloring`` module. It colors a graph using a greedy 
+    graph coloring algorithm.
