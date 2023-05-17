@@ -10,6 +10,8 @@
 import sys
 import functools
 
+import numpy as np
+
 from .rustworkx import *
 
 # flake8: noqa
@@ -130,8 +132,12 @@ class PyDAG(PyDiGraph):
     pass
 
 
-@functools.singledispatch
-def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
+def distance_matrix(
+        graph: PyDiGraph | PyGraph,
+        parallel_threshold=300,
+        as_undirected=False,
+        null_value=0.0
+    ) -> np.ndarray:
     """Get the distance matrix for a graph
 
     This differs from functions like :func:`~rustworkx.floyd_warshall_numpy` in
@@ -159,24 +165,20 @@ def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_val
     :returns: The distance matrix
     :rtype: numpy.ndarray
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    if isinstance(PyGraph, PyDiGraph):
+        return digraph_distance_matrix(
+            graph,
+            parallel_threshold=parallel_threshold,
+            as_undirected=as_undirected,
+            null_value=null_value,
+        )
+    elif isinstance(graph, PyGraph):
+        return graph_distance_matrix(
+            graph, parallel_threshold=parallel_threshold, null_value=null_value
+        )
+    else:
+        raise TypeError(f"Invalid Input Type {type(graph)} for `graph`")
 
-
-@distance_matrix.register(PyDiGraph)
-def _digraph_distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
-    return digraph_distance_matrix(
-        graph,
-        parallel_threshold=parallel_threshold,
-        as_undirected=as_undirected,
-        null_value=null_value,
-    )
-
-
-@distance_matrix.register(PyGraph)
-def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
-    return graph_distance_matrix(
-        graph, parallel_threshold=parallel_threshold, null_value=null_value
-    )
 
 
 @functools.singledispatch
