@@ -126,8 +126,8 @@ with open("sources.txt", "r") as fd:
         redirects[f"stubs/{source_str}"] = f"../apiref/{source_str}"
 
 if os.getenv("RETWORKX_LEGACY_DOCS", None) is not None:
-    redirects["*"] = "https://qiskit.org/documentation/rustworkx/$source.html"
-    html_baseurl = "https://qiskit.org/documentation/rustworkx/"
+    redirects["*"] = "https://qiskit.org/ecosystem/rustworkx/$source.html"
+    html_baseurl = "https://qiskit.org/ecosystem/rustworkx/"
 
 
 # Version extensions

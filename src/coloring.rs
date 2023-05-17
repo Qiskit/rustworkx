@@ -17,13 +17,44 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
 
-/// Color a PyGraph using a largest_first strategy greedy graph coloring.
+use petgraph::graph::NodeIndex;
+use petgraph::prelude::*;
+use petgraph::visit::NodeCount;
+
+use rayon::prelude::*;
+
+/// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
+///
+/// This function uses a `largest-first` strategy as described in [1]_ and colors
+/// the nodes with higher degree first.
+///
+/// .. note::
+///
+///     The coloring problem is NP-hard and this is a heuristic algorithm which
+///     may not return an optimal solution.
 ///
 /// :param PyGraph: The input PyGraph object to color
 ///
 /// :returns: A dictionary where keys are node indices and the value is
 ///     the color
 /// :rtype: dict
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visualization import mpl_draw
+///
+///     graph = rx.generators.generalized_petersen_graph(5, 2)
+///     coloring = rx.graph_greedy_color(graph)
+///     colors = [coloring[node] for node in graph.node_indices()]
+///
+///     # Draw colored graph
+///     layout = rx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
+///     mpl_draw(graph, node_color=colors, pos=layout)
+///
+///
+/// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
+///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
