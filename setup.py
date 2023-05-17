@@ -14,7 +14,7 @@ from setuptools_rust import Binding, RustExtension
 
 # If RUST_DEBUG is set, force compiling in debug mode. Else, use the default    behavior of whether
 # it's an editable installation.
-rust_debug = True if os.getenv("RUST_DEBUG") == "1" else None
+rustworkx_debug = True if os.getenv("RUSTWORKX_DEBUG") == "1" else None
 
 
 def readme():
@@ -30,7 +30,7 @@ PKG_VERSION = "0.13.0"
 PKG_PACKAGES = ["rustworkx", "rustworkx.visualization"]
 PKG_INSTALL_REQUIRES = ['numpy>=1.16.0']
 RUST_EXTENSIONS = [RustExtension("rustworkx.rustworkx", "Cargo.toml",
-                                 binding=Binding.PyO3, debug=rust_debug)]
+                                 binding=Binding.PyO3, debug=rustworkx_debug)]
 
 retworkx_readme_compat = """# retworkx
 
