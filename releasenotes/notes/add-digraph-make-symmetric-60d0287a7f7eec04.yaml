@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    Added a new method, :meth:`~.PyDiGraph.make_symmetric`, to the
+    :class:`~.PyDiGraph` class. This method is used to make all the edges
+    in the graph symmetric (there is a reverse edge in the graph for each edge).
+    For example:
+
+    .. jupyter-execute::
+
+        import rustworkx as rx
+        from rustworkx.visualization import graphviz_draw
+
+        graph = rx.generators.directed_path_graph(5, bidirectional=False)
+        graph.make_symmetric()
+        graphviz_draw(graph)

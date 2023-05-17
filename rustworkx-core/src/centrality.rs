@@ -681,7 +681,7 @@ mod test_eigenvector_centrality {
 
     macro_rules! assert_almost_equal {
         ($x:expr, $y:expr, $d:expr) => {
-            if !($x - $y < $d || $y - $x < $d) {
+            if ($x - $y).abs() >= $d {
                 panic!("{} != {} within delta of {}", $x, $y, $d);
             }
         };
@@ -753,8 +753,7 @@ mod test_eigenvector_centrality {
         let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(2.), None, None);
         let result = output.unwrap().unwrap();
         let expected_values: Vec<f64> = vec![
-            0.25368793, 0.19576478, 0.32817092, 0.40430835, 0.48199885, 0.15724483, 0.51346196,
-            0.32475403,
+            0.2140437, 0.2009269, 0.1036383, 0.0972886, 0.3113323, 0.4891686, 0.4420605, 0.6016448,
         ];
         for i in 0..8 {
             assert_almost_equal!(expected_values[i], result[i], 1e-4);
