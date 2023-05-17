@@ -116,7 +116,7 @@ class TestGNMRandomGraph(unittest.TestCase):
             rustworkx.directed_gnm_random_graph(23, -5)
 
     def test_random_gnm_directed_payload(self):
-        graph = rustworkx.directed_gnm_random_graph(3, 6)
+        graph = rustworkx.directed_gnm_random_graph(3, 3)
         self.assertEqual(graph.nodes(), [0, 1, 2])
 
     def test_random_gnm_undirected(self):
@@ -162,7 +162,7 @@ class TestGNMRandomGraph(unittest.TestCase):
             rustworkx.undirected_gnm_random_graph(23, -5)
 
     def test_random_gnm_undirected_payload(self):
-        graph = rustworkx.undirected_gnm_random_graph(3, 6)
+        graph = rustworkx.undirected_gnm_random_graph(3, 3)
         self.assertEqual(graph.nodes(), [0, 1, 2])
 
 

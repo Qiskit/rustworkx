@@ -101,7 +101,7 @@ class TestGeneral(unittest.TestCase):
         size = 100
         # Note that graph may have "gaps" in the node counts, i.e. the numbering is noncontiguous.
         graph = rx.undirected_gnm_random_graph(size, size**2 // 10)
-        for i in graph.nodes():
+        for i in graph.node_indexes():
             try:
                 graph.remove_edge(i, i)  # Remove self-loops.
             except rx.NoEdgeBetweenNodes:
@@ -111,7 +111,7 @@ class TestGeneral(unittest.TestCase):
 
         # Generate a randomized permutation.
         rand_perm = random.permutation(graph.nodes())
-        permutation = dict(zip(graph.node_indexes(), rand_perm))
+        permutation = dict(zip(graph.nodes(), rand_perm))
         mapping = dict(itertools.islice(permutation.items(), 0, size, 2))  # Drop every 2nd element.
         swaps = rx.graph_token_swapper(graph, permutation, 4, 4)
         swap_permutation(mapping, swaps)
