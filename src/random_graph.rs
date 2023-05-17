@@ -27,6 +27,8 @@ use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
+use rustworkx_core::generators as core_generators;
+
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///
@@ -57,83 +59,42 @@ use rand_pcg::Pcg64;
 ///    Phys. Rev. E, 71, 036113, 2005.
 /// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, probability, seed=None, /)")]
+#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)")]
 pub fn directed_gnp_random_graph(
     py: Python,
-    num_nodes: isize,
+    num_nodes: usize,
     probability: f64,
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Directed>::new();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    if !(0.0..=1.0).contains(&probability) {
-        return Err(PyValueError::new_err(
-            "Probability out of range, must be 0 <= p <= 1",
-        ));
-    }
-    if probability > 0.0 {
-        if (probability - 1.0).abs() < std::f64::EPSILON {
-            for u in 0..num_nodes {
-                for v in 0..num_nodes {
-                    if u != v {
-                        // exclude self-loops
-                        let u_index = NodeIndex::new(u as usize);
-                        let v_index = NodeIndex::new(v as usize);
-                        inner_graph.add_edge(u_index, v_index, py.None());
-                    }
-                }
-            }
-        } else {
-            let mut v: isize = 0;
-            let mut w: isize = -1;
-            let lp: f64 = (1.0 - probability).ln();
-
-            let between = Uniform::new(0.0, 1.0);
-            while v < num_nodes {
-                let random: f64 = between.sample(&mut rng);
-                let lr: f64 = (1.0 - random).ln();
-                let ratio: isize = (lr / lp) as isize;
-                w = w + 1 + ratio;
-                // avoid self loops
-                if v == w {
-                    w += 1;
-                }
-                while v < num_nodes && num_nodes <= w {
-                    w -= v;
-                    v += 1;
-                    // avoid self loops
-                    if v == w {
-                        w -= v;
-                        v += 1;
-                    }
-                }
-                if v < num_nodes {
-                    let v_index = NodeIndex::new(v as usize);
-                    let w_index = NodeIndex::new(w as usize);
-                    inner_graph.add_edge(v_index, w_index, py.None());
-                }
-            }
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Directed> = match core_generators::gnp_random_graph(
+        num_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "num_nodes or probability invalid input",
+            ))
         }
-    }
-
-    let graph = digraph::PyDiGraph {
-        graph: inner_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
-        node_removed: false,
-        multigraph: true,
-        attrs: py.None(),
     };
-    Ok(graph)
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
+    }
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
 }
 
 /// Return a :math:`G_{np}` random undirected graph, also known as an
@@ -166,69 +127,40 @@ pub fn directed_gnp_random_graph(
 ///    Phys. Rev. E, 71, 036113, 2005.
 /// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, probability, seed=None, /)")]
+#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)")]
 pub fn undirected_gnp_random_graph(
     py: Python,
-    num_nodes: isize,
+    num_nodes: usize,
     probability: f64,
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Undirected>::default();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    if !(0.0..=1.0).contains(&probability) {
-        return Err(PyValueError::new_err(
-            "Probability out of range, must be 0 <= p <= 1",
-        ));
-    }
-    if probability > 0.0 {
-        if (probability - 1.0).abs() < std::f64::EPSILON {
-            for u in 0..num_nodes {
-                for v in u + 1..num_nodes {
-                    let u_index = NodeIndex::new(u as usize);
-                    let v_index = NodeIndex::new(v as usize);
-                    inner_graph.add_edge(u_index, v_index, py.None());
-                }
-            }
-        } else {
-            let mut v: isize = 1;
-            let mut w: isize = -1;
-            let lp: f64 = (1.0 - probability).ln();
-
-            let between = Uniform::new(0.0, 1.0);
-            while v < num_nodes {
-                let random: f64 = between.sample(&mut rng);
-                let lr = (1.0 - random).ln();
-                let ratio: isize = (lr / lp) as isize;
-                w = w + 1 + ratio;
-                while w >= v && v < num_nodes {
-                    w -= v;
-                    v += 1;
-                }
-                if v < num_nodes {
-                    let v_index = NodeIndex::new(v as usize);
-                    let w_index = NodeIndex::new(w as usize);
-                    inner_graph.add_edge(v_index, w_index, py.None());
-                }
-            }
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Undirected> = match core_generators::gnp_random_graph(
+        num_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "num_nodes or probability invalid input",
+            ))
         }
+    };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
     }
-
-    let graph = graph::PyGraph {
-        graph: inner_graph,
+    Ok(graph::PyGraph {
+        graph,
         node_removed: false,
         multigraph: true,
         attrs: py.None(),
-    };
-    Ok(graph)
+    })
 }
 
 /// Return a :math:`G_{nm}` directed graph, also known as an
@@ -256,61 +188,35 @@ pub fn undirected_gnp_random_graph(
 #[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)")]
 pub fn directed_gnm_random_graph(
     py: Python,
-    num_nodes: isize,
-    num_edges: isize,
+    num_nodes: usize,
+    num_edges: usize,
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    if num_edges < 0 {
-        return Err(PyValueError::new_err("num_edges must be >= 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Directed>::new();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    // if number of edges to be created is >= max,
-    // avoid randomly missed trials and directly add edges between every node
-    if num_edges >= num_nodes * (num_nodes - 1) {
-        for u in 0..num_nodes {
-            for v in 0..num_nodes {
-                // avoid self-loops
-                if u != v {
-                    let u_index = NodeIndex::new(u as usize);
-                    let v_index = NodeIndex::new(v as usize);
-                    inner_graph.add_edge(u_index, v_index, py.None());
-                }
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Directed> =
+        match core_generators::gnm_random_graph(num_nodes, num_edges, seed, default_fn, default_fn)
+        {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyValueError::new_err(
+                    "num_nodes or num_edges invalid input",
+                ))
             }
-        }
-    } else {
-        let mut created_edges: isize = 0;
-        let between = Uniform::new(0, num_nodes);
-        while created_edges < num_edges {
-            let u = between.sample(&mut rng);
-            let v = between.sample(&mut rng);
-            let u_index = NodeIndex::new(u as usize);
-            let v_index = NodeIndex::new(v as usize);
-            // avoid self-loops and multi-graphs
-            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
-                inner_graph.add_edge(u_index, v_index, py.None());
-                created_edges += 1;
-            }
-        }
+        };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
     }
-    let graph = digraph::PyDiGraph {
-        graph: inner_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
+    Ok(digraph::PyDiGraph {
+        graph,
         node_removed: false,
-        multigraph: true,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
         attrs: py.None(),
-    };
-    Ok(graph)
+    })
 }
 
 /// Return a :math:`G_{nm}` undirected graph, also known as an
@@ -338,56 +244,33 @@ pub fn directed_gnm_random_graph(
 #[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)")]
 pub fn undirected_gnm_random_graph(
     py: Python,
-    num_nodes: isize,
-    num_edges: isize,
+    num_nodes: usize,
+    num_edges: usize,
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    if num_edges < 0 {
-        return Err(PyValueError::new_err("num_edges must be >= 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Undirected>::default();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    // if number of edges to be created is >= max,
-    // avoid randomly missed trials and directly add edges between every node
-    if num_edges >= num_nodes * (num_nodes - 1) / 2 {
-        for u in 0..num_nodes {
-            for v in u + 1..num_nodes {
-                let u_index = NodeIndex::new(u as usize);
-                let v_index = NodeIndex::new(v as usize);
-                inner_graph.add_edge(u_index, v_index, py.None());
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Undirected> =
+        match core_generators::gnm_random_graph(num_nodes, num_edges, seed, default_fn, default_fn)
+        {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyValueError::new_err(
+                    "num_nodes or num_edges invalid input",
+                ))
             }
-        }
-    } else {
-        let mut created_edges: isize = 0;
-        let between = Uniform::new(0, num_nodes);
-        while created_edges < num_edges {
-            let u = between.sample(&mut rng);
-            let v = between.sample(&mut rng);
-            let u_index = NodeIndex::new(u as usize);
-            let v_index = NodeIndex::new(v as usize);
-            // avoid self-loops and multi-graphs
-            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
-                inner_graph.add_edge(u_index, v_index, py.None());
-                created_edges += 1;
-            }
-        }
+        };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
     }
-    let graph = graph::PyGraph {
-        graph: inner_graph,
+    Ok(graph::PyGraph {
+        graph,
         node_removed: false,
         multigraph: true,
         attrs: py.None(),
-    };
-    Ok(graph)
+    })
 }
 
 #[inline]
