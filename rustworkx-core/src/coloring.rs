@@ -84,3 +84,61 @@ where
 
     colors
 }
+
+#[cfg(test)]
+
+mod test_coloring {
+
+    use crate::coloring::greedy_color;
+    use crate::dictmap::DictMap;
+    use crate::petgraph::Graph;
+
+    use petgraph::graph::NodeIndex;
+    use petgraph::Undirected;
+
+    #[test]
+    fn test_greedy_color_empty_graph() {
+        // Empty graph
+        let graph = Graph::<(), (), Undirected>::new_undirected();
+        let colors = greedy_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_color_simple_graph() {
+        // Simple graph
+        let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
+        let colors = greedy_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 0),
+            (NodeIndex::new(1), 1),
+            (NodeIndex::new(2), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_color_simple_graph_large_degree() {
+        // Graph with multiple edges
+        let graph = Graph::<(), (), Undirected>::from_edges(&[
+            (0, 1),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+        ]);
+        let colors = greedy_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 0),
+            (NodeIndex::new(1), 1),
+            (NodeIndex::new(2), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+}
