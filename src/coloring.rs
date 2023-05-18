@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::graph;
-use rustworkx_core::coloring::greedy_color;
+use rustworkx_core::coloring::greedy_node_color;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -52,7 +52,7 @@ use pyo3::Python;
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    let colors = greedy_color(&graph.graph);
+    let colors = greedy_node_color(&graph.graph);
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
         out_dict.set_item(node.index(), color)?;

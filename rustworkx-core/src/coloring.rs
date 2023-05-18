@@ -34,10 +34,10 @@ use rayon::prelude::*;
 /// use petgraph::graph::NodeIndex;
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::coloring::greedy_color;
+/// use rustworkx_core::coloring::greedy_node_color;
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_color(&g);
+/// let colors = greedy_node_color(&g);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 0);
 /// expected_colors.insert(NodeIndex::new(1), 1);
@@ -48,7 +48,7 @@ use rayon::prelude::*;
 ///
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
-pub fn greedy_color<G>(graph: G) -> DictMap<G::NodeId, usize>
+pub fn greedy_node_color<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
@@ -87,9 +87,9 @@ where
 
 #[cfg(test)]
 
-mod test_coloring {
+mod test_node_coloring {
 
-    use crate::coloring::greedy_color;
+    use crate::coloring::greedy_node_color;
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
 
@@ -97,19 +97,19 @@ mod test_coloring {
     use petgraph::Undirected;
 
     #[test]
-    fn test_greedy_color_empty_graph() {
+    fn test_greedy_node_color_empty_graph() {
         // Empty graph
         let graph = Graph::<(), (), Undirected>::new_undirected();
-        let colors = greedy_color(&graph);
+        let colors = greedy_node_color(&graph);
         let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
 
     #[test]
-    fn test_greedy_color_simple_graph() {
+    fn test_greedy_node_color_simple_graph() {
         // Simple graph
         let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-        let colors = greedy_color(&graph);
+        let colors = greedy_node_color(&graph);
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
@@ -121,7 +121,7 @@ mod test_coloring {
     }
 
     #[test]
-    fn test_greedy_color_simple_graph_large_degree() {
+    fn test_greedy_node_color_simple_graph_large_degree() {
         // Graph with multiple edges
         let graph = Graph::<(), (), Undirected>::from_edges(&[
             (0, 1),
@@ -131,7 +131,7 @@ mod test_coloring {
             (0, 2),
             (0, 2),
         ]);
-        let colors = greedy_color(&graph);
+        let colors = greedy_node_color(&graph);
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
