@@ -649,15 +649,14 @@ fn longest_simple_path<Ty: EdgeType + Sync + Send>(
             .flat_map(|u| {
                 connectivity::all_simple_paths_multiple_targets(graph, *u, &node_index_set, 0, None)
                     .values()
-                    .flat_map(|paths| {
-                        paths
-                            .iter()
-                            .map(|path| path.iter().map(|v| v.index()).collect::<Vec<usize>>())
-                    })
-                    .collect::<Vec<Vec<usize>>>()
+                    .map(|path| path.iter().max_by_key(|x| x.len()).unwrap().clone())
+                    .collect::<Vec<Vec<NodeIndex>>>()
             })
-            .max_by_key(|x: &Vec<usize>| x.len())
-            .unwrap(),
+            .max_by_key(|x| x.len())
+            .unwrap()
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
     })
 }
 
