@@ -646,11 +646,11 @@ fn longest_simple_path<Ty: EdgeType + Sync + Send>(
     Some(NodeIndices {
         nodes: node_indices
             .par_iter()
-            .flat_map(|u| {
+            .filter_map(|u| {
                 connectivity::all_simple_paths_multiple_targets(graph, *u, &node_index_set, 0, None)
                     .values()
                     .map(|path| path.iter().max_by_key(|x| x.len()).unwrap().clone())
-                    .collect::<Vec<Vec<NodeIndex>>>()
+                    .max_by_key(|x| x.len())
             })
             .max_by_key(|x| x.len())
             .unwrap()
