@@ -37,6 +37,8 @@ use numpy::IntoPyArray;
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
 };
+use crate::{EdgeType, StablePyGraph};
+
 use rustworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -629,6 +631,36 @@ pub fn graph_all_pairs_all_simple_paths(
     ))
 }
 
+fn longest_simple_path<Ty: EdgeType + Sync + Send>(
+    graph: &StablePyGraph<Ty>,
+) -> Option<NodeIndices> {
+    if graph.node_count() == 0 {
+        return None;
+    } else if graph.edge_count() == 0 {
+        return Some(NodeIndices {
+            nodes: vec![graph.node_indices().next()?.index()],
+        });
+    }
+    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+    let node_index_set = node_indices.iter().copied().collect();
+    Some(NodeIndices {
+        nodes: node_indices
+            .par_iter()
+            .flat_map(|u| {
+                connectivity::all_simple_paths_multiple_targets(graph, *u, &node_index_set, 0, None)
+                    .values()
+                    .flat_map(|paths| {
+                        paths
+                            .iter()
+                            .map(|path| path.iter().map(|v| v.index()).collect::<Vec<usize>>())
+                    })
+                    .collect::<Vec<Vec<usize>>>()
+            })
+            .max_by_key(|x: &Vec<usize>| x.len())
+            .unwrap(),
+    })
+}
+
 /// Return a longest simple path in the graph
 ///
 /// This function searches computes all pairs of all simple paths and returns
@@ -660,37 +692,7 @@ pub fn graph_all_pairs_all_simple_paths(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_longest_simple_path(graph: &digraph::PyDiGraph) -> Option<NodeIndices> {
-    if graph.graph.node_count() == 0 {
-        return None;
-    } else if graph.graph.edge_count() == 0 {
-        return Some(NodeIndices {
-            nodes: vec![graph.graph.node_indices().next()?.index()],
-        });
-    }
-    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let node_index_set = node_indices.iter().copied().collect();
-    Some(NodeIndices {
-        nodes: node_indices
-            .par_iter()
-            .flat_map(|u| {
-                connectivity::all_simple_paths_multiple_targets(
-                    &graph.graph,
-                    *u,
-                    &node_index_set,
-                    0,
-                    None,
-                )
-                .values()
-                .flat_map(|paths| {
-                    paths
-                        .iter()
-                        .map(|path| path.iter().map(|v| v.index()).collect::<Vec<usize>>())
-                })
-                .collect::<Vec<Vec<usize>>>()
-            })
-            .max_by_key(|x: &Vec<usize>| x.len())
-            .unwrap(),
-    })
+    longest_simple_path(&graph.graph)
 }
 
 /// Return a longest simple path in the graph
@@ -728,37 +730,7 @@ pub fn digraph_longest_simple_path(graph: &digraph::PyDiGraph) -> Option<NodeInd
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> {
-    if graph.graph.node_count() == 0 {
-        return None;
-    } else if graph.graph.edge_count() == 0 {
-        return Some(NodeIndices {
-            nodes: vec![graph.graph.node_indices().next()?.index()],
-        });
-    }
-    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let node_index_set = node_indices.iter().copied().collect();
-    Some(NodeIndices {
-        nodes: node_indices
-            .par_iter()
-            .flat_map(|u| {
-                connectivity::all_simple_paths_multiple_targets(
-                    &graph.graph,
-                    *u,
-                    &node_index_set,
-                    0,
-                    None,
-                )
-                .values()
-                .flat_map(|paths| {
-                    paths
-                        .iter()
-                        .map(|path| path.iter().map(|v| v.index()).collect::<Vec<usize>>())
-                })
-                .collect::<Vec<Vec<usize>>>()
-            })
-            .max_by_key(|x: &Vec<usize>| x.len())
-            .unwrap(),
-    })
+    longest_simple_path(&graph.graph)
 }
 
 /// Return the core number for each node in the graph.
