@@ -69,6 +69,7 @@ Traversal
    rustworkx.dfs_edges
    rustworkx.dfs_search
    rustworkx.bfs_successors
+   rustworkx.bfs_predecessors
    rustworkx.bfs_search
    rustworkx.dijkstra_search
    rustworkx.topological_sort
@@ -371,6 +372,7 @@ typed API based on the data type.
    rustworkx.graph_complement
    rustworkx.graph_union
    rustworkx.graph_tensor_product
+   rustworkx.graph_token_swapper
    rustworkx.graph_cartesian_product
    rustworkx.graph_random_layout
    rustworkx.graph_bipartite_layout
@@ -414,6 +416,7 @@ Custom Return Types
    :toctree: apiref
 
    rustworkx.BFSSuccessors
+   rustworkx.BFSPredecessors   
    rustworkx.NodeIndices
    rustworkx.EdgeIndices
    rustworkx.EdgeList

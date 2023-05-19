@@ -34,11 +34,15 @@ class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_directed_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            rustworkx.directed_gnp_random_graph(-23, 0.5)
+            rustworkx.directed_gnp_random_graph(0, 0.5)
 
     def test_random_gnp_directed_invalid_probability(self):
         with self.assertRaises(ValueError):
             rustworkx.directed_gnp_random_graph(23, 123.5)
+
+    def test_random_gnp_directed_payload(self):
+        graph = rustworkx.directed_gnp_random_graph(3, 0.5)
+        self.assertEqual(graph.nodes(), [0, 1, 2])
 
     def test_random_gnp_undirected(self):
         graph = rustworkx.undirected_gnp_random_graph(20, 0.5, seed=10)
@@ -57,11 +61,15 @@ class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_undirected_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            rustworkx.undirected_gnp_random_graph(-23, 0.5)
+            rustworkx.undirected_gnp_random_graph(0, 0.5)
 
     def test_random_gnp_undirected_invalid_probability(self):
         with self.assertRaises(ValueError):
             rustworkx.undirected_gnp_random_graph(23, 123.5)
+
+    def test_random_gnp_undirected_payload(self):
+        graph = rustworkx.undirected_gnp_random_graph(3, 0.5)
+        self.assertEqual(graph.nodes(), [0, 1, 2])
 
 
 class TestGNMRandomGraph(unittest.TestCase):
@@ -101,11 +109,15 @@ class TestGNMRandomGraph(unittest.TestCase):
 
     def test_random_gnm_directed_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            rustworkx.directed_gnm_random_graph(-23, 5)
+            rustworkx.directed_gnm_random_graph(0, 0)
 
     def test_random_gnm_directed_invalid_num_edges(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(OverflowError):
             rustworkx.directed_gnm_random_graph(23, -5)
+
+    def test_random_gnm_directed_payload(self):
+        graph = rustworkx.directed_gnm_random_graph(3, 3)
+        self.assertEqual(graph.nodes(), [0, 1, 2])
 
     def test_random_gnm_undirected(self):
         graph = rustworkx.undirected_gnm_random_graph(20, 100)
@@ -143,11 +155,15 @@ class TestGNMRandomGraph(unittest.TestCase):
 
     def test_random_gnm_undirected_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            rustworkx.undirected_gnm_random_graph(-23, 5)
+            rustworkx.undirected_gnm_random_graph(0, 5)
 
-    def test_random_gnm_undirected_invalid_probability(self):
-        with self.assertRaises(ValueError):
+    def test_random_gnm_undirected_invalid_num_edges(self):
+        with self.assertRaises(OverflowError):
             rustworkx.undirected_gnm_random_graph(23, -5)
+
+    def test_random_gnm_undirected_payload(self):
+        graph = rustworkx.undirected_gnm_random_graph(3, 3)
+        self.assertEqual(graph.nodes(), [0, 1, 2])
 
 
 class TestGeometricRandomGraph(unittest.TestCase):

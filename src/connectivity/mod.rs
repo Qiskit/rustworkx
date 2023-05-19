@@ -399,7 +399,7 @@ pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::P
                     || !complement_graph.has_edge(node_a.index(), node_b.index()))
             {
                 // avoid creating parallel edges in multigraph
-                complement_graph.add_edge(node_a.index(), node_b.index(), py.None());
+                complement_graph.graph.add_edge(node_a, node_b, py.None());
             }
         }
     }
