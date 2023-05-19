@@ -648,8 +648,8 @@ fn longest_simple_path<Ty: EdgeType + Sync + Send>(
             .par_iter()
             .filter_map(|u| {
                 connectivity::all_simple_paths_multiple_targets(graph, *u, &node_index_set, 0, None)
-                    .values()
-                    .filter_map(|path| path.iter().max_by_key(|x| x.len()).cloned())
+                    .into_values()
+                    .filter_map(|path| path.into_iter().max_by_key(|x| x.len()))
                     .max_by_key(|x| x.len())
             })
             .max_by_key(|x| x.len())
