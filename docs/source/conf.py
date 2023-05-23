@@ -42,7 +42,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx_reredirects',
               'qiskit_sphinx_theme',
              ]
-static_path = ["_static"]
+html_static_path = ["_static"]
 templates_path = ['_templates']
 extra_css_files = ["overrides.css"]
 
