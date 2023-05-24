@@ -27,3 +27,7 @@ features:
             else:
               colors.append('#1f78b4')
         mpl_draw(graph, node_color=colors)
+  - |
+    Added a new function ``longest_simple_path_multiple_targets()`` to
+    rustworkx-core. This function will return the longest simple path from a
+    source node to a ``HashSet``of target nodes.
