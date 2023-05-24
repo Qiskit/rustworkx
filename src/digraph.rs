@@ -227,9 +227,10 @@ impl PyDiGraph {
         p_index: NodeIndex,
         c_index: NodeIndex,
         edge: PyObject,
+        force: bool,
     ) -> PyResult<usize> {
         // Only check for cycles if instance attribute is set to true
-        if self.check_cycle {
+        if self.check_cycle || force {
             // Only check for a cycle (by running has_path_connecting) if
             // the new edge could potentially add a cycle
             let cycle_check_required = is_cycle_check_required(self, p_index, c_index);
@@ -270,11 +271,11 @@ impl PyDiGraph {
             .collect::<Vec<(NodeIndex, EdgeIndex, PyObject)>>();
         for (other_index, edge_index, weight) in edges {
             if direction {
-                self._add_edge(node_between_index, index, weight.clone_ref(py))?;
-                self._add_edge(index, other_index, weight.clone_ref(py))?;
+                self._add_edge(node_between_index, index, weight.clone_ref(py), false)?;
+                self._add_edge(index, other_index, weight.clone_ref(py), false)?;
             } else {
-                self._add_edge(other_index, index, weight.clone_ref(py))?;
-                self._add_edge(index, node_between_index, weight.clone_ref(py))?;
+                self._add_edge(other_index, index, weight.clone_ref(py), false)?;
+                self._add_edge(index, node_between_index, weight.clone_ref(py), false)?;
             }
             self.graph.remove_edge(edge_index);
         }
@@ -1056,7 +1057,7 @@ impl PyDiGraph {
             }
         }
         for (source, target, weight) in edge_list {
-            self._add_edge(source, target, weight)?;
+            self._add_edge(source, target, weight, false)?;
         }
         self.graph.remove_node(index);
         self.node_removed = true;
@@ -1088,7 +1089,7 @@ impl PyDiGraph {
                 "One of the endpoints of the edge does not exist in graph",
             ));
         }
-        let out_index = self._add_edge(p_index, c_index, edge)?;
+        let out_index = self._add_edge(p_index, c_index, edge, false)?;
         Ok(out_index)
     }
 
@@ -1158,7 +1159,12 @@ impl PyDiGraph {
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
             }
-            self._add_edge(NodeIndex::new(source), NodeIndex::new(target), py.None())?;
+            self._add_edge(
+                NodeIndex::new(source),
+                NodeIndex::new(target),
+                py.None(),
+                false,
+            )?;
         }
         Ok(())
     }
@@ -1183,7 +1189,12 @@ impl PyDiGraph {
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
             }
-            self._add_edge(NodeIndex::new(source), NodeIndex::new(target), weight)?;
+            self._add_edge(
+                NodeIndex::new(source),
+                NodeIndex::new(target),
+                weight,
+                false,
+            )?;
         }
         Ok(())
     }
@@ -2291,7 +2302,7 @@ impl PyDiGraph {
             let new_p_index = new_node_map.get(&edge.source()).unwrap();
             let new_c_index = new_node_map.get(&edge.target()).unwrap();
             let weight = weight_transform_callable(py, &edge_map_func, edge.weight())?;
-            self._add_edge(*new_p_index, *new_c_index, weight)?;
+            self._add_edge(*new_p_index, *new_c_index, weight, false)?;
         }
         // Add edges from map
         for (this_index, (index, weight)) in node_map.iter() {
@@ -2300,6 +2311,7 @@ impl PyDiGraph {
                 NodeIndex::new(*this_index),
                 *new_index,
                 weight.clone_ref(py),
+                false,
             )?;
         }
         let out_dict = PyDict::new(py);
@@ -2405,6 +2417,7 @@ impl PyDiGraph {
                 NodeIndex::new(out_map[&edge.source().index()]),
                 NodeIndex::new(out_map[&edge.target().index()]),
                 weight_map_fn(edge.weight(), &edge_weight_map)?,
+                false,
             )?;
         }
         // Add edges to/from node to nodes in other
@@ -2432,7 +2445,7 @@ impl PyDiGraph {
                 },
                 None => continue,
             };
-            self._add_edge(source, target_out, weight)?;
+            self._add_edge(source, target_out, weight, false)?;
         }
         for (source, target, weight) in out_edges {
             let old_index = map_fn(source.index(), target.index(), &weight)?;
@@ -2448,7 +2461,7 @@ impl PyDiGraph {
                 },
                 None => continue,
             };
-            self._add_edge(source_out, target, weight)?;
+            self._add_edge(source_out, target, weight, false)?;
         }
         // Remove node
         self.graph.remove_node(node_index);
@@ -2652,8 +2665,21 @@ impl PyDiGraph {
     ///     after the edge is mapped from ``other``. If not specified the weight
     ///     from the edge in ``other`` will be copied by reference and used.
     ///
+    /// :param bool cycle_check: To check and raise if the substitution would introduce a cycle.
+    ///     If set to ``True`` or :attr:`.check_cycle` is set to ``True`` when a cycle would be
+    ///     added a :class:`~.DAGWouldCycle` exception will be raised. However, in this case the
+    ///     state of the graph will be partially through the internal steps required for the
+    ///     substitution. If your intent is to detect and use the graph if a
+    ///     cycle were to be detected, you should make a copy of the graph
+    ///     (see :meth:`.copy`) prior to calling this method so you have a
+    ///     copy of the input graph to use.
+    ///
     /// :returns: A mapping of node indices in ``other`` to the new node index in this graph
     /// :rtype: NodeMap
+    ///
+    /// :raises DAGWouldCycle: If ``cycle_check`` or the :attr:`.check_cycle` attribute are set to
+    ///     ``True`` and a cycle were to be introduced by the substitution.
+    #[pyo3(signature=(nodes, other, input_node_map, edge_weight_map=None, cycle_check=false))]
     pub fn substitute_subgraph(
         &mut self,
         py: Python,
@@ -2661,6 +2687,7 @@ impl PyDiGraph {
         other: &PyDiGraph,
         input_node_map: HashMap<usize, usize>,
         edge_weight_map: Option<PyObject>,
+        cycle_check: bool,
     ) -> PyResult<NodeMap> {
         let mut io_nodes: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
         let mut node_map: IndexMap<usize, usize, ahash::RandomState> =
@@ -2710,11 +2737,12 @@ impl PyDiGraph {
         for edge in other.graph.edge_references() {
             let new_source = node_map[edge.source().index()];
             let new_target = node_map[edge.target().index()];
-            self.graph.add_edge(
+            self._add_edge(
                 NodeIndex::new(new_source),
                 NodeIndex::new(new_target),
                 weight_map_fn(edge.weight(), &edge_weight_map)?,
-            );
+                cycle_check,
+            )?;
         }
         for edge in io_nodes {
             let old_source = edge.0;
@@ -2747,7 +2775,7 @@ impl PyDiGraph {
             } else {
                 old_target
             };
-            self.graph.add_edge(new_source, new_target, edge.2);
+            self._add_edge(new_source, new_target, edge.2, cycle_check)?;
         }
         Ok(NodeMap { node_map })
     }
@@ -2863,7 +2891,7 @@ impl PyDiGraph {
                     Some(callback) => callback.call1(py, (forward_weight,))?,
                     None => forward_weight.clone_ref(py),
                 };
-                self._add_edge(*edge_target, *edge_source, weight)?;
+                self._add_edge(*edge_target, *edge_source, weight, false)?;
             }
         }
         Ok(())
