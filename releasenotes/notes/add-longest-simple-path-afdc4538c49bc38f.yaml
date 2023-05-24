@@ -30,4 +30,4 @@ features:
   - |
     Added a new function ``longest_simple_path_multiple_targets()`` to
     rustworkx-core. This function will return the longest simple path from a
-    source node to a ``HashSet``of target nodes.
+    source node to a ``HashSet`` of target nodes.
