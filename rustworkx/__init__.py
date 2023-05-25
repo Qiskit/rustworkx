@@ -2504,3 +2504,37 @@ def _graph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, e
     return graph_node_link_json(
         graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
     )
+
+
+@functools.singledispatch
+def densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
+    """Find a connected and dense subgraph of a given size in a graph.
+
+    This method does not provide any guarantees on the approximation of the optimal solution as it
+    does a naive search using BFS traversal.
+
+    :param graph: The graph to find the densest subgraph in. This can be a
+        :class:`~retworkx.PyGraph` or a :class:`~retworkx.PyDiGraph`.
+    :param int num_nodes: The number of nodes in the subgraph to find
+    :param func weight_callback: An optional callable that if specified will be
+        passed the node indices of each edge in the graph and it is expected to
+        return a float value. If specified the lowest avg weight for edges in
+        a found subgraph will be a criteria for selection in addition to the
+        connectivity of the subgraph.
+    :returns: A tuple of the subgraph found and a :class:`~.NodeMap` of the
+        mapping of node indices in the input ``graph`` to the index in the
+        output subgraph.
+
+    :rtype: (subgraph, node_map)
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@densest_subgraph_of_size.register(PyDiGraph)
+def _digraph_densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
+    return digraph_densest_subgraph_of_size(graph, num_nodes, weight_callback=weight_callback)
+
+
+@densest_subgraph_of_size.register(PyGraph)
+def _graph_densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
+    return graph_densest_subgraph_of_size(graph, num_nodes, weight_callback=weight_callback)

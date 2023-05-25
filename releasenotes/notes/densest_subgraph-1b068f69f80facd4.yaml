@@ -1,0 +1,31 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.densest_subgraph_of_size`, which is used to return a
+    subgraph of given size that has the highest degree of connecitivity between the nodes.
+    For example, if you wanted to find the subgraph of 5 nodes in a 19 node heavy hexagon
+    graph:
+
+    .. jupyter-execute::
+
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+
+        graph = rx.generators.hexagonal_lattice_graph(4, 5)
+
+        subgraph, node_map = rx.densest_subgraph_of_size(graph, 5)
+        subgraph_edge_set = set(subgraph.edge_list())
+        node_colors = []
+        for node in graph.node_indices():
+            if node in node_map:
+              node_colors.append('red')
+            else:
+              node_colors.append('blue')
+            graph[node] = node
+        edge_colors = []
+        for edge in graph.edge_list():
+            if edge[0] in node_map and edge[1] in node_map:
+                edge_colors.append('red')
+            else:
+                edge_colors.append('blue')
+        mpl_draw(graph, with_labels=True, node_color=node_colors, edge_color=edge_colors, labels=str)
