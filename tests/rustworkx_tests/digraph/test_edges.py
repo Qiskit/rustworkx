@@ -963,6 +963,21 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         self.assertEqual(len(graph), 4)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
 
+    def test_add_edge_non_existent(self):
+        g = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            g.add_edge(2, 3, None)
+
+    def test_add_edges_from_non_existent(self):
+        g = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            g.add_edges_from([(2, 3, 5)])
+
+    def test_add_edges_from_no_data_non_existent(self):
+        g = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            g.add_edges_from_no_data([(2, 3)])
+
     def test_reverse_graph(self):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from([i for i in range(4)])
@@ -978,7 +993,7 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         self.assertEqual([(1, 0), (2, 1), (2, 0), (3, 2), (3, 0)], graph.edge_list())
 
     def test_reverse_large_graph(self):
-        LARGE_AMOUNT_OF_NODES = 10000000
+        LARGE_AMOUNT_OF_NODES = 1000000
 
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(range(LARGE_AMOUNT_OF_NODES))

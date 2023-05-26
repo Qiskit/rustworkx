@@ -817,3 +817,18 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         graph.extend_from_weighted_edge_list(edge_list)
         self.assertEqual(len(graph), 4)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
+
+    def test_add_edge_non_existent(self):
+        g = rustworkx.PyGraph()
+        with self.assertRaises(IndexError):
+            g.add_edge(2, 3, None)
+
+    def test_add_edges_from_non_existent(self):
+        g = rustworkx.PyGraph()
+        with self.assertRaises(IndexError):
+            g.add_edges_from([(2, 3, 5)])
+
+    def test_add_edges_from_no_data_non_existent(self):
+        g = rustworkx.PyGraph()
+        with self.assertRaises(IndexError):
+            g.add_edges_from_no_data([(2, 3)])
