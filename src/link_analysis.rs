@@ -135,7 +135,6 @@ pub fn pagerank(
 
     // Vector with probabilities for the Markov Chain process
     let mut popularity = Array1::<f64>::zeros(mat_size);
-    let mut personalized_array = Array1::<f64>::zeros(mat_size);
     let default_pop = (n as f64).recip();
 
     // Handle custom start
@@ -152,38 +151,42 @@ pub fn pagerank(
     }
 
     // Handle personalization
-    if let Some(personalization) = personalization {
-        for i in &node_indices {
-            personalized_array[*i] = *personalization.get(i).unwrap_or(&0.0);
+    let personalized_array: Array1<f64> = match personalization {
+        Some(personalization) => {
+            let mut personalized_array = Array1::<f64>::zeros(mat_size);
+            for i in &node_indices {
+                personalized_array[*i] = *personalization.get(i).unwrap_or(&0.0);
+            }
+            let p_sum = personalized_array.sum();
+            personalized_array /= p_sum;
+            personalized_array
         }
-        let p_sum = personalized_array.sum();
-        personalized_array /= p_sum;
-    } else {
-        for i in &node_indices {
-            personalized_array[*i] = default_pop;
+        None => {
+            let mut personalized_array = Array1::<f64>::zeros(mat_size);
+            for i in &node_indices {
+                personalized_array[*i] = default_pop;
+            }
+            personalized_array
         }
-    }
+    };
     let damping = (1.0 - alpha) * &personalized_array;
 
     // Handle dangling nodes i.e. nodes that point nowhere
-    let mut is_dangling: Vec<bool> = vec![false; mat_size];
-    let mut dangling_weights = Array1::<f64>::zeros(mat_size);
-
-    for i in &node_indices {
-        if out_weights[*i] == 0.0 {
-            is_dangling[*i] = true;
+    let is_dangling = (0..mat_size)
+        .map(|i| out_weights[i] == 0.0)
+        .collect::<Vec<_>>();
+    let dangling_weights: Array1<f64> = match dangling {
+        Some(dangling) => {
+            let mut dangling_weights = Array1::<f64>::zeros(mat_size);
+            for i in &node_indices {
+                dangling_weights[*i] = *dangling.get(i).unwrap_or(&0.0);
+            }
+            let d_sum = dangling_weights.sum();
+            dangling_weights /= d_sum;
+            dangling_weights
         }
-    }
-
-    if let Some(dangling) = dangling {
-        for i in &node_indices {
-            dangling_weights[*i] = *dangling.get(i).unwrap_or(&0.0);
-        }
-        let d_sum = dangling_weights.sum();
-        dangling_weights /= d_sum;
-    } else {
-        dangling_weights = personalized_array.clone();
-    }
+        None => personalized_array.clone(),
+    };
 
     // Power Method iteration for the Google Matrix
     let mut has_converged = false;
