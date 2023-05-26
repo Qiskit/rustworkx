@@ -59,6 +59,16 @@ Centrality
    rustworkx.katz_centrality
    rustworkx.closeness_centrality
 
+.. _link-analysis:
+
+Link Analysis
+--------------
+
+.. autosummary::
+   :toctree: apiref
+
+   rustworkx.pagerank
+
 .. _traversal:
 
 Traversal

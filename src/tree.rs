@@ -130,7 +130,7 @@ pub fn minimum_spanning_tree(
         .edges
         .iter()
     {
-        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py));
+        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py))?;
     }
 
     Ok(spanning_tree)
