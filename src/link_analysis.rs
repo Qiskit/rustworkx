@@ -185,7 +185,7 @@ pub fn pagerank(
             dangling_weights /= d_sum;
             dangling_weights
         }
-        None => personalized_array.clone(),
+        None => personalized_array,
     };
 
     // Power Method iteration for the Google Matrix
