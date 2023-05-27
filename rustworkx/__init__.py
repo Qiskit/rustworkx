@@ -163,13 +163,7 @@ def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_val
 
 
 distance_matrix.register(PyDiGraph, digraph_distance_matrix)
-
-
-@distance_matrix.register(PyGraph)
-def _(graph, parallel_threshold=300, null_value=0.0):
-    return graph_distance_matrix(
-        graph, parallel_threshold=parallel_threshold, null_value=null_value
-    )
+distance_matrix.register(PyGraph, graph_distance_matrix)
 
 
 @functools.singledispatch
