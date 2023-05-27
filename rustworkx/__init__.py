@@ -1646,14 +1646,8 @@ def closeness_centrality(graph, wf_improved=True):
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@closeness_centrality.register(PyDiGraph)
-def _digraph_closeness_centrality(graph, wf_improved=True):
-    return digraph_closeness_centrality(graph, wf_improved=wf_improved)
-
-
-@closeness_centrality.register(PyGraph)
-def _graph_closeness_centrality(graph, wf_improved=True):
-    return graph_closeness_centrality(graph, wf_improved=wf_improved)
+closeness_centrality.register(PyDiGraph, digraph_closeness_centrality)
+closeness_centrality.register(PyGraph, graph_closeness_centrality)
 
 
 @functools.singledispatch
@@ -1700,22 +1694,8 @@ def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@edge_betweenness_centrality.register(PyDiGraph)
-def _digraph_edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
-    return digraph_edge_betweenness_centrality(
-        graph,
-        normalized=normalized,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@edge_betweenness_centrality.register(PyGraph)
-def _graph_edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
-    return graph_edge_betweenness_centrality(
-        graph,
-        normalized=normalized,
-        parallel_threshold=parallel_threshold,
-    )
+edge_betweenness_centrality.register(PyDiGraph, digraph_edge_betweenness_centrality)
+edge_betweenness_centrality.register(PyGraph, graph_edge_betweenness_centrality)
 
 
 @functools.singledispatch
@@ -1758,22 +1738,8 @@ def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=1
     """
 
 
-@eigenvector_centrality.register(PyDiGraph)
-def _digraph_eigenvector_centrality(
-    graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
-):
-    return digraph_eigenvector_centrality(
-        graph, weight_fn=weight_fn, default_weight=default_weight, max_iter=max_iter, tol=tol
-    )
-
-
-@eigenvector_centrality.register(PyGraph)
-def _graph_eigenvector_centrality(
-    graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
-):
-    return graph_eigenvector_centrality(
-        graph, weight_fn=weight_fn, default_weight=default_weight, max_iter=max_iter, tol=tol
-    )
+eigenvector_centrality.register(PyDiGraph, digraph_eigenvector_centrality)
+eigenvector_centrality.register(PyGraph, graph_eigenvector_centrality)
 
 
 @functools.singledispatch
@@ -1834,50 +1800,8 @@ def vf2_mapping(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@vf2_mapping.register(PyDiGraph)
-def _digraph_vf2_mapping(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=True,
-    subgraph=False,
-    induced=True,
-    call_limit=None,
-):
-    return digraph_vf2_mapping(
-        first,
-        second,
-        node_matcher=node_matcher,
-        edge_matcher=edge_matcher,
-        id_order=id_order,
-        subgraph=subgraph,
-        induced=induced,
-        call_limit=call_limit,
-    )
-
-
-@vf2_mapping.register(PyGraph)
-def _graph_vf2_mapping(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=True,
-    subgraph=False,
-    induced=True,
-    call_limit=None,
-):
-    return graph_vf2_mapping(
-        first,
-        second,
-        node_matcher=node_matcher,
-        edge_matcher=edge_matcher,
-        id_order=id_order,
-        subgraph=subgraph,
-        induced=induced,
-        call_limit=call_limit,
-    )
+vf2_mapping.register(PyDiGraph, digraph_vf2_mapping)
+vf2_mapping.register(PyGraph, graph_vf2_mapping)
 
 
 @functools.singledispatch
@@ -1921,24 +1845,8 @@ def union(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@union.register(PyDiGraph)
-def _digraph_union(
-    first,
-    second,
-    merge_nodes=False,
-    merge_edges=False,
-):
-    return digraph_union(first, second, merge_nodes=merge_nodes, merge_edges=merge_edges)
-
-
-@union.register(PyGraph)
-def _graph_union(
-    first,
-    second,
-    merge_nodes=False,
-    merge_edges=False,
-):
-    return graph_union(first, second, merge_nodes=merge_nodes, merge_edges=merge_edges)
+union.register(PyDiGraph, digraph_union)
+union.register(PyGraph, graph_union)
 
 
 @functools.singledispatch
@@ -1971,20 +1879,8 @@ def tensor_product(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@tensor_product.register(PyDiGraph)
-def _digraph_tensor_product(
-    first,
-    second,
-):
-    return digraph_tensor_product(first, second)
-
-
-@tensor_product.register(PyGraph)
-def _graph_tensor_product(
-    first,
-    second,
-):
-    return graph_tensor_product(first, second)
+tensor_product.register(PyDiGraph, digraph_tensor_product)
+tensor_product.register(PyGraph, graph_tensor_product)
 
 
 @functools.singledispatch
@@ -2017,20 +1913,8 @@ def cartesian_product(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@cartesian_product.register(PyDiGraph)
-def _digraph_cartesian_product(
-    first,
-    second,
-):
-    return digraph_cartesian_product(first, second)
-
-
-@cartesian_product.register(PyGraph)
-def _graph_cartesian_product(
-    first,
-    second,
-):
-    return graph_cartesian_product(first, second)
+cartesian_product.register(PyDiGraph, digraph_cartesian_product)
+cartesian_product.register(PyGraph, graph_cartesian_product)
 
 
 @functools.singledispatch
@@ -2110,6 +1994,7 @@ def bfs_search(graph, source, visitor):
 bfs_search.register(PyDiGraph, digraph_bfs_search)
 bfs_search.register(PyGraph, graph_bfs_search)
 
+
 @functools.singledispatch
 def dfs_search(graph, source, visitor):
     """Depth-first traversal of a directed/undirected graph.
@@ -2182,6 +2067,7 @@ def dfs_search(graph, source, visitor):
 
 dfs_search.register(PyDiGraph, digraph_dfs_search)
 dfs_search.register(PyGraph, graph_dfs_search)
+
 
 @functools.singledispatch
 def dijkstra_search(graph, source, weight_fn, visitor):
@@ -2392,8 +2278,11 @@ def all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-all_pairs_bellman_ford_shortest_paths.register(PyDiGraph, digraph_all_pairs_bellman_ford_shortest_paths)
+all_pairs_bellman_ford_shortest_paths.register(
+    PyDiGraph, digraph_all_pairs_bellman_ford_shortest_paths
+)
 all_pairs_bellman_ford_shortest_paths.register(PyGraph, graph_all_pairs_bellman_ford_shortest_paths)
+
 
 @functools.singledispatch
 def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
