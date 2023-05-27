@@ -773,8 +773,8 @@ def is_isomorphic_node_match(first, second, matcher, id_order=True):
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-is_isomorphic_node_match.register(PyDiGraph, digraph_is_isomorphic)
-is_isomorphic_node_match.register(PyGraph, graph_is_isomorphic)
+is_isomorphic_node_match.register(PyDiGraph, functools.partial(digraph_is_isomorphic, edge_matcher=None))
+is_isomorphic_node_match.register(PyGraph, functools.partial(graph_is_isomorphic, edge_matcher=None))
 
 
 @functools.singledispatch
