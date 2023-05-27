@@ -2107,15 +2107,8 @@ def bfs_search(graph, source, visitor):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@bfs_search.register(PyDiGraph)
-def _digraph_bfs_search(graph, source, visitor):
-    return digraph_bfs_search(graph, source, visitor)
-
-
-@bfs_search.register(PyGraph)
-def _graph_bfs_search(graph, source, visitor):
-    return graph_bfs_search(graph, source, visitor)
-
+bfs_search.register(PyDiGraph, digraph_bfs_search)
+bfs_search.register(PyGraph, graph_bfs_search)
 
 @functools.singledispatch
 def dfs_search(graph, source, visitor):
@@ -2187,15 +2180,8 @@ def dfs_search(graph, source, visitor):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dfs_search.register(PyDiGraph)
-def _digraph_dfs_search(graph, source, visitor):
-    return digraph_dfs_search(graph, source, visitor)
-
-
-@dfs_search.register(PyGraph)
-def _graph_dfs_search(graph, source, visitor):
-    return graph_dfs_search(graph, source, visitor)
-
+dfs_search.register(PyDiGraph, digraph_dfs_search)
+dfs_search.register(PyGraph, graph_dfs_search)
 
 @functools.singledispatch
 def dijkstra_search(graph, source, weight_fn, visitor):
@@ -2254,14 +2240,8 @@ def dijkstra_search(graph, source, weight_fn, visitor):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dijkstra_search.register(PyDiGraph)
-def _digraph_dijkstra_search(graph, source, weight_fn, visitor):
-    return digraph_dijkstra_search(graph, source, weight_fn, visitor)
-
-
-@dijkstra_search.register(PyGraph)
-def _graph_dijkstra_search(graph, source, weight_fn, visitor):
-    return graph_dijkstra_search(graph, source, weight_fn, visitor)
+dijkstra_search.register(PyDiGraph, digraph_dijkstra_search)
+dijkstra_search.register(PyGraph, graph_dijkstra_search)
 
 
 @functools.singledispatch
@@ -2445,15 +2425,5 @@ def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_att
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@node_link_json.register(PyDiGraph)
-def _digraph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
-    return digraph_node_link_json(
-        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
-    )
-
-
-@node_link_json.register(PyGraph)
-def _graph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
-    return graph_node_link_json(
-        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
-    )
+node_link_json.register(PyDiGraph, digraph_node_link_json)
+node_link_json.register(PyGraph, graph_node_link_json)
