@@ -162,18 +162,11 @@ def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_val
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@distance_matrix.register(PyDiGraph)
-def _digraph_distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
-    return digraph_distance_matrix(
-        graph,
-        parallel_threshold=parallel_threshold,
-        as_undirected=as_undirected,
-        null_value=null_value,
-    )
+distance_matrix.register(PyDiGraph, digraph_distance_matrix)
 
 
 @distance_matrix.register(PyGraph)
-def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
+def _(graph, parallel_threshold=300, null_value=0.0):
     return graph_distance_matrix(
         graph, parallel_threshold=parallel_threshold, null_value=null_value
     )
@@ -221,8 +214,12 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disco
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-unweighted_average_shortest_path_length.register(PyDiGraph, digraph_unweighted_average_shortest_path_length)
-unweighted_average_shortest_path_length.register(PyGraph, graph_unweighted_average_shortest_path_length)
+unweighted_average_shortest_path_length.register(
+    PyDiGraph, digraph_unweighted_average_shortest_path_length
+)
+unweighted_average_shortest_path_length.register(
+    PyGraph, graph_unweighted_average_shortest_path_length
+)
 
 
 @functools.singledispatch
@@ -403,6 +400,7 @@ def floyd_warshall_numpy(
 
 floyd_warshall_numpy.register(PyDiGraph, digraph_floyd_warshall_numpy)
 floyd_warshall_numpy.register(PyGraph, graph_floyd_warshall_numpy)
+
 
 @functools.singledispatch
 def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
@@ -630,14 +628,8 @@ def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@k_shortest_path_lengths.register(PyDiGraph)
-def _digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
-    return digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=goal)
-
-
-@k_shortest_path_lengths.register(PyGraph)
-def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
-    return graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=goal)
+k_shortest_path_lengths.register(PyDiGraph, digraph_k_shortest_path_lengths)
+k_shortest_path_lengths.register(PyGraph, graph_k_shortest_path_lengths)
 
 
 @functools.singledispatch
@@ -684,14 +676,8 @@ def dfs_edges(graph, source=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dfs_edges.register(PyDiGraph)
-def _digraph_dfs_edges(graph, source=None):
-    return digraph_dfs_edges(graph, source=source)
-
-
-@dfs_edges.register(PyGraph)
-def _graph_dfs_edges(graph, source=None):
-    return graph_dfs_edges(graph, source=source)
+dfs_edges.register(PyDiGraph, digraph_dfs_edges)
+dfs_edges.register(PyGraph, graph_dfs_edges)
 
 
 @functools.singledispatch
@@ -750,28 +736,8 @@ def is_isomorphic(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@is_isomorphic.register(PyDiGraph)
-def _digraph_is_isomorphic(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=True,
-    call_limit=None,
-):
-    return digraph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order, call_limit)
-
-
-@is_isomorphic.register(PyGraph)
-def _graph_is_isomorphic(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=True,
-    call_limit=None,
-):
-    return graph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order, call_limit)
+is_isomorphic.register(PyDiGraph, digraph_is_isomorphic)
+is_isomorphic.register(PyGraph, graph_is_isomorphic)
 
 
 @functools.singledispatch
@@ -813,14 +779,8 @@ def is_isomorphic_node_match(first, second, matcher, id_order=True):
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@is_isomorphic_node_match.register(PyDiGraph)
-def _digraph_is_isomorphic_node_match(first, second, matcher, id_order=True):
-    return digraph_is_isomorphic(first, second, matcher, id_order=id_order)
-
-
-@is_isomorphic_node_match.register(PyGraph)
-def _graph_is_isomorphic_node_match(first, second, matcher, id_order=True):
-    return graph_is_isomorphic(first, second, matcher, id_order=id_order)
+is_isomorphic_node_match.register(PyDiGraph, digraph_is_isomorphic)
+is_isomorphic_node_match.register(PyGraph, graph_is_isomorphic)
 
 
 @functools.singledispatch
@@ -880,34 +840,8 @@ def is_subgraph_isomorphic(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@is_subgraph_isomorphic.register(PyDiGraph)
-def _digraph_is_subgraph_isomorphic(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=False,
-    induced=True,
-    call_limit=None,
-):
-    return digraph_is_subgraph_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, induced, call_limit
-    )
-
-
-@is_subgraph_isomorphic.register(PyGraph)
-def _graph_is_subgraph_isomorphic(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=False,
-    induced=True,
-    call_limit=None,
-):
-    return graph_is_subgraph_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, induced, call_limit
-    )
+is_subgraph_isomorphic.register(PyDiGraph, digraph_is_subgraph_isomorphic)
+is_subgraph_isomorphic.register(PyGraph, graph_is_subgraph_isomorphic)
 
 
 @functools.singledispatch
@@ -936,14 +870,8 @@ def transitivity(graph):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@transitivity.register(PyDiGraph)
-def _digraph_transitivity(graph):
-    return digraph_transitivity(graph)
-
-
-@transitivity.register(PyGraph)
-def _graph_transitivity(graph):
-    return graph_transitivity(graph)
+transitivity.register(PyDiGraph, digraph_transitivity)
+transitivity.register(PyGraph, graph_transitivity)
 
 
 @functools.singledispatch
@@ -968,14 +896,8 @@ def core_number(graph):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@core_number.register(PyDiGraph)
-def _digraph_core_number(graph):
-    return digraph_core_number(graph)
-
-
-@core_number.register(PyGraph)
-def _graph_core_number(graph):
-    return graph_core_number(graph)
+core_number.register(PyDiGraph, digraph_core_number)
+core_number.register(PyGraph, graph_core_number)
 
 
 @functools.singledispatch
@@ -995,14 +917,8 @@ def complement(graph):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@complement.register(PyDiGraph)
-def _digraph_complement(graph):
-    return digraph_complement(graph)
-
-
-@complement.register(PyGraph)
-def _graph_complement(graph):
-    return graph_complement(graph)
+complement.register(PyDiGraph, digraph_complement)
+complement.register(PyGraph, graph_complement)
 
 
 @functools.singledispatch
@@ -1020,14 +936,8 @@ def random_layout(graph, center=None, seed=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@random_layout.register(PyDiGraph)
-def _digraph_random_layout(graph, center=None, seed=None):
-    return digraph_random_layout(graph, center=center, seed=seed)
-
-
-@random_layout.register(PyGraph)
-def _graph_random_layout(graph, center=None, seed=None):
-    return graph_random_layout(graph, center=center, seed=seed)
+random_layout.register(PyDiGraph, digraph_random_layout)
+random_layout.register(PyGraph, graph_random_layout)
 
 
 @functools.singledispatch
@@ -1095,70 +1005,8 @@ def spring_layout(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@spring_layout.register(PyDiGraph)
-def _digraph_spring_layout(
-    graph,
-    pos=None,
-    fixed=None,
-    k=None,
-    repulsive_exponent=2,
-    adaptive_cooling=True,
-    num_iter=50,
-    tol=1e-6,
-    weight_fn=None,
-    default_weight=1,
-    scale=1,
-    center=None,
-    seed=None,
-):
-    return digraph_spring_layout(
-        graph,
-        pos,
-        fixed,
-        k,
-        repulsive_exponent,
-        adaptive_cooling,
-        num_iter,
-        tol,
-        weight_fn,
-        default_weight,
-        scale,
-        center,
-        seed,
-    )
-
-
-@spring_layout.register(PyGraph)
-def _graph_spring_layout(
-    graph,
-    pos=None,
-    fixed=None,
-    k=None,
-    repulsive_exponent=2,
-    adaptive_cooling=True,
-    num_iter=50,
-    tol=1e-6,
-    weight_fn=None,
-    default_weight=1,
-    scale=1,
-    center=None,
-    seed=None,
-):
-    return graph_spring_layout(
-        graph,
-        pos,
-        fixed,
-        k,
-        repulsive_exponent,
-        adaptive_cooling,
-        num_iter,
-        tol,
-        weight_fn,
-        default_weight,
-        scale,
-        center,
-        seed,
-    )
+spring_layout.register(PyDiGraph, digraph_spring_layout)
+spring_layout.register(PyGraph, graph_spring_layout)
 
 
 def networkx_converter(graph, keep_attributes: bool = False):
@@ -1232,42 +1080,8 @@ def bipartite_layout(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@bipartite_layout.register(PyDiGraph)
-def _digraph_bipartite_layout(
-    graph,
-    first_nodes,
-    horizontal=False,
-    scale=1,
-    center=None,
-    aspect_ratio=4 / 3,
-):
-    return digraph_bipartite_layout(
-        graph,
-        first_nodes,
-        horizontal=horizontal,
-        scale=scale,
-        center=center,
-        aspect_ratio=aspect_ratio,
-    )
-
-
-@bipartite_layout.register(PyGraph)
-def _graph_bipartite_layout(
-    graph,
-    first_nodes,
-    horizontal=False,
-    scale=1,
-    center=None,
-    aspect_ratio=4 / 3,
-):
-    return graph_bipartite_layout(
-        graph,
-        first_nodes,
-        horizontal=horizontal,
-        scale=scale,
-        center=center,
-        aspect_ratio=aspect_ratio,
-    )
+bipartite_layout.register(PyDiGraph, digraph_bipartite_layout)
+bipartite_layout.register(PyGraph, graph_bipartite_layout)
 
 
 @functools.singledispatch
@@ -1286,14 +1100,8 @@ def circular_layout(graph, scale=1, center=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@circular_layout.register(PyDiGraph)
-def _digraph_circular_layout(graph, scale=1, center=None):
-    return digraph_circular_layout(graph, scale=scale, center=center)
-
-
-@circular_layout.register(PyGraph)
-def _graph_circular_layout(graph, scale=1, center=None):
-    return graph_circular_layout(graph, scale=scale, center=center)
+circular_layout.register(PyDiGraph, digraph_circular_layout)
+circular_layout.register(PyGraph, graph_circular_layout)
 
 
 @functools.singledispatch
@@ -1317,14 +1125,8 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@shell_layout.register(PyDiGraph)
-def _digraph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
-    return digraph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale, center=center)
-
-
-@shell_layout.register(PyGraph)
-def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
-    return graph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale, center=center)
+shell_layout.register(PyDiGraph, digraph_shell_layout)
+shell_layout.register(PyGraph, graph_shell_layout)
 
 
 @functools.singledispatch
@@ -1348,26 +1150,8 @@ def spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=Fals
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@spiral_layout.register(PyDiGraph)
-def _digraph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
-    return digraph_spiral_layout(
-        graph,
-        scale=scale,
-        center=center,
-        resolution=resolution,
-        equidistant=equidistant,
-    )
-
-
-@spiral_layout.register(PyGraph)
-def _graph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
-    return graph_spiral_layout(
-        graph,
-        scale=scale,
-        center=center,
-        resolution=resolution,
-        equidistant=equidistant,
-    )
+spiral_layout.register(PyDiGraph, digraph_spiral_layout)
+spiral_layout.register(PyGraph, graph_spiral_layout)
 
 
 @functools.singledispatch
@@ -1385,14 +1169,8 @@ def num_shortest_paths_unweighted(graph, source):
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@num_shortest_paths_unweighted.register(PyDiGraph)
-def _digraph_num_shortest_paths_unweighted(graph, source):
-    return digraph_num_shortest_paths_unweighted(graph, source)
-
-
-@num_shortest_paths_unweighted.register(PyGraph)
-def _graph_num_shortest_paths_unweighted(graph, source):
-    return graph_num_shortest_paths_unweighted(graph, source)
+num_shortest_paths_unweighted.register(PyDiGraph, digraph_num_shortest_paths_unweighted)
+num_shortest_paths_unweighted.register(PyGraph, graph_num_shortest_paths_unweighted)
 
 
 @functools.singledispatch
@@ -1442,24 +1220,8 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@betweenness_centrality.register(PyDiGraph)
-def _digraph_betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
-    return digraph_betweenness_centrality(
-        graph,
-        normalized=normalized,
-        endpoints=endpoints,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@betweenness_centrality.register(PyGraph)
-def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
-    return graph_betweenness_centrality(
-        graph,
-        normalized=normalized,
-        endpoints=endpoints,
-        parallel_threshold=parallel_threshold,
-    )
+betweenness_centrality.register(PyDiGraph, digraph_betweenness_centrality)
+betweenness_centrality.register(PyGraph, graph_betweenness_centrality)
 
 
 @functools.singledispatch
