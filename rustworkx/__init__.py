@@ -17,7 +17,7 @@ from .rustworkx import *
 import rustworkx.visit
 
 sys.modules["rustworkx.generators"] = generators
-__rustworkx_mod__ = importlib.import_module(".rustworkx", package=__package__)
+__rustworkx_mod__ = importlib.import_module(".rustworkx", package="rustworkx")
 
 
 class PyDAG(PyDiGraph):
