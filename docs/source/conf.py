@@ -21,7 +21,7 @@ import subprocess
 
 project = 'rustworkx'
 copyright = '2021, rustworkx Contributors'
-
+docs_url_prefix = "ecosystem/rustworkx"
 
 # The short X.Y version.
 version = '0.13.0'
@@ -42,7 +42,9 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx_reredirects',
               'qiskit_sphinx_theme',
              ]
+html_static_path = ["_static"]
 templates_path = ['_templates']
+extra_css_files = ["overrides.css"]
 
 pygments_style = 'colorful'
 
@@ -126,8 +128,8 @@ with open("sources.txt", "r") as fd:
         redirects[f"stubs/{source_str}"] = f"../apiref/{source_str}"
 
 if os.getenv("RETWORKX_LEGACY_DOCS", None) is not None:
-    redirects["*"] = "https://qiskit.org/documentation/rustworkx/$source.html"
-    html_baseurl = "https://qiskit.org/documentation/rustworkx/"
+    redirects["*"] = "https://qiskit.org/ecosystem/rustworkx/$source.html"
+    html_baseurl = "https://qiskit.org/ecosystem/rustworkx/"
 
 
 # Version extensions

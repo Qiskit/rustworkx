@@ -24,6 +24,7 @@ mod isomorphism;
 mod iterators;
 mod json;
 mod layout;
+mod link_analysis;
 mod matching;
 mod planar;
 mod random_graph;
@@ -47,6 +48,8 @@ use graphml::*;
 use isomorphism::*;
 use json::*;
 use layout::*;
+use link_analysis::*;
+
 use matching::*;
 use planar::*;
 use random_graph::*;
@@ -485,6 +488,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;

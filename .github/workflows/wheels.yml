@@ -67,7 +67,7 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
           CIBW_SKIP: cp36-* pp* *win32 *musl*
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
+          CIBW_TEST_REQUIRES: networkx scipy testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
       - uses: actions/upload-artifact@v3
         with:
@@ -109,7 +109,7 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
           CIBW_SKIP: cp36-* pp* *win32 *musl*
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
+          CIBW_TEST_REQUIRES: networkx scipy testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: aarch64
       - uses: actions/upload-artifact@v3

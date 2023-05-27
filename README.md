@@ -12,7 +12,7 @@
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.5879859-blue)](https://doi.org/10.5281/zenodo.5879859)
 
   - You can see the full rendered docs at:
-    <https://qiskit.org/documentation/rustworkx/dev>
+    <https://qiskit.org/ecosystem/rustworkx/dev>
 
 |:warning:| The retworkx project has been renamed to **rustworkx**. The use of the
 retworkx package will still work for the time being but starting in the 1.0.0
