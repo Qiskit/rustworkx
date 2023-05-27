@@ -136,12 +136,12 @@ def rustworkx_dispatch(func):
     """Decorator to dispatch rustworkx universal functions to the correct typed function"""
 
     func_name = func.__name__
-    wrapper = functools.singledispatch(func)
+    wrapped_func = functools.singledispatch(func)
 
-    wrapper.register(PyDiGraph, vars(__rustworkx_mod__)[f"digraph_{func_name}"])
-    wrapper.register(PyGraph, vars(__rustworkx_mod__)[f"graph_{func_name}"])
+    wrapped_func.register(PyDiGraph, vars(__rustworkx_mod__)[f"digraph_{func_name}"])
+    wrapped_func.register(PyGraph, vars(__rustworkx_mod__)[f"graph_{func_name}"])
 
-    return wrapper
+    return wrapped_func
 
 
 @rustworkx_dispatch
