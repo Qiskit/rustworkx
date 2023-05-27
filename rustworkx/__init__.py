@@ -221,23 +221,8 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disco
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@unweighted_average_shortest_path_length.register(PyDiGraph)
-def _digraph_unweighted_average_shortest_path_length(
-    graph, parallel_threshold=300, as_undirected=False, disconnected=False
-):
-    return digraph_unweighted_average_shortest_path_length(
-        graph,
-        parallel_threshold=parallel_threshold,
-        as_undirected=as_undirected,
-        disconnected=disconnected,
-    )
-
-
-@unweighted_average_shortest_path_length.register(PyGraph)
-def _graph_unweighted_shortest_path_length(graph, parallel_threshold=300, disconnected=False):
-    return graph_unweighted_average_shortest_path_length(
-        graph, parallel_threshold=parallel_threshold, disconnected=disconnected
-    )
+unweighted_average_shortest_path_length.register(PyDiGraph, digraph_unweighted_average_shortest_path_length)
+unweighted_average_shortest_path_length.register(PyGraph, graph_unweighted_average_shortest_path_length)
 
 
 @functools.singledispatch
@@ -276,24 +261,8 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@adjacency_matrix.register(PyDiGraph)
-def _digraph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
-    return digraph_adjacency_matrix(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        null_value=null_value,
-    )
-
-
-@adjacency_matrix.register(PyGraph)
-def _graph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
-    return graph_adjacency_matrix(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        null_value=null_value,
-    )
+adjacency_matrix.register(PyDiGraph, digraph_adjacency_matrix)
+adjacency_matrix.register(PyGraph, graph_adjacency_matrix)
 
 
 @functools.singledispatch
@@ -319,14 +288,8 @@ def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_simple_paths.register(PyDiGraph)
-def _digraph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return digraph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
-
-
-@all_simple_paths.register(PyGraph)
-def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return graph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
+all_simple_paths.register(PyDiGraph, digraph_all_simple_paths)
+all_simple_paths.register(PyGraph, graph_all_simple_paths)
 
 
 @functools.singledispatch
@@ -385,34 +348,8 @@ def floyd_warshall(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@floyd_warshall.register(PyDiGraph)
-def _digraph_floyd_warshall(
-    graph,
-    weight_fn=None,
-    default_weight=1.0,
-    parallel_threshold=300,
-):
-    return digraph_floyd_warshall(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@floyd_warshall.register(PyGraph)
-def _graph_floyd_warshall(
-    graph,
-    weight_fn=None,
-    default_weight=1.0,
-    parallel_threshold=300,
-):
-    return graph_floyd_warshall(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        parallel_threshold=parallel_threshold,
-    )
+floyd_warshall.register(PyDiGraph, digraph_floyd_warshall)
+floyd_warshall.register(PyGraph, graph_floyd_warshall)
 
 
 @functools.singledispatch
@@ -464,27 +401,8 @@ def floyd_warshall_numpy(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@floyd_warshall_numpy.register(PyDiGraph)
-def _digraph_floyd_warshall_numpy(
-    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
-):
-    return digraph_floyd_warshall_numpy(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300):
-    return graph_floyd_warshall_numpy(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        parallel_threshold=parallel_threshold,
-    )
-
+floyd_warshall_numpy.register(PyDiGraph, digraph_floyd_warshall_numpy)
+floyd_warshall_numpy.register(PyGraph, graph_floyd_warshall_numpy)
 
 @functools.singledispatch
 def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
@@ -513,14 +431,8 @@ def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@astar_shortest_path.register(PyDiGraph)
-def _digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
-    return digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
-
-
-@astar_shortest_path.register(PyGraph)
-def _graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
-    return graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
+astar_shortest_path.register(PyDiGraph, digraph_astar_shortest_path)
+astar_shortest_path.register(PyGraph, graph_astar_shortest_path)
 
 
 @functools.singledispatch
@@ -557,34 +469,8 @@ def dijkstra_shortest_paths(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dijkstra_shortest_paths.register(PyDiGraph)
-def _digraph_dijkstra_shortest_path(
-    graph,
-    source,
-    target=None,
-    weight_fn=None,
-    default_weight=1.0,
-    as_undirected=False,
-):
-    return digraph_dijkstra_shortest_paths(
-        graph,
-        source,
-        target=target,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        as_undirected=as_undirected,
-    )
-
-
-@dijkstra_shortest_paths.register(PyGraph)
-def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None, default_weight=1.0):
-    return graph_dijkstra_shortest_paths(
-        graph,
-        source,
-        target=target,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-    )
+dijkstra_shortest_paths.register(PyDiGraph, digraph_dijkstra_shortest_paths)
+dijkstra_shortest_paths.register(PyGraph, graph_dijkstra_shortest_paths)
 
 
 @functools.singledispatch
@@ -620,14 +506,8 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_dijkstra_shortest_paths.register(PyDiGraph)
-def _digraph_all_pairsdijkstra_shortest_path(graph, edge_cost_fn):
-    return digraph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
-
-
-@all_pairs_dijkstra_shortest_paths.register(PyGraph)
-def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
-    return graph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
+all_pairs_dijkstra_shortest_paths.register(PyDiGraph, digraph_all_pairs_dijkstra_shortest_paths)
+all_pairs_dijkstra_shortest_paths.register(PyGraph, graph_all_pairs_dijkstra_shortest_paths)
 
 
 @functools.singledispatch
@@ -655,14 +535,8 @@ def all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_all_simple_paths.register(PyDiGraph)
-def _digraph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
-    return digraph_all_pairs_all_simple_paths(graph, min_depth=min_depth, cutoff=cutoff)
-
-
-@all_pairs_all_simple_paths.register(PyGraph)
-def _graph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
-    return graph_all_pairs_all_simple_paths(graph, min_depth=min_depth, cutoff=cutoff)
+all_pairs_all_simple_paths.register(PyDiGraph, digraph_all_pairs_all_simple_paths)
+all_pairs_all_simple_paths.register(PyGraph, graph_all_pairs_all_simple_paths)
 
 
 @functools.singledispatch
@@ -698,14 +572,8 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_dijkstra_path_lengths.register(PyDiGraph)
-def _digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
-    return digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
-
-
-@all_pairs_dijkstra_path_lengths.register(PyGraph)
-def _graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
-    return graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
+all_pairs_dijkstra_path_lengths.register(PyDiGraph, digraph_all_pairs_dijkstra_path_lengths)
+all_pairs_dijkstra_path_lengths.register(PyGraph, graph_all_pairs_dijkstra_path_lengths)
 
 
 @functools.singledispatch
@@ -733,14 +601,8 @@ def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dijkstra_shortest_path_lengths.register(PyDiGraph)
-def _digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
-
-
-@dijkstra_shortest_path_lengths.register(PyGraph)
-def _graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
+dijkstra_shortest_path_lengths.register(PyDiGraph, digraph_dijkstra_shortest_path_lengths)
+dijkstra_shortest_path_lengths.register(PyGraph, graph_dijkstra_shortest_path_lengths)
 
 
 @functools.singledispatch
