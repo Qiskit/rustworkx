@@ -2301,36 +2301,8 @@ def bellman_ford_shortest_paths(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@bellman_ford_shortest_paths.register(PyDiGraph)
-def _digraph_bellman_ford_shortest_path(
-    graph,
-    source,
-    target=None,
-    weight_fn=None,
-    default_weight=1.0,
-    as_undirected=False,
-):
-    return digraph_bellman_ford_shortest_paths(
-        graph,
-        source,
-        target=target,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        as_undirected=as_undirected,
-    )
-
-
-@bellman_ford_shortest_paths.register(PyGraph)
-def _graph_bellman_ford_shortest_path(
-    graph, source, target=None, weight_fn=None, default_weight=1.0
-):
-    return graph_bellman_ford_shortest_paths(
-        graph,
-        source,
-        target=target,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-    )
+bellman_ford_shortest_paths.register(PyDiGraph, digraph_bellman_ford_shortest_paths)
+bellman_ford_shortest_paths.register(PyGraph, graph_bellman_ford_shortest_paths)
 
 
 @functools.singledispatch
@@ -2360,14 +2332,8 @@ def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@bellman_ford_shortest_path_lengths.register(PyDiGraph)
-def _digraph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return digraph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
-
-
-@bellman_ford_shortest_path_lengths.register(PyGraph)
-def _graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
+bellman_ford_shortest_path_lengths.register(PyDiGraph, digraph_bellman_ford_shortest_path_lengths)
+bellman_ford_shortest_path_lengths.register(PyGraph, graph_bellman_ford_shortest_path_lengths)
 
 
 @functools.singledispatch
@@ -2406,14 +2372,8 @@ def all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_bellman_ford_path_lengths.register(PyDiGraph)
-def _digraph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
-    return digraph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn)
-
-
-@all_pairs_bellman_ford_path_lengths.register(PyGraph)
-def _graph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
-    return graph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn)
+all_pairs_bellman_ford_path_lengths.register(PyDiGraph, digraph_all_pairs_bellman_ford_path_lengths)
+all_pairs_bellman_ford_path_lengths.register(PyGraph, graph_all_pairs_bellman_ford_path_lengths)
 
 
 @functools.singledispatch
@@ -2452,15 +2412,8 @@ def all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_bellman_ford_shortest_paths.register(PyDiGraph)
-def _digraph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
-    return digraph_all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn)
-
-
-@all_pairs_bellman_ford_shortest_paths.register(PyGraph)
-def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
-    return graph_all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn)
-
+all_pairs_bellman_ford_shortest_paths.register(PyDiGraph, digraph_all_pairs_bellman_ford_shortest_paths)
+all_pairs_bellman_ford_shortest_paths.register(PyGraph, graph_all_pairs_bellman_ford_shortest_paths)
 
 @functools.singledispatch
 def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
