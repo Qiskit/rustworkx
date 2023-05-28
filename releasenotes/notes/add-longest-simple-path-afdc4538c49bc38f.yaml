@@ -1,0 +1,33 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.longest_simple_path` which is used to search
+    all the simple paths between all pairs of nodes in a graph and return
+    the longest path found. For example:
+
+      .. jupyter-execute::
+
+        import rustworkx as rx
+
+        graph = rx.generators.binomial_tree_graph(5)
+        longest_path = rx.longest_simple_path(graph)
+        print(longest_path)
+
+    Then visualizing the nodes in the longest path found:
+
+      .. jupyter-execute::
+
+        from rustworkx.visualization import mpl_draw
+
+        path_set = set(longest_path)
+        colors = []
+        for index in range(len(graph)):
+            if index in path_set:
+              colors.append('r')
+            else:
+              colors.append('#1f78b4')
+        mpl_draw(graph, node_color=colors)
+  - |
+    Added a new function ``longest_simple_path_multiple_targets()`` to
+    rustworkx-core. This function will return the longest simple path from a
+    source node to a ``HashSet`` of target nodes.
