@@ -39,6 +39,7 @@ __all__ = [
     "PathMapping",
     "AllPairsPathLengthMapping",
     "AllPairsPathMapping",
+    "BFSPredecessors",
     "BFSSuccessors",
     "EdgeIndexMap",
     "EdgeIndices",
@@ -103,6 +104,9 @@ class AllPairsPathMapping(RustworkxCustomHashMapIter[int, PathMapping]): ...
 
 @final
 class BFSSuccessors(Generic[T_co], RustworkxCustomVecIter[Tuple[T_co, List[T_co]]]): ...
+
+@final
+class BFSPredecessors(Generic[T_co], RustworkxCustomVecIter[Tuple[T_co, List[T_co]]]): ...
 
 @final
 class EdgeIndexMap(Generic[T_co], RustworkxCustomHashMapIter[int, Tuple[int, int, T_co]]): ...
