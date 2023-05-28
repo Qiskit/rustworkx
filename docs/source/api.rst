@@ -58,6 +58,16 @@ Centrality
    rustworkx.eigenvector_centrality
    rustworkx.closeness_centrality
 
+.. _link-analysis:
+
+Link Analysis
+--------------
+
+.. autosummary::
+   :toctree: apiref
+
+   rustworkx.pagerank
+
 .. _traversal:
 
 Traversal
@@ -160,6 +170,7 @@ Connectivity and Cycles
    rustworkx.all_simple_paths
    rustworkx.all_pairs_all_simple_paths
    rustworkx.stoer_wagner_min_cut
+   rustworkx.longest_simple_path
 
 .. _graph-ops:
 
@@ -330,6 +341,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_bfs_search
    rustworkx.digraph_dijkstra_search
    rustworkx.digraph_node_link_json
+   rustworkx.digraph_longest_simple_path
 
 .. _api-functions-pygraph:
 
@@ -387,6 +399,7 @@ typed API based on the data type.
    rustworkx.graph_bfs_search
    rustworkx.graph_dijkstra_search
    rustworkx.graph_node_link_json
+   rustworkx.graph_longest_simple_path
 
 Exceptions
 ==========
