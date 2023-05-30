@@ -20,8 +20,15 @@ use rayon::prelude::*;
 
 /// Color a graph using a greedy graph coloring algorithm.
 ///
-/// This function uses a `largest-first` strategy as described in [1]_ and colors
-/// the nodes with higher degree first.
+/// This function uses a `largest-first` strategy as described in:
+///
+/// Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
+/// Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
+///
+/// to color the nodes with higher degree first.
+///
+/// The coloring problem is NP-hard and this is a heuristic algorithm
+/// which may not return an optimal solution.
 ///
 /// Arguments:
 ///
@@ -46,8 +53,6 @@ use rayon::prelude::*;
 /// ```
 ///
 ///
-/// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
-///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 pub fn greedy_node_color<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges,
