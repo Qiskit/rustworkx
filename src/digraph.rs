@@ -173,7 +173,6 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///     :attr:`~.PyDiGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyDiGraph.attrs` will be set to ``None``.
 #[pyclass(mapping, module = "rustworkx", subclass)]
-#[pyo3(text_signature = "(/, check_cycle=False, multigraph=True, attrs=None)")]
 #[derive(Clone)]
 pub struct PyDiGraph {
     pub graph: StablePyGraph<Directed>,
@@ -285,7 +284,7 @@ impl PyDiGraph {
 #[pymethods]
 impl PyDiGraph {
     #[new]
-    #[pyo3(signature=(check_cycle=false, multigraph=true, attrs=None))]
+    #[pyo3(signature=(check_cycle=false, multigraph=true, attrs=None), text_signature="(/, check_cycle=False, multigraph=True, attrs=None)")]
     fn new(py: Python, check_cycle: bool, multigraph: bool, attrs: Option<PyObject>) -> Self {
         PyDiGraph {
             graph: StablePyGraph::<Directed>::new(),

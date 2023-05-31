@@ -136,7 +136,6 @@ use petgraph::visit::{
 ///     :attr:`~.PyGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyGraph.attrs` will be set to ``None``.
 #[pyclass(mapping, module = "rustworkx", subclass)]
-#[pyo3(text_signature = "(/, multigraph=True, attrs=None)")]
 #[derive(Clone)]
 pub struct PyGraph {
     pub graph: StablePyGraph<Undirected>,
@@ -181,7 +180,7 @@ impl PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    #[pyo3(signature=(multigraph=true, attrs=None))]
+    #[pyo3(signature=(multigraph=true, attrs=None), text_signature = "(/, multigraph=True, attrs=None)")]
     fn new(py: Python, multigraph: bool, attrs: Option<PyObject>) -> Self {
         PyGraph {
             graph: StablePyGraph::<Undirected>::default(),
