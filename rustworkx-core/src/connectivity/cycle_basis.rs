@@ -141,11 +141,11 @@ where
 /// # Example
 /// ```rust
 /// use petgraph::prelude::*;
-/// use rustworkx_core::connectivity::cycle_basis;
+/// use rustworkx_core::connectivity::cycle_basis_edges;
 ///
 /// let edge_list = [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)];
 /// let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
-/// let mut res: Vec<Vec<(NodeId, NodeId)>> = cycle_basis_edges(&graph, Some(NodeIndex::new(0)));
+/// let mut res: Vec<Vec<(NodeIndex, NodeIndex)>> = cycle_basis_edges(&graph, Some(NodeIndex::new(0)));
 /// ```
 pub fn cycle_basis_edges<G>(graph: G, root: Option<G::NodeId>) -> Vec<Vec<(G::NodeId, G::NodeId)>>
 where
