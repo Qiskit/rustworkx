@@ -305,3 +305,42 @@ class TestDiGraphAllSimplePathsAllPairs(unittest.TestCase):
 
     def test_all_simple_paths_empty(self):
         self.assertEqual({}, rustworkx.all_pairs_all_simple_paths(rustworkx.PyDiGraph()))
+
+
+class TestDiGraphLongestSimplePaths(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.edges = [
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (1, 2),
+            (1, 3),
+            (2, 3),
+            (2, 4),
+            (3, 2),
+            (3, 4),
+            (4, 2),
+            (4, 5),
+            (5, 2),
+            (5, 3),
+        ]
+
+    def test_all_simple_paths(self):
+        dag = rustworkx.PyDAG()
+        for i in range(6):
+            dag.add_node(i)
+        dag.add_edges_from_no_data(self.edges)
+        res = rustworkx.longest_simple_path(dag)
+        expected = {(0, 1, 2, 3, 4, 5), (0, 1, 3, 2, 4, 5), (0, 1, 2, 4, 5, 3), (0, 1, 3, 4, 5, 2)}
+        self.assertIn(tuple(res), expected)
+
+    def test_all_simple_path_no_path(self):
+        dag = rustworkx.PyDAG()
+        dag.add_node(0)
+        dag.add_node(1)
+        res = rustworkx.longest_simple_path(dag)
+        self.assertEqual([0], res)
+
+    def test_all_simple_paths_empty(self):
+        self.assertIsNone(rustworkx.longest_simple_path(rustworkx.PyDiGraph()))

@@ -392,6 +392,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_longest_simple_path))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_longest_simple_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
