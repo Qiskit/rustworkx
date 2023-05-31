@@ -304,7 +304,7 @@ pub fn hits(
     for edge in graph.graph.edge_references() {
         let i = NodeIndexable::to_index(&graph.graph, edge.source());
         let j = NodeIndexable::to_index(&graph.graph, edge.target());
-        let weight = edge.weight().clone();
+        let weight = edge.weight().clone_ref(py);
 
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
 
@@ -372,7 +372,6 @@ pub fn hits(
     }
 
     let hubs_map: DictMap<usize, f64> = node_indices.iter().map(|x| (*x, hubs[*x])).collect();
-
     let auth_map: DictMap<usize, f64> = node_indices.iter().map(|x| (*x, authority[*x])).collect();
 
     Ok((
