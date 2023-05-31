@@ -565,7 +565,7 @@ pub fn digraph_eigenvector_centrality(
 
 /// Compute the Katz centrality of a :class:`~PyGraph`.
 ///
-/// For details on the eigenvector centrality refer to:
+/// For details on the Katz centrality refer to:
 ///
 /// Leo Katz. “A New Status Index Derived from Sociometric Index.”
 /// Psychometrika 18(1):39–43, 1953
@@ -695,7 +695,7 @@ pub fn graph_katz_centrality(
 
 /// Compute the Katz centrality of a :class:`~PyDiGraph`.
 ///
-/// For details on the eigenvector centrality refer to:
+/// For details on the Katz centrality refer to:
 ///
 /// Leo Katz. “A New Status Index Derived from Sociometric Index.”
 /// Psychometrika 18(1):39–43, 1953
