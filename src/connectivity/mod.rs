@@ -74,6 +74,44 @@ pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize
         .collect()
 }
 
+/// Return a list of edges representing cycles which form a basis for cycles of a given PyGraph
+///
+/// A basis for cycles of a graph is a minimal collection of
+/// cycles such that any cycle in the graph can be written
+/// as a sum of cycles in the basis.  Here summation of cycles
+/// is defined as the exclusive or of the edges.
+///
+/// This is adapted from algorithm CACM 491 [1]_.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges.
+///     It may produce incorrect/unexpected results if the input graph has
+///     parallel edges.
+///
+/// :param PyGraph graph: The graph to find the cycle basis in
+/// :param int root: Optional index for starting node for basis
+///
+/// :returns: A list of edge lists. Each list is a list of tuples of node ids which
+///     forms a cycle (loop) in the input graph
+/// :rtype: list
+///
+/// .. [1] Paton, K. An algorithm for finding a fundamental set of
+///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, root=None)")]
+pub fn cycle_basis_edges(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<(usize, usize)>> {
+    connectivity::cycle_basis_edges(&graph.graph, root.map(NodeIndex::new))
+        .into_iter()
+        .map(|res_map| {
+            res_map
+                .into_iter()
+                .map(|x| (x.0.index(), x.1.index()))
+                .collect()
+        })
+        .collect()
+}
+
 /// Find all simple cycles of a :class:`~.PyDiGraph`
 ///
 /// A "simple cycle" (called an elementary circuit in [1]) is a cycle (or closed path)
