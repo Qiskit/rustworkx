@@ -2891,38 +2891,58 @@ impl PyDiGraph {
     }
 
     /// Filters a graph's nodes by some criteria conditioned on a node's data payload and returns those nodes' indices
-    /// 
+    ///
     /// :param filter_function: Function with which to filter nodes
     /// :returns: The node indices that match the filter
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, filter_function)")]
     pub fn filter_nodes(&self, py: Python, filter_function: PyObject) -> NodeIndices {
-
-        let filter= |nindex: NodeIndex| -> PyResult<bool> {
+        let filter = |nindex: NodeIndex| -> PyResult<bool> {
             let res = filter_function.call1(py, (&self.graph[nindex],))?;
             res.extract(py)
         };
         NodeIndices {
-            nodes: self.graph.node_indices().filter_map(|node_index| if filter(node_index).ok()? {Some(node_index)} else {None}).map(|node_index| node_index.index()).collect(),
+            nodes: self
+                .graph
+                .node_indices()
+                .filter_map(|node_index| {
+                    if filter(node_index).ok()? {
+                        Some(node_index)
+                    } else {
+                        None
+                    }
+                })
+                .map(|node_index| node_index.index())
+                .collect(),
         }
     }
 
     /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices
-    /// 
+    ///
     /// :param filter_function: Function with which to filter edges
     /// :returns: The edge indices that match the filter
     /// :rtype: EdgeIndices
     #[pyo3(text_signature = "(self, filter_function)")]
     pub fn filter_edges(&self, py: Python, filter_function: PyObject) -> EdgeIndices {
-        let filter= |eindex: EdgeIndex| -> PyResult<bool> {
+        let filter = |eindex: EdgeIndex| -> PyResult<bool> {
             let res = filter_function.call1(py, (&self.graph[eindex],))?;
             res.extract(py)
         };
         EdgeIndices {
-            edges: self.graph.edge_indices().filter_map(|edge_index| if filter(edge_index).ok()? {Some(edge_index)} else {None}).map(|edge_index| edge_index.index()).collect(),
+            edges: self
+                .graph
+                .edge_indices()
+                .filter_map(|edge_index| {
+                    if filter(edge_index).ok()? {
+                        Some(edge_index)
+                    } else {
+                        None
+                    }
+                })
+                .map(|edge_index| edge_index.index())
+                .collect(),
         }
     }
-
 
     /// Return the number of nodes in the graph
     fn __len__(&self) -> PyResult<usize> {
