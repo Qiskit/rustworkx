@@ -56,6 +56,7 @@ Centrality
    rustworkx.betweenness_centrality
    rustworkx.edge_betweenness_centrality
    rustworkx.eigenvector_centrality
+   rustworkx.katz_centrality
    rustworkx.closeness_centrality
 
 .. _link-analysis:
@@ -338,6 +339,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_edge_betweenness_centrality
    rustworkx.digraph_closeness_centrality
    rustworkx.digraph_eigenvector_centrality
+   rustworkx.digraph_katz_centrality
    rustworkx.digraph_unweighted_average_shortest_path_length
    rustworkx.digraph_bfs_search
    rustworkx.digraph_dijkstra_search
@@ -396,6 +398,7 @@ typed API based on the data type.
    rustworkx.graph_edge_betweenness_centrality
    rustworkx.graph_closeness_centrality
    rustworkx.graph_eigenvector_centrality
+   rustworkx.graph_katz_centrality
    rustworkx.graph_unweighted_average_shortest_path_length
    rustworkx.graph_bfs_search
    rustworkx.graph_dijkstra_search
