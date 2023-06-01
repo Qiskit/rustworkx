@@ -745,13 +745,13 @@ where
             let node = graph.to_index(node_index);
             beta.insert(node, beta_scalar);
         }
-    }
-
-    // Check if beta contains all node indices
-    for node_index in graph.node_identifiers() {
-        let node = graph.to_index(node_index);
-        if !beta.contains_key(&node) {
-            return Ok(None); // beta_map was provided but did not include all nodes
+    } else {
+        // Check if beta contains all node indices
+        for node_index in graph.node_identifiers() {
+            let node = graph.to_index(node_index);
+            if !beta.contains_key(&node) {
+                return Ok(None); // beta_map was provided but did not include all nodes
+            }
         }
     }
 
