@@ -718,6 +718,9 @@ where
 /// ]);
 /// // Calculate the eigenvector centrality
 /// let output: Result<Option<Vec<f64>>> = katz_centrality(&g, |_| {Ok(1.)}, None, None, None, None, None);
+/// let centralities = output.unwrap().unwrap();
+/// assert!(centralities[1] > centralities[0], "Node 1 is more central than node 0");
+/// assert!(centralities[1] > centralities[2], "Node 1 is more central than node 2");
 /// ```
 pub fn katz_centrality<G, F, E>(
     graph: G,
