@@ -8,8 +8,9 @@ prelude: |
       * Additionally connectivity functions such as ``find_cycle`` and
     * New link analysis functions such as page rank
     * Expanded centrality measure functions
-    * Type annotations for :class:`~PyDiGraph` and :class:`~.PyGraph` that
-      can be type checked with `mypy <https://mypy-lang.org/>`__
+    * Added partial type annotations to the library including for the
+      :class:`~PyDiGraph` and :class:`~.PyGraph` classes. This enables
+      type checking with `mypy <https://mypy-lang.org/>`__
 
   This is also the final rustworkx release that supports running with Python
   3.7. Starting in the 0.14.0 release Python >= 3.8 will be required to use
