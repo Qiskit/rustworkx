@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    A function, :func:`~rustworkx.cycle_basis_edges` was added to the crate
+    ``rustworkx-core`` in the ``connectivity`` module. This function returns 
+    the edge indices that form the cycle basis of a graph.
+fixes:
+  - |
+    Support for edges when getting the cycle basis. Refer to 
+    `#551 <https://github.com/Qiskit/rustworkx/issues/551>`__ for more details.
