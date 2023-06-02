@@ -1896,25 +1896,21 @@ impl PyGraph {
     /// :returns: The node indices that match the filter
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, filter_function)")]
-    pub fn filter_nodes(&self, py: Python, filter_function: PyObject) -> NodeIndices {
+    pub fn filter_nodes(&self, py: Python, filter_function: PyObject) -> PyResult<NodeIndices> {
         let filter = |nindex: NodeIndex| -> PyResult<bool> {
             let res = filter_function.call1(py, (&self.graph[nindex],))?;
             res.extract(py)
         };
-        NodeIndices {
-            nodes: self
-                .graph
-                .node_indices()
-                .filter_map(|node_index| {
-                    if filter(node_index).ok()? {
-                        Some(node_index)
-                    } else {
-                        None
-                    }
-                })
-                .map(|node_index| node_index.index())
-                .collect(),
+
+        let mut n = Vec::new();
+        for node_index in self.graph.node_indices(){
+            if filter(node_index)?{
+                n.push(node_index.index())
+            };
         }
+        Ok(NodeIndices {
+            nodes: n,
+        })
     }
 
     /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices
@@ -1923,25 +1919,22 @@ impl PyGraph {
     /// :returns: The edge indices that match the filter
     /// :rtype: EdgeIndices
     #[pyo3(text_signature = "(self, filter_function)")]
-    pub fn filter_edges(&self, py: Python, filter_function: PyObject) -> EdgeIndices {
+    pub fn filter_edges(&self, py: Python, filter_function: PyObject) -> PyResult<EdgeIndices> {
         let filter = |eindex: EdgeIndex| -> PyResult<bool> {
             let res = filter_function.call1(py, (&self.graph[eindex],))?;
             res.extract(py)
         };
-        EdgeIndices {
-            edges: self
-                .graph
-                .edge_indices()
-                .filter_map(|edge_index| {
-                    if filter(edge_index).ok()? {
-                        Some(edge_index)
-                    } else {
-                        None
-                    }
-                })
-                .map(|edge_index| edge_index.index())
-                .collect(),
+
+        let mut e = Vec::new();
+        for edge_index in self.graph.edge_indices(){
+            if filter(edge_index)?{
+                e.push(edge_index.index())
+            };
         }
+        Ok(EdgeIndices {
+            edges: e,
+        })
+
     }
 }
 

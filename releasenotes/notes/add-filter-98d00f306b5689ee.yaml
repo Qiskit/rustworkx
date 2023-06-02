@@ -1,0 +1,20 @@
+---
+features:
+  - |
+    The :class:`~rustworkx.PyGraph` and the :class:`~rustworkx.PyDiGraph` classes have a new method 
+    :meth:`~rustworkx.PyGraph.filter_nodes` (or :meth:`~rustworkx.PyDiGraph.filter_nodes`). 
+    This method returns a NodeIndices object with the resulting nodes that fit some abstract criteria indicated by a filter function.
+    For example::
+      def my_filter_function(node)
+        return isinstance(node, str)
+
+      string_indices = graph.filter_nodes(my_filter_function)
+  - |
+    The :class:`~rustworkx.PyGraph` and the :class:`~rustworkx.PyDiGraph` classes have a new method 
+    :meth:`~rustworkx.PyGraph.filter_edges` (or :meth:`~rustworkx.PyDiGraph.filter_edges`). 
+    This method returns a EdgeIndices object with the resulting edges that fit some abstract criteria indicated by a filter function.
+    For example::
+      def my_filter_function(edge)
+        return isinstance(edge, str)
+
+      string_indices = graph.filter_edges(my_filter_function)
