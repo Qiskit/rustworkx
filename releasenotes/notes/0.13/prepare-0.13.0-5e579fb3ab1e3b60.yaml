@@ -3,9 +3,8 @@ prelude: |
   This release is major feature release of Rustworkx that adds some
   new features to the library. The highlights of this release are:
 
-    * An expansion of the functions exposed by rustworkx-core to include:
-      * Graph generator functions
-      * Additionally connectivity functions such as ``find_cycle`` and
+    * An expansion of the functions exposed by rustworkx-core to including a
+      new graph generator module.
     * New link analysis functions such as page rank
     * Expanded centrality measure functions
     * Added partial type annotations to the library including for the
