@@ -178,7 +178,7 @@ where
                 if equiv {
                     edge.source() == target && edge.target() == target
                 } else {
-                    edge.source() == target || edge.target() == target
+                    edge.target() == target
                 }
             })
             .map(|edge: G::EdgeRef| edge.id())
