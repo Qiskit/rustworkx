@@ -16,15 +16,16 @@ import rustworkx as rx
 
 
 class TestFilter(unittest.TestCase):
-    
     def test_filter_nodes(self):
         def my_filter_function1(node):
             return node == "cat"
+
         def my_filter_function2(node):
             return node == "lizard"
+
         def my_filter_function3(node):
             return node == "human"
-        
+
         graph = rx.PyDiGraph()
         graph.add_node("cat")
         graph.add_node("cat")
@@ -41,11 +42,13 @@ class TestFilter(unittest.TestCase):
     def test_filter_edges(self):
         def my_filter_function1(edge):
             return edge == "friends"
+
         def my_filter_function2(edge):
             return edge == "enemies"
+
         def my_filter_function3(node):
             return node == "frenemies"
-        
+
         graph = rx.PyDiGraph()
         graph.add_node("cat")
         graph.add_node("cat")
@@ -65,7 +68,7 @@ class TestFilter(unittest.TestCase):
     def test_filter_errors(self):
         def my_filter_function1(node):
             raise TypeError("error!")
-            
+
         graph = rx.PyDiGraph()
         graph.add_node("cat")
         graph.add_node("cat")

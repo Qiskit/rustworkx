@@ -1903,14 +1903,12 @@ impl PyGraph {
         };
 
         let mut n = Vec::new();
-        for node_index in self.graph.node_indices(){
-            if filter(node_index)?{
+        for node_index in self.graph.node_indices() {
+            if filter(node_index)? {
                 n.push(node_index.index())
             };
         }
-        Ok(NodeIndices {
-            nodes: n,
-        })
+        Ok(NodeIndices { nodes: n })
     }
 
     /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices
@@ -1926,15 +1924,12 @@ impl PyGraph {
         };
 
         let mut e = Vec::new();
-        for edge_index in self.graph.edge_indices(){
-            if filter(edge_index)?{
+        for edge_index in self.graph.edge_indices() {
+            if filter(edge_index)? {
                 e.push(edge_index.index())
             };
         }
-        Ok(EdgeIndices {
-            edges: e,
-        })
-
+        Ok(EdgeIndices { edges: e })
     }
 }
 
