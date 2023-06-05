@@ -383,7 +383,7 @@ impl PyDiGraph {
             let node_idx: usize = item.get_item(0).unwrap().extract().unwrap();
             let node_w = item.get_item(1).unwrap().extract().unwrap();
 
-            for _i in 0..node_idx + 1 {
+            for _i in 0..node_idx {
                 self.graph.add_node(py.None());
             }
             self.graph.add_node(node_w);
