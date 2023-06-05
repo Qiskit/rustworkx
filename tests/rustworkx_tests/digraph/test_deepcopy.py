@@ -93,4 +93,6 @@ class TestDeepcopy(unittest.TestCase):
             ]
         )
         copied_graph = copy.deepcopy(graph)
-        self.assertEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16, 17, 18, 19], graph.node_indices())
+        self.assertEqual(
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16, 17, 18, 19], copied_graph.node_indices()
+        )
