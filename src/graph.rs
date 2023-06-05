@@ -1802,7 +1802,13 @@ impl PyGraph {
     }
 
     fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
-        self.remove_node(idx)
+        match self.graph.remove_node(NodeIndex::new(idx)) {
+            Some(_) => {
+                self.node_removed = true;
+                Ok(())
+            }
+            None => Err(PyIndexError::new_err("No node found for index")),
+        }
     }
 
     // Functions to enable Python Garbage Collection
