@@ -39,4 +39,5 @@ features:
         def my_filter_function(edge):
           return edge > 2
           
-        string_indices = graph.filter_edges(my_filter_function)
+        indices = graph.filter_edges(my_filter_function)
+        print(indices)
