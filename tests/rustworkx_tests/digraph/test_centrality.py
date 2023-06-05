@@ -14,6 +14,7 @@ import math
 import unittest
 
 import rustworkx
+import networkx as nx
 
 
 class TestCentralityDiGraph(unittest.TestCase):
@@ -160,6 +161,51 @@ class TestEigenvectorCentrality(unittest.TestCase):
         graph = rustworkx.PyDiGraph()
         with self.assertRaises(rustworkx.FailedToConverge):
             rustworkx.eigenvector_centrality(graph, max_iter=0)
+
+
+class TestKatzCentrality(unittest.TestCase):
+    def test_complete_graph(self):
+        graph = rustworkx.generators.directed_complete_graph(5)
+        centrality = rustworkx.digraph_katz_centrality(graph)
+        expected_value = math.sqrt(1.0 / 5.0)
+        for value in centrality.values():
+            self.assertAlmostEqual(value, expected_value, delta=1e-4)
+
+    def test_no_convergence(self):
+        graph = rustworkx.generators.directed_complete_graph(5)
+        with self.assertRaises(rustworkx.FailedToConverge):
+            rustworkx.katz_centrality(graph, max_iter=0)
+
+    def test_beta_scalar(self):
+        rx_graph = rustworkx.generators.directed_grid_graph(5, 2)
+        beta = 0.3
+
+        rx_centrality = rustworkx.katz_centrality(rx_graph, alpha=0.25, beta=beta)
+
+        nx_graph = nx.DiGraph()
+        nx_graph.add_edges_from(rx_graph.edge_list())
+        nx_centrality = nx.katz_centrality(nx_graph, alpha=0.25, beta=beta)
+
+        for key in rx_centrality.keys():
+            self.assertAlmostEqual(rx_centrality[key], nx_centrality[key], delta=1e-4)
+
+    def test_beta_dictionary(self):
+        rx_graph = rustworkx.generators.directed_grid_graph(5, 2)
+        beta = {i: 0.1 * i**2 for i in range(10)}
+
+        rx_centrality = rustworkx.katz_centrality(rx_graph, alpha=0.25, beta=beta)
+
+        nx_graph = nx.DiGraph()
+        nx_graph.add_edges_from(rx_graph.edge_list())
+        nx_centrality = nx.katz_centrality(nx_graph, alpha=0.25, beta=beta)
+
+        for key in rx_centrality.keys():
+            self.assertAlmostEqual(rx_centrality[key], nx_centrality[key], delta=1e-4)
+
+    def test_beta_incomplete(self):
+        graph = rustworkx.generators.directed_grid_graph(5, 2)
+        with self.assertRaises(ValueError):
+            rustworkx.katz_centrality(graph, beta={0: 0.25})
 
 
 class TestEdgeBetweennessCentrality(unittest.TestCase):
