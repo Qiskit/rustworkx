@@ -448,7 +448,6 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
-    m.add_wrapped(wrap_pyfunction!(cycle_basis_edges))?;
     m.add_wrapped(wrap_pyfunction!(simple_cycles))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
