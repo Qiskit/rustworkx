@@ -1,9 +1,56 @@
 ---
 features:
   - |
-    A function, :func:`~rustworkx.cycle_basis_edges` was added to the crate
-    ``rustworkx-core`` in the ``connectivity`` module. This function returns 
-    the edge indices that form the cycle basis of a graph.
+    The function :func:`~rustworkx.cycle_basis` from the crate ``rustworkx-core`` 
+    in the ``connectivity`` module was modified. This function now has the option
+    of returning the edge indices that form the cycle basis of a graph.
+
+    .. jupyter-execute::
+
+      import rustworkx
+      from rustworkx.visualization import * # Needs matplotlib/
+
+      graph = rustworkx.PyGraph()
+
+      # Each time add node is called, it returns a new node index
+      a = graph.add_node("A")
+      b = graph.add_node("B")
+      c = graph.add_node("C")
+      d = graph.add_node("D")
+      e = graph.add_node("E")
+      f = graph.add_node("F")
+      g = graph.add_node("G")
+      h = graph.add_node("H")
+      i = graph.add_node("I")
+      j = graph.add_node("J")
+
+      # add_edges_from takes tuples of node indices and weights,
+      # and returns edge indices
+      graph.add_edges_from([
+          (a, b, 1.5), 
+          (a, a, 1.0), 
+          (a, c, 5.0), 
+          (b, c, 2.5), 
+          (c, d, 1.3), 
+          (d, e, 0.8), 
+          (e, f, 1.6), 
+          (f, d, 0.7), 
+          (e, g, 0.7), 
+          (g, h, 0.9), 
+          (g, i, 1.0), 
+          (i, j, 0.8),
+      ])
+
+      mpl_draw(graph, with_labels=True)
+      # Retrieve EdgeIDs by enabling the edges flag.
+      cycles_edges = rustworkx.cycle_basis(graph, a, edges=True)
+      edge_list = list(graph.edge_list())
+      cycle_info = [[edge_list[edge] for edge in cycle] for cycle in cycles_edges]
+      # Print the EdgeID's that form cycles in the graph
+      display(cycles_edges)
+      # Print the data retrieved from the graph.
+      display(cycle_info)
+
 fixes:
   - |
     Support for edges when getting the cycle basis. Refer to 
