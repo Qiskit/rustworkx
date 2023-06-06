@@ -91,30 +91,30 @@ class TestCycleBasisEdges(unittest.TestCase):
 
     def test_cycle_basis_edges(self):
         graph = self.graph
-        res = sorted(sorted(c) for c in rustworkx.cycle_basis_edges(graph, 0))
+        res = sorted(sorted(c) for c in rustworkx.cycle_basis(graph, 0, True))
         self.assertEqual([[0, 1, 2], [4, 5, 6]], res)
 
     def test_cycle_basis_edges_multiple_roots_same_cycles(self):
-        res = sorted(sorted(x) for x in rustworkx.cycle_basis_edges(self.graph, 0))
+        res = sorted(sorted(x) for x in rustworkx.cycle_basis(self.graph, 0, True))
         self.assertEqual([[0, 1, 2], [4, 5, 6]], res)
-        res = sorted(sorted(x) for x in rustworkx.cycle_basis_edges(self.graph, 5))
+        res = sorted(sorted(x) for x in rustworkx.cycle_basis(self.graph, 5, True))
         self.assertEqual([[0, 1, 2], [4, 5, 6]], res)
-        res = sorted(sorted(x) for x in rustworkx.cycle_basis_edges(self.graph, 7))
+        res = sorted(sorted(x) for x in rustworkx.cycle_basis(self.graph, 7, True))
         self.assertEqual([[0, 1, 2], [4, 5, 6]], res)
 
     def test_cycle_basis_disconnected_graphs(self):
         self.graph.add_nodes_from(["A", "B", "C"])
         self.graph.add_edges_from_no_data([(10, 11), (10, 12), (11, 12)])
-        cycles = rustworkx.cycle_basis_edges(self.graph, 9)
+        cycles = rustworkx.cycle_basis(self.graph, 9, True)
         res = sorted(sorted(x) for x in cycles[:-1]) + [sorted(cycles[-1])]
         self.assertEqual(res, [[0, 1, 2], [4, 5, 6], [11, 12, 13]])
 
     def test_invalid_types(self):
         digraph = rustworkx.PyDiGraph()
         with self.assertRaises(TypeError):
-            rustworkx.cycle_basis_edges(digraph)
+            rustworkx.cycle_basis(digraph, edges=True)
 
     def test_self_loop(self):
         self.graph.add_edge(1, 1, None)
-        res = sorted(sorted(c) for c in rustworkx.cycle_basis_edges(self.graph, 0))
+        res = sorted(sorted(c) for c in rustworkx.cycle_basis(self.graph, 0, edges=True))
         self.assertEqual([[0, 1, 2], [4, 5, 6], [11]], res)
