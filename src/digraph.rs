@@ -1065,8 +1065,8 @@ impl PyDiGraph {
     /// Add an edge between 2 nodes.
     ///
     /// Use add_child() or add_parent() to create a node with an edge at the
-    /// same time as an edge for better performance. Using this method will
-    /// enable adding duplicate edges between nodes if the ``check_cycle``
+    /// same time as an edge for better performance. Using this method
+    /// allows for adding duplicate edges between nodes if the ``multigraph``
     /// attribute is set to ``True``.
     ///
     /// :param int parent: Index of the parent node
