@@ -26,7 +26,7 @@ use rustworkx_core::dictmap::*;
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::types::{PyBool, PyDict, PyList, PyString, PyTuple};
 use pyo3::PyTraverseError;
 use pyo3::Python;
 
@@ -49,6 +49,7 @@ use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::visit::{
     EdgeIndexable, GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
+    NodeIndexable,
 };
 
 /// A class for creating undirected graphs
@@ -286,56 +287,24 @@ impl PyGraph {
                 .downcast::<PyTuple>()
                 .unwrap();
 
-            // use a pointer to iter the node list
-            let mut pointer = 0;
-            let mut next_node_idx: usize = nodes_lst
-                .get_item(pointer)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap()
-                .get_item(0)
-                .unwrap()
-                .downcast::<PyLong>()
-                .unwrap()
-                .extract()
-                .unwrap();
-
             // list of temporary nodes that will be removed later to re-create holes
             let node_bound_1: usize = last_item.get_item(0).unwrap().extract().unwrap();
             let mut tmp_nodes: Vec<NodeIndex> =
                 Vec::with_capacity(node_bound_1 + 1 - nodes_lst.len());
 
-            for i in 0..nodes_lst.len() + 1 {
-                if i < next_node_idx {
+            for item in nodes_lst {
+                let item = item.downcast::<PyTuple>().unwrap();
+                let next_index: usize = item.get_item(0).unwrap().extract().unwrap();
+                let weight: PyObject = item.get_item(1).unwrap().extract().unwrap();
+                while next_index > self.graph.node_bound() {
                     // node does not exist
                     let tmp_node = self.graph.add_node(py.None());
                     tmp_nodes.push(tmp_node);
-                } else {
-                    // add node to the graph, and update the next available node index
-                    let item = nodes_lst
-                        .get_item(pointer)
-                        .unwrap()
-                        .downcast::<PyTuple>()
-                        .unwrap();
-
-                    let node_w = item.get_item(1).unwrap().extract().unwrap();
-                    self.graph.add_node(node_w);
-                    pointer += 1;
-                    if pointer < nodes_lst.len() {
-                        next_node_idx = nodes_lst
-                            .get_item(pointer)
-                            .unwrap()
-                            .downcast::<PyTuple>()
-                            .unwrap()
-                            .get_item(0)
-                            .unwrap()
-                            .downcast::<PyLong>()
-                            .unwrap()
-                            .extract()
-                            .unwrap();
-                    }
                 }
+                // add node to the graph, and update the next available node index
+                self.graph.add_node(weight);
             }
+            // Remove any temporary nodes we added
             for tmp_node in tmp_nodes {
                 self.graph.remove_node(tmp_node);
             }
@@ -350,20 +319,8 @@ impl PyGraph {
                 self.graph.add_edge(tmp_node, tmp_node, py.None());
             } else {
                 let triple = item.downcast::<PyTuple>().unwrap();
-                let edge_p: usize = triple
-                    .get_item(0)
-                    .unwrap()
-                    .downcast::<PyLong>()
-                    .unwrap()
-                    .extract()
-                    .unwrap();
-                let edge_c: usize = triple
-                    .get_item(1)
-                    .unwrap()
-                    .downcast::<PyLong>()
-                    .unwrap()
-                    .extract()
-                    .unwrap();
+                let edge_p: usize = triple.get_item(0).unwrap().extract().unwrap();
+                let edge_c: usize = triple.get_item(1).unwrap().extract().unwrap();
                 let edge_w = triple.get_item(2).unwrap().extract().unwrap();
                 self.graph
                     .add_edge(NodeIndex::new(edge_p), NodeIndex::new(edge_c), edge_w);
@@ -1064,8 +1021,8 @@ impl PyGraph {
     ///     the graph
     #[pyo3(text_signature = "(self, index_list, /)")]
     pub fn remove_nodes_from(&mut self, index_list: Vec<usize>) -> PyResult<()> {
-        for node in index_list.iter().map(|x| NodeIndex::new(*x)) {
-            self.graph.remove_node(node);
+        for node in index_list {
+            self.remove_node(node)?;
         }
         Ok(())
     }
@@ -1824,7 +1781,7 @@ impl PyGraph {
 
         // Remove nodes that will be replaced.
         for index in indices_to_remove {
-            self.graph.remove_node(index);
+            self.remove_node(index.index())?;
         }
 
         // If `weight_combo_fn` was specified, merge edges according
@@ -1975,7 +1932,10 @@ impl PyGraph {
 
     fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
         match self.graph.remove_node(NodeIndex::new(idx)) {
-            Some(_) => Ok(()),
+            Some(_) => {
+                self.node_removed = true;
+                Ok(())
+            }
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
