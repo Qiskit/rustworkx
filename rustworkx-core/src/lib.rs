@@ -74,9 +74,9 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 pub mod centrality;
 /// Module for coloring algorithms.
 pub mod coloring;
-pub mod line_graph;
 pub mod connectivity;
 pub mod generators;
+pub mod line_graph;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
 pub mod planar;
