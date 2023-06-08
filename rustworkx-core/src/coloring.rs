@@ -18,7 +18,42 @@ use hashbrown::{HashMap, HashSet};
 use petgraph::visit::{EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount};
 use rayon::prelude::*;
 
-pub fn greedy_color<G>(graph: G) -> DictMap<G::NodeId, usize>
+/// Color a graph using a greedy graph coloring algorithm.
+///
+/// This function uses a `largest-first` strategy as described in:
+///
+/// Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
+/// Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
+///
+/// to color the nodes with higher degree first.
+///
+/// The coloring problem is NP-hard and this is a heuristic algorithm
+/// which may not return an optimal solution.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+///
+/// # Example
+/// ```rust
+///
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::NodeIndex;
+/// use petgraph::Undirected;
+/// use rustworkx_core::dictmap::*;
+/// use rustworkx_core::coloring::greedy_node_color;
+///
+/// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
+/// let colors = greedy_node_color(&g);
+/// let mut expected_colors = DictMap::new();
+/// expected_colors.insert(NodeIndex::new(0), 0);
+/// expected_colors.insert(NodeIndex::new(1), 1);
+/// expected_colors.insert(NodeIndex::new(2), 1);
+/// assert_eq!(colors, expected_colors);
+/// ```
+///
+///
+pub fn greedy_node_color<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
@@ -53,4 +88,62 @@ where
     }
 
     colors
+}
+
+#[cfg(test)]
+
+mod test_node_coloring {
+
+    use crate::coloring::greedy_node_color;
+    use crate::dictmap::DictMap;
+    use crate::petgraph::Graph;
+
+    use petgraph::graph::NodeIndex;
+    use petgraph::Undirected;
+
+    #[test]
+    fn test_greedy_node_color_empty_graph() {
+        // Empty graph
+        let graph = Graph::<(), (), Undirected>::new_undirected();
+        let colors = greedy_node_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_node_color_simple_graph() {
+        // Simple graph
+        let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
+        let colors = greedy_node_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 0),
+            (NodeIndex::new(1), 1),
+            (NodeIndex::new(2), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_node_color_simple_graph_large_degree() {
+        // Graph with multiple edges
+        let graph = Graph::<(), (), Undirected>::from_edges(&[
+            (0, 1),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+        ]);
+        let colors = greedy_node_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 0),
+            (NodeIndex::new(1), 1),
+            (NodeIndex::new(2), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
 }

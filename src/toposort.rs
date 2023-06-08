@@ -62,7 +62,6 @@ enum NodeState {
 ///     it's set to ``False``, topological sorter will output as many nodes
 ///     as possible until cycles block more progress. By default is ``True``.
 #[pyclass(module = "rustworkx")]
-#[pyo3(text_signature = "(graph, /, check_cycle=True)")]
 pub struct TopologicalSorter {
     dag: Py<PyDiGraph>,
     ready_nodes: Vec<NodeIndex>,
@@ -75,7 +74,7 @@ pub struct TopologicalSorter {
 #[pymethods]
 impl TopologicalSorter {
     #[new]
-    #[pyo3(signature=(dag, check_cycle=true))]
+    #[pyo3(signature=(dag, check_cycle=true), text_signature = "(graph, /, check_cycle=True)")]
     fn new(py: Python, dag: Py<PyDiGraph>, check_cycle: bool) -> PyResult<Self> {
         {
             let dag = &dag.borrow(py);

@@ -1,10 +1,12 @@
 name: Docs Publish
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
 
 jobs:
   deploy:
+    if: github.repository_owner == 'Qiskit'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3

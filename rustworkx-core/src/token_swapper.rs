@@ -580,29 +580,55 @@ mod test_token_swapper {
         assert_eq!(5, swaps.len());
         assert_eq!(expected, new_map);
     }
+
+    #[test]
+    fn test_large_partial_random() {
+        // Test a random (partial) mapping on a large randomly generated graph
+        use crate::generators::gnm_random_graph;
+        use rand::prelude::*;
+        use rand_pcg::Pcg64;
+        use std::iter::zip;
+
+        let mut rng: Pcg64 = Pcg64::seed_from_u64(4);
+
+        // Note that graph may have "gaps" in the node counts, i.e. the numbering is noncontiguous.
+        let size = 100;
+        let mut g: petgraph::stable_graph::StableGraph<(), ()> =
+            gnm_random_graph(size, size.pow(2) / 10, Some(4), || (), || ()).unwrap();
+
+        // Remove self-loops
+        let nodes: Vec<_> = g.node_indices().collect();
+        for node in nodes {
+            let edge = g.find_edge(node, node);
+            if edge.is_some() {
+                g.remove_edge(edge.unwrap());
+            }
+        }
+        // Make sure the graph is connected by adding C_n
+        for i in 0..(g.node_count() - 1) {
+            g.add_edge(NodeIndex::new(i), NodeIndex::new(i + 1), ());
+        }
+
+        // Get node indices and randomly shuffle
+        let mut mapped_nodes: Vec<usize> = g.node_indices().map(|node| node.index()).collect();
+        let nodes = mapped_nodes.clone();
+        mapped_nodes.shuffle(&mut rng);
+
+        // Zip nodes and shuffled nodes and remove every other one
+        let mut mapping: Vec<(usize, usize)> = zip(nodes, mapped_nodes).collect();
+        mapping.retain(|(a, _)| a % 2 == 0);
+
+        // Convert mapping to HashMap of NodeIndex's
+        let mapping: HashMap<NodeIndex, NodeIndex> = mapping
+            .into_iter()
+            .map(|(a, b)| (NodeIndex::new(a), NodeIndex::new(b)))
+            .collect();
+        let mut new_map = mapping.clone();
+        let expected: HashMap<NodeIndex, NodeIndex> =
+            mapping.values().map(|val| (*val, *val)).collect();
+
+        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
+        do_swap(&mut new_map, &swaps);
+        assert_eq!(expected, new_map)
+    }
 }
-
-// TODO: Port this test when rustworkx-core adds random graphs
-
-// def test_large_partial_random(self) -> None:
-//     """Test a random (partial) mapping on a large randomly generated graph"""
-//     size = 100
-//     # Note that graph may have "gaps" in the node counts, i.e. the numbering is noncontiguous.
-//     graph = rx.undirected_gnm_random_graph(size, size**2 // 10)
-//     for i in graph.node_indexes():
-//         try:
-//             graph.remove_edge(i, i)  # Remove self-loops.
-//         except rx.NoEdgeBetweenNodes:
-//             continue
-//     # Make sure the graph is connected by adding C_n
-//     graph.add_edges_from_no_data([(i, i + 1) for i in range(len(graph) - 1)])
-//     swapper = ApproximateTokenSwapper(graph)  # type: ApproximateTokenSwapper[int]
-
-//     # Generate a randomized permutation.
-//     rand_perm = random.permutation(graph.nodes())
-//     permutation = dict(zip(graph.nodes(), rand_perm))
-//     mapping = dict(itertools.islice(permutation.items(), 0, size, 2))  # Drop every 2nd element.
-
-//     out = list(swapper.map(mapping, trials=40))
-//     util.swap_permutation([out], mapping, allow_missing_keys=True)
-//     self.assertEqual({i: i for i in mapping.values()}, mapping)

@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Fixed an issue when using ``copy.deepcopy()`` on :class:`~.PyDiGraph` and
+    :class:`~.PyGraph` objects when there were removed edges from the graph
+    object. Previously, if there were any holes in the edge indices caused by
+    the removal the output copy of the graph object would incorrectly have
+    flatten the indices. This has been corrected so that the edge indices are
+    recreated exactly after a ``deepcopy()``.
+    Fixed `#585 <https://github.com/Qiskit/rustworkx/issues/585>`__

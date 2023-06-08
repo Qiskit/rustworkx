@@ -24,6 +24,7 @@ mod isomorphism;
 mod iterators;
 mod json;
 mod layout;
+mod link_analysis;
 mod matching;
 mod planar;
 mod random_graph;
@@ -47,6 +48,8 @@ use graphml::*;
 use isomorphism::*;
 use json::*;
 use layout::*;
+use link_analysis::*;
+
 use matching::*;
 use planar::*;
 use random_graph::*;
@@ -389,6 +392,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_pairs_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_longest_simple_path))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_longest_simple_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
@@ -423,6 +428,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_edge_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_eigenvector_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_katz_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_katz_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
@@ -486,6 +493,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(pagerank))?;
+    m.add_wrapped(wrap_pyfunction!(hits))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;

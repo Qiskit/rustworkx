@@ -243,3 +243,32 @@ class TestGraphAllSimplePathsAllPairs(unittest.TestCase):
 
     def test_all_simple_paths_empty(self):
         self.assertEqual({}, rustworkx.all_pairs_all_simple_paths(rustworkx.PyGraph()))
+
+
+class TestGraphLongestSimplePath(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.graph = rustworkx.generators.cycle_graph(4)
+
+    def test_all_simple_paths(self):
+        res = rustworkx.longest_simple_path(self.graph)
+        expected = {
+            (0, 3, 2, 1),
+            (0, 1, 2, 3),
+            (1, 0, 3, 2),
+            (1, 2, 3, 0),
+            (2, 1, 0, 3),
+            (2, 3, 0, 1),
+            (3, 0, 1, 2),
+            (3, 2, 1, 0),
+        }
+        self.assertIn(tuple(res), expected)
+
+    def test_all_simple_path_no_path(self):
+        graph = rustworkx.PyGraph()
+        graph.add_node(0)
+        graph.add_node(1)
+        self.assertEqual([0], rustworkx.longest_simple_path(graph))
+
+    def test_all_simple_paths_empty(self):
+        self.assertIsNone(rustworkx.longest_simple_path(rustworkx.PyGraph()))
