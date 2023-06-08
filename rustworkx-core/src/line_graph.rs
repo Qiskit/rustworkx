@@ -35,9 +35,9 @@ use petgraph::visit::{Data, EdgeCount, EdgeRef, IntoEdges, IntoNodeIdentifiers};
 ///
 /// # Example
 /// ```rust
-/// use crate::line_graph::line_graph;
-/// use crate::petgraph::visit::EdgeRef;
-/// use crate::petgraph::Graph;
+/// use rustworkx_core::line_graph::line_graph;
+/// use rustworkx_core::petgraph::visit::EdgeRef;
+/// use rustworkx_core::petgraph::Graph;
 /// use hashbrown::HashMap;
 /// use petgraph::graph::{EdgeIndex, NodeIndex};
 /// use petgraph::Undirected;
