@@ -120,6 +120,7 @@ fn greedy_edge_color<Ty: EdgeType>(py: Python, graph: &StablePyGraph<Ty>) -> Dic
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+    println!("Running graph_greedy_edge_color....");
     let edge_colors = greedy_edge_color(py, &graph.graph);
 
     let out_dict = PyDict::new(py);
