@@ -1890,9 +1890,9 @@ impl PyGraph {
     }
 
     /// Filters a graph's nodes by some criteria conditioned on a node's data payload and returns those nodes' indices.
-    /// 
+    ///
     /// Takes in a filter function that takes in a node's weight, and returns a bool value stating whether the weight aligns with some criteria specified by the user.
-    /// 
+    ///
     /// For example::
     ///     
     ///     from rustworkx import PyGraph
@@ -1926,11 +1926,11 @@ impl PyGraph {
     }
 
     /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices.
-    /// 
+    ///
     /// Takes in a filter function that takes in an edge's weight, and returns a bool value stating whether the weight aligns with some criteria specified by the user.
-    /// 
+    ///
     /// For example::
-    /// 
+    ///
     ///     from rustworkx import PyGraph
     ///     from rustworkx.generators import complete_graph
     ///
@@ -1945,7 +1945,7 @@ impl PyGraph {
     ///        
     ///     indices = graph.filter_edges(my_filter_function)
     ///     assert indices == [1]
-    /// 
+    ///
     /// :param filter_function: Function with which to filter edges
     /// :returns: The edge indices that match the filter
     /// :rtype: EdgeIndices
