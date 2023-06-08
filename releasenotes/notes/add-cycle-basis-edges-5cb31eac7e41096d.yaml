@@ -1,9 +1,9 @@
 ---
 features:
   - |
-    The function :func:`~rustworkx.cycle_basis` from the crate ``rustworkx-core`` 
-    in the ``connectivity`` module was modified. This function now has the option
-    of returning the edge indices that form the cycle basis of a graph.
+    A function, :func:`~rustworkx.cycle_basis_edges` was added to the crate
+    ``rustworkx-core`` in the ``connectivity`` module. This function returns 
+    the edge indices that form the cycle basis of a graph.
 
     .. jupyter-execute::
 
@@ -43,14 +43,13 @@ features:
 
       mpl_draw(graph, with_labels=True)
       # Retrieve EdgeIDs by enabling the edges flag.
-      cycles_edges = rustworkx.cycle_basis(graph, a, edges=True)
+      cycles_edges = rustworkx.cycle_basis_edges(graph, a)
       edge_list = list(graph.edge_list())
       cycle_info = [[edge_list[edge] for edge in cycle] for cycle in cycles_edges]
       # Print the EdgeID's that form cycles in the graph
       display(cycles_edges)
       # Print the data retrieved from the graph.
       display(cycle_info)
-
 fixes:
   - |
     Support for edges when getting the cycle basis. Refer to 
