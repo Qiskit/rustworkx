@@ -1889,7 +1889,22 @@ impl PyGraph {
         self.attrs = py.None();
     }
 
-    /// Filters a graph's nodes by some criteria conditioned on a node's data payload and returns those nodes' indices
+    /// Filters a graph's nodes by some criteria conditioned on a node's data payload and returns those nodes' indices.
+    /// 
+    /// Takes in a filter function that takes in a node's weight, and returns a bool value stating whether the weight aligns with some criteria specified by the user.
+    /// 
+    /// For example::
+    ///     
+    ///     from rustworkx import PyGraph
+    ///
+    ///     graph = PyGraph()
+    ///     graph.add_nodes_from(list(range(5)))
+    ///
+    ///     def my_filter_function(node):
+    ///         return node > 2
+    ///
+    ///     indices = graph.filter_nodes(my_filter_function)
+    ///     assert indices == [3, 4]
     ///
     /// :param filter_function: Function with which to filter nodes
     /// :returns: The node indices that match the filter
@@ -1901,7 +1916,7 @@ impl PyGraph {
             res.extract(py)
         };
 
-        let mut n = Vec::new();
+        let mut n = Vec::with_capacity(self.graph.node_count());
         for node_index in self.graph.node_indices() {
             if filter(node_index)? {
                 n.push(node_index.index())
@@ -1910,8 +1925,27 @@ impl PyGraph {
         Ok(NodeIndices { nodes: n })
     }
 
-    /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices
+    /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices.
+    /// 
+    /// Takes in a filter function that takes in an edge's weight, and returns a bool value stating whether the weight aligns with some criteria specified by the user.
+    /// 
+    /// For example::
+    /// 
+    ///     from rustworkx import PyGraph
+    ///     from rustworkx.generators import complete_graph
     ///
+    ///     graph = PyGraph()
+    ///     graph.add_nodes_from(range(3))
+    ///     graph.add_edges_from([(0, 1, 'A'), (0, 1, 'B'), (1, 2, 'C')])
+    ///
+    ///     def my_filter_function(edge):
+    ///         if edge:
+    ///             return edge == 'B'
+    ///         return False  
+    ///        
+    ///     indices = graph.filter_edges(my_filter_function)
+    ///     assert indices == [1]
+    /// 
     /// :param filter_function: Function with which to filter edges
     /// :returns: The edge indices that match the filter
     /// :rtype: EdgeIndices
@@ -1922,7 +1956,7 @@ impl PyGraph {
             res.extract(py)
         };
 
-        let mut e = Vec::new();
+        let mut e = Vec::with_capacity(self.graph.edge_count());
         for edge_index in self.graph.edge_indices() {
             if filter(edge_index)? {
                 e.push(edge_index.index())
