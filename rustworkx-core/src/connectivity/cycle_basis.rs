@@ -14,7 +14,9 @@ use hashbrown::{HashMap, HashSet};
 use petgraph::visit::{EdgeRef, IntoEdges, IntoNeighbors, IntoNodeIdentifiers, NodeCount};
 use std::hash::Hash;
 
-/// Return a list of cycles which form a basis for cycles of a given graph.
+/// Inner private function for `cycle_basis` and `cycle_basis_edges`.
+/// Returns a list of cycles which forms a basis of cycles of a given
+/// graph.
 ///
 /// A basis for cycles of a graph is a minimal collection of
 /// cycles such that any cycle in the graph can be written
@@ -29,29 +31,18 @@ use std::hash::Hash;
 /// It may produce incorrect/unexpected results if the input graph has
 /// parallel edges.
 ///
-///
 /// Arguments:
 ///
 /// * `graph` - The graph in which to find the basis.
 /// * `root` - Optional node index for starting the basis search. If not
 ///     specified, an arbitrary node is chosen.
-/// * `edges` - Optional bool for when the user requests the edges instead
+/// * `edges` - bool for when the user requests the edges instead
 ///     of the nodes of the cycles.
-///
-/// # Example
-/// ```rust
-/// use petgraph::prelude::*;
-/// use rustworkx_core::connectivity::cycle_basis;
-///
-/// let edge_list = [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)];
-/// let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
-/// let mut res: Vec<Vec<NodeIndex>> = cycle_basis(&graph, Some(NodeIndex::new(0)), Some(false)).unwrap_nodes();
-/// ```
 
-pub fn cycle_basis<G>(
+fn inner_cycle_basis<G>(
     graph: G,
     root: Option<G::NodeId>,
-    edges: Option<bool>,
+    edges: bool,
 ) -> EdgesOrNodes<G::NodeId, G::EdgeId>
 where
     G: NodeCount,
@@ -61,7 +52,6 @@ where
     G::NodeId: Eq + Hash,
     G::EdgeId: Eq + Hash,
 {
-    let want_edges = edges == Some(true);
     let mut root_node = root;
     let mut graph_nodes: HashSet<G::NodeId> = graph.node_identifiers().collect();
     let mut cycles_edges: Vec<Vec<G::EdgeId>> = Vec::new();
@@ -126,7 +116,7 @@ where
                     used.insert(neighbor, temp_set);
                 // A self loop:
                 } else if z == neighbor {
-                    if want_edges {
+                    if edges {
                         let cycle_edge: Vec<G::EdgeId> = get_edge_between(graph, z, z, true);
                         cycles_edges.push(cycle_edge);
                     } else {
@@ -137,7 +127,7 @@ where
                 } else if !used.get(&z).unwrap().contains(&neighbor) {
                     let pn = used.get(&neighbor).unwrap();
                     let mut p = pred.get(&z).unwrap();
-                    if want_edges {
+                    if edges {
                         let mut cycle: Vec<G::EdgeId> = Vec::new();
                         // Retreive all edges from z to neighbor.
                         let mut neigh_edge: Vec<G::EdgeId> =
@@ -191,7 +181,7 @@ where
         graph_nodes = graph_nodes.difference(&temp_hashset).copied().collect();
         root_node = None;
     }
-    if want_edges {
+    if edges {
         EdgesOrNodes::Edges(cycles_edges)
     } else {
         EdgesOrNodes::Nodes(cycles_nodes)
@@ -199,59 +189,141 @@ where
 }
 
 /// Enum for custom return types of `cycle_basis()`.
-pub enum EdgesOrNodes<N, E> {
+enum EdgesOrNodes<N, E> {
     Nodes(Vec<Vec<N>>),
     Edges(Vec<Vec<E>>),
 }
 /// Functions used to unwrap the desired datatype of `EdgesOrNodes`.
 impl<N, E> EdgesOrNodes<N, E> {
-    pub fn unwrap_nodes(self) -> Vec<Vec<N>> {
-        use EdgesOrNodes::*;
+    fn unwrap_nodes(self) -> Vec<Vec<N>> {
         match self {
-            Nodes(x) => x,
-            Edges(_) => vec![],
+            Self::Nodes(x) => x,
+            Self::Edges(_) => unreachable!(
+                "Function should only return instances of {}.",
+                std::any::type_name::<N>()
+            ),
         }
     }
-    pub fn unwrap_edges(self) -> Vec<Vec<E>> {
-        use EdgesOrNodes::*;
+    fn unwrap_edges(self) -> Vec<Vec<E>> {
         match self {
-            Edges(x) => x,
-            Nodes(_) => vec![],
+            Self::Edges(x) => x,
+            Self::Nodes(_) => unreachable!(
+                "Function should only return instances of {}.",
+                std::any::type_name::<E>()
+            ),
         }
     }
+}
+
+/// Returns lists of `NodeIndex` representing cycles which form
+/// a basis for cycles of a given graph.
+///
+/// A basis for cycles of a graph is a minimal collection of
+/// cycles such that any cycle in the graph can be written
+/// as a sum of cycles in the basis.  Here summation of cycles
+/// is defined as the exclusive-or of the edges.
+///
+/// This is adapted from
+///    Paton, K. An algorithm for finding a fundamental set of
+///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
+///
+/// The function implicitly assumes that there are no parallel edges.
+/// It may produce incorrect/unexpected results if the input graph has
+/// parallel edges.
+///
+///
+/// Arguments:
+///
+/// * `graph` - The graph in which to find the basis.
+/// * `root` - Optional node index for starting the basis search. If not
+///     specified, an arbitrary node is chosen.
+///
+/// # Example
+/// ```rust
+/// use petgraph::prelude::*;
+/// use rustworkx_core::connectivity::cycle_basis;
+///
+/// let edge_list = [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)];
+/// let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+/// let mut res: Vec<Vec<NodeIndex>> = cycle_basis(&graph, Some(NodeIndex::new(0)));
+/// ```
+pub fn cycle_basis<G>(graph: G, root: Option<G::NodeId>) -> Vec<Vec<G::NodeId>>
+where
+    G: NodeCount,
+    G: IntoEdges,
+    G: IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    inner_cycle_basis(graph, root, false).unwrap_nodes()
+}
+
+/// Returns lists of `EdgeIndex` representing cycles which form
+/// a basis for cycles of a given graph.
+///
+/// A basis for cycles of a graph is a minimal collection of
+/// cycles such that any cycle in the graph can be written
+/// as a sum of cycles in the basis.  Here summation of cycles
+/// is defined as the exclusive-or of the edges.
+///
+/// This is adapted from
+///    Paton, K. An algorithm for finding a fundamental set of
+///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
+///
+/// The function implicitly assumes that there are no parallel edges.
+/// It may produce incorrect/unexpected results if the input graph has
+/// parallel edges.
+///
+///
+/// Arguments:
+///
+/// * `graph` - The graph in which to find the basis.
+/// * `root` - Optional node index for starting the basis search. If not
+///     specified, an arbitrary node is chosen.
+///
+/// # Example
+/// ```rust
+/// use petgraph::prelude::*;
+/// use rustworkx_core::connectivity::cycle_basis_edges;
+///
+/// let edge_list = [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)];
+/// let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+/// let mut res: Vec<Vec<EdgeIndex>> = cycle_basis_edges(&graph, Some(NodeIndex::new(0)));
+/// ```
+pub fn cycle_basis_edges<G>(graph: G, root: Option<G::NodeId>) -> Vec<Vec<G::EdgeId>>
+where
+    G: NodeCount,
+    G: IntoEdges,
+    G: IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    inner_cycle_basis(graph, root, true).unwrap_edges()
 }
 
 #[cfg(test)]
 mod tests {
     use crate::connectivity::cycle_basis;
+    use crate::connectivity::cycle_basis_edges;
     use petgraph::prelude::*;
+    use petgraph::stable_graph::GraphIndex;
 
-    use super::EdgesOrNodes;
-
-    fn sorted_cycle(cycles: EdgesOrNodes<NodeIndex, EdgeIndex>, edges: bool) -> Vec<Vec<usize>> {
+    fn sorted_cycle<T>(cycles: Vec<Vec<T>>) -> Vec<Vec<usize>>
+    where
+        T: GraphIndex,
+    {
         let mut sorted_cycles: Vec<Vec<usize>> = vec![];
-        if edges {
-            let cycles: Vec<Vec<EdgeIndex>> = cycles.unwrap_edges();
-            for cycle in cycles {
-                let mut cycle: Vec<usize> = cycle.iter().map(|x: &EdgeIndex| x.index()).collect();
-                cycle.sort();
-                sorted_cycles.push(cycle);
-            }
-        } else {
-            let cycles: Vec<Vec<NodeIndex>> = cycles.unwrap_nodes();
-            for cycle in cycles {
-                let mut cycle: Vec<usize> = cycle.iter().map(|x: &NodeIndex| x.index()).collect();
-                cycle.sort();
-                sorted_cycles.push(cycle);
-            }
-        };
+        for cycle in cycles {
+            let mut cycle: Vec<usize> = cycle.iter().map(|x: &T| x.index()).collect();
+            cycle.sort();
+            sorted_cycles.push(cycle);
+        }
         sorted_cycles.sort();
         sorted_cycles
     }
 
     #[test]
     fn test_cycle_basis_source() {
-        let edges: bool = false;
         let edge_list = vec![
             (0, 1),
             (0, 3),
@@ -268,17 +340,16 @@ mod tests {
         ];
         let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
         let expected = vec![vec![0, 1, 2, 3], vec![0, 1, 6, 7, 8], vec![0, 3, 4, 5]];
-        let res_0 = cycle_basis(&graph, Some(NodeIndex::new(0)), Some(edges));
-        assert_eq!(sorted_cycle(res_0, false), expected);
-        let res_1 = cycle_basis(&graph, Some(NodeIndex::new(1)), Some(edges));
-        assert_eq!(sorted_cycle(res_1, false), expected);
-        let res_9 = cycle_basis(&graph, Some(NodeIndex::new(9)), Some(edges));
-        assert_eq!(sorted_cycle(res_9, false), expected);
+        let res_0 = cycle_basis(&graph, Some(NodeIndex::new(0)));
+        assert_eq!(sorted_cycle(res_0), expected);
+        let res_1 = cycle_basis(&graph, Some(NodeIndex::new(1)));
+        assert_eq!(sorted_cycle(res_1), expected);
+        let res_9 = cycle_basis(&graph, Some(NodeIndex::new(9)));
+        assert_eq!(sorted_cycle(res_9), expected);
     }
 
     #[test]
     fn test_cycle_edge_basis_source() {
-        let edges: bool = true;
         let edge_list = vec![
             (0, 0),
             (0, 1),
@@ -291,17 +362,16 @@ mod tests {
         ];
         let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
         let expected = vec![vec![0], vec![3, 4, 5, 6]];
-        let res_0 = cycle_basis(&graph, Some(NodeIndex::new(0)), Some(edges));
-        assert_eq!(sorted_cycle(res_0, true), expected);
-        let res_1 = cycle_basis(&graph, Some(NodeIndex::new(2)), Some(edges));
-        assert_eq!(sorted_cycle(res_1, true), expected);
-        let res_9 = cycle_basis(&graph, Some(NodeIndex::new(6)), Some(edges));
-        assert_eq!(sorted_cycle(res_9, true), expected);
+        let res_0 = cycle_basis_edges(&graph, Some(NodeIndex::new(0)));
+        assert_eq!(sorted_cycle(res_0), expected);
+        let res_1 = cycle_basis_edges(&graph, Some(NodeIndex::new(2)));
+        assert_eq!(sorted_cycle(res_1), expected);
+        let res_9 = cycle_basis_edges(&graph, Some(NodeIndex::new(6)));
+        assert_eq!(sorted_cycle(res_9), expected);
     }
 
     #[test]
     fn test_self_loop() {
-        let edges: bool = false;
         let edge_list = vec![
             (0, 1),
             (0, 3),
@@ -318,9 +388,9 @@ mod tests {
         ];
         let mut graph = UnGraph::<i32, i32>::from_edges(&edge_list);
         graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
-        let res_0 = cycle_basis(&graph, Some(NodeIndex::new(0)), Some(edges));
+        let res_0 = cycle_basis(&graph, Some(NodeIndex::new(0)));
         assert_eq!(
-            sorted_cycle(res_0, edges),
+            sorted_cycle(res_0),
             vec![
                 vec![0, 1, 2, 3],
                 vec![0, 1, 6, 7, 8],
@@ -332,7 +402,6 @@ mod tests {
 
     #[test]
     fn test_self_loop_edges() {
-        let edges: bool = true;
         let edge_list = vec![
             (0, 1),
             (0, 3),
@@ -349,9 +418,9 @@ mod tests {
         ];
         let mut graph = UnGraph::<i32, i32>::from_edges(&edge_list);
         graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
-        let res_0 = cycle_basis(&graph, Some(NodeIndex::new(0)), Some(edges));
+        let res_0 = cycle_basis_edges(&graph, Some(NodeIndex::new(0)));
         assert_eq!(
-            sorted_cycle(res_0, edges),
+            sorted_cycle(res_0),
             vec![
                 vec![0, 1, 4, 6],
                 vec![0, 3, 5, 9, 10],
