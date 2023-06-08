@@ -15,7 +15,7 @@ features:
       # Make sure to connect the graphs at node 2 of the sub_graph
       # This is done by passing a function that returns 2
 
-      graph.substitute_node_with_subgraph(g, graph_sub, lambda _, __, ___: 2)
+      graph.substitute_node_with_subgraph(4, sub_graph, lambda _, __, ___: 2)
 
       # Draw the updated graph
       mpl_draw(graph, with_labels=True)
