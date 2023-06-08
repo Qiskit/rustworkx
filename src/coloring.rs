@@ -11,17 +11,18 @@
 // under the License.
 
 use crate::graph;
-use rustworkx_core::coloring::greedy_node_color;
+use crate::StablePyGraph;
+use hashbrown::HashMap;
+use rustworkx_core::dictmap::*;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
 
-// The following three might not be needed
-use crate::StablePyGraph;
-use hashbrown::HashMap;
-use rustworkx_core::dictmap::*;
-
+use rustworkx_core::coloring::greedy_node_color;
+use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences, EdgeRef};
+use petgraph::EdgeType;
+use petgraph::graph::{EdgeIndex, NodeIndex};
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
@@ -103,7 +104,7 @@ fn line_graph<Ty: EdgeType>(
 
 fn greedy_edge_color<Ty: EdgeType>(py: Python, graph: &StablePyGraph<Ty>) -> DictMap<usize, usize> {
     let (line_graph, edge_to_node_map) = line_graph(py, graph);
-    let colors = greedy_color(&line_graph);
+    let colors = greedy_node_color(&line_graph);
 
     let mut edge_colors: DictMap<usize, usize> = DictMap::new();
 
