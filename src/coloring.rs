@@ -70,37 +70,6 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
     Ok(out_dict.into())
 }
 
-//graph::PyGraph
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-pub fn graph_line_graph(
-    py: Python,
-    graph: &graph::PyGraph,
-) -> (graph::PyGraph, DictMap<usize, usize>) {
-    let default_fn = || py.None();
-
-    let (output_graph, output_edge_to_node_map): (
-        StablePyGraph<Undirected>,
-        HashMap<EdgeIndex, NodeIndex>,
-    ) = line_graph(&graph.graph, default_fn, default_fn);
-
-    let output_graph_py = graph::PyGraph {
-        graph: output_graph,
-        node_removed: false,
-        multigraph: false,
-        attrs: py.None(),
-    };
-
-    let mut output_edge_to_node_map_py: DictMap<usize, usize> = DictMap::new();
-
-    for edge in graph.graph.edge_references() {
-        let edge_id = edge.id();
-        let node_id = output_edge_to_node_map.get(&edge_id).unwrap();
-        output_edge_to_node_map_py.insert(edge_id.index(), node_id.index());
-    }
-
-    (output_graph_py, output_edge_to_node_map_py)
-}
 
 fn line_graph_tmp<Ty: EdgeType>(
     py: Python,

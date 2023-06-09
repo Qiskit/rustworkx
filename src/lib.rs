@@ -25,6 +25,7 @@ mod iterators;
 mod json;
 mod layout;
 mod link_analysis;
+mod line_graph;
 mod matching;
 mod planar;
 mod random_graph;
@@ -48,6 +49,7 @@ use graphml::*;
 use isomorphism::*;
 use json::*;
 use layout::*;
+use line_graph::*;
 use link_analysis::*;
 
 use matching::*;
