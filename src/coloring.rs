@@ -78,11 +78,11 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
 ///
 /// .. jupyter-execute::
 ///
-///     import rustworkx as rx
+///   import rustworkx as rx
 ///
-///     graph = rx.generators.cycle_graph(7)
-///     edge_colors = rx.graph_greedy_edge_color(graph)
-///     assert edge_colors == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}
+///   graph = rx.generators.cycle_graph(7)
+///   edge_colors = rx.graph_greedy_edge_color(graph)
+///   assert edge_colors == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}
 ///
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
