@@ -102,6 +102,11 @@ class TestGraphEdgeColoring(unittest.TestCase):
         edge_colors = rustworkx.graph_greedy_edge_color(graph)
         self.assertEqual({0: 0, 1: 1, 2: 2, 3: 3}, edge_colors)
 
+    def test_cycle_graph(self):
+        graph = rustworkx.generators.cycle_graph(7)
+        edge_colors = rustworkx.graph_greedy_edge_color(graph)
+        self.assertEqual({0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}, edge_colors)
+
 
 if __name__ == "__main__":
     unittest.main()

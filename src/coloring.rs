@@ -67,6 +67,23 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
     Ok(out_dict.into())
 }
 
+/// Color edges of a :class:`~.PyGraph` object using a greedy approach.
+///
+/// This function works by greedily coloring the line graph of the given graph.
+///
+/// :param PyGraph: The input PyGraph object to edge-color
+///
+/// :returns: A dictionary where keys are edge indices and the value is the color
+/// :rtype: dict
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///
+///     graph = rx.generators.cycle_graph(7)
+///     edge_colors = rx.graph_greedy_edge_color(graph)
+///     assert edge_colors == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}
+///
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
