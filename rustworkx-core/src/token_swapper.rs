@@ -23,6 +23,7 @@ use petgraph::visit::{
 };
 use petgraph::Directed;
 use petgraph::Direction::{Incoming, Outgoing};
+use rayon::prelude::*;
 use rayon_cond::CondIterator;
 
 use crate::connectivity::find_cycle;
@@ -127,10 +128,11 @@ where
             .collect();
 
         // todo_nodes are all the mapping entries where left != right
-        let todo_nodes: Vec<NodeIndex> = tokens
+        let mut todo_nodes: Vec<NodeIndex> = tokens
             .iter()
             .filter_map(|(node, dest)| if node != dest { Some(*node) } else { None })
             .collect();
+        todo_nodes.par_sort();
 
         // Add initial edges to the digraph/sub_digraph
         for node in self.graph.node_identifiers() {
