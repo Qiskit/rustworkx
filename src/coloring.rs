@@ -10,21 +10,19 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::graph;
-use crate::StablePyGraph;
+use crate::{graph, StablePyGraph};
+
 use hashbrown::HashMap;
+
+use petgraph::graph::{EdgeIndex, NodeIndex};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 use petgraph::Undirected;
-use rustworkx_core::dictmap::*;
+use rustworkx_core::coloring::greedy_node_color;
+use rustworkx_core::line_graph::line_graph;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
-
-use petgraph::graph::{EdgeIndex, NodeIndex};
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences};
-use petgraph::EdgeType;
-use rustworkx_core::coloring::greedy_node_color;
-use rustworkx_core::line_graph::line_graph;
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
@@ -69,60 +67,25 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
     Ok(out_dict.into())
 }
 
-fn line_graph_tmp<Ty: EdgeType>(
-    py: Python,
-    graph: &StablePyGraph<Ty>,
-) -> (StablePyGraph<Ty>, HashMap<EdgeIndex, NodeIndex>) {
-    let mut out_graph = StablePyGraph::<Ty>::with_capacity(graph.edge_count(), 0);
-    let mut out_edge_map = HashMap::<EdgeIndex, NodeIndex>::with_capacity(graph.edge_count());
-
-    for edge in graph.edge_references() {
-        let e0 = edge.id();
-        let n0 = out_graph.add_node(py.None());
-        out_edge_map.insert(e0, n0);
-    }
-
-    // There must be a better way to iterate over all pairs of edges, but I can't get
-    // combinations() to work.
-    for node in graph.node_references() {
-        for edge0 in graph.edges(node.0) {
-            for edge1 in graph.edges(node.0) {
-                if edge0.id().index() < edge1.id().index() {
-                    let node0 = out_edge_map.get(&edge0.id()).unwrap();
-                    let node1 = out_edge_map.get(&edge1.id()).unwrap();
-                    out_graph.add_edge(*node0, *node1, py.None());
-                }
-            }
-        }
-    }
-
-    (out_graph, out_edge_map)
-}
-
-fn greedy_edge_color<Ty: EdgeType>(py: Python, graph: &StablePyGraph<Ty>) -> DictMap<usize, usize> {
-    let (line_graph, edge_to_node_map) = line_graph_tmp(py, graph);
-    let colors = greedy_node_color(&line_graph);
-
-    let mut edge_colors: DictMap<usize, usize> = DictMap::new();
-
-    for edge in graph.edge_references() {
-        let e0 = edge.id();
-        let n0 = edge_to_node_map.get(&e0).unwrap();
-        let c0 = colors.get(n0).unwrap();
-        edge_colors.insert(e0.index(), *c0);
-    }
-    edge_colors
-}
-
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    println!("Running graph_greedy_edge_color....");
-    let edge_colors = greedy_edge_color(py, &graph.graph);
+    println!("Running NEW graph_greedy_edge_color....");
+
+    let default_fn = || py.None();
+    let (new_graph, edge_to_node_map): (StablePyGraph<Undirected>, HashMap<EdgeIndex, NodeIndex>) =
+        line_graph(&graph.graph, default_fn, default_fn);
+
+    let colors = greedy_node_color(&new_graph);
 
     let out_dict = PyDict::new(py);
-    for (index, color) in edge_colors {
-        out_dict.set_item(index, color)?;
+
+    for edge in graph.graph.edge_references() {
+        let e0 = edge.id();
+        let n0 = edge_to_node_map.get(&e0).unwrap();
+        let c0 = colors.get(n0).unwrap();
+        out_dict.set_item(e0.index(), c0)?;
     }
+
     Ok(out_dict.into())
 }
