@@ -79,12 +79,11 @@ pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<P
     let colors = greedy_node_color(&new_graph);
 
     let out_dict = PyDict::new(py);
-
     for edge in graph.graph.edge_references() {
-        let e0 = edge.id();
-        let n0 = edge_to_node_map.get(&e0).unwrap();
-        let c0 = colors.get(n0).unwrap();
-        out_dict.set_item(e0.index(), c0)?;
+        let edge_index = edge.id();
+        let node_index = edge_to_node_map.get(&edge_index).unwrap();
+        let edge_color = colors.get(node_index).unwrap();
+        out_dict.set_item(edge_index.index(), edge_color)?;
     }
 
     Ok(out_dict.into())
