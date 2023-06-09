@@ -71,23 +71,23 @@ source.
    * - Linux
      - x86_64
      - :ref:`tier-1`
-     - Distributions compatible with the `manylinux 2014 <https://peps.python.org/pep-0599/>`__ packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - i686 
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
-     - Distributions compatible with the `manylinux 2014 <https://peps.python.org/pep-0599/>`__ packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - aarch64
      - :ref:`tier-2`
-     - Distributions compatible with the `manylinux 2014 <https://peps.python.org/pep-0599/`__ packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - pp64le
      - :ref:`tier-3`
-     - Distributions compatible with the `manylinux 2014 <https://peps.python.org/pep-0599/>`__ packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - s390x
      - :ref:`tier-4`
-     - Distributions compatible with the `manylinux 2014 <https://peps.python.org/pep-0599/>`__ packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - macOS (10.9 or newer)
      - x86_64
      - :ref:`tier-1`
@@ -104,6 +104,9 @@ source.
      - i686 or x86_64
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
      -
+
+
+.. _manylinux 2014: https://peps.python.org/pep-0599/>
 
 .. _tier-1:
 
