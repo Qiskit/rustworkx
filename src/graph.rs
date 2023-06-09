@@ -1891,7 +1891,8 @@ impl PyGraph {
 
     /// Filters a graph's nodes by some criteria conditioned on a node's data payload and returns those nodes' indices.
     ///
-    /// Takes in a filter function that takes in a node's weight, and returns a bool value stating whether the weight aligns with some criteria specified by the user.
+    /// This function takes in a function as an argument. This filter function will be passed in a node's data payload and is
+    /// required to return a boolean value stating whether the node's data payload fits some criteria.
     ///
     /// For example::
     ///     
@@ -1927,7 +1928,8 @@ impl PyGraph {
 
     /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices.
     ///
-    /// Takes in a filter function that takes in an edge's weight, and returns a bool value stating whether the weight aligns with some criteria specified by the user.
+    /// This function takes in a function as an argument. This filter function will be passed in an edge's data payload and is
+    /// required to return a boolean value stating whether the edge's data payload fits some criteria.
     ///
     /// For example::
     ///
