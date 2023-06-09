@@ -13,16 +13,19 @@
 use crate::graph;
 use crate::StablePyGraph;
 use hashbrown::HashMap;
+use petgraph::Undirected;
 use rustworkx_core::dictmap::*;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
 
-use rustworkx_core::coloring::greedy_node_color;
-use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences, EdgeRef};
-use petgraph::EdgeType;
 use petgraph::graph::{EdgeIndex, NodeIndex};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences};
+use petgraph::EdgeType;
+use pyo3::pyclass::boolean_struct::True;
+use rustworkx_core::coloring::greedy_node_color;
+use rustworkx_core::line_graph::line_graph;
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
@@ -67,12 +70,39 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
     Ok(out_dict.into())
 }
 
+//graph::PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_line_graph(
+    py: Python,
+    graph: &graph::PyGraph,
+) -> (graph::PyGraph, DictMap<usize, usize>) {
+    let default_fn = || py.None();
 
+    let (output_graph, output_edge_to_node_map): (
+        StablePyGraph<Undirected>,
+        HashMap<EdgeIndex, NodeIndex>,
+    ) = line_graph(&graph.graph, default_fn, default_fn);
 
+    let output_graph_py = graph::PyGraph {
+        graph: output_graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    };
 
+    let mut output_edge_to_node_map_py: DictMap<usize, usize> = DictMap::new();
 
+    for edge in graph.graph.edge_references() {
+        let edge_id = edge.id();
+        let node_id = output_edge_to_node_map.get(&edge_id).unwrap();
+        output_edge_to_node_map_py.insert(edge_id.index(), node_id.index());
+    }
 
-fn line_graph<Ty: EdgeType>(
+    (output_graph_py, output_edge_to_node_map_py)
+}
+
+fn line_graph_tmp<Ty: EdgeType>(
     py: Python,
     graph: &StablePyGraph<Ty>,
 ) -> (StablePyGraph<Ty>, HashMap<EdgeIndex, NodeIndex>) {
@@ -103,7 +133,7 @@ fn line_graph<Ty: EdgeType>(
 }
 
 fn greedy_edge_color<Ty: EdgeType>(py: Python, graph: &StablePyGraph<Ty>) -> DictMap<usize, usize> {
-    let (line_graph, edge_to_node_map) = line_graph(py, graph);
+    let (line_graph, edge_to_node_map) = line_graph_tmp(py, graph);
     let colors = greedy_node_color(&line_graph);
 
     let mut edge_colors: DictMap<usize, usize> = DictMap::new();

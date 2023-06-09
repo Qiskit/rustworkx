@@ -434,6 +434,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_line_graph))?;
     m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;

@@ -46,7 +46,7 @@ class TestGraphColoring(unittest.TestCase):
         self.assertEqual({0: 0, 1: 1, 2: 1}, res)
 
 
-class TestGraphEdgehColoring(unittest.TestCase):
+class TestGraphEdgeColoring(unittest.TestCase):
     def test_simple_graph(self):
         graph = rustworkx.PyGraph()
         node_a = graph.add_node(1)
