@@ -23,7 +23,6 @@ use pyo3::Python;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences};
 use petgraph::EdgeType;
-use pyo3::pyclass::boolean_struct::True;
 use rustworkx_core::coloring::greedy_node_color;
 use rustworkx_core::line_graph::line_graph;
 
@@ -69,7 +68,6 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
     }
     Ok(out_dict.into())
 }
-
 
 fn line_graph_tmp<Ty: EdgeType>(
     py: Python,

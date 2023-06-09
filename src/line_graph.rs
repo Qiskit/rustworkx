@@ -10,22 +10,18 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::graph;
-use crate::StablePyGraph;
-use hashbrown::HashMap;
-use petgraph::Undirected;
-use rustworkx_core::dictmap::*;
+use crate::{graph, StablePyGraph};
 
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
-use pyo3::Python;
+use hashbrown::HashMap;
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences};
-use petgraph::EdgeType;
-use pyo3::pyclass::boolean_struct::True;
-use rustworkx_core::coloring::greedy_node_color;
+use petgraph::visit::{EdgeRef, IntoEdgeReferences};
+use petgraph::Undirected;
+use rustworkx_core::dictmap::*;
 use rustworkx_core::line_graph::line_graph;
+
+use pyo3::prelude::*;
+use pyo3::Python;
 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
