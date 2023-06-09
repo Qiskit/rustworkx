@@ -40,6 +40,7 @@ use crate::iterators::{
 use crate::{EdgeType, StablePyGraph};
 
 use rustworkx_core::connectivity;
+use std::cmp;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -349,8 +350,8 @@ pub fn digraph_adjacency_matrix(
 /// :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
 pub fn graph_adjacency_matrix(
     py: Python,
@@ -358,6 +359,7 @@ pub fn graph_adjacency_matrix(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
+    parallel_edge: String
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
@@ -367,8 +369,20 @@ pub fn graph_adjacency_matrix(
             matrix[[i, j]] = edge_weight;
             matrix[[j, i]] = edge_weight;
         } else {
-            matrix[[i, j]] += edge_weight;
-            matrix[[j, i]] += edge_weight;
+            if (parallel_edge == "sum"){
+                matrix[[i, j]] += edge_weight;
+                matrix[[j, i]] += edge_weight;
+            }
+            else if (parallel_edge == "min"){
+                let weight_min = cmp::min(matrix[[i, j]], edge_weight);
+                matrix[[i, j]] = weight_min;
+                matrix[[j, i]] = weight_min;
+            }
+            else if (parallel_edge == "max"){
+                let weight_max = cmp::max(matrix[[i, j]], edge_weight);
+                matrix[[i, j]] = weight_max;
+                matrix[[j, i]] = weight_max;
+            }
         }
     }
     Ok(matrix.into_pyarray(py).into())
