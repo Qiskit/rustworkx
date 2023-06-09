@@ -23,20 +23,20 @@ class TestGraphColoring(unittest.TestCase):
 
     def test_simple_graph(self):
         graph = rustworkx.PyGraph()
-        node_a = graph.add_node(1)
-        node_b = graph.add_node(2)
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
         graph.add_edge(node_a, node_b, 1)
-        node_c = graph.add_node(3)
+        node_c = graph.add_node("c")
         graph.add_edge(node_a, node_c, 1)
         res = rustworkx.graph_greedy_color(graph)
         self.assertEqual({0: 0, 1: 1, 2: 1}, res)
 
     def test_simple_graph_large_degree(self):
         graph = rustworkx.PyGraph()
-        node_a = graph.add_node(1)
-        node_b = graph.add_node(2)
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
         graph.add_edge(node_a, node_b, 1)
-        node_c = graph.add_node(3)
+        node_c = graph.add_node("c")
         graph.add_edge(node_a, node_c, 1)
         graph.add_edge(node_a, node_c, 1)
         graph.add_edge(node_a, node_c, 1)
@@ -49,11 +49,11 @@ class TestGraphColoring(unittest.TestCase):
 class TestGraphEdgeColoring(unittest.TestCase):
     def test_graph(self):
         graph = rustworkx.PyGraph()
-        node_a = graph.add_node(1)
-        node_b = graph.add_node(2)
-        node_c = graph.add_node(3)
-        node_d = graph.add_node(4)
-        node_e = graph.add_node(5)
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        node_e = graph.add_node("e")
 
         graph.add_edge(node_a, node_b, 1)
         graph.add_edge(node_a, node_c, 1)
@@ -67,11 +67,11 @@ class TestGraphEdgeColoring(unittest.TestCase):
         """Graph with missing node and edge indices."""
         graph = rustworkx.PyGraph()
 
-        node_a = graph.add_node("A")
-        node_b = graph.add_node("B")
-        node_c = graph.add_node("C")
-        node_d = graph.add_node("D")
-        node_e = graph.add_node("E")
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        node_e = graph.add_node("e")
 
         graph.add_edge(node_a, node_b, 1)
         graph.add_edge(node_b, node_c, 1)
@@ -85,16 +85,16 @@ class TestGraphEdgeColoring(unittest.TestCase):
 
     def test_graph_without_edges(self):
         graph = rustworkx.PyGraph()
-        graph.add_node(1)
-        graph.add_node(2)
+        graph.add_node("a")
+        graph.add_node("b")
         edge_colors = rustworkx.graph_greedy_edge_color(graph)
         self.assertEqual({}, edge_colors)
 
     def test_graph_multiple_edges(self):
         """Graph with multiple edges between two nodes."""
         graph = rustworkx.PyGraph()
-        node_a = graph.add_node(1)
-        node_b = graph.add_node(2)
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
         graph.add_edge(node_a, node_b, 1)
         graph.add_edge(node_a, node_b, 1)
         graph.add_edge(node_a, node_b, 1)
@@ -106,7 +106,3 @@ class TestGraphEdgeColoring(unittest.TestCase):
         graph = rustworkx.generators.cycle_graph(7)
         edge_colors = rustworkx.graph_greedy_edge_color(graph)
         self.assertEqual({0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}, edge_colors)
-
-
-if __name__ == "__main__":
-    unittest.main()

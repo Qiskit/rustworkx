@@ -53,7 +53,7 @@ use petgraph::visit::{Data, EdgeCount, EdgeRef, IntoEdges, IntoNodeIdentifiers};
 /// let output_edge_list = output_graph
 ///     .edge_references()
 ///     .map(|edge| (edge.source().index(), edge.target().index()))
-///     .collect::<Vec<(usize, usize)>>();///
+///     .collect::<Vec<(usize, usize)>>();
 ///
 /// let expected_edge_list = vec![(3, 1), (3, 0), (1, 0), (2, 0), (2, 1)];
 /// let expected_edge_map: HashMap<EdgeIndex, NodeIndex> = [
