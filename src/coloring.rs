@@ -70,8 +70,6 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    println!("Running NEW graph_greedy_edge_color....");
-
     let default_fn = || py.None();
     let (new_graph, edge_to_node_map): (StablePyGraph<Undirected>, HashMap<EdgeIndex, NodeIndex>) =
         line_graph(&graph.graph, default_fn, default_fn);
