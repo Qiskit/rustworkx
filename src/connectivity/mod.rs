@@ -363,6 +363,7 @@ pub fn graph_adjacency_matrix(
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
+    let mut parallel_edge_count = HashMap::new();
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
@@ -382,6 +383,21 @@ pub fn graph_adjacency_matrix(
                 let weight_max = cmp::max(matrix[[i, j]], edge_weight);
                 matrix[[i, j]] = weight_max;
                 matrix[[j, i]] = weight_max;
+            }
+            else if (parallel_edge == "avg"){
+                if (parallel_edge_count.contains_key([i, j])){
+                    matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[[i, j]] + edge_weight) / (parallel_edge_count[[i, j]] + 1);
+                    matrix[[j, i]] = (matrix[[j, i]] * parallel_edge_count[[i, j]] + edge_weight) / (parallel_edge_count[[i, j]] + 1);
+                    parallel_edge_count[[i, j]] += 1;
+                }
+                else{
+                    parallel_edge_count.insert([i, j], 2);
+                    matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2
+                    matrix[[j, i]] = (matrix[[j, i]] + edge_weight) / 2
+                }
+            }
+            else{
+                Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
             }
         }
     }
