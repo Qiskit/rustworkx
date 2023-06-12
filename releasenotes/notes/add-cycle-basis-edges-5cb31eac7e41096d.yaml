@@ -1,9 +1,13 @@
 ---
 features:
   - |
-    A function, :func:`~rustworkx.cycle_basis_edges` was added to the crate
+    A function, ``cycle_basis_edges`` was added to the crate
     ``rustworkx-core`` in the ``connectivity`` module. This function returns 
     the edge indices that form the cycle basis of a graph.
+  - |
+    Added a new function :func:`~rustworkx.cycle_basis_edges`  which is similar
+    to the existing :func:`~.cycle_basis` function but instead of returning node
+    indices it returns a list of edge indices for the cycle.
 
     .. jupyter-execute::
 
@@ -50,6 +54,11 @@ features:
       display(cycles_edges)
       # Print the data retrieved from the graph.
       display(cycle_info)
+upgrade:
+  - |
+    The trait bounds of :func:`rustworkx_core::connectivity::cycle_basis` now 
+    requires graphs to be compatible with the trait ``IntoEdges`` and that the 
+    attribute ``EdgeId`` conforms to `Eq` and `Hash`.
 fixes:
   - |
     Support for edges when getting the cycle basis. Refer to 
