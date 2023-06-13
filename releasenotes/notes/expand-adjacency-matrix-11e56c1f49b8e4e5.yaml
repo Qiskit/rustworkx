@@ -1,30 +1,30 @@
 ---
 features:
   - |
-    The function :func:`~rustworkx.graph_adjacency_matrix` now has the option to adjust parallel edge behavior. 
-    Instead of just the default sum behavior, the value in the output matrix can be the minimum ("min"), maximum ("max"), or average ("avg") of the weights of the parallel edges. 
-
-    For example::
+    The functions :func:`~rustworkx.graph_adjacency_matrix` and :func:`~rustworkx.digraph_adjacency_matrix` now have the option to adjust parallel edge behavior. 
+    Instead of just the default sum behavior, the value in the output matrix can be the minimum ("min"), maximum ("max"), or average ("avg") of the weights of the parallel edges.
+    For example:
 
     .. jupyter-execute::
 
-      import rustworkx as rx
-      graph = rx.PyGraph()
-      a = graph.add_node("A")
-      b = graph.add_node("B")
-      c = graph.add_node("C")
+        import rustworkx as rx
+        graph = rx.PyGraph()
+        a = graph.add_node("A")
+        b = graph.add_node("B")
+        c = graph.add_node("C")
 
-      graph.add_edges_from([
-          (a, b, 3.0),
-          (a, b, 1.0),
-          (a, c, 2.0),
-          (b, c, 7.0),
-          (c, a, 1.0),
-          (b, c, 2.0),
-          (a, b, 4.0)
-      ])
+        graph.add_edges_from([
+            (a, b, 3.0),
+            (a, b, 1.0),
+            (a, c, 2.0),
+            (b, c, 7.0),
+            (c, a, 1.0),
+            (b, c, 2.0),
+            (a, b, 4.0)
+        ])
 
-      mpl_draw(graph, with_labels=True)
-      print(rx.graph_adjacency_matrix(graph, weight_fn= lambda x: float(x), parallel_edge="avg"))
+        mpl_draw(graph, with_labels=True)
+        print(rx.graph_adjacency_matrix(graph, weight_fn= lambda x: float(x), parallel_edge="avg"))
+      
 
    

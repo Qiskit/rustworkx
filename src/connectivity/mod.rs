@@ -290,10 +290,9 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     value. This is the default value in the output matrix and it is used
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
-///:param String parallel_edge: Optional argument that determines how the function handles parallel edges.
-///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar
-///     behavior can be expected for ``"max"`` and ``"avg"``. The function defaults to ``"sum"`` behavior,
-///     where the value in the output matrix is the sum of all parallel edge weights.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges. 
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``. 
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
 ///
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
@@ -377,10 +376,9 @@ pub fn digraph_adjacency_matrix(
 ///     value. This is the default value in the output matrix and it is used
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
-/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
-///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar
-///     behavior can be expected for ``"max"`` and ``"avg"``. The function defaults to ``"sum"`` behavior,
-///     where the value in the output matrix is the sum of all parallel edge weights.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges. 
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``. 
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
 ///
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
