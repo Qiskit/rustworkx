@@ -23,7 +23,9 @@ features:
             (a, b, 4.0)
         ])
 
-        mpl_draw(graph, with_labels=True)
+        print("Adjacency Matrix with Summed Parallel Edges")
+        print(rx.graph_adjacency_matrix(graph, weight_fn= lambda x: float(x)))
+        print("Adjacency Matrix with Averaged Parallel Edges")
         print(rx.graph_adjacency_matrix(graph, weight_fn= lambda x: float(x), parallel_edge="avg"))
       
 
