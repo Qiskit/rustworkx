@@ -76,10 +76,7 @@ struct MisraGriesAlgorithm<'a> {
 impl<'a> MisraGriesAlgorithm<'a> {
     pub fn new(graph: &'a StablePyGraph<Undirected>) -> Self {
         let colors: DictMap<EdgeIndex, usize> = DictMap::new();
-        MisraGriesAlgorithm {
-            graph,
-            colors,
-        }
+        MisraGriesAlgorithm { graph, colors }
     }
 
     // Computes colors used at node u
@@ -134,13 +131,13 @@ impl<'a> MisraGriesAlgorithm<'a> {
 
             for (edge_index, z) in &neighbors {
                 if let Some(color) = self.colors.get(edge_index) {
-                        if self.is_free_color(last_node, *color) {
-                            fan_extended = true;
-                            last_node = *z;
-                            fan.push((*edge_index, *z));
-                            let position_z = neighbors.iter().position(|x| x.1 == *z).unwrap();
-                            neighbors.remove(position_z);
-                            break;
+                    if self.is_free_color(last_node, *color) {
+                        fan_extended = true;
+                        last_node = *z;
+                        fan.push((*edge_index, *z));
+                        let position_z = neighbors.iter().position(|x| x.1 == *z).unwrap();
+                        neighbors.remove(position_z);
+                        break;
                     }
                 }
             }
@@ -157,7 +154,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
         }
     }
 
-    // Returns path starting from node u with alternating colors c, d, c, d, c, etc.
+    // Returns the longest path starting at node u with alternating colors c, d, c, d, c, etc.
     fn get_cdu_path(&self, u: NodeIndex, c: usize, d: usize) -> Vec<(EdgeIndex, usize)> {
         let mut path: Vec<(EdgeIndex, usize)> = Vec::new();
         let mut cur_node: NodeIndex = u;
@@ -169,10 +166,9 @@ impl<'a> MisraGriesAlgorithm<'a> {
             for edge in self.graph.edges(cur_node) {
                 if let Some(color) = self.colors.get(&edge.id()) {
                     if *color == cur_color {
-                        // can extend the current path
-                        cur_node = edge.target();
-                        path.push((edge.id(), cur_color));
                         path_extended = true;
+                        path.push((edge.id(), cur_color));
+                        cur_node = edge.target();
                         cur_color = self.flip_color(c, d, cur_color);
                         break;
                     }
@@ -226,36 +222,36 @@ impl<'a> MisraGriesAlgorithm<'a> {
         for edge in self.graph.edge_references() {
             let u: NodeIndex = edge.source();
             let v: NodeIndex = edge.target();
-            let f = self.get_maximal_fan(edge.id(), u, v);
+            let fan = self.get_maximal_fan(edge.id(), u, v);
             let c = self.get_free_color(u);
-            let n = f.last().unwrap().1;
-            let d = self.get_free_color(n);
+            let d = self.get_free_color(fan.last().unwrap().1);
 
+            // find cdu-path
             let cdu_path = self.get_cdu_path(u, d, c);
 
+            // invert colors on cdu-path
             for (edge_index, color) in cdu_path {
-                let new_color = self.flip_color(c, d, color);
-                self.colors.insert(edge_index, new_color);
+                let flipped_color = self.flip_color(c, d, color);
+                self.colors.insert(edge_index, flipped_color);
             }
 
+            // find sub-fan fan[0..w] such that d is free on fan[w]
             let mut w = 0;
-            for (i, (_ee, z)) in f.iter().enumerate() {
+            for (i, (_, z)) in fan.iter().enumerate() {
                 if self.is_free_color(*z, d) {
                     w = i;
                     break;
                 }
             }
 
-            // rotating fan
+            // rotate fan
             for i in 1..w + 1 {
-                let e_prev = f[i - 1].0;
-                let e_next = f[i].0;
-                let color_next = self.colors.get(&e_next).unwrap();
-                self.colors.insert(e_prev, *color_next);
+                let next_color = self.colors.get(&(fan[i].0)).unwrap();
+                self.colors.insert(fan[i - 1].0, *next_color);
             }
 
-            let e_next = f[w].0;
-            self.colors.insert(e_next, d);
+            // fill additional color
+            self.colors.insert(fan[w].0, d);
         }
 
         self.check_coloring();
