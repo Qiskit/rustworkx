@@ -112,11 +112,16 @@ fn get_maximal_fan(graph: &StablePyGraph<Undirected>, edge_colors: &DictMap<Edge
     fan.push(v);
     // println!("... initial fan = {:?}", fan);
 
-    let mut neighbors: Vec<NodeIndex> = graph.neighbors(u).collect();
+    let mut neighbors: Vec<(EdgeIndex, NodeIndex)> = Vec::new();
+    for edge in graph.edges(u) {
+        neighbors.push((edge.id(), edge.target()));
+    }
+
+    // graph.neighbors(u).collect();
     // println!("... {:?} has neighbors {:?}", u, neighbors);
     let mut last_node = v;
 
-    let position_v = neighbors.iter().position(|x| *x == v).unwrap();
+    let position_v = neighbors.iter().position(|x| x.1 == v).unwrap();
     // println!("position_v is {}", position_v);
     neighbors.remove(position_v);
     // println!("... remaining neighbors are {:?}", neighbors);
@@ -125,11 +130,9 @@ fn get_maximal_fan(graph: &StablePyGraph<Undirected>, edge_colors: &DictMap<Edge
     while fan_extended {
         fan_extended = false;
 
-        for z in &neighbors {
-            // println!("... looking for edge {:?} to {:?}", u, *z);
-            let edge_index = graph.find_edge(u, *z).unwrap();
+        for (edge_index, z) in &neighbors {
             // println!("... examining nbd {:?} with edge_index {:?}", z, edge_index);
-            match edge_colors.get(&edge_index) {
+            match edge_colors.get(edge_index) {
                 Some(color) => {
                     // println!("...... has color {:?}", color);
                     // println!("...... checking if color {:?} if free on {:?}", *color, last_node);
@@ -138,7 +141,7 @@ fn get_maximal_fan(graph: &StablePyGraph<Undirected>, edge_colors: &DictMap<Edge
                         fan_extended = true;
                         last_node = *z;
                         fan.push(*z);
-                        let position_z = neighbors.iter().position(|x| *x == *z).unwrap();
+                        let position_z = neighbors.iter().position(|x| x.1 == *z).unwrap();
                         neighbors.remove(position_z);
                         break;
                     } else {
