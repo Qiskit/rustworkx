@@ -188,18 +188,15 @@ impl<'a> MisraGriesAlgorithm<'a> {
         while path_extended {
             path_extended = false;
             for edge in self.graph.edges(cur_node) {
-                match self.edge_colors.get(&edge.id()) {
-                    Some(color) => {
-                        if *color == cur_color {
-                            // can extend the current path
-                            cur_node = edge.target();
-                            path.push((edge.id(), cur_color));
-                            path_extended = true;
-                            cur_color = self.flip_color(c, d, cur_color);
-                            break;
-                        }
+                if let Some(color) = self.edge_colors.get(&edge.id()) {
+                    if *color == cur_color {
+                        // can extend the current path
+                        cur_node = edge.target();
+                        path.push((edge.id(), cur_color));
+                        path_extended = true;
+                        cur_color = self.flip_color(c, d, cur_color);
+                        break;
                     }
-                    _ => (),
                 }
             }
         }
