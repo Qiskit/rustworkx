@@ -70,82 +70,71 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
 
 struct MisraGriesAlgorithm<'a> {
     graph: &'a StablePyGraph<Undirected>,
-    edge_colors: DictMap<EdgeIndex, usize>,
+    colors: DictMap<EdgeIndex, usize>,
 }
 
 impl<'a> MisraGriesAlgorithm<'a> {
     pub fn new(graph: &'a StablePyGraph<Undirected>) -> Self {
-        let edge_colors: DictMap<EdgeIndex, usize> = DictMap::new();
+        let colors: DictMap<EdgeIndex, usize> = DictMap::new();
         MisraGriesAlgorithm {
             graph,
-            edge_colors,
+            colors,
         }
     }
 
+    // Computes colors used at node u
     fn get_used_colors(&self, u: NodeIndex) -> Vec<usize> {
         let mut used_colors: Vec<usize> = Vec::new();
         for edge in self.graph.edges(u) {
-            if let Some(color) = self.edge_colors.get(&edge.id()) {
+            if let Some(color) = self.colors.get(&edge.id()) {
                 used_colors.push(*color);
             }
         }
         used_colors
     }
 
+    // Returns the smallest free (aka unused) color at node u
     fn get_free_color(&self, u: NodeIndex) -> usize {
         let used_colors = self.get_used_colors(u);
-        // println!("used colors for {:?} are {:?}", u, used_colors);
-
         let mut c: usize = 0;
-
         while used_colors.contains(&c) {
             c += 1;
         }
-
         c
     }
 
+    // Returns if color c is free at node u
     fn is_free_color(&self, u: NodeIndex, c: usize) -> bool {
         let used_colors = self.get_used_colors(u);
         !used_colors.contains(&c)
     }
 
+    // Returns the maximal fan on edge ee = (u, v) at u
     fn get_maximal_fan(
         &self,
         ee: EdgeIndex,
         u: NodeIndex,
         v: NodeIndex,
     ) -> Vec<(EdgeIndex, NodeIndex)> {
-        // println!("calling maximal_fan on {:?} and {:?}", u, v);
         let mut fan: Vec<(EdgeIndex, NodeIndex)> = Vec::new();
         fan.push((ee, v));
-        // println!("... initial fan = {:?}", fan);
 
         let mut neighbors: Vec<(EdgeIndex, NodeIndex)> = Vec::new();
         for edge in self.graph.edges(u) {
             neighbors.push((edge.id(), edge.target()));
         }
 
-        // graph.neighbors(u).collect();
-        // println!("... {:?} has neighbors {:?}", u, neighbors);
         let mut last_node = v;
-
         let position_v = neighbors.iter().position(|x| x.1 == v).unwrap();
-        // println!("position_v is {}", position_v);
         neighbors.remove(position_v);
-        // println!("... remaining neighbors are {:?}", neighbors);
 
         let mut fan_extended: bool = true;
         while fan_extended {
             fan_extended = false;
 
             for (edge_index, z) in &neighbors {
-                // println!("... examining nbd {:?} with edge_index {:?}", z, edge_index);
-                if let Some(color) = self.edge_colors.get(edge_index) {
-                        // println!("...... has color {:?}", color);
-                        // println!("...... checking if color {:?} if free on {:?}", *color, last_node);
+                if let Some(color) = self.colors.get(edge_index) {
                         if self.is_free_color(last_node, *color) {
-                            // println!("...... free, extending");
                             fan_extended = true;
                             last_node = *z;
                             fan.push((*edge_index, *z));
@@ -155,8 +144,6 @@ impl<'a> MisraGriesAlgorithm<'a> {
                     }
                 }
             }
-
-            // println!("... after looking at all neighbors, fan is extended: {}", fan_extended);
         }
 
         fan
@@ -170,17 +157,17 @@ impl<'a> MisraGriesAlgorithm<'a> {
         }
     }
 
-    // Find a path starting from node u with alternating colors d, c, d, c, etc.
+    // Returns path starting from node u with alternating colors c, d, c, d, c, etc.
     fn get_cdu_path(&self, u: NodeIndex, c: usize, d: usize) -> Vec<(EdgeIndex, usize)> {
         let mut path: Vec<(EdgeIndex, usize)> = Vec::new();
         let mut cur_node: NodeIndex = u;
-        let mut cur_color = d;
+        let mut cur_color = c;
         let mut path_extended = true;
 
         while path_extended {
             path_extended = false;
             for edge in self.graph.edges(cur_node) {
-                if let Some(color) = self.edge_colors.get(&edge.id()) {
+                if let Some(color) = self.colors.get(&edge.id()) {
                     if *color == cur_color {
                         // can extend the current path
                         cur_node = edge.target();
@@ -197,7 +184,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
 
     fn check_coloring(&self) -> bool {
         for edge in self.graph.edge_references() {
-            match self.edge_colors.get(&edge.id()) {
+            match self.colors.get(&edge.id()) {
                 Some(_color) => (),
                 None => {
                     println!("Problem edge {:?} has no color assigned", edge);
@@ -212,7 +199,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
             let mut num_edges = 0;
             for edge in self.graph.edges(node) {
                 num_edges += 1;
-                match self.edge_colors.get(&edge.id()) {
+                match self.colors.get(&edge.id()) {
                     Some(color) => {
                         used_colors.insert(*color);
                         if max_color < *color {
@@ -236,51 +223,20 @@ impl<'a> MisraGriesAlgorithm<'a> {
     }
 
     pub fn run_algorithm(&mut self) -> &DictMap<EdgeIndex, usize> {
-        println!("================");
-        println!("Initially");
         for edge in self.graph.edge_references() {
             let u: NodeIndex = edge.source();
             let v: NodeIndex = edge.target();
-            println!(
-                "==> edge_ref {:?} with id {:?} with source {:?} and target {:?}",
-                edge,
-                edge.id(),
-                u,
-                v
-            );
-        }
-
-        for edge in self.graph.edge_references() {
-            println!("================");
-            let u: NodeIndex = edge.source();
-            let v: NodeIndex = edge.target();
-            println!("==> edge_ref with source {:?} and target {:?}", u, v);
             let f = self.get_maximal_fan(edge.id(), u, v);
-            println!(
-                "==> get_maximal_fan: u = {:?}, v = {:?}, fan = {:?}",
-                u, v, f
-            );
             let c = self.get_free_color(u);
-            println!("==> c has free color {}", c);
             let n = f.last().unwrap().1;
-            // println!("==> last element in fan is {:?}", n);
             let d = self.get_free_color(n);
-            println!("==> d has free color {}", d);
 
-            let cdu_path: Vec<(EdgeIndex, usize)> = self.get_cdu_path(u, c, d);
-            println!(
-                "==> found cdu_path of length {}: {:?}",
-                cdu_path.len(),
-                cdu_path
-            );
+            let cdu_path = self.get_cdu_path(u, d, c);
 
-            for (edge_index, edge_color) in cdu_path {
-                let new_color = self.flip_color(c, d, edge_color);
-                println!("... setting color for {:?} to {:?}", edge_index, new_color);
-
-                self.edge_colors.insert(edge_index, new_color);
+            for (edge_index, color) in cdu_path {
+                let new_color = self.flip_color(c, d, color);
+                self.colors.insert(edge_index, new_color);
             }
-            println!("==> now edge colors are {:?}", self.edge_colors);
 
             let mut w = 0;
             for (i, (_ee, z)) in f.iter().enumerate() {
@@ -289,34 +245,22 @@ impl<'a> MisraGriesAlgorithm<'a> {
                     break;
                 }
             }
-            println!("==> w is {}", w);
 
             // rotating fan
             for i in 1..w + 1 {
                 let e_prev = f[i - 1].0;
                 let e_next = f[i].0;
-                let color_next = self.edge_colors.get(&e_next).unwrap();
-                println!("... setting color for {:?} to {:?}", e_prev, color_next);
-                self.edge_colors.insert(e_prev, *color_next);
+                let color_next = self.colors.get(&e_next).unwrap();
+                self.colors.insert(e_prev, *color_next);
             }
-            println!(
-                "==> after rotating fan: edge colors are {:?}",
-                self.edge_colors
-            );
 
             let e_next = f[w].0;
-            self.edge_colors.insert(e_next, d);
-            println!("... setting color for {:?} to {:?}", e_next, d);
-
-            println!(
-                "==> after assigning color, colors are {:?}",
-                self.edge_colors
-            );
+            self.colors.insert(e_next, d);
         }
 
         self.check_coloring();
 
-        &self.edge_colors
+        &self.colors
     }
 }
 
@@ -325,10 +269,10 @@ impl<'a> MisraGriesAlgorithm<'a> {
 pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let mut mg = MisraGriesAlgorithm::new(&graph.graph);
 
-    let edge_colors = mg.run_algorithm();
+    let colors = mg.run_algorithm();
 
     let out_dict = PyDict::new(py);
-    for (edge, color) in edge_colors {
+    for (edge, color) in colors {
         out_dict.set_item(edge.index(), color)?;
     }
     Ok(out_dict.into())
