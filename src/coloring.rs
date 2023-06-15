@@ -75,10 +75,10 @@ struct MisraGriesAlgorithm<'a> {
 
 impl<'a> MisraGriesAlgorithm<'a> {
     pub fn new(graph: &'a StablePyGraph<Undirected>) -> Self {
-        let mut edge_colors: DictMap<EdgeIndex, usize> = DictMap::new();
+        let edge_colors: DictMap<EdgeIndex, usize> = DictMap::new();
         MisraGriesAlgorithm {
             graph,
-            edge_colors: edge_colors,
+            edge_colors,
         }
     }
 
