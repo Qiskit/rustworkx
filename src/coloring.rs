@@ -24,6 +24,7 @@ use petgraph::visit::{EdgeRef};
 
 use petgraph::visit::{IntoEdgeReferences};
 use petgraph::{Undirected};
+use petgraph::adj::EdgeReference;
 
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
@@ -106,10 +107,10 @@ fn is_free_color(graph: &StablePyGraph<Undirected>, edge_colors: &DictMap<EdgeIn
 
 
 
-fn get_maximal_fan(graph: &StablePyGraph<Undirected>, edge_colors: &DictMap<EdgeIndex, usize>, u: NodeIndex, v: NodeIndex) -> Vec<NodeIndex> {
+fn get_maximal_fan(graph: &StablePyGraph<Undirected>, edge_colors: &DictMap<EdgeIndex, usize>, ee: EdgeIndex, u: NodeIndex, v: NodeIndex) -> Vec<(EdgeIndex, NodeIndex)> {
     // println!("calling maximal_fan on {:?} and {:?}", u, v);
-    let mut fan: Vec<NodeIndex> = Vec::new();
-    fan.push(v);
+    let mut fan: Vec<(EdgeIndex, NodeIndex)> = Vec::new();
+    fan.push((ee, v));
     // println!("... initial fan = {:?}", fan);
 
     let mut neighbors: Vec<(EdgeIndex, NodeIndex)> = Vec::new();
@@ -140,7 +141,7 @@ fn get_maximal_fan(graph: &StablePyGraph<Undirected>, edge_colors: &DictMap<Edge
                         // println!("...... free, extending");
                         fan_extended = true;
                         last_node = *z;
-                        fan.push(*z);
+                        fan.push((*edge_index, *z));
                         let position_z = neighbors.iter().position(|x| x.1 == *z).unwrap();
                         neighbors.remove(position_z);
                         break;
@@ -258,13 +259,13 @@ pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyRes
         let u: NodeIndex = edge.source();
         let v: NodeIndex = edge.target();
         println!("==> edge_ref with source {:?} and target {:?}", u, v);
-        let f = get_maximal_fan(&graph.graph, &edge_colors, u, v);
+        let f = get_maximal_fan(&graph.graph, &edge_colors, edge.id(), u, v);
         println!("==> get_maximal_fan: u = {:?}, v = {:?}, fan = {:?}", u, v, f);
         let c = get_free_color(&graph.graph, &edge_colors, u);
         println!("==> c has free color {}", c);
-        let n = f.last().unwrap();
+        let n = f.last().unwrap().1;
         // println!("==> last element in fan is {:?}", n);
-        let d = get_free_color(&graph.graph, &edge_colors, *n);
+        let d = get_free_color(&graph.graph, &edge_colors, n);
         println!("==> d has free color {}", d);
 
         let cdu_path: Vec<(EdgeIndex, usize)> = get_cdu_path(&graph.graph, &edge_colors, u, c, d);
@@ -279,7 +280,7 @@ pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyRes
         println!("==> now edge colors are {:?}", edge_colors);
 
         let mut w = 0;
-        for (i, z) in f.iter().enumerate() {
+        for (i, (ee, z)) in f.iter().enumerate() {
             if is_free_color(&graph.graph, &edge_colors, *z, d) {
                 w = i;
                 break;
@@ -290,15 +291,15 @@ pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyRes
 
         // rotating fan
         for i in 1..w+1 {
-            let e_prev = graph.graph.find_edge(u, f[i-1]).unwrap();
-            let e_next = graph.graph.find_edge(u, f[i]).unwrap();
+            let e_prev = f[i-1].0;
+            let e_next = f[i].0;
             let color_next = edge_colors.get(&e_next).unwrap();
             println!("... setting color for {:?} to {:?}", e_prev, color_next);
             edge_colors.insert(e_prev, *color_next);
         }
         println!("==> after rotating fan: edge colors are {:?}", edge_colors);
 
-        let e_next = graph.graph.find_edge(u, f[w]).unwrap();
+        let e_next = f[w].0;
         edge_colors.insert(e_next, d);
         println!("... setting color for {:?} to {:?}", e_next, d);
 
