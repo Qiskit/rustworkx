@@ -144,8 +144,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
 
             for (edge_index, z) in &neighbors {
                 // println!("... examining nbd {:?} with edge_index {:?}", z, edge_index);
-                match self.edge_colors.get(edge_index) {
-                    Some(color) => {
+                if let Some(color) = self.edge_colors.get(edge_index) {
                         // println!("...... has color {:?}", color);
                         // println!("...... checking if color {:?} if free on {:?}", *color, last_node);
                         if self.is_free_color(last_node, *color) {
@@ -156,11 +155,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
                             let position_z = neighbors.iter().position(|x| x.1 == *z).unwrap();
                             neighbors.remove(position_z);
                             break;
-                        } else {
-                            // println!("...... not free");
-                        }
                     }
-                    None => (),
                 }
             }
 
