@@ -85,11 +85,8 @@ impl<'a> MisraGriesAlgorithm<'a> {
     fn get_used_colors(&self, u: NodeIndex) -> Vec<usize> {
         let mut used_colors: Vec<usize> = Vec::new();
         for edge in self.graph.edges(u) {
-            match self.edge_colors.get(&edge.id()) {
-                Some(color) => {
-                    used_colors.push(*color);
-                }
-                None => (),
+            if let Some(color) = self.edge_colors.get(&edge.id()) {
+                used_colors.push(*color);
             }
         }
         used_colors
@@ -102,7 +99,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
         let mut c: usize = 0;
 
         while used_colors.contains(&c) {
-            c = c + 1;
+            c += 1;
         }
 
         c
