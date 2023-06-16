@@ -1848,6 +1848,84 @@ impl PyGraph {
         self.node_removed = false;
         self.attrs = py.None();
     }
+
+    /// Filters a graph's nodes by some criteria conditioned on a node's data payload and returns those nodes' indices.
+    ///
+    /// This function takes in a function as an argument. This filter function will be passed in a node's data payload and is
+    /// required to return a boolean value stating whether the node's data payload fits some criteria.
+    ///
+    /// For example::
+    ///     
+    ///     from rustworkx import PyGraph
+    ///
+    ///     graph = PyGraph()
+    ///     graph.add_nodes_from(list(range(5)))
+    ///
+    ///     def my_filter_function(node):
+    ///         return node > 2
+    ///
+    ///     indices = graph.filter_nodes(my_filter_function)
+    ///     assert indices == [3, 4]
+    ///
+    /// :param filter_function: Function with which to filter nodes
+    /// :returns: The node indices that match the filter
+    /// :rtype: NodeIndices
+    #[pyo3(text_signature = "(self, filter_function)")]
+    pub fn filter_nodes(&self, py: Python, filter_function: PyObject) -> PyResult<NodeIndices> {
+        let filter = |nindex: NodeIndex| -> PyResult<bool> {
+            let res = filter_function.call1(py, (&self.graph[nindex],))?;
+            res.extract(py)
+        };
+
+        let mut n = Vec::with_capacity(self.graph.node_count());
+        for node_index in self.graph.node_indices() {
+            if filter(node_index)? {
+                n.push(node_index.index())
+            };
+        }
+        Ok(NodeIndices { nodes: n })
+    }
+
+    /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices.
+    ///
+    /// This function takes in a function as an argument. This filter function will be passed in an edge's data payload and is
+    /// required to return a boolean value stating whether the edge's data payload fits some criteria.
+    ///
+    /// For example::
+    ///
+    ///     from rustworkx import PyGraph
+    ///     from rustworkx.generators import complete_graph
+    ///
+    ///     graph = PyGraph()
+    ///     graph.add_nodes_from(range(3))
+    ///     graph.add_edges_from([(0, 1, 'A'), (0, 1, 'B'), (1, 2, 'C')])
+    ///
+    ///     def my_filter_function(edge):
+    ///         if edge:
+    ///             return edge == 'B'
+    ///         return False  
+    ///        
+    ///     indices = graph.filter_edges(my_filter_function)
+    ///     assert indices == [1]
+    ///
+    /// :param filter_function: Function with which to filter edges
+    /// :returns: The edge indices that match the filter
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, filter_function)")]
+    pub fn filter_edges(&self, py: Python, filter_function: PyObject) -> PyResult<EdgeIndices> {
+        let filter = |eindex: EdgeIndex| -> PyResult<bool> {
+            let res = filter_function.call1(py, (&self.graph[eindex],))?;
+            res.extract(py)
+        };
+
+        let mut e = Vec::with_capacity(self.graph.edge_count());
+        for edge_index in self.graph.edge_indices() {
+            if filter(edge_index)? {
+                e.push(edge_index.index())
+            };
+        }
+        Ok(EdgeIndices { edges: e })
+    }
 }
 
 fn weight_transform_callable(
