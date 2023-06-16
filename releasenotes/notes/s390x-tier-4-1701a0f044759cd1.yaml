@@ -5,7 +5,7 @@ upgrade:
     documented in :ref:`platform-suppport`). This is a result of no longer being
     able to run tests during the pre-compiled wheel publishing jobs due to
     constraints in the available CI infrastructure. There hopefully shouldn't 
-    be any meaningful impact resulting from this change, but as we're no longer tests being
+    be any meaningful impact resulting from this change, but as there are no longer tests being
     run to validate the binaries prior to publishing them there are no longer
     guarantees that the wheels for s390x are fully functional (although the
     likelihood they are is still high as it works on other platforms). If any
