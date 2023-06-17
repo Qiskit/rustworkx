@@ -10,8 +10,8 @@ Installing Rustworkx
 ====================
 
 rustworkx is published on pypi so on x86_64, i686, ppc64le, s390x, and aarch64
-Linux systems, x86_64 on Mac OSX, and 32 and 64 bit Windows installing is as
-simple as running::
+Linux systems, x86_64 and arm64 on macOS, and 32 and 64 bit Windows
+installing is as simple as running::
 
     pip install rustworkx
 
@@ -71,28 +71,28 @@ source.
    * - Linux
      - x86_64
      - :ref:`tier-1`
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - i686 
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - aarch64
      - :ref:`tier-2`
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - pp64le
      - :ref:`tier-3`
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - s390x
-     - :ref:`tier-3`
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - :ref:`tier-4`
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - macOS (10.9 or newer)
      - x86_64
      - :ref:`tier-1`
      -
-   * - macOS (10.15 or newer)
+   * - macOS (11 or newer)
      - arm64
      - :ref:`tier-4`
      -
@@ -104,6 +104,9 @@ source.
      - i686 or x86_64
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
      -
+
+
+.. _manylinux 2014: https://peps.python.org/pep-0599/>
 
 .. _tier-1:
 
