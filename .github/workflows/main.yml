@@ -82,13 +82,13 @@ jobs:
         with:
           python-version: 3.7
           architecture: ${{ matrix.platform.python-architecture }}
-        if: runner.os == 'Windows' && ${{ matrix.python-version }} == "3.7.16"
+        if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7.16' }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
-        if: runner.os == 'Windows' && ${{ matrix.python-version }} != '3.7.16'
+        if: ${{ runner.os == 'Windows' && matrix.python-version != '3.7.16' }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
