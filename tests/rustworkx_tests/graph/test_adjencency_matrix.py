@@ -308,6 +308,6 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError):
-            err_matrix = rustworkx.graph_adjacency_matrix(
+            rustworkx.graph_adjacency_matrix(
                 graph, weight_fn=lambda x: float(x), parallel_edge="error"
             )
