@@ -1596,7 +1596,35 @@ impl PyGraph {
         Ok(out_dict.into())
     }
 
-    /// Docs Pending
+    /// Substitute a node with a PyGraph object
+    ///
+    /// :param int node: The node to replace with the PyGraph object
+    /// :param PyGraph other: The other graph to replace ``node`` with
+    /// :param callable edge_map_fn: A callable object that will take 3 position
+    ///     parameters, ``(source, target, weight)`` to represent an edge either to
+    ///     or from ``node`` in this graph. The expected return value from this
+    ///     callable is the node index of the node in ``other`` that an edge should
+    ///     be to/from. If None is returned, that edge will be skipped and not
+    ///     be copied.
+    /// :param callable node_filter: An optional callable object that when used
+    ///     will receive a node's payload object from ``other`` and return
+    ///     ``True`` if that node is to be included in the graph or not.
+    /// :param callable edge_weight_map: An optional callable object that when
+    ///     used will receive an edge's weight/data payload from ``other`` and
+    ///     will return an object to use as the weight for a newly created edge
+    ///     after the edge is mapped from ``other``. If not specified the weight
+    ///     from the edge in ``other`` will be copied by reference and used.
+    ///
+    /// :returns: A mapping of node indices in ``other`` to the equivalent node
+    ///     in this graph.
+    /// :rtype: NodeMap
+    ///
+    /// .. note::
+    ///
+    ///    The return type is a :class:`rustworkx.NodeMap` which is an unordered
+    ///    type. So it does not provide a deterministic ordering between objects
+    ///    when iterated over (although the same object will have a consistent
+    ///    order when iterated over multiple times).
     ///
     #[pyo3(
         text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None"
