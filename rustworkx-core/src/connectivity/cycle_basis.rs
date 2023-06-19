@@ -52,14 +52,13 @@ where
     G::NodeId: Eq + Hash,
     G::EdgeId: Eq + Hash,
 {
-    let mut root_node = root;
+    let mut root_node: Option<G::NodeId> = root;
     let mut graph_nodes: HashSet<G::NodeId> = graph.node_identifiers().collect();
     let mut cycles_edges: Vec<Vec<G::EdgeId>> = Vec::new();
     let mut cycles_nodes: Vec<Vec<G::NodeId>> = Vec::new();
 
-    // Method used to retrieve all the edges between an origin node and a target node.
-    // Can be used to check if a node loops back to itself by enabling equiv
-    fn get_edge_between<G>(orig_graph: G, origin: G::NodeId, target: G::NodeId) -> Vec<G::EdgeId>
+    /// Method used to retrieve all the edges between an origin node and a target node.
+    fn get_edge_between<G>(orig_graph: G, origin: G::NodeId, target: G::NodeId) -> G::EdgeId
     where
         G: IntoEdges,
     {
@@ -67,7 +66,8 @@ where
             .edges(origin)
             .filter(|edge: &G::EdgeRef| edge.target() == target)
             .map(|edge: G::EdgeRef| edge.id())
-            .collect()
+            .next()
+            .unwrap()
     }
 
     while !graph_nodes.is_empty() {
@@ -105,7 +105,7 @@ where
                 // A self loop:
                 } else if z == neighbor {
                     if edges {
-                        let cycle_edge: Vec<G::EdgeId> = get_edge_between(graph, z, z);
+                        let cycle_edge: Vec<G::EdgeId> = vec![get_edge_between(graph, z, z)];
                         cycles_edges.push(cycle_edge);
                     } else {
                         let cycle: Vec<G::NodeId> = vec![z];
@@ -117,31 +117,24 @@ where
                     let mut p = pred.get(&z).unwrap();
                     if edges {
                         let mut cycle: Vec<G::EdgeId> = Vec::new();
-                        // Retreive all edges from z to neighbor.
-                        let mut neigh_edge: Vec<G::EdgeId> = get_edge_between(graph, z, neighbor);
-                        // Append to cycle
-                        cycle.append(&mut neigh_edge);
+                        // Retreive all edges from z to neighbor and push to cycle
+                        cycle.push(get_edge_between(graph, z, neighbor));
 
                         // Make last p_node == z
                         let mut prev_p: &G::NodeId = &z;
                         // While p is in the neighborhood of neighbor
                         while !pn.contains(p) {
-                            // Retrieve all edges from prev_p to p and vice versa
-                            let mut neigh_edge: Vec<G::EdgeId> =
-                                get_edge_between(graph, *prev_p, *p);
-                            // Append to cycle
-                            cycle.append(&mut neigh_edge);
+                            // Retrieve all edges from prev_p to p and vice versa append to cycle
+                            cycle.push(get_edge_between(graph, *prev_p, *p));
                             // Update prev_p to p
                             prev_p = p;
                             // Retreive a new predecessor node from p and replace p
                             p = pred.get(p).unwrap();
                         }
                         // When loop ends add remaining edges from prev_p to p.
-                        let mut neigh_edge: Vec<G::EdgeId> = get_edge_between(graph, *prev_p, *p);
-                        cycle.append(&mut neigh_edge);
+                        cycle.push(get_edge_between(graph, *prev_p, *p));
                         // Also retreive all edges between the last p and neighbor
-                        let mut neigh_edge: Vec<G::EdgeId> = get_edge_between(graph, *p, neighbor);
-                        cycle.append(&mut neigh_edge);
+                        cycle.push(get_edge_between(graph, *p, neighbor));
                         // Once all edges within cycle have been found, push to cycle list.
                         cycles_edges.push(cycle);
                     } else {
