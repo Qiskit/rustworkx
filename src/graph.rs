@@ -1641,7 +1641,7 @@ impl PyGraph {
         let filter_fn = |obj: &PyObject, filter_fn: &Option<PyObject>| -> PyResult<bool> {
             match filter_fn {
                 Some(filter) => {
-                    let res = filter.call1(py, (obj,)).unwrap();
+                    let res = filter.call1(py, (obj,))?;
                     res.extract(py)
                 }
                 None => Ok(true),
@@ -1656,7 +1656,7 @@ impl PyGraph {
         };
 
         let map_fn = |source: usize, target: usize, weight: &PyObject| -> PyResult<Option<usize>> {
-            let res = edge_map_fn.call1(py, (source, target, weight)).unwrap();
+            let res = edge_map_fn.call1(py, (source, target, weight))?;
             res.extract(py)
         };
 
@@ -1694,7 +1694,7 @@ impl PyGraph {
             self._add_edge(
                 NodeIndex::new(out_map[&edge.source().index()]),
                 NodeIndex::new(out_map[&edge.target().index()]),
-                weight_map_fn(edge.weight(), &edge_weight_map).unwrap(),
+                weight_map_fn(edge.weight(), &edge_weight_map)?,
             );
         }
         // Incoming and outgoing edges.
@@ -1715,13 +1715,13 @@ impl PyGraph {
             .map(|edge| (edge.source(), edge.target(), edge.weight().clone_ref(py)))
             .collect();
         for (source, target, weight) in in_edges {
-            let old_index: Option<usize> = map_fn(source.index(), target.index(), &weight).unwrap();
+            let old_index: Option<usize> = map_fn(source.index(), target.index(), &weight)?;
             let target_out: NodeIndex = match old_index {
                 Some(old_index) => match out_map.get(&old_index) {
                     Some(new_index) => NodeIndex::new(*new_index),
                     None => {
                         return Err(PyIndexError::new_err(format!(
-                            "No matter index {} found",
+                            "No mapped index {} found",
                             old_index
                         )))
                     }
@@ -1731,13 +1731,13 @@ impl PyGraph {
             self._add_edge(source, target_out, weight);
         }
         for (source, target, weight) in out_edges {
-            let old_index: Option<usize> = map_fn(source.index(), target.index(), &weight).unwrap();
+            let old_index: Option<usize> = map_fn(source.index(), target.index(), &weight)?;
             let source_out: NodeIndex = match old_index {
                 Some(old_index) => match out_map.get(&old_index) {
                     Some(new_index) => NodeIndex::new(*new_index),
                     None => {
                         return Err(PyIndexError::new_err(format!(
-                            "No matter index {} found",
+                            "No mapped index {} found",
                             old_index
                         )))
                     }
