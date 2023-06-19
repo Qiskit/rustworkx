@@ -316,26 +316,34 @@ pub fn digraph_adjacency_matrix(
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
-        } else if parallel_edge == "sum" {
-            matrix[[i, j]] += edge_weight;
-        } else if parallel_edge == "min" {
-            let weight_min = matrix[[i, j]].min(edge_weight);
-            matrix[[i, j]] = weight_min;
-        } else if parallel_edge == "max" {
-            let weight_max = matrix[[i, j]].max(edge_weight);
-            matrix[[i, j]] = weight_max;
-        } else if parallel_edge == "avg" {
-            if parallel_edge_count.contains_key(&[i, j]) {
-                matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[&[i, j]] as f64
-                    + edge_weight)
-                    / ((parallel_edge_count[&[i, j]] + 1) as f64);
-                *parallel_edge_count.get_mut(&[i, j]).unwrap() += 1;
-            } else {
-                parallel_edge_count.insert([i, j], 2);
-                matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2.0;
-            }
         } else {
-            return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+            match parallel_edge {
+                "sum" => {
+                    matrix[[i, j]] += edge_weight;
+                }
+                "min" => {
+                    let weight_min = matrix[[i, j]].min(edge_weight);
+                    matrix[[i, j]] = weight_min;
+                }
+                "max" => {
+                    let weight_max = matrix[[i, j]].max(edge_weight);
+                    matrix[[i, j]] = weight_max;
+                }
+                "avg" => {
+                    if parallel_edge_count.contains_key(&[i, j]) {
+                        matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        *parallel_edge_count.get_mut(&[i, j]).unwrap() += 1;
+                    } else {
+                        parallel_edge_count.insert([i, j], 2);
+                        matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2.0;
+                    }
+                }
+                _ => {
+                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                }
+            }
         }
     }
     Ok(matrix.into_pyarray(py).into())
@@ -394,33 +402,41 @@ pub fn graph_adjacency_matrix(
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
             matrix[[j, i]] = edge_weight;
-        } else if parallel_edge == "sum" {
-            matrix[[i, j]] += edge_weight;
-            matrix[[j, i]] += edge_weight;
-        } else if parallel_edge == "min" {
-            let weight_min = matrix[[i, j]].min(edge_weight);
-            matrix[[i, j]] = weight_min;
-            matrix[[j, i]] = weight_min;
-        } else if parallel_edge == "max" {
-            let weight_max = matrix[[i, j]].max(edge_weight);
-            matrix[[i, j]] = weight_max;
-            matrix[[j, i]] = weight_max;
-        } else if parallel_edge == "avg" {
-            if parallel_edge_count.contains_key(&[i, j]) {
-                matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[&[i, j]] as f64
-                    + edge_weight)
-                    / ((parallel_edge_count[&[i, j]] + 1) as f64);
-                matrix[[j, i]] = (matrix[[j, i]] * parallel_edge_count[&[i, j]] as f64
-                    + edge_weight)
-                    / ((parallel_edge_count[&[i, j]] + 1) as f64);
-                *parallel_edge_count.get_mut(&[i, j]).unwrap() += 1;
-            } else {
-                parallel_edge_count.insert([i, j], 2);
-                matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2.0;
-                matrix[[j, i]] = (matrix[[j, i]] + edge_weight) / 2.0;
-            }
         } else {
-            return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+            match parallel_edge {
+                "sum" => {
+                    matrix[[i, j]] += edge_weight;
+                    matrix[[j, i]] += edge_weight;
+                }
+                "min" => {
+                    let weight_min = matrix[[i, j]].min(edge_weight);
+                    matrix[[i, j]] = weight_min;
+                    matrix[[j, i]] = weight_min;
+                }
+                "max" => {
+                    let weight_max = matrix[[i, j]].max(edge_weight);
+                    matrix[[i, j]] = weight_max;
+                    matrix[[j, i]] = weight_max;
+                }
+                "avg" => {
+                    if parallel_edge_count.contains_key(&[i, j]) {
+                        matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        matrix[[j, i]] = (matrix[[j, i]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        *parallel_edge_count.get_mut(&[i, j]).unwrap() += 1;
+                    } else {
+                        parallel_edge_count.insert([i, j], 2);
+                        matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2.0;
+                        matrix[[j, i]] = (matrix[[j, i]] + edge_weight) / 2.0;
+                    }
+                }
+                _ => {
+                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                }
+            }
         }
     }
     Ok(matrix.into_pyarray(py).into())
