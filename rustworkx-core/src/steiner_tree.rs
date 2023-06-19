@@ -4,6 +4,14 @@ use petgraph::visit::{EdgeRef, GraphBase, IntoEdgeReferences};
 use petgraph::Directed;
 use std::cmp::Ordering;
 
+struct MetricClosureEdge {
+    source: usize,
+    target: usize,
+    distance: f64,
+    path: Vec<usize>,
+}
+
+
 fn deduplicate_edges<F, E, W>(
     out_graph: &mut StableGraph<(), W, Directed>,
     weight_fn: &mut F,
