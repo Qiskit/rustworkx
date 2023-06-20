@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build_lint:
-    # if: github.repository_owner == 'Qiskit'
+    if: github.repository_owner == 'Qiskit'
     name: Build, rustfmt, and python lint
     runs-on: ubuntu-latest
     steps:
@@ -50,7 +50,7 @@ jobs:
           name: rustworkx_core_docs
           path: target/doc/rustworkx_core
   tests:
-    # if: github.repository_owner == 'Qiskit'
+    if: github.repository_owner == 'Qiskit'
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
     runs-on: ${{ matrix.platform.os }}
@@ -103,7 +103,7 @@ jobs:
       - name: 'Run tests'
         run: tox -epy
   tests_stubs:
-    # if: github.repository_owner == 'Qiskit'
+    if: github.repository_owner == 'Qiskit'
     needs: [tests]
     name: python-stubs-${{ matrix.python-version }}
     runs-on: ubuntu-latest
@@ -124,7 +124,7 @@ jobs:
       - name: 'Run rustworkx stub tests'
         run: tox -estubs
   tests_retworkx_compat:
-    # if: github.repository_owner == 'Qiskit'
+    if: github.repository_owner == 'Qiskit'
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
     runs-on: ${{ matrix.platform.os }}
@@ -165,7 +165,7 @@ jobs:
           cd tests
           stestr run -t ./retworkx_backwards_compat
   coverage:
-    # if: github.repository_owner == 'Qiskit'
+    if: github.repository_owner == 'Qiskit'
     needs: [tests]
     name: Coverage
     runs-on: ubuntu-latest
@@ -208,7 +208,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: coveralls.info
   docs:
-    # if: github.repository_owner == 'Qiskit'
+    if: github.repository_owner == 'Qiskit'
     needs: [tests]
     name: Build Docs
     runs-on: ubuntu-latest
