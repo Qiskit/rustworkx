@@ -260,3 +260,54 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
             edge_list,
             [(0, 1, 1 + 0j), (1, 2, 1 + 0j)],
         )
+
+    def test_parallel_edge(self):
+        graph = rustworkx.PyGraph()
+        a = graph.add_node("A")
+        b = graph.add_node("B")
+        c = graph.add_node("C")
+
+        graph.add_edges_from(
+            [
+                (a, b, 3.0),
+                (a, b, 1.0),
+                (a, c, 2.0),
+                (b, c, 7.0),
+                (c, a, 1.0),
+                (b, c, 2.0),
+                (a, b, 4.0),
+            ]
+        )
+
+        min_matrix = rustworkx.graph_adjacency_matrix(
+            graph, weight_fn=lambda x: float(x), parallel_edge="min"
+        )
+        np.testing.assert_array_equal(
+            [[0.0, 1.0, 1.0], [1.0, 0.0, 2.0], [1.0, 2.0, 0.0]], min_matrix
+        )
+
+        max_matrix = rustworkx.graph_adjacency_matrix(
+            graph, weight_fn=lambda x: float(x), parallel_edge="max"
+        )
+        np.testing.assert_array_equal(
+            [[0.0, 4.0, 2.0], [4.0, 0.0, 7.0], [2.0, 7.0, 0.0]], max_matrix
+        )
+
+        avg_matrix = rustworkx.graph_adjacency_matrix(
+            graph, weight_fn=lambda x: float(x), parallel_edge="avg"
+        )
+        np.testing.assert_array_equal(
+            [[0.0, 8 / 3.0, 1.5], [8 / 3.0, 0.0, 4.5], [1.5, 4.5, 0.0]], avg_matrix
+        )
+
+        sum_matrix = rustworkx.graph_adjacency_matrix(
+            graph, weight_fn=lambda x: float(x), parallel_edge="sum"
+        )
+        np.testing.assert_array_equal(
+            [[0.0, 8.0, 3.0], [8.0, 0.0, 9.0], [3.0, 9.0, 0.0]], sum_matrix
+        )
+
+        with self.assertRaises(ValueError):
+            rustworkx.graph_adjacency_matrix(
+                graph, weight_fn=lambda x: float(x), parallel_edge="error"
+            )
