@@ -21,8 +21,8 @@ S = TypeVar("S")
 T = TypeVar("T")
 
 class PyDiGraph(Generic[S, T]):
-    check_cycle: bool = ...
-    multigraph: bool = ...
+    check_cycle: bool
+    multigraph: bool
     def __init__(
         self,
         /,
