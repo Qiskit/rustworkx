@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build_lint:
+    if: github.repository_owner == 'Qiskit'
     name: Build, rustfmt, and python lint
     runs-on: ubuntu-latest
     steps:
@@ -49,13 +50,14 @@ jobs:
           name: rustworkx_core_docs
           path: target/doc/rustworkx_core
   tests:
+    if: github.repository_owner == 'Qiskit'
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
     runs-on: ${{ matrix.platform.os }}
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.7, 3.8, 3.9, "3.10", "3.11"]
+        python-version: [3.8, 3.9, "3.10", "3.11"]
         platform: [
           { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
@@ -74,6 +76,20 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
+        if: runner.os != 'Windows'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+          architecture: ${{ matrix.platform.python-architecture }}
+        if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7.16' }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.platform.python-architecture }}
+        if: ${{ runner.os == 'Windows' && matrix.python-version != '3.7.16' }}
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -87,6 +103,7 @@ jobs:
       - name: 'Run tests'
         run: nox -e test
   tests_stubs:
+    if: github.repository_owner == 'Qiskit'
     needs: [tests]
     name: python-stubs-${{ matrix.python-version }}
     runs-on: ubuntu-latest
@@ -107,6 +124,7 @@ jobs:
       - name: 'Run rustworkx stub tests'
         run: nox -e stubs
   tests_retworkx_compat:
+    if: github.repository_owner == 'Qiskit'
     needs: [build_lint]
     name: python${{ matrix.python-version }}-${{ matrix.platform.python-architecture }} ${{ matrix.platform.os }} ${{ matrix.msrv }}
     runs-on: ${{ matrix.platform.os }}
@@ -147,6 +165,7 @@ jobs:
           cd tests
           stestr run -t ./retworkx_backwards_compat
   coverage:
+    if: github.repository_owner == 'Qiskit'
     needs: [tests]
     name: Coverage
     runs-on: ubuntu-latest
@@ -163,7 +182,7 @@ jobs:
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
       - name: Install deps
-        run: pip install -U setuptools-rust networkx testtools fixtures
+        run: pip install -U setuptools-rust networkx scipy testtools fixtures
       - name: Build retworkx
         run: python setup.py develop
         env:
@@ -189,6 +208,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: coveralls.info
   docs:
+    if: github.repository_owner == 'Qiskit'
     needs: [tests]
     name: Build Docs
     runs-on: ubuntu-latest

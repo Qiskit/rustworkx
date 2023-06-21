@@ -1,9 +1,6 @@
 queue_rules:
   - name: automerge
     conditions:
-      - check-success=python3.7-x64 windows-latest
-      - check-success=python3.7-x64 ubuntu-latest
-      - check-success=python3.7-x64 macOS-latest
       - check-success=python3.8-x64 windows-latest
       - check-success=python3.8-x64 ubuntu-latest
       - check-success=python3.8-x64 macOS-latest
@@ -36,4 +33,4 @@ pull_request_rules:
     actions:
       backport:
         branches:
-          - stable/0.12
+          - stable/0.13

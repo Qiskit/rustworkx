@@ -1,3 +1,4 @@
 ---
 encoding: utf8
 default_branch: main
+earliest_version: 0.8.0

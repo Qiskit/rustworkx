@@ -1,6 +1,0 @@
----
-features:
-  - |
-    Added type annotations to :class:`~retworkx.PyDiGraph` and
-    :class:`~retworkx.PyGraph`. They can now be statically type checked
-    with `mypy <http://mypy-lang.org>`__.

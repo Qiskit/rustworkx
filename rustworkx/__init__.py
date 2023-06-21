@@ -1777,6 +1777,82 @@ def _graph_eigenvector_centrality(
 
 
 @functools.singledispatch
+def katz_centrality(
+    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
+):
+    """Compute the Katz centrality of a graph.
+
+    For details on the Katz centrality refer to:
+
+    Leo Katz. “A New Status Index Derived from Sociometric Index.”
+    Psychometrika 18(1):39–43, 1953
+    <https://link.springer.com/content/pdf/10.1007/BF02289026.pdf>
+
+    This function uses a power iteration method to compute the eigenvector
+    and convergence is not guaranteed. The function will stop when `max_iter`
+    iterations is reached or when the computed vector between two iterations
+    is smaller than the error tolerance multiplied by the number of nodes.
+    The implementation of this algorithm is based on the NetworkX
+    `katz_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html>`__
+    function.
+
+    In the case of multigraphs the weights of any parallel edges will be
+    summed when computing the Katz centrality.
+
+    :param graph: Graph to be used. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param float alpha: Attenuation factor. If this is not specified default value of 0.1 is used.
+    :param float | dict beta: Immediate neighbourhood weights. If a float is provided, the neighbourhood
+        weight is used for all nodes. If a dictionary is provided, it must contain all node indices.
+        If beta is not specified, a default value of 1.0 is used.
+    :param weight_fn: An optional input callable that will be passed the edge's
+        payload object and is expected to return a `float` weight for that edge.
+        If this is not specified ``default_weight`` will be used as the weight
+        for every edge in ``graph``
+    :param float default_weight: If ``weight_fn`` is not set the default weight
+        value to use for the weight of all edges
+    :param int max_iter: The maximum number of iterations in the power method. If
+        not specified a default value of 100 is used.
+    :param float tol: The error tolerance used when checking for convergence in the
+        power method. If this is not specified default value of 1e-6 is used.
+
+    :returns: a read-only dict-like object whose keys are the node indices and values are the
+         centrality score for that node.
+    :rtype: CentralityMapping
+    """
+
+
+@katz_centrality.register(PyDiGraph)
+def _digraph_katz_centrality(
+    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6
+):
+    return digraph_katz_centrality(
+        graph,
+        alpha=alpha,
+        beta=beta,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        max_iter=max_iter,
+        tol=tol,
+    )
+
+
+@katz_centrality.register(PyGraph)
+def _graph_katz_centrality(
+    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6
+):
+    return graph_katz_centrality(
+        graph,
+        alpha=alpha,
+        beta=beta,
+        weight_fn=weight_fn,
+        default_weight=default_weight,
+        max_iter=max_iter,
+        tol=tol,
+    )
+
+
+@functools.singledispatch
 def vf2_mapping(
     first,
     second,
@@ -2504,3 +2580,46 @@ def _graph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, e
     return graph_node_link_json(
         graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
     )
+
+
+@functools.singledispatch
+def longest_simple_path(graph):
+    """Return a longest simple path in the graph
+
+    This function searches computes all pairs of all simple paths and returns
+    a path of the longest length from that set. It is roughly equivalent to
+    running something like::
+
+        from rustworkx import all_pairs_all_simple_paths
+
+        max((y.values for y in all_pairs_all_simple_paths(graph).values()), key=lambda x: len(x))
+
+    but this function will be more efficient than using ``max()`` as the search
+    is evaluated in parallel before returning to Python. In the case of multiple
+    paths of the same maximum length being present in the graph only one will be
+    provided. There are no guarantees on which of the multiple longest paths
+    will be returned (as it is determined by the parallel execution order). This
+    is a tradeoff to improve runtime performance. If a stable return is required
+    in such case consider using the ``max()`` equivalent above instead.
+
+    This function is multithreaded and will launch a thread pool with threads
+    equal to the number of CPUs by default. You can tune the number of threads
+    with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+    ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+
+    :param PyGraph graph: The graph to find the longest path in
+
+    :returns: A sequence of node indices that represent the longest simple graph
+        found in the graph. If the graph is empty ``None`` will be returned instead.
+    :rtype: NodeIndices
+    """
+
+
+@longest_simple_path.register(PyDiGraph)
+def _digraph_longest_simple_path(graph):
+    return digraph_longest_simple_path(graph)
+
+
+@longest_simple_path.register(PyGraph)
+def _graph_longest_simple_path(graph):
+    return graph_longest_simple_path(graph)

@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added partial type annotations to the library, including for the
+    :class:`~retworkx.PyDiGraph` and :class:`~retworkx.PyGraph` classes.
+    This enables statically type checking  with
+    `mypy <http://mypy-lang.org>`__.

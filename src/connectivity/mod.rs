@@ -16,26 +16,29 @@ mod all_pairs_all_simple_paths;
 mod johnson_simple_cycles;
 
 use super::{
-    digraph, get_edge_iter_with_weights, graph, iterators::NodeIndices, score, weight_callable,
-    InvalidNode, NullGraph,
+    digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
 };
 
 use hashbrown::{HashMap, HashSet};
-
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
-use pyo3::Python;
 
 use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
+use pyo3::Python;
+use rayon::prelude::*;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 
-use crate::iterators::{AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList};
+use crate::iterators::{
+    AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
+};
+use crate::{EdgeType, StablePyGraph};
+
 use rustworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -263,7 +266,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
-/// output matrix will be the sum of the edges' weights.
+/// output matrix will be assigned based on a given parameter. Currently, the minimum, maximum, average, and default sum are supported.
 ///
 /// :param PyDiGraph graph: The DiGraph used to generate the adjacency matrix
 ///     from
@@ -287,13 +290,16 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     value. This is the default value in the output matrix and it is used
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
 ///
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
 pub fn digraph_adjacency_matrix(
     py: Python,
@@ -301,15 +307,43 @@ pub fn digraph_adjacency_matrix(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
+    parallel_edge: &str,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
+    let mut parallel_edge_count = HashMap::new();
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
         } else {
-            matrix[[i, j]] += edge_weight;
+            match parallel_edge {
+                "sum" => {
+                    matrix[[i, j]] += edge_weight;
+                }
+                "min" => {
+                    let weight_min = matrix[[i, j]].min(edge_weight);
+                    matrix[[i, j]] = weight_min;
+                }
+                "max" => {
+                    let weight_max = matrix[[i, j]].max(edge_weight);
+                    matrix[[i, j]] = weight_max;
+                }
+                "avg" => {
+                    if parallel_edge_count.contains_key(&[i, j]) {
+                        matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        *parallel_edge_count.get_mut(&[i, j]).unwrap() += 1;
+                    } else {
+                        parallel_edge_count.insert([i, j], 2);
+                        matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2.0;
+                    }
+                }
+                _ => {
+                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                }
+            }
         }
     }
     Ok(matrix.into_pyarray(py).into())
@@ -318,7 +352,7 @@ pub fn digraph_adjacency_matrix(
 /// Return the adjacency matrix for a PyGraph class
 ///
 /// In the case where there are multiple edges between nodes the value in the
-/// output matrix will be the sum of the edges' weights.
+/// output matrix will be assigned based on a given parameter. Currently, the minimum, maximum, average, and default sum are supported.
 ///
 /// :param PyGraph graph: The graph used to generate the adjacency matrix from
 /// :param weight_fn: A callable object (function, lambda, etc) which
@@ -341,13 +375,16 @@ pub fn digraph_adjacency_matrix(
 ///     value. This is the default value in the output matrix and it is used
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
 ///
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
 pub fn graph_adjacency_matrix(
     py: Python,
@@ -355,17 +392,51 @@ pub fn graph_adjacency_matrix(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
+    parallel_edge: &str,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
+    let mut parallel_edge_count = HashMap::new();
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
             matrix[[j, i]] = edge_weight;
         } else {
-            matrix[[i, j]] += edge_weight;
-            matrix[[j, i]] += edge_weight;
+            match parallel_edge {
+                "sum" => {
+                    matrix[[i, j]] += edge_weight;
+                    matrix[[j, i]] += edge_weight;
+                }
+                "min" => {
+                    let weight_min = matrix[[i, j]].min(edge_weight);
+                    matrix[[i, j]] = weight_min;
+                    matrix[[j, i]] = weight_min;
+                }
+                "max" => {
+                    let weight_max = matrix[[i, j]].max(edge_weight);
+                    matrix[[i, j]] = weight_max;
+                    matrix[[j, i]] = weight_max;
+                }
+                "avg" => {
+                    if parallel_edge_count.contains_key(&[i, j]) {
+                        matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        matrix[[j, i]] = (matrix[[j, i]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        *parallel_edge_count.get_mut(&[i, j]).unwrap() += 1;
+                    } else {
+                        parallel_edge_count.insert([i, j], 2);
+                        matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2.0;
+                        matrix[[j, i]] = (matrix[[j, i]] + edge_weight) / 2.0;
+                    }
+                }
+                _ => {
+                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                }
+            }
         }
     }
     Ok(matrix.into_pyarray(py).into())
@@ -398,7 +469,7 @@ pub fn graph_complement(py: Python, graph: &graph::PyGraph) -> PyResult<graph::P
                     || !complement_graph.has_edge(node_a.index(), node_b.index()))
             {
                 // avoid creating parallel edges in multigraph
-                complement_graph.add_edge(node_a.index(), node_b.index(), py.None());
+                complement_graph.graph.add_edge(node_a, node_b, py.None());
             }
         }
     }
@@ -626,6 +697,104 @@ pub fn graph_all_pairs_all_simple_paths(
         min_depth,
         cutoff,
     ))
+}
+
+fn longest_simple_path<Ty: EdgeType + Sync + Send>(
+    graph: &StablePyGraph<Ty>,
+) -> Option<NodeIndices> {
+    if graph.node_count() == 0 {
+        return None;
+    } else if graph.edge_count() == 0 {
+        return Some(NodeIndices {
+            nodes: vec![graph.node_indices().next()?.index()],
+        });
+    }
+    let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
+    let node_index_set = node_indices.iter().copied().collect();
+    Some(NodeIndices {
+        nodes: node_indices
+            .par_iter()
+            .filter_map(|u| {
+                connectivity::longest_simple_path_multiple_targets(graph, *u, &node_index_set)
+            })
+            .max_by_key(|x| x.len())
+            .unwrap()
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
+    })
+}
+
+/// Return a longest simple path in the graph
+///
+/// This function searches computes all pairs of all simple paths and returns
+/// a path of the longest length from that set. It is roughly equivalent to
+/// running something like::
+///
+///     from rustworkx import all_pairs_all_simple_paths
+///
+///     max((y.values for y in all_pairs_all_simple_paths(graph).values()), key=lambda x: len(x))
+///
+/// but this function will be more efficient than using ``max()`` as the search
+/// is evaluated in parallel before returning to Python. In the case of multiple
+/// paths of the same maximum length being present in the graph only one will be
+/// provided. There are no guarantees on which of the multiple longest paths
+/// will be returned (as it is determined by the parallel execution order). This
+/// is a tradeoff to improve runtime performance. If a stable return is required
+/// in such case consider using the ``max()`` equivalent above instead.
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyDiGraph graph: The graph to find the longest path in
+///
+/// :returns: A sequence of node indices that represent the longest simple graph
+///     found in the graph. If the graph is empty ``None`` will be returned instead.
+/// :rtype: NodeIndices
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn digraph_longest_simple_path(graph: &digraph::PyDiGraph) -> Option<NodeIndices> {
+    longest_simple_path(&graph.graph)
+}
+
+/// Return a longest simple path in the graph
+///
+/// This function searches computes all pairs of all simple paths and returns
+/// a path of the longest length from that set. It is roughly equivalent to
+/// running something like::
+///
+///     from rustworkx import all_pairs_all_simple_paths
+///
+///     simple_path_pairs = rx.all_pairs_all_simple_paths(graph)
+///     longest_path = max(
+///         (u for y in simple_path_pairs.values() for z in y.values() for u in z),
+///         key=lambda x: len(x),
+///     )
+///
+/// but this function will be more efficient than using ``max()`` as the search
+/// is evaluated in parallel before returning to Python. In the case of multiple
+/// paths of the same maximum length being present in the graph only one will be
+/// provided. There are no guarantees on which of the multiple longest paths
+/// will be returned (as it is determined by the parallel execution order). This
+/// is a tradeoff to improve runtime performance. If a stable return is required
+/// in such case consider using the ``max()`` equivalent above instead.
+///
+/// This function is multithreaded and will launch a thread pool with threads
+/// equal to the number of CPUs by default. You can tune the number of threads
+/// with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+/// ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+///
+/// :param PyGraph graph: The graph to find the longest path in
+///
+/// :returns: A sequence of node indices that represent the longest simple graph
+///     found in the graph. If the graph is empty ``None`` will be returned instead.
+/// :rtype: NodeIndices
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> {
+    longest_simple_path(&graph.graph)
 }
 
 /// Return the core number for each node in the graph.
