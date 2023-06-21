@@ -1290,6 +1290,7 @@ def katz_centrality(
     :rtype: CentralityMapping
     """
 
+
 @rustworkx_dispatch
 def vf2_mapping(
     first,
