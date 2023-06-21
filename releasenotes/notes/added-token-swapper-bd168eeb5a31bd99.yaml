@@ -1,6 +1,0 @@
----
-features:
-  - |
-    Added a new function, :func:`~.token_swapper()` which performs an
-    approximately optimal Token Swapping algorithm and supports partial
-    mappings (i.e. not-permutations) for graphs with missing tokens.

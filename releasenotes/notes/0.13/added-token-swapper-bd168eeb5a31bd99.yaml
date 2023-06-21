@@ -1,0 +1,21 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.graph_token_swapper`, which performs an
+    approximately optimal token swapping algorithm based on:
+
+    Approximation and Hardness for Token Swapping by Miltzow et al. (2016)
+    https://arxiv.org/abs/1602.05150
+
+    that supports partial mappings (i.e. not-permutations) for graphs with
+    missing tokens.
+  - |
+    Added a new function ``token_swapper()`` to the new ``rustworkx-core``
+    module ``rustworkx_core::token_swapper``. This function performs an
+    approximately optimal token swapping algorithm based on:
+
+    Approximation and Hardness for Token Swapping by Miltzow et al. (2016)
+    https://arxiv.org/abs/1602.05150
+
+    that supports partial mappings (i.e. not-permutations) for graphs with
+    missing tokens.

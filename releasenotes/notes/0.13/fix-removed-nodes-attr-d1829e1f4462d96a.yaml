@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed an issue with several :class:`~.PyDiGraph` and  :class:`~.PyGraph`
+    methods that removed nodes where previously when calling
+    these methods the :attr:`.PyDiGraph.node_removed` attribute would not be
+    updated to reflect that nodes were removed.
