@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The minimum required Python version was raised to Python 3.8.
+    To use rustworkx, please ensure you are using Python >= 3.8.

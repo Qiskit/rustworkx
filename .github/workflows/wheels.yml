@@ -26,7 +26,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - name: Install deps
         run: pip install -U twine setuptools-rust
       - name: Build sdist
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - uses: dtolnay/rust-toolchain@stable
       - name: Install cibuildwheel
         run: |
@@ -65,7 +65,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* pp* *win32 *musl*
+          CIBW_SKIP: cp36-* cp37-* pp* *win32 *musl*
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -107,7 +107,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* pp* *win32 *musl*
+          CIBW_SKIP: cp36-* cp37-* pp* *win32 *musl*
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx scipy testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
@@ -132,7 +132,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -150,7 +150,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp39-* cp310-* cp311-* pp* *win32 *musl*
+          CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32 *musl*
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
@@ -175,7 +175,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -218,7 +218,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -236,7 +236,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp39-* cp310-* cp311-* pp* *win32 *musl*
+          CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32 *musl*
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
@@ -262,7 +262,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -329,7 +329,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
           architecture: 'x86'
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -344,7 +344,7 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_SKIP: cp36-* pp* *amd64 *musl*
+          CIBW_SKIP: cp36-* cp37-* pp* *amd64 *musl*
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
