@@ -1358,6 +1358,7 @@ def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=1
          centrality score for that node.
     :rtype: CentralityMapping
     """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
 eigenvector_centrality.register(PyDiGraph, digraph_eigenvector_centrality)
@@ -1408,10 +1409,11 @@ def katz_centrality(
          centrality score for that node.
     :rtype: CentralityMapping
     """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-eigenvector_centrality.register(PyDiGraph, digraph_katz_centrality)
-eigenvector_centrality.register(PyGraph, graph_katz_centrality)
+katz_centrality.register(PyDiGraph, digraph_katz_centrality)
+katz_centrality.register(PyGraph, graph_katz_centrality)
 
 
 @functools.singledispatch
