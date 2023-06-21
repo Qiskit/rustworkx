@@ -1410,34 +1410,8 @@ def katz_centrality(
     """
 
 
-@katz_centrality.register(PyDiGraph)
-def _digraph_katz_centrality(
-    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6
-):
-    return digraph_katz_centrality(
-        graph,
-        alpha=alpha,
-        beta=beta,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        max_iter=max_iter,
-        tol=tol,
-    )
-
-
-@katz_centrality.register(PyGraph)
-def _graph_katz_centrality(
-    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6
-):
-    return graph_katz_centrality(
-        graph,
-        alpha=alpha,
-        beta=beta,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        max_iter=max_iter,
-        tol=tol,
-    )
+eigenvector_centrality.register(PyDiGraph, digraph_katz_centrality)
+eigenvector_centrality.register(PyGraph, graph_katz_centrality)
 
 
 @functools.singledispatch
