@@ -17,8 +17,8 @@ use hashbrown::HashMap;
 use pyo3::prelude::*;
 
 use petgraph::algo;
-use petgraph::stable_graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::stable_graph::NodeIndex;
 
 use num_traits::{Num, Zero};
 
