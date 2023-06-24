@@ -10,6 +10,7 @@
 # For implementation details, see __init__.py and src/graph.rs
 
 import numpy as np
+import sys
 from .iterators import *
 
 from typing import (
@@ -23,6 +24,8 @@ from typing import (
     Tuple,
     Sequence,
 )
+
+assert sys.version_info >= (3, 8)
 
 __all__ = ["PyGraph"]
 

@@ -10,8 +10,11 @@
 # For implementation details, see __init__.py and src/digraph.rs
 
 import numpy as np
+import sys
 from .iterators import *
 from .graph import PyGraph
+
+assert sys.version_info >= (3, 8)
 
 from typing import Any, Callable, Dict, Generic, TypeVar, Optional, List, Tuple, Sequence
 

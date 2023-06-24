@@ -9,6 +9,10 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
+import sys
+
+assert sys.version_info >= (3, 8)
+
 from .rustworkx import *
 from typing import Generic, TypeVar
 

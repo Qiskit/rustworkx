@@ -9,6 +9,10 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
+import sys
+
+assert sys.version_info >= (3, 8)
+
 from .iterators import *
 from .graph import PyGraph as PyGraph
 from .digraph import PyDiGraph as PyDiGraph
