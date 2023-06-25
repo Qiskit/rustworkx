@@ -9,6 +9,8 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/iterators.rs
 
+# mypy: python-version=3.11
+
 import sys
 
 assert sys.version_info >= (3, 8)
