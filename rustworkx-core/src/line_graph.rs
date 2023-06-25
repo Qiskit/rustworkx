@@ -114,10 +114,10 @@ mod test_line_graph {
     use petgraph::Undirected;
 
     #[test]
-    fn test_greedy_node_color_simple_graph() {
+    fn test_simple_graph() {
         // Simple graph
         let input_graph =
-            Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2), (1, 2), (0, 3)]);
+            Graph::<(), (), Undirected>::from_edges(&[(0, 1), (2, 3), (3, 4), (4, 5)]);
 
         let (output_graph, output_edge_map): (
             petgraph::graph::UnGraph<(), ()>,
@@ -129,7 +129,7 @@ mod test_line_graph {
             .map(|edge| (edge.source().index(), edge.target().index()))
             .collect::<Vec<(usize, usize)>>();
 
-        let expected_edge_list = vec![(3, 1), (3, 0), (1, 0), (2, 0), (2, 1)];
+        let expected_edge_list = vec![(2, 1), (3, 2)];
         let expected_edge_map: HashMap<EdgeIndex, NodeIndex> = [
             (EdgeIndex::new(0), NodeIndex::new(0)),
             (EdgeIndex::new(1), NodeIndex::new(1)),
