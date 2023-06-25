@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The minimum supported rust version (MSRV) for rustworkx and rustworkx-core
+    has been raised to 1.64.0. Previously you could build rustworkx or
+    rustworkx-core using an MSRV of 1.56.1. This change was necessary as the
+    upstream dependencies of rustworkx have adopted newer MSRVs.
