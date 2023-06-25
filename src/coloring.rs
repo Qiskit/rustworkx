@@ -10,15 +10,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{graph, StablePyGraph};
+use crate::graph;
 
-use hashbrown::HashMap;
-
-use petgraph::graph::{EdgeIndex, NodeIndex};
-use petgraph::visit::{EdgeRef, IntoEdgeReferences};
-use petgraph::Undirected;
-use rustworkx_core::coloring::greedy_node_color;
-use rustworkx_core::line_graph::line_graph;
+use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -87,19 +81,10 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    let default_fn = || py.None();
-    let (new_graph, edge_to_node_map): (StablePyGraph<Undirected>, HashMap<EdgeIndex, NodeIndex>) =
-        line_graph(&graph.graph, default_fn, default_fn);
-
-    let colors = greedy_node_color(&new_graph);
-
+    let colors = greedy_edge_color(&graph.graph);
     let out_dict = PyDict::new(py);
-    for edge in graph.graph.edge_references() {
-        let edge_index = edge.id();
-        let node_index = edge_to_node_map.get(&edge_index).unwrap();
-        let edge_color = colors.get(node_index).unwrap();
-        out_dict.set_item(edge_index.index(), edge_color)?;
+    for (node, color) in colors {
+        out_dict.set_item(node.index(), color)?;
     }
-
     Ok(out_dict.into())
 }
