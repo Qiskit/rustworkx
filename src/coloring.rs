@@ -93,11 +93,10 @@ impl<'a> MisraGriesAlgorithm<'a> {
     // Returns the smallest free (aka unused) color at node u
     fn get_free_color(&self, u: NodeIndex) -> usize {
         let used_colors = self.get_used_colors(u);
-        let mut c: usize = 0;
-        while used_colors.contains(&c) {
-            c += 1;
-        }
-        c
+        let free_color: usize = (0..)
+            .position(|color| !used_colors.contains(&color))
+            .unwrap();
+        free_color
     }
 
     // Returns if color c is free at node u
