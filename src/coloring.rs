@@ -115,10 +115,9 @@ impl<'a> MisraGriesAlgorithm<'a> {
         let mut fan: Vec<(EdgeIndex, NodeIndex)> = Vec::new();
         fan.push((ee, v));
 
-        let mut neighbors: Vec<(EdgeIndex, NodeIndex)> = Vec::new();
-        for edge in self.graph.edges(u) {
-            neighbors.push((edge.id(), edge.target()));
-        }
+        let mut neighbors: Vec<(EdgeIndex, NodeIndex)> = self.graph.edges(u).map(
+            |edge| (edge.id(), edge.target())
+        ).collect();
 
         let mut last_node = v;
         let position_v = neighbors.iter().position(|x| x.1 == v).unwrap();
@@ -140,6 +139,18 @@ impl<'a> MisraGriesAlgorithm<'a> {
                     }
                 }
             }
+
+            // for (position, (edge_index, z)) in neighbors.iter().enumerate() {
+            //     if let Some(color) = self.colors.get(edge_index) {
+            //         if self.is_free_color(last_node, *color) {
+            //             fan_extended = true;
+            //             last_node = *z;
+            //             fan.push((*edge_index, *z));
+            //             neighbors.remove(position);
+            //             break;
+            //         }
+            //     }
+            // }
         }
 
         fan
