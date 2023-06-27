@@ -12,7 +12,7 @@
 
 use crate::{graph, StablePyGraph};
 use rustworkx_core::coloring::greedy_node_color;
-use std::collections::HashSet;
+use hashbrown::HashSet;
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::EdgeRef;
@@ -75,16 +75,16 @@ struct MisraGriesAlgorithm<'a> {
 
 impl<'a> MisraGriesAlgorithm<'a> {
     pub fn new(graph: &'a StablePyGraph<Undirected>) -> Self {
-        let colors: DictMap<EdgeIndex, usize> = DictMap::new();
+        let colors: DictMap<EdgeIndex, usize> = DictMap::with_capacity(graph.edge_count());
         MisraGriesAlgorithm { graph, colors }
     }
 
     // Computes colors used at node u
-    fn get_used_colors(&self, u: NodeIndex) -> Vec<usize> {
-        let mut used_colors: Vec<usize> = Vec::new();
+    fn get_used_colors(&self, u: NodeIndex) -> HashSet<usize> {
+        let mut used_colors: HashSet<usize> = HashSet::new();
         for edge in self.graph.edges(u) {
             if let Some(color) = self.colors.get(&edge.id()) {
-                used_colors.push(*color);
+                used_colors.insert(*color);
             }
         }
         used_colors
