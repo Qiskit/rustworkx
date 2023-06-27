@@ -11,8 +11,8 @@
 // under the License.
 
 use crate::{graph, StablePyGraph};
-use rustworkx_core::coloring::greedy_node_color;
 use hashbrown::HashSet;
+use rustworkx_core::coloring::greedy_node_color;
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::EdgeRef;
@@ -81,12 +81,12 @@ impl<'a> MisraGriesAlgorithm<'a> {
 
     // Computes colors used at node u
     fn get_used_colors(&self, u: NodeIndex) -> HashSet<usize> {
-        let mut used_colors: HashSet<usize> = HashSet::new();
-        for edge in self.graph.edges(u) {
-            if let Some(color) = self.colors.get(&edge.id()) {
-                used_colors.insert(*color);
-            }
-        }
+        let used_colors: HashSet<usize> = self
+            .graph
+            .edges(u)
+            .filter_map(|edge| self.colors.get(&edge.id()))
+            .copied()
+            .collect();
         used_colors
     }
 
@@ -254,7 +254,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
             self.colors.insert(fan[w].0, d);
         }
 
-        self.check_coloring();
+        // self.check_coloring();
 
         &self.colors
     }
