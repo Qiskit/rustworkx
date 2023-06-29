@@ -1,8 +1,11 @@
 use hashbrown::HashMap;
 use petgraph::stable_graph::{NodeIndex, StableGraph};
+use petgraph::visit::NodeIndexable;
 use petgraph::visit::{EdgeRef, GraphBase, IntoEdgeReferences};
 use petgraph::Directed;
 use std::cmp::Ordering;
+
+use crate::petgraph::unionfind::UnionFind;
 
 struct MetricClosureEdge {
     source: usize,
@@ -10,6 +13,7 @@ struct MetricClosureEdge {
     distance: f64,
     path: Vec<usize>,
 }
+
 /// Return the metric closure of a graph
 ///
 /// The metric closure of a graph is the complete graph in which each edge is
@@ -56,6 +60,25 @@ fn _metric_closure_edges<F, E, W>(
     panic!("not implemented");
 }
 
+/// Computes the shortest path between all pairs `(s, t)` of the given `terminal_nodes`
+/// *provided* that:
+///   - there is an edge `(u, v)` in the graph and path pass through this edge.
+///   - node `s` is the closest node to  `u` among all `terminal_nodes`
+///   - node `t` is the closest node to `v` among all `terminal_nodes`
+/// and wraps the result inside a `MetricClosureEdge`
+///
+/// For example, if all vertices are terminals, it returns the original edges of the graph.
+fn fast_metric_edges<F, E, W>(
+    graph: &mut StableGraph<(), W, Directed>,
+    terminal_nodes: Vec<usize>,
+    weight_fn: &mut F,
+) -> Result<Vec<MetricClosureEdge>, E>
+where
+    W: Clone,
+    F: FnMut(&W) -> Result<f64, E>,
+{
+    Ok(Vec::new())
+}
 
 
 fn deduplicate_edges<F, E, W>(
