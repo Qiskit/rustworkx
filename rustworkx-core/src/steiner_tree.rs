@@ -11,6 +11,19 @@ struct MetricClosureEdge {
     path: Vec<usize>,
 }
 
+fn _metric_closure_edges<F, E, W>(
+    graph: &StableGraph<(), W, Directed>,
+    weight_fn: &mut F,
+) -> Result<Vec<MetricClosureEdge>, E> {
+    let node_count = graph.node_count();
+    if node_count == 0 {
+        return Ok(Vec::new());
+    }
+    // TODO implemented
+    panic!("not implemented");
+}
+
+
 
 fn deduplicate_edges<F, E, W>(
     out_graph: &mut StableGraph<(), W, Directed>,
