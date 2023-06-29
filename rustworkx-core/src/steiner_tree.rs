@@ -80,6 +80,64 @@ where
     Ok(Vec::new())
 }
 
+/// Return an approximation to the minimum Steiner tree of a graph.
+///
+/// The minimum tree of ``graph`` with regard to a set of ``terminal_nodes``
+/// is a tree within ``graph`` that spans those nodes and has a minimum size
+/// (measured as the sum of edge weights) amoung all such trees.
+///
+/// The minimum steiner tree can be approximated by computing the minimum
+/// spanning tree of the subgraph of the metric closure of ``graph`` induced
+/// by the terminal nodes, where the metric closure of ``graph`` is the
+/// complete graph in which each edge is weighted by the shortest path distance
+/// between nodes in ``graph``.
+///
+/// This algorithm [1]_ produces a tree whose weight is within a
+/// :math:`(2 - (2 / t))` factor of the weight of the optimal Steiner tree
+/// where :math:`t` is the number of terminal nodes. The algorithm implemented
+/// here is due to [2]_ . It avoids computing all pairs shortest paths but rather
+/// reduces the problem to a single source shortest path and a minimum spanning tree
+/// problem.
+///
+/// :param PyGraph graph: The graph to compute the minimum Steiner tree for
+/// :param list terminal_nodes: The list of node indices for which the Steiner
+///     tree is to be computed for.
+/// :param weight_fn: A callable object that will be passed an edge's
+///     weight/data payload and expected to return a ``float``. For example,
+///     you can use ``weight_fn=float`` to cast every weight as a float.
+///
+/// :returns: An approximation to the minimal steiner tree of ``graph`` induced
+///     by ``terminal_nodes``.
+/// :rtype: PyGraph
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
+///
+/// .. [1] Kou, Markowsky & Berman,
+///    "A fast algorithm for Steiner trees"
+///    Acta Informatica 15, 141–145 (1981).
+///    https://link.springer.com/article/10.1007/BF00288961
+/// .. [2] Kurt Mehlhorn,
+///    "A faster approximation algorithm for the Steiner problem in graphs"
+///    https://doi.org/10.1016/0020-0190(88)90066-X
+pub fn steiner_tree<F, E, W>(
+    graph: &mut StableGraph<(), W, Directed>,
+    terminal_nodes: Vec<usize>,
+    weight_fn: &mut F,
+    //) -> Result<StableGraph<(), W, Directed>, E>
+) -> Result<(), E>
+where
+    W: Clone,
+    F: FnMut(&W) -> Result<f64, E>,
+{
+    let mut edge_list = fast_metric_edges(graph, terminal_nodes, &mut weight_fn)?;
+    let mut subgraphs = UnionFind::<usize>::new(graph.node_bound());
+    edge_list.par_sort_unstable_by(|a, b| {
+        let weight_a = (a.distance, a.source, a.target);
+        let weight_b = (b.distance, b.source, b.target);
+        weight_a.partial_cmp(&weight_b).unwrap_or(Ordering::Less)
+    });
+    Ok(())
+}
 
 fn deduplicate_edges<F, E, W>(
     out_graph: &mut StableGraph<(), W, Directed>,
