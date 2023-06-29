@@ -10,6 +10,39 @@ struct MetricClosureEdge {
     distance: f64,
     path: Vec<usize>,
 }
+/// Return the metric closure of a graph
+///
+/// The metric closure of a graph is the complete graph in which each edge is
+/// weighted by the shortest path distance between the nodes in the graph.
+///
+/// :param PyGraph graph: The input graph to find the metric closure for
+/// :param weight_fn: A callable object that will be passed an edge's
+///     weight/data payload and expected to return a ``float``. For example,
+///     you can use ``weight_fn=float`` to cast every weight as a float
+///
+/// :return: A metric closure graph from the input graph
+/// :rtype: PyGraph
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
+pub fn metric_closure<F, E, W>(
+    graph: &StableGraph<(), W, Directed>,
+    weight_fn: &mut F,
+) -> Result<StableGraph<(), W, Directed>, E>
+where
+    W: Clone,
+{
+    let mut out_graph: StableGraph<(), W, Directed> = graph.clone();
+    out_graph.clear_edges();
+    // let edges = _metric_closure_edges(graph, weight_fn)?;
+    //for edge in edges {
+    //   out_graph.add_edge(
+    //      NodeIndex::new(edge.source),
+    //     NodeIndex::new(edge.target),
+    //    edge.distance,
+    //);
+    //}
+    Ok(out_graph)
+}
 
 fn _metric_closure_edges<F, E, W>(
     graph: &StableGraph<(), W, Directed>,
