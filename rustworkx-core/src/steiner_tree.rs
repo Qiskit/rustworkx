@@ -130,7 +130,7 @@ where
     W: Clone,
     F: FnMut(&W) -> Result<f64, E>,
 {
-    let mut edge_list = fast_metric_edges(graph, terminal_nodes, &mut weight_fn)?;
+    let mut edge_list = fast_metric_edges(graph, terminal_nodes, weight_fn)?;
     let mut subgraphs = UnionFind::<usize>::new(graph.node_bound());
     edge_list.par_sort_unstable_by(|a, b| {
         let weight_a = (a.distance, a.source, a.target);
