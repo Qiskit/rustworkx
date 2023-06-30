@@ -3,6 +3,7 @@ use petgraph::stable_graph::{NodeIndex, StableGraph};
 use petgraph::visit::NodeIndexable;
 use petgraph::visit::{EdgeRef, GraphBase, IntoEdgeReferences};
 use petgraph::Directed;
+use rayon::prelude::ParallelSliceMut;
 use std::cmp::Ordering;
 
 use crate::petgraph::unionfind::UnionFind;
