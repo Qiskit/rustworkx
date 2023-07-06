@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.transitive_reduction` which returns the transtive reduction
+    of a given :class:`~rustworkx.PyDiGraph`. This graph must be a Directed Acyclic Graph (DAG).
+
+    Ref: https://en.wikipedia.org/wiki/Transitive_reduction
+

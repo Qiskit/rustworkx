@@ -17,7 +17,9 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use super::iterators::NodeIndices;
-use crate::{digraph, DAGHasCycle, InvalidNode};
+use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
+
+use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -636,4 +638,75 @@ pub fn collect_bicolor_runs(
     }
 
     Ok(block_list)
+}
+
+/// Returns the transitive reduction of a directed acyclic graph
+///
+/// The transitive reduction of G = (V,E) is a graph G- = (V,E-)
+/// such that for all v,w in V there is an edge (v,w) in E- if and only if (v,w) is in E
+/// and there is no path from v to w in G with length greater than 1.
+///
+/// :param PyDiGraph graph: A directed acyclic graph
+///
+/// :returns: a directed acyclic graph representing the transitive reduction
+/// :rtype: PyDiGraph
+///
+/// :raises PyValueError: if graph is not a DAG
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn transitive_reduction(
+    graph: &digraph::PyDiGraph,
+    py: Python,
+) -> PyResult<digraph::PyDiGraph> {
+    let g = &graph.graph;
+    if !is_directed_acyclic_graph(graph) {
+        return Err(PyValueError::new_err(
+            "Directed Acyclic Graph required for transitive_reduction",
+        ));
+    }
+    let mut tr = StablePyGraph::<Directed>::new();
+    let mut descendants = HashMap::new();
+    let mut check_count = HashMap::new();
+    for (i, node) in g.node_indices().enumerate() {
+        tr.add_node(graph.get_node_data(i).unwrap().clone_ref(py));
+        check_count.insert(node, graph.in_degree(i));
+    }
+
+    for u in g.node_indices() {
+        let mut u_nbrs: HashSet<NodeIndex> = g.neighbors(u).collect();
+        for v in g.neighbors(u) {
+            if u_nbrs.contains(&v) {
+                if !descendants.contains_key(&v) {
+                    let dfs = dfs_edges(&g, Some(v));
+                    descendants.insert(v, dfs);
+                }
+                for desc in &descendants[&v] {
+                    u_nbrs.remove(&NodeIndex::new(desc.1));
+                }
+            }
+            *check_count.get_mut(&v).unwrap() -= 1;
+            if check_count[&v] == 0 {
+                descendants.remove(&v);
+            }
+        }
+        for v in u_nbrs {
+            tr.add_edge(
+                u,
+                v,
+                graph
+                    .get_edge_data(u.index(), v.index())
+                    .unwrap()
+                    .clone_ref(py),
+            );
+        }
+    }
+    Ok(digraph::PyDiGraph {
+        graph: tr,
+        node_removed: false,
+        multigraph: graph.multigraph,
+        attrs: py.None(),
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: graph.check_cycle,
+    })
 }
