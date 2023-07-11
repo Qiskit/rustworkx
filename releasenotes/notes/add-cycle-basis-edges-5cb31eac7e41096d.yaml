@@ -59,7 +59,3 @@ upgrade:
     The trait bounds of :func:`rustworkx_core::connectivity::cycle_basis` now 
     requires graphs to be compatible with the trait ``IntoEdges`` and that the 
     attribute ``EdgeId`` conforms to `Eq` and `Hash`.
-fixes:
-  - |
-    Support for edges when getting the cycle basis. Refer to 
-    `#551 <https://github.com/Qiskit/rustworkx/issues/551>`__ for more details.
