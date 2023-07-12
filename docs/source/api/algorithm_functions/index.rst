@@ -4,7 +4,7 @@ Algorithm Functions
 ===================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    centrality
    connectivity_and_cycles
