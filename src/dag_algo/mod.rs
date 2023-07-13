@@ -713,7 +713,7 @@ pub fn transitive_reduction(
     return Ok((
         digraph::PyDiGraph {
             graph: tr,
-            node_removed: graph.node_removed,
+            node_removed: false,
             multigraph: graph.multigraph,
             attrs: py.None(),
             cycle_state: algo::DfsSpace::default(),
