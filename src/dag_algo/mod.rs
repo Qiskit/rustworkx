@@ -12,7 +12,10 @@
 
 mod longest_path;
 
+use super::DictMap;
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
+use rustworkx_core::dictmap::InitWithHasher;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -648,8 +651,8 @@ pub fn collect_bicolor_runs(
 ///
 /// :param PyDiGraph graph: A directed acyclic graph
 ///
-/// :returns: a directed acyclic graph representing the transitive reduction
-/// :rtype: PyDiGraph
+/// :returns: a directed acyclic graph representing the transitive reduction, and a map containing the index of a node in the original graph mapped to its equivalent in the resulting graph.
+/// :rtype: Tuple[:class:`~rustworkx.PyGraph`, dict]
 ///
 /// :raises PyValueError: if graph is not a DAG
 
@@ -658,23 +661,29 @@ pub fn collect_bicolor_runs(
 pub fn transitive_reduction(
     graph: &digraph::PyDiGraph,
     py: Python,
-) -> PyResult<digraph::PyDiGraph> {
+) -> PyResult<(digraph::PyDiGraph, DictMap<usize, usize>)> {
     let g = &graph.graph;
+    let mut index_map = DictMap::new();
     if !is_directed_acyclic_graph(graph) {
         return Err(PyValueError::new_err(
             "Directed Acyclic Graph required for transitive_reduction",
         ));
     }
     let mut tr = StablePyGraph::<Directed>::new();
-    let mut descendants = HashMap::new();
-    let mut check_count = HashMap::new();
-    for (i, node) in g.node_indices().enumerate() {
-        tr.add_node(graph.get_node_data(i).unwrap().clone_ref(py));
+    let mut descendants = DictMap::new();
+    let mut check_count = DictMap::new();
+
+    for node in g.node_indices() {
+        let i = node.index();
+        index_map.insert(
+            node,
+            tr.add_node(graph.get_node_data(i).unwrap().clone_ref(py)),
+        );
         check_count.insert(node, graph.in_degree(i));
     }
 
     for u in g.node_indices() {
-        let mut u_nbrs: HashSet<NodeIndex> = g.neighbors(u).collect();
+        let mut u_nbrs: IndexSet<NodeIndex> = g.neighbors(u).collect();
         for v in g.neighbors(u) {
             if u_nbrs.contains(&v) {
                 if !descendants.contains_key(&v) {
@@ -692,8 +701,8 @@ pub fn transitive_reduction(
         }
         for v in u_nbrs {
             tr.add_edge(
-                u,
-                v,
+                *index_map.get(&u).unwrap(),
+                *index_map.get(&v).unwrap(),
                 graph
                     .get_edge_data(u.index(), v.index())
                     .unwrap()
@@ -701,12 +710,18 @@ pub fn transitive_reduction(
             );
         }
     }
-    Ok(digraph::PyDiGraph {
-        graph: tr,
-        node_removed: false,
-        multigraph: graph.multigraph,
-        attrs: py.None(),
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: graph.check_cycle,
-    })
+    return Ok((
+        digraph::PyDiGraph {
+            graph: tr,
+            node_removed: graph.node_removed,
+            multigraph: graph.multigraph,
+            attrs: py.None(),
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: graph.check_cycle,
+        },
+        index_map
+            .iter()
+            .map(|(k, v)| (k.index(), v.index()))
+            .collect::<DictMap<usize, usize>>(),
+    ));
 }
