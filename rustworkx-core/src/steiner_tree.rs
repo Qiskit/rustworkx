@@ -8,10 +8,10 @@ use std::cmp::Ordering;
 
 use crate::petgraph::unionfind::UnionFind;
 
-struct MetricClosureEdge {
+struct MetricClosureEdge<W> {
     source: usize,
     target: usize,
-    distance: f64,
+    distance: W,
     path: Vec<usize>,
 }
 
@@ -38,21 +38,21 @@ where
 {
     let mut out_graph: StableGraph<(), W, Directed> = graph.clone();
     out_graph.clear_edges();
-    // let edges = _metric_closure_edges(graph, weight_fn)?;
-    //for edge in edges {
-    //   out_graph.add_edge(
-    //      NodeIndex::new(edge.source),
-    //     NodeIndex::new(edge.target),
-    //    edge.distance,
-    //);
-    //}
+    let edges = _metric_closure_edges(graph, weight_fn)?;
+    for edge in edges {
+        out_graph.add_edge(
+            NodeIndex::new(edge.source),
+            NodeIndex::new(edge.target),
+            edge.distance,
+        );
+    }
     Ok(out_graph)
 }
 
 fn _metric_closure_edges<F, E, W>(
     graph: &StableGraph<(), W, Directed>,
     weight_fn: &mut F,
-) -> Result<Vec<MetricClosureEdge>, E> {
+) -> Result<Vec<MetricClosureEdge<W>>, E> {
     let node_count = graph.node_count();
     if node_count == 0 {
         return Ok(Vec::new());
@@ -73,7 +73,7 @@ fn fast_metric_edges<F, E, W>(
     graph: &mut StableGraph<(), W, Directed>,
     terminal_nodes: Vec<usize>,
     weight_fn: &mut F,
-) -> Result<Vec<MetricClosureEdge>, E>
+) -> Result<Vec<MetricClosureEdge<W>>, E>
 where
     W: Clone,
     F: FnMut(&W) -> Result<f64, E>,
@@ -137,7 +137,7 @@ where
         let weight_b = (b.distance, b.source, b.target);
         weight_a.partial_cmp(&weight_b).unwrap_or(Ordering::Less)
     });
-    Ok(())
+    Ok(out)
 }
 
 fn deduplicate_edges<F, E, W>(
