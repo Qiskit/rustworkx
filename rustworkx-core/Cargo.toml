@@ -22,12 +22,9 @@ priority-queue = "1.2"
 rayon-cond = "0.2"
 
 [dependencies.hashbrown]
-version = "0.12"
+version = ">=0.12, <0.15"
 features = ["rayon"]
 
 [dependencies.indexmap]
-version = "1.9"
+version = ">=1.9, < 3"
 features = ["rayon"]
-
-[dev-dependencies]
-rand = "0.8"

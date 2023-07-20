@@ -95,6 +95,11 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.platform.rust-target }}
+      - name: 'Set msrv min versions'
+        run: |
+          cargo update -p hashbrown:0.12.3 --precise 0.12.3 --workspace
+          cargo update -p indexmap:1.9.3 --precise 1.9.3 --workspace
+        if: ${{ matrix.msrv == 'MSRV' }}
       - name: 'Install dependencies'
         run: python -m pip install --upgrade tox
       - name: 'Install binary dependencies'
