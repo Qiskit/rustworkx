@@ -328,6 +328,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_core_number
    rustworkx.digraph_complement
    rustworkx.digraph_union
+   rustworkx.digraph_difference
    rustworkx.digraph_tensor_product
    rustworkx.digraph_cartesian_product
    rustworkx.digraph_random_layout
@@ -386,6 +387,7 @@ typed API based on the data type.
    rustworkx.graph_core_number
    rustworkx.graph_complement
    rustworkx.graph_union
+   rustworkx.graph_difference
    rustworkx.graph_tensor_product
    rustworkx.graph_token_swapper
    rustworkx.graph_cartesian_product

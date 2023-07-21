@@ -2539,6 +2539,38 @@ def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
 
 
 @functools.singledispatch
+def difference(
+    first,
+    second,
+):
+    """Return a new PyGraph that is the difference from two input
+    graph objects
+    :param first: The first graph object
+    :param second: The second graph object
+    :returns: A new graph object that is the difference of ``second`` and
+        ``first``. It's worth noting the weight/data payload objects are
+        passed by reference from ``first`` to this new object.
+    :rtype: :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(first))
+
+
+@difference.register(PyDiGraph)
+def _digraph_difference(
+    first,
+    second,
+):
+    return digraph_difference(first, second)
+
+
+@difference.register(PyGraph)
+def _graph_difference(
+    first,
+    second,
+):
+    return graph_difference(first, second)
+
+@functools.singledispatch
 def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
     """Generate a JSON object representing a graph in a node-link format
 
