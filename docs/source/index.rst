@@ -52,9 +52,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   About Rustworkx <self>
    Installation and Getting Started <install>
    Rustworkx Tutorials and Guides <tutorial/index>
-   Rustworkx API <api>
+   Rustworkx API <api/index>
    Visualization <visualization>
    Release Notes <release_notes>
    Contributing Guide <CONTRIBUTING>
