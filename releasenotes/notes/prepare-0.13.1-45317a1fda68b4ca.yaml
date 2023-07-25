@@ -1,0 +1,13 @@
+---
+prelude: >
+    rustworkx 0.13.1 is a bugfix release, addressing some issues identified
+    since the 0.13.0 release.
+issues:
+  - |
+    The type hint stub files included in this release (and 0.13.0) are not
+    compatible with Python 3.7's type hinting syntax. If you are now using
+    `mypy` to partially validate the typing in your usage of rustworkx, you
+    should not run this with Python 3.7 as it will not function correctly.
+    The actual rustworkx code will continue to function as expected with
+    Python 3.7 for the 0.13.x release series, it was just the typing syntax
+    used in the stubs files which are incompatible with Python 3.7.
