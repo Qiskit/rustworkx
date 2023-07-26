@@ -38,10 +38,10 @@ to install rustworkx.
 rustworkx-core
 --------------
 
-In addition to the Python library as part of rustworkx a standalone Rust library
+In addition to the Python library, as part of rustworkx a standalone Rust library
 is also included. This library provides a generic interface for Rust users
 that wish to use the same graph algorithm implementations exposed in the Python
-library. This library, rustworkx-core, is used to build rustworkx the Python
+library. This library, rustworkx-core, is used to build the Python rustworkx
 library but can be used for any Rust application that needs the same graph
 functionality that rustworkx provides.
 
