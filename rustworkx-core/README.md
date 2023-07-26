@@ -7,7 +7,12 @@
 > If you're using retworkx-core 0.11.0 you will need to change your requirement
 > and use statements to use the new crate name
 
-This crate contains the rust library rustworkx-core. This library is part of the
+rustworkx-core is a graph algorithm library that is built on top of
+[petgraph](https://github.com/petgraph/petgraph). It offers additional
+algorithms and functionality on top of the core data structures offered in
+the petgraph library.
+
+This crate contains the Rust library rustworkx-core. This library is part of the
 rustworkx project. However while the larger rustworkx project is a Python library
 that offers a general purpose high performance graph library written in Rust,
 rustworkx-core is a pure rust library that offers a stable rust API for any
@@ -18,7 +23,7 @@ At it's core rustworkx is built on top of the
 Python layer. However, many of the algorithms (and to a lesser extent data
 structures) needed for rustworkx are not available in petgraph. For places
 where these algorithms are implemented in a generic way the rustworkx-core
-crate exposes it for rust users.
+crate exposes it for Rust users.
 
 ## Usage
 

@@ -4,7 +4,7 @@ rustworkx Documentation
 
 .. note::
 
-    The project has been renamed to **rustworkx**. You can still use the legavcy
+    The project has been renamed to **rustworkx**. You can still use the legacy
     retworkx name for now but starting in the 1.0.0 release the retworkx name
     will no longer be supported.
 
@@ -34,6 +34,25 @@ pre-compiled binaries for Linux on x86, x86_64, aarch64, s390x, and ppc64le,
 MacOS on x86_64, and arm64, and Windows 32bit and 64bit systems. However, if
 you are not running on one of these platforms, you will need a rust compiler
 to install rustworkx.
+
+rustworkx-core
+--------------
+
+In addition to the Python library, as part of rustworkx a standalone Rust library
+is also included. This library provides a generic interface for Rust users
+that wish to use the same graph algorithm implementations exposed in the Python
+library. This library, rustworkx-core, is used to build the Python rustworkx
+library but can be used for any Rust application that needs the same graph
+functionality that rustworkx provides.
+
+You can find more details on rustworkx-core here:
+
+https://crates.io/crates/rustworkx-core
+
+and the documentation for the library is hosted here:
+
+https://docs.rs/rustworkx-core/0.13.0/rustworkx_core/
+
 
 Project history
 ---------------
