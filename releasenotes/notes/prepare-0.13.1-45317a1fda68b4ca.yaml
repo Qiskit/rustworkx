@@ -2,11 +2,23 @@
 prelude: >
     rustworkx 0.13.1 is a bugfix release, addressing some issues identified
     since the 0.13.0 release.
+fixes:
+  - |
+    Fixed a potential soure of non-determinism in the output of the
+    ``token_swapper()`` function in rustworkx-core along with it's matching
+    function in the Python rustworkx package: :func:`~.graph_token_swapper`.
+  - |
+    Fixed the rustworkx-core dependencies to loosen the constraints on the
+    version of ``hashbrown`` and ``indexmap`` used. Previously, they were fixed
+    to the latest version which was compatible with rustworkx's MSRV. This has
+    been updated so a range of versions can be used, which will enable users
+    that don't have as restrictive of an MSRV to use newer versions of these
+    libraries with rustworkx-core.
 issues:
   - |
     The type hint stub files included in this release (and 0.13.0) are not
     compatible with Python 3.7's type hinting syntax. If you are now using
-    `mypy` to partially validate the typing in your usage of rustworkx, you
+    ``mypy`` to partially validate the typing in your usage of rustworkx, you
     should not run this with Python 3.7 as it will not function correctly.
     The actual rustworkx code will continue to function as expected with
     Python 3.7 for the 0.13.x release series, it was just the typing syntax
