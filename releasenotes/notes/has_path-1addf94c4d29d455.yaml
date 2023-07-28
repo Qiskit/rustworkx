@@ -1,0 +1,23 @@
+---
+features:
+  - |
+    Added functions :func:`~rustworkx.has_path` which accepts as arguments a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
+    in addition to a source and target node index. The fucntion returns True if a path is found using :func:`~rustworkx.dijkstra_shortest_paths`
+    and False if not. For example,
+
+    .. jupyter-execute::
+    
+        from rustworkx import PyDiGraph, has_path
+
+        graph = PyGraph()
+        a = graph.add_node("A")
+        b = graph.add_node("B")
+        c = graph.add_node("C")
+        edge_list = [(a, b, 1), (b, c, 1)]
+        graph.add_edges_from(edge_list)
+
+        path_exists = rustworkx.has_path(graph, a, c)
+        assert(path_exists == True)
+
+        path_exists = rustworkx.has_path(graph, c, a)
+        assert(path_exists == False)

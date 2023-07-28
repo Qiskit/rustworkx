@@ -49,23 +49,23 @@ class TestDijkstraGraph(unittest.TestCase):
         # a -> c -> d -> e = 20
         expected = {4: [self.a, self.c, self.d, self.e]}
         self.assertEqual(expected, path)
-    
+
     def test_dijkstra_has_path(self):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         b = g.add_node("B")
         c = g.add_node("C")
-        
+
         edge_list = [
             (a, b, 7),
             (c, b, 9),
             (c, b, 10),
         ]
         g.add_edges_from(edge_list)
-        
-        path_exists = rustworkx.digraph_has_path(g, a, c)
+
+        path_exists = rustworkx.graph_has_path(g, a, c)
         expected = True
-        
+
         self.assertEqual(path_exists, expected)
 
     def test_dijkstra_with_no_goal_set(self):
