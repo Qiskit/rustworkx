@@ -4,8 +4,8 @@ prelude: >
     since the 0.13.0 release.
 fixes:
   - |
-    Fixed a potential soure of non-determinism in the output of the
-    ``token_swapper()`` function in rustworkx-core along with it's matching
+    Fixed a potential source of non-determinism in the output of the
+    ``token_swapper()`` function in rustworkx-core along with its matching
     function in the Python rustworkx package: :func:`~.graph_token_swapper`.
   - |
     Fixed the rustworkx-core dependencies to loosen the constraints on the
