@@ -99,6 +99,7 @@ where
     if !(0.0..=1.0).contains(&probability) {
         return Err(InvalidInputError {});
     }
+
     if probability > 0.0 {
         if (probability - 1.0).abs() < std::f64::EPSILON {
             for u in 0..num_nodes {
@@ -113,43 +114,51 @@ where
                 }
             }
         } else {
-            let mut v: isize = if directed { 0 } else { 1 };
-            let mut w: isize = -1;
-            let num_nodes: isize = num_nodes as isize;
+            let num_nodes = num_nodes as isize;
             let lp: f64 = (1.0 - probability).ln();
-
-            println!("vw1 {:?} {:?}", v, w);
             let between = Uniform::new(0.0, 1.0);
-            while v < num_nodes {
-                let random: f64 = between.sample(&mut rng);
-                let lr: f64 = (1.0 - random).ln();
-                let ratio: isize = (lr / lp) as isize;
-                w = w + 1 + ratio;
 
-                if directed {
-                    // avoid self loops
-                    if v == w {
-                        w += 1;
+            if directed {
+                let mut v: isize = 0;
+                let mut w: isize = -1;
+                while v < num_nodes {
+                    let random: f64 = between.sample(&mut rng);
+                    let lr: f64 = (1.0 - random).ln();
+                    w = w + 1 + ((lr / lp) as isize);
+                    while w >= v && v < num_nodes {
+                        w = w - v;
+                        v = v + 1;
                     }
-                }
-                println!("vw2 {:?} {:?}", v, w);
-                while v < num_nodes && ((directed && num_nodes <= w) || (!directed && v <= w)) {
-                    w -= v;
-                    v += 1;
-                    // avoid self loops
-                    if directed && v == w {
+                    // Skip self-loops
+                    if v == w {
                         w -= v;
                         v += 1;
                     }
-                    println!("vw3 {:?} {:?}", v, w);
+                    if v < num_nodes {
+                        let v_index = graph.from_index(v as usize);
+                        let w_index = graph.from_index(w as usize);
+                        graph.add_edge(w_index, v_index, default_edge_weight());
+                    }
+                }
+            }
 
+            // Nodes in graph are from 0,n-1 (start with v as the second node index).
+            let mut v: isize = 1;
+            let mut w: isize = -1;
+            while v < num_nodes {
+                let random: f64 = between.sample(&mut rng);
+                let lr: f64 = (1.0 - random).ln();
+                w = w + 1 + ((lr / lp) as isize);
+                while w >= v && v < num_nodes {
+                    w = w - v;
+                    v = v + 1;
                 }
                 if v < num_nodes {
                     let v_index = graph.from_index(v as usize);
                     let w_index = graph.from_index(w as usize);
                     graph.add_edge(v_index, w_index, default_edge_weight());
                 }
-            }
+           }
         }
     }
     Ok(graph)
