@@ -423,7 +423,7 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             gnp_random_graph(20, 0.5, Some(10), || (), || ()).unwrap();
         assert_eq!(g.node_count(), 20);
-        assert_eq!(g.edge_count(), 104);
+        assert_eq!(g.edge_count(), 189);
     }
 
     #[test]

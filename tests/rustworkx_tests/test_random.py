@@ -20,7 +20,7 @@ class TestGNPRandomGraph(unittest.TestCase):
     def test_random_gnp_directed(self):
         graph = rustworkx.directed_gnp_random_graph(20, 0.5, seed=10)
         self.assertEqual(len(graph), 20)
-        self.assertEqual(len(graph.edges()), 104)
+        self.assertEqual(len(graph.edges()), 189)
 
     def test_random_gnp_directed_empty_graph(self):
         graph = rustworkx.directed_gnp_random_graph(20, 0)
