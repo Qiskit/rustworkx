@@ -160,7 +160,7 @@ where
                     let w_index = graph.from_index(w as usize);
                     graph.add_edge(v_index, w_index, default_edge_weight());
                 }
-           }
+            }
         }
     }
     Ok(graph)
