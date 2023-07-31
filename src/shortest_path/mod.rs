@@ -130,9 +130,9 @@ pub fn graph_has_path(
     source: usize,
     target: usize,
 ) -> PyResult<bool> {
-    let paths = graph_dijkstra_shortest_paths(py, graph, source, Some(target), None, 1.0)?;
+    let path_mapping = graph_dijkstra_shortest_paths(py, graph, source, Some(target), None, 1.0)?;
 
-    Ok(paths.paths.len() > 0)
+    Ok(!path_mapping.paths.is_empty())
 }
 
 /// Find the shortest path from a node
@@ -234,10 +234,10 @@ pub fn digraph_has_path(
     target: usize,
     as_undirected: bool,
 ) -> PyResult<bool> {
-    let paths =
+    let path_mapping =
         digraph_dijkstra_shortest_paths(py, graph, source, Some(target), None, 1.0, as_undirected)?;
 
-    Ok(paths.paths.len() > 0)
+    Ok(!path_mapping.paths.is_empty())
 }
 
 /// Compute the lengths of the shortest paths for a PyGraph object using
