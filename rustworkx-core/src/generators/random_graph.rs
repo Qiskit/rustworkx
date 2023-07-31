@@ -118,6 +118,7 @@ where
             let lp: f64 = (1.0 - probability).ln();
             let between = Uniform::new(0.0, 1.0);
 
+            // For directed, create inward edges to a v
             if directed {
                 let mut v: isize = 0;
                 let mut w: isize = -1;
@@ -126,8 +127,8 @@ where
                     let lr: f64 = (1.0 - random).ln();
                     w = w + 1 + ((lr / lp) as isize);
                     while w >= v && v < num_nodes {
-                        w = w - v;
-                        v = v + 1;
+                        w -= v;
+                        v += 1;
                     }
                     // Skip self-loops
                     if v == w {
@@ -142,6 +143,7 @@ where
                 }
             }
 
+            // For directed and undirected, create outward edges from a v
             // Nodes in graph are from 0,n-1 (start with v as the second node index).
             let mut v: isize = 1;
             let mut w: isize = -1;
@@ -150,8 +152,8 @@ where
                 let lr: f64 = (1.0 - random).ln();
                 w = w + 1 + ((lr / lp) as isize);
                 while w >= v && v < num_nodes {
-                    w = w - v;
-                    v = v + 1;
+                    w -= v;
+                    v += 1;
                 }
                 if v < num_nodes {
                     let v_index = graph.from_index(v as usize);
