@@ -130,14 +130,7 @@ pub fn graph_has_path(
     source: usize,
     target: usize,
 ) -> PyResult<bool> {
-    let paths = graph_dijkstra_shortest_paths(
-        py, 
-        graph, 
-        source, 
-        Some(target), 
-        None, 
-        1.0,
-    )?;
+    let paths = graph_dijkstra_shortest_paths(py, graph, source, Some(target), None, 1.0)?;
 
     Ok(paths.paths.len() > 0)
 }
@@ -241,16 +234,9 @@ pub fn digraph_has_path(
     target: usize,
     as_undirected: bool,
 ) -> PyResult<bool> {
-    let paths = digraph_dijkstra_shortest_paths(
-        py, 
-        graph, 
-        source, 
-        Some(target), 
-        None,
-        1.0,
-        as_undirected,
-    )?;
-    
+    let paths =
+        digraph_dijkstra_shortest_paths(py, graph, source, Some(target), None, 1.0, as_undirected)?;
+
     Ok(paths.paths.len() > 0)
 }
 
