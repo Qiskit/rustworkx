@@ -118,6 +118,7 @@ where
             let num_nodes: isize = num_nodes as isize;
             let lp: f64 = (1.0 - probability).ln();
 
+            println!("vw1 {:?} {:?}", v, w);
             let between = Uniform::new(0.0, 1.0);
             while v < num_nodes {
                 let random: f64 = between.sample(&mut rng);
@@ -131,6 +132,7 @@ where
                         w += 1;
                     }
                 }
+                println!("vw2 {:?} {:?}", v, w);
                 while v < num_nodes && ((directed && num_nodes <= w) || (!directed && v <= w)) {
                     w -= v;
                     v += 1;
@@ -139,6 +141,8 @@ where
                         w -= v;
                         v += 1;
                     }
+                    println!("vw3 {:?} {:?}", v, w);
+
                 }
                 if v < num_nodes {
                     let v_index = graph.from_index(v as usize);
