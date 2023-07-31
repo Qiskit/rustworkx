@@ -223,7 +223,7 @@ pub fn digraph_dijkstra_shortest_paths(
 /// :param int source: The node index to find paths from
 /// :param int target: The index of the target node
 /// :param bool as_undirected: If set to true the graph will be treated as
-///     undirected for finding the shortest path.
+///     undirected for finding a path
 ///
 /// :return: True if a path exists, False if not.
 /// :rtype: bool
