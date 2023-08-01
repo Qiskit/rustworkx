@@ -59,7 +59,7 @@ class TestDot(unittest.TestCase):
         dot_str = graph.to_dot(lambda _: {}, lambda _: {})
         self.assertEqual(
             "digraph {\n0 ;\n1 ;\n2 ;\n0 -> 1 ;\n0 -> 2 ;\n1 -> 2 ;\n2 -> 0 ;\n2 -> 1 ;\n}\n",
-            dot_str
+            dot_str,
         )
 
     def test_digraph_graph_attrs(self):
@@ -75,5 +75,5 @@ class TestDot(unittest.TestCase):
         dot_str = graph.to_dot()
         self.assertEqual(
             "digraph {\n0 ;\n1 ;\n2 ;\n0 -> 2 ;\n1 -> 2 ;\n1 -> 0 ;\n2 -> 0 ;\n2 -> 1 ;\n}\n",
-            dot_str
+            dot_str,
         )

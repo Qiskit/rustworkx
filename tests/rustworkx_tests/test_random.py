@@ -16,6 +16,7 @@ from ddt import ddt, data
 
 import rustworkx
 
+
 @ddt
 class TestGNPRandomGraph(unittest.TestCase):
     @data((15, 20, 0.7, 156), (20, 10, 0.5, 189), (22, 6, 0.2, 91))
