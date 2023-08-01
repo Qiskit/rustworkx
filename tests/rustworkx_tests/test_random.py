@@ -12,18 +12,25 @@
 
 import unittest
 import random
-from ddt import ddt, data
 
 import rustworkx
 
 
-@ddt
 class TestGNPRandomGraph(unittest.TestCase):
-    @data((15, 20, 0.7, 156), (20, 10, 0.5, 189), (22, 6, 0.2, 91))
-    def test_random_gnp_directed(self, args):
-        graph = rustworkx.directed_gnp_random_graph(args[0], args[2], seed=args[1])
-        self.assertEqual(len(graph), args[0])
-        self.assertEqual(len(graph.edges()), args[3])
+    def test_random_gnp_directed_1(self):
+        graph = rustworkx.directed_gnp_random_graph(15, 0.7, seed=20)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 156)
+
+    def test_random_gnp_directed_2(self):
+        graph = rustworkx.directed_gnp_random_graph(20, 0.5, seed=10)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 189)
+
+    def test_random_gnp_directed_3(self):
+        graph = rustworkx.directed_gnp_random_graph(22, 0.2, seed=6)
+        self.assertEqual(len(graph), 22)
+        self.assertEqual(len(graph.edges()), 91)
 
     def test_random_gnp_directed_empty_graph(self):
         graph = rustworkx.directed_gnp_random_graph(20, 0)
