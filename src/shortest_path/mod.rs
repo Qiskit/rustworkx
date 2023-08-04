@@ -109,6 +109,32 @@ pub fn graph_dijkstra_shortest_paths(
     })
 }
 
+/// Check if a graph has a path between source and target nodes
+///
+/// :param PyGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: The index of the target node
+///
+/// :return: True if a path exists, False if not.
+/// :rtype: bool
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, target),
+    text_signature = "(graph, source, target)"
+)]
+pub fn graph_has_path(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: usize,
+    target: usize,
+) -> PyResult<bool> {
+    let path_mapping = graph_dijkstra_shortest_paths(py, graph, source, Some(target), None, 1.0)?;
+
+    Ok(!path_mapping.paths.is_empty())
+}
+
 /// Find the shortest path from a node
 ///
 /// This function will generate the shortest path from a source node using
@@ -182,6 +208,36 @@ pub fn digraph_dijkstra_shortest_paths(
             })
             .collect(),
     })
+}
+
+/// Check if a digraph has a path between source and target nodes
+///
+/// :param PyDiGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: The index of the target node
+/// :param bool as_undirected: If set to true the graph will be treated as
+///     undirected for finding a path
+///
+/// :return: True if a path exists, False if not.
+/// :rtype: bool
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, target, as_undirected=false),
+    text_signature = "(graph, source, target, /, as_undirected=false)"
+)]
+pub fn digraph_has_path(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: usize,
+    target: usize,
+    as_undirected: bool,
+) -> PyResult<bool> {
+    let path_mapping =
+        digraph_dijkstra_shortest_paths(py, graph, source, Some(target), None, 1.0, as_undirected)?;
+
+    Ok(!path_mapping.paths.is_empty())
 }
 
 /// Compute the lengths of the shortest paths for a PyGraph object using

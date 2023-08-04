@@ -50,6 +50,21 @@ class TestDijkstraGraph(unittest.TestCase):
         expected = {4: [self.a, self.c, self.d, self.e]}
         self.assertEqual(expected, path)
 
+    def test_dijkstra_has_path(self):
+        g = rustworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+
+        edge_list = [
+            (a, b, 7),
+            (c, b, 9),
+            (c, b, 10),
+        ]
+        g.add_edges_from(edge_list)
+
+        self.assertTrue(rustworkx.graph_has_path(g, a, c))
+
     def test_dijkstra_with_no_goal_set(self):
         path = rustworkx.graph_dijkstra_shortest_path_lengths(self.graph, self.a, lambda x: 1)
         expected = {1: 1.0, 2: 1.0, 3: 1.0, 4: 2.0, 5: 2.0}

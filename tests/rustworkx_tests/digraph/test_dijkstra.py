@@ -70,6 +70,21 @@ class TestDijkstraDiGraph(unittest.TestCase):
         }
         self.assertEqual(expected, paths)
 
+    def test_dijkstra_has_path(self):
+        g = rustworkx.PyDiGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        c = g.add_node("C")
+
+        edge_list = [
+            (a, b, 7),
+            (c, b, 9),
+            (c, b, 10),
+        ]
+        g.add_edges_from(edge_list)
+
+        self.assertFalse(rustworkx.digraph_has_path(g, a, c))
+
     def test_dijkstra_path_with_weight_fn(self):
         paths = rustworkx.digraph_dijkstra_shortest_paths(self.graph, self.a, weight_fn=lambda x: x)
         expected = {
