@@ -594,7 +594,7 @@ def has_path(
     target,
     as_undirected=False,
 ):
-    """Checks if a path exists between a source and target node using Dijkstra's algorithm
+    """Checks if a path exists between a source and target node
 
     :param graph: The input graph to use. Can either be a
         :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`

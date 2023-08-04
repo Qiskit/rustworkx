@@ -109,7 +109,7 @@ pub fn graph_dijkstra_shortest_paths(
     })
 }
 
-/// Check if a graph has a path between source and target nodes using Dijkstra's algorithm
+/// Check if a graph has a path between source and target nodes 
 ///
 /// :param PyGraph graph:
 /// :param int source: The node index to find paths from
@@ -210,7 +210,7 @@ pub fn digraph_dijkstra_shortest_paths(
     })
 }
 
-/// Check if a digraph has a path between source and target nodes using Dijkstra's algorithm
+/// Check if a digraph has a path between source and target nodes
 ///
 /// :param PyDiGraph graph:
 /// :param int source: The node index to find paths from

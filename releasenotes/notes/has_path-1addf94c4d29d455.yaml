@@ -1,9 +1,7 @@
 ---
 features:
   - |
-    Added functions :func:`~rustworkx.has_path` which accepts as arguments a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
-    in addition to a source and target node index. The fucntion returns True if a path is found using :func:`~rustworkx.dijkstra_shortest_paths`
-    and False if not. For example,
+    Added :func:`~rustworkx.has_path` which accepts as arguments a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph` and checks if there is a path from source to destination
 
     .. jupyter-execute::
     

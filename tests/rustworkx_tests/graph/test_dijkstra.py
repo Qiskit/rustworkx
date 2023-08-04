@@ -63,10 +63,7 @@ class TestDijkstraGraph(unittest.TestCase):
         ]
         g.add_edges_from(edge_list)
 
-        path_exists = rustworkx.graph_has_path(g, a, c)
-        expected = True
-
-        self.assertEqual(path_exists, expected)
+        self.assertTrue(rustworkx.graph_has_path(g, a, c))
 
     def test_dijkstra_with_no_goal_set(self):
         path = rustworkx.graph_dijkstra_shortest_path_lengths(self.graph, self.a, lambda x: 1)
