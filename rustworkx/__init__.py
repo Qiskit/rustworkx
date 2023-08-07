@@ -588,6 +588,39 @@ def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None, de
 
 
 @functools.singledispatch
+def has_path(
+    graph,
+    source,
+    target,
+    as_undirected=False,
+):
+    """Checks if a path exists between a source and target node
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
+    :param int source: The node index to find paths from
+    :param int target: The index of the target node
+    :param bool as_undirected: If set to true the graph will be treated as
+        undirected for finding existence of a path. This only works with a
+        :class:`~rustworkx.PyDiGraph` input for ``graph``
+
+    :return: True if a path exists, False if not
+    :rtype: bool
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@has_path.register(PyDiGraph)
+def _digraph_has_path(graph, source, target, as_undirected=False):
+    return digraph_has_path(graph, source, target=target, as_undirected=as_undirected)
+
+
+@has_path.register(PyGraph)
+def _graph_has_path(graph, source, target):
+    return graph_has_path(graph, source, target=target)
+
+
+@functools.singledispatch
 def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
     """For each node in the graph, finds the shortest paths to all others.
 
