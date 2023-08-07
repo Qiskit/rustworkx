@@ -57,7 +57,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.7, 3.8, 3.9, "3.10", "3.11"]
+        python-version: [3.8, 3.9, "3.10", "3.11"]
         platform: [
           { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
@@ -65,7 +65,7 @@ jobs:
         ]
         include:
           # Test minimal supported Rust version
-          - rust: 1.56.1
+          - rust: 1.64
             python-version: 3.8
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
@@ -76,6 +76,20 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
+        if: runner.os != 'Windows'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+          architecture: ${{ matrix.platform.python-architecture }}
+        if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7.16' }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.platform.python-architecture }}
+        if: ${{ runner.os == 'Windows' && matrix.python-version != '3.7.16' }}
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:

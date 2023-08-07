@@ -26,7 +26,7 @@ use rustworkx_core::dictmap::*;
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::{PyBool, PyDict, PyList, PyLong, PyString, PyTuple};
+use pyo3::types::{PyBool, PyDict, PyList, PyString, PyTuple};
 use pyo3::PyTraverseError;
 use pyo3::Python;
 
@@ -34,6 +34,8 @@ use ndarray::prelude::*;
 use num_traits::Zero;
 use numpy::Complex64;
 use numpy::PyReadonlyArray2;
+
+use crate::iterators::NodeMap;
 
 use super::dot_utils::build_dot;
 use super::iterators::{EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
@@ -47,6 +49,7 @@ use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 use petgraph::visit::{
     EdgeIndexable, GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
+    NodeIndexable,
 };
 
 /// A class for creating undirected graphs
@@ -136,7 +139,6 @@ use petgraph::visit::{
 ///     :attr:`~.PyGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyGraph.attrs` will be set to ``None``.
 #[pyclass(mapping, module = "rustworkx", subclass)]
-#[pyo3(text_signature = "(/, multigraph=True, attrs=None)")]
 #[derive(Clone)]
 pub struct PyGraph {
     pub graph: StablePyGraph<Undirected>,
@@ -181,7 +183,7 @@ impl PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    #[pyo3(signature=(multigraph=true, attrs=None))]
+    #[pyo3(signature=(multigraph=true, attrs=None), text_signature = "(/, multigraph=True, attrs=None)")]
     fn new(py: Python, multigraph: bool, attrs: Option<PyObject>) -> Self {
         PyGraph {
             graph: StablePyGraph::<Undirected>::default(),
@@ -285,56 +287,24 @@ impl PyGraph {
                 .downcast::<PyTuple>()
                 .unwrap();
 
-            // use a pointer to iter the node list
-            let mut pointer = 0;
-            let mut next_node_idx: usize = nodes_lst
-                .get_item(pointer)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap()
-                .get_item(0)
-                .unwrap()
-                .downcast::<PyLong>()
-                .unwrap()
-                .extract()
-                .unwrap();
-
             // list of temporary nodes that will be removed later to re-create holes
             let node_bound_1: usize = last_item.get_item(0).unwrap().extract().unwrap();
             let mut tmp_nodes: Vec<NodeIndex> =
                 Vec::with_capacity(node_bound_1 + 1 - nodes_lst.len());
 
-            for i in 0..nodes_lst.len() + 1 {
-                if i < next_node_idx {
+            for item in nodes_lst {
+                let item = item.downcast::<PyTuple>().unwrap();
+                let next_index: usize = item.get_item(0).unwrap().extract().unwrap();
+                let weight: PyObject = item.get_item(1).unwrap().extract().unwrap();
+                while next_index > self.graph.node_bound() {
                     // node does not exist
                     let tmp_node = self.graph.add_node(py.None());
                     tmp_nodes.push(tmp_node);
-                } else {
-                    // add node to the graph, and update the next available node index
-                    let item = nodes_lst
-                        .get_item(pointer)
-                        .unwrap()
-                        .downcast::<PyTuple>()
-                        .unwrap();
-
-                    let node_w = item.get_item(1).unwrap().extract().unwrap();
-                    self.graph.add_node(node_w);
-                    pointer += 1;
-                    if pointer < nodes_lst.len() {
-                        next_node_idx = nodes_lst
-                            .get_item(pointer)
-                            .unwrap()
-                            .downcast::<PyTuple>()
-                            .unwrap()
-                            .get_item(0)
-                            .unwrap()
-                            .downcast::<PyLong>()
-                            .unwrap()
-                            .extract()
-                            .unwrap();
-                    }
                 }
+                // add node to the graph, and update the next available node index
+                self.graph.add_node(weight);
             }
+            // Remove any temporary nodes we added
             for tmp_node in tmp_nodes {
                 self.graph.remove_node(tmp_node);
             }
@@ -349,20 +319,8 @@ impl PyGraph {
                 self.graph.add_edge(tmp_node, tmp_node, py.None());
             } else {
                 let triple = item.downcast::<PyTuple>().unwrap();
-                let edge_p: usize = triple
-                    .get_item(0)
-                    .unwrap()
-                    .downcast::<PyLong>()
-                    .unwrap()
-                    .extract()
-                    .unwrap();
-                let edge_c: usize = triple
-                    .get_item(1)
-                    .unwrap()
-                    .downcast::<PyLong>()
-                    .unwrap()
-                    .extract()
-                    .unwrap();
+                let edge_p: usize = triple.get_item(0).unwrap().extract().unwrap();
+                let edge_c: usize = triple.get_item(1).unwrap().extract().unwrap();
                 let edge_w = triple.get_item(2).unwrap().extract().unwrap();
                 self.graph
                     .add_edge(NodeIndex::new(edge_p), NodeIndex::new(edge_c), edge_w);
@@ -1063,8 +1021,8 @@ impl PyGraph {
     ///     the graph
     #[pyo3(text_signature = "(self, index_list, /)")]
     pub fn remove_nodes_from(&mut self, index_list: Vec<usize>) -> PyResult<()> {
-        for node in index_list.iter().map(|x| NodeIndex::new(*x)) {
-            self.graph.remove_node(node);
+        for node in index_list {
+            self.remove_node(node)?;
         }
         Ok(())
     }
@@ -1638,6 +1596,161 @@ impl PyGraph {
         Ok(out_dict.into())
     }
 
+    /// Substitute a node with a PyGraph object
+    ///
+    /// :param int node: The node to replace with the PyGraph object
+    /// :param PyGraph other: The other graph to replace ``node`` with
+    /// :param callable edge_map_fn: A callable object that will take 3 position
+    ///     parameters, ``(source, target, weight)`` to represent an edge either to
+    ///     or from ``node`` in this graph. The expected return value from this
+    ///     callable is the node index of the node in ``other`` that an edge should
+    ///     be to/from. If None is returned, that edge will be skipped and not
+    ///     be copied.
+    /// :param callable node_filter: An optional callable object that when used
+    ///     will receive a node's payload object from ``other`` and return
+    ///     ``True`` if that node is to be included in the graph or not.
+    /// :param callable edge_weight_map: An optional callable object that when
+    ///     used will receive an edge's weight/data payload from ``other`` and
+    ///     will return an object to use as the weight for a newly created edge
+    ///     after the edge is mapped from ``other``. If not specified the weight
+    ///     from the edge in ``other`` will be copied by reference and used.
+    ///
+    /// :returns: A mapping of node indices in ``other`` to the equivalent node
+    ///     in this graph.
+    /// :rtype: NodeMap
+    ///
+    /// .. note::
+    ///
+    ///    The return type is a :class:`rustworkx.NodeMap` which is an unordered
+    ///    type. So it does not provide a deterministic ordering between objects
+    ///    when iterated over (although the same object will have a consistent
+    ///    order when iterated over multiple times).
+    ///
+    #[pyo3(
+        text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None"
+    )]
+    fn substitute_node_with_subgraph(
+        &mut self,
+        py: Python,
+        node: usize,
+        other: &PyGraph,
+        edge_map_fn: PyObject,
+        node_filter: Option<PyObject>,
+        edge_weight_map: Option<PyObject>,
+    ) -> PyResult<NodeMap> {
+        let filter_fn = |obj: &PyObject, filter_fn: &Option<PyObject>| -> PyResult<bool> {
+            match filter_fn {
+                Some(filter) => {
+                    let res = filter.call1(py, (obj,))?;
+                    res.extract(py)
+                }
+                None => Ok(true),
+            }
+        };
+
+        let weight_map_fn = |obj: &PyObject, weight_fn: &Option<PyObject>| -> PyResult<PyObject> {
+            match weight_fn {
+                Some(weight_fn) => weight_fn.call1(py, (obj,)),
+                None => Ok(obj.clone_ref(py)),
+            }
+        };
+
+        let map_fn = |source: usize, target: usize, weight: &PyObject| -> PyResult<Option<usize>> {
+            let res = edge_map_fn.call1(py, (source, target, weight))?;
+            res.extract(py)
+        };
+
+        let node_index = NodeIndex::new(node);
+        if self.graph.node_weight(node_index).is_none() {
+            return Err(PyIndexError::new_err(format!(
+                "Specified node {} is not in this graph",
+                node
+            )));
+        }
+
+        // Copy all nodes from other to self
+        let mut out_map: DictMap<usize, usize> = DictMap::with_capacity(other.node_count());
+        for node in other.graph.node_indices() {
+            let node_weight: Py<PyAny> = other.graph[node].clone_ref(py);
+            if !filter_fn(&node_weight, &node_filter)? {
+                continue;
+            }
+            let new_index: NodeIndex = self.graph.add_node(node_weight);
+            out_map.insert(node.index(), new_index.index());
+        }
+
+        if out_map.is_empty() {
+            self.graph.remove_node(node_index);
+            return Ok(NodeMap {
+                node_map: DictMap::new(),
+            });
+        }
+
+        // Copy all edges
+        for edge in other.graph.edge_references().filter(|edge| {
+            out_map.contains_key(&edge.target().index())
+                && out_map.contains_key(&edge.source().index())
+        }) {
+            self._add_edge(
+                NodeIndex::new(out_map[&edge.source().index()]),
+                NodeIndex::new(out_map[&edge.target().index()]),
+                weight_map_fn(edge.weight(), &edge_weight_map)?,
+            );
+        }
+        // Incoming and outgoing edges.
+        let in_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
+            .graph
+            .edge_references()
+            .filter(|edge| edge.target() == node_index)
+            .map(|edge| (edge.source(), edge.target(), edge.weight().clone_ref(py)))
+            .collect();
+        // Keep track of what's present on incoming edges
+        let in_set: HashSet<(NodeIndex, NodeIndex)> =
+            in_edges.iter().map(|edge| (edge.0, edge.1)).collect();
+        // Retrieve outgoing edges. Make sure to not include any incoming edge.
+        let out_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
+            .graph
+            .edges(node_index)
+            .filter(|edge| !in_set.contains(&(edge.target(), edge.source())))
+            .map(|edge| (edge.source(), edge.target(), edge.weight().clone_ref(py)))
+            .collect();
+        for (source, target, weight) in in_edges {
+            let old_index: Option<usize> = map_fn(source.index(), target.index(), &weight)?;
+            let target_out: NodeIndex = match old_index {
+                Some(old_index) => match out_map.get(&old_index) {
+                    Some(new_index) => NodeIndex::new(*new_index),
+                    None => {
+                        return Err(PyIndexError::new_err(format!(
+                            "No mapped index {} found",
+                            old_index
+                        )))
+                    }
+                },
+                None => continue,
+            };
+            self._add_edge(source, target_out, weight);
+        }
+        for (source, target, weight) in out_edges {
+            let old_index: Option<usize> = map_fn(source.index(), target.index(), &weight)?;
+            let source_out: NodeIndex = match old_index {
+                Some(old_index) => match out_map.get(&old_index) {
+                    Some(new_index) => NodeIndex::new(*new_index),
+                    None => {
+                        return Err(PyIndexError::new_err(format!(
+                            "No mapped index {} found",
+                            old_index
+                        )))
+                    }
+                },
+                None => continue,
+            };
+            self._add_edge(source_out, target, weight);
+        }
+        // Remove original node
+        self.graph.remove_node(node_index);
+        Ok(NodeMap { node_map: out_map })
+    }
+
     /// Substitute a set of nodes with a single new node.
     ///
     /// .. note::
@@ -1696,7 +1809,7 @@ impl PyGraph {
 
         // Remove nodes that will be replaced.
         for index in indices_to_remove {
-            self.graph.remove_node(index);
+            self.remove_node(index.index())?;
         }
 
         // If `weight_combo_fn` was specified, merge edges according
@@ -1847,7 +1960,10 @@ impl PyGraph {
 
     fn __delitem__(&mut self, idx: usize) -> PyResult<()> {
         match self.graph.remove_node(NodeIndex::new(idx)) {
-            Some(_) => Ok(()),
+            Some(_) => {
+                self.node_removed = true;
+                Ok(())
+            }
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
@@ -1888,6 +2004,84 @@ impl PyGraph {
         self.graph = StablePyGraph::<Undirected>::default();
         self.node_removed = false;
         self.attrs = py.None();
+    }
+
+    /// Filters a graph's nodes by some criteria conditioned on a node's data payload and returns those nodes' indices.
+    ///
+    /// This function takes in a function as an argument. This filter function will be passed in a node's data payload and is
+    /// required to return a boolean value stating whether the node's data payload fits some criteria.
+    ///
+    /// For example::
+    ///     
+    ///     from rustworkx import PyGraph
+    ///
+    ///     graph = PyGraph()
+    ///     graph.add_nodes_from(list(range(5)))
+    ///
+    ///     def my_filter_function(node):
+    ///         return node > 2
+    ///
+    ///     indices = graph.filter_nodes(my_filter_function)
+    ///     assert indices == [3, 4]
+    ///
+    /// :param filter_function: Function with which to filter nodes
+    /// :returns: The node indices that match the filter
+    /// :rtype: NodeIndices
+    #[pyo3(text_signature = "(self, filter_function)")]
+    pub fn filter_nodes(&self, py: Python, filter_function: PyObject) -> PyResult<NodeIndices> {
+        let filter = |nindex: NodeIndex| -> PyResult<bool> {
+            let res = filter_function.call1(py, (&self.graph[nindex],))?;
+            res.extract(py)
+        };
+
+        let mut n = Vec::with_capacity(self.graph.node_count());
+        for node_index in self.graph.node_indices() {
+            if filter(node_index)? {
+                n.push(node_index.index())
+            };
+        }
+        Ok(NodeIndices { nodes: n })
+    }
+
+    /// Filters a graph's edges by some criteria conditioned on a edge's data payload and returns those edges' indices.
+    ///
+    /// This function takes in a function as an argument. This filter function will be passed in an edge's data payload and is
+    /// required to return a boolean value stating whether the edge's data payload fits some criteria.
+    ///
+    /// For example::
+    ///
+    ///     from rustworkx import PyGraph
+    ///     from rustworkx.generators import complete_graph
+    ///
+    ///     graph = PyGraph()
+    ///     graph.add_nodes_from(range(3))
+    ///     graph.add_edges_from([(0, 1, 'A'), (0, 1, 'B'), (1, 2, 'C')])
+    ///
+    ///     def my_filter_function(edge):
+    ///         if edge:
+    ///             return edge == 'B'
+    ///         return False  
+    ///        
+    ///     indices = graph.filter_edges(my_filter_function)
+    ///     assert indices == [1]
+    ///
+    /// :param filter_function: Function with which to filter edges
+    /// :returns: The edge indices that match the filter
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, filter_function)")]
+    pub fn filter_edges(&self, py: Python, filter_function: PyObject) -> PyResult<EdgeIndices> {
+        let filter = |eindex: EdgeIndex| -> PyResult<bool> {
+            let res = filter_function.call1(py, (&self.graph[eindex],))?;
+            res.extract(py)
+        };
+
+        let mut e = Vec::with_capacity(self.graph.edge_count());
+        for edge_index in self.graph.edge_indices() {
+            if filter(edge_index)? {
+                e.push(edge_index.index())
+            };
+        }
+        Ok(EdgeIndices { edges: e })
     }
 }
 

@@ -24,6 +24,7 @@ mod isomorphism;
 mod iterators;
 mod json;
 mod layout;
+mod line_graph;
 mod link_analysis;
 mod matching;
 mod planar;
@@ -48,6 +49,7 @@ use graphml::*;
 use isomorphism::*;
 use json::*;
 use layout::*;
+use line_graph::*;
 use link_analysis::*;
 
 use matching::*;
@@ -398,6 +400,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_has_path))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_paths))?;
@@ -428,9 +432,13 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_edge_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_eigenvector_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_katz_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_katz_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_line_graph))?;
     m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
@@ -491,6 +499,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
+    m.add_wrapped(wrap_pyfunction!(hits))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;

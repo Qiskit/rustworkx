@@ -1,0 +1,17 @@
+---
+prelude: |
+  This release is major feature release of Rustworkx that adds some
+  new features to the library. The highlights of this release are:
+
+    * An expansion of the functions exposed by rustworkx-core to including a
+      new graph generator module.
+    * New link analysis functions such as page rank
+    * Expanded centrality measure functions
+    * Added partial type annotations to the library including for the
+      :class:`~PyDiGraph` and :class:`~.PyGraph` classes. This enables
+      type checking with `mypy <https://mypy-lang.org/>`__
+
+  This is also the final rustworkx release that supports running with Python
+  3.7. Starting in the 0.14.0 release Python >= 3.8 will be required to use
+  rustworkx. This release also increased the minimum suported Rust version for
+  compiling rustworkx and rustworkx-core from source to 1.56.1.

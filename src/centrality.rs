@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::too_many_arguments)]
+
 use std::convert::TryFrom;
 
 use crate::digraph;
@@ -18,9 +20,12 @@ use crate::iterators::{CentralityMapping, EdgeCentralityMapping};
 use crate::CostFn;
 use crate::FailedToConverge;
 
+use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::EdgeIndexable;
 use petgraph::visit::EdgeRef;
+use petgraph::visit::IntoNodeIdentifiers;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use rustworkx_core::centrality;
 
@@ -533,6 +538,267 @@ pub fn digraph_eigenvector_centrality(
     let ev_centrality = centrality::eigenvector_centrality(
         &graph.graph,
         |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
+        Some(max_iter),
+        Some(tol),
+    )?;
+
+    match ev_centrality {
+        Some(centrality) => Ok(CentralityMapping {
+            centralities: centrality
+                .iter()
+                .enumerate()
+                .filter_map(|(k, v)| {
+                    if graph.graph.contains_node(NodeIndex::new(k)) {
+                        Some((k, *v))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        }),
+        None => Err(FailedToConverge::new_err(format!(
+            "Function failed to converge on a solution in {} iterations",
+            max_iter
+        ))),
+    }
+}
+
+/// Compute the Katz centrality of a :class:`~PyGraph`.
+///
+/// For details on the Katz centrality refer to:
+///
+/// Leo Katz. “A New Status Index Derived from Sociometric Index.”
+/// Psychometrika 18(1):39–43, 1953
+/// <https://link.springer.com/content/pdf/10.1007/BF02289026.pdf>
+///
+/// This function uses a power iteration method to compute the eigenvector
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm is based on the NetworkX
+/// `katz_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html>`__
+/// function.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the Katz centrality.
+///
+/// :param PyGraph graph: The graph object to run the algorithm on
+/// :param float alpha: Attenuation factor. If this is not specified default value of 0.1 is used.
+/// :param float | dict beta: Immediate neighbourhood weights. If a float is provided, the neighbourhood
+///     weight is used for all nodes. If a dictionary is provided, it must contain all node indices.
+///     If beta is not specified, a default value of 1.0 is used.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///     payload object and is expected to return a `float` weight for that edge.
+///     If this is not specified ``default_weight`` will be used as the weight
+///     for every edge in ``graph``
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+/// :param int max_iter: The maximum number of iterations in the power method. If
+///     not specified a default value of 1000 is used.
+/// :param float tol: The error tolerance used when checking for convergence in the
+///     power method. If this is not specified default value of 1e-6 is used.
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for that node.
+/// :rtype: CentralityMapping
+#[pyfunction(
+    signature = (
+        graph,
+        alpha=0.1,
+        beta=None,
+        weight_fn=None,
+        default_weight=1.0,
+        max_iter=1000,
+        tol=1e-6
+    )
+)]
+#[pyo3(
+    text_signature = "(graph, /, alpha=0.1, beta=None, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6)"
+)]
+pub fn graph_katz_centrality(
+    py: Python,
+    graph: &graph::PyGraph,
+    alpha: f64,
+    beta: Option<PyObject>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    max_iter: usize,
+    tol: f64,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+
+    let mut beta_map: HashMap<usize, f64> = HashMap::new();
+
+    if let Some(beta) = beta {
+        match beta.extract::<f64>(py) {
+            Ok(beta_scalar) => {
+                // User provided a scalar, populate beta_map with the value
+                for node_index in graph.graph.node_identifiers() {
+                    beta_map.insert(node_index.index(), beta_scalar);
+                }
+            }
+            Err(_) => {
+                beta_map = beta.extract::<HashMap<usize, f64>>(py)?;
+
+                for node_index in graph.graph.node_identifiers() {
+                    if !beta_map.contains_key(&node_index.index()) {
+                        return Err(PyValueError::new_err(
+                            "Beta does not contain all node indices",
+                        ));
+                    }
+                }
+            }
+        }
+    } else {
+        // Populate with 1.0
+        for node_index in graph.graph.node_identifiers() {
+            beta_map.insert(node_index.index(), 1.0);
+        }
+    }
+
+    let ev_centrality = centrality::katz_centrality(
+        &graph.graph,
+        |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
+        Some(alpha),
+        Some(beta_map),
+        None,
+        Some(max_iter),
+        Some(tol),
+    )?;
+    match ev_centrality {
+        Some(centrality) => Ok(CentralityMapping {
+            centralities: centrality
+                .iter()
+                .enumerate()
+                .filter_map(|(k, v)| {
+                    if graph.graph.contains_node(NodeIndex::new(k)) {
+                        Some((k, *v))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        }),
+        None => Err(FailedToConverge::new_err(format!(
+            "Function failed to converge on a solution in {} iterations",
+            max_iter
+        ))),
+    }
+}
+
+/// Compute the Katz centrality of a :class:`~PyDiGraph`.
+///
+/// For details on the Katz centrality refer to:
+///
+/// Leo Katz. “A New Status Index Derived from Sociometric Index.”
+/// Psychometrika 18(1):39–43, 1953
+/// <https://link.springer.com/content/pdf/10.1007/BF02289026.pdf>
+///
+/// This function uses a power iteration method to compute the eigenvector
+/// and convergence is not guaranteed. The function will stop when `max_iter`
+/// iterations is reached or when the computed vector between two iterations
+/// is smaller than the error tolerance multiplied by the number of nodes.
+/// The implementation of this algorithm is based on the NetworkX
+/// `katz_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html>`__
+/// function.
+///
+/// In the case of multigraphs the weights of any parallel edges will be
+/// summed when computing the Katz centrality.
+///
+/// :param PyDiGraph graph: The graph object to run the algorithm on
+/// :param float alpha: Attenuation factor. If this is not specified default value of 0.1 is used.
+/// :param float | dict beta: Immediate neighbourhood weights. If a float is provided, the neighbourhood
+///     weight is used for all nodes. If a dictionary is provided, it must contain all node indices.
+///     If beta is not specified, a default value of 1.0 is used.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///     payload object and is expected to return a `float` weight for that edge.
+///     If this is not specified ``default_weight`` will be used as the weight
+///     for every edge in ``graph``
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+/// :param int max_iter: The maximum number of iterations in the power method. If
+///     not specified a default value of 1000 is used.
+/// :param float tol: The error tolerance used when checking for convergence in the
+///     power method. If this is not specified default value of 1e-6 is used.
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for that node.
+/// :rtype: CentralityMapping
+#[pyfunction(
+    signature = (
+        graph,
+        alpha=0.1,
+        beta=None,
+        weight_fn=None,
+        default_weight=1.0,
+        max_iter=1000,
+        tol=1e-6
+    )
+)]
+#[pyo3(
+    text_signature = "(graph, /, alpha=0.1, beta=None, weight_fn=None, default_weight=1.0, max_iter=1000, tol=1e-6)"
+)]
+pub fn digraph_katz_centrality(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    alpha: f64,
+    beta: Option<PyObject>,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    max_iter: usize,
+    tol: f64,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+
+    let mut beta_map: HashMap<usize, f64> = HashMap::new();
+
+    if let Some(beta) = beta {
+        match beta.extract::<f64>(py) {
+            Ok(beta_scalar) => {
+                // User provided a scalar, populate beta_map with the value
+                for node_index in graph.graph.node_identifiers() {
+                    beta_map.insert(node_index.index(), beta_scalar);
+                }
+            }
+            Err(_) => {
+                beta_map = beta.extract::<HashMap<usize, f64>>(py)?;
+
+                for node_index in graph.graph.node_identifiers() {
+                    if !beta_map.contains_key(&node_index.index()) {
+                        return Err(PyValueError::new_err(
+                            "Beta does not contain all node indices",
+                        ));
+                    }
+                }
+            }
+        }
+    } else {
+        // Populate with 1.0
+        for node_index in graph.graph.node_identifiers() {
+            beta_map.insert(node_index.index(), 1.0);
+        }
+    }
+
+    let ev_centrality = centrality::katz_centrality(
+        &graph.graph,
+        |e| -> PyResult<f64> { Ok(edge_weights[e.id().index()]) },
+        Some(alpha),
+        Some(beta_map),
+        None,
         Some(max_iter),
         Some(tol),
     )?;

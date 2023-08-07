@@ -4,7 +4,7 @@ jupyter-sphinx
 pydot
 pillow>=4.2.1
 reno>=3.4.0
-qiskit-sphinx-theme~=1.12.0
+qiskit-sphinx-theme~=1.14.0rc1
 matplotlib>=3.4
 sphinx-reredirects
 sphinxemoji

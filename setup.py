@@ -26,7 +26,7 @@ mpl_extras = ['matplotlib>=3.0']
 graphviz_extras = ['pillow>=5.4']
 
 PKG_NAME = os.getenv('RUSTWORKX_PKG_NAME', "rustworkx")
-PKG_VERSION = "0.13.0"
+PKG_VERSION = "0.14.0"
 PKG_PACKAGES = ["rustworkx", "rustworkx.visualization"]
 PKG_INSTALL_REQUIRES = ['numpy>=1.16.0']
 RUST_EXTENSIONS = [RustExtension("rustworkx.rustworkx", "Cargo.toml",
@@ -64,7 +64,6 @@ setup(
         "Intended Audience :: Science/Research",
         "Programming Language :: Rust",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
@@ -84,7 +83,7 @@ setup(
     include_package_data=True,
     packages=PKG_PACKAGES,
     zip_safe=False,
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     install_requires=PKG_INSTALL_REQUIRES,
     extras_require={
         'mpl': mpl_extras,

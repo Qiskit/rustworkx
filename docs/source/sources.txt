@@ -123,6 +123,7 @@ rustworkx.graph_distance_matrix.html
 rustworkx.graph_floyd_warshall.html
 rustworkx.graph_floyd_warshall_numpy.html
 rustworkx.graph_greedy_color.html
+rustworkx.graph_greedy_edge_color.html
 rustworkx.graph_is_isomorphic.html
 rustworkx.graph_is_subgraph_isomorphic.html
 rustworkx.graph_k_shortest_path_lengths.html
