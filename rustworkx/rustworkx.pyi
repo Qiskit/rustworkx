@@ -94,7 +94,7 @@ def digraph_bellman_ford_shortest_paths(
     graph: PyDiGraph[_S, _T],
     source: int,
     /,
-    target: Optional[int],
+    target: Optional[int] = ...,
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
     as_undirected: bool = ...,
@@ -103,7 +103,7 @@ def graph_bellman_ford_shortest_paths(
     graph: PyDiGraph[_S, _T],
     source: int,
     /,
-    target: Optional[int],
+    target: Optional[int] = ...,
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
 ) -> PathMapping: ...
