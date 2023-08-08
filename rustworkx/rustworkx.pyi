@@ -67,15 +67,19 @@ def dag_weighted_longest_path_length(
 ) -> float: ...
 def digraph_adjacency_matrix(
     graph: PyDiGraph[_S, _T],
+    /,
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
     null_value: float = ...,
+    parallel_edge: str = ...,
 ) -> np.ndarray: ...
 def graph_adjacency_matrix(
     graph: PyGraph[_S, _T],
+    /,
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
     null_value: float = ...,
+    parallel_edge: str = ...,
 ) -> np.ndarray: ...
 def digraph_core_number(
     graph: PyDiGraph,
