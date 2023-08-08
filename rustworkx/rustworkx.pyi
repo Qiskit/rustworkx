@@ -31,14 +31,14 @@ class NegativeCycle(Exception): ...
 class JSONSerializationError(Exception): ...
 class FailedToConverge(Exception): ...
 
-def ancestors(graph: PyDiGraph, node: int) -> Set[int]: ...
-def articulation_points(graph: PyGraph) -> Set[int]: ...
-def biconnected_components(graph: PyGraph) -> BiconnectedComponents: ...
-def bfs_predecessors(graph: PyDiGraph, node: int) -> BFSPredecessors: ...
-def bfs_successors(graph: PyDiGraph, node: int) -> BFSSuccessors: ...
-def chain_decomposition(graph: PyGraph, source: Optional[int]) -> Chains: ...
-def connected_components(graph: PyGraph) -> List[Set[int]]: ...
-def cycle_basis(graph: PyGraph, root: Optional[int]) -> List[List[int]]: ...
+def ancestors(graph: PyDiGraph, node: int, /) -> Set[int]: ...
+def articulation_points(graph: PyGraph, /) -> Set[int]: ...
+def biconnected_components(graph: PyGraph, /) -> BiconnectedComponents: ...
+def bfs_predecessors(graph: PyDiGraph, node: int, /) -> BFSPredecessors: ...
+def bfs_successors(graph: PyDiGraph, node: int, /) -> BFSSuccessors: ...
+def chain_decomposition(graph: PyGraph, /, source: Optional[int] = ...) -> Chains: ...
+def connected_components(graph: PyGraph, /) -> List[Set[int]]: ...
+def cycle_basis(graph: PyGraph, /, root: Optional[int]) -> List[List[int]]: ...
 def collect_runs(
     graph: PyDiGraph[_S, _T],
     filter_fn: Optional[Callable[[_S], bool]] = ...,
@@ -80,6 +80,7 @@ def graph_complement(graph: PyGraph[_S, _T]) -> PyGraph[_S, Optional[_T]]: ...
 def digraph_bellman_ford_shortest_paths(
     graph: PyDiGraph[_S, _T],
     source: int,
+    /,
     target: Optional[int],
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
@@ -88,6 +89,7 @@ def digraph_bellman_ford_shortest_paths(
 def graph_bellman_ford_shortest_paths(
     graph: PyDiGraph[_S, _T],
     source: int,
+    /,
     target: Optional[int],
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
@@ -96,17 +98,20 @@ def digraph_bellman_ford_shortest_path_lengths(
     graph: PyDiGraph[_S, _T],
     node: int,
     edge_cost_fn: Optional[Callable[[_T], float]],
+    /,
     goal: Optional[int] = ...,
 ) -> PathLengthMapping: ...
 def graph_bellman_ford_shortest_path_lengths(
     graph: PyGraph[_S, _T],
     node: int,
     edge_cost_fn: Optional[Callable[[_T], float]],
+    /,
     goal: Optional[int] = ...,
 ) -> PathLengthMapping: ...
 def digraph_dijkstra_shortest_paths(
     graph: PyDiGraph[_S, _T],
     source: int,
+    /,
     target: Optional[int],
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
@@ -115,6 +120,7 @@ def digraph_dijkstra_shortest_paths(
 def graph_dijkstra_shortest_paths(
     graph: PyDiGraph[_S, _T],
     source: int,
+    /,
     target: Optional[int],
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
@@ -123,45 +129,55 @@ def digraph_dijkstra_shortest_path_lengths(
     graph: PyDiGraph[_S, _T],
     node: int,
     edge_cost_fn: Optional[Callable[[_T], float]],
+    /,
     goal: Optional[int] = ...,
 ) -> PathLengthMapping: ...
 def graph_dijkstra_shortest_path_lengths(
     graph: PyGraph[_S, _T],
     node: int,
     edge_cost_fn: Optional[Callable[[_T], float]],
+    /,
     goal: Optional[int] = ...,
 ) -> PathLengthMapping: ...
 def digraph_all_pairs_bellman_ford_path_lengths(
     graph: PyDiGraph[_S, _T],
     edge_cost: Optional[Callable[[_T], float]] = ...,
+    /,
 ) -> AllPairsPathLengthMapping: ...
 def graph_all_pairs_bellman_ford_path_lengths(
     graph: PyGraph[_S, _T],
     edge_cost: Optional[Callable[[_T], float]] = ...,
+    /,
 ) -> AllPairsPathLengthMapping: ...
 def digraph_all_pairs_bellman_ford_shortest_paths(
     graph: PyDiGraph[_S, _T],
     edge_cost: Optional[Callable[[_T], float]] = ...,
+    /,
 ) -> AllPairsPathMapping: ...
 def graph_all_pairs_bellman_ford_shortest_paths(
     graph: PyDiGraph[_S, _T],
     edge_cost: Optional[Callable[[_T], float]] = ...,
+    /,
 ) -> AllPairsPathMapping: ...
 def digraph_all_pairs_dijkstra_path_lengths(
     graph: PyDiGraph[_S, _T],
     edge_cost: Optional[Callable[[_T], float]] = ...,
+    /,
 ) -> AllPairsPathLengthMapping: ...
 def graph_all_pairs_dijkstra_path_lengths(
     graph: PyGraph[_S, _T],
     edge_cost: Optional[Callable[[_T], float]] = ...,
+    /,
 ) -> AllPairsPathLengthMapping: ...
 def digraph_all_pairs_dijkstra_shortest_paths(
     graph: PyDiGraph[_S, _T],
     edge_cost: Optional[Callable[[_T], float]] = ...,
+    /,
 ) -> AllPairsPathMapping: ...
 def graph_all_pairs_dijkstra_shortest_paths(
     graph: PyDiGraph[_S, _T],
     edge_cost: Optional[Callable[[_T], float]] = ...,
+    /,
 ) -> AllPairsPathMapping: ...
 def digraph_eigenvector_centrality(
     graph: PyDiGraph[_S, _T],
