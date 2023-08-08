@@ -390,9 +390,24 @@ def graph_all_pairs_all_simple_paths(
     min_depth: Optional[int] = ...,
     cutoff: Optional[int] = ...,
 )-> AllPairsMultiplePathMapping: ...
+def digraph_astar_shortest_path(
+    graph: PyDiGraph[_S, _T],
+    node: int,
+    goal_fn: Callable[[_S], bool],
+    edge_cost_fn: Callable[[_T], float],
+    estimate_cost_fn: Callable[[_S], float],
+    /,
+) -> NodeIndices: ...
+def graph_astar_shortest_path(
+    graph: PyGraph[_S, _T],
+    node: int,
+    goal_fn: Callable[[_S], bool],
+    edge_cost_fn: Callable[[_T], float],
+    estimate_cost_fn: Callable[[_S], float],
+    /,
+) -> NodeIndices: ...
 
 """
-def digraph_astar_shortest_path(*args, **kwargs) -> Any: ...
 def digraph_bfs_search(*args, **kwargs) -> Any: ...
 def digraph_cartesian_product(graph_1, graph_2) -> Any: ...
 def digraph_dfs_edges(*args, **kwargs) -> Any: ...
