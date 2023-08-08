@@ -514,7 +514,7 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 /// A simple path is a path with no repeated nodes.
 ///
 /// :param PyGraph graph: The graph to find the path in
-/// :param int from: The node index to find the paths from
+/// :param int origin: The node index to find the paths from
 /// :param int to: The node index to find the paths to
 /// :param int min_depth: The minimum depth of the path to include in the output
 ///     list of paths. By default all paths are included regardless of depth,
@@ -526,15 +526,15 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 /// :returns: A list of lists where each inner list is a path of node indices
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)")]
 pub fn graph_all_simple_paths(
     graph: &graph::PyGraph,
-    from: usize,
+    origin: usize,
     to: usize,
     min_depth: Option<usize>,
     cutoff: Option<usize>,
 ) -> PyResult<Vec<Vec<usize>>> {
-    let from_index = NodeIndex::new(from);
+    let from_index = NodeIndex::new(origin);
     if !graph.graph.contains_node(from_index) {
         return Err(InvalidNode::new_err(
             "The input index for 'from' is not a valid node index",
@@ -568,7 +568,7 @@ pub fn graph_all_simple_paths(
 /// A simple path is a path with no repeated nodes.
 ///
 /// :param PyDiGraph graph: The graph to find the path in
-/// :param int from: The node index to find the paths from
+/// :param int origin: The node index to find the paths from
 /// :param int to: The node index to find the paths to
 /// :param int min_depth: The minimum depth of the path to include in the output
 ///     list of paths. By default all paths are included regardless of depth,
@@ -580,15 +580,15 @@ pub fn graph_all_simple_paths(
 /// :returns: A list of lists where each inner list is a path
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, from, to, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)")]
 pub fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
-    from: usize,
+    origin: usize,
     to: usize,
     min_depth: Option<usize>,
     cutoff: Option<usize>,
 ) -> PyResult<Vec<Vec<usize>>> {
-    let from_index = NodeIndex::new(from);
+    let from_index = NodeIndex::new(origin);
     if !graph.graph.contains_node(from_index) {
         return Err(InvalidNode::new_err(
             "The input index for 'from' is not a valid node index",
