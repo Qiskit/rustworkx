@@ -459,7 +459,7 @@ pub fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
 ///     payload/weight for the nodes in the run
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, filter)")]
+#[pyo3(text_signature = "(graph, filter_fn)")]
 pub fn collect_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
