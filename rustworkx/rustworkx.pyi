@@ -366,7 +366,7 @@ def digraph_all_simple_paths(
     graph: PyDiGraph,
     origin: int,
     to: int,
-    /, 
+    /,
     min_depth: Optional[int] = ...,
     cutoff: Optional[int] = ...,
 ) -> List[List[int]]: ...
@@ -374,22 +374,22 @@ def graph_all_simple_paths(
     graph: PyGraph,
     origin: int,
     to: int,
-    /, 
+    /,
     min_depth: Optional[int] = ...,
     cutoff: Optional[int] = ...,
 ) -> List[List[int]]: ...
 def digraph_all_pairs_all_simple_paths(
-    graph: PyDiGraph, 
+    graph: PyDiGraph,
     /,
     min_depth: Optional[int] = ...,
     cutoff: Optional[int] = ...,
-)-> AllPairsMultiplePathMapping: ...
+) -> AllPairsMultiplePathMapping: ...
 def graph_all_pairs_all_simple_paths(
-    graph: PyGraph, 
+    graph: PyGraph,
     /,
     min_depth: Optional[int] = ...,
     cutoff: Optional[int] = ...,
-)-> AllPairsMultiplePathMapping: ...
+) -> AllPairsMultiplePathMapping: ...
 def digraph_astar_shortest_path(
     graph: PyDiGraph[_S, _T],
     node: int,
@@ -408,18 +408,18 @@ def graph_astar_shortest_path(
 ) -> NodeIndices: ...
 def digraph_k_shortest_path_lengths(
     graph: PyDiGraph[_S, _T],
-    start: int, 
-    k: int, 
+    start: int,
+    k: int,
     edge_cost: Callable[[_T], float],
-    /, 
+    /,
     goal: Optional[int] = ...,
 ) -> PathLengthMapping: ...
 def graph_k_shortest_path_lengths(
     graph: PyGraph[_S, _T],
-    start: int, 
-    k: int, 
+    start: int,
+    k: int,
     edge_cost: Callable[[_T], float],
-    /, 
+    /,
     goal: Optional[int] = ...,
 ) -> PathLengthMapping: ...
 def digraph_is_isomorphic(
@@ -428,7 +428,7 @@ def digraph_is_isomorphic(
     /,
     node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
     edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
-    id_order: bool = ..., 
+    id_order: bool = ...,
     call_limit: Optional[int] = ...,
 ) -> bool: ...
 def graph_is_isomorphic(
@@ -437,7 +437,7 @@ def graph_is_isomorphic(
     /,
     node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
     edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
-    id_order: bool = ..., 
+    id_order: bool = ...,
     call_limit: Optional[int] = ...,
 ) -> bool: ...
 def digraph_is_subgraph_isomorphic(
