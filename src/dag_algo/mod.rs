@@ -645,16 +645,19 @@ pub fn collect_bicolor_runs(
 
 /// Returns the transitive reduction of a directed acyclic graph
 ///
-/// The transitive reduction of G = (V,E) is a graph G- = (V,E-)
-/// such that for all v,w in V there is an edge (v,w) in E- if and only if (v,w) is in E
-/// and there is no path from v to w in G with length greater than 1.
+/// The transitive reduction of :math:`G = (V,E)` is a graph :math:`G\prime = (V,E\prime)`
+/// such that for all :math:`v` and :math:`w` in :math:`V` there is an edge :math:`(v, w)` in
+/// :math:`E\prime` if and only if :math:`(v, w)` is in :math:`E`
+/// and there is no path from :math:`v` to :math:`w` in :math:`G` with length greater than 1.
 ///
 /// :param PyDiGraph graph: A directed acyclic graph
 ///
-/// :returns: a directed acyclic graph representing the transitive reduction, and a map containing the index of a node in the original graph mapped to its equivalent in the resulting graph.
-/// :rtype: Tuple[:class:`~rustworkx.PyGraph`, dict]
+/// :returns: a directed acyclic graph representing the transitive reduction, and
+///     a map containing the index of a node in the original graph mapped to its
+///     equivalent in the resulting graph.
+/// :rtype: Tuple[PyGraph, dict]
 ///
-/// :raises PyValueError: if graph is not a DAG
+/// :raises PyValueError: if ``graph`` is not a DAG
 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
@@ -663,15 +666,15 @@ pub fn transitive_reduction(
     py: Python,
 ) -> PyResult<(digraph::PyDiGraph, DictMap<usize, usize>)> {
     let g = &graph.graph;
-    let mut index_map = DictMap::new();
+    let mut index_map = DictMap::with_capacity(g.node_count());
     if !is_directed_acyclic_graph(graph) {
         return Err(PyValueError::new_err(
             "Directed Acyclic Graph required for transitive_reduction",
         ));
     }
-    let mut tr = StablePyGraph::<Directed>::new();
+    let mut tr = StablePyGraph::<Directed>::with_capacity(g.node_count(), 0);
     let mut descendants = DictMap::new();
-    let mut check_count = DictMap::new();
+    let mut check_count = HashMap::with_capacity(g.node_count());
 
     for node in g.node_indices() {
         let i = node.index();

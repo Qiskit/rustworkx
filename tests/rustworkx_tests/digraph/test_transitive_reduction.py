@@ -16,7 +16,7 @@ import rustworkx
 
 
 class TestTransitiveReduction(unittest.TestCase):
-    def test_tr(self):
+    def test_tr1(self):
         graph = rustworkx.PyDiGraph()
         a = graph.add_node("a")
         b = graph.add_node("b")
@@ -29,6 +29,7 @@ class TestTransitiveReduction(unittest.TestCase):
         tr, _ = rustworkx.transitive_reduction(graph)
         self.assertCountEqual(list(tr.edge_list()), [(0, 2), (0, 1), (1, 3), (2, 3), (3, 4)])
 
+    def test_tr2(self):
         graph2 = rustworkx.PyDiGraph()
         a = graph2.add_node("a")
         b = graph2.add_node("b")
@@ -43,6 +44,7 @@ class TestTransitiveReduction(unittest.TestCase):
         tr2, _ = rustworkx.transitive_reduction(graph2)
         self.assertCountEqual(list(tr2.edge_list()), [(0, 1), (1, 2)])
 
+    def test_tr3(self):
         graph3 = rustworkx.PyDiGraph()
         graph3.add_nodes_from([0, 1, 2, 3])
         graph3.add_edges_from([(0, 1, 1), (0, 2, 1), (0, 3, 1), (1, 2, 1), (1, 3, 1)])
@@ -63,9 +65,10 @@ class TestTransitiveReduction(unittest.TestCase):
 
         graph.remove_node(3)
 
-        tr, _ = rustworkx.transitive_reduction(graph)
+        tr, index_map = rustworkx.transitive_reduction(graph)
 
         self.assertCountEqual(list(tr.edge_list()), [(0, 1), (0, 2), (2, 3)])
+        self.assertEqual(index_map[4], 3)
 
     def test_tr_error(self):
         digraph = rustworkx.generators.directed_cycle_graph(1000)
