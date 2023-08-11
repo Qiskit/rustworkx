@@ -91,9 +91,8 @@ where
         let mut used: HashMap<G::NodeId, HashSet<G::NodeId>> = HashMap::new();
         used.insert(root_index, HashSet::new());
         // Walk the spanning tree
-        while !stack.is_empty() {
+        while let Some(z) = stack.pop() {
             // Use the last element added so that cycles are easier to find
-            let z = stack.pop().unwrap();
             for neighbor in graph.neighbors(z) {
                 // A new node was encountered:
                 if !used.contains_key(&neighbor) {
