@@ -235,13 +235,13 @@ def digraph_edge_betweenness_centrality(
     /,
     normalized: bool = ...,
     parallel_threshold: int = ...,
-) -> CentralityMapping: ...
+) -> EdgeCentralityMapping: ...
 def graph_edge_betweenness_centrality(
     graph: PyGraph[_S, _T],
     /,
     normalized: bool = ...,
     parallel_threshold: int = ...,
-) -> CentralityMapping: ...
+) -> EdgeCentralityMapping: ...
 def digraph_closeness_centrality(
     graph: PyDiGraph[_S, _T],
     wf_improved: bool = ...,

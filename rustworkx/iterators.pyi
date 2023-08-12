@@ -51,6 +51,7 @@ __all__ = [
     "Pos2DMapping",
     "WeightedEdgeList",
     "CentralityMapping",
+    "EdgeCentralityMapping",
     "BiconnectedComponents",
     "ProductNodeMap",
     "MultiplePathMapping",
@@ -135,6 +136,9 @@ class WeightedEdgeList(Generic[T_co], RustworkxCustomVecIter[Tuple[int, int, T_c
 
 @final
 class CentralityMapping(RustworkxCustomHashMapIter[int, float]): ...
+
+@final
+class EdgeCentralityMapping(RustworkxCustomHashMapIter[int, float]): ...
 
 @final
 class BiconnectedComponents(RustworkxCustomHashMapIter[Tuple[int, int], int]): ...
