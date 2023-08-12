@@ -359,6 +359,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
+    m.add_wrapped(wrap_pyfunction!(transitive_reduction))?;
     m.add_wrapped(wrap_pyfunction!(number_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_connected))?;
