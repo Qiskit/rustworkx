@@ -10,8 +10,8 @@
 # For implementation details, see __init__.py and src/traversal/mod.rs
 
 from .iterators import *
-from .graph import PyGraph as PyGraph
-from .digraph import PyDiGraph as PyDiGraph
+from .graph import PyGraph
+from .digraph import PyDiGraph
 from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 
 from typing import Any, Optional, Set, TypeVar, Callable

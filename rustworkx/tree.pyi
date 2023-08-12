@@ -12,10 +12,9 @@
 import numpy as np
 
 from .iterators import *
-from .graph import PyGraph as PyGraph
-from .digraph import PyDiGraph as PyDiGraph
+from .graph import PyGraph
 
-from typing import Optional, Set, List, Dict, TypeVar, Tuple, Callable, Union
+from typing import Optional, List, TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")

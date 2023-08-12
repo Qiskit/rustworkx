@@ -10,8 +10,8 @@
 # For implementation details, see __init__.py and src/centrality.rs
 
 from .iterators import *
-from .graph import PyGraph as PyGraph
-from .digraph import PyDiGraph as PyDiGraph
+from .graph import PyGraph
+from .digraph import PyDiGraph
 
 from typing import Optional, TypeVar, Callable
 

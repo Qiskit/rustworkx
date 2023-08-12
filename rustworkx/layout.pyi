@@ -10,8 +10,8 @@
 # For implementation details, see __init__.py and src/layout/mod.rs
 
 from .iterators import *
-from .graph import PyGraph as PyGraph
-from .digraph import PyDiGraph as PyDiGraph
+from .graph import PyGraph
+from .digraph import PyDiGraph
 
 from typing import Optional, Set, List, Dict, TypeVar, Tuple, Callable
 
