@@ -250,6 +250,26 @@ def graph_closeness_centrality(
     graph: PyGraph[_S, _T],
     wf_improved: bool = ...,
 ) -> CentralityMapping: ...
+def digraph_katz_centrality(
+    graph: PyDiGraph[_S, _T],
+    /,
+    alpha: Optional[float] = ...,
+    beta: Optional[float] = ...,
+    weight_fn: Optional[Callable[[_T], float]] = ...,
+    default_weight: Optional[float] = ...,
+    max_iter: Optional[int] = ...,
+    tol: Optional[float] = ...,
+) -> CentralityMapping: ...
+def graph_katz_centrality(
+    graph: PyGraph[_S, _T],
+    /,
+    alpha: Optional[float] = ...,
+    beta: Optional[float] = ...,
+    weight_fn: Optional[Callable[[_T], float]] = ...,
+    default_weight: Optional[float] = ...,
+    max_iter: Optional[int] = ...,
+    tol: Optional[float] = ...,
+) -> CentralityMapping: ...
 def minimum_spanning_edges(
     graph: PyGraph[_S, _T],
     weight_fn: Optional[Callable[[_T], float]] = ...,
@@ -556,6 +576,18 @@ def digraph_find_cycle(
     /,
     source: Optional[int] = ...,
 ) -> EdgeList: ...
+def digraph_has_path(
+    graph: PyDiGraph,
+    source: int,
+    target: int,
+    /,
+    as_undirected: Optional[bool] = ...,
+) -> bool: ...
+def graph_has_path(
+    graph: PyGraph,
+    source: int,
+    target: int,
+) -> bool: ...
 def digraph_num_shortest_paths_unweighted(
     graph: PyDiGraph,
     source: int,
@@ -641,25 +673,32 @@ def undirected_gnp_random_graph(
 def read_graphml(path: str, /) -> List[Union[PyGraph, PyDiGraph]]: ...
 
 """
-def digraph_cartesian_product(graph_1, graph_2) -> Any: ...
-def digraph_node_link_json(*args, **kwargs) -> Any: ...
-def digraph_tensor_product(graph_1, graph_2) -> Any: ...
-def digraph_transitivity(*args, **kwargs) -> Any: ...
-def digraph_vf2_mapping(graph_a, graph_b, subgraph = ...) -> Any: ...
-def graph_cartesian_product(graph_1, graph_2) -> Any: ...
-def graph_greedy_color(graph) -> Any: ...
-def graph_node_link_json(*args, **kwargs) -> Any: ...
-def graph_tensor_product(graph_1, graph_2) -> Any: ...
-def graph_token_swapper(*args, **kwargs) -> Any: ...
-def graph_transitivity(*args, **kwargs) -> Any: ...
-def graph_vf2_mapping(graph_a, graph_b, subgraph = ...) -> Any: ...
-def is_matching(*args, **kwargs) -> Any: ...
-def is_maximal_matching(*args, **kwargs) -> Any: ...
-def layers(*args, **kwargs) -> Any: ...
-def max_weight_matching(*args, **kwargs) -> Any: ...
-def metric_closure(*args, **kwargs) -> Any: ...
-def pagerank() -> Any: ...
-def random_geometric_graph(*args, **kwargs) -> Any: ...
-def simple_cycles(*args, **kwargs) -> Any: ...
-def stoer_wagner_min_cut(*args, **kwargs) -> Any: ...
+TopologicalSorter is not present in stub
+digraph_cartesian_product is not present in stub
+digraph_longest_simple_path is not present in stub
+digraph_node_link_json is not present in stub
+digraph_tensor_product is not present in stub
+digraph_transitivity is not present in stub
+digraph_vf2_mapping is not present in stub
+generators is not present in stub
+graph_cartesian_product is not present in stub
+graph_greedy_color is not present in stub
+graph_greedy_edge_color is not present in stub
+graph_line_graph is not present in stub
+graph_longest_simple_path is not present in stub
+graph_node_link_json is not present in stub
+graph_tensor_product is not present in stub
+graph_token_swapper is not present in stub
+graph_transitivity is not present in stub
+graph_vf2_mapping is not present in stub
+hits is not present in stub
+is_matching is not present in stub
+is_maximal_matching is not present in stub
+layers is not present in stub
+max_weight_matching is not present in stub
+metric_closure is not present in stub
+pagerank is not present in stub
+random_geometric_graph is not present in stub
+simple_cycles is not present in stub
+stoer_wagner_min_cut is not present in stub
 """
