@@ -23,6 +23,7 @@ from .layout import *
 from .link_analysis import *
 from .shortest_path import *
 from .traversal import *
+from .tree import *
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -97,16 +98,6 @@ def graph_complement(
     graph: PyGraph[_S, _T],
     /,
 ) -> PyGraph[_S, Optional[_T]]: ...
-def minimum_spanning_edges(
-    graph: PyGraph[_S, _T],
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-) -> WeightedEdgeList: ...
-def minimum_spanning_tree(
-    graph: PyGraph[_S, _T],
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-) -> PyGraph[_S, _T]: ...
 def digraph_all_simple_paths(
     graph: PyDiGraph,
     origin: int,
@@ -173,12 +164,6 @@ def number_weakly_connected_components(graph: PyDiGraph, /) -> bool: ...
 def node_connected_component(graph: PyGraph, node: int, /) -> Set[int]: ...
 def strongly_connected_components(graph: PyDiGraph, /) -> List[List[int]]: ...
 def weakly_connected_components(graph: PyDiGraph, /) -> List[Set[int]]: ...
-def steiner_tree(
-    graph: PyGraph[_S, _T],
-    terminal_nodes: List[int],
-    weight_fn: Callable[[_T], float],
-    /,
-) -> PyGraph[_S, _T]: ...
 def topological_sort(graph: PyDiGraph, /) -> NodeIndices: ...
 def lexicographical_topological_sort(
     dag: PyDiGraph[_S, _T],

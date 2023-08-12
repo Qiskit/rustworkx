@@ -120,6 +120,10 @@ from .traversal import bfs_predecessors as bfs_predecessors
 from .traversal import bfs_successors as bfs_successors
 from .traversal import descendants as descendants
 
+from .tree import minimum_spanning_edges as minimum_spanning_edges
+from .tree import minimum_spanning_tree as minimum_spanning_tree
+from .tree import steiner_tree as steiner_tree
+
 S = TypeVar("S")
 T = TypeVar("T")
 
