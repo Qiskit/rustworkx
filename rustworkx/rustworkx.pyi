@@ -18,6 +18,71 @@ from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 
 from typing import Any, Optional, Set, List, Dict, TypeVar, Tuple, Callable, Union
 
+# Shortest path algorithms
+from .shortest_path import (
+    digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths,
+)
+from .shortest_path import graph_bellman_ford_shortest_paths as graph_bellman_ford_shortest_paths
+from .shortest_path import (
+    digraph_bellman_ford_shortest_path_lengths as digraph_bellman_ford_shortest_path_lengths,
+)
+from .shortest_path import (
+    graph_bellman_ford_shortest_path_lengths as graph_bellman_ford_shortest_path_lengths,
+)
+from .shortest_path import digraph_dijkstra_shortest_paths as digraph_dijkstra_shortest_paths
+from .shortest_path import graph_dijkstra_shortest_paths as graph_dijkstra_shortest_paths
+from .shortest_path import (
+    digraph_dijkstra_shortest_path_lengths as digraph_dijkstra_shortest_path_lengths,
+)
+from .shortest_path import (
+    graph_dijkstra_shortest_path_lengths as graph_dijkstra_shortest_path_lengths,
+)
+from .shortest_path import (
+    digraph_all_pairs_bellman_ford_path_lengths as digraph_all_pairs_bellman_ford_path_lengths,
+)
+from .shortest_path import (
+    graph_all_pairs_bellman_ford_path_lengths as graph_all_pairs_bellman_ford_path_lengths,
+)
+from .shortest_path import (
+    digraph_all_pairs_bellman_ford_shortest_paths as digraph_all_pairs_bellman_ford_shortest_paths,
+)
+from .shortest_path import (
+    graph_all_pairs_bellman_ford_shortest_paths as graph_all_pairs_bellman_ford_shortest_paths,
+)
+from .shortest_path import (
+    digraph_all_pairs_dijkstra_path_lengths as digraph_all_pairs_dijkstra_path_lengths,
+)
+from .shortest_path import (
+    graph_all_pairs_dijkstra_path_lengths as graph_all_pairs_dijkstra_path_lengths,
+)
+from .shortest_path import (
+    digraph_all_pairs_dijkstra_shortest_paths as digraph_all_pairs_dijkstra_shortest_paths,
+)
+from .shortest_path import (
+    graph_all_pairs_dijkstra_shortest_paths as graph_all_pairs_dijkstra_shortest_paths,
+)
+from .shortest_path import digraph_astar_shortest_path as digraph_astar_shortest_path
+from .shortest_path import graph_astar_shortest_path as graph_astar_shortest_path
+from .shortest_path import digraph_k_shortest_path_lengths as digraph_k_shortest_path_lengths
+from .shortest_path import graph_k_shortest_path_lengths as graph_k_shortest_path_lengths
+from .shortest_path import digraph_has_path as digraph_has_path
+from .shortest_path import graph_has_path as graph_has_path
+from .shortest_path import (
+    digraph_num_shortest_paths_unweighted as digraph_num_shortest_paths_unweighted,
+)
+from .shortest_path import (
+    graph_num_shortest_paths_unweighted as graph_num_shortest_paths_unweighted,
+)
+from .shortest_path import (
+    digraph_unweighted_average_shortest_path_length as digraph_unweighted_average_shortest_path_length,
+)
+from .shortest_path import digraph_distance_matrix as digraph_distance_matrix
+from .shortest_path import graph_distance_matrix as graph_distance_matrix
+from .shortest_path import digraph_floyd_warshall as digraph_floyd_warshall
+from .shortest_path import graph_floyd_warshall as graph_floyd_warshall
+from .shortest_path import digraph_floyd_warshall_numpy as digraph_floyd_warshall_numpy
+from .shortest_path import graph_floyd_warshall_numpy as graph_floyd_warshall_numpy
+
 _S = TypeVar("_S")
 _T = TypeVar("_T")
 _BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor)
@@ -98,108 +163,6 @@ def graph_complement(
     graph: PyGraph[_S, _T],
     /,
 ) -> PyGraph[_S, Optional[_T]]: ...
-def digraph_bellman_ford_shortest_paths(
-    graph: PyDiGraph[_S, _T],
-    source: int,
-    /,
-    target: Optional[int] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-    as_undirected: bool = ...,
-) -> PathMapping: ...
-def graph_bellman_ford_shortest_paths(
-    graph: PyDiGraph[_S, _T],
-    source: int,
-    /,
-    target: Optional[int] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-) -> PathMapping: ...
-def digraph_bellman_ford_shortest_path_lengths(
-    graph: PyDiGraph[_S, _T],
-    node: int,
-    edge_cost_fn: Optional[Callable[[_T], float]],
-    /,
-    goal: Optional[int] = ...,
-) -> PathLengthMapping: ...
-def graph_bellman_ford_shortest_path_lengths(
-    graph: PyGraph[_S, _T],
-    node: int,
-    edge_cost_fn: Optional[Callable[[_T], float]],
-    /,
-    goal: Optional[int] = ...,
-) -> PathLengthMapping: ...
-def digraph_dijkstra_shortest_paths(
-    graph: PyDiGraph[_S, _T],
-    source: int,
-    /,
-    target: Optional[int],
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-    as_undirected: bool = ...,
-) -> PathMapping: ...
-def graph_dijkstra_shortest_paths(
-    graph: PyDiGraph[_S, _T],
-    source: int,
-    /,
-    target: Optional[int],
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-) -> PathMapping: ...
-def digraph_dijkstra_shortest_path_lengths(
-    graph: PyDiGraph[_S, _T],
-    node: int,
-    edge_cost_fn: Optional[Callable[[_T], float]],
-    /,
-    goal: Optional[int] = ...,
-) -> PathLengthMapping: ...
-def graph_dijkstra_shortest_path_lengths(
-    graph: PyGraph[_S, _T],
-    node: int,
-    edge_cost_fn: Optional[Callable[[_T], float]],
-    /,
-    goal: Optional[int] = ...,
-) -> PathLengthMapping: ...
-def digraph_all_pairs_bellman_ford_path_lengths(
-    graph: PyDiGraph[_S, _T],
-    edge_cost: Callable[[_T], float],
-    /,
-) -> AllPairsPathLengthMapping: ...
-def graph_all_pairs_bellman_ford_path_lengths(
-    graph: PyGraph[_S, _T],
-    edge_cost: Callable[[_T], float],
-    /,
-) -> AllPairsPathLengthMapping: ...
-def digraph_all_pairs_bellman_ford_shortest_paths(
-    graph: PyDiGraph[_S, _T],
-    edge_cost: Callable[[_T], float],
-    /,
-) -> AllPairsPathMapping: ...
-def graph_all_pairs_bellman_ford_shortest_paths(
-    graph: PyDiGraph[_S, _T],
-    edge_cost: Callable[[_T], float],
-    /,
-) -> AllPairsPathMapping: ...
-def digraph_all_pairs_dijkstra_path_lengths(
-    graph: PyDiGraph[_S, _T],
-    edge_cost: Callable[[_T], float],
-    /,
-) -> AllPairsPathLengthMapping: ...
-def graph_all_pairs_dijkstra_path_lengths(
-    graph: PyGraph[_S, _T],
-    edge_cost: Callable[[_T], float],
-    /,
-) -> AllPairsPathLengthMapping: ...
-def digraph_all_pairs_dijkstra_shortest_paths(
-    graph: PyDiGraph[_S, _T],
-    edge_cost: Callable[[_T], float],
-    /,
-) -> AllPairsPathMapping: ...
-def graph_all_pairs_dijkstra_shortest_paths(
-    graph: PyDiGraph[_S, _T],
-    edge_cost: Callable[[_T], float],
-    /,
-) -> AllPairsPathMapping: ...
 def digraph_eigenvector_centrality(
     graph: PyDiGraph[_S, _T],
     /,
@@ -414,38 +377,6 @@ def graph_all_pairs_all_simple_paths(
     min_depth: Optional[int] = ...,
     cutoff: Optional[int] = ...,
 ) -> AllPairsMultiplePathMapping: ...
-def digraph_astar_shortest_path(
-    graph: PyDiGraph[_S, _T],
-    node: int,
-    goal_fn: Callable[[_S], bool],
-    edge_cost_fn: Callable[[_T], float],
-    estimate_cost_fn: Callable[[_S], float],
-    /,
-) -> NodeIndices: ...
-def graph_astar_shortest_path(
-    graph: PyGraph[_S, _T],
-    node: int,
-    goal_fn: Callable[[_S], bool],
-    edge_cost_fn: Callable[[_T], float],
-    estimate_cost_fn: Callable[[_S], float],
-    /,
-) -> NodeIndices: ...
-def digraph_k_shortest_path_lengths(
-    graph: PyDiGraph[_S, _T],
-    start: int,
-    k: int,
-    edge_cost: Callable[[_T], float],
-    /,
-    goal: Optional[int] = ...,
-) -> PathLengthMapping: ...
-def graph_k_shortest_path_lengths(
-    graph: PyGraph[_S, _T],
-    start: int,
-    k: int,
-    edge_cost: Callable[[_T], float],
-    /,
-    goal: Optional[int] = ...,
-) -> PathLengthMapping: ...
 def digraph_is_isomorphic(
     first: PyDiGraph[_S, _T],
     second: PyDiGraph[_S, _T],
@@ -528,89 +459,11 @@ def negative_edge_cycle(
 ) -> bool: ...
 def digraph_dfs_edges(graph: PyDiGraph[_S, _T], /, source: Optional[int] = ...) -> EdgeList: ...
 def graph_dfs_edges(graph: PyGraph[_S, _T], /, source: Optional[int] = ...) -> EdgeList: ...
-def digraph_distance_matrix(
-    graph: PyDiGraph,
-    /,
-    parallel_threshold: Optional[int] = ...,
-    as_undirected: Optional[bool] = ...,
-    null_value: Optional[float] = ...,
-) -> np.ndarray: ...
-def graph_distance_matrix(
-    graph: PyGraph,
-    /,
-    parallel_threshold: Optional[int] = ...,
-    null_value: Optional[float] = ...,
-) -> np.ndarray: ...
-def digraph_floyd_warshall(
-    graph: PyDiGraph[_S, _T],
-    /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    as_undirected: Optional[bool] = ...,
-    default_weight: Optional[float] = ...,
-    parallel_threshold: Optional[int] = ...,
-) -> AllPairsPathLengthMapping: ...
-def graph_floyd_warshall(
-    graph: PyGraph[_S, _T],
-    /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: Optional[float] = ...,
-    parallel_threshold: Optional[int] = ...,
-) -> AllPairsPathLengthMapping: ...
-def digraph_floyd_warshall_numpy(
-    graph: PyDiGraph[_S, _T],
-    /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    as_undirected: Optional[bool] = ...,
-    default_weight: Optional[float] = ...,
-    parallel_threshold: Optional[int] = ...,
-) -> np.ndarray: ...
-def graph_floyd_warshall_numpy(
-    graph: PyGraph[_S, _T],
-    /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: Optional[float] = ...,
-    parallel_threshold: Optional[int] = ...,
-) -> np.ndarray: ...
 def digraph_find_cycle(
     graph: PyDiGraph[_S, _T],
     /,
     source: Optional[int] = ...,
 ) -> EdgeList: ...
-def digraph_has_path(
-    graph: PyDiGraph,
-    source: int,
-    target: int,
-    /,
-    as_undirected: Optional[bool] = ...,
-) -> bool: ...
-def graph_has_path(
-    graph: PyGraph,
-    source: int,
-    target: int,
-) -> bool: ...
-def digraph_num_shortest_paths_unweighted(
-    graph: PyDiGraph,
-    source: int,
-    /,
-) -> NodesCountMapping: ...
-def graph_num_shortest_paths_unweighted(
-    graph: PyGraph,
-    source: int,
-    /,
-) -> NodesCountMapping: ...
-def digraph_unweighted_average_shortest_path_length(
-    graph: PyDiGraph,
-    /,
-    parallel_threshold: Optional[int] = ...,
-    as_undirected: Optional[bool] = ...,
-    disconnected: Optional[bool] = ...,
-) -> float: ...
-def graph_unweighted_average_shortest_path_length(
-    graph: PyGraph,
-    /,
-    parallel_threshold: Optional[int] = ...,
-    disconnected: Optional[bool] = ...,
-) -> float: ...
 def digraph_union(
     first: PyDiGraph[_S, _T],
     second: PyDiGraph[_S, _T],
