@@ -691,25 +691,33 @@ def pagerank(
     max_iter: Optional[int] = ...,
     dangling: Optional[Dict[int, float]] = ...,
 ) -> CentralityMapping: ...
+def transitive_reduction(graph: PyDiGraph, /) -> Tuple[PyDiGraph, Dict[int, int]]: ...
+def digraph_longest_simple_path(graph: PyDiGraph, /) -> Optional[NodeIndices]: ...
+def graph_longest_simple_path(graph: PyGraph, /) -> Optional[NodeIndices]: ...
+def digraph_transitivity(graph: PyGraph, /) -> float: ...
+def graph_transitivity(graph: PyGraph, /) -> float: ...
+def graph_token_swapper(
+    graph: PyGraph,
+    mapping: Dict[int,int],
+    /, 
+    trials: Optional[int] = ...,
+    seed: Optional[int] = ...,
+    parallel_threshold: Optional[int] = ...,
+) -> EdgeList: ...
 
 """
 TopologicalSorter is not present in stub
 digraph_cartesian_product is not present in stub
-digraph_longest_simple_path is not present in stub
 digraph_node_link_json is not present in stub
 digraph_tensor_product is not present in stub
-digraph_transitivity is not present in stub
 digraph_vf2_mapping is not present in stub
 generators is not present in stub
 graph_cartesian_product is not present in stub
 graph_greedy_color is not present in stub
 graph_greedy_edge_color is not present in stub
 graph_line_graph is not present in stub
-graph_longest_simple_path is not present in stub
 graph_node_link_json is not present in stub
 graph_tensor_product is not present in stub
-graph_token_swapper is not present in stub
-graph_transitivity is not present in stub
 graph_vf2_mapping is not present in stub
 is_matching is not present in stub
 is_maximal_matching is not present in stub
