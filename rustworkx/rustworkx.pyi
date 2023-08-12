@@ -14,11 +14,22 @@ import numpy as np
 from .iterators import *
 from .graph import PyGraph as PyGraph
 from .digraph import PyDiGraph as PyDiGraph
-from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 
-from typing import Any, Optional, Set, List, Dict, TypeVar, Tuple, Callable, Union
+from typing import Optional, Set, List, Dict, TypeVar, Tuple, Callable, Union
 
-# Shortest path algorithms
+# Centrality functions
+from .centrality import digraph_eigenvector_centrality as digraph_eigenvector_centrality
+from .centrality import graph_eigenvector_centrality as graph_eigenvector_centrality
+from .centrality import digraph_betweenness_centrality as digraph_betweenness_centrality
+from .centrality import graph_betweenness_centrality as graph_betweenness_centrality
+from .centrality import digraph_edge_betweenness_centrality as digraph_edge_betweenness_centrality
+from .centrality import graph_edge_betweenness_centrality as graph_edge_betweenness_centrality
+from .centrality import digraph_closeness_centrality as digraph_closeness_centrality
+from .centrality import graph_closeness_centrality as graph_closeness_centrality
+from .centrality import digraph_katz_centrality as digraph_katz_centrality
+from .centrality import graph_katz_centrality as graph_katz_centrality
+
+# Shortest path functions
 from .shortest_path import (
     digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths,
 )
@@ -83,11 +94,22 @@ from .shortest_path import graph_floyd_warshall as graph_floyd_warshall
 from .shortest_path import digraph_floyd_warshall_numpy as digraph_floyd_warshall_numpy
 from .shortest_path import graph_floyd_warshall_numpy as graph_floyd_warshall_numpy
 
+# Traversal functions
+from .traversal import digraph_bfs_search as digraph_bfs_search
+from .traversal import graph_bfs_search as graph_bfs_search
+from .traversal import digraph_dfs_search as digraph_dfs_search
+from .traversal import graph_dfs_search as graph_dfs_search
+from .traversal import digraph_dijkstra_search as digraph_dijkstra_search
+from .traversal import graph_dijkstra_search as graph_dijkstra_search
+from .traversal import digraph_dfs_edges as digraph_dfs_edges
+from .traversal import graph_dfs_edges as graph_dfs_edges
+from .traversal import ancestors as ancestors
+from .traversal import bfs_predecessors as bfs_predecessors
+from .traversal import bfs_successors as bfs_successors
+from .traversal import descendants as descendants
+
 _S = TypeVar("_S")
 _T = TypeVar("_T")
-_BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor)
-_DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor)
-_DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor)
 
 class DAGHasCycle(Exception): ...
 class DAGWouldCycle(Exception): ...
@@ -100,11 +122,8 @@ class NegativeCycle(Exception): ...
 class JSONSerializationError(Exception): ...
 class FailedToConverge(Exception): ...
 
-def ancestors(graph: PyDiGraph, node: int, /) -> Set[int]: ...
 def articulation_points(graph: PyGraph, /) -> Set[int]: ...
 def biconnected_components(graph: PyGraph, /) -> BiconnectedComponents: ...
-def bfs_predecessors(graph: PyDiGraph, node: int, /) -> BFSPredecessors: ...
-def bfs_successors(graph: PyDiGraph, node: int, /) -> BFSSuccessors: ...
 def chain_decomposition(graph: PyGraph, /, source: Optional[int] = ...) -> Chains: ...
 def connected_components(graph: PyGraph, /) -> List[Set[int]]: ...
 def cycle_basis(graph: PyGraph, /, root: Optional[int] = ...) -> List[List[int]]: ...
@@ -117,7 +136,6 @@ def collect_bicolor_runs(
     filter_fn: Callable[[_S], bool],
     color_fn: Callable[[_T], int],
 ) -> List[List[_S]]: ...
-def descendants(graph: PyDiGraph, node: int, /) -> Set[int]: ...
 def dag_longest_path(
     graph: PyDiGraph[_S, _T], /, weight_fn: Optional[Callable[[int, int, _T], int]] = ...
 ) -> NodeIndices: ...
@@ -163,76 +181,6 @@ def graph_complement(
     graph: PyGraph[_S, _T],
     /,
 ) -> PyGraph[_S, Optional[_T]]: ...
-def digraph_eigenvector_centrality(
-    graph: PyDiGraph[_S, _T],
-    /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-    max_iter: int = ...,
-    tol: float = ...,
-) -> CentralityMapping: ...
-def graph_eigenvector_centrality(
-    graph: PyGraph[_S, _T],
-    /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-    max_iter: int = ...,
-    tol: float = ...,
-) -> CentralityMapping: ...
-def digraph_betweenness_centrality(
-    graph: PyDiGraph[_S, _T],
-    /,
-    normalized: bool = ...,
-    endpoints: bool = ...,
-    parallel_threshold: int = ...,
-) -> CentralityMapping: ...
-def graph_betweenness_centrality(
-    graph: PyGraph[_S, _T],
-    /,
-    normalized: bool = ...,
-    endpoints: bool = ...,
-    parallel_threshold: int = ...,
-) -> CentralityMapping: ...
-def digraph_edge_betweenness_centrality(
-    graph: PyDiGraph[_S, _T],
-    /,
-    normalized: bool = ...,
-    parallel_threshold: int = ...,
-) -> EdgeCentralityMapping: ...
-def graph_edge_betweenness_centrality(
-    graph: PyGraph[_S, _T],
-    /,
-    normalized: bool = ...,
-    parallel_threshold: int = ...,
-) -> EdgeCentralityMapping: ...
-def digraph_closeness_centrality(
-    graph: PyDiGraph[_S, _T],
-    wf_improved: bool = ...,
-) -> CentralityMapping: ...
-def graph_closeness_centrality(
-    graph: PyGraph[_S, _T],
-    wf_improved: bool = ...,
-) -> CentralityMapping: ...
-def digraph_katz_centrality(
-    graph: PyDiGraph[_S, _T],
-    /,
-    alpha: Optional[float] = ...,
-    beta: Optional[float] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: Optional[float] = ...,
-    max_iter: Optional[int] = ...,
-    tol: Optional[float] = ...,
-) -> CentralityMapping: ...
-def graph_katz_centrality(
-    graph: PyGraph[_S, _T],
-    /,
-    alpha: Optional[float] = ...,
-    beta: Optional[float] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: Optional[float] = ...,
-    max_iter: Optional[int] = ...,
-    tol: Optional[float] = ...,
-) -> CentralityMapping: ...
 def minimum_spanning_edges(
     graph: PyGraph[_S, _T],
     weight_fn: Optional[Callable[[_T], float]] = ...,
@@ -415,38 +363,6 @@ def graph_is_subgraph_isomorphic(
     induced: bool = ...,
     call_limit: Optional[int] = ...,
 ) -> bool: ...
-def digraph_bfs_search(
-    graph: PyDiGraph,
-    source: Optional[int] = ...,
-    visitor: Optional[_BFSVisitor] = ...,
-) -> None: ...
-def graph_bfs_search(
-    graph: PyGraph,
-    source: Optional[int] = ...,
-    visitor: Optional[_BFSVisitor] = ...,
-) -> None: ...
-def digraph_dfs_search(
-    graph: PyDiGraph,
-    source: Optional[int] = ...,
-    visitor: Optional[_DFSVisitor] = ...,
-) -> None: ...
-def graph_dfs_search(
-    graph: PyGraph,
-    source: Optional[int] = ...,
-    visitor: Optional[_DFSVisitor] = ...,
-) -> None: ...
-def digraph_dijkstra_search(
-    graph: PyDiGraph,
-    source: Optional[int] = ...,
-    weight_fn: Optional[Callable[[Any], float]] = ...,
-    visitor: Optional[_DijkstraVisitor] = ...,
-) -> None: ...
-def graph_dijkstra_search(
-    graph: PyGraph,
-    source: Optional[int] = ...,
-    weight_fn: Optional[Callable[[Any], float]] = ...,
-    visitor: Optional[_DijkstraVisitor] = ...,
-) -> None: ...
 def find_negative_cycle(
     graph: PyDiGraph[_S, _T],
     edge_cost_fn: Callable[[_T], float],
@@ -457,8 +373,6 @@ def negative_edge_cycle(
     edge_cost_fn: Callable[[_T], float],
     /,
 ) -> bool: ...
-def digraph_dfs_edges(graph: PyDiGraph[_S, _T], /, source: Optional[int] = ...) -> EdgeList: ...
-def graph_dfs_edges(graph: PyGraph[_S, _T], /, source: Optional[int] = ...) -> EdgeList: ...
 def digraph_find_cycle(
     graph: PyDiGraph[_S, _T],
     /,
