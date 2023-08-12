@@ -698,12 +698,32 @@ def digraph_transitivity(graph: PyGraph, /) -> float: ...
 def graph_transitivity(graph: PyGraph, /) -> float: ...
 def graph_token_swapper(
     graph: PyGraph,
-    mapping: Dict[int,int],
-    /, 
+    mapping: Dict[int, int],
+    /,
     trials: Optional[int] = ...,
     seed: Optional[int] = ...,
     parallel_threshold: Optional[int] = ...,
 ) -> EdgeList: ...
+def graph_greedy_color(graph: PyGraph, /) -> Dict[int, int]: ...
+def graph_greedy_edge_color(graph: PyGraph, /) -> Dict[int, int]: ...
+def max_weight_matching(
+    graph: PyGraph[_S, _T],
+    /,
+    max_cardinality: bool = ...,
+    weight_fn: Optional[Callable[[_T], float]] = ...,
+    default_weight: int = ...,
+    verify_optimum: bool = ...,
+) -> Set[Tuple[int, int]]: ...
+def is_matching(
+    graph: PyGraph,
+    matching: Set[Tuple[int, int]],
+    /,
+) -> bool: ...
+def is_maximal_matching(
+    graph: PyGraph,
+    matching: Set[Tuple[int, int]],
+    /,
+) -> bool: ...
 
 """
 TopologicalSorter is not present in stub
@@ -713,16 +733,11 @@ digraph_tensor_product is not present in stub
 digraph_vf2_mapping is not present in stub
 generators is not present in stub
 graph_cartesian_product is not present in stub
-graph_greedy_color is not present in stub
-graph_greedy_edge_color is not present in stub
 graph_line_graph is not present in stub
 graph_node_link_json is not present in stub
 graph_tensor_product is not present in stub
 graph_vf2_mapping is not present in stub
-is_matching is not present in stub
-is_maximal_matching is not present in stub
 layers is not present in stub
-max_weight_matching is not present in stub
 metric_closure is not present in stub
 random_geometric_graph is not present in stub
 simple_cycles is not present in stub
