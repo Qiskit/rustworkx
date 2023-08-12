@@ -671,6 +671,26 @@ def undirected_gnp_random_graph(
     seed: Optional[int] = ...,
 ) -> PyGraph: ...
 def read_graphml(path: str, /) -> List[Union[PyGraph, PyDiGraph]]: ...
+def hits(
+    graph: PyDiGraph[_S, _T],
+    /,
+    weight_fn: Optional[Callable[[_T], float]] = ...,
+    nstart: Optional[Dict[int, float]] = ...,
+    tol: Optional[float] = ...,
+    max_iter: Optional[int] = ...,
+    normalized: Optional[bool] = ...,
+) -> Tuple[CentralityMapping, CentralityMapping]: ...
+def pagerank(
+    graph: PyDiGraph[_S, _T],
+    /,
+    alpha: Optional[float] = ...,
+    weight_fn: Optional[Callable[[_T], float]] = ...,
+    nstart: Optional[Dict[int, float]] = ...,
+    personalization: Optional[Dict[int, float]] = ...,
+    tol: Optional[float] = ...,
+    max_iter: Optional[int] = ...,
+    dangling: Optional[Dict[int, float]] = ...,
+) -> CentralityMapping: ...
 
 """
 TopologicalSorter is not present in stub
@@ -691,13 +711,11 @@ graph_tensor_product is not present in stub
 graph_token_swapper is not present in stub
 graph_transitivity is not present in stub
 graph_vf2_mapping is not present in stub
-hits is not present in stub
 is_matching is not present in stub
 is_maximal_matching is not present in stub
 layers is not present in stub
 max_weight_matching is not present in stub
 metric_closure is not present in stub
-pagerank is not present in stub
 random_geometric_graph is not present in stub
 simple_cycles is not present in stub
 stoer_wagner_min_cut is not present in stub
