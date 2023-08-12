@@ -29,6 +29,19 @@ from .centrality import graph_closeness_centrality as graph_closeness_centrality
 from .centrality import digraph_katz_centrality as digraph_katz_centrality
 from .centrality import graph_katz_centrality as graph_katz_centrality
 
+# Layout functions
+from .layout import digraph_bipartite_layout as digraph_bipartite_layout
+from .layout import graph_bipartite_layout as graph_bipartite_layout
+from .layout import digraph_circular_layout as digraph_circular_layout
+from .layout import graph_circular_layout as graph_circular_layout
+from .layout import digraph_random_layout as digraph_random_layout
+from .layout import graph_random_layout as graph_random_layout
+from .layout import graph_shell_layout as graph_shell_layout
+from .layout import digraph_spiral_layout as digraph_spiral_layout
+from .layout import graph_spiral_layout as graph_spiral_layout
+from .layout import digraph_spring_layout as digraph_spring_layout
+from .layout import graph_spring_layout as graph_spring_layout
+
 # Shortest path functions
 from .shortest_path import (
     digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths,
@@ -191,112 +204,6 @@ def minimum_spanning_tree(
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
 ) -> PyGraph[_S, _T]: ...
-def digraph_bipartite_layout(
-    graph: PyDiGraph,
-    first_nodes: Set[int],
-    /,
-    horizontal: Optional[bool] = ...,
-    scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
-    aspect_ratio: Optional[float] = ...,
-) -> Pos2DMapping: ...
-def graph_bipartite_layout(
-    graph: PyGraph,
-    first_nodes: Set[int],
-    /,
-    horizontal: Optional[bool] = ...,
-    scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
-    aspect_ratio: Optional[float] = ...,
-) -> Pos2DMapping: ...
-def digraph_circular_layout(
-    graph: PyDiGraph,
-    /,
-    scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
-) -> Pos2DMapping: ...
-def graph_circular_layout(
-    graph: PyGraph,
-    /,
-    scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
-) -> Pos2DMapping: ...
-def digraph_random_layout(
-    graph: PyDiGraph,
-    /,
-    center: Optional[Tuple[float, float]] = ...,
-    seed: Optional[int] = ...,
-) -> Pos2DMapping: ...
-def graph_random_layout(
-    graph: PyGraph,
-    /,
-    center: Optional[Tuple[float, float]] = ...,
-    seed: Optional[int] = ...,
-) -> Pos2DMapping: ...
-def digraph_shell_layout(
-    graph: PyDiGraph,
-    /,
-    nlist: Optional[List[List[int]]] = ...,
-    rotate: Optional[float] = ...,
-    scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
-) -> Pos2DMapping: ...
-def graph_shell_layout(
-    graph: PyGraph,
-    /,
-    nlist: Optional[List[List[int]]] = ...,
-    rotate: Optional[float] = ...,
-    scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
-) -> Pos2DMapping: ...
-def digraph_spiral_layout(
-    graph: PyDiGraph,
-    /,
-    scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
-    resolution: Optional[float] = ...,
-    equidistant: Optional[bool] = ...,
-) -> Pos2DMapping: ...
-def graph_spiral_layout(
-    graph: PyGraph,
-    /,
-    scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
-    resolution: Optional[float] = ...,
-    equidistant: Optional[bool] = ...,
-) -> Pos2DMapping: ...
-def digraph_spring_layout(
-    graph: PyDiGraph[_S, _T],
-    pos: Optional[Dict[int, Tuple[float, float]]] = ...,
-    fixed: Optional[Set[int]] = ...,
-    k: Optional[float] = ...,
-    repulsive_exponent: int = ...,
-    adaptive_cooling: bool = ...,
-    num_iter: int = ...,
-    tol: Optional[float] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-    scale: float = ...,
-    center: Optional[Tuple[float, float]] = ...,
-    seed: Optional[int] = ...,
-    /,
-) -> Pos2DMapping: ...
-def graph_spring_layout(
-    graph: PyGraph[_S, _T],
-    pos: Optional[Dict[int, Tuple[float, float]]] = ...,
-    fixed: Optional[Set[int]] = ...,
-    k: Optional[float] = ...,
-    repulsive_exponent: int = ...,
-    adaptive_cooling: bool = ...,
-    num_iter: int = ...,
-    tol: Optional[float] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: float = ...,
-    scale: float = ...,
-    center: Optional[Tuple[float, float]] = ...,
-    seed: Optional[int] = ...,
-    /,
-) -> Pos2DMapping: ...
 def digraph_all_simple_paths(
     graph: PyDiGraph,
     origin: int,
