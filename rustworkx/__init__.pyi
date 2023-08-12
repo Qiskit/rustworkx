@@ -12,6 +12,9 @@
 from .rustworkx import *
 from typing import Generic, TypeVar
 
+from .graph import PyGraph as PyGraph
+from .digraph import PyDiGraph as PyDiGraph
+
 from .centrality import digraph_eigenvector_centrality as digraph_eigenvector_centrality
 from .centrality import graph_eigenvector_centrality as graph_eigenvector_centrality
 from .centrality import digraph_betweenness_centrality as digraph_betweenness_centrality
@@ -22,6 +25,21 @@ from .centrality import digraph_closeness_centrality as digraph_closeness_centra
 from .centrality import graph_closeness_centrality as graph_closeness_centrality
 from .centrality import digraph_katz_centrality as digraph_katz_centrality
 from .centrality import graph_katz_centrality as graph_katz_centrality
+
+from .connectivity import connected_components as connected_components
+from .connectivity import is_connected as is_connected
+from .connectivity import is_weakly_connected as is_weakly_connected
+from .connectivity import number_connected_components as number_connected_components
+from .connectivity import number_weakly_connected_components as number_weakly_connected_components
+from .connectivity import node_connected_component as node_connected_component
+from .connectivity import strongly_connected_components as strongly_connected_components
+from .connectivity import weakly_connected_components as weakly_connected_components
+from .connectivity import digraph_adjacency_matrix as digraph_adjacency_matrix
+from .connectivity import graph_adjacency_matrix as graph_adjacency_matrix
+from .connectivity import cycle_basis as cycle_basis
+from .connectivity import articulation_points as articulation_points
+from .connectivity import biconnected_components as biconnected_components
+from .connectivity import chain_decomposition as chain_decomposition
 
 from .isomorphism import digraph_is_isomorphic as digraph_is_isomorphic
 from .isomorphism import graph_is_isomorphic as graph_is_isomorphic
