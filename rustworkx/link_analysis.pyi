@@ -1,0 +1,40 @@
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+# This file contains only type annotations for PyO3 functions and classes
+# For implementation details, see __init__.py and src/link_analysis.rs
+
+from .iterators import *
+from .graph import PyGraph as PyGraph
+from .digraph import PyDiGraph as PyDiGraph
+
+from typing import Optional, Dict, TypeVar, Tuple, Callable
+
+_S = TypeVar("_S")
+_T = TypeVar("_T")
+
+def hits(
+    graph: PyDiGraph[_S, _T],
+    /,
+    weight_fn: Optional[Callable[[_T], float]] = ...,
+    nstart: Optional[Dict[int, float]] = ...,
+    tol: Optional[float] = ...,
+    max_iter: Optional[int] = ...,
+    normalized: Optional[bool] = ...,
+) -> Tuple[CentralityMapping, CentralityMapping]: ...
+def pagerank(
+    graph: PyDiGraph[_S, _T],
+    /,
+    alpha: Optional[float] = ...,
+    weight_fn: Optional[Callable[[_T], float]] = ...,
+    nstart: Optional[Dict[int, float]] = ...,
+    personalization: Optional[Dict[int, float]] = ...,
+    tol: Optional[float] = ...,
+    max_iter: Optional[int] = ...,
+    dangling: Optional[Dict[int, float]] = ...,
+) -> CentralityMapping: ...

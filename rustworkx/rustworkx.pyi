@@ -17,7 +17,6 @@ from .digraph import PyDiGraph as PyDiGraph
 
 from typing import Optional, Set, List, Dict, TypeVar, Tuple, Callable, Union
 
-# Centrality functions
 from .centrality import digraph_eigenvector_centrality as digraph_eigenvector_centrality
 from .centrality import graph_eigenvector_centrality as graph_eigenvector_centrality
 from .centrality import digraph_betweenness_centrality as digraph_betweenness_centrality
@@ -29,7 +28,11 @@ from .centrality import graph_closeness_centrality as graph_closeness_centrality
 from .centrality import digraph_katz_centrality as digraph_katz_centrality
 from .centrality import graph_katz_centrality as graph_katz_centrality
 
-# Layout functions
+from .isomorphism import digraph_is_isomorphic as digraph_is_isomorphic
+from .isomorphism import graph_is_isomorphic as graph_is_isomorphic
+from .isomorphism import digraph_is_subgraph_isomorphic as digraph_is_subgraph_isomorphic
+from .isomorphism import graph_is_subgraph_isomorphic as graph_is_subgraph_isomorphic
+
 from .layout import digraph_bipartite_layout as digraph_bipartite_layout
 from .layout import graph_bipartite_layout as graph_bipartite_layout
 from .layout import digraph_circular_layout as digraph_circular_layout
@@ -42,7 +45,9 @@ from .layout import graph_spiral_layout as graph_spiral_layout
 from .layout import digraph_spring_layout as digraph_spring_layout
 from .layout import graph_spring_layout as graph_spring_layout
 
-# Shortest path functions
+from .link_analysis import hits as hits
+from .link_analysis import pagerank as pagerank
+
 from .shortest_path import (
     digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths,
 )
@@ -107,7 +112,6 @@ from .shortest_path import graph_floyd_warshall as graph_floyd_warshall
 from .shortest_path import digraph_floyd_warshall_numpy as digraph_floyd_warshall_numpy
 from .shortest_path import graph_floyd_warshall_numpy as graph_floyd_warshall_numpy
 
-# Traversal functions
 from .traversal import digraph_bfs_search as digraph_bfs_search
 from .traversal import graph_bfs_search as graph_bfs_search
 from .traversal import digraph_dfs_search as digraph_dfs_search
@@ -232,44 +236,6 @@ def graph_all_pairs_all_simple_paths(
     min_depth: Optional[int] = ...,
     cutoff: Optional[int] = ...,
 ) -> AllPairsMultiplePathMapping: ...
-def digraph_is_isomorphic(
-    first: PyDiGraph[_S, _T],
-    second: PyDiGraph[_S, _T],
-    /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
-    id_order: bool = ...,
-    call_limit: Optional[int] = ...,
-) -> bool: ...
-def graph_is_isomorphic(
-    first: PyGraph[_S, _T],
-    second: PyGraph[_S, _T],
-    /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
-    id_order: bool = ...,
-    call_limit: Optional[int] = ...,
-) -> bool: ...
-def digraph_is_subgraph_isomorphic(
-    first: PyDiGraph[_S, _T],
-    second: PyDiGraph[_S, _T],
-    /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
-    id_order: bool = ...,
-    induced: bool = ...,
-    call_limit: Optional[int] = ...,
-) -> bool: ...
-def graph_is_subgraph_isomorphic(
-    first: PyGraph[_S, _T],
-    second: PyGraph[_S, _T],
-    /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
-    id_order: bool = ...,
-    induced: bool = ...,
-    call_limit: Optional[int] = ...,
-) -> bool: ...
 def find_negative_cycle(
     graph: PyDiGraph[_S, _T],
     edge_cost_fn: Callable[[_T], float],
@@ -345,26 +311,6 @@ def undirected_gnp_random_graph(
     seed: Optional[int] = ...,
 ) -> PyGraph: ...
 def read_graphml(path: str, /) -> List[Union[PyGraph, PyDiGraph]]: ...
-def hits(
-    graph: PyDiGraph[_S, _T],
-    /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    nstart: Optional[Dict[int, float]] = ...,
-    tol: Optional[float] = ...,
-    max_iter: Optional[int] = ...,
-    normalized: Optional[bool] = ...,
-) -> Tuple[CentralityMapping, CentralityMapping]: ...
-def pagerank(
-    graph: PyDiGraph[_S, _T],
-    /,
-    alpha: Optional[float] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    nstart: Optional[Dict[int, float]] = ...,
-    personalization: Optional[Dict[int, float]] = ...,
-    tol: Optional[float] = ...,
-    max_iter: Optional[int] = ...,
-    dangling: Optional[Dict[int, float]] = ...,
-) -> CentralityMapping: ...
 def transitive_reduction(graph: PyDiGraph, /) -> Tuple[PyDiGraph, Dict[int, int]]: ...
 def digraph_longest_simple_path(graph: PyDiGraph, /) -> Optional[NodeIndices]: ...
 def graph_longest_simple_path(graph: PyGraph, /) -> Optional[NodeIndices]: ...
