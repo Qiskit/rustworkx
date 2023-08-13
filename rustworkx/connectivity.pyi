@@ -15,7 +15,7 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, Set, List, TypeVar, Callable, Tuple
+from typing import Optional, Set, List, TypeVar, Callable, Tuple, Iterator
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -101,3 +101,4 @@ def stoer_wagner_min_cut(
     /,
     weight_fn: Optional[Callable[[_T], float]] = ...,
 ) -> Optional[Tuple[float, NodeIndices]]: ...
+def simple_cycles(graph: PyDiGraph, /) -> Iterator[NodeIndices]: ...

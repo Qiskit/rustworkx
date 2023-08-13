@@ -61,5 +61,4 @@ def graph_token_swapper(
 digraph_vf2_mapping is not present in stub
 graph_line_graph is not present in stub
 graph_vf2_mapping is not present in stub
-simple_cycles is not present in stub
 """
