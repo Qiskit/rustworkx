@@ -19,4 +19,5 @@ retworkx/*pyd
 *.svg
 !/docs/source/images/*.svg
 *.jpg
+**/*.so
 retworkx-core/Cargo.lock
