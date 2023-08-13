@@ -1315,6 +1315,7 @@ def katz_centrality(
     """
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
+
 @rustworkx_dispatch
 def vf2_mapping(
     first,
