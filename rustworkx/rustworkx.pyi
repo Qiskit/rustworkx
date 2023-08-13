@@ -13,8 +13,6 @@ from .iterators import *
 from .graph import PyGraph as PyGraph
 from .digraph import PyDiGraph as PyDiGraph
 
-from typing import Optional, Dict, TypeVar
-
 from .cartesian_product import *
 from .centrality import *
 from .coloring import *
@@ -22,8 +20,10 @@ from .connectivity import *
 from .dag_algo import *
 from .isomorphism import *
 from .layout import *
+from .line_graph import *
 from .link_analysis import *
 from .matching import *
+from .planar import *
 from .random_graph import *
 from .read_write import *
 from .shortest_path import *
@@ -31,10 +31,8 @@ from .traversal import *
 from .transitivity import *
 from .tree import *
 from .tensor_product import *
+from .token_swapper import *
 from .union import *
-
-_S = TypeVar("_S")
-_T = TypeVar("_T")
 
 class DAGHasCycle(Exception): ...
 class DAGWouldCycle(Exception): ...
@@ -46,19 +44,3 @@ class NullGraph(Exception): ...
 class NegativeCycle(Exception): ...
 class JSONSerializationError(Exception): ...
 class FailedToConverge(Exception): ...
-
-def is_planar(graph: PyGraph, /) -> bool: ...
-def graph_token_swapper(
-    graph: PyGraph,
-    mapping: Dict[int, int],
-    /,
-    trials: Optional[int] = ...,
-    seed: Optional[int] = ...,
-    parallel_threshold: Optional[int] = ...,
-) -> EdgeList: ...
-
-"""
-digraph_vf2_mapping is not present in stub
-graph_line_graph is not present in stub
-graph_vf2_mapping is not present in stub
-"""

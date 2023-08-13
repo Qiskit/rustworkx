@@ -13,7 +13,7 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, TypeVar, Callable
+from typing import Optional, TypeVar, Callable, Iterator
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -56,3 +56,25 @@ def graph_is_subgraph_isomorphic(
     induced: bool = ...,
     call_limit: Optional[int] = ...,
 ) -> bool: ...
+def digraph_vf2_mapping(
+    first: PyDiGraph[_S, _T],
+    second: PyDiGraph[_S, _T],
+    /,
+    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
+    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
+    id_order: bool = ...,
+    subgraph: bool = ...,
+    induced: bool = ...,
+    call_limit: Optional[int] = ...,
+) -> Iterator[NodeMap]: ...
+def graph_vf2_mapping(
+    first: PyGraph[_S, _T],
+    second: PyGraph[_S, _T],
+    /,
+    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
+    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
+    id_order: bool = ...,
+    subgraph: bool = ...,
+    induced: bool = ...,
+    call_limit: Optional[int] = ...,
+) -> Iterator[NodeMap]: ...

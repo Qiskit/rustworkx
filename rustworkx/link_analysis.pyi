@@ -10,7 +10,6 @@
 # For implementation details, see __init__.py and src/link_analysis.rs
 
 from .iterators import *
-from .graph import PyGraph
 from .digraph import PyDiGraph
 
 from typing import Optional, Dict, TypeVar, Tuple, Callable

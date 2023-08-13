@@ -9,11 +9,10 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
-from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, List, Dict, TypeVar, Union
+from typing import Optional, List, TypeVar
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")

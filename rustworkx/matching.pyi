@@ -9,9 +9,7 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/matcing/mod.rs
 
-from .iterators import *
 from .graph import PyGraph
-from .digraph import PyDiGraph
 
 from typing import Optional, Set, TypeVar, Tuple, Callable
 

@@ -13,8 +13,7 @@ import numpy as np
 
 from .iterators import *
 from .graph import PyGraph
-from .digraph import PyDiGraph as PyDiGraph
-from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
+from .digraph import PyDiGraph
 
 from typing import Optional, TypeVar, Callable
 

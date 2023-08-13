@@ -9,8 +9,6 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/dag_algo/mod.rs
 
-import numpy as np
-
 from .iterators import *
 from .digraph import PyDiGraph
 

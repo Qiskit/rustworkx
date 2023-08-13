@@ -76,6 +76,8 @@ from .isomorphism import digraph_is_isomorphic as digraph_is_isomorphic
 from .isomorphism import graph_is_isomorphic as graph_is_isomorphic
 from .isomorphism import digraph_is_subgraph_isomorphic as digraph_is_subgraph_isomorphic
 from .isomorphism import graph_is_subgraph_isomorphic as graph_is_subgraph_isomorphic
+from .isomorphism import digraph_vf2_mapping as digraph_vf2_mapping
+from .isomorphism import graph_vf2_mapping as graph_vf2_mapping
 
 from .layout import digraph_bipartite_layout as digraph_bipartite_layout
 from .layout import graph_bipartite_layout as graph_bipartite_layout
@@ -89,12 +91,16 @@ from .layout import graph_spiral_layout as graph_spiral_layout
 from .layout import digraph_spring_layout as digraph_spring_layout
 from .layout import graph_spring_layout as graph_spring_layout
 
+from .line_graph import graph_line_graph as graph_line_graph
+
 from .link_analysis import hits as hits
 from .link_analysis import pagerank as pagerank
 
 from .matching import max_weight_matching as max_weight_matching
 from .matching import is_matching as is_matching
 from .matching import is_maximal_matching as is_maximal_matching
+
+from .planar import is_planar as is_planar
 
 from .random_graph import directed_gnm_random_graph as directed_gnm_random_graph
 from .random_graph import undirected_gnm_random_graph as undirected_gnm_random_graph
@@ -195,6 +201,8 @@ from .tree import metric_closure as metric_closure
 
 from .tensor_product import digraph_tensor_product as digraph_tensor_product
 from .tensor_product import graph_tensor_product as graph_tensor_product
+
+from .token_swapper import graph_token_swapper as graph_token_swapper
 
 from .union import digraph_union as digraph_union
 from .union import graph_union as graph_union
