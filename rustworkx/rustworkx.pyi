@@ -9,13 +9,11 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
-import numpy as np
-
 from .iterators import *
 from .graph import PyGraph as PyGraph
 from .digraph import PyDiGraph as PyDiGraph
 
-from typing import Optional, Set, List, Dict, TypeVar, Tuple, Callable, Union
+from typing import Optional, List, Dict, TypeVar, Union
 
 from .centrality import *
 from .connectivity import *
@@ -23,6 +21,7 @@ from .dag_algo import *
 from .isomorphism import *
 from .layout import *
 from .link_analysis import *
+from .matching import *
 from .shortest_path import *
 from .traversal import *
 from .tree import *
@@ -41,42 +40,6 @@ class NegativeCycle(Exception): ...
 class JSONSerializationError(Exception): ...
 class FailedToConverge(Exception): ...
 
-def digraph_core_number(
-    graph: PyDiGraph,
-    /,
-) -> int: ...
-def graph_core_number(
-    graph: PyGraph,
-    /,
-) -> int: ...
-def digraph_all_simple_paths(
-    graph: PyDiGraph,
-    origin: int,
-    to: int,
-    /,
-    min_depth: Optional[int] = ...,
-    cutoff: Optional[int] = ...,
-) -> List[List[int]]: ...
-def graph_all_simple_paths(
-    graph: PyGraph,
-    origin: int,
-    to: int,
-    /,
-    min_depth: Optional[int] = ...,
-    cutoff: Optional[int] = ...,
-) -> List[List[int]]: ...
-def digraph_all_pairs_all_simple_paths(
-    graph: PyDiGraph,
-    /,
-    min_depth: Optional[int] = ...,
-    cutoff: Optional[int] = ...,
-) -> AllPairsMultiplePathMapping: ...
-def graph_all_pairs_all_simple_paths(
-    graph: PyGraph,
-    /,
-    min_depth: Optional[int] = ...,
-    cutoff: Optional[int] = ...,
-) -> AllPairsMultiplePathMapping: ...
 def digraph_union(
     first: PyDiGraph[_S, _T],
     second: PyDiGraph[_S, _T],
@@ -117,8 +80,6 @@ def undirected_gnp_random_graph(
     seed: Optional[int] = ...,
 ) -> PyGraph: ...
 def read_graphml(path: str, /) -> List[Union[PyGraph, PyDiGraph]]: ...
-def digraph_longest_simple_path(graph: PyDiGraph, /) -> Optional[NodeIndices]: ...
-def graph_longest_simple_path(graph: PyGraph, /) -> Optional[NodeIndices]: ...
 def digraph_transitivity(graph: PyGraph, /) -> float: ...
 def graph_transitivity(graph: PyGraph, /) -> float: ...
 def graph_token_swapper(
@@ -131,24 +92,6 @@ def graph_token_swapper(
 ) -> EdgeList: ...
 def graph_greedy_color(graph: PyGraph, /) -> Dict[int, int]: ...
 def graph_greedy_edge_color(graph: PyGraph, /) -> Dict[int, int]: ...
-def max_weight_matching(
-    graph: PyGraph[_S, _T],
-    /,
-    max_cardinality: bool = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: int = ...,
-    verify_optimum: bool = ...,
-) -> Set[Tuple[int, int]]: ...
-def is_matching(
-    graph: PyGraph,
-    matching: Set[Tuple[int, int]],
-    /,
-) -> bool: ...
-def is_maximal_matching(
-    graph: PyGraph,
-    matching: Set[Tuple[int, int]],
-    /,
-) -> bool: ...
 
 """
 TopologicalSorter is not present in stub

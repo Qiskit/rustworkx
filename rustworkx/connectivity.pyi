@@ -58,3 +58,41 @@ def graph_complement(
     graph: PyGraph[_S, _T],
     /,
 ) -> PyGraph[_S, Optional[_T]]: ...
+def digraph_all_simple_paths(
+    graph: PyDiGraph,
+    origin: int,
+    to: int,
+    /,
+    min_depth: Optional[int] = ...,
+    cutoff: Optional[int] = ...,
+) -> List[List[int]]: ...
+def graph_all_simple_paths(
+    graph: PyGraph,
+    origin: int,
+    to: int,
+    /,
+    min_depth: Optional[int] = ...,
+    cutoff: Optional[int] = ...,
+) -> List[List[int]]: ...
+def digraph_all_pairs_all_simple_paths(
+    graph: PyDiGraph,
+    /,
+    min_depth: Optional[int] = ...,
+    cutoff: Optional[int] = ...,
+) -> AllPairsMultiplePathMapping: ...
+def graph_all_pairs_all_simple_paths(
+    graph: PyGraph,
+    /,
+    min_depth: Optional[int] = ...,
+    cutoff: Optional[int] = ...,
+) -> AllPairsMultiplePathMapping: ...
+def digraph_longest_simple_path(graph: PyDiGraph, /) -> Optional[NodeIndices]: ...
+def graph_longest_simple_path(graph: PyGraph, /) -> Optional[NodeIndices]: ...
+def digraph_core_number(
+    graph: PyDiGraph,
+    /,
+) -> int: ...
+def graph_core_number(
+    graph: PyGraph,
+    /,
+) -> int: ...

@@ -43,6 +43,14 @@ from .connectivity import chain_decomposition as chain_decomposition
 from .connectivity import digraph_find_cycle as digraph_find_cycle
 from .connectivity import digraph_complement as digraph_complement
 from .connectivity import graph_complement as graph_complement
+from .connectivity import digraph_all_simple_paths as digraph_all_simple_paths
+from .connectivity import graph_all_simple_paths as graph_all_simple_paths
+from .connectivity import digraph_all_pairs_all_simple_paths as digraph_all_pairs_all_simple_paths
+from .connectivity import graph_all_pairs_all_simple_paths as graph_all_pairs_all_simple_paths
+from .connectivity import digraph_longest_simple_path as digraph_longest_simple_path
+from .connectivity import graph_longest_simple_path as graph_longest_simple_path
+from .connectivity import digraph_core_number as digraph_core_number
+from .connectivity import graph_core_number as graph_core_number
 
 from .dag_algo import collect_runs as collect_runs
 from .dag_algo import collect_bicolor_runs as collect_bicolor_runs
@@ -74,6 +82,10 @@ from .layout import graph_spring_layout as graph_spring_layout
 
 from .link_analysis import hits as hits
 from .link_analysis import pagerank as pagerank
+
+from .matching import max_weight_matching as max_weight_matching
+from .matching import is_matching as is_matching
+from .matching import is_maximal_matching as is_maximal_matching
 
 from .shortest_path import (
     digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths,
