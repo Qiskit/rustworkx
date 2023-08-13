@@ -13,7 +13,7 @@ from .iterators import *
 from .graph import PyGraph as PyGraph
 from .digraph import PyDiGraph as PyDiGraph
 
-from typing import Optional, List, Dict, TypeVar, Union
+from typing import Optional, Dict, TypeVar
 
 from .cartesian_product import *
 from .centrality import *
@@ -25,6 +25,7 @@ from .layout import *
 from .link_analysis import *
 from .matching import *
 from .random_graph import *
+from .read_write import *
 from .shortest_path import *
 from .traversal import *
 from .transitivity import *
@@ -47,7 +48,6 @@ class JSONSerializationError(Exception): ...
 class FailedToConverge(Exception): ...
 
 def is_planar(graph: PyGraph, /) -> bool: ...
-def read_graphml(path: str, /) -> List[Union[PyGraph, PyDiGraph]]: ...
 def graph_token_swapper(
     graph: PyGraph,
     mapping: Dict[int, int],
@@ -58,10 +58,8 @@ def graph_token_swapper(
 ) -> EdgeList: ...
 
 """
-digraph_node_link_json is not present in stub
 digraph_vf2_mapping is not present in stub
 graph_line_graph is not present in stub
-graph_node_link_json is not present in stub
 graph_vf2_mapping is not present in stub
 simple_cycles is not present in stub
 """
