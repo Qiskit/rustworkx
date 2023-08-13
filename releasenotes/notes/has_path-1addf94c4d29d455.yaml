@@ -1,0 +1,21 @@
+---
+features:
+  - |
+    Added :func:`~rustworkx.has_path` which accepts as arguments a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph` and checks if there is a path from source to destination
+
+    .. jupyter-execute::
+    
+        from rustworkx import PyDiGraph, has_path
+
+        graph = PyDiGraph()
+        a = graph.add_node("A")
+        b = graph.add_node("B")
+        c = graph.add_node("C")
+        edge_list = [(a, b, 1), (b, c, 1)]
+        graph.add_edges_from(edge_list)
+
+        path_exists = has_path(graph, a, c)
+        assert(path_exists == True)
+
+        path_exists = has_path(graph, c, a)
+        assert(path_exists == False)

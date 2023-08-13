@@ -42,7 +42,6 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx_reredirects',
               'qiskit_sphinx_theme',
              ]
-html_static_path = ["_static"]
 templates_path = ['_templates']
 extra_css_files = ["overrides.css"]
 
@@ -94,15 +93,13 @@ else:
 """
 
 # HTML Output Options
-html_theme = 'qiskit_sphinx_theme'
-html_theme_options = {
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
-}
+html_theme = 'qiskit-ecosystem'
+html_title = f"{project} {release}"
 htmlhelp_basename = 'rustworkx'
 
+html_theme_options = {
+    "disable_ecosystem_logo": True,
+}
 
 # Latex options
 latex_elements = {}
