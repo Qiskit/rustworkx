@@ -233,3 +233,13 @@ def graph_floyd_warshall_numpy(
     default_weight: Optional[float] = ...,
     parallel_threshold: Optional[int] = ...,
 ) -> np.ndarray: ...
+def find_negative_cycle(
+    graph: PyDiGraph[_S, _T],
+    edge_cost_fn: Callable[[_T], float],
+    /,
+) -> NodeIndices: ...
+def negative_edge_cycle(
+    graph: PyDiGraph[_S, _T],
+    edge_cost_fn: Callable[[_T], float],
+    /,
+) -> bool: ...

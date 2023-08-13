@@ -40,6 +40,20 @@ from .connectivity import cycle_basis as cycle_basis
 from .connectivity import articulation_points as articulation_points
 from .connectivity import biconnected_components as biconnected_components
 from .connectivity import chain_decomposition as chain_decomposition
+from .connectivity import digraph_find_cycle as digraph_find_cycle
+from .connectivity import digraph_complement as digraph_complement
+from .connectivity import graph_complement as graph_complement
+
+from .dag_algo import collect_runs as collect_runs
+from .dag_algo import collect_bicolor_runs as collect_bicolor_runs
+from .dag_algo import dag_longest_path as dag_longest_path
+from .dag_algo import dag_longest_path_length as dag_longest_path_length
+from .dag_algo import dag_weighted_longest_path as dag_weighted_longest_path
+from .dag_algo import dag_weighted_longest_path_length as dag_weighted_longest_path_length
+from .dag_algo import is_directed_acyclic_graph as is_directed_acyclic_graph
+from .dag_algo import topological_sort as topological_sort
+from .dag_algo import lexicographical_topological_sort as lexicographical_topological_sort
+from .dag_algo import transitive_reduction as transitive_reduction
 
 from .isomorphism import digraph_is_isomorphic as digraph_is_isomorphic
 from .isomorphism import graph_is_isomorphic as graph_is_isomorphic
@@ -124,6 +138,8 @@ from .shortest_path import digraph_floyd_warshall as digraph_floyd_warshall
 from .shortest_path import graph_floyd_warshall as graph_floyd_warshall
 from .shortest_path import digraph_floyd_warshall_numpy as digraph_floyd_warshall_numpy
 from .shortest_path import graph_floyd_warshall_numpy as graph_floyd_warshall_numpy
+from .shortest_path import find_negative_cycle as find_negative_cycle
+from .shortest_path import negative_edge_cycle as negative_edge_cycle
 
 from .traversal import digraph_bfs_search as digraph_bfs_search
 from .traversal import graph_bfs_search as graph_bfs_search
