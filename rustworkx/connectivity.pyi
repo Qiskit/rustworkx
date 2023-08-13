@@ -15,7 +15,7 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, Set, List, TypeVar, Callable
+from typing import Optional, Set, List, TypeVar, Callable, Tuple
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -96,3 +96,8 @@ def graph_core_number(
     graph: PyGraph,
     /,
 ) -> int: ...
+def stoer_wagner_min_cut(
+    graph: PyGraph[_S, _T],
+    /,
+    weight_fn: Optional[Callable[[_T], float]] = ...,
+) -> Optional[Tuple[float, NodeIndices]]: ...

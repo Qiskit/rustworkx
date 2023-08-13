@@ -12,10 +12,9 @@
 import numpy as np
 
 from .iterators import *
-from .graph import PyGraph as PyGraph
-from .digraph import PyDiGraph as PyDiGraph
+from .digraph import PyDiGraph
 
-from typing import Optional, List, TypeVar, Callable, Tuple, Dict
+from typing import Optional, List, TypeVar, Callable, Tuple, Dict, Union
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -53,3 +52,9 @@ def lexicographical_topological_sort(
     /,
 ) -> List[_S]: ...
 def transitive_reduction(graph: PyDiGraph, /) -> Tuple[PyDiGraph, Dict[int, int]]: ...
+def layers(
+    dag: PyDiGraph[_S, _T],
+    first_layer: List[int],
+    /,
+    index_output: bool = ...,
+) -> Union[List[_S], List[int]]: ...

@@ -15,7 +15,9 @@ from .digraph import PyDiGraph as PyDiGraph
 
 from typing import Optional, List, Dict, TypeVar, Union
 
+from .cartesian_product import *
 from .centrality import *
+from .coloring import *
 from .connectivity import *
 from .dag_algo import *
 from .isomorphism import *
@@ -25,7 +27,10 @@ from .matching import *
 from .random_graph import *
 from .shortest_path import *
 from .traversal import *
+from .transitivity import *
 from .tree import *
+from .tensor_product import *
+from .union import *
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -41,24 +46,8 @@ class NegativeCycle(Exception): ...
 class JSONSerializationError(Exception): ...
 class FailedToConverge(Exception): ...
 
-def digraph_union(
-    first: PyDiGraph[_S, _T],
-    second: PyDiGraph[_S, _T],
-    /,
-    merge_nodes: bool = ...,
-    merge_edges: bool = ...,
-) -> PyDiGraph[_S, _T]: ...
-def graph_union(
-    first: PyGraph[_S, _T],
-    second: PyGraph[_S, _T],
-    /,
-    merge_nodes: bool = ...,
-    merge_edges: bool = ...,
-) -> PyGraph[_S, _T]: ...
 def is_planar(graph: PyGraph, /) -> bool: ...
 def read_graphml(path: str, /) -> List[Union[PyGraph, PyDiGraph]]: ...
-def digraph_transitivity(graph: PyGraph, /) -> float: ...
-def graph_transitivity(graph: PyGraph, /) -> float: ...
 def graph_token_swapper(
     graph: PyGraph,
     mapping: Dict[int, int],
@@ -67,23 +56,12 @@ def graph_token_swapper(
     seed: Optional[int] = ...,
     parallel_threshold: Optional[int] = ...,
 ) -> EdgeList: ...
-def graph_greedy_color(graph: PyGraph, /) -> Dict[int, int]: ...
-def graph_greedy_edge_color(graph: PyGraph, /) -> Dict[int, int]: ...
 
 """
-TopologicalSorter is not present in stub
-digraph_cartesian_product is not present in stub
 digraph_node_link_json is not present in stub
-digraph_tensor_product is not present in stub
 digraph_vf2_mapping is not present in stub
-generators is not present in stub
-graph_cartesian_product is not present in stub
 graph_line_graph is not present in stub
 graph_node_link_json is not present in stub
-graph_tensor_product is not present in stub
 graph_vf2_mapping is not present in stub
-layers is not present in stub
-metric_closure is not present in stub
 simple_cycles is not present in stub
-stoer_wagner_min_cut is not present in stub
 """

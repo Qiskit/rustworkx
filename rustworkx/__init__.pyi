@@ -15,6 +15,9 @@ from typing import Generic, TypeVar
 from .graph import PyGraph as PyGraph
 from .digraph import PyDiGraph as PyDiGraph
 
+from .cartesian_product import digraph_cartesian_product as digraph_cartesian_product
+from .cartesian_product import graph_cartesian_product as graph_cartesian_product
+
 from .centrality import digraph_eigenvector_centrality as digraph_eigenvector_centrality
 from .centrality import graph_eigenvector_centrality as graph_eigenvector_centrality
 from .centrality import digraph_betweenness_centrality as digraph_betweenness_centrality
@@ -25,6 +28,9 @@ from .centrality import digraph_closeness_centrality as digraph_closeness_centra
 from .centrality import graph_closeness_centrality as graph_closeness_centrality
 from .centrality import digraph_katz_centrality as digraph_katz_centrality
 from .centrality import graph_katz_centrality as graph_katz_centrality
+
+from .coloring import graph_greedy_color as graph_greedy_color
+from .coloring import graph_greedy_edge_color as graph_greedy_edge_color
 
 from .connectivity import connected_components as connected_components
 from .connectivity import is_connected as is_connected
@@ -51,6 +57,7 @@ from .connectivity import digraph_longest_simple_path as digraph_longest_simple_
 from .connectivity import graph_longest_simple_path as graph_longest_simple_path
 from .connectivity import digraph_core_number as digraph_core_number
 from .connectivity import graph_core_number as graph_core_number
+from .connectivity import stoer_wagner_min_cut as stoer_wagner_min_cut
 
 from .dag_algo import collect_runs as collect_runs
 from .dag_algo import collect_bicolor_runs as collect_bicolor_runs
@@ -62,6 +69,7 @@ from .dag_algo import is_directed_acyclic_graph as is_directed_acyclic_graph
 from .dag_algo import topological_sort as topological_sort
 from .dag_algo import lexicographical_topological_sort as lexicographical_topological_sort
 from .dag_algo import transitive_reduction as transitive_reduction
+from .dag_algo import layers as layers
 
 from .isomorphism import digraph_is_isomorphic as digraph_is_isomorphic
 from .isomorphism import graph_is_isomorphic as graph_is_isomorphic
@@ -172,9 +180,19 @@ from .traversal import bfs_predecessors as bfs_predecessors
 from .traversal import bfs_successors as bfs_successors
 from .traversal import descendants as descendants
 
+from .transitivity import digraph_transitivity as digraph_transitivity
+from .transitivity import graph_transitivity as graph_transitivity
+
 from .tree import minimum_spanning_edges as minimum_spanning_edges
 from .tree import minimum_spanning_tree as minimum_spanning_tree
 from .tree import steiner_tree as steiner_tree
+from .tree import metric_closure as metric_closure
+
+from .tensor_product import digraph_tensor_product as digraph_tensor_product
+from .tensor_product import graph_tensor_product as graph_tensor_product
+
+from .union import digraph_union as digraph_union
+from .union import graph_union as graph_union
 
 S = TypeVar("S")
 T = TypeVar("T")

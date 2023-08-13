@@ -35,3 +35,8 @@ def steiner_tree(
     weight_fn: Callable[[_T], float],
     /,
 ) -> PyGraph[_S, _T]: ...
+def metric_closure(
+    graph: PyGraph[_S, _T],
+    weight_fn: Callable[[_T], float],
+    /,
+) -> PyGraph: ...
