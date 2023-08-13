@@ -22,6 +22,7 @@ from .isomorphism import *
 from .layout import *
 from .link_analysis import *
 from .matching import *
+from .random_graph import *
 from .shortest_path import *
 from .traversal import *
 from .tree import *
@@ -55,30 +56,6 @@ def graph_union(
     merge_edges: bool = ...,
 ) -> PyGraph[_S, _T]: ...
 def is_planar(graph: PyGraph, /) -> bool: ...
-def directed_gnm_random_graph(
-    num_nodes: int,
-    num_edges: int,
-    /,
-    seed: Optional[int] = ...,
-) -> PyDiGraph: ...
-def undirected_gnm_random_graph(
-    num_nodes: int,
-    num_edges: int,
-    /,
-    seed: Optional[int] = ...,
-) -> PyGraph: ...
-def directed_gnp_random_graph(
-    num_nodes: int,
-    probability: float,
-    /,
-    seed: Optional[int] = ...,
-) -> PyDiGraph: ...
-def undirected_gnp_random_graph(
-    num_nodes: int,
-    probability: float,
-    /,
-    seed: Optional[int] = ...,
-) -> PyGraph: ...
 def read_graphml(path: str, /) -> List[Union[PyGraph, PyDiGraph]]: ...
 def digraph_transitivity(graph: PyGraph, /) -> float: ...
 def graph_transitivity(graph: PyGraph, /) -> float: ...
@@ -107,7 +84,6 @@ graph_tensor_product is not present in stub
 graph_vf2_mapping is not present in stub
 layers is not present in stub
 metric_closure is not present in stub
-random_geometric_graph is not present in stub
 simple_cycles is not present in stub
 stoer_wagner_min_cut is not present in stub
 """

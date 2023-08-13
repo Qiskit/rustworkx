@@ -87,6 +87,12 @@ from .matching import max_weight_matching as max_weight_matching
 from .matching import is_matching as is_matching
 from .matching import is_maximal_matching as is_maximal_matching
 
+from .random_graph import directed_gnm_random_graph as directed_gnm_random_graph
+from .random_graph import undirected_gnm_random_graph as undirected_gnm_random_graph
+from .random_graph import directed_gnp_random_graph as directed_gnp_random_graph
+from .random_graph import undirected_gnp_random_graph as undirected_gnp_random_graph
+from .random_graph import random_geometric_graph as random_geometric_graph
+
 from .shortest_path import (
     digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths,
 )
