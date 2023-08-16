@@ -359,6 +359,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
+    m.add_wrapped(wrap_pyfunction!(transitive_reduction))?;
     m.add_wrapped(wrap_pyfunction!(number_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_connected))?;
@@ -400,6 +401,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_has_path))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_paths))?;
