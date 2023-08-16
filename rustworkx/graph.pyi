@@ -167,10 +167,3 @@ class PyGraph(Generic[S, T]):
     def __len__(self) -> int: ...
     def __setitem__(self, idx: int, value: S, /) -> None: ...
     def __setstate__(self, state, /) -> None: ...
-
-"""
-rustworkx.rustworkx.PyDiGraph.incident_edge_index_map is not present in stub
-rustworkx.rustworkx.PyDiGraph.incident_edges is not present in stub
-rustworkx.rustworkx.PyGraph.incident_edge_index_map is not present in stub
-rustworkx.rustworkx.PyGraph.incident_edges is not present in stub
-"""
