@@ -258,7 +258,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adb12d4e967ec485a5f71c6311fe28158e9d6f4bc4a447b474184d0f91a8fa32"
 dependencies = [
  "matrixmultiply",
- "num-complex 0.4.3",
+ "num-complex 0.4.4",
  "num-integer",
  "num-traits",
  "rawpointer",
@@ -312,9 +312,9 @@ dependencies = [
 
 [[package]]
 name = "num-complex"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02e0d21255c828d6f128a1e41534206671e8c3ea0c62f32291e808dc82cff17d"
+checksum = "1ba157ca0885411de85d6ca030ba7e2a83a28636056c7c699b07c8b6f7383214"
 dependencies = [
  "num-traits",
 ]
@@ -357,7 +357,7 @@ checksum = "437213adf41bbccf4aeae535fbfcdad0f6fed241e1ae182ebe97fa1f3ce19389"
 dependencies = [
  "libc",
  "ndarray",
- "num-complex 0.4.3",
+ "num-complex 0.2.4",
  "num-integer",
  "num-traits",
  "pyo3",
@@ -441,7 +441,7 @@ dependencies = [
  "libc",
  "memoffset",
  "num-bigint",
- "num-complex 0.4.3",
+ "num-complex 0.2.4",
  "parking_lot",
  "pyo3-build-config",
  "pyo3-ffi",
@@ -614,7 +614,7 @@ dependencies = [
  "ndarray",
  "ndarray-stats",
  "num-bigint",
- "num-complex 0.4.3",
+ "num-complex 0.4.4",
  "num-traits",
  "numpy",
  "petgraph",
@@ -703,7 +703,7 @@ checksum = "88bab60b0a18fb9b3e0c26e92796b3c3a278bf5fa4880f5ad5cc3bdfb843d0b1"
 dependencies = [
  "alga",
  "ndarray",
- "num-complex 0.4.3",
+ "num-complex 0.4.4",
  "num-traits",
  "num_cpus",
  "rayon",
