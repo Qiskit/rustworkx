@@ -60,10 +60,15 @@ pub fn graph_token_swapper(
         .iter()
         .map(|(s, t)| (NodeIndex::new(*s), NodeIndex::new(*t)))
         .collect();
-    let swaps = match token_swapper::token_swapper(&graph.graph, map, trials, seed, parallel_threshold) {
-        Ok(swaps) => swaps,
-        Err(_) => return Err(InvalidMapping::new_err("Specified mapping could not be made on the given graph"))
-    };
+    let swaps =
+        match token_swapper::token_swapper(&graph.graph, map, trials, seed, parallel_threshold) {
+            Ok(swaps) => swaps,
+            Err(_) => {
+                return Err(InvalidMapping::new_err(
+                    "Specified mapping could not be made on the given graph",
+                ))
+            }
+        };
     Ok(EdgeList {
         edges: swaps
             .into_iter()
