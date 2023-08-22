@@ -322,6 +322,8 @@ create_exception!(rustworkx, NoSuitableNeighbors, PyException);
 create_exception!(rustworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(rustworkx, NoPathFound, PyException);
+// No mapping was found for the request swapping
+create_exception!(rustworkx, InvalidMapping, PyException);
 // Prune part of the search tree while traversing a graph.
 import_exception!(rustworkx.visit, PruneSearch);
 // Stop graph traversal.
@@ -342,6 +344,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
+    m.add("InvalidMapping", py.get_type::<InvalidMapping>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
     m.add(
