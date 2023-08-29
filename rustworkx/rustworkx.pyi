@@ -1225,6 +1225,10 @@ class PyDiGraph(Generic[_S, _T]):
         /,
         check_cycle: bool = ...,
         multigraph: bool = ...,
+        attrs: object = ...,
+        *,
+        initial_node_count: int = ...,
+        initial_edge_count: int = ...,
     ) -> None: ...
     def add_child(self, parent: int, obj: _S, edge: _T, /) -> int: ...
     def add_edge(self, parent: int, child: int, edge: _T, /) -> int: ...

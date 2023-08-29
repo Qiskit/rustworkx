@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    :class:`.PyGraph` and :class:`.PyDiGraph` now each have a :meth:`~.PyGraph.with_capacity`
+    constructor, which can be used to pre-allocate space for the given number of nodes and edges.

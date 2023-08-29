@@ -26,7 +26,7 @@ use rustworkx_core::dictmap::*;
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::{PyBool, PyDict, PyList, PyString, PyTuple};
+use pyo3::types::{IntoPyDict, PyBool, PyDict, PyList, PyString, PyTuple};
 use pyo3::PyTraverseError;
 use pyo3::Python;
 
@@ -138,6 +138,10 @@ use petgraph::visit::{
 /// :param attrs: An optional attributes payload to assign to the
 ///     :attr:`~.PyGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyGraph.attrs` will be set to ``None``.
+/// :param int initial_node_count: The graph will be allocated with enough capacity to store this
+///     many nodes before needing to grow (default 0: no overallocation).
+/// :param int initial_edge_count: The graph will be allocated with enough capacity to store this
+///     many edges before needing to grow (default 0: no overallocation).
 #[pyclass(mapping, module = "rustworkx", subclass)]
 #[derive(Clone)]
 pub struct PyGraph {
@@ -183,14 +187,25 @@ impl PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    #[pyo3(signature=(multigraph=true, attrs=None), text_signature = "(/, multigraph=True, attrs=None)")]
-    fn new(py: Python, multigraph: bool, attrs: Option<PyObject>) -> Self {
+    #[pyo3(signature=(multigraph=true, attrs=None, *, initial_node_count=0, initial_edge_count=0))]
+    fn new(py: Python, multigraph: bool, attrs: Option<PyObject>, initial_node_count: usize, initial_edge_count: usize) -> Self {
         PyGraph {
-            graph: StablePyGraph::<Undirected>::default(),
+            graph: StablePyGraph::<Undirected>::with_capacity(initial_node_count, initial_edge_count),
             node_removed: false,
             multigraph,
             attrs: attrs.unwrap_or_else(|| py.None()),
         }
+    }
+
+    fn __getnewargs_ex__<'py>(&self, py: Python<'py>) -> (Py<PyTuple>, Bound<'py, PyDict>) {
+        (
+            (self.multigraph, self.attrs.clone_ref(py)).into_py(py),
+            [
+                ("initial_node_count", self.graph.node_count()),
+                ("initial_edge_count", self.graph.edge_bound()),
+            ]
+            .into_py_dict_bound(py),
+        )
     }
 
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
@@ -222,8 +237,6 @@ impl PyGraph {
         out_dict.set_item("nodes", nodes_lst)?;
         out_dict.set_item("edges", edges_lst)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
-        out_dict.set_item("multigraph", self.multigraph)?;
-        out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
         Ok(out_dict.into())
     }
 
@@ -234,21 +247,11 @@ impl PyGraph {
         let binding = dict_state.get_item("edges")?.unwrap();
         let edges_lst = binding.downcast::<PyList>()?;
 
-        self.graph = StablePyGraph::<Undirected>::default();
-        self.multigraph = dict_state
-            .get_item("multigraph")?
-            .unwrap()
-            .downcast::<PyBool>()?
-            .extract()?;
         self.node_removed = dict_state
             .get_item("nodes_removed")?
             .unwrap()
             .downcast::<PyBool>()?
             .extract()?;
-        self.attrs = match dict_state.get_item("attrs")? {
-            Some(attr) => attr.into(),
-            None => py.None(),
-        };
         // graph is empty, stop early
         if nodes_lst.is_empty() {
             return Ok(());
