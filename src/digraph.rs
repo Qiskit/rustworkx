@@ -296,6 +296,43 @@ impl PyDiGraph {
         }
     }
 
+    /// Create an empty :class:`PyDiGraph` with pre-allocated capacity for at least the given
+    /// number of ``nodes`` and ``edges``.
+    ///
+    /// :param nodes: The number of nodes there should be space for.
+    /// :type nodes: int
+    /// :param edges: The number of nodes there should be space for.
+    /// :type edges: int
+    ///
+    /// For example:
+    ///
+    /// .. jupyter-execute::
+    ///
+    ///     import rustworkx as rx
+    ///     graph = rx.PyDiGraph.with_capacity(4, 4)
+    ///     # The graph already contains space for these items.
+    ///     graph.add_nodes_from(["A", "B", "C", "D"])
+    ///     graph.add_edges_from_no_data([(0, 1), (1, 2), (2, 3), (3, 0)])
+    #[staticmethod]
+    #[pyo3(signature=(nodes, edges, check_cycle=false, multigraph=true, attrs=None), text_signature="(nodes, edges, /, check_cycle=False, multigraph=True, attrs=None)")]
+    fn with_capacity(
+        py: Python,
+        nodes: usize,
+        edges: usize,
+        check_cycle: bool,
+        multigraph: bool,
+        attrs: Option<PyObject>,
+    ) -> Self {
+        PyDiGraph {
+            graph: StablePyGraph::<Directed>::with_capacity(nodes, edges),
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle,
+            node_removed: false,
+            multigraph,
+            attrs: attrs.unwrap_or_else(|| py.None()),
+        }
+    }
+
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
         let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_count());
         let mut edges: Vec<PyObject> = Vec::with_capacity(self.graph.edge_bound());
