@@ -16,8 +16,8 @@ from .rustworkx import *
 # flake8: noqa
 import rustworkx.visit
 
-sys.modules["rustworkx.generators"] = generators
 __rustworkx_mod__ = importlib.import_module(".rustworkx", package="rustworkx")
+sys.modules["rustworkx.generators"] = __rustworkx_mod__.generators
 
 
 class PyDAG(PyDiGraph):
