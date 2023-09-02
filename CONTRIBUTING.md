@@ -284,7 +284,7 @@ their code with [mypy](http://mypy-lang.org/), which can be helpful for finding 
 Just like with tests for the code, annotations are also tested via Nox.
 
 ```
-Nox -e stubs
+nox -e stubs
 ```
 
 ### Release Notes
