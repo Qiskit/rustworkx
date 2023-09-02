@@ -29,6 +29,4 @@ pwd
 # Push to qiskit.org/ecosystem
 openssl aes-256-cbc -K $encrypted_rclone_key -iv $encrypted_rclone_iv -in tools/rclone.conf.enc -out $RCLONE_CONFIG_PATH -d
 echo "Pushing built docs to website"
-rclone sync --progress ./docs/build/html IBMCOS:qiskit-org-web-resources/documentation/retworkx/dev
-rclone sync --progress ./docs/build/html IBMCOS:qiskit-org-web-resources/documentation/rustworkx/dev
 rclone sync --progress ./docs/build/html IBMCOS:qiskit-org-web-resources/ecosystem/rustworkx/dev

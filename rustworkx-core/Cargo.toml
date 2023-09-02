@@ -1,31 +1,25 @@
 [package]
 name = "rustworkx-core"
-version = "0.14.0"
-edition = "2021"
-authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 description = "Rust APIs used for rustworkx algorithms"
-license = "Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/Qiskit/rustworkx"
-homepage = "https://github.com/Qiskit/rustworkx/tree/main/rustworkx-core"
 keywords = ["graph"]
-rust-version = "1.64"
+homepage = "https://github.com/Qiskit/rustworkx/tree/main/rustworkx-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
-ahash = "0.8.3"
-fixedbitset = "0.4.2"
-petgraph = "0.6.3"
-rand = "0.8.5"
-rand_pcg = "0.3.1"
-rayon = "1.7"
-num-traits = "0.2"
+ahash.workspace = true
+fixedbitset.workspace = true
+hashbrown.workspace = true
+indexmap.workspace = true
+num-traits.workspace = true
+petgraph.workspace = true
 priority-queue = "1.3"
-rayon-cond = "0.2"
-
-[dependencies.hashbrown]
-version = "0.13"
-features = ["rayon"]
-
-[dependencies.indexmap]
-version = "1.9"
-features = ["rayon"]
+rand.workspace = true
+rand_pcg.workspace = true
+rayon.workspace = true
+rayon-cond = "0.3"

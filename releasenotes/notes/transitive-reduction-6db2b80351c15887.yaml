@@ -1,0 +1,36 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.transitive_reduction` which returns the transtive reduction
+    of a given :class:`~rustworkx.PyDiGraph` and a dictionary with the mapping of indices from the given graph to the returned graph.
+    The given graph must be a Directed Acyclic Graph (DAG).
+    For example:
+
+    .. jupyter-execute::
+    
+        from rustworkx import PyDiGraph
+        from rustworkx import transitive_reduction
+
+        graph = PyDiGraph()
+        a = graph.add_node("a")
+        b = graph.add_node("b")
+        c = graph.add_node("c")
+        d = graph.add_node("d")
+        e = graph.add_node("e")
+
+        graph.add_edges_from([
+            (a, b, 1),
+            (a, d, 1),
+            (a, c, 1),
+            (a, e, 1),
+            (b, d, 1),
+            (c, d, 1),
+            (c, e, 1),
+            (d, e, 1)
+        ])
+
+        tr, _ = transitive_reduction(graph)
+        list(tr.edge_list())
+
+    Ref: https://en.wikipedia.org/wiki/Transitive_reduction
+
