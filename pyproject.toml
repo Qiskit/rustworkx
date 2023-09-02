@@ -25,3 +25,32 @@ exclude = [
     "*egg",
     "build"
 ]
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    minversion = 4.4.0
+    envlist = py38, py39, py310, py311, lint
+    isolated_build = true
+
+    [testenv]
+    skip_install = true
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -epy'); sys.exit(1)"
+
+    [testenv:lint]
+    skip_install = true
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -elint'); sys.exit(1)"
+
+    [testenv:docs]
+    skip_install = true
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -edocs'); sys.exit(1)"
+
+    [testenv:black]
+    skip_install = true
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -eblack'); sys.exit(1)"
+
+
+    [testenv:stubs]
+    skip_install = true
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -estubs'); sys.exit(1)"
+"""
