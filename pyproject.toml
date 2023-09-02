@@ -5,3 +5,23 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 100
 target-version = ['py37', 'py38', 'py39', 'py310']
+
+[tool.flake8]
+# E125 is deliberately excluded. See https://github.com/jcrocholl/pep8/issues/126
+# E123 skipped because it is ignored by default in the default pep8
+# E129 skipped because it is too limiting when combined with other rules
+# E711 skipped because sqlalchemy filter() requires using == instead of is
+# max-line-length, E203, W503 are added for black compatibility
+max-line-length = 110
+ignore = ["E125", "E123", "E129", "E711"]
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".venv",
+    ".git",
+    ".nox",
+    ".tox",
+    "dist",
+    "doc",
+    "*egg",
+    "build"
+]

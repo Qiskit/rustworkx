@@ -17,6 +17,13 @@ extras = [
   "graphviz",
 ]
 
+lint_deps = [
+    "black~=22.0",
+    "flake8",
+    "setuptools-rust",
+    "Flake8-pyproject==1.2.3",
+]
+
 @nox.session(python=["3"])
 def test(session):
     session.install(*deps)
@@ -28,10 +35,10 @@ def test(session):
 def lint(session):
     session.install(*deps)
     session.install(".", "-c", "constraints.txt")
-    session.install("black~=22.0", "flake8", "setuptools-rust")
+    session.install(*lint_deps)
     session.run("black", "--check", "--diff", "rustworkx", "tests", "retworkx", *session.posargs)
-    session.run("flake8", "--per-file-ignores='rustworkx/__init__.py':F405,F403", "setup.py", "rustworkx", "retworkx", ".")
-    session.run("cargo", "fmt", "--all", "--", "--check")
+    session.run("flake8p", "--per-file-ignores='rustworkx/__init__.py':F405,F403", "setup.py", "rustworkx", "retworkx")
+    session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
 @nox.session(python=["3"])
@@ -46,7 +53,7 @@ def docs(session):
 
 @nox.session(python=["3"])
 def black(session):
-    session.install("black~=22.0")
+    session.install(*[d for d in lint_deps if "black" in d])
     session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
 
 @nox.session(python=["3"])
@@ -56,8 +63,3 @@ def stubs(session):
     session.install("mypy==1.0.1")
     session.chdir("tests")
     session.run("python", "-m", "mypy.stubtest", "--concise", "--ignore-missing-stub", "rustworkx.rustworkx")
-
-@nox.session(python=["3"])
-def black(session):
-    session.install("black~=22.0")
-    session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
