@@ -25,7 +25,7 @@ any Python application.
 
 ## Project history
 
-Rustworkx was originally called retworkx and was was created initially to be
+Rustworkx was originally called retworkx and was created initially to be
 a replacement for [qiskit](https://qiskit.org/)'s previous (and current)
 networkx usage (hence the original name).  The project was originally started
 to build a faster directed graph to use as the underlying data structure for
