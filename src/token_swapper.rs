@@ -12,6 +12,7 @@
 
 use crate::graph;
 use crate::iterators::EdgeList;
+use crate::InvalidMapping;
 
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
@@ -54,16 +55,24 @@ pub fn graph_token_swapper(
     trials: Option<usize>,
     seed: Option<u64>,
     parallel_threshold: Option<usize>,
-) -> EdgeList {
+) -> PyResult<EdgeList> {
     let map: HashMap<NodeIndex, NodeIndex> = mapping
         .iter()
         .map(|(s, t)| (NodeIndex::new(*s), NodeIndex::new(*t)))
         .collect();
-    let swaps = token_swapper::token_swapper(&graph.graph, map, trials, seed, parallel_threshold);
-    EdgeList {
+    let swaps =
+        match token_swapper::token_swapper(&graph.graph, map, trials, seed, parallel_threshold) {
+            Ok(swaps) => swaps,
+            Err(_) => {
+                return Err(InvalidMapping::new_err(
+                    "Specified mapping could not be made on the given graph",
+                ))
+            }
+        };
+    Ok(EdgeList {
         edges: swaps
             .into_iter()
             .map(|(s, t)| (s.index(), t.index()))
             .collect(),
-    }
+    })
 }

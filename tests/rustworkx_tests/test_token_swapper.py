@@ -116,3 +116,11 @@ class TestGeneral(unittest.TestCase):
         swaps = rx.graph_token_swapper(graph, permutation, 4, 4)
         swap_permutation(mapping, swaps)
         self.assertEqual({i: i for i in mapping.values()}, mapping)
+
+    def test_disjoint_graph(self):
+        graph = rx.PyGraph()
+        graph.extend_from_edge_list([(0, 1), (2, 3)])
+        swaps = rx.graph_token_swapper(graph, {1: 0, 0: 1, 2: 3, 3: 2}, 10, seed=42)
+        self.assertEqual(len(swaps), 2)
+        with self.assertRaises(rx.InvalidMapping):
+            rx.graph_token_swapper(graph, {2: 0, 1: 1, 0: 2, 3: 3}, 10)
