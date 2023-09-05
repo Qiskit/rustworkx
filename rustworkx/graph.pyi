@@ -97,6 +97,15 @@ class PyGraph(Generic[S, T]):
     def remove_node(self, node: int, /) -> None: ...
     def remove_nodes_from(self, index_list: Sequence[int], /) -> None: ...
     def subgraph(self, nodes: Sequence[int], /, preserve_attrs: bool = ...) -> PyGraph[S, T]: ...
+    def substitute_node_with_subgraph(
+        self,
+        node: int,
+        other: PyGraph[S, T],
+        edge_map_fn: Callable[[int, int, T], Optional[int]],
+        /,
+        node_filter: Optional[Callable[[S], bool]] = ...,
+        edge_weight_map: Optional[Callable[[T], T]] = ...,
+    ) -> NodeMap: ...
     def to_dot(
         self,
         /,

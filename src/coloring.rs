@@ -12,14 +12,13 @@
 
 use crate::{graph, StablePyGraph};
 use hashbrown::HashSet;
-use rustworkx_core::coloring::greedy_node_color;
+use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::EdgeRef;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
-use rustworkx_core::dictmap::DictMap;
 
 use petgraph::visit::IntoEdgeReferences;
 use petgraph::Undirected;
@@ -84,7 +83,6 @@ impl<'a> MisraGriesAlgorithm<'a> {
             .graph
             .edges(u)
             .filter_map(|edge| self.colors[edge.id().index()])
-
             .collect();
         used_colors
     }
@@ -114,9 +112,11 @@ impl<'a> MisraGriesAlgorithm<'a> {
         let mut fan: Vec<(EdgeIndex, NodeIndex)> = Vec::new();
         fan.push((ee, v));
 
-        let mut neighbors: Vec<(EdgeIndex, NodeIndex)> = self.graph.edges(u).map(
-            |edge| (edge.id(), edge.target())
-        ).collect();
+        let mut neighbors: Vec<(EdgeIndex, NodeIndex)> = self
+            .graph
+            .edges(u)
+            .map(|edge| (edge.id(), edge.target()))
+            .collect();
 
         let mut last_node = v;
         let position_v = neighbors.iter().position(|x| x.1 == v).unwrap();
@@ -228,7 +228,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
     }
 
     pub fn run_algorithm(&mut self) -> &Vec<Option<usize>> {
-        println!("run_algorithm!");
+        println!("run_algorithm 1!");
         for edge in self.graph.edge_references() {
             let u: NodeIndex = edge.source();
             let v: NodeIndex = edge.target();
@@ -257,7 +257,7 @@ impl<'a> MisraGriesAlgorithm<'a> {
             // rotate fan
             for i in 1..w + 1 {
                 let next_color = self.colors[fan[i].0.index()].unwrap();
-                let edge_id = fan[i-1].0;
+                let edge_id = fan[i - 1].0;
                 self.colors[edge_id.index()] = Some(next_color);
             }
 
@@ -268,9 +268,36 @@ impl<'a> MisraGriesAlgorithm<'a> {
 
         // self.check_coloring();
 
-
         &self.colors
     }
+}
+
+/// Color edges of a :class:`~.PyGraph` object using a greedy approach.
+///
+/// This function works by greedily coloring the line graph of the given graph.
+///
+/// :param PyGraph: The input PyGraph object to edge-color
+///
+/// :returns: A dictionary where keys are edge indices and the value is the color
+/// :rtype: dict
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx as rx
+///
+///   graph = rx.generators.cycle_graph(7)
+///   edge_colors = rx.graph_greedy_edge_color(graph)
+///   assert edge_colors == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}
+///
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+    let colors = greedy_edge_color(&graph.graph);
+    let out_dict = PyDict::new(py);
+    for (node, color) in colors {
+        out_dict.set_item(node.index(), color)?;
+    }
+    Ok(out_dict.into())
 }
 
 #[pyfunction]

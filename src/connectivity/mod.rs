@@ -266,7 +266,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
-/// output matrix will be the sum of the edges' weights.
+/// output matrix will be assigned based on a given parameter. Currently, the minimum, maximum, average, and default sum are supported.
 ///
 /// :param PyDiGraph graph: The DiGraph used to generate the adjacency matrix
 ///     from
@@ -290,13 +290,16 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     value. This is the default value in the output matrix and it is used
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
 ///
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
 pub fn digraph_adjacency_matrix(
     py: Python,
@@ -304,15 +307,43 @@ pub fn digraph_adjacency_matrix(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
+    parallel_edge: &str,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
+    let mut parallel_edge_count = HashMap::new();
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
         } else {
-            matrix[[i, j]] += edge_weight;
+            match parallel_edge {
+                "sum" => {
+                    matrix[[i, j]] += edge_weight;
+                }
+                "min" => {
+                    let weight_min = matrix[[i, j]].min(edge_weight);
+                    matrix[[i, j]] = weight_min;
+                }
+                "max" => {
+                    let weight_max = matrix[[i, j]].max(edge_weight);
+                    matrix[[i, j]] = weight_max;
+                }
+                "avg" => {
+                    if parallel_edge_count.contains_key(&[i, j]) {
+                        matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        *parallel_edge_count.get_mut(&[i, j]).unwrap() += 1;
+                    } else {
+                        parallel_edge_count.insert([i, j], 2);
+                        matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2.0;
+                    }
+                }
+                _ => {
+                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                }
+            }
         }
     }
     Ok(matrix.into_pyarray(py).into())
@@ -321,7 +352,7 @@ pub fn digraph_adjacency_matrix(
 /// Return the adjacency matrix for a PyGraph class
 ///
 /// In the case where there are multiple edges between nodes the value in the
-/// output matrix will be the sum of the edges' weights.
+/// output matrix will be assigned based on a given parameter. Currently, the minimum, maximum, average, and default sum are supported.
 ///
 /// :param PyGraph graph: The graph used to generate the adjacency matrix from
 /// :param weight_fn: A callable object (function, lambda, etc) which
@@ -344,13 +375,16 @@ pub fn digraph_adjacency_matrix(
 ///     value. This is the default value in the output matrix and it is used
 ///     to indicate the absence of an edge between 2 nodes. By default this is
 ///     ``0.0``.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
 ///
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0)"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
 pub fn graph_adjacency_matrix(
     py: Python,
@@ -358,17 +392,51 @@ pub fn graph_adjacency_matrix(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
+    parallel_edge: &str,
 ) -> PyResult<PyObject> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
+    let mut parallel_edge_count = HashMap::new();
     for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
             matrix[[j, i]] = edge_weight;
         } else {
-            matrix[[i, j]] += edge_weight;
-            matrix[[j, i]] += edge_weight;
+            match parallel_edge {
+                "sum" => {
+                    matrix[[i, j]] += edge_weight;
+                    matrix[[j, i]] += edge_weight;
+                }
+                "min" => {
+                    let weight_min = matrix[[i, j]].min(edge_weight);
+                    matrix[[i, j]] = weight_min;
+                    matrix[[j, i]] = weight_min;
+                }
+                "max" => {
+                    let weight_max = matrix[[i, j]].max(edge_weight);
+                    matrix[[i, j]] = weight_max;
+                    matrix[[j, i]] = weight_max;
+                }
+                "avg" => {
+                    if parallel_edge_count.contains_key(&[i, j]) {
+                        matrix[[i, j]] = (matrix[[i, j]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        matrix[[j, i]] = (matrix[[j, i]] * parallel_edge_count[&[i, j]] as f64
+                            + edge_weight)
+                            / ((parallel_edge_count[&[i, j]] + 1) as f64);
+                        *parallel_edge_count.get_mut(&[i, j]).unwrap() += 1;
+                    } else {
+                        parallel_edge_count.insert([i, j], 2);
+                        matrix[[i, j]] = (matrix[[i, j]] + edge_weight) / 2.0;
+                        matrix[[j, i]] = (matrix[[j, i]] + edge_weight) / 2.0;
+                    }
+                }
+                _ => {
+                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                }
+            }
         }
     }
     Ok(matrix.into_pyarray(py).into())
