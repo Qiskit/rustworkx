@@ -12,11 +12,6 @@ deps = [
   "stestr",
 ]
 
-extras = [
-  "mpl",
-  "graphviz",
-]
-
 lint_deps = [
     "black~=22.0",
     "flake8",
@@ -27,14 +22,14 @@ lint_deps = [
 @nox.session(python=["3"])
 def test(session):
     session.install(*deps)
-    session.install(".", "-c", "constraints.txt")
+    session.install(".[all]", "-c", "constraints.txt")
     session.chdir("tests")
     session.run("python", "-m", "stestr", "run", *session.posargs)
 
 @nox.session(python=["3"])
 def lint(session):
     session.install(*deps)
-    session.install(".", "-c", "constraints.txt")
+    session.install(".[all]", "-c", "constraints.txt")
     session.install(*lint_deps)
     session.run("black", "--check", "--diff", "rustworkx", "tests", "retworkx", *session.posargs)
     session.run("flake8p", "--per-file-ignores='rustworkx/__init__.py':F405,F403", "setup.py", "rustworkx", "retworkx")
@@ -44,7 +39,7 @@ def lint(session):
 @nox.session(python=["3"])
 def docs(session):
     session.install(*deps)
-    session.install(".", "-c", "constraints.txt")
+    session.install(".[all]", "-c", "constraints.txt")
     session.install("-r", "docs/source/requirements.txt", "-c", "constraints.txt")
     session.run("python", "-m", "ipykernel", "install", "--user")
     session.run("jupyter", "kernelspec", "list")
@@ -59,7 +54,7 @@ def black(session):
 @nox.session(python=["3"])
 def stubs(session):
     session.install(*deps)
-    session.install(".", "-c", "constraints.txt")
+    session.install(".[all]", "-c", "constraints.txt")
     session.install("mypy==1.0.1")
     session.chdir("tests")
     session.run("python", "-m", "mypy.stubtest", "--concise", "--ignore-missing-stub", "rustworkx.rustworkx")
