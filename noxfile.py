@@ -19,12 +19,22 @@ lint_deps = [
     "Flake8-pyproject==1.2.3",
 ]
 
-@nox.session(python=["3"])
-def test(session):
+# We define a common base such that -e test triggers a test with the current
+# Python version of the interpreter and -e test_with_version launches
+# a test with the specified version of Python.
+def base_test(session):
     session.install(*deps)
     session.install(".[all]", "-c", "constraints.txt")
     session.chdir("tests")
     session.run("python", "-m", "stestr", "run", *session.posargs)
+
+@nox.session(python=["3"])
+def test(session):
+    base_test(session)
+
+@nox.session(python=["3.8", "3.9", "3.10", "3.11"])
+def test_with_version(session):
+    base_test(session)
 
 @nox.session(python=["3"])
 def lint(session):

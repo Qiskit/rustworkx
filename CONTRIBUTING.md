@@ -116,7 +116,7 @@ biggest one is that it builds an isolated virtualenv for running tests. This
 means it does not pollute your system python when running. However, by default
 Nox will recompile rustworkx from source every time it is run even if there
 are no changes made to the rust code. To avoid this you can use the
-`--skip-pkg-install` package if you'd like to rerun tests without recompiling.
+`--no-install` package if you'd like to rerun tests without recompiling.
 Note, you only want to use this flag if you recently ran Nox and there are no
 rust code (or packaged python code) changes to the repo since then. Otherwise
 the rustworkx package Nox installs in it's virtualenv will be out of date (or
@@ -126,6 +126,15 @@ Note, if you run tests outside of Nox that you can **not** run the tests from
 the root of the repo, this is because rustworkx packaging shim will conflict
 with imports from rustworkx the installed version of rustworkx (which contains
 the compiled extension).
+
+#### Running tests with a specific Python version
+
+If you want to run the tests with a specific version of Python, use the `test_with_version`
+target. For example, to launch a test with version 3.11 the command is:
+
+```python
+nox --python 3.11 -e test_with_version
+```
 
 #### Running subsets of tests
 
