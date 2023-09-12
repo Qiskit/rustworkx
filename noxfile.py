@@ -45,7 +45,7 @@ def lint(session):
 def docs(session):
     session.install(*deps)
     session.install(".", "-c", "constraints.txt")
-    session.install("-r", "docs/source/requirements.txt")
+    session.install("-r", "docs/source/requirements.txt", "-c", "constraints.txt")
     session.run("python", "-m", "ipykernel", "install", "--user")
     session.run("jupyter", "kernelspec", "list")
     session.chdir("docs")
