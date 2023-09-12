@@ -35,22 +35,22 @@ legacy_tox_ini = """
 
     [testenv]
     skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -epy'); sys.exit(1)"
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e test'); sys.exit(1)"
 
     [testenv:lint]
     skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -elint'); sys.exit(1)"
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e lint'); sys.exit(1)"
 
     [testenv:docs]
     skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -edocs'); sys.exit(1)"
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e docs'); sys.exit(1)"
 
     [testenv:black]
     skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -eblack'); sys.exit(1)"
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e black'); sys.exit(1)"
 
 
     [testenv:stubs]
     skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -estubs'); sys.exit(1)"
+    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e stubs'); sys.exit(1)"
 """
