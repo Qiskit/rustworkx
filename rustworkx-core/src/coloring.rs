@@ -19,23 +19,10 @@ use core::fmt::Debug;
 use hashbrown::{HashMap, HashSet};
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    EdgeCount,
-    EdgeIndexable,
-    EdgeRef,
-    GraphBase,
-    GraphProp, // allows is_directed
-    IntoEdges,
-    IntoEdgesDirected,
-    IntoNeighbors,
-    IntoNeighborsDirected,
-    IntoNodeIdentifiers,
-    NodeCount,
+    EdgeCount, EdgeIndexable, EdgeRef, GraphBase, IntoEdges, IntoNodeIdentifiers, NodeCount,
     NodeIndexable,
-    Reversed,
-    Visitable,
 };
 use rayon::prelude::*;
-use std::borrow::Borrow;
 
 /// Color a graph using a greedy graph coloring algorithm.
 ///
@@ -487,10 +474,9 @@ mod test_misra_gries_edge_color {
     use crate::dictmap::DictMap;
     use crate::generators::{cycle_graph, heavy_hex_graph, path_graph};
     use crate::petgraph::Graph;
-    use std::cmp::max;
 
     use hashbrown::HashSet;
-    use petgraph::graph::{edge_index, EdgeIndex};
+    use petgraph::graph::EdgeIndex;
     use petgraph::visit::{
         EdgeCount, EdgeIndexable, EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeIndexable,
     };
@@ -530,7 +516,10 @@ mod test_misra_gries_edge_color {
                 }
             }
             if used_colors.len() < cur_node_degree {
-                panic!("Problem: node {:?} does not have enough colors.", node);
+                panic!(
+                    "Problem: node {:?} does not have enough colors.",
+                    NodeIndexable::to_index(&graph, node)
+                );
             }
 
             if cur_node_degree > max_node_degree {
