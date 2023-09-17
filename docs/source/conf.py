@@ -71,7 +71,7 @@ intersphinx_mapping = {
 
 # Prepend warning for development docs:
 
-if not os.getenv('RETWORKX_DEV_DOCS', None):
+if not os.getenv('RUSTWORKX_DEV_DOCS', None):
     rst_prolog = """
 .. raw:: html
 
@@ -124,7 +124,7 @@ with open("sources.txt", "r") as fd:
     for source_str in fd:
         redirects[f"stubs/{source_str}"] = f"../apiref/{source_str}"
 
-if os.getenv("RETWORKX_LEGACY_DOCS", None) is not None:
+if os.getenv("RUSTWORKX_LEGACY_DOCS", None) is not None:
     redirects["*"] = "https://qiskit.org/ecosystem/rustworkx/$source.html"
     html_baseurl = "https://qiskit.org/ecosystem/rustworkx/"
 
@@ -152,7 +152,7 @@ def _get_versions(app, config):
 
 
 def _get_version_label(current_version):
-    if not os.getenv('RETWORKX_DEV_DOCS', None):
+    if not os.getenv('RUSTWORKX_DEV_DOCS', None):
         current_version_info = current_version.split('.')
         return ".".join(current_version_info[:-1])
     else:
