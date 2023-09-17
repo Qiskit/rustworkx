@@ -15,12 +15,11 @@ use std::hash::Hash;
 
 use crate::dictmap::*;
 use crate::line_graph::line_graph;
-use core::fmt::Debug;
+
 use hashbrown::{HashMap, HashSet};
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
     EdgeCount, EdgeIndexable, EdgeRef, GraphBase, IntoEdges, IntoNodeIdentifiers, NodeCount,
-    NodeIndexable,
 };
 use rayon::prelude::*;
 
@@ -158,10 +157,7 @@ struct MisraGries<G: GraphBase> {
 
 impl<G> MisraGries<G>
 where
-    G: NodeIndexable + EdgeIndexable + IntoEdges + Sync + EdgeCount + IntoNodeIdentifiers,
-    G::NodeId: Eq + Hash + Debug,
-    G::EdgeId: Eq + Hash + Debug,
-    G::EdgeRef: Debug,
+    G: EdgeIndexable + IntoEdges,
 {
     pub fn new(graph: G) -> Self {
         let colors = vec![None; graph.edge_bound()];
@@ -344,10 +340,8 @@ where
 ///
 pub fn misra_gries_edge_color<G>(graph: G) -> DictMap<G::EdgeId, usize>
 where
-    G: NodeIndexable + EdgeIndexable + IntoEdges + Sync + EdgeCount + IntoNodeIdentifiers,
-    G::NodeId: Eq + Hash + Debug,
-    G::EdgeId: Eq + Hash + Debug,
-    G::EdgeRef: Debug,
+    G: EdgeIndexable + IntoEdges + EdgeCount,
+    G::EdgeId: Eq + Hash,
 {
     let mut mg: MisraGries<G> = MisraGries::new(graph);
     let colors = mg.run_algorithm();
@@ -469,7 +463,7 @@ mod test_edge_coloring {
 }
 
 #[cfg(test)]
-mod test_misra_gries_edge_color {
+mod test_misra_gries_edge_coloring {
     use crate::coloring::misra_gries_edge_color;
     use crate::dictmap::DictMap;
     use crate::generators::{cycle_graph, heavy_hex_graph, path_graph};
