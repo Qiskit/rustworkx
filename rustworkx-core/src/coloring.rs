@@ -494,7 +494,7 @@ mod test_misra_gries_edge_color {
     use std::fmt::Debug;
     use std::hash::Hash;
 
-    fn check_edge_coloring<G>(graph: G, colors: DictMap<G::EdgeId, usize>)
+    fn check_edge_coloring<G>(graph: G, colors: &DictMap<G::EdgeId, usize>)
     where
         G: NodeIndexable + EdgeIndexable + IntoEdges + Sync + EdgeCount + IntoNodeIdentifiers,
         G::NodeId: Eq + Hash + Debug,
@@ -547,53 +547,42 @@ mod test_misra_gries_edge_color {
 
     #[test]
     fn test_simple_graph() {
-        // Graph with an edge removed
         let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2), (0, 3), (3, 4)]);
         let colors = misra_gries_edge_color(&graph);
+        check_edge_coloring(&graph, &colors);
+
         let expected_colors: DictMap<EdgeIndex, usize> = [
-            (EdgeIndex::new(0), 1),
-            (EdgeIndex::new(1), 0),
+            (EdgeIndex::new(0), 0),
+            (EdgeIndex::new(1), 2),
             (EdgeIndex::new(2), 1),
-            (EdgeIndex::new(3), 0),
-            (EdgeIndex::new(4), 1),
+            (EdgeIndex::new(3), 3),
         ]
         .into_iter()
         .collect();
-        println!("colors {:?}", colors);
-        // assert_eq!(colors, expected_colors);
+        assert_eq!(colors, expected_colors);
     }
 
     #[test]
     fn test_path_graph() {
         let graph: petgraph::graph::UnGraph<(), ()> =
             path_graph(Some(7), None, || (), || (), false).unwrap();
-
-        println!("graph = {:?}", graph);
         let colors = misra_gries_edge_color(&graph);
-
-        println!("colors {:?}", colors);
+        check_edge_coloring(&graph, &colors);
     }
 
     #[test]
     fn test_cycle_graph() {
         let graph: petgraph::graph::UnGraph<(), ()> =
             cycle_graph(Some(15), None, || (), || (), false).unwrap();
-
-        println!("graph = {:?}", graph);
         let colors = misra_gries_edge_color(&graph);
-
-        println!("colors {:?}", colors);
+        check_edge_coloring(&graph, &colors);
     }
 
     #[test]
     fn test_heavy_hex_graph() {
         let graph: petgraph::graph::UnGraph<(), ()> =
             heavy_hex_graph(7, || (), || (), false).unwrap();
-
-        println!("graph = {:?}", graph);
         let colors = misra_gries_edge_color(&graph);
-
-        println!("colors {:?}", colors);
-        check_edge_coloring(&graph, colors);
+        check_edge_coloring(&graph, &colors);
     }
 }
