@@ -172,12 +172,12 @@ not include any way to view the images from the visualization tests.
 
 If you want to inspect the output from the visualization tests (which is common
 if you're working on visualizations) you can set the
-`RETWORKX_TEST_PRESERVE_IMAGES` environment variable to any value and this will
+`RUSTWORKX_TEST_PRESERVE_IMAGES` environment variable to any value and this will
 skip the cleanup. This will enable you to look at the output image and ensure the
 visualization is correct. For example, running:
 
 ```
-RETWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
+RUSTWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
 ```
 
 will run the visualization tests and preserve the generated image files after
