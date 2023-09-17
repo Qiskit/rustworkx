@@ -303,7 +303,11 @@ where
     }
 }
 
-/// Color edges of a graph using the Misra-Gries algorithm.
+/// Color edges of a graph using the Misra-Gries edge coloring algorithm.
+///
+/// Based on the paper: "A constructive proof of Vizing's theorem" by
+/// Misra and Gries, 1992.
+/// <https://www.cs.utexas.edu/users/misra/psp.dir/vizing.pdf>
 ///
 /// The coloring produces at most d + 1 colors where d is the maximum degree
 /// of the graph.
