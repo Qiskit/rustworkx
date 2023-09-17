@@ -339,16 +339,20 @@ where
 /// use petgraph::graph::EdgeIndex;
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::coloring::{greedy_edge_color, misra_gries_edge_color};
-///
+/// use rustworkx_core::coloring::misra_gries_edge_color;///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (0, 2), (2, 3)]);
 /// let colors = misra_gries_edge_color(&g);
-/// let mut expected_colors = DictMap::new();
-/// expected_colors.insert(EdgeIndex::new(0), 2);
-/// expected_colors.insert(EdgeIndex::new(1), 0);
-/// expected_colors.insert(EdgeIndex::new(2), 1);
-/// expected_colors.insert(EdgeIndex::new(3), 2);
-/// assert_eq!(colors, expected_colors);
+///
+/// let expected_colors: DictMap<EdgeIndex, usize> = [
+///     (EdgeIndex::new(0), 2),
+///     (EdgeIndex::new(1), 1),
+///     (EdgeIndex::new(2), 0),
+///     (EdgeIndex::new(3), 2),
+/// ]
+/// .into_iter()
+/// .collect();
+///
+///  assert_eq!(colors, expected_colors);
 /// ```
 ///
 pub fn misra_gries_edge_color<G>(graph: G) -> DictMap<G::EdgeId, usize>
