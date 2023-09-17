@@ -477,19 +477,15 @@ mod test_misra_gries_edge_color {
 
     use hashbrown::HashSet;
     use petgraph::graph::EdgeIndex;
-    use petgraph::visit::{
-        EdgeCount, EdgeIndexable, EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeIndexable,
-    };
+    use petgraph::visit::{EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeIndexable};
     use petgraph::Undirected;
     use std::fmt::Debug;
     use std::hash::Hash;
 
     fn check_edge_coloring<G>(graph: G, colors: &DictMap<G::EdgeId, usize>)
     where
-        G: NodeIndexable + EdgeIndexable + IntoEdges + Sync + EdgeCount + IntoNodeIdentifiers,
-        G::NodeId: Eq + Hash + Debug,
+        G: NodeIndexable + IntoEdges + IntoNodeIdentifiers,
         G::EdgeId: Eq + Hash + Debug,
-        G::EdgeRef: Debug,
     {
         // Check that every edge has valid color
         for edge in graph.edge_references() {
