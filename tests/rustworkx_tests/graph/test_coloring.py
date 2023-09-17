@@ -89,6 +89,12 @@ class TestMisraGriesColoring(unittest.TestCase):
         res = rustworkx.graph_misra_gries_edge_color(graph)
         print(f"{res = }")
 
+    def test_path_graph(self):
+        print("HERE")
+        graph = rustworkx.generators.path_graph(15)
+        res = rustworkx.graph_misra_gries_edge_color(graph)
+        print(f"{res = }")
+
 
 class TestGraphEdgeColoring(unittest.TestCase):
     def test_graph(self):

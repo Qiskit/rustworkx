@@ -12,7 +12,7 @@
 
 use crate::{graph, StablePyGraph};
 use hashbrown::HashSet;
-use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color};
+use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, mg_color};
 
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::EdgeRef;
@@ -313,3 +313,4 @@ pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyRes
     }
     Ok(out_dict.into())
 }
+
