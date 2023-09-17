@@ -10,18 +10,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{graph, StablePyGraph};
-use hashbrown::HashSet;
-use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, misra_gries_edge_color};
-
-use petgraph::graph::{EdgeIndex, NodeIndex};
-use petgraph::visit::EdgeRef;
+use crate::graph;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
-
-use petgraph::visit::IntoEdgeReferences;
-use petgraph::Undirected;
+use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, misra_gries_edge_color};
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
