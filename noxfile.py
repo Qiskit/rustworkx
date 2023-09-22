@@ -9,7 +9,7 @@ deps = [
   "testtools>=2.5.0",
   "networkx>=2.5",
   "scipy>=1.7",
-  "stestr",
+  "stestr>=4.1",
 ]
 
 lint_deps = [
