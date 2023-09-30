@@ -26,7 +26,7 @@ mpl_extras = ['matplotlib>=3.0']
 graphviz_extras = ['pillow>=5.4']
 
 PKG_NAME = os.getenv('RUSTWORKX_PKG_NAME', "rustworkx")
-PKG_VERSION = "0.13.1"
+PKG_VERSION = "0.13.2"
 PKG_PACKAGES = ["rustworkx", "rustworkx.visualization"]
 PKG_INSTALL_REQUIRES = ['numpy>=1.16.0']
 RUST_EXTENSIONS = [RustExtension("rustworkx.rustworkx", "Cargo.toml",
