@@ -1,0 +1,5 @@
+---
+prelude: >
+    rustworkx 0.13.2 is a minor release, adding support for Python 3.12.
+    Existing users of 0.13.1 should not be affected by this release, but
+    are still encouraged to upgraded.

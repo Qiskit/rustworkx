@@ -1,7 +1,7 @@
 [package]
 name = "rustworkx"
 description = "A python graph library implemented in Rust"
-version = "0.13.1"
+version = "0.13.2"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 license = "Apache-2.0"
 readme = "README.md"
@@ -33,7 +33,7 @@ ndarray-stats = "0.5.1"
 quick-xml = "0.28"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-rustworkx-core = { path = "rustworkx-core", version = "=0.13.1" }
+rustworkx-core = { path = "rustworkx-core", version = "=0.13.2" }
 
 [dependencies.pyo3]
 version = "0.19.1"
