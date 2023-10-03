@@ -188,9 +188,9 @@ checksum = "fc7fcc620a3bff7cdd7a365be3376c97191aeaccc2a603e600951e452615bf89"
 
 [[package]]
 name = "libm"
-version = "0.2.6"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "348108ab3fba42ec82ff6e9564fc4ca0247bdccdc68dd8af9764bbc79c3c8ffb"
+checksum = "f7012b1bbb0719e1097c47611d3898568c546d597c2e74d66f6087edd5233ff4"
 
 [[package]]
 name = "lock_api"
@@ -315,9 +315,9 @@ dependencies = [
 
 [[package]]
 name = "num-traits"
-version = "0.2.15"
+version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
+checksum = "f30b0abd723be7e2ffca1272140fac1a2f084c77ec3e123c192b66af1ee9e6c2"
 dependencies = [
  "autocfg",
  "libm",
@@ -341,7 +341,7 @@ checksum = "437213adf41bbccf4aeae535fbfcdad0f6fed241e1ae182ebe97fa1f3ce19389"
 dependencies = [
  "libc",
  "ndarray",
- "num-complex 0.2.4",
+ "num-complex 0.4.3",
  "num-integer",
  "num-traits",
  "pyo3",
@@ -425,7 +425,7 @@ dependencies = [
  "libc",
  "memoffset 0.9.0",
  "num-bigint",
- "num-complex 0.2.4",
+ "num-complex 0.4.3",
  "parking_lot",
  "pyo3-build-config",
  "pyo3-ffi",
@@ -589,7 +589,7 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "rustworkx"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "ahash 0.8.0",
  "fixedbitset",
@@ -615,7 +615,7 @@ dependencies = [
 
 [[package]]
 name = "rustworkx-core"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "ahash 0.8.0",
  "fixedbitset",
