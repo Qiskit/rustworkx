@@ -368,14 +368,14 @@ impl PyGraph {
         false
     }
 
-    /// Remove all nodes and edges
+    /// Clears all nodes and edges
     #[pyo3(text_signature = "(self)")]
     pub fn clear(&mut self) {
         self.graph.clear();
         self.node_removed = true;
     }
 
-    /// Remove all edges
+    /// Clears all edges, leaves nodes intact
     #[pyo3(text_signature = "(self)")]
     pub fn clear_edges(&mut self) {
         self.graph.clear_edges();
