@@ -21,7 +21,7 @@ class TestClear(unittest.TestCase):
         node_a = dag.add_node("a")
         node_b = dag.add_child(node_a, "b", {"a": 1})
         node_c = dag.add_child(node_a, "c", {"a": 2})
-        dag.clear() # clear nodes and edges
+        dag.clear()
         self.assertEqual(dag.num_nodes(), 0)
         self.assertEqual(dag.num_edges(), 0)
         self.assertEqual(dag.nodes(), [])
@@ -33,7 +33,7 @@ class TestClear(unittest.TestCase):
         node_a = dag.add_node("a")
         node_b = dag.add_child(node_a, "b", {"a": 1})
         node_c = dag.add_child(node_a, "c", {"a": 2})
-        dag.clear_edges();
+        dag.clear_edges()
         self.assertEqual(dag.num_nodes(), 3)
         self.assertEqual(dag.num_edges(), 0)
         self.assertEqual(dag.nodes(), ["a", "b", "c"])
