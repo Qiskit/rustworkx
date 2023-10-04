@@ -500,6 +500,7 @@ impl PyDiGraph {
         self.node_removed = true;
     }
 
+    /// Clears all edges, leaves nodes intact
     #[pyo3(text_signature = "(self)")]
     pub fn clear_edges(&mut self) {
         self.graph.clear_edges();
