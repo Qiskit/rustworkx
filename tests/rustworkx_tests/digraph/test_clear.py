@@ -33,9 +33,9 @@ class TestClear(unittest.TestCase):
         node_a = dag.add_node("a")
         node_b = dag.add_child(node_a, "b", {"a": 1})
         node_c = dag.add_child(node_a, "c", {"a": 2})
-        res = dag.adj_direction(node_a, False)
-        self.assertEqual(graph.num_nodes(), 3)
-        self.assertEqual(graph.num_edges(), 0)
-        self.assertEqual(graph.nodes(), ["a", "b", "c"])
-        self.assertEqual(graph.edges(), [])
+        dag.clear_edges();
+        self.assertEqual(dag.num_nodes(), 3)
+        self.assertEqual(dag.num_edges(), 0)
+        self.assertEqual(dag.nodes(), ["a", "b", "c"])
+        self.assertEqual(dag.edges(), [])
 

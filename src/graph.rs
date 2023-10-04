@@ -371,29 +371,15 @@ impl PyGraph {
     /// Remove all nodes and edges
     #[pyo3(text_signature = "(self)")]
     pub fn clear(&mut self) {
-        self.graph.node_count = 0;
-        self.graph.edge_count = 0;
-        self.graph.free_node = NodeIndex::end();
-        self.graph.free_edge = EdgeIndex::end();
-        self.graph.g.clear();
+        self.graph.clear();
+        self.node_removed = true;
     }
 
     /// Remove all edges
     #[pyo3(text_signature = "(self)")]
     pub fn clear_edges(&mut self) {
-        self.graph.edge_count = 0;
-        self.graph.free_edge = EdgeIndex::end();
-        self.graph.g.edges.clear();
-        // clear edges without touching underlying free list
-        for node in &mut self.graph.g.nodes {
-            if node.weight.is_some() {
-                node.next = [EdgeIndex::end(), EdgeIndex::end()];
-            }
-        }
+        self.graph.clear_edges();
     }
-
-    // TODO: Idea -> Basically change num_nodes function to return
-    // self.graph.node_count (without function parens) and see what happens
 
     /// Return the number of nodes in the graph
     #[pyo3(text_signature = "(self)")]
