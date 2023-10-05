@@ -628,7 +628,6 @@ pub fn collect_bicolor_runs(
                 }
             } else {
                 for color in colors {
-                    let color = color;
                     ensure_vector_has_index!(pending_list, block_id, color);
                     if let Some(color_block_id) = block_id[color] {
                         block_list[color_block_id].append(&mut pending_list[color]);
