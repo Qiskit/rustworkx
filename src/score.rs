@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 #![allow(clippy::derive_partial_eq_without_eq)]
+#![allow(clippy::incorrect_partial_ord_impl_on_ord_type)]
 
 use std::cmp::Ordering;
 use std::ops::{Add, AddAssign};
