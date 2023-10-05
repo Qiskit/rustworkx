@@ -1,15 +1,10 @@
 ---
-prelude: >
-    This is a commit to add the clear and clear_edges functions from StableGraph
-    to PyGraph and PyDAG.
-
 features:
   - |
     Added a new function, :func:`clear` that clears all nodes and edges
-    from the :class:`rustworkx.PyGraph` or :class:`rustworkx.PyDiGraph` object and
-    sets the `node_removed` flag to `true`.
+    from a :class:`rustworkx.PyGraph` or :class:`rustworkx.PyDiGraph` 
 
   - |
-    Added a new function, :func:`clear_edges` that clears all edges from the 
-    :class:`rustworkx.PyGraph` or :class:`rustworkx.PyDiGraph` object. Note
-    that all nodes remain unchanged.
+    Added a new function, :func:`clear_edges` that clears all edges for
+    :class:`rustworkx.PyGraph` or :class:`rustworkx.PyDiGraph` without
+    modifying nodes
