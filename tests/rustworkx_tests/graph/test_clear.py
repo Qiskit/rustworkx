@@ -47,7 +47,6 @@ class TestClear(unittest.TestCase):
         self.assertEqual(graph.nodes(), ["a", "b", "c"])
         self.assertEqual(graph.edges(), [{"a": 1}, {"a": 2}])
 
-
     def test_clear_edges(self):
         graph = rustworkx.PyGraph()
         node_a = graph.add_node("a")

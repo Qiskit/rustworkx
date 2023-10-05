@@ -26,7 +26,7 @@ class TestClear(unittest.TestCase):
         self.assertEqual(dag.num_edges(), 0)
         self.assertEqual(dag.nodes(), [])
         self.assertEqual(dag.edges(), [])
-        
+
     def test_clear_reuse(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
@@ -64,5 +64,3 @@ class TestClear(unittest.TestCase):
         self.assertEqual(dag.num_edges(), 2)
         self.assertEqual(dag.nodes(), ["a", "b", "c"])
         self.assertEqual(dag.edges(), [{"a": 1}, {"a": 2}])
- 
-
