@@ -738,7 +738,7 @@ where
 {
     let alpha: f64 = alpha.unwrap_or(0.1);
 
-    let mut beta: HashMap<usize, f64> = beta_map.unwrap_or_else(HashMap::new);
+    let mut beta: HashMap<usize, f64> = beta_map.unwrap_or_default(HashMap::new);
 
     if beta.is_empty() {
         // beta_map was none
