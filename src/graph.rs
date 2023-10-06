@@ -368,6 +368,19 @@ impl PyGraph {
         false
     }
 
+    /// Clears all nodes and edges
+    #[pyo3(text_signature = "(self)")]
+    pub fn clear(&mut self) {
+        self.graph.clear();
+        self.node_removed = true;
+    }
+
+    /// Clears all edges, leaves nodes intact
+    #[pyo3(text_signature = "(self)")]
+    pub fn clear_edges(&mut self) {
+        self.graph.clear_edges();
+    }
+
     /// Return the number of nodes in the graph
     #[pyo3(text_signature = "(self)")]
     pub fn num_nodes(&self) -> usize {
