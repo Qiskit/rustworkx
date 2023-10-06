@@ -89,6 +89,14 @@ source.
      - s390x
      - :ref:`tier-4`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
+   * - Linux (musl)
+     - x86_64
+     - :ref:`tier-3`
+     -
+   * - Linux (musl)
+     - aarch64
+     - :ref:`tier-3`
+     -
    * - macOS (10.9 or newer)
      - x86_64
      - :ref:`tier-1`

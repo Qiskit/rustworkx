@@ -4,4 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 100
-target-version = ['py37', 'py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.cibuildwheel]
+manylinux-x86_64-image = "manylinux2014"
+manylinux-i686-image = "manylinux2014"
+skip = "pp* cp36-* cp37-* *win32"
+test-requires = "networkx testtools fixtures"
+test-command = "python -m unittest discover {project}/tests/rustworkx_tests"
+before-build = "pip install -U setuptools-rust"
+
+[tool.cibuildwheel.linux]
+before-all = "yum install -y wget && {package}/tools/install_rust.sh"
+environment = 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "apk add apk add --no-cache curl gcc && curl https://sh.rustup.rs -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install stable && rustup default stable"
+test-skip = "cp37-* cp38-*"
+
+[tool.cibuildwheel.macos]
+environment = "MACOSX_DEPLOYMENT_TARGET=10.9"

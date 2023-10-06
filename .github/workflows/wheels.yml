@@ -55,20 +55,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.16.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp37-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -97,20 +87,11 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.16.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp37-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx scipy testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: aarch64
       - uses: actions/upload-artifact@v3
         with:
@@ -140,20 +121,12 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.16.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
+          CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32
           CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v3
         with:
@@ -183,20 +156,12 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.16.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp37-* cp38-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
+          CIBW_SKIP: cp36-* cp37-* cp38-* cp312-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v3
         with:
@@ -226,20 +191,12 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.16.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
           CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: s390x
           CIBW_TEST_SKIP: "*-*linux_s390x"
       - uses: actions/upload-artifact@v3
@@ -270,20 +227,12 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.16.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp37-* cp38-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
+          CIBW_SKIP: cp36-* cp37-* cp38-* cp312-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: s390x
           CIBW_TEST_SKIP: "*-*linux_s390x"
       - uses: actions/upload-artifact@v3
@@ -300,7 +249,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build wheels
-        uses: joerick/cibuildwheel@v2.10.1
+        uses: joerick/cibuildwheel@v2.16.2
         env:
           CIBW_BEFORE_ALL: rustup target add aarch64-apple-darwin
           CIBW_ARCHS_MACOS: arm64 universal2
@@ -338,16 +287,12 @@ jobs:
         run: rustup default stable-i686-pc-windows-msvc
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.16.2 twine
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
           CIBW_SKIP: cp36-* cp37-* pp* *amd64 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
