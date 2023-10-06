@@ -206,12 +206,7 @@ where
         let id_node = self.rev_node_map[&node];
         let id_token = self.rev_node_map[&tokens[&node]];
 
-        if self
-            .graph
-            .neighbors(id_node)
-            .collect::<Vec<G::NodeId>>()
-            .is_empty()
-        {
+        if self.graph.neighbors(id_node).next().is_none() {
             return Err(MapNotPossible {});
         }
 
