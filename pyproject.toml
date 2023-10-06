@@ -10,7 +10,7 @@ target-version = ['py38', 'py39', 'py310', 'py311']
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
 skip = "pp* cp36-* cp37-* *win32"
-test-requires = "networkx testtools fixtures"
+test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests/rustworkx_tests"
 before-build = "pip install -U setuptools-rust"
 
