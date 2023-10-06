@@ -19,8 +19,8 @@ class TestClear(unittest.TestCase):
     def test_clear(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
-        node_b = dag.add_child(node_a, "b", {"a": 1}) # noqa: F841
-        node_c = dag.add_child(node_a, "c", {"a": 2}) # noqa: F841
+        node_b = dag.add_child(node_a, "b", {"a": 1})  # noqa: F841
+        node_c = dag.add_child(node_a, "c", {"a": 2})  # noqa: F841
         dag.clear()
         self.assertEqual(dag.num_nodes(), 0)
         self.assertEqual(dag.num_edges(), 0)
@@ -44,8 +44,8 @@ class TestClear(unittest.TestCase):
     def test_clear_edges(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
-        node_b = dag.add_child(node_a, "b", {"a": 1}) # noqa: F841
-        node_c = dag.add_child(node_a, "c", {"a": 2}) # noqa: F841
+        node_b = dag.add_child(node_a, "b", {"a": 1})  # noqa: F841
+        node_c = dag.add_child(node_a, "c", {"a": 2})  # noqa: F841
         dag.clear_edges()
         self.assertEqual(dag.num_nodes(), 3)
         self.assertEqual(dag.num_edges(), 0)
