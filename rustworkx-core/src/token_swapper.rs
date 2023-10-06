@@ -205,6 +205,11 @@ where
         }
         let id_node = self.rev_node_map[&node];
         let id_token = self.rev_node_map[&tokens[&node]];
+
+        if self.graph.neighbors(id_node).next().is_none() {
+            return Err(MapNotPossible {});
+        }
+
         for id_neighbor in self.graph.neighbors(id_node) {
             let neighbor = self.node_map[&id_neighbor];
             let dist_neighbor: DictMap<G::NodeId, usize> = dijkstra(
@@ -700,6 +705,21 @@ mod test_token_swapper {
             (NodeIndex::new(0), NodeIndex::new(2)),
             (NodeIndex::new(3), NodeIndex::new(3)),
         ]);
+        match token_swapper(&g, mapping, Some(10), Some(4), Some(50)) {
+            Ok(_) => panic!("This should error"),
+            Err(_) => (),
+        };
+    }
+
+    #[test]
+    fn test_edgeless_graph_fails() {
+        let mut g = petgraph::graph::UnGraph::<(), ()>::new_undirected();
+        let a = g.add_node(());
+        let b = g.add_node(());
+        let c = g.add_node(());
+        let d = g.add_node(());
+        g.add_edge(c, d, ());
+        let mapping = HashMap::from([(a, b), (b, a)]);
         match token_swapper(&g, mapping, Some(10), Some(4), Some(50)) {
             Ok(_) => panic!("This should error"),
             Err(_) => (),
