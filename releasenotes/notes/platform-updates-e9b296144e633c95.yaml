@@ -1,4 +1,4 @@
 ---
 features:
   - |
-    Added support for musl Linux platforms on x86_64 and aarch64 at :ref:`tier 3`.
+    Added support for musl Linux platforms on x86_64 and aarch64 at :ref:`tier-3`.
