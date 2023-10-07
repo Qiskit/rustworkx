@@ -24,12 +24,13 @@ before-all = "apk add apk add --no-cache curl gcc && curl https://sh.rustup.rs -
 test-skip = "cp37-* cp38-*"
 
 [[tool.cibuildwheel.overrides]]
-select = "*i686*"
-before_test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
+select = "*i686"
+skip = "pp* cp36-* cp37-* *win32" "*-musllinux*"
+before_test = 'yum install openblas-devel'
 
 [[tool.cibuildwheel.overrides]]
-select = "*ppc64le*"
-before_test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
+select = "*ppc64le"
+before_test = 'yum install openblas-devel'
 
 [tool.cibuildwheel.macos]
 environment = "MACOSX_DEPLOYMENT_TARGET=10.9"
