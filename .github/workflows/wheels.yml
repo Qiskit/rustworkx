@@ -53,6 +53,7 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: aarch64
+          CIBW_SKIP: cp36-* cp37-* pp* *musl*
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl

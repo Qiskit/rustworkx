@@ -93,10 +93,6 @@ source.
      - x86_64
      - :ref:`tier-3`
      -
-   * - Linux (musl)
-     - aarch64
-     - :ref:`tier-3`
-     -
    * - macOS (10.9 or newer)
      - x86_64
      - :ref:`tier-1`
