@@ -25,12 +25,12 @@ test-skip = "cp37-* cp38-*"
 
 [[tool.cibuildwheel.overrides]]
 select = "*i686"
-skip = "pp* cp36-* cp37-* *win32" "*-musllinux*"
-before_test = 'yum install openblas-devel'
+skip = "pp* cp36-* cp37-* *win32 *-musllinux*"
+before_test = "yum install openblas-devel"
 
 [[tool.cibuildwheel.overrides]]
 select = "*ppc64le"
-before_test = 'yum install openblas-devel'
+before_test = "yum install openblas-devel"
 
 [tool.cibuildwheel.macos]
 environment = "MACOSX_DEPLOYMENT_TARGET=10.9"
