@@ -53,7 +53,37 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_SKIP: cp36-* cp37-* pp* *musl*
+          CIBW_SKIP: cp36-* cp37-* cp311-* cp312-* pp* *musl*
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+  build_wheels_aarch64_part_2:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.8'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel==2.16.2 twine
+      - name: Build wheels
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS_LINUX: aarch64
+          CIBW_SKIP: cp36-* cp37-* cp38-* cp39-* cp310-* pp* *musl*
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
