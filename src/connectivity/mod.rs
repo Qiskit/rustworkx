@@ -1011,16 +1011,9 @@ pub fn chain_decomposition(graph: graph::PyGraph, source: Option<usize>) -> Chai
 #[pyfunction]
 pub fn graph_isolates(graph: graph::PyGraph) -> NodeIndices {
     NodeIndices {
-        nodes: graph
-            .graph
-            .node_indices()
-            .filter_map(|x| {
-                if graph.graph.neighbors(x).next().is_none() {
-                    Some(x.index())
-                } else {
-                    None
-                }
-            })
+        nodes: connectivity::isolates(&graph.graph)
+            .into_iter()
+            .map(|x| x.index())
             .collect(),
     }
 }
@@ -1036,16 +1029,9 @@ pub fn graph_isolates(graph: graph::PyGraph) -> NodeIndices {
 #[pyfunction]
 pub fn digraph_isolates(graph: digraph::PyDiGraph) -> NodeIndices {
     NodeIndices {
-        nodes: graph
-            .graph
-            .node_indices()
-            .filter_map(|x| {
-                if graph.graph.neighbors_undirected(x).next().is_none() {
-                    Some(x.index())
-                } else {
-                    None
-                }
-            })
+        nodes: connectivity::isolates(&graph.graph)
+            .into_iter()
+            .map(|x| x.index())
             .collect(),
     }
 }

@@ -3,3 +3,6 @@ features:
   - |
     Added a new function, :func:`~.isolates`, which is used to find the isolates
     (nodes with a degree of 0) in a :class:`~.PyDiGraph` or :class:`~.PyGraph`.
+  - |
+    Added a new function, ``isolates()`` to the rustworkx-core ``rustworkx_core::connectivity``
+    module which is used to find the isolates (nodes with a degree of 0).
