@@ -21,7 +21,7 @@ environment = 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
-before-all = "apk add apk add --no-cache curl gcc && curl https://sh.rustup.rs -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install stable && rustup default stable"
+before-all = "apk add --no-cache curl gcc && curl https://sh.rustup.rs -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install stable && rustup default stable"
 
 [[tool.cibuildwheel.overrides]]
 select = "*i686"
