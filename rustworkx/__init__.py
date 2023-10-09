@@ -2054,3 +2054,20 @@ def longest_simple_path(graph):
 
 longest_simple_path.register(PyDiGraph, digraph_longest_simple_path)
 longest_simple_path.register(PyGraph, graph_longest_simple_path)
+
+
+@functools.singledispatch
+def isolates(graph):
+    """Return a list of isolates in a graph object
+
+    An isolate is a node without any neighbors meaning it has a degree of 0. For
+    directed graphs this means the in-degree and out-degree are both 0.
+
+    :param graph: The input graph to find isolates in
+    :returns: A list of node indices for isolates in the graph
+    :rtype: NodeIndices
+    """
+
+
+isolates.register(PyDiGraph, digraph_isolates)
+isolates.register(PyGraph, graph_isolates)

@@ -1000,3 +1000,52 @@ pub fn chain_decomposition(graph: graph::PyGraph, source: Option<usize>) -> Chai
             .collect(),
     }
 }
+
+/// Return a list of isolates in a :class:`~.PyGraph` object
+///
+/// An isolate is a node without any neighbors meaning it has a degree of 0.
+///
+/// :param PyGraph graph: The input graph to find isolates in
+/// :returns: A list of node indices for isolates in the graph
+/// :rtype: NodeIndices
+#[pyfunction]
+pub fn graph_isolates(graph: graph::PyGraph) -> NodeIndices {
+    NodeIndices {
+        nodes: graph
+            .graph
+            .node_indices()
+            .filter_map(|x| {
+                if graph.graph.neighbors(x).next().is_none() {
+                    Some(x.index())
+                } else {
+                    None
+                }
+            })
+            .collect(),
+    }
+}
+
+/// Return a list of isolates in a :class:`~.PyGraph` object
+///
+/// An isolate is a node without any neighbors meaning it has an in-degree
+/// and out-degree of 0.
+///
+/// :param PyGraph graph: The input graph to find isolates in
+/// :returns: A list of node indices for isolates in the graph
+/// :rtype: NodeIndices
+#[pyfunction]
+pub fn digraph_isolates(graph: digraph::PyDiGraph) -> NodeIndices {
+    NodeIndices {
+        nodes: graph
+            .graph
+            .node_indices()
+            .filter_map(|x| {
+                if graph.graph.neighbors_undirected(x).next().is_none() {
+                    Some(x.index())
+                } else {
+                    None
+                }
+            })
+            .collect(),
+    }
+}

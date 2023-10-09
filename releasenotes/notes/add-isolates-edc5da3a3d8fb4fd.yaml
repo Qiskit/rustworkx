@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.isolates`, which is used to find the isolates
+    (nodes with a degree of 0) in a :class:`~.PyDiGraph` or :class:`~.PyGraph`.
