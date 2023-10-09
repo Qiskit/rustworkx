@@ -13,7 +13,7 @@ skip = "pp* cp36-* cp37-* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests/rustworkx_tests"
 before-build = "pip install -U setuptools-rust"
-test-skip = "cp38-*musllinux* *-*linux_s390x -*linux_ppc64le"
+test-skip = "cp38-*musllinux* *linux_s390x *ppc64le"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"
