@@ -28,4 +28,4 @@ select = "*i686"
 before-test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
 
 [tool.cibuildwheel.macos]
-environment = "MACOSX_DEPLOYMENT_TARGET=10.9"
+environment = "MACOSX_DEPLOYMENT_TARGET=10.12"
