@@ -144,7 +144,6 @@ jobs:
         env:
           CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: s390x
-          CIBW_TEST_SKIP: "*-*linux_s390x"
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -175,7 +174,6 @@ jobs:
         env:
           CIBW_SKIP: cp36-* cp37-* cp38-* cp312-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: s390x
-          CIBW_TEST_SKIP: "*-*linux_s390x"
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl

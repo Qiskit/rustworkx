@@ -2,3 +2,15 @@
 features:
   - |
     Added support for musl Linux platforms on x86_64 and aarch64 at :ref:`tier-3`.
+upgrade:
+  - |
+    Support for the Linux ppc64le pllatform has changed from tier 3 to tier 4
+    (as documented in :ref:`platform-suppport`). This is a result of no longer
+    being able to run tests during the pre-compiled wheel publishing jobs due
+    to constraints in the available CI infrastructure. There hopefully
+    shouldn't be any meaningful impact resulting from this change, but as there
+    are no longer tests being run to validate the binaries prior to publishing
+    them there are no longer guarantees that the wheels for ppc64le are fully
+    functional (although the likelihood they are is still high as it works on
+    other platforms). If any issues are encountered with ppc64le Linux please
+    open an issue.

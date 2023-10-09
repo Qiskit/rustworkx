@@ -13,7 +13,7 @@ skip = "pp* cp36-* cp37-* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests/rustworkx_tests"
 before-build = "pip install -U setuptools-rust"
-test-skip = "cp38-*musllinux*"
+test-skip = "cp38-*musllinux* *-*linux_s390x -*linux_ppc64le"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"
@@ -25,10 +25,6 @@ before-all = "apk add apk add --no-cache curl gcc && curl https://sh.rustup.rs -
 
 [[tool.cibuildwheel.overrides]]
 select = "*i686"
-before-test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
-
-[[tool.cibuildwheel.overrides]]
-select = "*ppc64le"
 before-test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
 
 [tool.cibuildwheel.macos]
