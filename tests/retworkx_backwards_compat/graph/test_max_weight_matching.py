@@ -14,10 +14,9 @@
 # https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/tests/test_matching.py
 
 import random
+import unittest
 
-import fixtures
 import networkx
-import testtools
 
 import retworkx
 
@@ -26,14 +25,7 @@ def match_dict_to_set(match):
     return {(u, v) for (u, v) in set(map(frozenset, match.items()))}
 
 
-class TestMaxWeightMatching(testtools.TestCase):
-    def setUp(self):
-        super().setUp()
-        stdout = self.useFixture(fixtures.StringStream("stdout")).stream
-        self.useFixture(fixtures.MonkeyPatch("sys.stdout", stdout))
-        stderr = self.useFixture(fixtures.StringStream("stderr")).stream
-        self.useFixture(fixtures.MonkeyPatch("sys.stderr", stderr))
-
+class TestMaxWeightMatching(unittest.TestCase):
     def compare_match_sets(self, rx_match, expected_match):
         for (u, v) in rx_match:
             if (u, v) not in expected_match and (v, u) not in expected_match:
