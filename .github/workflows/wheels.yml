@@ -20,6 +20,9 @@ jobs:
   sdist:
     name: Build sdist
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
     needs: ["build_wheels", "build-win32-wheels"]
     steps:
       - uses: actions/checkout@v3
@@ -28,20 +31,20 @@ jobs:
         with:
           python-version: '3.8'
       - name: Install deps
-        run: pip install -U twine setuptools-rust
+        run: pip install -U setuptools-rust
       - name: Build sdist
         run: python setup.py sdist
       - uses: actions/upload-artifact@v3
         with:
           path: ./dist/*
-      - name: Upload to PyPI
-        run: twine upload ./dist/*
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -55,21 +58,23 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.16.2 twine
+          python -m pip install cibuildwheel==2.16.2
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build_wheels_aarch64:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -87,7 +92,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.16.2 twine
+          python -m pip install cibuildwheel==2.16.2
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -97,9 +102,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build_wheels_aarch64_part_2:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -117,7 +129,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.16.2 twine
+          python -m pip install cibuildwheel==2.16.2
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -127,14 +139,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build_wheels_ppc64le:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -152,7 +166,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.16.2 twine
+          python -m pip install cibuildwheel==2.16.2
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -162,14 +176,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build_wheels_ppc64le_part2:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -187,7 +203,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.16.2 twine
+          python -m pip install cibuildwheel==2.16.2
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -197,14 +213,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build_wheels_s390x:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -222,7 +240,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.16.2 twine
+          python -m pip install cibuildwheel==2.16.2
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -232,14 +250,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build_wheels_s390x_part2:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -257,7 +277,7 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.16.2 twine
+          python -m pip install cibuildwheel==2.16.2
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -267,14 +287,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build-mac-arm-wheels:
     name: Build wheels on macos for arm and universal2
     runs-on: macos-latest
+    environment: release
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Build wheels
@@ -287,21 +309,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-      - uses: actions/setup-python@v4
-        name: Install Python
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          python-version: '3.8'
-      - name: Install twine
-        run: |
-          python -m pip install twine
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+          packages-dir: wheelhouse/
   build-win32-wheels:
     name: Build wheels on win32
     runs-on: windows-latest
+    environment: release
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -316,7 +333,7 @@ jobs:
         run: rustup default stable-i686-pc-windows-msvc
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.16.2 twine
+          python -m pip install cibuildwheel==2.16.2
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -325,14 +342,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   retworkx-compat-build:
     name: Build retworkx
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
     needs: ["build_wheels", "build-win32-wheels"]
     steps:
       - uses: actions/checkout@v3
@@ -341,7 +360,7 @@ jobs:
         with:
           python-version: '3.10'
       - name: Install deps
-        run: pip install -U twine setuptools-rust wheel build
+        run: pip install -U setuptools-rust wheel build
       - name: Build sdist
         run: python setup.py bdist_wheel
         env:
@@ -349,8 +368,5 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./dist/*
-      - name: Upload to PyPI
-        run: twine upload ./dist/*
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
