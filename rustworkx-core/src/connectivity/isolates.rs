@@ -13,7 +13,7 @@
 use petgraph::visit::{IntoNeighborsDirected, IntoNodeIdentifiers, NodeIndexable};
 use petgraph::Direction::{Incoming, Outgoing};
 
-/// Return the fisolates in a graph object
+/// Return the isolates in a graph object
 ///
 /// An isolate is a node without any neighbors meaning it has a degree of 0. For
 /// directed graphs this means the in-degree and out-degree are both 0.
