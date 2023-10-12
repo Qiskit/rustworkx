@@ -57,3 +57,20 @@ class TestBipartite(unittest.TestCase):
     def test_two_color_not_biparite(self):
         graph = rustworkx.generators.directed_complete_graph(5)
         self.assertIsNone(rustworkx.two_color(graph))
+
+    def test_grid_graph(self):
+        for i in range(10):
+            for j in range(10):
+                with self.subTest((i, j)):
+                    graph = rustworkx.generators.directed_grid_graph(i, j)
+                    self.assertTrue(rustworkx.is_bipartite(graph))
+
+    def test_cycle_graph(self):
+        for i in range(20):
+            with self.subTest(i):
+                graph = rustworkx.generators.directed_cycle_graph(i)
+                res = rustworkx.is_bipartite(graph)
+                if i % 2:
+                    self.assertFalse(res)
+                else:
+                    self.assertTrue(res)

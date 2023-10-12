@@ -53,3 +53,37 @@ class TestBipartite(unittest.TestCase):
     def test_two_color_not_biparite(self):
         graph = rustworkx.generators.complete_graph(5)
         self.assertIsNone(rustworkx.two_color(graph))
+
+    def test_bipartite_petersen_graph(self):
+        # Per Lemma 3 of https://arxiv.org/pdf/1008.3208.pdf A petersen graph is bipartite
+        # for any even value of n and odd value of k
+        for i in range(3, 30):
+            for j in range(30):
+                n = 2 * i
+                k = 2 * j + 1
+                if n <= k * 2:
+                    continue
+
+                with self.subTest((n, k)):
+                    graph = rustworkx.generators.generalized_petersen_graph(n, k)
+                    self.assertTrue(rustworkx.is_bipartite(graph))
+
+    def test_not_bipartite_petersen_graph(self):
+        # Per Lemma 3 of https://arxiv.org/pdf/1008.3208.pdf A petersen graph is bipartite
+        # for any even value of n and odd value of k
+        for n in range(3, 30):
+            for k in range(1, 31):
+                with self.subTest((2 * n, 2 * k)):
+                    if 2 * n > k * 4:
+                        graph = rustworkx.generators.generalized_petersen_graph(2 * n, 2 * k)
+                        self.assertFalse(rustworkx.is_bipartite(graph))
+                with self.subTest((2 * n + 1, 2 * k)):
+                    if 2 * n + 1 > k * 4:
+                        graph = rustworkx.generators.generalized_petersen_graph(2 * n + 1, 2 * k)
+                        self.assertFalse(rustworkx.is_bipartite(graph))
+                with self.subTest((2 * n + 1, 2 * k + 1)):
+                    if 2 * n + 1 > k * 4 + 2:
+                        graph = rustworkx.generators.generalized_petersen_graph(
+                            2 * n + 1, 2 * k + 1
+                        )
+                        self.assertFalse(rustworkx.is_bipartite(graph))
