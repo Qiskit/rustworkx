@@ -13,7 +13,6 @@
 use std::cmp::Reverse;
 use std::hash::Hash;
 
-use crate::connectivity::isolates;
 use crate::dictmap::*;
 use crate::line_graph::line_graph;
 use hashbrown::{HashMap, HashSet};
@@ -93,7 +92,6 @@ where
             }
         }
     }
-    colors.extend(isolates(&graph).into_iter().map(|x| (x, 0)));
     Some(colors)
 }
 
@@ -327,8 +325,8 @@ mod test_node_coloring {
         expected_colors.insert(NodeIndex::new(2), 1);
         expected_colors.insert(NodeIndex::new(3), 0);
         expected_colors.insert(NodeIndex::new(4), 1);
-        expected_colors.insert(NodeIndex::new(5), 0);
-        expected_colors.insert(NodeIndex::new(6), 0);
+        expected_colors.insert(NodeIndex::new(5), 1);
+        expected_colors.insert(NodeIndex::new(6), 1);
         assert_eq!(coloring, expected_colors)
     }
 
@@ -346,8 +344,8 @@ mod test_node_coloring {
         expected_colors.insert(NodeIndex::new(2), 1);
         expected_colors.insert(NodeIndex::new(3), 0);
         expected_colors.insert(NodeIndex::new(4), 1);
-        expected_colors.insert(NodeIndex::new(5), 0);
-        expected_colors.insert(NodeIndex::new(6), 0);
+        expected_colors.insert(NodeIndex::new(5), 1);
+        expected_colors.insert(NodeIndex::new(6), 1);
         assert_eq!(coloring, expected_colors)
     }
 }
