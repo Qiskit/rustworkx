@@ -46,6 +46,7 @@ README = readme()
 if PKG_NAME == "retworkx":
     README = retworkx_readme_compat + README
     PKG_PACKAGES = ["retworkx"]
+    # TODO: For final retworkx release change this to < 1.
     PKG_INSTALL_REQUIRES.append(f"rustworkx=={PKG_VERSION}")
     RUST_EXTENSIONS = []
 
