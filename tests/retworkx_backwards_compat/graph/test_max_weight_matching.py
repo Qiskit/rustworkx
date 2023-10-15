@@ -30,9 +30,9 @@ class TestMaxWeightMatching(unittest.TestCase):
         for (u, v) in rx_match:
             if (u, v) not in expected_match and (v, u) not in expected_match:
                 self.fail(
-                    "Element %s and it's reverse %s not found in "
-                    "expected output.\nretworkx output: %s\nexpected "
-                    "output: %s" % ((u, v), (v, u), rx_match, expected_match)
+                    f"Element {(u, v)} and it's reverse {(v, u)} not found in "
+                    f"expected output.\nretworkx output: {rx_match}\nexpected "
+                    f"output: {expected_match}"
                 )
 
     def compare_rx_nx_sets(self, rx_graph, rx_matches, nx_matches, seed, nx_graph):
@@ -53,11 +53,10 @@ class TestMaxWeightMatching(unittest.TestCase):
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
                     print(
-                        "seed %s failed. Element %s and it's "
-                        "reverse %s not found in networkx output.\nretworkx"
-                        " output: %s\nnetworkx output: %s\nedge list: %s\n"
-                        "falling back to checking for a valid solution"
-                        % (
+                        "seed {} failed. Element {} and it's "
+                        "reverse {} not found in networkx output.\nretworkx"
+                        " output: {}\nnetworkx output: {}\nedge list: {}\n"
+                        "falling back to checking for a valid solution".format(
                             seed,
                             (u, v),
                             (v, u),

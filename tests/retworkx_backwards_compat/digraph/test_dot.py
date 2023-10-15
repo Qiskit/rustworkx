@@ -50,7 +50,7 @@ class TestDot(unittest.TestCase):
         res = graph.to_dot(lambda node: node, lambda edge: edge, filename=self.path)
         self.addCleanup(os.remove, self.path)
         self.assertIsNone(res)
-        with open(self.path, "r") as fd:
+        with open(self.path) as fd:
             res = fd.read()
         self.assertEqual(expected, res)
 

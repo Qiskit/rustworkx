@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.8
-      - run: pip install -U flake8 black~=22.0
+      - run: pip install -U ruff black~=22.0
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -38,7 +38,7 @@ jobs:
       - name: Black Codestyle Format
         run: black --check --diff retworkx rustworkx retworkx tests
       - name: Python Lint
-        run: flake8 --per-file-ignores='retworkx/__init__.py:F405,F403' setup.py retworkx tests rustworkx
+        run: ruff check rustworkx retworkx setup.py tests
       - name: Check stray release notes
         run: python tools/find_stray_release_notes.py
       - name: rustworkx-core Rust Tests
