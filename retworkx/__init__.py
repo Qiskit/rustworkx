@@ -10,11 +10,18 @@
 
 
 import sys
+import warnings
 
 from rustworkx import *  # noqa
 
 from . import namespace
 
+warnings.warn(
+    "The retworkx package is deprecated and has been renamed to rustworkx. Rustworkx is a "
+    "drop-in replacement and can be used by replacing `import retworkx` with import `rustworkx`. ",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 sys.modules["retworkx.generators"] = generators  # noqa
 new_meta_path_finder = namespace.RetworkxImport("retworkx", "rustworkx")
