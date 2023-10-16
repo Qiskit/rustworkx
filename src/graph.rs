@@ -229,21 +229,27 @@ impl PyGraph {
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
         let dict_state = state.downcast::<PyDict>(py)?;
-        let nodes_lst = dict_state.get_item("nodes").unwrap().downcast::<PyList>()?;
-        let edges_lst = dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
+        let nodes_lst = dict_state
+            .get_item("nodes")?
+            .unwrap()
+            .downcast::<PyList>()?;
+        let edges_lst = dict_state
+            .get_item("edges")?
+            .unwrap()
+            .downcast::<PyList>()?;
 
         self.graph = StablePyGraph::<Undirected>::default();
         self.multigraph = dict_state
-            .get_item("multigraph")
+            .get_item("multigraph")?
             .unwrap()
             .downcast::<PyBool>()?
             .extract()?;
         self.node_removed = dict_state
-            .get_item("nodes_removed")
+            .get_item("nodes_removed")?
             .unwrap()
             .downcast::<PyBool>()?
             .extract()?;
-        self.attrs = match dict_state.get_item("attrs") {
+        self.attrs = match dict_state.get_item("attrs")? {
             Some(attr) => attr.into(),
             None => py.None(),
         };
