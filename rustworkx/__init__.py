@@ -2071,3 +2071,34 @@ def isolates(graph):
 
 isolates.register(PyDiGraph, digraph_isolates)
 isolates.register(PyGraph, graph_isolates)
+
+
+@functools.singledispatch
+def two_color(graph):
+    """Compute a two-coloring of a directed graph
+
+    If a two coloring is not possible for the input graph (meaning it is not
+    bipartite), ``None`` is returned.
+
+    :param graph: The graph to find the coloring for
+    :returns: If a coloring is possible return a dictionary of node indices to the color as an integer (0 or 1)
+    :rtype: dict
+    """
+
+
+two_color.register(PyDiGraph, digraph_two_color)
+two_color.register(PyGraph, graph_two_color)
+
+
+@functools.singledispatch
+def is_bipartite(graph):
+    """Determine if a given graph is bipartite
+
+    :param graph: The graph to check if it's bipartite
+    :returns: ``True`` if the graph is bipartite and ``False`` if it is not
+    :rtype: bool
+    """
+
+
+is_bipartite.register(PyDiGraph, digraph_is_bipartite)
+is_bipartite.register(PyGraph, graph_is_bipartite)
