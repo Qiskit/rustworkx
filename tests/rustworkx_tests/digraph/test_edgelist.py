@@ -152,7 +152,7 @@ class TestEdgeList(unittest.TestCase):
         graph = rustworkx.PyDiGraph()
         graph.write_edge_list(path)
         self.addCleanup(os.remove, path)
-        with open(path, "rt") as edge_file:
+        with open(path) as edge_file:
             self.assertEqual("", edge_file.read())
 
     def test_write_edge_list_round_trip(self):
@@ -184,7 +184,7 @@ class TestEdgeList(unittest.TestCase):
 2,3
 3,4
 """
-        with open(path, "rt") as edge_file:
+        with open(path) as edge_file:
             self.assertEqual(edge_file.read(), expected)
 
     def test_invalid_return_type_weight_fn(self):
