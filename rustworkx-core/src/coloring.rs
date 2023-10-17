@@ -17,8 +17,83 @@ use crate::dictmap::*;
 use crate::line_graph::line_graph;
 use hashbrown::{HashMap, HashSet};
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{EdgeCount, EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeCount};
+use petgraph::visit::{
+    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNeighborsDirected,
+    IntoNodeIdentifiers, NodeCount, NodeIndexable,
+};
+use petgraph::{Incoming, Outgoing};
 use rayon::prelude::*;
+
+/// Compute a two-coloring of a graph
+///
+/// If a two coloring is not possible for the input graph (meaning it is not
+/// bipartite), `None` is returned.
+///
+/// Arguments:
+///
+/// * `graph` - The graph to find the coloring for
+///
+/// # Example
+///
+/// ```rust
+/// use rustworkx_core::petgraph::prelude::*;
+/// use rustworkx_core::coloring::two_color;
+/// use rustworkx_core::dictmap::*;
+///
+/// let edge_list = vec![
+///  (0, 1),
+///  (1, 2),
+///  (2, 3),
+///  (3, 4),
+/// ];
+///
+/// let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+/// let coloring = two_color(&graph).unwrap();
+/// let mut expected_colors = DictMap::new();
+/// expected_colors.insert(NodeIndex::new(0), 1);
+/// expected_colors.insert(NodeIndex::new(1), 0);
+/// expected_colors.insert(NodeIndex::new(2), 1);
+/// expected_colors.insert(NodeIndex::new(3), 0);
+/// expected_colors.insert(NodeIndex::new(4), 1);
+/// assert_eq!(coloring, expected_colors)
+/// ```
+pub fn two_color<G>(graph: G) -> Option<DictMap<G::NodeId, u8>>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + GraphBase
+        + GraphProp
+        + NodeCount,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
+{
+    let mut colors = DictMap::with_capacity(graph.node_count());
+    for node in graph.node_identifiers() {
+        if colors.contains_key(&node) {
+            continue;
+        }
+        let mut queue = vec![node];
+        colors.insert(node, 1);
+        while let Some(v) = queue.pop() {
+            let v_color: u8 = *colors.get(&v).unwrap();
+            let color: u8 = 1 - v_color;
+            for w in graph
+                .neighbors_directed(v, Outgoing)
+                .chain(graph.neighbors_directed(v, Incoming))
+            {
+                if let Some(color_w) = colors.get(&w) {
+                    if *color_w == v_color {
+                        return None;
+                    }
+                } else {
+                    colors.insert(w, color);
+                    queue.push(w);
+                }
+            }
+        }
+    }
+    Some(colors)
+}
 
 /// Color a graph using a greedy graph coloring algorithm.
 ///
@@ -150,11 +225,12 @@ where
 mod test_node_coloring {
 
     use crate::coloring::greedy_node_color;
-    use crate::dictmap::DictMap;
-    use crate::petgraph::Graph;
+    use crate::coloring::two_color;
+    use crate::dictmap::*;
+    use crate::petgraph::prelude::*;
 
-    use petgraph::graph::NodeIndex;
-    use petgraph::Undirected;
+    use crate::petgraph::graph::NodeIndex;
+    use crate::petgraph::Undirected;
 
     #[test]
     fn test_greedy_node_color_empty_graph() {
@@ -200,6 +276,77 @@ mod test_node_coloring {
         .into_iter()
         .collect();
         assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_two_color_directed() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
+
+        let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let coloring = two_color(&graph).unwrap();
+        let mut expected_colors = DictMap::new();
+        expected_colors.insert(NodeIndex::new(0), 1);
+        expected_colors.insert(NodeIndex::new(1), 0);
+        expected_colors.insert(NodeIndex::new(2), 1);
+        expected_colors.insert(NodeIndex::new(3), 0);
+        expected_colors.insert(NodeIndex::new(4), 1);
+        assert_eq!(coloring, expected_colors)
+    }
+
+    #[test]
+    fn test_two_color_directed_not_bipartite() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 0), (3, 1)];
+
+        let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let coloring = two_color(&graph);
+        assert_eq!(None, coloring)
+    }
+
+    #[test]
+    fn test_two_color_undirected_not_bipartite() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 0), (3, 1)];
+
+        let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        let coloring = two_color(&graph);
+        assert_eq!(None, coloring)
+    }
+
+    #[test]
+    fn test_two_color_directed_with_isolates() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
+
+        let mut graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        graph.add_node(10);
+        graph.add_node(11);
+        let coloring = two_color(&graph).unwrap();
+        let mut expected_colors = DictMap::new();
+        expected_colors.insert(NodeIndex::new(0), 1);
+        expected_colors.insert(NodeIndex::new(1), 0);
+        expected_colors.insert(NodeIndex::new(2), 1);
+        expected_colors.insert(NodeIndex::new(3), 0);
+        expected_colors.insert(NodeIndex::new(4), 1);
+        expected_colors.insert(NodeIndex::new(5), 1);
+        expected_colors.insert(NodeIndex::new(6), 1);
+        assert_eq!(coloring, expected_colors)
+    }
+
+    #[test]
+    fn test_two_color_undirected_with_isolates() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
+
+        let mut graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        graph.add_node(10);
+        graph.add_node(11);
+        let coloring = two_color(&graph).unwrap();
+        let mut expected_colors = DictMap::new();
+        expected_colors.insert(NodeIndex::new(0), 1);
+        expected_colors.insert(NodeIndex::new(1), 0);
+        expected_colors.insert(NodeIndex::new(2), 1);
+        expected_colors.insert(NodeIndex::new(3), 0);
+        expected_colors.insert(NodeIndex::new(4), 1);
+        expected_colors.insert(NodeIndex::new(5), 1);
+        expected_colors.insert(NodeIndex::new(6), 1);
+        assert_eq!(coloring, expected_colors)
     }
 }
 

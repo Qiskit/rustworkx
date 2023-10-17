@@ -1175,7 +1175,7 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
 
     def test_keys(self):
         keys = rustworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn).keys()
-        self.assertEqual([0, 1], list(sorted((keys))))
+        self.assertEqual([0, 1], list(sorted(keys)))
 
     def test_values(self):
         values = rustworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn).values()

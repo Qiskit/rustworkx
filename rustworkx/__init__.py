@@ -1873,3 +1873,39 @@ def longest_simple_path(graph):
         found in the graph. If the graph is empty ``None`` will be returned instead.
     :rtype: NodeIndices
     """
+
+
+@rustworkx_dispatch
+def isolates(graph):
+    """Return a list of isolates in a graph object
+
+    An isolate is a node without any neighbors meaning it has a degree of 0. For
+    directed graphs this means the in-degree and out-degree are both 0.
+
+    :param graph: The input graph to find isolates in
+    :returns: A list of node indices for isolates in the graph
+    :rtype: NodeIndices
+    """
+
+
+@rustworkx_dispatch
+def two_color(graph):
+    """Compute a two-coloring of a directed graph
+
+    If a two coloring is not possible for the input graph (meaning it is not
+    bipartite), ``None`` is returned.
+
+    :param graph: The graph to find the coloring for
+    :returns: If a coloring is possible return a dictionary of node indices to the color as an integer (0 or 1)
+    :rtype: dict
+    """
+
+
+@rustworkx_dispatch
+def is_bipartite(graph):
+    """Determine if a given graph is bipartite
+
+    :param graph: The graph to check if it's bipartite
+    :returns: ``True`` if the graph is bipartite and ``False`` if it is not
+    :rtype: bool
+    """
