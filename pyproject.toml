@@ -4,27 +4,61 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 100
-target-version = ['py37', 'py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310', 'py311']
 
-[tool.flake8]
-# E125 is deliberately excluded. See https://github.com/jcrocholl/pep8/issues/126
-# E123 skipped because it is ignored by default in the default pep8
-# E129 skipped because it is too limiting when combined with other rules
-# E711 skipped because sqlalchemy filter() requires using == instead of is
-# max-line-length, E203, W503 are added for black compatibility
-max-line-length = 110
-ignore = ["E125", "E123", "E129", "E711"]
-extend-ignore = ["E203", "W503"]
+[tool.ruff]
+line-length = 100
+src = ["rustworkx", "setup.py", "retworkx", "tests"]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "UP",  # pyupgrade
+    "PYI", # flake8-pyi
+    "Q",   # flake8-quotes
+]
+target-version = "py38"
 exclude = [
     ".venv",
     ".git",
-    ".nox",
     ".tox",
+    ".nox",
+    ".eggs",
     "dist",
     "doc",
-    "*egg",
-    "build"
+    "build",
 ]
+
+[tool.ruff.per-file-ignores]
+"rustworkx/__init__.py" = ["F405", "F403"]
+"rustworkx/__init__.pyi" = ["F403", "F405", "PYI001"]
+"rustworkx/digraph.pyi" = ["F403", "F405", "PYI001"]
+"rustworkx/graph.pyi" = ["F403", "F405", "PYI001"]
+"rustworkx/iterators.pyi" = ["F403", "F405", "PYI001"]
+"rustworkx/rustworkx.pyi" = ["F403", "F405", "PYI001"]
+
+[tool.cibuildwheel]
+manylinux-x86_64-image = "manylinux2014"
+manylinux-i686-image = "manylinux2014"
+skip = "pp* cp36-* cp37-* *win32 *musllinux*i686"
+test-requires = "networkx"
+test-command = "python -m unittest discover {project}/tests/rustworkx_tests"
+before-build = "pip install -U setuptools-rust"
+test-skip = "cp38-*musllinux* *linux_s390x *ppc64le"
+
+[tool.cibuildwheel.linux]
+before-all = "yum install -y wget && {package}/tools/install_rust.sh"
+environment = 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "apk add --no-cache curl gcc && curl https://sh.rustup.rs -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install stable && rustup default stable"
+
+[[tool.cibuildwheel.overrides]]
+select = "*i686"
+before-test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
+
+[tool.cibuildwheel.macos]
+environment = "MACOSX_DEPLOYMENT_TARGET=10.12"
 
 [tool.tox]
 legacy_tox_ini = """
