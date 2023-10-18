@@ -24,9 +24,8 @@ class LayoutTest(unittest.TestCase):
             rv = res[k]
             if abs(ev[0] - rv[0]) > self.thres or abs(ev[1] - rv[1]) > self.thres:
                 self.fail(
-                    "The position for node %s, %s, differs from the expected "
-                    "position, %s by more than the allowed threshold of %s"
-                    % (k, rv, ev, self.thres)
+                    f"The position for node {k}, {rv}, differs from the expected "
+                    f"position, {ev} by more than the allowed threshold of {self.thres}"
                 )
 
 

@@ -34,7 +34,7 @@ class TestSubstituteNodeSubGraph(unittest.TestCase):
     def test_node_filter(self):
         in_graph = rustworkx.generators.complete_graph(5)
         res = self.graph.substitute_node_with_subgraph(
-            0, in_graph, lambda _, __, ___: 2, node_filter=lambda node: node == None
+            0, in_graph, lambda _, __, ___: 2, node_filter=lambda node: node is None
         )
         self.assertEqual(res, {i: i + 5 for i in range(5)})
         self.assertEqual(
