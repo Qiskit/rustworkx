@@ -10,7 +10,10 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::graph;
+use crate::{digraph, graph};
+
+use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, two_color};
+
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
@@ -119,4 +122,52 @@ pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyRes
         out_dict.set_item(node.index(), color)?;
     }
     Ok(out_dict.into())
+}
+
+/// Compute a two-coloring of a graph
+///
+/// If a two coloring is not possible for the input graph (meaning it is not
+/// bipartite), ``None`` is returned.
+///
+/// :param PyGraph graph: The graph to find the coloring for
+///
+/// :returns: If a coloring is possible return a dictionary of node indices to the color as an
+/// integer (0 or 1)
+/// :rtype: dict
+#[pyfunction]
+pub fn graph_two_color(py: Python, graph: &graph::PyGraph) -> PyResult<Option<PyObject>> {
+    match two_color(&graph.graph) {
+        Some(colors) => {
+            let out_dict = PyDict::new(py);
+            for (node, color) in colors {
+                out_dict.set_item(node.index(), color)?;
+            }
+            Ok(Some(out_dict.into()))
+        }
+        None => Ok(None),
+    }
+}
+
+/// Compute a two-coloring of a directed graph
+///
+/// If a two coloring is not possible for the input graph (meaning it is not
+/// bipartite), ``None`` is returned.
+///
+/// :param PyDiGraph graph: The graph to find the coloring for
+///
+/// :returns: If a coloring is possible return a dictionary of node indices to the color as an
+/// integer (0 or 1)
+/// :rtype: dict
+#[pyfunction]
+pub fn digraph_two_color(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Option<PyObject>> {
+    match two_color(&graph.graph) {
+        Some(colors) => {
+            let out_dict = PyDict::new(py);
+            for (node, color) in colors {
+                out_dict.set_item(node.index(), color)?;
+            }
+            Ok(Some(out_dict.into()))
+        }
+        None => Ok(None),
+    }
 }
