@@ -466,7 +466,7 @@ where
     for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgesDirected + IntoNodeIdentifiers,
     F: FnMut() -> T,
     H: FnMut() -> M,
-    G::NodeId: Eq + Hash + std::fmt::Debug,
+    G::NodeId: Eq + Hash,
 {
     if m < 1 || m >= n {
         return Err(InvalidInputError {});

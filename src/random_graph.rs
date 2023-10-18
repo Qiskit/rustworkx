@@ -386,14 +386,14 @@ pub fn random_geometric_graph(
 /// are preferentially attached to existing nodes with high degree. All the edges
 /// and nodes added to this graph will have weights of ``None``.
 ///
-/// The algorithm performed by this function are described in:
+/// The algorithm performed by this function is described in:
 ///
 /// A. L. Barabási and R. Albert "Emergence of scaling in random networks",
 /// Science 286, pp 509-512, 1999.
 ///
 /// :param int n: The number of nodes to extend the graph to.
 /// :param int m: The number of edges to attach from a new node to existing nodes.
-/// :param int seed: An optional seed to use for the random number generator
+/// :param int seed: An optional seed to use for the random number generator.
 /// :param PyGraph initial_graph: An optional initial graph to use as a starting
 ///     point. :func:`.star_graph` is used to create an ``m`` node star graph
 ///     to use as a starting point. If specified the input graph will be
@@ -447,7 +447,7 @@ pub fn barabasi_albert_graph(
 /// of the extension algorithm all edges are treated as weak (meaning directionality
 /// isn't considered).
 ///
-/// The algorithm performed by this function are described in:
+/// The algorithm performed by this function is described in:
 ///
 /// A. L. Barabási and R. Albert "Emergence of scaling in random networks",
 /// Science 286, pp 509-512, 1999.
