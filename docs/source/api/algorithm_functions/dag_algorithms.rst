@@ -12,3 +12,4 @@ DAG Algorithms
    rustworkx.dag_weighted_longest_path_length
    rustworkx.is_directed_acyclic_graph
    rustworkx.layers
+   rustworkx.transitive_reduction

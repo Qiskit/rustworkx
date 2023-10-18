@@ -19,6 +19,7 @@ mod conn_components;
 mod core_number;
 mod cycle_basis;
 mod find_cycle;
+mod isolates;
 mod min_cut;
 
 pub use all_simple_paths::{
@@ -32,4 +33,5 @@ pub use conn_components::number_connected_components;
 pub use core_number::core_number;
 pub use cycle_basis::cycle_basis;
 pub use find_cycle::find_cycle;
+pub use isolates::isolates;
 pub use min_cut::stoer_wagner_min_cut;

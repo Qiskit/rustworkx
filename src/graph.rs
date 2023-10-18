@@ -229,21 +229,27 @@ impl PyGraph {
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
         let dict_state = state.downcast::<PyDict>(py)?;
-        let nodes_lst = dict_state.get_item("nodes").unwrap().downcast::<PyList>()?;
-        let edges_lst = dict_state.get_item("edges").unwrap().downcast::<PyList>()?;
+        let nodes_lst = dict_state
+            .get_item("nodes")?
+            .unwrap()
+            .downcast::<PyList>()?;
+        let edges_lst = dict_state
+            .get_item("edges")?
+            .unwrap()
+            .downcast::<PyList>()?;
 
         self.graph = StablePyGraph::<Undirected>::default();
         self.multigraph = dict_state
-            .get_item("multigraph")
+            .get_item("multigraph")?
             .unwrap()
             .downcast::<PyBool>()?
             .extract()?;
         self.node_removed = dict_state
-            .get_item("nodes_removed")
+            .get_item("nodes_removed")?
             .unwrap()
             .downcast::<PyBool>()?
             .extract()?;
-        self.attrs = match dict_state.get_item("attrs") {
+        self.attrs = match dict_state.get_item("attrs")? {
             Some(attr) => attr.into(),
             None => py.None(),
         };
@@ -366,6 +372,19 @@ impl PyGraph {
             edges.insert(endpoints_rev);
         }
         false
+    }
+
+    /// Clears all nodes and edges
+    #[pyo3(text_signature = "(self)")]
+    pub fn clear(&mut self) {
+        self.graph.clear();
+        self.node_removed = true;
+    }
+
+    /// Clears all edges, leaves nodes intact
+    #[pyo3(text_signature = "(self)")]
+    pub fn clear_edges(&mut self) {
+        self.graph.clear_edges();
     }
 
     /// Return the number of nodes in the graph

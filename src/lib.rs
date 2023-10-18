@@ -322,6 +322,8 @@ create_exception!(rustworkx, NoSuitableNeighbors, PyException);
 create_exception!(rustworkx, NullGraph, PyException);
 // No path was found between the specified nodes.
 create_exception!(rustworkx, NoPathFound, PyException);
+// No mapping was found for the request swapping
+create_exception!(rustworkx, InvalidMapping, PyException);
 // Prune part of the search tree while traversing a graph.
 import_exception!(rustworkx.visit, PruneSearch);
 // Stop graph traversal.
@@ -342,6 +344,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
     m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
     m.add("NoPathFound", py.get_type::<NoPathFound>())?;
+    m.add("InvalidMapping", py.get_type::<InvalidMapping>())?;
     m.add("NullGraph", py.get_type::<NullGraph>())?;
     m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
     m.add(
@@ -359,6 +362,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
+    m.add_wrapped(wrap_pyfunction!(transitive_reduction))?;
     m.add_wrapped(wrap_pyfunction!(number_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_connected))?;
@@ -400,6 +404,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_has_path))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_paths))?;
@@ -436,6 +442,10 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_two_color))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_two_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_is_bipartite))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_is_bipartite))?;
     m.add_wrapped(wrap_pyfunction!(graph_line_graph))?;
     m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
@@ -492,6 +502,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
+    m.add_wrapped(wrap_pyfunction!(graph_isolates))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_isolates))?;
     m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
