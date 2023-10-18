@@ -19,8 +19,8 @@ use crate::line_graph::line_graph;
 use hashbrown::{HashMap, HashSet};
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNeighborsDirected,
-    IntoNodeIdentifiers, NodeCount, NodeIndexable, EdgeIndexable,
+    EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNeighborsDirected,
+    IntoNodeIdentifiers, NodeCount, NodeIndexable,
 };
 use petgraph::{Incoming, Outgoing};
 use rayon::prelude::*;

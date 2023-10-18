@@ -12,12 +12,12 @@
 
 use crate::{digraph, graph};
 
-use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, two_color};
-
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
-use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, misra_gries_edge_color};
+use rustworkx_core::coloring::{
+    greedy_edge_color, greedy_node_color, misra_gries_edge_color, two_color,
+};
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
