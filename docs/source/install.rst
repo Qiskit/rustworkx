@@ -59,7 +59,7 @@ limitations in available testing resources and platform availability, not all
 platforms can be supported. Platform support for rustworkx is broken into 4
 tiers with different levels of support for each tier. For platforms outside
 these, rustworkx is probably still installable, but it’s not tested and you will
-need a Rust compiler and have to build retworkx (and likely Numpy too) from
+need a Rust compiler and have to build rustworkx (and likely Numpy too) from
 source.
 
 .. list-table:: Platform Support
@@ -89,7 +89,11 @@ source.
      - s390x
      - :ref:`tier-4`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
-   * - macOS (10.9 or newer)
+   * - Linux (musl)
+     - x86_64
+     - :ref:`tier-3`
+     -
+   * - macOS (10.12 or newer)
      - x86_64
      - :ref:`tier-1`
      -

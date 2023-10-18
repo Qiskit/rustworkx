@@ -92,7 +92,7 @@ fn _inner_is_matching(graph: &graph::PyGraph, matching: &HashSet<(usize, usize)>
             .contains_edge(NodeIndex::new(e.0), NodeIndex::new(e.1))
     };
 
-    if !matching.iter().all(|e| has_edge(e)) {
+    if !matching.iter().all(has_edge) {
         return false;
     }
     let mut found: HashSet<usize> = HashSet::with_capacity(2 * matching.len());
