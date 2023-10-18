@@ -12,7 +12,7 @@
 from .iterators import *
 from .digraph import PyDiGraph
 
-from typing import Optional, List, TypeVar, Callable, Tuple, Dict, Union
+from typing import Optional, TypeVar, Callable, Union
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -20,12 +20,12 @@ _T = TypeVar("_T")
 def collect_runs(
     graph: PyDiGraph[_S, _T],
     filter_fn: Callable[[_S], bool],
-) -> List[List[_S]]: ...
+) -> list[list[_S]]: ...
 def collect_bicolor_runs(
     graph: PyDiGraph[_S, _T],
     filter_fn: Callable[[_S], bool],
     color_fn: Callable[[_T], int],
-) -> List[List[_S]]: ...
+) -> list[list[_S]]: ...
 def dag_longest_path(
     graph: PyDiGraph[_S, _T], /, weight_fn: Optional[Callable[[int, int, _T], int]] = ...
 ) -> NodeIndices: ...
@@ -48,11 +48,11 @@ def lexicographical_topological_sort(
     dag: PyDiGraph[_S, _T],
     key: Callable[[_S], str],
     /,
-) -> List[_S]: ...
-def transitive_reduction(graph: PyDiGraph, /) -> Tuple[PyDiGraph, Dict[int, int]]: ...
+) -> list[_S]: ...
+def transitive_reduction(graph: PyDiGraph, /) -> tuple[PyDiGraph, dict[int, int]]: ...
 def layers(
     dag: PyDiGraph[_S, _T],
-    first_layer: List[int],
+    first_layer: list[int],
     /,
     index_output: bool = ...,
-) -> Union[List[_S], List[int]]: ...
+) -> Union[list[_S], list[int]]: ...

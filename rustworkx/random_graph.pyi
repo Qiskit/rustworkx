@@ -12,10 +12,7 @@
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, List, TypeVar
-
-_S = TypeVar("_S")
-_T = TypeVar("_T")
+from typing import Optional
 
 def directed_gnm_random_graph(
     num_nodes: int,
@@ -46,7 +43,7 @@ def random_geometric_graph(
     radius: float,
     /,
     dim: int = ...,
-    pos: Optional[List[List[float]]] = ...,
+    pos: Optional[list[list[float]]] = ...,
     p: float = ...,
     seed: Optional[int] = ...,
 ) -> PyGraph: ...

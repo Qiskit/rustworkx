@@ -9,12 +9,10 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py, src/tree.rs, and src/steiner_tree.rs
 
-import numpy as np
-
 from .iterators import *
 from .graph import PyGraph
 
-from typing import Optional, List, TypeVar, Callable
+from typing import Optional, TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -31,7 +29,7 @@ def minimum_spanning_tree(
 ) -> PyGraph[_S, _T]: ...
 def steiner_tree(
     graph: PyGraph[_S, _T],
-    terminal_nodes: List[int],
+    terminal_nodes: list[int],
     weight_fn: Callable[[_T], float],
     /,
 ) -> PyGraph[_S, _T]: ...

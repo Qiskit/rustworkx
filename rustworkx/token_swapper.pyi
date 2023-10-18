@@ -12,11 +12,11 @@
 from .iterators import *
 from .graph import PyGraph
 
-from typing import Optional, Dict
+from typing import Optional
 
 def graph_token_swapper(
     graph: PyGraph,
-    mapping: Dict[int, int],
+    mapping: dict[int, int],
     /,
     trials: Optional[int] = ...,
     seed: Optional[int] = ...,

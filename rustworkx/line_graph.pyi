@@ -10,6 +10,5 @@
 # For implementation details, see __init__.py and src/line_graph.rs
 
 from .graph import PyGraph
-from typing import Dict, Tuple
 
-def graph_line_graph(graph: PyGraph, /) -> Tuple[PyGraph, Dict[int, int]]: ...
+def graph_line_graph(graph: PyGraph, /) -> tuple[PyGraph, dict[int, int]]: ...

@@ -13,15 +13,13 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Tuple
-
 def digraph_tensor_product(
     first: PyDiGraph,
     second: PyDiGraph,
     /,
-) -> Tuple[PyDiGraph, ProductNodeMap]: ...
+) -> tuple[PyDiGraph, ProductNodeMap]: ...
 def graph_tensor_product(
     first: PyGraph,
     second: PyGraph,
     /,
-) -> Tuple[PyGraph, ProductNodeMap]: ...
+) -> tuple[PyGraph, ProductNodeMap]: ...

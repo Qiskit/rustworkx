@@ -12,7 +12,7 @@
 from .iterators import *
 from .digraph import PyDiGraph
 
-from typing import Optional, Dict, TypeVar, Tuple, Callable
+from typing import Optional, TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -21,19 +21,19 @@ def hits(
     graph: PyDiGraph[_S, _T],
     /,
     weight_fn: Optional[Callable[[_T], float]] = ...,
-    nstart: Optional[Dict[int, float]] = ...,
+    nstart: Optional[dict[int, float]] = ...,
     tol: Optional[float] = ...,
     max_iter: Optional[int] = ...,
     normalized: Optional[bool] = ...,
-) -> Tuple[CentralityMapping, CentralityMapping]: ...
+) -> tuple[CentralityMapping, CentralityMapping]: ...
 def pagerank(
     graph: PyDiGraph[_S, _T],
     /,
     alpha: Optional[float] = ...,
     weight_fn: Optional[Callable[[_T], float]] = ...,
-    nstart: Optional[Dict[int, float]] = ...,
-    personalization: Optional[Dict[int, float]] = ...,
+    nstart: Optional[dict[int, float]] = ...,
+    personalization: Optional[dict[int, float]] = ...,
     tol: Optional[float] = ...,
     max_iter: Optional[int] = ...,
-    dangling: Optional[Dict[int, float]] = ...,
+    dangling: Optional[dict[int, float]] = ...,
 ) -> CentralityMapping: ...

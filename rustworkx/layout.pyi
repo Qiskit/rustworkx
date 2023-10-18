@@ -13,74 +13,74 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, Set, List, Dict, TypeVar, Tuple, Callable
+from typing import Optional, TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
 
 def digraph_bipartite_layout(
     graph: PyDiGraph,
-    first_nodes: Set[int],
+    first_nodes: set[int],
     /,
     horizontal: Optional[bool] = ...,
     scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
     aspect_ratio: Optional[float] = ...,
 ) -> Pos2DMapping: ...
 def graph_bipartite_layout(
     graph: PyGraph,
-    first_nodes: Set[int],
+    first_nodes: set[int],
     /,
     horizontal: Optional[bool] = ...,
     scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
     aspect_ratio: Optional[float] = ...,
 ) -> Pos2DMapping: ...
 def digraph_circular_layout(
     graph: PyDiGraph,
     /,
     scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
 ) -> Pos2DMapping: ...
 def graph_circular_layout(
     graph: PyGraph,
     /,
     scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
 ) -> Pos2DMapping: ...
 def digraph_random_layout(
     graph: PyDiGraph,
     /,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
     seed: Optional[int] = ...,
 ) -> Pos2DMapping: ...
 def graph_random_layout(
     graph: PyGraph,
     /,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
     seed: Optional[int] = ...,
 ) -> Pos2DMapping: ...
 def digraph_shell_layout(
     graph: PyDiGraph,
     /,
-    nlist: Optional[List[List[int]]] = ...,
+    nlist: Optional[list[list[int]]] = ...,
     rotate: Optional[float] = ...,
     scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
 ) -> Pos2DMapping: ...
 def graph_shell_layout(
     graph: PyGraph,
     /,
-    nlist: Optional[List[List[int]]] = ...,
+    nlist: Optional[list[list[int]]] = ...,
     rotate: Optional[float] = ...,
     scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
 ) -> Pos2DMapping: ...
 def digraph_spiral_layout(
     graph: PyDiGraph,
     /,
     scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
     resolution: Optional[float] = ...,
     equidistant: Optional[bool] = ...,
 ) -> Pos2DMapping: ...
@@ -88,14 +88,14 @@ def graph_spiral_layout(
     graph: PyGraph,
     /,
     scale: Optional[float] = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
     resolution: Optional[float] = ...,
     equidistant: Optional[bool] = ...,
 ) -> Pos2DMapping: ...
 def digraph_spring_layout(
     graph: PyDiGraph[_S, _T],
-    pos: Optional[Dict[int, Tuple[float, float]]] = ...,
-    fixed: Optional[Set[int]] = ...,
+    pos: Optional[dict[int, tuple[float, float]]] = ...,
+    fixed: Optional[set[int]] = ...,
     k: Optional[float] = ...,
     repulsive_exponent: int = ...,
     adaptive_cooling: bool = ...,
@@ -104,14 +104,14 @@ def digraph_spring_layout(
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
     scale: float = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
     seed: Optional[int] = ...,
     /,
 ) -> Pos2DMapping: ...
 def graph_spring_layout(
     graph: PyGraph[_S, _T],
-    pos: Optional[Dict[int, Tuple[float, float]]] = ...,
-    fixed: Optional[Set[int]] = ...,
+    pos: Optional[dict[int, tuple[float, float]]] = ...,
+    fixed: Optional[set[int]] = ...,
     k: Optional[float] = ...,
     repulsive_exponent: int = ...,
     adaptive_cooling: bool = ...,
@@ -120,7 +120,7 @@ def graph_spring_layout(
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: float = ...,
     scale: float = ...,
-    center: Optional[Tuple[float, float]] = ...,
+    center: Optional[tuple[float, float]] = ...,
     seed: Optional[int] = ...,
     /,
 ) -> Pos2DMapping: ...

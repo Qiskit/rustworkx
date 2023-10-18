@@ -13,15 +13,13 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Tuple
-
 def digraph_cartesian_product(
     first: PyDiGraph,
     second: PyDiGraph,
     /,
-) -> Tuple[PyDiGraph, ProductNodeMap]: ...
+) -> tuple[PyDiGraph, ProductNodeMap]: ...
 def graph_cartesian_product(
     first: PyGraph,
     second: PyGraph,
     /,
-) -> Tuple[PyGraph, ProductNodeMap]: ...
+) -> tuple[PyGraph, ProductNodeMap]: ...

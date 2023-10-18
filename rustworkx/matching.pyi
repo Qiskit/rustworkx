@@ -11,7 +11,7 @@
 
 from .graph import PyGraph
 
-from typing import Optional, Set, TypeVar, Tuple, Callable
+from typing import Optional, TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -23,14 +23,14 @@ def max_weight_matching(
     weight_fn: Optional[Callable[[_T], float]] = ...,
     default_weight: int = ...,
     verify_optimum: bool = ...,
-) -> Set[Tuple[int, int]]: ...
+) -> set[tuple[int, int]]: ...
 def is_matching(
     graph: PyGraph,
-    matching: Set[Tuple[int, int]],
+    matching: set[tuple[int, int]],
     /,
 ) -> bool: ...
 def is_maximal_matching(
     graph: PyGraph,
-    matching: Set[Tuple[int, int]],
+    matching: set[tuple[int, int]],
     /,
 ) -> bool: ...
