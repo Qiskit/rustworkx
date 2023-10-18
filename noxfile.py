@@ -14,9 +14,8 @@ deps = [
 
 lint_deps = [
     "black~=22.0",
-    "flake8",
+    "ruff~=0.1",
     "setuptools-rust",
-    "Flake8-pyproject==1.2.3",
 ]
 
 # We define a common base such that -e test triggers a test with the current
@@ -42,7 +41,7 @@ def lint(session):
     session.install(".[all]", "-c", "constraints.txt")
     session.install(*lint_deps)
     session.run("black", "--check", "--diff", "rustworkx", "tests", "retworkx", *session.posargs)
-    session.run("flake8p", "--per-file-ignores='rustworkx/__init__.py':F405,F403", "setup.py", "rustworkx", "retworkx")
+    session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
