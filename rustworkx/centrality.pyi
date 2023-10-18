@@ -13,7 +13,7 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, TypeVar, Callable
+from typing import TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -21,7 +21,7 @@ _T = TypeVar("_T")
 def digraph_eigenvector_centrality(
     graph: PyDiGraph[_S, _T],
     /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     max_iter: int = ...,
     tol: float = ...,
@@ -29,7 +29,7 @@ def digraph_eigenvector_centrality(
 def graph_eigenvector_centrality(
     graph: PyGraph[_S, _T],
     /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     max_iter: int = ...,
     tol: float = ...,
@@ -71,20 +71,20 @@ def graph_closeness_centrality(
 def digraph_katz_centrality(
     graph: PyDiGraph[_S, _T],
     /,
-    alpha: Optional[float] = ...,
-    beta: Optional[float] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: Optional[float] = ...,
-    max_iter: Optional[int] = ...,
-    tol: Optional[float] = ...,
+    alpha: float | None = ...,
+    beta: float | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float | None = ...,
+    max_iter: int | None = ...,
+    tol: float | None = ...,
 ) -> CentralityMapping: ...
 def graph_katz_centrality(
     graph: PyGraph[_S, _T],
     /,
-    alpha: Optional[float] = ...,
-    beta: Optional[float] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    default_weight: Optional[float] = ...,
-    max_iter: Optional[int] = ...,
-    tol: Optional[float] = ...,
+    alpha: float | None = ...,
+    beta: float | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float | None = ...,
+    max_iter: int | None = ...,
+    tol: float | None = ...,
 ) -> CentralityMapping: ...

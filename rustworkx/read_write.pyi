@@ -11,25 +11,25 @@
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, TypeVar, Union, Callable, Any
+from typing import TypeVar, Callable, Any
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
 
-def read_graphml(path: str, /) -> list[Union[PyGraph, PyDiGraph]]: ...
+def read_graphml(path: str, /) -> list[PyGraph | PyDiGraph]: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
     /,
-    path: Optional[str] = ...,
-    graph_attrs: Optional[Callable[[Any], dict[str, str]]] = ...,
-    node_attrs: Optional[Callable[[_S], str]] = ...,
-    edge_attrs: Optional[Callable[[_T], str]] = ...,
-) -> Optional[str]: ...
+    path: str | None = ...,
+    graph_attrs: Callable[[Any], dict[str, str]] | None = ...,
+    node_attrs: Callable[[_S], str] | None = ...,
+    edge_attrs: Callable[[_T], str] | None = ...,
+) -> str | None: ...
 def graph_node_link_json(
     graph: PyGraph[_S, _T],
     /,
-    path: Optional[str] = ...,
-    graph_attrs: Optional[Callable[[Any], dict[str, str]]] = ...,
-    node_attrs: Optional[Callable[[_S], str]] = ...,
-    edge_attrs: Optional[Callable[[_T], str]] = ...,
-) -> Optional[str]: ...
+    path: str | None = ...,
+    graph_attrs: Callable[[Any], dict[str, str]] | None = ...,
+    node_attrs: Callable[[_S], str] | None = ...,
+    edge_attrs: Callable[[_T], str] | None = ...,
+) -> str | None: ...

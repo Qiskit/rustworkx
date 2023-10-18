@@ -12,13 +12,11 @@
 from .iterators import *
 from .graph import PyGraph
 
-from typing import Optional
-
 def graph_token_swapper(
     graph: PyGraph,
     mapping: dict[int, int],
     /,
-    trials: Optional[int] = ...,
-    seed: Optional[int] = ...,
-    parallel_threshold: Optional[int] = ...,
+    trials: int | None = ...,
+    seed: int | None = ...,
+    parallel_threshold: int | None = ...,
 ) -> EdgeList: ...

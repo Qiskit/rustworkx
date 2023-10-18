@@ -14,7 +14,7 @@ from .graph import PyGraph
 from .digraph import PyDiGraph
 from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 
-from typing import Any, Optional, TypeVar, Callable
+from typing import Any, TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -24,38 +24,38 @@ _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor)
 
 def digraph_bfs_search(
     graph: PyDiGraph,
-    source: Optional[int] = ...,
-    visitor: Optional[_BFSVisitor] = ...,
+    source: int | None = ...,
+    visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def graph_bfs_search(
     graph: PyGraph,
-    source: Optional[int] = ...,
-    visitor: Optional[_BFSVisitor] = ...,
+    source: int | None = ...,
+    visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dfs_search(
     graph: PyDiGraph,
-    source: Optional[int] = ...,
-    visitor: Optional[_DFSVisitor] = ...,
+    source: int | None = ...,
+    visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def graph_dfs_search(
     graph: PyGraph,
-    source: Optional[int] = ...,
-    visitor: Optional[_DFSVisitor] = ...,
+    source: int | None = ...,
+    visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
-    source: Optional[int] = ...,
-    weight_fn: Optional[Callable[[Any], float]] = ...,
-    visitor: Optional[_DijkstraVisitor] = ...,
+    source: int | None = ...,
+    weight_fn: Callable[[Any], float] | None = ...,
+    visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
 def graph_dijkstra_search(
     graph: PyGraph,
-    source: Optional[int] = ...,
-    weight_fn: Optional[Callable[[Any], float]] = ...,
-    visitor: Optional[_DijkstraVisitor] = ...,
+    source: int | None = ...,
+    weight_fn: Callable[[Any], float] | None = ...,
+    visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
-def digraph_dfs_edges(graph: PyDiGraph[_S, _T], /, source: Optional[int] = ...) -> EdgeList: ...
-def graph_dfs_edges(graph: PyGraph[_S, _T], /, source: Optional[int] = ...) -> EdgeList: ...
+def digraph_dfs_edges(graph: PyDiGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
+def graph_dfs_edges(graph: PyGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
 def ancestors(graph: PyDiGraph, node: int, /) -> set[int]: ...
 def bfs_predecessors(graph: PyDiGraph, node: int, /) -> BFSPredecessors: ...
 def bfs_successors(graph: PyDiGraph, node: int, /) -> BFSSuccessors: ...

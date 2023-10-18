@@ -13,7 +13,7 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, TypeVar, Callable, Iterator
+from typing import TypeVar, Callable, Iterator
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -22,59 +22,59 @@ def digraph_is_isomorphic(
     first: PyDiGraph[_S, _T],
     second: PyDiGraph[_S, _T],
     /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
-    call_limit: Optional[int] = ...,
+    call_limit: int | None = ...,
 ) -> bool: ...
 def graph_is_isomorphic(
     first: PyGraph[_S, _T],
     second: PyGraph[_S, _T],
     /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
-    call_limit: Optional[int] = ...,
+    call_limit: int | None = ...,
 ) -> bool: ...
 def digraph_is_subgraph_isomorphic(
     first: PyDiGraph[_S, _T],
     second: PyDiGraph[_S, _T],
     /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
     induced: bool = ...,
-    call_limit: Optional[int] = ...,
+    call_limit: int | None = ...,
 ) -> bool: ...
 def graph_is_subgraph_isomorphic(
     first: PyGraph[_S, _T],
     second: PyGraph[_S, _T],
     /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
     induced: bool = ...,
-    call_limit: Optional[int] = ...,
+    call_limit: int | None = ...,
 ) -> bool: ...
 def digraph_vf2_mapping(
     first: PyDiGraph[_S, _T],
     second: PyDiGraph[_S, _T],
     /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
     subgraph: bool = ...,
     induced: bool = ...,
-    call_limit: Optional[int] = ...,
+    call_limit: int | None = ...,
 ) -> Iterator[NodeMap]: ...
 def graph_vf2_mapping(
     first: PyGraph[_S, _T],
     second: PyGraph[_S, _T],
     /,
-    node_matcher: Optional[Callable[[_S, _S], bool]] = ...,
-    edge_matcher: Optional[Callable[[_T, _T], bool]] = ...,
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
     subgraph: bool = ...,
     induced: bool = ...,
-    call_limit: Optional[int] = ...,
+    call_limit: int | None = ...,
 ) -> Iterator[NodeMap]: ...

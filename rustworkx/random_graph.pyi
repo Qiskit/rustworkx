@@ -12,38 +12,36 @@
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional
-
 def directed_gnm_random_graph(
     num_nodes: int,
     num_edges: int,
     /,
-    seed: Optional[int] = ...,
+    seed: int | None = ...,
 ) -> PyDiGraph: ...
 def undirected_gnm_random_graph(
     num_nodes: int,
     num_edges: int,
     /,
-    seed: Optional[int] = ...,
+    seed: int | None = ...,
 ) -> PyGraph: ...
 def directed_gnp_random_graph(
     num_nodes: int,
     probability: float,
     /,
-    seed: Optional[int] = ...,
+    seed: int | None = ...,
 ) -> PyDiGraph: ...
 def undirected_gnp_random_graph(
     num_nodes: int,
     probability: float,
     /,
-    seed: Optional[int] = ...,
+    seed: int | None = ...,
 ) -> PyGraph: ...
 def random_geometric_graph(
     num_nodes: int,
     radius: float,
     /,
     dim: int = ...,
-    pos: Optional[list[list[float]]] = ...,
+    pos: list[list[float]] | None = ...,
     p: float = ...,
-    seed: Optional[int] = ...,
+    seed: int | None = ...,
 ) -> PyGraph: ...

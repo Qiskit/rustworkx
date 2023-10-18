@@ -15,7 +15,7 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import Optional, TypeVar, Callable, Iterator
+from typing import TypeVar, Callable, Iterator
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -31,7 +31,7 @@ def weakly_connected_components(graph: PyDiGraph, /) -> list[set[int]]: ...
 def digraph_adjacency_matrix(
     graph: PyDiGraph[_S, _T],
     /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     null_value: float = ...,
     parallel_edge: str = ...,
@@ -39,55 +39,55 @@ def digraph_adjacency_matrix(
 def graph_adjacency_matrix(
     graph: PyGraph[_S, _T],
     /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     null_value: float = ...,
     parallel_edge: str = ...,
 ) -> np.ndarray: ...
-def cycle_basis(graph: PyGraph, /, root: Optional[int] = ...) -> list[list[int]]: ...
+def cycle_basis(graph: PyGraph, /, root: int | None = ...) -> list[list[int]]: ...
 def articulation_points(graph: PyGraph, /) -> set[int]: ...
 def biconnected_components(graph: PyGraph, /) -> BiconnectedComponents: ...
-def chain_decomposition(graph: PyGraph, /, source: Optional[int] = ...) -> Chains: ...
+def chain_decomposition(graph: PyGraph, /, source: int | None = ...) -> Chains: ...
 def digraph_find_cycle(
     graph: PyDiGraph[_S, _T],
     /,
-    source: Optional[int] = ...,
-) -> Edgelist: ...
-def digraph_complement(graph: PyDiGraph[_S, _T], /) -> PyDiGraph[_S, Optional[_T]]: ...
+    source: int | None = ...,
+) -> EdgeList: ...
+def digraph_complement(graph: PyDiGraph[_S, _T], /) -> PyDiGraph[_S, _T | None]: ...
 def graph_complement(
     graph: PyGraph[_S, _T],
     /,
-) -> PyGraph[_S, Optional[_T]]: ...
+) -> PyGraph[_S, _T | None]: ...
 def digraph_all_simple_paths(
     graph: PyDiGraph,
     origin: int,
     to: int,
     /,
-    min_depth: Optional[int] = ...,
-    cutoff: Optional[int] = ...,
+    min_depth: int | None = ...,
+    cutoff: int | None = ...,
 ) -> list[list[int]]: ...
 def graph_all_simple_paths(
     graph: PyGraph,
     origin: int,
     to: int,
     /,
-    min_depth: Optional[int] = ...,
-    cutoff: Optional[int] = ...,
+    min_depth: int | None = ...,
+    cutoff: int | None = ...,
 ) -> list[list[int]]: ...
 def digraph_all_pairs_all_simple_paths(
     graph: PyDiGraph,
     /,
-    min_depth: Optional[int] = ...,
-    cutoff: Optional[int] = ...,
+    min_depth: int | None = ...,
+    cutoff: int | None = ...,
 ) -> AllPairsMultiplePathMapping: ...
 def graph_all_pairs_all_simple_paths(
     graph: PyGraph,
     /,
-    min_depth: Optional[int] = ...,
-    cutoff: Optional[int] = ...,
+    min_depth: int | None = ...,
+    cutoff: int | None = ...,
 ) -> AllPairsMultiplePathMapping: ...
-def digraph_longest_simple_path(graph: PyDiGraph, /) -> Optional[NodeIndices]: ...
-def graph_longest_simple_path(graph: PyGraph, /) -> Optional[NodeIndices]: ...
+def digraph_longest_simple_path(graph: PyDiGraph, /) -> NodeIndices | None: ...
+def graph_longest_simple_path(graph: PyGraph, /) -> NodeIndices | None: ...
 def digraph_core_number(
     graph: PyDiGraph,
     /,
@@ -99,6 +99,6 @@ def graph_core_number(
 def stoer_wagner_min_cut(
     graph: PyGraph[_S, _T],
     /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-) -> Optional[tuple[float, NodeIndices]]: ...
+    weight_fn: Callable[[_T], float] | None = ...,
+) -> tuple[float, NodeIndices] | None: ...
 def simple_cycles(graph: PyDiGraph, /) -> Iterator[NodeIndices]: ...

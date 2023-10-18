@@ -12,7 +12,7 @@
 from .iterators import *
 from .digraph import PyDiGraph
 
-from typing import Optional, TypeVar, Callable
+from typing import TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -20,20 +20,20 @@ _T = TypeVar("_T")
 def hits(
     graph: PyDiGraph[_S, _T],
     /,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    nstart: Optional[dict[int, float]] = ...,
-    tol: Optional[float] = ...,
-    max_iter: Optional[int] = ...,
-    normalized: Optional[bool] = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    nstart: dict[int, float] | None = ...,
+    tol: float | None = ...,
+    max_iter: int | None = ...,
+    normalized: bool | None = ...,
 ) -> tuple[CentralityMapping, CentralityMapping]: ...
 def pagerank(
     graph: PyDiGraph[_S, _T],
     /,
-    alpha: Optional[float] = ...,
-    weight_fn: Optional[Callable[[_T], float]] = ...,
-    nstart: Optional[dict[int, float]] = ...,
-    personalization: Optional[dict[int, float]] = ...,
-    tol: Optional[float] = ...,
-    max_iter: Optional[int] = ...,
-    dangling: Optional[dict[int, float]] = ...,
+    alpha: float | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    nstart: dict[int, float] | None = ...,
+    personalization: dict[int, float] | None = ...,
+    tol: float | None = ...,
+    max_iter: int | None = ...,
+    dangling: dict[int, float] | None = ...,
 ) -> CentralityMapping: ...

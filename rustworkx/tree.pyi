@@ -12,19 +12,19 @@
 from .iterators import *
 from .graph import PyGraph
 
-from typing import Optional, TypeVar, Callable
+from typing import TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
 
 def minimum_spanning_edges(
     graph: PyGraph[_S, _T],
-    weight_fn: Optional[Callable[[_T], float]] = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
 ) -> WeightedEdgeList: ...
 def minimum_spanning_tree(
     graph: PyGraph[_S, _T],
-    weight_fn: Optional[Callable[[_T], float]] = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
 ) -> PyGraph[_S, _T]: ...
 def steiner_tree(
