@@ -14,10 +14,9 @@
 # https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/tests/test_matching.py
 
 import random
+import unittest
 
-import fixtures
 import networkx
-import testtools
 
 import rustworkx
 
@@ -26,21 +25,14 @@ def match_dict_to_set(match):
     return {(u, v) for (u, v) in set(map(frozenset, match.items()))}
 
 
-class TestMaxWeightMatching(testtools.TestCase):
-    def setUp(self):
-        super().setUp()
-        stdout = self.useFixture(fixtures.StringStream("stdout")).stream
-        self.useFixture(fixtures.MonkeyPatch("sys.stdout", stdout))
-        stderr = self.useFixture(fixtures.StringStream("stderr")).stream
-        self.useFixture(fixtures.MonkeyPatch("sys.stderr", stderr))
-
+class TestMaxWeightMatching(unittest.TestCase):
     def compare_match_sets(self, rx_match, expected_match):
         for (u, v) in rx_match:
             if (u, v) not in expected_match and (v, u) not in expected_match:
                 self.fail(
-                    "Element %s and it's reverse %s not found in "
-                    "expected output.\nrustworkx output: %s\nexpected "
-                    "output: %s" % ((u, v), (v, u), rx_match, expected_match)
+                    f"Element {(u, v)} and it's reverse {(v, u)} not found in "
+                    f"expected output.\nrustworkx output: {rx_match}\nexpected "
+                    f"output: {expected_match}"
                 )
 
     def compare_rx_nx_sets(self, rx_graph, rx_matches, nx_matches, seed, nx_graph):
@@ -61,11 +53,10 @@ class TestMaxWeightMatching(testtools.TestCase):
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
                     print(
-                        "seed %s failed. Element %s and it's "
-                        "reverse %s not found in networkx output.\nrustworkx"
-                        " output: %s\nnetworkx output: %s\nedge list: %s\n"
-                        "falling back to checking for a valid solution"
-                        % (
+                        "seed {} failed. Element {} and it's "
+                        "reverse {} not found in networkx output.\nrustworkx"
+                        " output: {}\nnetworkx output: {}\nedge list: {}\n"
+                        "falling back to checking for a valid solution".format(
                             seed,
                             (u, v),
                             (v, u),

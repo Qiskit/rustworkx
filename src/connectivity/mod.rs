@@ -39,6 +39,7 @@ use crate::iterators::{
 };
 use crate::{EdgeType, StablePyGraph};
 
+use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
@@ -999,4 +1000,59 @@ pub fn chain_decomposition(graph: graph::PyGraph, source: Option<usize>) -> Chai
             })
             .collect(),
     }
+}
+
+/// Return a list of isolates in a :class:`~.PyGraph` object
+///
+/// An isolate is a node without any neighbors meaning it has a degree of 0.
+///
+/// :param PyGraph graph: The input graph to find isolates in
+/// :returns: A list of node indices for isolates in the graph
+/// :rtype: NodeIndices
+#[pyfunction]
+pub fn graph_isolates(graph: graph::PyGraph) -> NodeIndices {
+    NodeIndices {
+        nodes: connectivity::isolates(&graph.graph)
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
+    }
+}
+
+/// Return a list of isolates in a :class:`~.PyGraph` object
+///
+/// An isolate is a node without any neighbors meaning it has an in-degree
+/// and out-degree of 0.
+///
+/// :param PyGraph graph: The input graph to find isolates in
+/// :returns: A list of node indices for isolates in the graph
+/// :rtype: NodeIndices
+#[pyfunction]
+pub fn digraph_isolates(graph: digraph::PyDiGraph) -> NodeIndices {
+    NodeIndices {
+        nodes: connectivity::isolates(&graph.graph)
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
+    }
+}
+
+/// Determine if a given graph is bipartite
+///
+/// :param PyGraph graph: The graph to check if it's bipartite
+/// :returns: ``True`` if the graph is bipartite and ``False`` if it is not
+/// :rtype: bool
+#[pyfunction]
+pub fn graph_is_bipartite(graph: graph::PyGraph) -> bool {
+    two_color(&graph.graph).is_some()
+}
+
+/// Determine if a given graph is bipartite
+///
+/// :param PyDiGraph graph: The graph to check if it's bipartite
+/// :returns: ``True`` if the graph is bipartite and ``False`` if it is not
+/// :rtype: bool
+#[pyfunction]
+pub fn digraph_is_bipartite(graph: digraph::PyDiGraph) -> bool {
+    two_color(&graph.graph).is_some()
 }

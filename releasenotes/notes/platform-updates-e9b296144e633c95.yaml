@@ -1,0 +1,26 @@
+---
+features:
+  - |
+    Added support for musl Linux platforms on x86_64 and aarch64 at :ref:`tier-3`.
+upgrade:
+  - |
+    Support for the Linux ppc64le pllatform has changed from tier 3 to tier 4
+    (as documented in :ref:`platform-suppport`). This is a result of no longer
+    being able to run tests during the pre-compiled wheel publishing jobs due
+    to constraints in the available CI infrastructure. There hopefully
+    shouldn't be any meaningful impact resulting from this change, but as there
+    are no longer tests being run to validate the binaries prior to publishing
+    them there are no longer guarantees that the wheels for ppc64le are fully
+    functional (although the likelihood they are is still high as it works on
+    other platforms). If any issues are encountered with ppc64le Linux please
+    open an issue.
+  - |
+    For macOS the minimum version of macOS is now 10.12. Previously, the
+    precompiled binary wheel packages for macOS x86_64 were published with
+    support for >=10.9. However, because of changes in the
+    `support policy <https://blog.rust-lang.org/2023/09/25/Increasing-Apple-Version-Requirements.html>`__
+    for the Rust programming language the minimum version needed to raised
+    to macOS 10.12. If you're using Qiskit on macOS 10.9 you can probably
+    build Qiskit from source while the rustworkx MSRV (minimum supported Rust
+    version) is < 1.74, but the precompiled binaries published to PyPI will
+    only be compatible with macOS >= 10.12.
