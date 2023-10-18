@@ -29,7 +29,7 @@ try:
 except ImportError:
     HAS_MPL = False
 
-SAVE_IMAGES = os.getenv("RETWORKX_TEST_PRESERVE_IMAGES", None)
+SAVE_IMAGES = os.getenv("RUSTWORKX_TEST_PRESERVE_IMAGES", None)
 
 
 def _save_images(fig, path):

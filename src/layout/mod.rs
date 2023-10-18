@@ -249,7 +249,9 @@ pub fn digraph_random_layout(
 /// :returns: The bipartite layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, first_nodes, /, horizontal=False, scale=1,
+#[pyo3(
+    signature=(graph, first_nodes, horizontal=false, scale=1.0, center=None, aspect_ratio=1.33333333333333),
+    text_signature = "(graph, first_nodes, /, horitontal=False, scale=1,
                      center=None, aspect_ratio=1.33333333333333)")]
 pub fn graph_bipartite_layout(
     graph: &graph::PyGraph,
@@ -285,7 +287,9 @@ pub fn graph_bipartite_layout(
 /// :returns: The bipartite layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, first_nodes, /, horizontal=False, scale=1,
+#[pyo3(
+    signature=(graph, first_nodes, horizontal=false, scale=1.0, center=None, aspect_ratio=1.33333333333333),
+    text_signature = "(graph, first_nodes, /, horitontal=False, scale=1,
                      center=None, aspect_ratio=1.33333333333333)")]
 pub fn digraph_bipartite_layout(
     graph: &digraph::PyDiGraph,
@@ -406,7 +410,9 @@ pub fn digraph_shell_layout(
 /// :returns: The spiral layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, scale=1, center=None, resolution=0.35,
+#[pyo3(
+    signature=(graph, scale=1.0, center=None, resolution=0.35, equidistant=false),
+    text_signature = "(graph, /, scale=1, center=None, resolution=0.35,
                      equidistant=False)")]
 pub fn graph_spiral_layout(
     graph: &graph::PyGraph,
@@ -432,7 +438,9 @@ pub fn graph_spiral_layout(
 /// :returns: The spiral layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, scale=1, center=None, resolution=0.35,
+#[pyo3(
+    signature=(graph, scale=1.0, center=None, resolution=0.35, equidistant=false),
+    text_signature = "(graph, /, scale=1, center=None, resolution=0.35,
                      equidistant=False)")]
 pub fn digraph_spiral_layout(
     graph: &digraph::PyDiGraph,
