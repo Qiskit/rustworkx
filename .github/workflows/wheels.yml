@@ -154,6 +154,102 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: wheelhouse/
+  build_wheels_musl_aarch64:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.8'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel==2.16.2
+      - name: Build wheels
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS_LINUX: aarch64
+          CIBW_BEFORE_ALL_LINUX: apk add --no-cache curl gcc && curl https://sh.rustup.rs
+            -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install
+            stable && rustup default stable
+          CIBW_ENVIRONMENT_LINUX: PATH="$PATH:$HOME/.cargo/bin:$HOME/.cargo/env"
+            CARGO_NET_GIT_FETCH_WITH_CLI="true"
+          CIBW_SKIP: cp36-* pp* *win32 *macosx* *manylinux* *686* *s390x* *x86* cp37-*
+            cp311-* cp312-*
+          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
+          CIBW_TEST_REQUIRES: networkx testtools fixtures
+          CIBW_BUILD_FRONTEND: pip
+          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
+          CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-*
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
+  build_wheels_musl_aarch64_part_2:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.8'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel==2.16.2
+      - name: Build wheels
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS_LINUX: aarch64
+          CIBW_BEFORE_ALL_LINUX: apk add --no-cache curl gcc && curl https://sh.rustup.rs
+            -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install
+            stable && rustup default stable
+          CIBW_ENVIRONMENT_LINUX: PATH="$PATH:$HOME/.cargo/bin:$HOME/.cargo/env"
+            CARGO_NET_GIT_FETCH_WITH_CLI="true"
+          CIBW_SKIP: cp36-* pp* *win32 *macosx* *manylinux* *686* *s390x* *x86* cp37-*
+            cp38-* cp39-* cp310-*
+          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
+          CIBW_TEST_REQUIRES: networkx testtools fixtures
+          CIBW_BUILD_FRONTEND: pip
+          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
+          CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-*
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build_wheels_ppc64le:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
