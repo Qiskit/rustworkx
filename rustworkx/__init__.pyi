@@ -63,6 +63,8 @@ from .connectivity import digraph_core_number as digraph_core_number
 from .connectivity import graph_core_number as graph_core_number
 from .connectivity import stoer_wagner_min_cut as stoer_wagner_min_cut
 from .connectivity import simple_cycles as simple_cycles
+from .connectivity import graph_isolates as graph_isolates
+from .connectivity import digraph_isolates as digraph_isolates
 
 from .dag_algo import collect_runs as collect_runs
 from .dag_algo import collect_bicolor_runs as collect_bicolor_runs
