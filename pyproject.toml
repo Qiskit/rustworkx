@@ -7,7 +7,7 @@ line-length = 100
 target-version = ['py38', 'py39', 'py310', 'py311']
 
 [tool.ruff]
-line-length = 100
+line-length = 105 # more lenient than black due to long function signatures
 src = ["rustworkx", "setup.py", "retworkx", "tests"]
 select = [
     "E",   # pycodestyle

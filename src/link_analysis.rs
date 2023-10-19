@@ -85,7 +85,7 @@ use sprs::{CsMat, TriMat};
     )
 )]
 #[pyo3(
-    text_signature = "(graph, /, alpha=0.85, weight_fn=None, nstart=None, personalization=None, tol=1.0e-6, max_iter=100)"
+    text_signature = "(graph, /, alpha=0.85, weight_fn=None, nstart=None, personalization=None, tol=1.0e-6, max_iter=100, dangling=None)"
 )]
 pub fn pagerank(
     py: Python,
