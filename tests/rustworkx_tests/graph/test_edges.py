@@ -142,6 +142,19 @@ class TestEdges(unittest.TestCase):
         graph.add_node("a")
         self.assertEqual([], graph.edge_indices())
 
+    def test_get_index(self):
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        edge_index = graph.add_edge(node_a, node_b, "Edgy?")
+        self.assertEqual(edge_index, graph.get_edge_index(node_a, node_b))
+
+    def test_get_index_no_edge(self):
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        self.assertRaises(rustworkx.NoEdgeBetweenNodes, graph.get_edge_index, node_a, node_b)
+
     def test_add_duplicates(self):
         graph = rustworkx.PyGraph()
         node_a = graph.add_node("a")
