@@ -45,3 +45,15 @@ def random_geometric_graph(
     p: float = ...,
     seed: int | None = ...,
 ) -> PyGraph: ...
+def barabasi_albert_graph(
+    n: int,
+    m: int,
+    seed: int | None = ...,
+    initial_graph: PyGraph | None = ...,
+) -> PyGraph: ...
+def directed_barabasi_albert_graph(
+    n: int,
+    m: int,
+    seed: int | None = ...,
+    initial_graph: PyDiGraph | None = ...,
+) -> PyDiGraph: ...
