@@ -9,6 +9,9 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
+import numpy as np
+import rustworkx.visit as visit
+
 from .rustworkx import *
 from typing import Generic, TypeVar, Any, Callable, Iterator
 
@@ -215,6 +218,9 @@ from .union import graph_union as graph_union
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
+_BFSVisitor = TypeVar("_BFSVisitor", bound=visit.BFSVisitor)
+_DFSVisitor = TypeVar("_DFSVisitor", bound=visit.DFSVisitor)
+_DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=visit.DijkstraVisitor)
 
 class PyDAG(Generic[_S, _T], PyDiGraph[_S, _T]): ...
 
@@ -223,44 +229,44 @@ def distance_matrix(
     parallel_threshold: int = ...,
     as_undirected: bool = ...,
     null_value: float = ...,
-) -> None: ...
+) -> np.ndarray: ...
 def unweighted_average_shortest_path_length(
     graph: PyGraph | PyDiGraph,
     parallel_threshold: int = ...,
     disconnected: bool = ...,
-) -> None: ...
+) -> float: ...
 def adjacency_matrix(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     null_value: float = ...,
-) -> None: ...
+) -> np.ndarray: ...
 def all_simple_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     from_: int,
     to: int,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
-) -> None: ...
+) -> list[list[int]]: ...
 def floyd_warshall(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     parallel_threshold: int = ...,
-) -> None: ...
+) -> AllPairsPathLengthMapping: ...
 def floyd_warshall_numpy(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     parallel_threshold: int = ...,
-) -> None: ...
+) -> np.ndarray: ...
 def astar_shortest_path(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    node,
-    goal_fn,
-    edge_cost_fn: Callable[[_T], float] | None,
-    estimate_cost_fn,
-) -> None: ...
+    node: int,
+    goal_fn: Callable[[_S], bool],
+    edge_cost_fn: Callable[[_T], float],
+    estimate_cost_fn: Callable[[_S], float],
+) -> NodeIndices: ...
 def dijkstra_shortest_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     source: int,
@@ -268,14 +274,14 @@ def dijkstra_shortest_paths(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     as_undirected: bool = ...,
-) -> None: ...
+) -> PathMapping: ...
 def has_path(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int, target: int, as_undirected: bool = ...
-) -> None: ...
+) -> bool: ...
 def all_pairs_dijkstra_shortest_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     edge_cost_fn: Callable[[_T], float] | None,
-) -> None: ...
+) -> AllPairsPathMapping: ...
 def all_pairs_all_simple_paths(
     graph: PyGraph | PyDiGraph,
     min_depth: int | None = ...,
@@ -284,17 +290,21 @@ def all_pairs_all_simple_paths(
 def all_pairs_dijkstra_path_lengths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     edge_cost_fn: Callable[[_T], float] | None,
-) -> None: ...
+) -> AllPairsPathLengthMapping: ...
 def dijkstra_shortest_path_lengths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    node,
+    node: int,
     edge_cost_fn: Callable[[_T], float] | None,
     goal: int | None = ...,
 ) -> PathLengthMapping: ...
 def k_shortest_path_lengths(
-    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], start, k, edge_cost, goal: int | None = ...
-) -> None: ...
-def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> None: ...
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    start: int,
+    k: int,
+    edge_cost: Callable[[_T], float],
+    goal: int | None = ...,
+) -> PathLengthMapping: ...
+def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> EdgeList: ...
 def is_isomorphic(
     first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
@@ -303,20 +313,26 @@ def is_isomorphic(
     id_order: bool = ...,
     call_limit: int | None = ...,
 ) -> bool: ...
-def is_isomorphic_node_match(first, second, matcher, id_order: bool = ...) -> None: ...
+def is_isomorphic_node_match(
+    first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    matcher: Callable[[_S, _S], bool],
+    id_order: bool = ...,
+) -> bool: ...
 def is_subgraph_isomorphic(
     first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    /,
     node_matcher: Callable[[_S, _S], bool] | None = ...,
     edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
     induced: bool = ...,
     call_limit: int | None = ...,
 ) -> bool: ...
-def transitivity(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> None: ...
-def core_number(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> None: ...
-def complement(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> None: ...
+def transitivity(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> float: ...
+def core_number(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> int: ...
+def complement(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]
+) -> PyGraph[_S, _T | None] | PyDiGraph[_S, _T | None]: ...
 def random_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     center: tuple[float, float] | None = ...,
@@ -365,7 +381,9 @@ def spiral_layout(
     resolution: float = ...,
     equidistant: bool = ...,
 ) -> Pos2DMapping: ...
-def num_shortest_paths_unweighted(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source) -> None: ...
+def num_shortest_paths_unweighted(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int
+) -> NodesCountMapping: ...
 def betweenness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     normalized: bool = ...,
@@ -406,13 +424,35 @@ def vf2_mapping(
     induced: bool = ...,
     call_limit: int | None = ...,
 ) -> Iterator[NodeMap]: ...
-def union(first, second, merge_nodes: bool = ..., merge_edges: bool = ...) -> None: ...
-def tensor_product(first, second) -> None: ...
-def cartesian_product(first, second) -> None: ...
-def bfs_search(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source, visitor) -> None: ...
-def dfs_search(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source, visitor) -> None: ...
+def union(
+    first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    merge_nodes: bool = ...,
+    merge_edges: bool = ...,
+) -> PyGraph[_S, _T] | PyDiGraph[_S, _T]: ...
+def tensor_product(
+    first: PyGraph | PyDiGraph,
+    second: PyGraph | PyDiGraph,
+) -> tuple[PyGraph | PyDiGraph, ProductNodeMap]: ...
+def cartesian_product(
+    first: PyGraph | PyDiGraph,
+    second: PyGraph | PyDiGraph,
+) -> tuple[PyGraph | PyDiGraph, ProductNodeMap]: ...
+def bfs_search(
+    graph: PyGraph | PyDiGraph,
+    source: int | None = ...,
+    visitor: _BFSVisitor | None = ...,
+) -> None: ...
+def dfs_search(
+    graph: PyGraph | PyDiGraph,
+    source: int | None = ...,
+    visitor: _DFSVisitor | None = ...,
+) -> None: ...
 def dijkstra_search(
-    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source, weight_fn, visitor
+    graph: PyGraph | PyDiGraph,
+    source: int | None = ...,
+    weight_fn: Callable[[Any], float] | None = ...,
+    visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
 def bellman_ford_shortest_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
@@ -443,7 +483,7 @@ def node_link_json(
     node_attrs: Callable[[_S], str] | None = ...,
     edge_attrs: Callable[[_T], str] | None = ...,
 ) -> str | None: ...
-def longest_simple_path(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> None: ...
-def isolates(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> None: ...
-def two_color(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> None: ...
+def longest_simple_path(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices | None: ...
+def isolates(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices: ...
+def two_color(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> dict[int, int]: ...
 def is_bipartite(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> bool: ...
