@@ -29,7 +29,7 @@ exclude = [
 
 [tool.ruff.per-file-ignores]
 "rustworkx/__init__.py" = ["F405", "F403"]
-"*.pyi" = ["F403", "F405", "PYI001"]
+"*.pyi" = ["F403", "F405", "PYI001", "PYI002"]
 
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux2014"
