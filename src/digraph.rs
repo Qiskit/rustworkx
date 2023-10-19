@@ -757,6 +757,27 @@ impl PyDiGraph {
         Ok(data)
     }
 
+    /// Return the index of an edge between 2 nodes.
+    ///
+    /// If there are parallel edges in the graph, only one edge's index will be returned.
+    ///
+    /// :param int node_a: The source node index to check for an edge
+    /// :param int node_b: The destination node index to check for an edge
+    ///
+    /// :returns: The index of the edge
+    /// :rtype: int
+    /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
+    #[pyo3(text_signature = "(self, node_a, node_b, /)")]
+    pub fn get_edge_index(&self, node_a: usize, node_b: usize) -> PyResult<usize> {
+        let index_a = NodeIndex::new(node_a);
+        let index_b = NodeIndex::new(node_b);
+        let edge_index = match self.graph.find_edge(index_a, index_b) {
+            Some(edge_index) => edge_index,
+            None => return Err(NoEdgeBetweenNodes::new_err("No edge found between nodes")),
+        };
+        Ok(edge_index.index())
+    }
+
     /// Return the edge data for the edge by its given index
     ///
     /// :param int edge_index: The edge index to get the data for
