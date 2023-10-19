@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added two new methods, :meth:`~rustworkx.PyDiGraph.get_edge_index`
+    and :meth:`~rustworkx.PyGraph.get_edge_index`, which add support for finding
+    the index of an edge using its endpoints. The edge returned should be the same as
+    the one modified by `~rustworkx.PyDiGraph.update_edge` and
+    `~rustworkx.PyGraph.update_edge` respectively.
