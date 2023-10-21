@@ -128,9 +128,9 @@ checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 
 [[package]]
 name = "hashbrown"
-version = "0.14.1"
+version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dfda62a12f55daeae5015f81b0baea145391cb4520f86c248fc615d72640d12"
+checksum = "f93e7192158dbcda357bdec5fb5788eebf8bbac027f3f33e719d29135ae84156"
 dependencies = [
  "ahash",
  "allocator-api2",
@@ -166,7 +166,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8adf3ddd720272c6ea8bf59463c04e0f93d0bbf7c5439b691bca2987e0270897"
 dependencies = [
  "equivalent",
- "hashbrown 0.14.1",
+ "hashbrown 0.14.2",
  "rayon",
 ]
 
@@ -431,7 +431,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04e8453b658fe480c3e70c8ed4e3d3ec33eb74988bd186561b0cc66b85c3bc4b"
 dependencies = [
  "cfg-if",
- "hashbrown 0.14.1",
+ "hashbrown 0.14.2",
  "indexmap 2.0.2",
  "indoc",
  "libc",
@@ -604,7 +604,7 @@ version = "0.14.0"
 dependencies = [
  "ahash",
  "fixedbitset",
- "hashbrown 0.14.1",
+ "hashbrown 0.14.2",
  "indexmap 2.0.2",
  "ndarray",
  "ndarray-stats",
@@ -630,7 +630,7 @@ version = "0.14.0"
 dependencies = [
  "ahash",
  "fixedbitset",
- "hashbrown 0.14.1",
+ "hashbrown 0.14.2",
  "indexmap 2.0.2",
  "num-traits",
  "petgraph",
