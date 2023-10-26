@@ -183,11 +183,6 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_BEFORE_ALL_LINUX: apk add --no-cache curl gcc && curl https://sh.rustup.rs
-            -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install
-            stable && rustup default stable
-          CIBW_ENVIRONMENT_LINUX: PATH="$PATH:$HOME/.cargo/bin:$HOME/.cargo/env"
-            CARGO_NET_GIT_FETCH_WITH_CLI="true"
           CIBW_SKIP: cp36-* cp37-*
             cp311-* cp312-*
           CIBW_BUILD_FRONTEND: pip
