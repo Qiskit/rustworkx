@@ -188,12 +188,9 @@ jobs:
             stable && rustup default stable
           CIBW_ENVIRONMENT_LINUX: PATH="$PATH:$HOME/.cargo/bin:$HOME/.cargo/env"
             CARGO_NET_GIT_FETCH_WITH_CLI="true"
-          CIBW_SKIP: cp36-* pp* *win32 *macosx* *manylinux* *686* *s390x* *x86* cp37-*
+          CIBW_SKIP: cp36-* cp37-*
             cp311-* cp312-*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
           CIBW_BUILD_FRONTEND: pip
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-*
       - uses: actions/upload-artifact@v3
         with:
