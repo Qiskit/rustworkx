@@ -404,6 +404,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_shortest_paths))?;
+    // m.add_wrapped(wrap_pyfunction!(digraph_all_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;

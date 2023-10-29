@@ -21,6 +21,7 @@ use std::convert::TryFrom;
 
 use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
 
+use ahash::HashSet;
 use pyo3::prelude::*;
 use pyo3::Python;
 
@@ -35,7 +36,7 @@ use numpy::IntoPyArray;
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
-    astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
+    all_shortest_paths, astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
 };
 
 use crate::iterators::{
@@ -107,6 +108,52 @@ pub fn graph_dijkstra_shortest_paths(
             })
             .collect(),
     })
+}
+
+/// Find all shortest paths between two nodes
+///
+/// This function will generate all possible shortest paths from a source node to a
+/// target using Dijkstra's algorithm.
+///
+/// :param PyGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: A target to find paths to
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :return: List of paths. Each paths are lists of node indices,
+///     starting at ``source`` and ending at ``target``.
+/// :rtype: list
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, target, weight_fn=None, default_weight=1.0),
+    text_signature = "(graph, source, target, /, weight_fn=None, default_weight=1.0)"
+)]
+pub fn graph_all_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: usize,
+    target: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<Vec<Vec<usize>>> {
+    let start = NodeIndex::new(source);
+    let goal = NodeIndex::new(target);
+
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+
+    let paths = (all_shortest_paths(&graph.graph, start, goal, |e| cost_fn.call(py, e.weight()))
+        as PyResult<HashSet<Vec<NodeIndex>>>)?;
+
+    Ok(paths
+        .iter()
+        .map(|v| v.iter().map(|v| v.index()).collect())
+        .collect())
 }
 
 /// Check if a graph has a path between source and target nodes
