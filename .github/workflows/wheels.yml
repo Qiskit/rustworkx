@@ -183,8 +183,8 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_SKIP: *many* cp36-* cp37-* cp311-* cp312-*
-          CIBW_TEST_SKIP: *many* cp37-* cp38-* cp39-* cp310-* cp311-* cp312-*
+          CIBW_SKIP: cp36-* cp37-* cp311-* cp312-* *many*
+          CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-* *many*
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -221,8 +221,8 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_SKIP: *many* cp36-* cp37-* cp38-* cp39-* cp310-*
-          CIBW_TEST_SKIP: *many* cp37-* cp38-* cp39-* cp310-* cp311-* cp312-*
+          CIBW_SKIP: cp36-* cp37-* cp38-* cp39-* cp310-* *many*
+          CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-* *many*
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
