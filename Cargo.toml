@@ -24,7 +24,7 @@ repository = "https://github.com/Qiskit/rustworkx"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-ahash = "0.8.3"
+ahash = "0.8.6"
 fixedbitset = "0.4.2"
 hashbrown = { version = ">=0.13, <0.15", features = ["rayon"] }
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
@@ -51,7 +51,7 @@ num-complex = "0.4"
 num-traits.workspace = true
 numpy.workspace = true
 petgraph.workspace = true
-quick-xml = "0.30"
+quick-xml = "0.31"
 rand.workspace = true
 rand_pcg.workspace = true
 rayon.workspace = true
