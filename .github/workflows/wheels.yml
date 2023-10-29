@@ -183,8 +183,7 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_SKIP: cp36-* cp37-*
-            cp311-* cp312-*
+          CIBW_SKIP: cp36-* cp37-* cp311-* cp312-*
           CIBW_BUILD_FRONTEND: pip
           CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-*
       - uses: actions/upload-artifact@v3
@@ -223,17 +222,8 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_BEFORE_ALL_LINUX: apk add --no-cache curl gcc && curl https://sh.rustup.rs
-            -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install
-            stable && rustup default stable
-          CIBW_ENVIRONMENT_LINUX: PATH="$PATH:$HOME/.cargo/bin:$HOME/.cargo/env"
-            CARGO_NET_GIT_FETCH_WITH_CLI="true"
-          CIBW_SKIP: cp36-* pp* *win32 *macosx* *manylinux* *686* *s390x* *x86* cp37-*
-            cp38-* cp39-* cp310-*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
+          CIBW_SKIP: cp36-* cp37-* cp38-* cp39-* cp310-*
           CIBW_BUILD_FRONTEND: pip
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-*
       - uses: actions/upload-artifact@v3
         with:
