@@ -89,6 +89,61 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         for i in expected:
             self.assertIn(i, paths)
 
+    def test_all_simple_paths_default_min_depth(self):
+        graph = rustworkx.PyGraph()
+        for i in range(6):
+            graph.add_node(i)
+        graph.add_edges_from_no_data(self.edges)
+        paths = rustworkx.graph_all_simple_paths(graph, 0, 5, min_depth=0)
+        expected = [
+            [0, 3, 4, 5],
+            [0, 3, 4, 2, 5],
+            [0, 3, 4, 2, 5],
+            [0, 3, 2, 4, 5],
+            [0, 3, 2, 5],
+            [0, 3, 2, 4, 5],
+            [0, 3, 5],
+            [0, 3, 2, 4, 5],
+            [0, 3, 2, 5],
+            [0, 3, 2, 4, 5],
+            [0, 3, 1, 2, 4, 5],
+            [0, 3, 1, 2, 5],
+            [0, 3, 1, 2, 4, 5],
+            [0, 2, 4, 5],
+            [0, 2, 4, 3, 5],
+            [0, 2, 3, 4, 5],
+            [0, 2, 3, 5],
+            [0, 2, 5],
+            [0, 2, 4, 5],
+            [0, 2, 4, 3, 5],
+            [0, 2, 3, 4, 5],
+            [0, 2, 3, 5],
+            [0, 2, 1, 3, 4, 5],
+            [0, 2, 1, 3, 5],
+            [0, 1, 3, 4, 5],
+            [0, 1, 3, 4, 2, 5],
+            [0, 1, 3, 4, 2, 5],
+            [0, 1, 3, 2, 4, 5],
+            [0, 1, 3, 2, 5],
+            [0, 1, 3, 2, 4, 5],
+            [0, 1, 3, 5],
+            [0, 1, 3, 2, 4, 5],
+            [0, 1, 3, 2, 5],
+            [0, 1, 3, 2, 4, 5],
+            [0, 1, 2, 4, 5],
+            [0, 1, 2, 4, 3, 5],
+            [0, 1, 2, 3, 4, 5],
+            [0, 1, 2, 3, 5],
+            [0, 1, 2, 5],
+            [0, 1, 2, 4, 5],
+            [0, 1, 2, 4, 3, 5],
+            [0, 1, 2, 3, 4, 5],
+            [0, 1, 2, 3, 5],
+        ]
+        self.assertEqual(len(expected), len(paths))
+        for i in expected:
+            self.assertIn(i, paths)
+
     def test_all_simple_paths_with_min_depth(self):
         graph = rustworkx.PyGraph()
         for i in range(6):
