@@ -35,9 +35,7 @@ class TestDijkstraGraph(unittest.TestCase):
         self.graph.add_edge(self.e, self.f, 6)
 
     def test_all_shortest_paths_single(self):
-        paths = rustworkx.graph_all_shortest_paths(
-            self.graph, self.a, self.e, lambda x: float(x)
-        )
+        paths = rustworkx.graph_all_shortest_paths(self.graph, self.a, self.e, lambda x: float(x))
         # a -> d -> e = 23
         # a -> c -> d -> e = 20
         expected = [[self.a, self.c, self.d, self.e]]
@@ -46,9 +44,7 @@ class TestDijkstraGraph(unittest.TestCase):
     def test_all_shortest_paths(self):
         self.graph.update_edge(self.a, self.d, 11)
 
-        paths = rustworkx.graph_all_shortest_paths(
-            self.graph, self.a, self.e, lambda x: float(x)
-        )
+        paths = rustworkx.graph_all_shortest_paths(self.graph, self.a, self.e, lambda x: float(x))
         # a -> d -> e = 20
         # a -> c -> d -> e = 20
         expected = [[self.a, self.d, self.e], [self.a, self.c, self.d, self.e]]
@@ -60,8 +56,7 @@ class TestDijkstraGraph(unittest.TestCase):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         b = g.add_node("B")
-        paths = rustworkx.graph_all_shortest_paths(
-            g, a, b, lambda x: float(x))
+        paths = rustworkx.graph_all_shortest_paths(g, a, b, lambda x: float(x))
         expected = []
         self.assertEqual(expected, paths)
 
