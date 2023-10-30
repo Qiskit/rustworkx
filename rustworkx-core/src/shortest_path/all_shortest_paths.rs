@@ -119,7 +119,7 @@ where
             }
         }
     }
-    return Ok(paths);
+    Ok(paths)
 }
 
 #[cfg(test)]
