@@ -112,7 +112,7 @@ where
                 let mut new_path = curr_path.clone();
                 new_path.insert(0, edge.source());
                 if edge.source() == start {
-                    paths.insert(new_path.clone());
+                    paths.insert(new_path);
                     continue;
                 }
                 queue.push((edge.source(), new_path));
