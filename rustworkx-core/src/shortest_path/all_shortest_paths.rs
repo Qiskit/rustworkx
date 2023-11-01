@@ -17,6 +17,7 @@
 // to be use for the input functions for edge_cost and return any exceptions
 // raised in Python instead of panicking
 
+use std::collections::VecDeque;
 use std::hash::Hash;
 
 use ahash::{HashSet, HashSetExt};
@@ -100,7 +101,8 @@ where
         return Ok(HashSet::default());
     }
     let mut paths = HashSet::new();
-    let mut queue = vec![(goal, vec![goal])];
+    let path = VecDeque::from([goal]);
+    let mut queue = vec![(goal, path)];
     while let Some((curr, curr_path)) = queue.pop() {
         let curr_dist = *scores.get(&curr).unwrap();
         for edge in graph.edges_directed(curr, Incoming) {
@@ -110,9 +112,9 @@ where
             };
             if curr_dist == next_dist + edge_cost(edge)? {
                 let mut new_path = curr_path.clone();
-                new_path.insert(0, edge.source());
+                new_path.push_front(edge.source());
                 if edge.source() == start {
-                    paths.insert(new_path);
+                    paths.insert(new_path.into());
                     continue;
                 }
                 queue.push((edge.source(), new_path));
