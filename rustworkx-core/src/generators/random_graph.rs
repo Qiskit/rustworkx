@@ -395,10 +395,96 @@ where
     Ok(graph)
 }
 
+/// Generate a random bipartite graph.
+///
+/// A bipartite graph is a graph whose nodes can be divided into two disjoint sets,
+/// informally called "left nodes" and "right nodes", so that every edge connects
+/// some left node and some right node.
+///
+/// Given a number `n` of left nodes, a number `m` of right nodes, and a probability `p`,
+/// the algorithm creates a graph with `n + m` nodes. For all the `n * m` possible edges,
+/// each edge is created independently with probability `p`.
+///
+/// Arguments:
+///
+/// * `num_l_nodes` - The number of "left" nodes in the random bipartite graph.
+/// * `num_r_nodes` - The number of "right" nodes in the random bipartite graph.
+/// * `probability` - The probability of creating an edge between two nodes as a float.
+/// * `seed` - An optional seed to use for the random number generator.
+/// * `default_node_weight` - A callable that will return the weight to use
+///     for newly created nodes.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::random_bipartite_graph;
+///
+/// let g: petgraph::graph::DiGraph<(), ()> = random_bipartite_graph(
+///     20,
+///     20,
+///     1.0,
+///     None,
+///     || {()},
+///     || {()},
+/// ).unwrap();
+/// assert_eq!(g.node_count(), 20 + 20);
+/// assert_eq!(g.edge_count(), 20 * 20);
+/// ```
+pub fn random_bipartite_graph<G, T, F, H, M>(
+    num_l_nodes: usize,
+    num_r_nodes: usize,
+    probability: f64,
+    seed: Option<u64>,
+    mut default_node_weight: F,
+    mut default_edge_weight: H,
+) -> Result<G, InvalidInputError>
+where
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + GraphProp,
+    F: FnMut() -> T,
+    H: FnMut() -> M,
+    G::NodeId: Eq + Hash,
+{
+    if num_l_nodes == 0 && num_r_nodes == 0 {
+        return Err(InvalidInputError {});
+    }
+    if !(0.0..=1.0).contains(&probability) {
+        return Err(InvalidInputError {});
+    }
+
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut graph = G::with_capacity(num_l_nodes + num_r_nodes, num_l_nodes + num_r_nodes);
+
+    for _ in 0..num_l_nodes + num_r_nodes {
+        graph.add_node(default_node_weight());
+    }
+
+    let between = Uniform::new(0.0, 1.0);
+    for v in 0..num_l_nodes {
+        for w in 0..num_r_nodes {
+            let random: f64 = between.sample(&mut rng);
+            if random < probability {
+                graph.add_edge(
+                    graph.from_index(v as usize),
+                    graph.from_index((num_l_nodes + w) as usize),
+                    default_edge_weight(),
+                );
+            }
+        }
+    }
+    Ok(graph)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::generators::InvalidInputError;
-    use crate::generators::{gnm_random_graph, gnp_random_graph, random_geometric_graph};
+    use crate::generators::{
+        gnm_random_graph, gnp_random_graph, random_bipartite_graph, random_geometric_graph,
+    };
     use crate::petgraph;
 
     // Test gnp_random_graph
@@ -568,6 +654,71 @@ mod tests {
             Some(vec![vec![0.5, 0.5]]),
             2.0,
             None,
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    // Test random_bipartite_graph
+
+    #[test]
+    fn test_random_bipartite_graph_directed() {
+        let g: petgraph::graph::DiGraph<(), ()> =
+            random_bipartite_graph(10, 10, 0.5, Some(10), || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 20);
+        assert_eq!(g.edge_count(), 57);
+    }
+
+    #[test]
+    fn test_random_bipartite_graph_directed_empty() {
+        let g: petgraph::graph::DiGraph<(), ()> =
+            random_bipartite_graph(5, 10, 0.0, None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 15);
+        assert_eq!(g.edge_count(), 0);
+    }
+
+    #[test]
+    fn test_random_bipartite_graph_directed_complete() {
+        let g: petgraph::graph::DiGraph<(), ()> =
+            random_bipartite_graph(10, 5, 1.0, None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 15);
+        assert_eq!(g.edge_count(), 10 * 5);
+    }
+
+    #[test]
+    fn test_random_bipartite_graph_undirected() {
+        let g: petgraph::graph::UnGraph<(), ()> =
+            random_bipartite_graph(10, 10, 0.5, Some(10), || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 20);
+        assert_eq!(g.edge_count(), 57);
+    }
+
+    #[test]
+    fn test_random_bipartite_graph_undirected_empty() {
+        let g: petgraph::graph::UnGraph<(), ()> =
+            random_bipartite_graph(5, 10, 0.0, None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 15);
+        assert_eq!(g.edge_count(), 0);
+    }
+
+    #[test]
+    fn test_random_bipartite_graph_undirected_complete() {
+        let g: petgraph::graph::UnGraph<(), ()> =
+            random_bipartite_graph(10, 5, 1.0, None, || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 15);
+        assert_eq!(g.edge_count(), 10 * 5);
+    }
+
+    #[test]
+    fn test_random_bipartite_graph_error() {
+        match random_bipartite_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            0,
+            0,
+            3.0,
+            None,
+            || (),
             || (),
         ) {
             Ok(_) => panic!("Returned a non-error"),

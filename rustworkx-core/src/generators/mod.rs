@@ -58,5 +58,6 @@ pub use path_graph::path_graph;
 pub use petersen_graph::petersen_graph;
 pub use random_graph::gnm_random_graph;
 pub use random_graph::gnp_random_graph;
+pub use random_graph::random_bipartite_graph;
 pub use random_graph::random_geometric_graph;
 pub use star_graph::star_graph;
