@@ -19,7 +19,7 @@ use hashbrown::HashMap;
 
 use crate::coloring::two_color;
 use petgraph::prelude::StableGraph;
-use petgraph::stable_graph::{NodeIndex, EdgeIndex};
+use petgraph::stable_graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::{
     EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
@@ -29,7 +29,6 @@ use petgraph::{Incoming, Outgoing, Undirected};
 use std::error::Error;
 use std::fmt;
 use std::fmt::Debug;
-
 
 /// Error returned by bipartite coloring if the graph is not bipartite.
 #[derive(Debug, PartialEq, Eq, Ord, PartialOrd, Copy, Clone)]
@@ -142,6 +141,8 @@ fn other_node(graph: &EdgedGraph, edge_index: EdgeIndex, node_index: NodeIndex) 
 }
 
 /// Returns a set of Euler cycles for a possibly disconnected graph.
+/// It is assumed that every node in the graph has even degree, so such decomposition
+/// exists.
 fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
     let mut cycles: Vec<Vec<EdgeIndex>> = Vec::new();
 
@@ -159,19 +160,19 @@ fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
         while !stack.is_empty() {
             let (last_node_id, last_edge_id) = stack.last().unwrap();
             in_component[last_node_id.index()] = true;
-
-            let new_edge = graph.edges(*last_node_id).next();
-
-            if new_edge.is_none() {
-                if last_edge_id.is_some() {
-                    cycle.push(last_edge_id.unwrap());
+            match graph.edges(*last_node_id).next() {
+                None => {
+                    if last_edge_id.is_some() {
+                        cycle.push(last_edge_id.unwrap());
+                    }
+                    stack.pop();
                 }
-                stack.pop();
-            } else {
-                let new_edge_id = new_edge.unwrap().id();
-                let new_node_id = other_node(&graph, new_edge_id, *last_node_id);
-                stack.push((new_node_id, Some(new_edge_id)));
-                graph.remove_edge(new_edge_id);
+                Some(new_edge_ref) => {
+                    let new_edge_id = new_edge_ref.id();
+                    let new_node_id = other_node(&graph, new_edge_id, *last_node_id);
+                    stack.push((new_node_id, Some(new_edge_id)));
+                    graph.remove_edge(new_edge_id);
+                }
             }
         }
         cycles.push(cycle);
@@ -179,8 +180,6 @@ fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
 
     cycles
 }
-
-
 
 pub fn bipartite_edge_color<G>(
     graph: G,
@@ -363,7 +362,6 @@ where
         return Err(GraphNotBipartite {});
     }
 }
-
 
 fn rbmg_split_into_two(
     g: &RegularBipartiteMultiGraph,
