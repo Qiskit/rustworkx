@@ -18,23 +18,20 @@ use std::hash::Hash;
 use hashbrown::HashMap;
 
 use crate::coloring::two_color;
-use petgraph::data::DataMap;
-use petgraph::graph::{edge_index, Node, NodeIndex, UnGraph};
 use petgraph::prelude::StableGraph;
-use petgraph::stable_graph::EdgeIndex;
+use petgraph::stable_graph::{NodeIndex, EdgeIndex};
 use petgraph::visit::{
     EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
-    NodeIndexable, Visitable,
+    NodeIndexable,
 };
-use petgraph::{Directed, EdgeType, Graph, Incoming, Outgoing, Undirected};
-use rayon_cond::CondIterator::Parallel;
+use petgraph::{Incoming, Outgoing, Undirected};
 use std::error::Error;
 use std::fmt;
 use std::fmt::Debug;
 
-/// Error returned by bipartite coloring if the graph is not bipartite
-/// is impossible
+
+/// Error returned by bipartite coloring if the graph is not bipartite.
 #[derive(Debug, PartialEq, Eq, Ord, PartialOrd, Copy, Clone)]
 pub struct GraphNotBipartite;
 
@@ -45,7 +42,7 @@ impl fmt::Display for GraphNotBipartite {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct EdgeData {
     // multiplicity of the edge
     multiplicity: usize,
@@ -65,17 +62,15 @@ struct RegularBipartiteMultiGraph {
 
 impl RegularBipartiteMultiGraph {
     fn new() -> Self {
-        let graph: EdgedGraph = StableGraph::default();
-
         RegularBipartiteMultiGraph {
-            graph: graph,
+            graph: StableGraph::default(),
             degree: 0,
             l_nodes: vec![],
             r_nodes: vec![],
         }
     }
 
-    fn copy(parent: &RegularBipartiteMultiGraph) -> Self {
+    fn clone(parent: &RegularBipartiteMultiGraph) -> Self {
         RegularBipartiteMultiGraph {
             graph: parent.graph.clone(),
             degree: parent.degree.clone(),
@@ -84,7 +79,7 @@ impl RegularBipartiteMultiGraph {
         }
     }
 
-    fn copy_without_edges(parent: &RegularBipartiteMultiGraph) -> Self {
+    fn clone_without_edges(parent: &RegularBipartiteMultiGraph) -> Self {
         let mut graph_copy: EdgedGraph = parent.graph.clone();
         graph_copy.clear_edges();
         RegularBipartiteMultiGraph {
@@ -128,26 +123,6 @@ impl RegularBipartiteMultiGraph {
         }
         self.degree -= 1;
     }
-
-    fn print(&self) {
-        let nodes: Vec<_> = self.graph.node_indices().collect();
-        let edges: Vec<_> = self.graph.edge_references().collect();
-        println!("===============");
-        println!("degree: {:?}", self.degree);
-        println!("nodes:");
-        for node in nodes {
-            println!("  {:?}", node);
-        }
-        println!("edges:");
-        for edge in edges {
-            println!("  {:?}", edge);
-        }
-        // println!("map: {:?}", self.node_map);
-        // println!("revmap: {:?}", self.rev_node_map);
-        println!("l_nodes: {:?}", self.l_nodes);
-        println!("r_nodes: {:?}", self.r_nodes);
-        println!("===============");
-    }
 }
 
 fn node_degree<G>(graph: &G, node: G::NodeId) -> usize
@@ -160,6 +135,52 @@ where
         graph.edges(node).count()
     }
 }
+
+fn other_node(graph: &EdgedGraph, edge_index: EdgeIndex, node_index: NodeIndex) -> NodeIndex {
+    let (a, b) = graph.edge_endpoints(edge_index).unwrap();
+    return if node_index == a { b } else { a };
+}
+
+/// Returns a set of Euler cycles for a possibly disconnected graph.
+fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
+    let mut cycles: Vec<Vec<EdgeIndex>> = Vec::new();
+
+    let mut graph = input_graph.clone();
+    let mut in_component = vec![false; graph.node_bound()];
+
+    let node_indices: Vec<NodeIndex> = graph.node_identifiers().collect();
+
+    for node_id in node_indices {
+        if in_component[node_id.index()] {
+            continue;
+        }
+        let mut stack: Vec<(NodeIndex, Option<EdgeIndex>)> = vec![(node_id, None)];
+        let mut cycle: Vec<EdgeIndex> = vec![];
+        while !stack.is_empty() {
+            let (last_node_id, last_edge_id) = stack.last().unwrap();
+            in_component[last_node_id.index()] = true;
+
+            let new_edge = graph.edges(*last_node_id).next();
+
+            if new_edge.is_none() {
+                if last_edge_id.is_some() {
+                    cycle.push(last_edge_id.unwrap());
+                }
+                stack.pop();
+            } else {
+                let new_edge_id = new_edge.unwrap().id();
+                let new_node_id = other_node(&graph, new_edge_id, *last_node_id);
+                stack.push((new_node_id, Some(new_edge_id)));
+                graph.remove_edge(new_edge_id);
+            }
+        }
+        cycles.push(cycle);
+    }
+
+    cycles
+}
+
+
 
 pub fn bipartite_edge_color<G>(
     graph: G,
@@ -195,7 +216,6 @@ where
         .map(|node| node_degree(&graph, node))
         .max()
         .unwrap();
-    println!("====> max degree is {:?}", max_degree);
 
     // Add nodes to multi-graph
     // ToDo: add optimization to combine nodes
@@ -259,7 +279,6 @@ where
             continue;
         }
 
-        // println!("max_degree = {:?}, l_index = {:?}, l_degree = {:?}, r_index = {:?}, r_degree = {:?} ", max_degree, l_index, l_degree, r_index, r_degree);
         let multiplicity = min(max_degree - l_degree, max_degree - r_degree);
         rbmg.add_edge(
             rbmg.l_nodes[l_index],
@@ -270,10 +289,7 @@ where
     }
     rbmg.degree = max_degree;
 
-    // rbmg.print();
-
     let coloring = rbmg_edge_color(&rbmg);
-    // println!("Discovered coloring {:?}", coloring);
 
     // Let's build map (NodeIndex, NodeIndex) -> list of colors
     let mut endpoints_to_colors: DictMap<(NodeIndex, NodeIndex), Vec<usize>> =
@@ -285,7 +301,6 @@ where
             } else {
                 (b, a)
             };
-            // println!("a0 = {:?}, b0 = {:?}, colors = {}", a0, b0, color);
             if let Some(colors) = endpoints_to_colors.get_mut(&(*a0, *b0)) {
                 colors.push(color);
             } else {
@@ -293,8 +308,6 @@ where
             }
         }
     }
-    // println!("and the hashmap is:");
-    // println!("{:?}", endpoints_to_colors);
 
     // Iterate over all edges in the original graph...
     let mut edge_coloring: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
@@ -339,7 +352,6 @@ where
         let mut l_nodes: Vec<G::NodeId> = Vec::new();
         let mut r_nodes: Vec<G::NodeId> = Vec::new();
         for (node_id, color) in &two_coloring {
-            // println!("HERE node_id = {:?} and color = {:?}", node_id, color);
             if *color == 0 {
                 l_nodes.push(*node_id);
             } else {
@@ -352,63 +364,6 @@ where
     }
 }
 
-/// Returns a set of Euler cycles for a possibly disconnected graph.
-///
-///
-
-fn other_node(graph: &EdgedGraph, edge_index: EdgeIndex, node_index: NodeIndex) -> NodeIndex {
-    let (node1, node2) = graph.edge_endpoints(edge_index).unwrap();
-    return if node_index == node1 { node2 } else { node1 };
-}
-
-fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
-    let mut cycles: Vec<Vec<EdgeIndex>> = Vec::new();
-
-    let mut graph = input_graph.clone();
-    let mut in_component = vec![false; graph.node_bound()];
-
-    let node_indices: Vec<NodeIndex> = graph.node_identifiers().collect();
-
-    for node_id in node_indices {
-        if in_component[node_id.index()] {
-            continue;
-        }
-        let mut stack: Vec<(NodeIndex, Option<EdgeIndex>)> = vec![(node_id, None)];
-        let mut cycle: Vec<EdgeIndex> = vec![];
-        while !stack.is_empty() {
-            let (last_node_id, last_edge_id) = stack.last().unwrap();
-            in_component[last_node_id.index()] = true;
-
-            // println!("examining node = {:?}, edge = {:?}", last_node_id, last_edge_id);
-
-            let new_edge = graph.edges(*last_node_id).next();
-            // println!("=> new_edge = {:?}", new_edge);
-
-            if new_edge.is_none() {
-                // println!("adding {:?} to cycle", last_edge_id);
-                if last_edge_id.is_some() {
-                    cycle.push(last_edge_id.unwrap());
-                }
-                stack.pop();
-            } else {
-                let new_edge_id = new_edge.unwrap().id();
-                let new_node_id = other_node(&graph, new_edge_id, *last_node_id);
-                stack.push((new_node_id, Some(new_edge_id)));
-                // println!("pushing {:?}, {:?} to stack", new_node_id, new_edge_id);
-
-                // println!("BEFORE REMOVING");
-                // print_graph(&graph);
-                graph.remove_edge(new_edge_id);
-                // println!("AFTER REMOVING");
-                // print_graph(&graph);
-            }
-        }
-        // println!("new cycle = {:?}", cycle);
-        cycles.push(cycle);
-    }
-
-    cycles
-}
 
 fn rbmg_split_into_two(
     g: &RegularBipartiteMultiGraph,
@@ -417,10 +372,10 @@ fn rbmg_split_into_two(
         panic!("Cannot split multi-graph of odd degree.")
     }
 
-    let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::copy_without_edges(&g);
+    let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(&g);
     h1.degree = g.degree.clone() / 2;
 
-    let mut h2: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::copy_without_edges(&g);
+    let mut h2: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(&g);
     h2.degree = g.degree.clone() / 2;
 
     let mut r: EdgedGraph = g.graph.clone();
@@ -445,10 +400,7 @@ fn rbmg_split_into_two(
         }
     }
 
-    // println!("r:");
-    // print_graph(&r);
     let cycles = euler_cycles(&r);
-    // println!("detected cycles = {:?}", cycles);
 
     for cycle in cycles.into_iter() {
         for i in 0..cycle.len() {
@@ -474,12 +426,7 @@ fn rbmg_find_perfect_matching(g: &RegularBipartiteMultiGraph) -> Matching {
     let alpha = t / k;
     let beta = t - k * alpha;
 
-    // println!("rbmg_find_perfect_matching: k = {}, n = {}, m = {}, t = {}, t2 = {}", k, n, m, t, t2);
-
-    // println!("printing g");
-    // g.print();
-
-    let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::copy_without_edges(&g);
+    let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(&g);
     h1.degree = t;
 
     for edge in g.graph.edge_references() {
@@ -496,10 +443,6 @@ fn rbmg_find_perfect_matching(g: &RegularBipartiteMultiGraph) -> Matching {
         h1.add_edge(g.l_nodes[i], g.r_nodes[i], beta, true);
     }
 
-    // println!("printing h1 initially");
-    // println!("============");
-    // h1.print();
-
     // Recursively split until we find a matching
     for _ in 0..t2 {
         let (h2, h3): (RegularBipartiteMultiGraph, RegularBipartiteMultiGraph) =
@@ -515,9 +458,6 @@ fn rbmg_find_perfect_matching(g: &RegularBipartiteMultiGraph) -> Matching {
             .map(|e| e.weight().bad as usize)
             .sum();
         h1 = if bad_h2 <= bad_h3 { h2 } else { h3 };
-        // println!("printing h1 after split");
-        // println!("============");
-        // h1.print();
     }
 
     let mut matching: Matching = Vec::with_capacity(n);
@@ -526,7 +466,6 @@ fn rbmg_find_perfect_matching(g: &RegularBipartiteMultiGraph) -> Matching {
         matching.push((edge.source(), edge.target()));
     }
 
-    // println!("rbmg_find_perfect_matching: matching = {:?}", matching);
     matching
 }
 
@@ -538,7 +477,6 @@ fn rbmg_edge_color_when_power_of_two(g: &RegularBipartiteMultiGraph) -> Vec<Matc
     let mut coloring: Vec<Matching> = Vec::with_capacity(g.degree);
 
     if g.degree == 1 {
-        // println!("degree is 1 ");
         let mut matching: Matching = Vec::with_capacity(g.l_nodes.len());
         for edge in g.graph.edge_references() {
             matching.push((edge.source(), edge.target()));
@@ -562,20 +500,14 @@ fn rbmg_edge_color_when_power_of_two(g: &RegularBipartiteMultiGraph) -> Vec<Matc
 
 fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     // todo: rename to clone, and maybe don't even need to implement clone()
-    let mut g: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::copy(g0);
-
-    // println!("Want to color rbmg");
-    // g.print();
-
+    let mut g: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone(g0);
     let mut coloring: Vec<Matching> = Vec::with_capacity(g.degree);
 
     if g.degree == 0 {
-        // println!("degree is 1 ");
         return coloring;
     }
 
     if g.degree == 1 {
-        // println!("degree is 1 ");
         let mut matching: Matching = Vec::with_capacity(g.l_nodes.len());
         for edge in g.graph.edge_references() {
             matching.push((edge.source(), edge.target()));
@@ -587,17 +519,13 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     let mut odd_degree_matching: Option<Matching> = None;
 
     if g.degree % 2 == 1 {
-        // println!("degree is odd {:?}", g.degree);
         let matching = rbmg_find_perfect_matching(&g);
-        // println!("Ok, for odd degree have matching {:?}", matching);
         g.remove_matching(&matching);
         odd_degree_matching = Some(matching);
     }
 
-    // println!("and now degree is {:?}", g.degree);
-
     // Split graph into two regular bipartite multigraphs of half-degree
-    let (mut h1, mut h2) = rbmg_split_into_two(&g);
+    let (h1, mut h2) = rbmg_split_into_two(&g);
 
     // Recursively color h1
     let h1_coloring = rbmg_edge_color(&h1);
@@ -605,15 +533,13 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     // Transfer some matchings from H1 to H2 to make the degree of H2 to be a power of 2
     let r = h2.degree.next_power_of_two();
     let num_classes_to_move = r - h2.degree;
-    // println!("r = {:?}, num_to_move = {:?}", r, num_classes_to_move);
 
     for i in 0..num_classes_to_move {
         h2.add_matching(&h1_coloring[i]);
     }
-    // println!("check: g0.degree = {:?}, g.degree = {:?}, h2 degree {:?}", g0.degree, g.degree, h2.degree);
 
     // Edge-color h2 by recursive splitting
-    let mut h2_coloring = rbmg_edge_color_when_power_of_two(&h2);
+    let h2_coloring = rbmg_edge_color_when_power_of_two(&h2);
 
     // Now, create the matching
 
@@ -632,83 +558,6 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
         panic!("Wrong output coloring length");
     }
     coloring
-}
-
-fn print_graph(r: &EdgedGraph) {
-    let nodes: Vec<_> = r.node_indices().collect();
-    let edges: Vec<_> = r.edge_references().collect();
-    println!("===============");
-    println!("nodes:");
-    for node in nodes {
-        println!("  {:?}", node);
-    }
-    println!("edges:");
-    // for edge in edges {
-    //     println!("  {:?}", edge);
-    // }
-    // println!("=======");
-}
-
-fn print_original_graph(r: &Graph<(), (), Undirected>) {
-    let nodes: Vec<_> = r.node_indices().collect();
-    let edges: Vec<_> = r.edge_references().collect();
-    println!("===============");
-    println!("nodes:");
-    for node in nodes {
-        println!("  {:?}", node);
-        for edge in r.edges_directed(node, Outgoing) {
-            println!(" => edge (out) {:?}", edge);
-        }
-
-        for edge in r.edges_directed(node, Incoming) {
-            println!(" => edge (in) {:?}", edge);
-        }
-    }
-    let max_degree = r
-        .node_indices()
-        .map(|node| r.edges(node).count())
-        .max()
-        .unwrap();
-    println!("max_degree = {}", max_degree);
-
-    // println!("==============");
-    // println!("edges:");
-    // for edge in edges {
-    //     println!("  {:?}", edge);
-    // }
-    println!("=======");
-}
-
-fn print_original_graph_d(r: &Graph<(), (), Directed>) {
-    let nodes: Vec<_> = r.node_indices().collect();
-    let edges: Vec<_> = r.edge_references().collect();
-    println!("===============");
-    println!("nodes:");
-    for node in nodes {
-        println!("  {:?}", node);
-        for edge in r.edges_directed(node, Outgoing) {
-            println!(" => edge (out) {:?}", edge);
-        }
-
-        for edge in r.edges_directed(node, Incoming) {
-            println!(" => edge (in) {:?}", edge);
-        }
-    }
-    // let max_degree = r.node_indices().map(|node| r.neighbors_undirected(node).count()).max().unwrap();
-    let max_degree = r
-        .node_indices()
-        .map(|node| r.neighbors_undirected(node).count())
-        .max()
-        .unwrap();
-
-    println!("max_degree = {}", max_degree);
-
-    // println!("==============");
-    // println!("edges:");
-    // for edge in edges {
-    //     println!("  {:?}", edge);
-    // }
-    println!("=======");
 }
 
 #[cfg(test)]
@@ -1078,7 +927,7 @@ mod test_bipartite_coloring {
                     let graph: petgraph::graph::UnGraph<(), ()> =
                         petersen_graph(n, k, || (), || ()).unwrap();
                     match if_bipartite_edge_color(&graph) {
-                        Ok(edge_coloring) => panic!("This should error"),
+                        Ok(_) => panic!("This should error"),
                         Err(_) => (),
                     }
                 }
