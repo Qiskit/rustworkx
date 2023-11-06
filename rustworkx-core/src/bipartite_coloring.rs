@@ -716,27 +716,15 @@ mod test_bipartite_coloring {
 
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
-    use petgraph::data::Element::Node;
-    use std::cmp::max;
 
-    use crate::bipartite_coloring::{
-        bipartite_edge_color, euler_cycles, if_bipartite_edge_color, node_degree, print_graph,
-        print_original_graph, EdgedGraph, RegularBipartiteMultiGraph,
-    };
-    use crate::bipartite_coloring::{print_original_graph_d, EdgeData};
-    use crate::generators::random_bipartite_graph;
-    use crate::generators::{heavy_hex_graph, petersen_graph};
     use hashbrown::HashSet;
-    use petgraph::graph::{edge_index, EdgeIndex};
-    use petgraph::prelude::StableGraph;
-    use petgraph::stable_graph::NodeIndex;
-    use petgraph::visit::{
-        EdgeRef, IntoEdgeReferences, IntoEdges, IntoEdgesDirected, IntoNodeIdentifiers,
-        NodeIndexable,
-    };
+
+    use crate::bipartite_coloring::{bipartite_edge_color, if_bipartite_edge_color};
+    use crate::generators::{heavy_hex_graph, petersen_graph, random_bipartite_graph};
+
+    use petgraph::graph::{EdgeIndex, NodeIndex};
+    use petgraph::visit::EdgeRef;
     use petgraph::{Directed, Incoming, Outgoing, Undirected};
-    use std::fmt::Debug;
-    use std::hash::Hash;
 
     // Correctness checking
 
@@ -794,7 +782,8 @@ mod test_bipartite_coloring {
 
         // Check that all edges from a given node have different colors
         for node in graph.node_indices() {
-            let node_degree = graph.edges_directed(node, Incoming).count() + graph.edges_directed(node, Outgoing).count();
+            let node_degree = graph.edges_directed(node, Incoming).count()
+                + graph.edges_directed(node, Outgoing).count();
             let node_colors: HashSet<usize> = graph
                 .edges_directed(node, Incoming)
                 .chain(graph.edges_directed(node, Outgoing))
@@ -1155,11 +1144,7 @@ mod test_bipartite_coloring {
                                 })
                                 .max()
                                 .unwrap();
-                            check_edge_coloring_directed(
-                                &graph,
-                                &edge_coloring,
-                                Some(max_degree),
-                            );
+                            check_edge_coloring_directed(&graph, &edge_coloring, Some(max_degree));
                         }
                         Err(_) => panic!("This should error"),
                     }
