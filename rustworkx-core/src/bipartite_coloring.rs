@@ -24,9 +24,10 @@ use petgraph::prelude::StableGraph;
 use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::{
     EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
+    IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable, Visitable,
 };
-use petgraph::{Graph, Undirected};
+use petgraph::{Directed, EdgeType, Graph, Incoming, Outgoing, Undirected};
 use rayon_cond::CondIterator::Parallel;
 use std::error::Error;
 use std::fmt;
@@ -149,10 +150,21 @@ impl RegularBipartiteMultiGraph {
     }
 }
 
+fn node_degree<G>(graph: &G, node: G::NodeId) -> usize
+where
+    G: GraphBase + GraphProp + IntoEdgesDirected,
+{
+    if graph.is_directed() {
+        graph.edges_directed(node, Incoming).count() + graph.edges_directed(node, Outgoing).count()
+    } else {
+        graph.edges(node).count()
+    }
+}
+
 pub fn bipartite_edge_color<G>(
-    input_graph: G,
-    input_l_nodes: &Vec<G::NodeId>,
-    input_r_nodes: &Vec<G::NodeId>,
+    graph: G,
+    l_nodes: &Vec<G::NodeId>,
+    r_nodes: &Vec<G::NodeId>,
 ) -> DictMap<G::EdgeId, usize>
 where
     G: GraphBase
@@ -161,48 +173,48 @@ where
         + IntoNodeIdentifiers
         + IntoEdges
         + EdgeCount
-        + EdgeIndexable,
+        + EdgeIndexable
+        + IntoNeighbors
+        + GraphProp
+        + IntoEdgesDirected,
     G::NodeId: Eq + Hash,
     G::EdgeId: Eq + Hash,
 {
     let mut rbmg: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::new();
 
-    let mut node_map: HashMap<G::NodeId, NodeIndex> =
-        HashMap::with_capacity(input_graph.node_count());
-    let mut rev_node_map: HashMap<NodeIndex, G::NodeId> =
-        HashMap::with_capacity(input_graph.node_count());
+    let mut node_map: HashMap<G::NodeId, NodeIndex> = HashMap::with_capacity(graph.node_count());
 
-    let input_graph_node_indices: Vec<G::NodeId> = input_graph.node_identifiers().collect();
+    let input_graph_node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
 
-    // Compute maximum degree of a node in input_graph
-    let mut max_degree: usize = 0;
-    for input_node_id in &input_graph_node_indices {
-        let mut node_degree = 0;
-        for edge in input_graph.edges(*input_node_id) {
-            node_degree += 1;
-        }
-        max_degree = max(max_degree, node_degree);
-    }
-    // println!("max degree is {:?}", max_degree);
+    // Maximum degree of a node in the original graph, ignoring direction
+    // fixme! fixme! fixme!
+    //     let max_degree = graph.node_identifiers().map(|node| graph.neighbors_undirected(node).count()).max().unwrap();
+
+    let max_degree = graph
+        .node_identifiers()
+        .map(|node| node_degree(&graph, node))
+        .max()
+        .unwrap();
+    println!("====> max degree is {:?}", max_degree);
+
     // Add nodes to multi-graph
     // ToDo: add optimization to combine nodes
     for input_node_id in &input_graph_node_indices {
         let rbmg_node_id = rbmg.graph.add_node(());
         node_map.insert(*input_node_id, rbmg_node_id);
-        rev_node_map.insert(rbmg_node_id, *input_node_id);
     }
 
     // Set l_nodes and r_nodes
-    for input_node_id in input_l_nodes {
+    for input_node_id in l_nodes {
         rbmg.l_nodes.push(*node_map.get(input_node_id).unwrap());
     }
-    for input_node_id in input_r_nodes {
+    for input_node_id in r_nodes {
         rbmg.r_nodes.push(*node_map.get(input_node_id).unwrap());
     }
 
     // Adds edges (note that input_graph may have multiple edges between the same
     // pair of vertices
-    for edge in input_graph.edge_references() {
+    for edge in graph.edge_references() {
         // todo: endpoints
         let mapped_source = *node_map.get(&edge.source()).unwrap();
         let mapped_target = *node_map.get(&edge.target()).unwrap();
@@ -285,10 +297,9 @@ where
     // println!("{:?}", endpoints_to_colors);
 
     // Iterate over all edges in the original graph...
-    let mut edge_coloring: DictMap<G::EdgeId, usize> =
-        DictMap::with_capacity(input_graph.edge_count());
+    let mut edge_coloring: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
 
-    for edge in input_graph.edge_references() {
+    for edge in graph.edge_references() {
         let a = *node_map.get(&edge.source()).unwrap();
         let b = *node_map.get(&edge.target()).unwrap();
         let (a0, b0) = if a.index() < b.index() {
@@ -298,7 +309,6 @@ where
         };
         let colors = endpoints_to_colors.get_mut(&(a0, b0)).unwrap();
         let last_color = colors.last().unwrap();
-        //EdgeIndexable::to_index(&input_graph, edge.id())
         edge_coloring.insert(edge.id(), *last_color);
         colors.pop();
     }
@@ -318,7 +328,9 @@ where
         + EdgeCount
         + EdgeIndexable
         + IntoNeighborsDirected
-        + GraphProp,
+        + GraphProp
+        // + EdgeType
+        + IntoEdgesDirected,
     G::NodeId: Eq + Hash + Debug,
     G::EdgeId: Eq + Hash,
 {
@@ -334,7 +346,7 @@ where
                 r_nodes.push(*node_id);
             }
         }
-        return Ok(bipartite_edge_color(&input_graph, &l_nodes, &r_nodes));
+        return Ok(bipartite_edge_color(input_graph, &l_nodes, &r_nodes));
     } else {
         return Err(GraphNotBipartite {});
     }
@@ -631,10 +643,10 @@ fn print_graph(r: &EdgedGraph) {
         println!("  {:?}", node);
     }
     println!("edges:");
-    for edge in edges {
-        println!("  {:?}", edge);
-    }
-    println!("=======");
+    // for edge in edges {
+    //     println!("  {:?}", edge);
+    // }
+    // println!("=======");
 }
 
 fn print_original_graph(r: &Graph<(), (), Undirected>) {
@@ -644,30 +656,72 @@ fn print_original_graph(r: &Graph<(), (), Undirected>) {
     println!("nodes:");
     for node in nodes {
         println!("  {:?}", node);
+        for edge in r.edges_directed(node, Outgoing) {
+            println!(" => edge (out) {:?}", edge);
+        }
+
+        for edge in r.edges_directed(node, Incoming) {
+            println!(" => edge (in) {:?}", edge);
+        }
     }
-    println!("edges:");
-    for edge in edges {
-        println!("  {:?}", edge);
+    let max_degree = r
+        .node_indices()
+        .map(|node| r.edges(node).count())
+        .max()
+        .unwrap();
+    println!("max_degree = {}", max_degree);
+
+    // println!("==============");
+    // println!("edges:");
+    // for edge in edges {
+    //     println!("  {:?}", edge);
+    // }
+    println!("=======");
+}
+
+fn print_original_graph_d(r: &Graph<(), (), Directed>) {
+    let nodes: Vec<_> = r.node_indices().collect();
+    let edges: Vec<_> = r.edge_references().collect();
+    println!("===============");
+    println!("nodes:");
+    for node in nodes {
+        println!("  {:?}", node);
+        for edge in r.edges_directed(node, Outgoing) {
+            println!(" => edge (out) {:?}", edge);
+        }
+
+        for edge in r.edges_directed(node, Incoming) {
+            println!(" => edge (in) {:?}", edge);
+        }
     }
+    // let max_degree = r.node_indices().map(|node| r.neighbors_undirected(node).count()).max().unwrap();
+    let max_degree = r
+        .node_indices()
+        .map(|node| r.neighbors_undirected(node).count())
+        .max()
+        .unwrap();
+
+    println!("max_degree = {}", max_degree);
+
+    // println!("==============");
+    // println!("edges:");
+    // for edge in edges {
+    //     println!("  {:?}", edge);
+    // }
     println!("=======");
 }
 
 #[cfg(test)]
 mod test_bipartite_coloring {
-    use petgraph::data::Element::Node;
-    // use crate::bipartite_coloring::greedy_edge_color;
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
+    use petgraph::data::Element::Node;
+    use std::cmp::max;
 
-    // use crate::bipartite_coloring::{bipartite_edge_color, RegularBipartiteMultiGraph};
-
-    use crate::bipartite_coloring::EdgeData;
-    use crate::bipartite_coloring::{
-        bipartite_edge_color, euler_cycles, if_bipartite_edge_color, print_graph,
-        print_original_graph, EdgedGraph, RegularBipartiteMultiGraph,
-    };
-    use crate::generators::petersen_graph;
+    use crate::bipartite_coloring::{bipartite_edge_color, euler_cycles, if_bipartite_edge_color, print_graph, print_original_graph, EdgedGraph, RegularBipartiteMultiGraph, node_degree};
+    use crate::bipartite_coloring::{print_original_graph_d, EdgeData};
     use crate::generators::random_bipartite_graph;
+    use crate::generators::{heavy_hex_graph, petersen_graph};
     use hashbrown::HashSet;
     use petgraph::graph::{edge_index, EdgeIndex};
     use petgraph::prelude::StableGraph;
@@ -675,12 +729,15 @@ mod test_bipartite_coloring {
     use petgraph::visit::{
         EdgeRef, IntoEdgeReferences, IntoEdges, IntoNodeIdentifiers, NodeIndexable,
     };
-    use petgraph::Undirected;
+    use petgraph::{Directed, Incoming, Outgoing, Undirected};
     use std::fmt::Debug;
     use std::hash::Hash;
 
-    fn check_valid_bipatite_edge_coloring<G>(graph: G, colors: &DictMap<G::EdgeId, usize>)
-    where
+    fn check_bipatite_edge_coloring_is_valid<G>(
+        graph: G,
+        colors: &DictMap<G::EdgeId, usize>,
+        opt_max_num_colors: Option<usize>,
+    ) where
         G: NodeIndexable + IntoEdges + IntoNodeIdentifiers,
         G::EdgeId: Eq + Hash + Debug,
     {
@@ -695,7 +752,6 @@ mod test_bipartite_coloring {
         // (i.e. the number of used colors is equal to the degree).
         // Also compute number of colors used and maximum node degree.
         let mut num_colors = 0;
-        let mut max_node_degree = 0;
         let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
         for node in node_indices {
             let mut cur_node_degree = 0;
@@ -714,35 +770,258 @@ mod test_bipartite_coloring {
                     NodeIndexable::to_index(&graph, node)
                 );
             }
-
-            if cur_node_degree > max_node_degree {
-                max_node_degree = cur_node_degree
-            }
         }
 
         println!(
-            "=> checking: max_degree = {:?}, num_colors = {:?}",
-            max_node_degree, num_colors
+            "=> checking:num_colors = {:?}, max_num_colors = {:?}",
+            num_colors, opt_max_num_colors
         );
-        // Check that number of colors used is at most max_node_degree + 1
-        // (note that number of colors is max_color + 1).
-        if max_node_degree < num_colors {
-            panic!(
-                "Problem: too many colors are used ({} colors used, {} max node degree)",
-                num_colors, max_node_degree
-            );
+
+        // Check that number of colors used is within the limit (when specified).
+        if let Some(max_num_colors) = opt_max_num_colors {
+            if num_colors > max_num_colors {
+                panic!(
+                    "The number {} of colors used exceed the allowed number {} of colors.",
+                    num_colors, max_num_colors
+                );
+            }
+        }
+    }
+
+    // Test bipartite_edge_color
+
+    #[test]
+    fn test_simple_graph_undirected() {
+        let edge_list = vec![(0, 1), (0, 2), (0, 3), (1, 4), (2, 5), (3, 6)];
+        let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
+        let l_nodes = vec![
+            NodeIndex::new(0),
+            NodeIndex::new(4),
+            NodeIndex::new(5),
+            NodeIndex::new(6),
+        ];
+        let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
+
+        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 2),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 0),
+            (EdgeIndex::new(3), 1),
+            (EdgeIndex::new(4), 0),
+            (EdgeIndex::new(5), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_simple_graph_directed() {
+        let edge_list = vec![(0, 1), (0, 2), (0, 3), (1, 4), (2, 5), (3, 6)];
+        let graph = Graph::<(), (), Directed>::from_edges(&edge_list);
+        let l_nodes = vec![
+            NodeIndex::new(0),
+            NodeIndex::new(4),
+            NodeIndex::new(5),
+            NodeIndex::new(6),
+        ];
+        let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
+
+        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 2),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 0),
+            (EdgeIndex::new(3), 1),
+            (EdgeIndex::new(4), 0),
+            (EdgeIndex::new(5), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_empty_graph_undirected() {
+        let mut graph = Graph::<(), (), Undirected>::default();
+        let a = graph.add_node(());
+        let b = graph.add_node(());
+        let c = graph.add_node(());
+        let d = graph.add_node(());
+        let l_nodes = vec![a, b];
+        let r_nodes = vec![c, d];
+        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_empty_graph_directed() {
+        let mut graph = Graph::<(), (), Directed>::default();
+        let a = graph.add_node(());
+        let b = graph.add_node(());
+        let c = graph.add_node(());
+        let d = graph.add_node(());
+        let l_nodes = vec![a, b];
+        let r_nodes = vec![c, d];
+        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_bipartite_multiple_edges_undirected() {
+        let edge_list = vec![
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (1, 4),
+            (2, 5),
+            (3, 6),
+            (4, 1),
+            (5, 2),
+        ];
+        let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
+        let l_nodes = vec![
+            NodeIndex::new(0),
+            NodeIndex::new(4),
+            NodeIndex::new(5),
+            NodeIndex::new(6),
+        ];
+        let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
+
+        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 2),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 0),
+            (EdgeIndex::new(3), 1),
+            (EdgeIndex::new(4), 2),
+            (EdgeIndex::new(5), 1),
+            (EdgeIndex::new(6), 0),
+            (EdgeIndex::new(7), 0),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_bipartite_multiple_edges_directed() {
+        let edge_list = vec![
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (1, 4),
+            (2, 5),
+            (3, 6),
+            (4, 1),
+            (5, 2),
+        ];
+        let graph = Graph::<(), (), Directed>::from_edges(&edge_list);
+        let l_nodes = vec![
+            NodeIndex::new(0),
+            NodeIndex::new(4),
+            NodeIndex::new(5),
+            NodeIndex::new(6),
+        ];
+        let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
+
+        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 2),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 0),
+            (EdgeIndex::new(3), 1),
+            (EdgeIndex::new(4), 2),
+            (EdgeIndex::new(5), 1),
+            (EdgeIndex::new(6), 0),
+            (EdgeIndex::new(7), 0),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    // Test if_bipartite_edge_color
+
+    #[test]
+    fn test_if_bipartite_multiple_edges_undirected() {
+        let edge_list = vec![(0, 1), (0, 1), (0, 1), (2, 0), (0, 2)];
+        let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
+        let colors = if_bipartite_edge_color(&graph).unwrap();
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 2),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 0),
+            (EdgeIndex::new(3), 4),
+            (EdgeIndex::new(4), 3),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_if_bipartite_multiple_edges_directed() {
+        let edge_list = vec![(0, 1), (0, 1), (0, 1), (2, 0), (0, 2)];
+        let graph = Graph::<(), (), Directed>::from_edges(&edge_list);
+        let colors = if_bipartite_edge_color(&graph).unwrap();
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 2),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 0),
+            (EdgeIndex::new(3), 4),
+            (EdgeIndex::new(4), 3),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_if_bipartite_heavy_hex_graphs_undirected() {
+        for n in (3..20).step_by(2) {
+            let graph: petgraph::graph::UnGraph<(), ()> =
+                heavy_hex_graph(n, || (), || (), false).unwrap();
+            match if_bipartite_edge_color(&graph) {
+                Ok(edge_coloring) => {
+                    check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
+                }
+                Err(_) => panic!("This should error"),
+            }
         }
     }
 
     #[test]
-    fn test_bipartite_multiple_edges() {
-        println!("Running test5");
-        let edge_list = vec![(0, 1), (0, 2), (0, 3), (1, 4), (2, 5), (3, 6), (4, 1)];
-        let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
-        print_original_graph(&graph);
+    fn test_if_bipartite_heavy_hex_graphs_directed() {
+        for n in (3..20).step_by(2) {
+            let graph: petgraph::graph::DiGraph<(), ()> =
+                heavy_hex_graph(n, || (), || (), false).unwrap();
+            match if_bipartite_edge_color(&graph) {
+                Ok(edge_coloring) => {
+                    check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
+                }
+                Err(_) => panic!("This should error"),
+            }
+        }
+    }
 
-        let output = if_bipartite_edge_color(&graph);
-        println!("FINAL FINAL {:?}", output);
+    #[test]
+    fn test_if_bipartite_heavy_hex_graphs_bidirected() {
+        for n in (3..20).step_by(2) {
+            let graph: petgraph::graph::UnGraph<(), ()> =
+                heavy_hex_graph(n, || (), || (), true).unwrap();
+            match if_bipartite_edge_color(&graph) {
+                Ok(edge_coloring) => {
+                    check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(6));
+                }
+                Err(_) => panic!("This should error"),
+            }
+        }
     }
 
     #[test]
@@ -758,7 +1037,7 @@ mod test_bipartite_coloring {
                     petersen_graph(n, k, || (), || ()).unwrap();
                 match if_bipartite_edge_color(&graph) {
                     Ok(edge_coloring) => {
-                        check_valid_bipatite_edge_coloring(&graph, &edge_coloring);
+                        check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
                     }
                     Err(_) => panic!("This should error"),
                 }
@@ -785,7 +1064,7 @@ mod test_bipartite_coloring {
     }
 
     #[test]
-    fn test_bipartite_random_graphs() {
+    fn test_bipartite_random_graphs_undirected() {
         for num_l_nodes in vec![5, 10, 15, 20] {
             for num_r_nodes in vec![5, 10, 15, 20] {
                 for probability in vec![0.1, 0.3, 0.5, 0.7, 0.9] {
@@ -800,7 +1079,8 @@ mod test_bipartite_coloring {
                     .unwrap();
                     match if_bipartite_edge_color(&graph) {
                         Ok(edge_coloring) => {
-                            check_valid_bipatite_edge_coloring(&graph, &edge_coloring);
+                            let max_degree = graph.node_indices().map(|node| graph.edges(node).count()).max().unwrap();
+                            check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(max_degree));
                         }
                         Err(_) => panic!("This should error"),
                     }
@@ -810,33 +1090,29 @@ mod test_bipartite_coloring {
     }
 
     #[test]
-    fn test_empty_graph() {
-        let mut graph = Graph::<(), (), Undirected>::new_undirected();
-        let a = graph.add_node(());
-        let b = graph.add_node(());
-        let c = graph.add_node(());
-        let d = graph.add_node(());
-        let left = vec![a, b];
-        let right = vec![c, d];
-        let output = bipartite_edge_color(&graph, &left, &right);
-        print_original_graph(&graph);
-        println!("FINAL FINAL {:?}", output);
-    }
-
-    #[test]
-    fn test2() {
-        let edge_list = vec![(0, 1), (0, 2), (0, 3), (1, 4), (2, 5), (3, 6), (4, 1)];
-        let original_graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
-        let left = vec![
-            NodeIndex::new(0),
-            NodeIndex::new(4),
-            NodeIndex::new(5),
-            NodeIndex::new(6),
-        ];
-        let right = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
-
-        let output = bipartite_edge_color(&original_graph, &left, &right);
-        // print_original_graph(&original_graph);
-        println!("FINAL FINAL {:?}", output);
+    fn test_bipartite_random_graphs_directed() {
+        for num_l_nodes in vec![5, 10, 15, 20] {
+            for num_r_nodes in vec![5, 10, 15, 20] {
+                for probability in vec![0.1, 0.3, 0.5, 0.7, 0.9] {
+                    let graph: petgraph::graph::DiGraph<(), ()> = random_bipartite_graph(
+                        num_l_nodes,
+                        num_r_nodes,
+                        probability,
+                        Some(10),
+                        || (),
+                        || (),
+                    )
+                    .unwrap();
+                    match if_bipartite_edge_color(&graph) {
+                        Ok(edge_coloring) => {
+                        let max_degree = graph.node_indices().map(|node| graph.edges_directed(node, Incoming).count() + graph.edges_directed(node, Outgoing).count()).max().unwrap();
+                            check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(max_degree));
+                        }
+                        Err(_) => panic!("This should error"),
+                    }
+                }
+            }
+        }
     }
 }
+
