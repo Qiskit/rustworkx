@@ -713,12 +713,16 @@ fn print_original_graph_d(r: &Graph<(), (), Directed>) {
 
 #[cfg(test)]
 mod test_bipartite_coloring {
+
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
     use petgraph::data::Element::Node;
     use std::cmp::max;
 
-    use crate::bipartite_coloring::{bipartite_edge_color, euler_cycles, if_bipartite_edge_color, print_graph, print_original_graph, EdgedGraph, RegularBipartiteMultiGraph, node_degree};
+    use crate::bipartite_coloring::{
+        bipartite_edge_color, euler_cycles, if_bipartite_edge_color, node_degree, print_graph,
+        print_original_graph, EdgedGraph, RegularBipartiteMultiGraph,
+    };
     use crate::bipartite_coloring::{print_original_graph_d, EdgeData};
     use crate::generators::random_bipartite_graph;
     use crate::generators::{heavy_hex_graph, petersen_graph};
@@ -727,63 +731,92 @@ mod test_bipartite_coloring {
     use petgraph::prelude::StableGraph;
     use petgraph::stable_graph::NodeIndex;
     use petgraph::visit::{
-        EdgeRef, IntoEdgeReferences, IntoEdges, IntoNodeIdentifiers, NodeIndexable,
+        EdgeRef, IntoEdgeReferences, IntoEdges, IntoEdgesDirected, IntoNodeIdentifiers,
+        NodeIndexable,
     };
     use petgraph::{Directed, Incoming, Outgoing, Undirected};
     use std::fmt::Debug;
     use std::hash::Hash;
 
-    fn check_bipatite_edge_coloring_is_valid<G>(
-        graph: G,
-        colors: &DictMap<G::EdgeId, usize>,
+    // Correctness checking
+
+    fn check_edge_coloring_undirected(
+        graph: &Graph<(), (), Undirected>,
+        colors: &DictMap<EdgeIndex, usize>,
         opt_max_num_colors: Option<usize>,
-    ) where
-        G: NodeIndexable + IntoEdges + IntoNodeIdentifiers,
-        G::EdgeId: Eq + Hash + Debug,
-    {
+    ) {
         // Check that every edge has valid color
         for edge in graph.edge_references() {
             if !colors.contains_key(&edge.id()) {
-                panic!("Problem: edge {:?} has no color assigned.", &edge.id());
+                panic!("Edge {:?} has no color assigned.", &edge.id());
             }
         }
 
-        // Check that for every node all of its edges have different colors
-        // (i.e. the number of used colors is equal to the degree).
-        // Also compute number of colors used and maximum node degree.
-        let mut num_colors = 0;
-        let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
-        for node in node_indices {
-            let mut cur_node_degree = 0;
-            let mut used_colors: HashSet<usize> = HashSet::new();
-            for edge in graph.edges(node) {
-                let color = colors.get(&edge.id()).unwrap();
-                used_colors.insert(*color);
-                cur_node_degree += 1;
-                if num_colors < *color + 1 {
-                    num_colors = *color + 1;
-                }
-            }
-            if used_colors.len() < cur_node_degree {
-                panic!(
-                    "Problem: node {:?} does not have enough colors.",
-                    NodeIndexable::to_index(&graph, node)
-                );
+        // Check that all edges from a given node have different colors
+        for node in graph.node_indices() {
+            let node_degree = graph.edges(node).count();
+            let node_colors: HashSet<usize> = graph
+                .edges(node)
+                .map(|edge| *colors.get(&edge.id()).unwrap())
+                .collect();
+            if node_colors.len() != node_degree {
+                panic!("Node {:?} does not have correct number of colors.", node);
             }
         }
 
-        println!(
-            "=> checking:num_colors = {:?}, max_num_colors = {:?}",
-            num_colors, opt_max_num_colors
-        );
-
-        // Check that number of colors used is within the limit (when specified).
+        // Check that number of colors used is within the limit (when specified)
         if let Some(max_num_colors) = opt_max_num_colors {
-            if num_colors > max_num_colors {
-                panic!(
-                    "The number {} of colors used exceed the allowed number {} of colors.",
-                    num_colors, max_num_colors
-                );
+            let max_color_used = graph
+                .edge_references()
+                .map(|edge| *colors.get(&edge.id()).unwrap())
+                .max();
+            let num_colors_used = match max_color_used {
+                Some(c) => c + 1,
+                None => 0,
+            };
+            if num_colors_used > max_num_colors {
+                panic!("The number of colors exceeds the specified number of colors.");
+            }
+        }
+    }
+
+    fn check_edge_coloring_directed(
+        graph: &Graph<(), (), Directed>,
+        colors: &DictMap<EdgeIndex, usize>,
+        opt_max_num_colors: Option<usize>,
+    ) {
+        // Check that every edge has valid color
+        for edge in graph.edge_references() {
+            if !colors.contains_key(&edge.id()) {
+                panic!("Edge {:?} has no color assigned.", &edge.id());
+            }
+        }
+
+        // Check that all edges from a given node have different colors
+        for node in graph.node_indices() {
+            let node_degree = graph.edges_directed(node, Incoming).count() + graph.edges_directed(node, Outgoing).count();
+            let node_colors: HashSet<usize> = graph
+                .edges_directed(node, Incoming)
+                .chain(graph.edges_directed(node, Outgoing))
+                .map(|edge| *colors.get(&edge.id()).unwrap())
+                .collect();
+            if node_colors.len() != node_degree {
+                panic!("Node {:?} does not have correct number of colors.", node);
+            }
+        }
+
+        // Check that number of colors used is within the limit (when specified)
+        if let Some(max_num_colors) = opt_max_num_colors {
+            let max_color_used = graph
+                .edge_references()
+                .map(|edge| *colors.get(&edge.id()).unwrap())
+                .max();
+            let num_colors_used = match max_color_used {
+                Some(c) => c + 1,
+                None => 0,
+            };
+            if num_colors_used > max_num_colors {
+                panic!("The number of colors exceeds the specified number of colors.");
             }
         }
     }
@@ -989,7 +1022,8 @@ mod test_bipartite_coloring {
                 heavy_hex_graph(n, || (), || (), false).unwrap();
             match if_bipartite_edge_color(&graph) {
                 Ok(edge_coloring) => {
-                    check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
+                    check_edge_coloring_undirected(&graph, &edge_coloring, Some(3));
+                    // check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
                 }
                 Err(_) => panic!("This should error"),
             }
@@ -1003,7 +1037,7 @@ mod test_bipartite_coloring {
                 heavy_hex_graph(n, || (), || (), false).unwrap();
             match if_bipartite_edge_color(&graph) {
                 Ok(edge_coloring) => {
-                    check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
+                    check_edge_coloring_directed(&graph, &edge_coloring, Some(3));
                 }
                 Err(_) => panic!("This should error"),
             }
@@ -1017,7 +1051,7 @@ mod test_bipartite_coloring {
                 heavy_hex_graph(n, || (), || (), true).unwrap();
             match if_bipartite_edge_color(&graph) {
                 Ok(edge_coloring) => {
-                    check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(6));
+                    check_edge_coloring_undirected(&graph, &edge_coloring, Some(6));
                 }
                 Err(_) => panic!("This should error"),
             }
@@ -1037,7 +1071,7 @@ mod test_bipartite_coloring {
                     petersen_graph(n, k, || (), || ()).unwrap();
                 match if_bipartite_edge_color(&graph) {
                     Ok(edge_coloring) => {
-                        check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
+                        check_edge_coloring_undirected(&graph, &edge_coloring, Some(3));
                     }
                     Err(_) => panic!("This should error"),
                 }
@@ -1079,8 +1113,16 @@ mod test_bipartite_coloring {
                     .unwrap();
                     match if_bipartite_edge_color(&graph) {
                         Ok(edge_coloring) => {
-                            let max_degree = graph.node_indices().map(|node| graph.edges(node).count()).max().unwrap();
-                            check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(max_degree));
+                            let max_degree = graph
+                                .node_indices()
+                                .map(|node| graph.edges(node).count())
+                                .max()
+                                .unwrap();
+                            check_edge_coloring_undirected(
+                                &graph,
+                                &edge_coloring,
+                                Some(max_degree),
+                            );
                         }
                         Err(_) => panic!("This should error"),
                     }
@@ -1105,8 +1147,19 @@ mod test_bipartite_coloring {
                     .unwrap();
                     match if_bipartite_edge_color(&graph) {
                         Ok(edge_coloring) => {
-                        let max_degree = graph.node_indices().map(|node| graph.edges_directed(node, Incoming).count() + graph.edges_directed(node, Outgoing).count()).max().unwrap();
-                            check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(max_degree));
+                            let max_degree = graph
+                                .node_indices()
+                                .map(|node| {
+                                    graph.edges_directed(node, Incoming).count()
+                                        + graph.edges_directed(node, Outgoing).count()
+                                })
+                                .max()
+                                .unwrap();
+                            check_edge_coloring_directed(
+                                &graph,
+                                &edge_coloring,
+                                Some(max_degree),
+                            );
                         }
                         Err(_) => panic!("This should error"),
                     }
@@ -1115,4 +1168,3 @@ mod test_bipartite_coloring {
         }
     }
 }
-
