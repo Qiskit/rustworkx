@@ -456,8 +456,14 @@ where
     let max_degree = graph
         .node_identifiers()
         .map(|node| node_degree(&graph, node))
-        .max()
-        .unwrap();
+        .max();
+
+    if max_degree.is_none() {
+        // Corner-case that the graph has no nodes
+        let edge_coloring: DictMap<G::EdgeId, usize> = DictMap::new();
+        return edge_coloring;
+    }
+    let max_degree = max_degree.unwrap();
 
     // Add nodes to multi-graph
     // ToDo: add optimization to combine nodes
@@ -581,7 +587,7 @@ where
 ///
 /// The input to the algorithm is a graph. If the graph is bipartite, the
 /// output is an assignment of colors to the edges of the graph so that
-/// no two incident edges have the same color. The The algorithm runs in
+/// no two incident edges have the same color. The algorithm runs in
 /// time `O (m log m)`, where `m` is the number of edges of the graph.
 /// If the graph is not bipartite, `GraphNotBipartite` is returned instead.
 ///
@@ -797,6 +803,32 @@ mod test_bipartite_coloring {
 
     #[test]
     fn test_empty_graph_undirected() {
+        let graph = Graph::<(), (), Undirected>::default();
+        let l_nodes = vec![];
+        let r_nodes = vec![];
+        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_empty_graph_directed() {
+        let graph = Graph::<(), (), Directed>::default();
+        let l_nodes = vec![];
+        let r_nodes = vec![];
+        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_edgeless_graph_undirected() {
         let mut graph = Graph::<(), (), Undirected>::default();
         let a = graph.add_node(());
         let b = graph.add_node(());
@@ -810,7 +842,7 @@ mod test_bipartite_coloring {
     }
 
     #[test]
-    fn test_empty_graph_directed() {
+    fn test_edgeless_graph_directed() {
         let mut graph = Graph::<(), (), Directed>::default();
         let a = graph.add_node(());
         let b = graph.add_node(());
