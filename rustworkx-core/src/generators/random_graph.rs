@@ -469,8 +469,8 @@ where
             let random: f64 = between.sample(&mut rng);
             if random < probability {
                 graph.add_edge(
-                    graph.from_index(v as usize),
-                    graph.from_index((num_l_nodes + w) as usize),
+                    graph.from_index(v),
+                    graph.from_index(num_l_nodes + w),
                     default_edge_weight(),
                 );
             }

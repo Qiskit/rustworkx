@@ -71,7 +71,7 @@ impl RegularBipartiteMultiGraph {
     fn clone(parent: &RegularBipartiteMultiGraph) -> Self {
         RegularBipartiteMultiGraph {
             graph: parent.graph.clone(),
-            degree: parent.degree.clone(),
+            degree: parent.degree,
             l_nodes: parent.l_nodes.clone(),
             r_nodes: parent.r_nodes.clone(),
         }
@@ -89,13 +89,15 @@ impl RegularBipartiteMultiGraph {
     }
 
     fn add_edge(&mut self, a: NodeIndex, b: NodeIndex, multiplicity: usize, bad: bool) {
-        let edge = self.graph.find_edge(a, b);
-        if edge.is_some() {
-            let mut edge_data = self.graph.edge_weight_mut(edge.unwrap()).unwrap();
-            edge_data.multiplicity += multiplicity;
-        } else {
-            let edge_data = EdgeData { multiplicity, bad };
-            self.graph.add_edge(a, b, edge_data);
+        match self.graph.find_edge(a, b) {
+            Some(edge) => {
+                let mut edge_data = self.graph.edge_weight_mut(edge).unwrap();
+                edge_data.multiplicity += multiplicity;
+            }
+            None => {
+                let edge_data = EdgeData { multiplicity, bad };
+                self.graph.add_edge(a, b, edge_data);
+            }
         }
     }
 
@@ -210,7 +212,7 @@ fn rbmg_split_into_two(
                 edge.target(),
                 EdgeData {
                     multiplicity: 1,
-                    bad: bad,
+                    bad,
                 },
             );
         }
@@ -642,9 +644,9 @@ where
                 r_nodes.push(*node_id);
             }
         }
-        return Ok(bipartite_edge_color(input_graph, &l_nodes, &r_nodes));
+        Ok(bipartite_edge_color(input_graph, &l_nodes, &r_nodes))
     } else {
-        return Err(GraphNotBipartite {});
+        Err(GraphNotBipartite {})
     }
 }
 
