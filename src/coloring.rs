@@ -13,7 +13,7 @@
 use crate::GraphNotBipartite;
 use crate::{digraph, graph};
 
-use rustworkx_core::bipartite_coloring::{bipartite_edge_color, if_bipartite_edge_color};
+use rustworkx_core::bipartite_coloring::if_bipartite_edge_color;
 use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, two_color};
 
 use pyo3::prelude::*;
