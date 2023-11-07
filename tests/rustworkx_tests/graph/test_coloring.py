@@ -194,7 +194,8 @@ class TestBipartiteGraphEdgeColoring(unittest.TestCase):
         self.assertEqual({0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 0, 7: 1}, edge_colors)
 
     def test_heavy_hex_graph(self):
-        """Test that we color the heavy hex with exactly 3 colors (it's bipartite and has max degree 3)."""
+        """Test that we color the heavy hex with exactly 3 colors (it's bipartite
+        and has max degree 3)."""
         graph = rustworkx.generators.heavy_hex_graph(9)
         edge_colors = rustworkx.rustworkx.graph_if_bipartite_edge_color(graph)
         num_colors = max(edge_colors.values()) + 1
