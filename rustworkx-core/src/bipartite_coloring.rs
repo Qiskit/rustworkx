@@ -138,7 +138,11 @@ where
 
 fn other_node(graph: &EdgedGraph, edge_index: EdgeIndex, node_index: NodeIndex) -> NodeIndex {
     let (a, b) = graph.edge_endpoints(edge_index).unwrap();
-    return if node_index == a { b } else { a };
+    if node_index == a {
+        b
+    } else {
+        a
+    }
 }
 
 /// Returns a set of Euler cycles for a possibly disconnected graph.
@@ -190,11 +194,11 @@ fn rbmg_split_into_two(
         panic!("Cannot split multi-graph of odd degree.")
     }
 
-    let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(&g);
-    h1.degree = g.degree.clone() / 2;
+    let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(g);
+    h1.degree = g.degree / 2;
 
-    let mut h2: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(&g);
-    h2.degree = g.degree.clone() / 2;
+    let mut h2: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(g);
+    h2.degree = g.degree / 2;
 
     let mut r: EdgedGraph = g.graph.clone();
     r.clear_edges();
@@ -220,8 +224,8 @@ fn rbmg_split_into_two(
 
     let cycles = euler_cycles(&r);
     for cycle in cycles.into_iter() {
-        for i in 0..cycle.len() {
-            let (source, target) = r.edge_endpoints(cycle[i]).unwrap();
+        for (i, edge) in cycle.iter().enumerate() {
+            let (source, target) = r.edge_endpoints(*edge).unwrap();
             let bad = r.edge_weight(cycle[i]).unwrap().bad;
             if i % 2 == 0 {
                 h1.add_edge(source, target, 1, bad);
@@ -249,7 +253,7 @@ fn rbmg_find_perfect_matching(g: &RegularBipartiteMultiGraph) -> Matching {
     let alpha = t / k;
     let beta = t - k * alpha;
 
-    let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(&g);
+    let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(g);
     h1.degree = t;
 
     for edge in g.graph.edge_references() {
@@ -311,7 +315,7 @@ fn rbmg_edge_color_when_power_of_two(g: &RegularBipartiteMultiGraph) -> Vec<Matc
         return coloring;
     }
 
-    let (h1, h2) = rbmg_split_into_two(&g);
+    let (h1, h2) = rbmg_split_into_two(g);
     let mut h1_coloring = rbmg_edge_color_when_power_of_two(&h1);
     let mut h2_coloring = rbmg_edge_color_when_power_of_two(&h2);
     coloring.append(&mut h1_coloring);
@@ -375,8 +379,8 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     let r = h2.degree.next_power_of_two();
     let num_classes_to_move = r - h2.degree;
 
-    for i in 0..num_classes_to_move {
-        h2.add_matching(&h1_coloring[i]);
+    for matching in h1_coloring.iter().take(num_classes_to_move) {
+        h2.add_matching(matching);
     }
 
     // Edge-color h2 by recursive splitting
@@ -385,11 +389,11 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     // The matching consists of h2 colors, remaining h1 colors and the removed
     // matching (if had odd degree)
     coloring = h2_coloring;
-    for i in num_classes_to_move..h1_coloring.len() {
-        coloring.push(h1_coloring[i].clone());
+    for matching in h1_coloring.iter().skip(num_classes_to_move) {
+        coloring.push(matching.clone());
     }
-    if odd_degree_matching.is_some() {
-        coloring.push(odd_degree_matching.unwrap());
+    if let Some(matching) = odd_degree_matching {
+        coloring.push(matching);
     }
 
     if coloring.len() != g0.degree {
