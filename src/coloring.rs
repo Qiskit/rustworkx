@@ -10,11 +10,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{digraph, graph};
 use crate::GraphNotBipartite;
+use crate::{digraph, graph};
 
-use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, two_color};
 use rustworkx_core::bipartite_coloring::{bipartite_edge_color, if_bipartite_edge_color};
+use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, two_color};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -161,13 +161,10 @@ pub fn digraph_two_color(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Opt
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_if_bipartite_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    let colors=
-        match if_bipartite_edge_color(&graph.graph) {
-            Ok(colors) => colors,
-            Err(_) => {
-                return Err(GraphNotBipartite::new_err("Graph is not bipartite", ))
-            }
-        };
+    let colors = match if_bipartite_edge_color(&graph.graph) {
+        Ok(colors) => colors,
+        Err(_) => return Err(GraphNotBipartite::new_err("Graph is not bipartite")),
+    };
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
         out_dict.set_item(node.index(), color)?;

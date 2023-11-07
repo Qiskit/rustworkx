@@ -807,10 +807,7 @@ mod test_bipartite_coloring {
         let l_nodes = vec![];
         let r_nodes = vec![];
         let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
-        let expected_colors: DictMap<EdgeIndex, usize> = [
-        ]
-        .into_iter()
-        .collect();
+        let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
 
@@ -820,10 +817,7 @@ mod test_bipartite_coloring {
         let l_nodes = vec![];
         let r_nodes = vec![];
         let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
-        let expected_colors: DictMap<EdgeIndex, usize> = [
-        ]
-        .into_iter()
-        .collect();
+        let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
 
