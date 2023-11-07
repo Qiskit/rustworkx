@@ -21,8 +21,8 @@ use crate::coloring::two_color;
 use petgraph::prelude::StableGraph;
 use petgraph::stable_graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::{
-    EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
+    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
+    IntoEdgesDirected, IntoNodeIdentifiers, NodeCount,
     NodeIndexable,
 };
 use petgraph::{Incoming, Outgoing, Undirected};
@@ -150,7 +150,6 @@ fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
     let mut in_component = vec![false; graph.node_bound()];
 
     let node_indices: Vec<NodeIndex> = graph.node_identifiers().collect();
-
     for node_id in node_indices {
         if in_component[node_id.index()] {
             continue;
@@ -162,8 +161,8 @@ fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
             in_component[last_node_id.index()] = true;
             match graph.edges(*last_node_id).next() {
                 None => {
-                    if last_edge_id.is_some() {
-                        cycle.push(last_edge_id.unwrap());
+                    if let Some(e) = last_edge_id {
+                        cycle.push(*e);
                     }
                     stack.pop();
                 }
@@ -181,188 +180,8 @@ fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
     cycles
 }
 
-pub fn bipartite_edge_color<G>(
-    graph: G,
-    l_nodes: &Vec<G::NodeId>,
-    r_nodes: &Vec<G::NodeId>,
-) -> DictMap<G::EdgeId, usize>
-where
-    G: GraphBase
-        + NodeCount
-        + NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoEdges
-        + EdgeCount
-        + EdgeIndexable
-        + IntoNeighbors
-        + GraphProp
-        + IntoEdgesDirected,
-    G::NodeId: Eq + Hash,
-    G::EdgeId: Eq + Hash,
-{
-    let mut rbmg: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::new();
-
-    let mut node_map: HashMap<G::NodeId, NodeIndex> = HashMap::with_capacity(graph.node_count());
-
-    let input_graph_node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
-
-    // Maximum degree of a node in the original graph, ignoring direction
-    // fixme! fixme! fixme!
-    //     let max_degree = graph.node_identifiers().map(|node| graph.neighbors_undirected(node).count()).max().unwrap();
-
-    let max_degree = graph
-        .node_identifiers()
-        .map(|node| node_degree(&graph, node))
-        .max()
-        .unwrap();
-
-    // Add nodes to multi-graph
-    // ToDo: add optimization to combine nodes
-    for input_node_id in &input_graph_node_indices {
-        let rbmg_node_id = rbmg.graph.add_node(());
-        node_map.insert(*input_node_id, rbmg_node_id);
-    }
-
-    // Set l_nodes and r_nodes
-    for input_node_id in l_nodes {
-        rbmg.l_nodes.push(*node_map.get(input_node_id).unwrap());
-    }
-    for input_node_id in r_nodes {
-        rbmg.r_nodes.push(*node_map.get(input_node_id).unwrap());
-    }
-
-    // Adds edges (note that input_graph may have multiple edges between the same
-    // pair of vertices
-    for edge in graph.edge_references() {
-        // todo: endpoints
-        let mapped_source = *node_map.get(&edge.source()).unwrap();
-        let mapped_target = *node_map.get(&edge.target()).unwrap();
-        rbmg.add_edge(mapped_source, mapped_target, 1, false);
-    }
-
-    // Create additional left or right vertices
-    let n: usize = max(rbmg.l_nodes.len(), rbmg.r_nodes.len());
-
-    while rbmg.l_nodes.len() < n {
-        let new_node_index = rbmg.graph.add_node(());
-        // todo: possibly update reverse node map
-        rbmg.l_nodes.push(new_node_index);
-    }
-
-    while rbmg.r_nodes.len() < n {
-        let new_node_index = rbmg.graph.add_node(());
-        // todo: possibly update reverse node map
-        rbmg.r_nodes.push(new_node_index);
-    }
-
-    let mut l_index = 0;
-    let mut r_index = 0;
-
-    while l_index < n {
-        let l_degree: usize = rbmg
-            .graph
-            .edges(rbmg.l_nodes[l_index])
-            .map(|e| e.weight().multiplicity)
-            .sum();
-        if l_degree == max_degree {
-            l_index += 1;
-            continue;
-        }
-        let r_degree: usize = rbmg
-            .graph
-            .edges(rbmg.r_nodes[r_index])
-            .map(|e| e.weight().multiplicity)
-            .sum();
-        if r_degree == max_degree {
-            r_index += 1;
-            continue;
-        }
-
-        let multiplicity = min(max_degree - l_degree, max_degree - r_degree);
-        rbmg.add_edge(
-            rbmg.l_nodes[l_index],
-            rbmg.r_nodes[r_index],
-            multiplicity,
-            false,
-        );
-    }
-    rbmg.degree = max_degree;
-
-    let coloring = rbmg_edge_color(&rbmg);
-
-    // Let's build map (NodeIndex, NodeIndex) -> list of colors
-    let mut endpoints_to_colors: DictMap<(NodeIndex, NodeIndex), Vec<usize>> =
-        DictMap::with_capacity(rbmg.graph.edge_count());
-    for (color, matching) in coloring.iter().enumerate() {
-        for (a, b) in matching {
-            let (a0, b0) = if a.index() < b.index() {
-                (a, b)
-            } else {
-                (b, a)
-            };
-            if let Some(colors) = endpoints_to_colors.get_mut(&(*a0, *b0)) {
-                colors.push(color);
-            } else {
-                endpoints_to_colors.insert((*a0, *b0), vec![color]);
-            }
-        }
-    }
-
-    // Iterate over all edges in the original graph...
-    let mut edge_coloring: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
-
-    for edge in graph.edge_references() {
-        let a = *node_map.get(&edge.source()).unwrap();
-        let b = *node_map.get(&edge.target()).unwrap();
-        let (a0, b0) = if a.index() < b.index() {
-            (a, b)
-        } else {
-            (b, a)
-        };
-        let colors = endpoints_to_colors.get_mut(&(a0, b0)).unwrap();
-        let last_color = colors.last().unwrap();
-        edge_coloring.insert(edge.id(), *last_color);
-        colors.pop();
-    }
-
-    edge_coloring
-}
-
-pub fn if_bipartite_edge_color<G>(
-    input_graph: G,
-) -> Result<DictMap<G::EdgeId, usize>, GraphNotBipartite>
-where
-    G: GraphBase
-        + NodeCount
-        + NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoEdges
-        + EdgeCount
-        + EdgeIndexable
-        + IntoNeighborsDirected
-        + GraphProp
-        // + EdgeType
-        + IntoEdgesDirected,
-    G::NodeId: Eq + Hash + Debug,
-    G::EdgeId: Eq + Hash,
-{
-    let two_color_result = two_color(&input_graph);
-    if let Some(two_coloring) = two_color_result {
-        let mut l_nodes: Vec<G::NodeId> = Vec::new();
-        let mut r_nodes: Vec<G::NodeId> = Vec::new();
-        for (node_id, color) in &two_coloring {
-            if *color == 0 {
-                l_nodes.push(*node_id);
-            } else {
-                r_nodes.push(*node_id);
-            }
-        }
-        return Ok(bipartite_edge_color(input_graph, &l_nodes, &r_nodes));
-    } else {
-        return Err(GraphNotBipartite {});
-    }
-}
-
+/// Splits a regular bipartite multigraph g of even degree 2k into two regular
+/// bipartte multigraphs h0 and h1 of degree k.
 fn rbmg_split_into_two(
     g: &RegularBipartiteMultiGraph,
 ) -> (RegularBipartiteMultiGraph, RegularBipartiteMultiGraph) {
@@ -399,7 +218,6 @@ fn rbmg_split_into_two(
     }
 
     let cycles = euler_cycles(&r);
-
     for cycle in cycles.into_iter() {
         for i in 0..cycle.len() {
             let (source, target) = r.edge_endpoints(cycle[i]).unwrap();
@@ -415,6 +233,12 @@ fn rbmg_split_into_two(
     (h1, h2)
 }
 
+/// Finds a perfect matching in a regular bipartite multigraph of an arbitrary degree k.
+/// The idea is to add more edges to the multigraph to increase its degree to a power
+/// of 2 (however some of the new edges might be "bad edges" not present in the original
+/// multigraph), and then to find a matching by recursively splitting the multigraph
+/// (always selecting the multigraph with fewer bad edges) until we find a multigraph
+/// of degree 1 without bad edges (it always exists).
 fn rbmg_find_perfect_matching(g: &RegularBipartiteMultiGraph) -> Matching {
     let k = g.degree;
     let n = g.l_nodes.len();
@@ -467,6 +291,9 @@ fn rbmg_find_perfect_matching(g: &RegularBipartiteMultiGraph) -> Matching {
     matching
 }
 
+/// Edge-colors a regular bipartite multigraph whose degree is a power of 2.
+/// This can be done very efficiently by recursively splitting the multigraph
+/// into pairs of multigraphs of half-degree..
 fn rbmg_edge_color_when_power_of_two(g: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     if !g.degree.is_power_of_two() {
         panic!("degree is not power of 2");
@@ -496,8 +323,23 @@ fn rbmg_edge_color_when_power_of_two(g: &RegularBipartiteMultiGraph) -> Vec<Matc
     coloring
 }
 
+/// Edge-colors a regular bipartite multigraph of an arbitrary degree r.
+/// Returns a list of perfect matchings, each matching corresponding to a color.
+///
+/// This function uses the following building blocks:
+///
+/// * an algorithm to find a single perfect matching in a regular bipartite multigraph of
+///   an arbitrary degree
+/// * recursion
+/// * adding perfect matchings to a regular bipartite multigraph to increase its degree to
+///   a power of 2
+/// * fast edge-coloring algorithm for regular bipartite multigraphs whose degree
+///   is a power of 2
+///
+/// This way to organize the building blocks guarantees that the full algorithm runs in
+/// O (m log m) time. A simpler (but less efficient) algorithm could be obtained by finding
+/// and removing one matching at a time.
 fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
-    // todo: rename to clone, and maybe don't even need to implement clone()
     let mut g: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone(g0);
     let mut coloring: Vec<Matching> = Vec::with_capacity(g.degree);
 
@@ -539,15 +381,12 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     // Edge-color h2 by recursive splitting
     let h2_coloring = rbmg_edge_color_when_power_of_two(&h2);
 
-    // Now, create the matching
-
+    // The matching consists of h2 colors, remaining h1 colors and the removed
+    // matching (if had odd degree)
     coloring = h2_coloring;
-
-    // Add remaining colors from h1
     for i in num_classes_to_move..h1_coloring.len() {
         coloring.push(h1_coloring[i].clone());
     }
-
     if odd_degree_matching.is_some() {
         coloring.push(odd_degree_matching.unwrap());
     }
@@ -556,6 +395,257 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
         panic!("Wrong output coloring length");
     }
     coloring
+}
+
+/// Color edges of a bipartite graph.
+///
+/// The implementation is based on the following paper:
+///
+/// Noga Alon. "A simple algorithm for edge-coloring bipartite multigraphs".
+/// Inf. Process. Lett. 85(6), (2003).
+/// <https://www.tau.ac.il/~nogaa/PDFS/lex2.pdf>
+///
+/// The input to the algorithm is a bipartite graph and an explicit partition of
+/// its nodes into "left" and "right" nodes. The output is an assignment of colors
+/// to the edges so that no two incident edges have the same color. The algorithm
+/// runs in time `O (m log m)`, where `m` is the number of edges of the graph.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on. The graph is
+///     assumed to be bipartite.
+/// * `l_nodes` - The vector containing the "left" nodes of the graph.
+/// * `r_nodes` - The vector containing the "right" nodes of the graph.
+///
+/// # Example
+/// ```rust
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::{EdgeIndex, NodeIndex};
+/// use petgraph::Undirected;
+/// use rustworkx_core::dictmap::*;
+/// use rustworkx_core::bipartite_coloring::bipartite_edge_color;
+///
+/// let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 0)];
+/// let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
+/// let l_nodes = vec![NodeIndex::new(0), NodeIndex::new(2)];
+/// let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(3)];
+/// let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+/// let expected_colors: DictMap<EdgeIndex, usize> = [
+///     (EdgeIndex::new(0), 0),
+///     (EdgeIndex::new(1), 1),
+///     (EdgeIndex::new(2), 0),
+///     (EdgeIndex::new(3), 1),
+/// ]
+/// .into_iter()
+/// .collect();
+/// assert_eq!(colors, expected_colors);
+/// ```
+pub fn bipartite_edge_color<G>(
+    graph: G,
+    l_nodes: &Vec<G::NodeId>,
+    r_nodes: &Vec<G::NodeId>,
+) -> DictMap<G::EdgeId, usize>
+where
+    G: GraphBase
+        + NodeCount
+        + IntoNodeIdentifiers
+        + EdgeCount
+        + GraphProp
+        + IntoEdgesDirected,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    let mut rbmg: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::new();
+    let mut node_map: HashMap<G::NodeId, NodeIndex> = HashMap::with_capacity(graph.node_count());
+
+    // Maximum degree of a node in the original graph, ignoring direction
+    let max_degree = graph
+        .node_identifiers()
+        .map(|node| node_degree(&graph, node))
+        .max()
+        .unwrap();
+
+    // Add nodes to multi-graph
+    // ToDo: add optimization to combine nodes
+    for node_id in graph.node_identifiers() {
+        let rbmg_node_id = rbmg.graph.add_node(());
+        node_map.insert(node_id, rbmg_node_id);
+    }
+
+    // Set l_nodes and r_nodes
+    for node_id in l_nodes {
+        rbmg.l_nodes.push(*node_map.get(node_id).unwrap());
+    }
+    for node_id in r_nodes {
+        rbmg.r_nodes.push(*node_map.get(node_id).unwrap());
+    }
+
+    // Add original edges (note that input_graph may have multiple edges between the
+    // same pair of vertices, this corresponds to increasing multiplicity of the edge
+    // in multigraph)
+    for edge in graph.edge_references() {
+        let mapped_source = *node_map.get(&edge.source()).unwrap();
+        let mapped_target = *node_map.get(&edge.target()).unwrap();
+        rbmg.add_edge(mapped_source, mapped_target, 1, false);
+    }
+
+    // Make sure that the number of left nodes equals the number of right nodes
+    // by creating additional nodes
+    let n: usize = max(rbmg.l_nodes.len(), rbmg.r_nodes.len());
+    while rbmg.l_nodes.len() < n {
+        let new_node_index = rbmg.graph.add_node(());
+        rbmg.l_nodes.push(new_node_index);
+    }
+    while rbmg.r_nodes.len() < n {
+        let new_node_index = rbmg.graph.add_node(());
+        rbmg.r_nodes.push(new_node_index);
+    }
+
+    // Make sure that all nodes have the same degree by increasing multiplicities
+    // of existing edges or adding new edges.
+    let mut l_index = 0;
+    let mut r_index = 0;
+    while l_index < n {
+        let l_degree: usize = rbmg
+            .graph
+            .edges(rbmg.l_nodes[l_index])
+            .map(|e| e.weight().multiplicity)
+            .sum();
+        if l_degree == max_degree {
+            l_index += 1;
+            continue;
+        }
+        let r_degree: usize = rbmg
+            .graph
+            .edges(rbmg.r_nodes[r_index])
+            .map(|e| e.weight().multiplicity)
+            .sum();
+        if r_degree == max_degree {
+            r_index += 1;
+            continue;
+        }
+
+        let multiplicity = min(max_degree - l_degree, max_degree - r_degree);
+        rbmg.add_edge(
+            rbmg.l_nodes[l_index],
+            rbmg.r_nodes[r_index],
+            multiplicity,
+            false,
+        );
+    }
+    rbmg.degree = max_degree;
+
+    // Call the edge coloring algorithm for regular bipartite multigraphs.
+    // The output is a vector of perfect matchings, where each matching can
+    // be viewed as a separate color. Note that an edge with multiplicity m
+    // in the multigraph appears in exactly m matchings and may correspond
+    // to up to m edges in the original graph.
+    let coloring = rbmg_edge_color(&rbmg);
+
+    // Construct the map from edges in the multigraph to the list of colors
+    // (more precisely, from the endpoints of the edges)
+    let mut endpoints_to_colors: DictMap<(NodeIndex, NodeIndex), Vec<usize>> =
+        DictMap::with_capacity(rbmg.graph.edge_count());
+    for (color, matching) in coloring.iter().enumerate() {
+        for (a, b) in matching {
+            let (a0, b0) = if a.index() < b.index() {
+                (a, b)
+            } else {
+                (b, a)
+            };
+            if let Some(colors) = endpoints_to_colors.get_mut(&(*a0, *b0)) {
+                colors.push(color);
+            } else {
+                endpoints_to_colors.insert((*a0, *b0), vec![color]);
+            }
+        }
+    }
+
+    // Reconstruct coloring of the original graph by iterating over the edges, finding the
+    // correponding edge (endpoints) in the multigraph, and selecting the last (not yet
+    // assigned) color of that edge
+    let mut edge_coloring: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
+    for edge in graph.edge_references() {
+        let a = *node_map.get(&edge.source()).unwrap();
+        let b = *node_map.get(&edge.target()).unwrap();
+        let (a0, b0) = if a.index() < b.index() {
+            (a, b)
+        } else {
+            (b, a)
+        };
+        let colors = endpoints_to_colors.get_mut(&(a0, b0)).unwrap();
+        let last_color = colors.last().unwrap();
+        edge_coloring.insert(edge.id(), *last_color);
+        colors.pop();
+    }
+
+    edge_coloring
+}
+
+/// Color edges of a graph by checking whether the graph is bipartite,
+/// and if so, calling the algorithm for edge-coloring bipartite graphs.
+///
+/// The input to the algorithm is a graph. If the graph is bipartite, the
+/// output is an assignment of colors to the edges of the graph so that
+/// no two incident edges have the same color. The The algorithm runs in
+/// time `O (m log m)`, where `m` is the number of edges of the graph.
+/// If the graph is not bipartite, `GraphNotBipartite` is returned instead.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on.
+///
+/// # Example
+/// ```rust
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::{EdgeIndex, NodeIndex};
+/// use petgraph::Undirected;
+/// use rustworkx_core::dictmap::*;
+/// use rustworkx_core::bipartite_coloring::if_bipartite_edge_color;
+///
+/// let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 0)];
+/// let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
+/// let colors = if_bipartite_edge_color(&graph);
+/// assert!(colors.is_ok());
+/// let expected_colors: DictMap<EdgeIndex, usize> = [
+///     (EdgeIndex::new(0), 0),
+///     (EdgeIndex::new(1), 1),
+///     (EdgeIndex::new(2), 0),
+///     (EdgeIndex::new(3), 1),
+/// ]
+/// .into_iter()
+/// .collect();
+/// assert_eq!(colors.unwrap(), expected_colors);
+/// ```
+pub fn if_bipartite_edge_color<G>(
+    input_graph: G,
+) -> Result<DictMap<G::EdgeId, usize>, GraphNotBipartite>
+where
+    G: GraphBase
+        + NodeCount
+        + NodeIndexable
+        + IntoNodeIdentifiers
+        + EdgeCount
+        + GraphProp
+        + IntoEdgesDirected,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    let two_color_result = two_color(&input_graph);
+    if let Some(two_coloring) = two_color_result {
+        let mut l_nodes: Vec<G::NodeId> = Vec::new();
+        let mut r_nodes: Vec<G::NodeId> = Vec::new();
+        for (node_id, color) in &two_coloring {
+            if *color == 0 {
+                l_nodes.push(*node_id);
+            } else {
+                r_nodes.push(*node_id);
+            }
+        }
+        return Ok(bipartite_edge_color(input_graph, &l_nodes, &r_nodes));
+    } else {
+        return Err(GraphNotBipartite {});
+    }
 }
 
 #[cfg(test)]
