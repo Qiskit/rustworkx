@@ -21,9 +21,8 @@ use crate::coloring::two_color;
 use petgraph::prelude::StableGraph;
 use petgraph::stable_graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::{
-    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoEdgesDirected, IntoNodeIdentifiers, NodeCount,
-    NodeIndexable,
+    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges, IntoEdgesDirected,
+    IntoNodeIdentifiers, NodeCount, NodeIndexable,
 };
 use petgraph::{Incoming, Outgoing, Undirected};
 use std::error::Error;
@@ -446,12 +445,7 @@ pub fn bipartite_edge_color<G>(
     r_nodes: &Vec<G::NodeId>,
 ) -> DictMap<G::EdgeId, usize>
 where
-    G: GraphBase
-        + NodeCount
-        + IntoNodeIdentifiers
-        + EdgeCount
-        + GraphProp
-        + IntoEdgesDirected,
+    G: GraphBase + NodeCount + IntoNodeIdentifiers + EdgeCount + GraphProp + IntoEdgesDirected,
     G::NodeId: Eq + Hash,
     G::EdgeId: Eq + Hash,
 {
