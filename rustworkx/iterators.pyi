@@ -36,6 +36,7 @@ __all__ = [
     "PathMapping",
     "AllPairsPathLengthMapping",
     "AllPairsPathMapping",
+    "BFSPredecessors",
     "BFSSuccessors",
     "EdgeIndexMap",
     "EdgeIndices",
@@ -46,6 +47,7 @@ __all__ = [
     "Pos2DMapping",
     "WeightedEdgeList",
     "CentralityMapping",
+    "EdgeCentralityMapping",
     "BiconnectedComponents",
     "ProductNodeMap",
     "MultiplePathMapping",
@@ -100,6 +102,9 @@ class AllPairsPathMapping(RustworkxCustomHashMapIter[int, PathMapping]): ...
 class BFSSuccessors(Generic[T_co], RustworkxCustomVecIter[tuple[T_co, list[T_co]]]): ...
 
 @final
+class BFSPredecessors(Generic[T_co], RustworkxCustomVecIter[tuple[T_co, list[T_co]]]): ...
+
+@final
 class EdgeIndexMap(Generic[T_co], RustworkxCustomHashMapIter[int, tuple[int, int, T_co]]): ...
 
 @final
@@ -125,6 +130,9 @@ class WeightedEdgeList(Generic[T_co], RustworkxCustomVecIter[tuple[int, int, T_c
 
 @final
 class CentralityMapping(RustworkxCustomHashMapIter[int, float]): ...
+
+@final
+class EdgeCentralityMapping(RustworkxCustomHashMapIter[int, float]): ...
 
 @final
 class BiconnectedComponents(RustworkxCustomHashMapIter[tuple[int, int], int]): ...

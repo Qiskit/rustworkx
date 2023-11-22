@@ -13,6 +13,27 @@ from .iterators import *
 from .graph import PyGraph as PyGraph
 from .digraph import PyDiGraph as PyDiGraph
 
+from .cartesian_product import *
+from .centrality import *
+from .coloring import *
+from .connectivity import *
+from .dag_algo import *
+from .isomorphism import *
+from .layout import *
+from .line_graph import *
+from .link_analysis import *
+from .matching import *
+from .planar import *
+from .random_graph import *
+from .read_write import *
+from .shortest_path import *
+from .traversal import *
+from .transitivity import *
+from .tree import *
+from .tensor_product import *
+from .token_swapper import *
+from .union import *
+
 class DAGHasCycle(Exception): ...
 class DAGWouldCycle(Exception): ...
 class InvalidNode(Exception): ...
@@ -23,3 +44,4 @@ class NullGraph(Exception): ...
 class NegativeCycle(Exception): ...
 class JSONSerializationError(Exception): ...
 class FailedToConverge(Exception): ...
+class InvalidMapping(Exception): ...
