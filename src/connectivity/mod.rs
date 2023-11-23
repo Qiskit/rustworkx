@@ -548,8 +548,8 @@ pub fn graph_all_simple_paths(
         ));
     }
     let min_intermediate_nodes: usize = match min_depth {
+        Some(0) | None => 0,
         Some(depth) => depth - 2,
-        None => 0,
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
@@ -573,7 +573,7 @@ pub fn graph_all_simple_paths(
 /// :param int to: The node index to find the paths to
 /// :param int min_depth: The minimum depth of the path to include in the output
 ///     list of paths. By default all paths are included regardless of depth,
-///     sett to 0 will behave like the default.
+///     setting to 0 will behave like the default.
 /// :param int cutoff: The maximum depth of path to include in the output list
 ///     of paths. By default includes all paths regardless of depth, setting to
 ///     0 will behave like default.
@@ -602,8 +602,8 @@ pub fn digraph_all_simple_paths(
         ));
     }
     let min_intermediate_nodes: usize = match min_depth {
+        Some(0) | None => 0,
         Some(depth) => depth - 2,
-        None => 0,
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
     let result: Vec<Vec<usize>> = algo::all_simple_paths(
