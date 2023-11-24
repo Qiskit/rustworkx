@@ -246,3 +246,45 @@ class TestRandomSubGraphIsomorphism(unittest.TestCase):
         self.assertTrue(
             rustworkx.is_subgraph_isomorphic(graph, subgraph, id_order=True, induced=False)
         )
+
+
+class TestBarabasiAlbertGraph(unittest.TestCase):
+    def test_barabasi_albert_graph(self):
+        graph = rustworkx.barabasi_albert_graph(500, 450, 42)
+        self.assertEqual(graph.num_nodes(), 500)
+        self.assertEqual(graph.num_edges(), (50 * 450) + 449)
+
+    def test_directed_barabasi_albert_graph(self):
+        graph = rustworkx.directed_barabasi_albert_graph(500, 450, 42)
+        self.assertEqual(graph.num_nodes(), 500)
+        self.assertEqual(graph.num_edges(), (50 * 450) + 449)
+
+    def test_barabasi_albert_graph_with_starting_graph(self):
+        initial_graph = rustworkx.generators.path_graph(450)
+        graph = rustworkx.barabasi_albert_graph(500, 450, 42, initial_graph)
+        self.assertEqual(graph.num_nodes(), 500)
+        self.assertEqual(graph.num_edges(), (50 * 450) + 449)
+
+    def test_directed_barabasi_albert_graph_with_starting_graph(self):
+        initial_graph = rustworkx.generators.directed_path_graph(450)
+        graph = rustworkx.directed_barabasi_albert_graph(500, 450, 42, initial_graph)
+        self.assertEqual(graph.num_nodes(), 500)
+        self.assertEqual(graph.num_edges(), (50 * 450) + 449)
+
+    def test_invalid_barabasi_albert_graph_args(self):
+        with self.assertRaises(ValueError):
+            rustworkx.barabasi_albert_graph(5, 400)
+        with self.assertRaises(ValueError):
+            rustworkx.barabasi_albert_graph(5, 0)
+        initial_graph = rustworkx.generators.path_graph(450)
+        with self.assertRaises(ValueError):
+            rustworkx.barabasi_albert_graph(5, 4, initial_graph=initial_graph)
+
+    def test_invalid_directed_barabasi_albert_graph_args(self):
+        with self.assertRaises(ValueError):
+            rustworkx.directed_barabasi_albert_graph(5, 400)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_barabasi_albert_graph(5, 0)
+        initial_graph = rustworkx.generators.directed_path_graph(450)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_barabasi_albert_graph(5, 4, initial_graph=initial_graph)
