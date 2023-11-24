@@ -4,4 +4,4 @@ fixes:
     Fixed an issue where the :func:`~rustworkx.generators.directed_gnp_random_graph`
     and the :func:`~rustworkx-core.generators.gnp_random_graph` for directed graphs
     produced a graph where lower node numbers had only a small number of edges
-    compared to what was expected and the output was therefore not random.
+    compared to what was expected.

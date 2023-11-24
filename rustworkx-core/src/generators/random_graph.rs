@@ -114,7 +114,7 @@ where
                 }
             }
         } else {
-            let num_nodes = num_nodes as isize;
+            let num_nodes: isize = num_nodes.try_into().map_err(|_| InvalidInputError).unwrap();
             let lp: f64 = (1.0 - probability).ln();
             let between = Uniform::new(0.0, 1.0);
 
