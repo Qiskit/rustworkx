@@ -10,13 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// This module was originally copied and forked from the upstream petgraph
-// repository, specifically:
-// https://github.com/petgraph/petgraph/blob/0.5.1/src/dijkstra.rs
-// this was necessary to modify the error handling to allow python callables
-// to be use for the input functions for edge_cost and return any exceptions
-// raised in Python instead of panicking
-
 use std::collections::VecDeque;
 use std::hash::Hash;
 
