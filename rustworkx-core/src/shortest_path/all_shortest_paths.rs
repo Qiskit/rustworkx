@@ -20,7 +20,6 @@
 use std::collections::VecDeque;
 use std::hash::Hash;
 
-use ahash::{HashSet, HashSetExt};
 use petgraph::algo::Measure;
 use petgraph::visit::{EdgeRef, IntoEdgesDirected, NodeIndexable, Visitable};
 use petgraph::Direction::Incoming;
@@ -32,12 +31,12 @@ use crate::dictmap::*;
 ///
 /// Compute every single shortest path from `start` to `goal`.
 ///
-/// The graph should be [`Visitable`] and implement [`IntoEdges`]. The function
+/// The graph should be [`Visitable`] and implement [`IntoEdgesDirected`]. The function
 /// `edge_cost` should return the cost for a particular edge, which is used
 /// to compute path costs. Edge costs must be non-negative.
 ///
 ///
-/// Returns a [`HashSet`] which contains all possible shortest paths. Each path
+/// Returns a [`Vec`] which contains all possible shortest paths. Each path
 /// is a Vec of node indices of the path starting with `start` and ending `goal`.
 /// # Example
 /// ```rust
@@ -74,12 +73,12 @@ use crate::dictmap::*;
 /// // v       v       v
 /// // c ----> d ----> e ----> g
 ///
-/// let expected_res: HashSet<Vec<NodeIndex>>= [
-///      vec![a, b, f, e, g],
+/// let expected_res: Vec<Vec<NodeIndex>>= [
 ///      vec![a, b, d, e, g],
-///      vec![a, c, d, e, g]
+///      vec![a, c, d, e, g],
+///      vec![a, b, f, e, g],
 ///     ].into_iter().collect();
-/// let res: Result<HashSet<Vec<NodeIndex>>> = all_shortest_paths(
+/// let res: Result<Vec<Vec<NodeIndex>>> = all_shortest_paths(
 ///     &graph, a, g, |_| Ok(1)
 /// );
 /// assert_eq!(res.unwrap(), expected_res)
@@ -89,23 +88,27 @@ pub fn all_shortest_paths<G, F, E, K>(
     start: G::NodeId,
     goal: G::NodeId,
     mut edge_cost: F,
-) -> Result<HashSet<Vec<G::NodeId>>, E>
+) -> Result<Vec<Vec<G::NodeId>>, E>
 where
     G: IntoEdgesDirected + Visitable + NodeIndexable,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Measure + Copy,
 {
-    let scores: DictMap<G::NodeId, K> = dijkstra(&graph, start, Some(goal), &mut edge_cost, None)?;
+    let scores: DictMap<G::NodeId, K> = dijkstra(&graph, start, None, &mut edge_cost, None)?;
     if !scores.contains_key(&goal) {
-        return Ok(HashSet::default());
+        return Ok(vec![]);
     }
-    let mut paths = HashSet::new();
+    let mut paths = vec![];
     let path = VecDeque::from([goal]);
     let mut queue = vec![(goal, path)];
     while let Some((curr, curr_path)) = queue.pop() {
         let curr_dist = *scores.get(&curr).unwrap();
         for edge in graph.edges_directed(curr, Incoming) {
+            // Only simple paths
+            if curr_path.contains(&edge.source()) {
+                continue;
+            }
             let next_dist = match scores.get(&edge.source()) {
                 Some(x) => *x,
                 None => continue,
@@ -114,7 +117,7 @@ where
                 let mut new_path = curr_path.clone();
                 new_path.push_front(edge.source());
                 if edge.source() == start {
-                    paths.insert(new_path.into());
+                    paths.push(new_path.into());
                     continue;
                 }
                 queue.push((edge.source(), new_path));
@@ -128,7 +131,6 @@ where
 mod tests {
     use crate::shortest_path::all_shortest_paths;
     use crate::Result;
-    use ahash::HashSet;
     use petgraph::prelude::*;
     use petgraph::Graph;
 
@@ -153,12 +155,12 @@ mod tests {
 
         let start = a;
         let goal = e;
-        let paths: Result<HashSet<Vec<NodeIndex>>> =
+        let paths: Result<Vec<Vec<NodeIndex>>> =
             all_shortest_paths(&g, start, goal, |e| Ok(*e.weight()));
 
         // a --> d --> e        (11 + 9)
         // a --> c --> d --> e  (9 + 2 + 9)
-        let expected_paths: HashSet<Vec<NodeIndex>> =
+        let expected_paths: Vec<Vec<NodeIndex>> =
             [vec![a, d, e], vec![a, c, d, e]].into_iter().collect();
         assert_eq!(paths.unwrap(), expected_paths);
     }
@@ -171,10 +173,62 @@ mod tests {
 
         let start = a;
         let goal = b;
-        let paths: Result<HashSet<Vec<NodeIndex>>> = all_shortest_paths(&g, start, goal, |_| Ok(1));
+        let paths: Result<Vec<Vec<NodeIndex>>> = all_shortest_paths(&g, start, goal, |_| Ok(1));
 
-        let expected_paths: HashSet<Vec<NodeIndex>> = HashSet::default();
+        let expected_paths: Vec<Vec<NodeIndex>> = vec![];
         assert_eq!(paths.unwrap(), expected_paths);
+    }
+
+    #[test]
+    fn test_all_paths_0_weight() {
+        let mut g = Graph::new_undirected();
+        let a = g.add_node("A");
+        let b = g.add_node("B");
+        let c = g.add_node("C");
+        let d = g.add_node("D");
+        let e = g.add_node("E");
+        let f = g.add_node("F");
+
+        g.add_edge(a, b, 1);
+        g.add_edge(b, f, 2);
+        g.add_edge(a, c, 2);
+        g.add_edge(c, d, 1);
+        g.add_edge(d, e, 0);
+        g.add_edge(e, f, 0);
+
+        let start = a;
+        let goal = f;
+
+        let paths: Result<Vec<Vec<NodeIndex>>> =
+            all_shortest_paths(&g, start, goal, |e| Ok(*e.weight()));
+
+        assert_eq!(paths.unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_all_paths_0_weight_cycles() {
+        let mut g = Graph::new_undirected();
+        let a = g.add_node("A");
+        let b = g.add_node("B");
+        let c = g.add_node("C");
+        let d = g.add_node("D");
+        let e = g.add_node("E");
+        let f = g.add_node("F");
+
+        g.add_edge(a, b, 1);
+        g.add_edge(b, c, 0);
+        g.add_edge(c, f, 1);
+        g.add_edge(b, d, 0);
+        g.add_edge(d, e, 0);
+        g.add_edge(e, c, 0);
+
+        let start = a;
+        let goal = f;
+
+        let paths: Result<Vec<Vec<NodeIndex>>> =
+            dbg!(all_shortest_paths(&g, start, goal, |e| Ok(*e.weight())));
+
+        assert_eq!(paths.unwrap().len(), 2);
     }
 
     #[test]
@@ -192,14 +246,14 @@ mod tests {
         let start = nodes[0];
         let goal = nodes[1];
 
-        let paths: Result<HashSet<Vec<NodeIndex>>> =
+        let paths: Result<Vec<Vec<NodeIndex>>> =
             all_shortest_paths(&g, start, goal, |e| Ok(*e.weight()));
         assert_eq!(paths.unwrap().len(), 1);
 
         let edge = g.edges_connecting(start, goal).next().unwrap();
         g.remove_edge(edge.id());
 
-        let paths: Result<HashSet<Vec<NodeIndex>>> =
+        let paths: Result<Vec<Vec<NodeIndex>>> =
             all_shortest_paths(&g, start, goal, |e| Ok(*e.weight()));
 
         assert_eq!(paths.unwrap().len(), num_nodes - 2);

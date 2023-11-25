@@ -15,7 +15,7 @@ import unittest
 import rustworkx
 
 
-class TestDijkstraGraph(unittest.TestCase):
+class TestGraphAllShortestPaths(unittest.TestCase):
     def setUp(self):
         self.graph = rustworkx.PyGraph()
         self.a = self.graph.add_node("A")
@@ -71,3 +71,22 @@ class TestDijkstraGraph(unittest.TestCase):
                         target=1,
                         weight_fn=lambda _: invalid_weight,
                     )
+    
+    def test_all_shortest_paths_graph_with_digraph_input(self):
+        g = rustworkx.PyDAG()
+        g.add_node(0)
+        g.add_node(1)
+        with self.assertRaises(TypeError):
+            rustworkx.graph_all_shortest_paths(g, 0, 1, lambda x: x)
+
+    def test_all_shortest_paths_digraph(self):
+        g = rustworkx.PyDAG()
+        g.add_node(0)
+        g.add_node(1)
+        g.add_edge(0, 1, 1)
+        paths_directed = rustworkx.digraph_all_shortest_paths(g, 1, 0, lambda x: x)
+        self.assertEqual([], paths_directed)
+
+        paths_undirected = rustworkx.digraph_all_shortest_paths(g, 1, 0, lambda x: x, as_undirected=True)
+        self.assertEqual([[1, 0]], paths_undirected)
+
