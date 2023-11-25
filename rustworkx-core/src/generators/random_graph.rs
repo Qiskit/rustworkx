@@ -120,7 +120,10 @@ where
                 }
             }
         } else {
-            let num_nodes: isize = num_nodes.try_into().map_err(|_| InvalidInputError).unwrap();
+            let num_nodes: isize = match num_nodes.try_into() {
+                Ok(nodes) => nodes,
+                Err(_) => return Err(InvalidInputError {}),
+            };
             let lp: f64 = (1.0 - probability).ln();
             let between = Uniform::new(0.0, 1.0);
 
