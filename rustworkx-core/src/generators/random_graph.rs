@@ -105,6 +105,7 @@ where
     if !(0.0..=1.0).contains(&probability) {
         return Err(InvalidInputError {});
     }
+
     if probability > 0.0 {
         if (probability - 1.0).abs() < std::f64::EPSILON {
             for u in 0..num_nodes {
@@ -119,32 +120,49 @@ where
                 }
             }
         } else {
-            let mut v: isize = if directed { 0 } else { 1 };
-            let mut w: isize = -1;
-            let num_nodes: isize = num_nodes as isize;
+            let num_nodes: isize = match num_nodes.try_into() {
+                Ok(nodes) => nodes,
+                Err(_) => return Err(InvalidInputError {}),
+            };
             let lp: f64 = (1.0 - probability).ln();
-
             let between = Uniform::new(0.0, 1.0);
-            while v < num_nodes {
-                let random: f64 = between.sample(&mut rng);
-                let lr: f64 = (1.0 - random).ln();
-                let ratio: isize = (lr / lp) as isize;
-                w = w + 1 + ratio;
 
-                if directed {
-                    // avoid self loops
-                    if v == w {
-                        w += 1;
-                    }
-                }
-                while v < num_nodes && ((directed && num_nodes <= w) || (!directed && v <= w)) {
-                    w -= v;
-                    v += 1;
-                    // avoid self loops
-                    if directed && v == w {
+            // For directed, create inward edges to a v
+            if directed {
+                let mut v: isize = 0;
+                let mut w: isize = -1;
+                while v < num_nodes {
+                    let random: f64 = between.sample(&mut rng);
+                    let lr: f64 = (1.0 - random).ln();
+                    w = w + 1 + ((lr / lp) as isize);
+                    while w >= v && v < num_nodes {
                         w -= v;
                         v += 1;
                     }
+                    // Skip self-loops
+                    if v == w {
+                        w -= v;
+                        v += 1;
+                    }
+                    if v < num_nodes {
+                        let v_index = graph.from_index(v as usize);
+                        let w_index = graph.from_index(w as usize);
+                        graph.add_edge(w_index, v_index, default_edge_weight());
+                    }
+                }
+            }
+
+            // For directed and undirected, create outward edges from a v
+            // Nodes in graph are from 0,n-1 (start with v as the second node index).
+            let mut v: isize = 1;
+            let mut w: isize = -1;
+            while v < num_nodes {
+                let random: f64 = between.sample(&mut rng);
+                let lr: f64 = (1.0 - random).ln();
+                w = w + 1 + ((lr / lp) as isize);
+                while w >= v && v < num_nodes {
+                    w -= v;
+                    v += 1;
                 }
                 if v < num_nodes {
                     let v_index = graph.from_index(v as usize);
@@ -533,7 +551,7 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             gnp_random_graph(20, 0.5, Some(10), || (), || ()).unwrap();
         assert_eq!(g.node_count(), 20);
-        assert_eq!(g.edge_count(), 104);
+        assert_eq!(g.edge_count(), 189);
     }
 
     #[test]
