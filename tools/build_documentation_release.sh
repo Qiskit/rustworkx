@@ -28,7 +28,7 @@ git clone --depth 1 --branch gh-pages https://github.com/Qiskit/rustworkx.git $T
 mkdir -p $TMP_DIR/stable/$VERSION
 cp -r docs/build/html/* $TMP_DIR/stable/$VERSION/*
 mkdir -p release_docs
-cp -r $TMP_DIR/stable/$VERSION/* release_docs/
+cp -r $TMP_DIR/* release_docs/
 
 # Delete the temporary directory
 rm -rf $TMP_DIR
