@@ -12,21 +12,19 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# Script for pushing the documentation to qiskit.org/ecosystem
+# Script for building docs
+# It builds the latest docs and pulls the historical stable docs
+# from the git repository
 set -e
-
-curl https://downloads.rclone.org/rclone-current-linux-amd64.deb -o rclone.deb
-sudo apt-get install -y ./rclone.deb
-
-RCLONE_CONFIG_PATH=$(rclone config file | tail -1)
 
 # Build the documentation.
 RUSTWORKX_DEV_DOCS=1 tox -edocs
 
-echo "show current dir: "
-pwd
+# Copy the stable docs from the git repository
+TMP_DIR=$(mktemp -d)
+git clone --depth 1 --branch gh-pages https://github.com/Qiskit/rustworkx.git $TMP_DIR
+mkdir -p docs/build/html/stable
+cp -r $TMP_DIR/stable/* docs/build/html/stable/
 
-# Push to qiskit.org/ecosystem
-openssl aes-256-cbc -K $encrypted_rclone_key -iv $encrypted_rclone_iv -in tools/rclone.conf.enc -out $RCLONE_CONFIG_PATH -d
-echo "Pushing built docs to website"
-rclone sync --progress ./docs/build/html IBMCOS:qiskit-org-web-resources/ecosystem/rustworkx/dev
+# Delete the temporary directory
+rm -rf $TMP_DIR
