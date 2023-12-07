@@ -2,11 +2,12 @@ name: Docs Publish
 on:
   workflow_dispatch:
   push:
-    branches: [ push-to-gh-pages ]
+    tags:
+      - "*"
 
 jobs:
   deploy:
-    if: github.repository_owner == 'IvanIsCoding'
+    if: github.repository_owner == 'Qiskit'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3

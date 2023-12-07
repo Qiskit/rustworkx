@@ -25,6 +25,7 @@ TMP_DIR=$(mktemp -d)
 git clone --depth 1 --branch gh-pages https://github.com/Qiskit/rustworkx.git $TMP_DIR
 mkdir -p docs/build/html/stable
 cp -r $TMP_DIR/stable/* docs/build/html/stable/
+touch docs/build/html/stable/.nojekyll # Prevent GitHub from ignoring the _static directory
 
 # Delete the temporary directory
 rm -rf $TMP_DIR

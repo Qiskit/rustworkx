@@ -30,6 +30,7 @@ mkdir -p $TMP_DIR/stable/$VERSION
 cp -r docs/build/html/* $TMP_DIR/stable/$VERSION/
 mkdir -p release_docs
 cp -r $TMP_DIR/* release_docs/
+touch release_docs/.nojekyll # Prevent GitHub from ignoring the _static directory
 
 # Delete the temporary directory
 rm -rf $TMP_DIR
