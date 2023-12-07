@@ -26,7 +26,7 @@ VERSION=$(grep -Po -m1 'version = "\K[0-9]+\.[0-9]+' Cargo.toml)
 TMP_DIR=$(mktemp -d)
 git clone --depth 1 --branch gh-pages https://github.com/Qiskit/rustworkx.git $TMP_DIR
 mkdir -p $TMP_DIR/stable/$VERSION
-cp -r docs/build/html/* $TMP_DIR/stable/$VERSION/*
+cp -r docs/build/html/* $TMP_DIR/stable/$VERSION/
 mkdir -p release_docs
 cp -r $TMP_DIR/* release_docs/
 
