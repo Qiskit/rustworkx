@@ -25,7 +25,7 @@ jobs:
       run: |
         tools/build_documentation_dev.sh
     - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          name: html_docs
-          path: docs/build/html
+      uses: actions/upload-pages-artifact@v2
+      with:
+        name: html_docs
+        path: docs/build/html
