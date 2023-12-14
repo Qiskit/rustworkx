@@ -12,11 +12,7 @@
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.5879859-blue)](https://doi.org/10.5281/zenodo.5879859)
 
   - You can see the full rendered docs at:
-    <https://qiskit.org/ecosystem/rustworkx/dev>
-
-|:warning:| The retworkx project has been renamed to **rustworkx**. The use of the
-retworkx package will still work for the time being but starting in the 1.0.0
-release retworkx will no longer be supported
+    <https://qiskit.org/ecosystem/rustworkx/>
 
 rustworkx is a general purpose graph library for Python written in Rust to
 take advantage of the performance and safety that Rust provides. It is
@@ -25,9 +21,9 @@ any Python application.
 
 ## Project history
 
-Rustworkx was originally called retworkx and was was created initially to be
+Rustworkx was originally called retworkx and was created initially to be
 a replacement for [qiskit](https://qiskit.org/)'s previous (and current)
-networkx usage (hence the original name).  The project was originally started
+NetworkX usage (hence the original name).  The project was originally started
 to build a faster directed graph to use as the underlying data structure for
 the DAG at the center of
 [qiskit-terra](https://github.com/Qiskit/qiskit-terra/)'s transpiler. However,

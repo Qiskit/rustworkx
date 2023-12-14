@@ -442,6 +442,10 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_two_color))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_two_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_is_bipartite))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_is_bipartite))?;
     m.add_wrapped(wrap_pyfunction!(graph_line_graph))?;
     m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
@@ -450,6 +454,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
+    m.add_wrapped(wrap_pyfunction!(barabasi_albert_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis_edges))?;
     m.add_wrapped(wrap_pyfunction!(simple_cycles))?;
@@ -499,6 +505,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
+    m.add_wrapped(wrap_pyfunction!(graph_isolates))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_isolates))?;
     m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;

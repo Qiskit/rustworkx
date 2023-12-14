@@ -2,12 +2,6 @@
 rustworkx Documentation
 #######################
 
-.. note::
-
-    The project has been renamed to **rustworkx**. You can still use the legacy
-    retworkx name for now but starting in the 1.0.0 release the retworkx name
-    will no longer be supported.
-
 rustworkx is a Python package for working with graphs and complex networks. It
 enables the creation, interaction with, and study of graphs and networks.
 
@@ -56,6 +50,12 @@ https://docs.rs/rustworkx-core/0.13.0/rustworkx_core/
 
 Project history
 ---------------
+
+.. note::
+
+    The project has been renamed to **rustworkx**. You can still use the legacy
+    retworkx name for now but starting in the 1.0.0 release the retworkx name
+    will no longer be supported.
 
 rustworkx was originally called retworkx and was created to be a high
 performance replacement for the Qiskit project's internal usage of the

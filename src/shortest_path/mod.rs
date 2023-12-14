@@ -608,7 +608,7 @@ pub fn digraph_astar_shortest_path(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn /)")]
+#[pyo3(text_signature = "(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn, /)")]
 pub fn graph_astar_shortest_path(
     py: Python,
     graph: &graph::PyGraph,

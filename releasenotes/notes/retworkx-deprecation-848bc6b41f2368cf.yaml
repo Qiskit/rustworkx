@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    The legacy ``retworkx`` package that operates as a backwards compatibility
+    alias for ``rustworkx`` has been marked as deprecated. If you're using
+    the ``retworkx`` package it will now emit a ``DeprecationWarning`` on
+    import.
