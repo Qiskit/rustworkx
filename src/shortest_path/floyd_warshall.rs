@@ -149,11 +149,18 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<Array2<f64>> {
+) -> PyResult<(Array2<f64>, Array2<usize>)> {
     let n = graph.node_count();
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
+    let mut next = Array2::<usize>::from_elem((n, n), 0);
 
+    // Build `next` matrix
+    for i in 0..n {
+        for j in 0..n {
+            next[[i, j]] = j;
+        }
+    }
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
@@ -176,6 +183,7 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
                     let d_ijk = mat[[i, k]] + mat[[k, j]];
                     if d_ijk < mat[[i, j]] {
                         mat[[i, j]] = d_ijk;
+                        next[[i, j]] = next[[i, k]]
                     }
                 }
             }
@@ -185,16 +193,23 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
             let row_k = mat.slice(s![k, ..]).to_owned();
             mat.axis_iter_mut(Axis(0))
                 .into_par_iter()
-                .for_each(|mut row_i| {
+                .zip(next.axis_iter_mut(Axis(0)))
+                .for_each(|(mut row_i, mut next_i)| {
                     let m_ik = row_i[k];
-                    row_i.iter_mut().zip(row_k.iter()).for_each(|(m_ij, m_kj)| {
-                        let d_ijk = m_ik + *m_kj;
-                        if d_ijk < *m_ij {
-                            *m_ij = d_ijk;
-                        }
-                    })
+                    let next_ik = next_i[k];
+                    row_i
+                        .iter_mut()
+                        .zip(row_k.iter())
+                        .zip(next_i.iter_mut())
+                        .for_each(|((m_ij, m_kj), next_ij)| {
+                            let d_ijk = m_ik + *m_kj;
+                            if d_ijk < *m_ij {
+                                *m_ij = d_ijk;
+                                *next_ij = next_ik;
+                            }
+                        })
                 })
         }
     }
-    Ok(mat)
+    Ok((mat, next))
 }
