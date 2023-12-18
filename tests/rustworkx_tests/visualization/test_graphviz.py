@@ -21,13 +21,15 @@ from rustworkx.visualization import graphviz_draw
 try:
     import PIL
 
-    subprocess.run(
+    run_result = subprocess.run(
         ["dot", "-V"],
         cwd=tempfile.gettempdir(),
         check=True,
         capture_output=True,
     )
     HAS_PILLOW = True
+    if run_result.returncode != 0:
+        HAS_PILLOW = False
 except Exception:
     HAS_PILLOW = False
 
