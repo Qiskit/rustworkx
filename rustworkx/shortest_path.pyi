@@ -224,8 +224,23 @@ def digraph_floyd_warshall_numpy(
     as_undirected: bool | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> Tuple[np.ndarray, np.ndarray]: ...
+) -> np.ndarray: ...
 def graph_floyd_warshall_numpy(
+    graph: PyGraph[_S, _T],
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float | None = ...,
+    parallel_threshold: int | None = ...,
+) -> np.ndarray: ...
+def digraph_floyd_warshall_successor_and_distance_numpy(
+    graph: PyDiGraph[_S, _T],
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    as_undirected: bool | None = ...,
+    default_weight: float | None = ...,
+    parallel_threshold: int | None = ...,
+) -> Tuple[np.ndarray, np.ndarray]: ...
+def graph_floyd_warshall_successor_and_distance_numpy(
     graph: PyGraph[_S, _T],
     /,
     weight_fn: Callable[[_T], float] | None = ...,

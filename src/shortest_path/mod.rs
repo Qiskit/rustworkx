@@ -935,6 +935,29 @@ pub fn graph_floyd_warshall_numpy(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     parallel_threshold: usize,
+) -> PyResult<PyObject> {
+    let (matrix, _) = floyd_warshall::floyd_warshall_numpy(
+        py,
+        &graph.graph,
+        weight_fn,
+        true,
+        default_weight,
+        parallel_threshold,
+    )?;
+    Ok(matrix.into_pyarray(py).into())
+}
+
+#[pyfunction]
+#[pyo3(
+signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
+text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
+)]
+pub fn graph_floyd_warshall_successor_and_distance_numpy(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<(PyObject, PyObject)> {
     let (matrix, next) = floyd_warshall::floyd_warshall_numpy(
         py,
@@ -984,10 +1007,34 @@ pub fn graph_floyd_warshall_numpy(
 /// :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
-    text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
+signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
+text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
 pub fn digraph_floyd_warshall_numpy(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+    as_undirected: bool,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<PyObject> {
+    let (matrix, _) = floyd_warshall::floyd_warshall_numpy(
+        py,
+        &graph.graph,
+        weight_fn,
+        as_undirected,
+        default_weight,
+        parallel_threshold,
+    )?;
+    Ok(matrix.into_pyarray(py).into())
+}
+
+#[pyfunction]
+#[pyo3(
+signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
+text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
+)]
+pub fn digraph_floyd_warshall_successor_and_distance_numpy(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
