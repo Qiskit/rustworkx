@@ -15,7 +15,7 @@ from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
 
-from typing import TypeVar, Callable, Tuple
+from typing import TypeVar, Callable
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -239,14 +239,14 @@ def digraph_floyd_warshall_successor_and_distance_numpy(
     as_undirected: bool | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> Tuple[np.ndarray, np.ndarray]: ...
+) -> tuple[np.ndarray, np.ndarray]: ...
 def graph_floyd_warshall_successor_and_distance_numpy(
     graph: PyGraph[_S, _T],
     /,
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> Tuple[np.ndarray, np.ndarray]: ...
+) -> tuple[np.ndarray, np.ndarray]: ...
 def find_negative_cycle(
     graph: PyDiGraph[_S, _T],
     edge_cost_fn: Callable[[_T], float],
