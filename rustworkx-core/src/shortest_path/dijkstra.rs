@@ -117,8 +117,8 @@ where
     let zero_score = K::default();
     scores.put_item(start, zero_score);
     visit_next.push(MinScored(zero_score, start));
-    if path.is_some() {
-        path.as_mut().unwrap().insert(start, vec![start]);
+    if let Some(path_mut) = &mut path {
+        path_mut.insert(start, vec![start]);
     }
     while let Some(MinScored(node_score, node)) = visit_next.pop() {
         if visited.is_visited(&node) {
@@ -139,10 +139,10 @@ where
                     if next_score < *current_score {
                         scores.put_item(next, next_score);
                         visit_next.push(MinScored(next_score, next));
-                        if path.is_some() {
-                            let mut node_path = path.as_mut().unwrap().get(&node).unwrap().clone();
+                        if let Some(path_mut) = &mut path {
+                            let mut node_path = path_mut.get(&node).unwrap().clone();
                             node_path.push(next);
-                            path.as_mut().unwrap().entry(next).and_modify(|new_vec| {
+                            path_mut.entry(next).and_modify(|new_vec| {
                                 *new_vec = node_path;
                             });
                         }
@@ -151,10 +151,10 @@ where
                 None => {
                     scores.put_item(next, next_score);
                     visit_next.push(MinScored(next_score, next));
-                    if path.is_some() {
-                        let mut node_path = path.as_mut().unwrap().get(&node).unwrap().clone();
+                    if let Some(path_mut) = &mut path {
+                        let mut node_path = path_mut.get(&node).unwrap().clone();
                         node_path.push(next);
-                        path.as_mut().unwrap().entry(next).or_insert(node_path);
+                        path_mut.entry(next).or_insert(node_path);
                     }
                 }
             }
