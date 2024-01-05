@@ -942,6 +942,7 @@ pub fn graph_floyd_warshall_numpy(
         weight_fn,
         true,
         default_weight,
+        false,
         parallel_threshold,
     )?;
     Ok(matrix.into_pyarray(py).into())
@@ -965,9 +966,13 @@ pub fn graph_floyd_warshall_successor_and_distance_numpy(
         weight_fn,
         true,
         default_weight,
+        true,
         parallel_threshold,
     )?;
-    Ok((matrix.into_pyarray(py).into(), next.into_pyarray(py).into()))
+    Ok((
+        matrix.into_pyarray(py).into(),
+        next.unwrap().into_pyarray(py).into(),
+    ))
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1024,6 +1029,7 @@ pub fn digraph_floyd_warshall_numpy(
         weight_fn,
         as_undirected,
         default_weight,
+        false,
         parallel_threshold,
     )?;
     Ok(matrix.into_pyarray(py).into())
@@ -1048,9 +1054,13 @@ pub fn digraph_floyd_warshall_successor_and_distance_numpy(
         weight_fn,
         as_undirected,
         default_weight,
+        true,
         parallel_threshold,
     )?;
-    Ok((matrix.into_pyarray(py).into(), next.into_pyarray(py).into()))
+    Ok((
+        matrix.into_pyarray(py).into(),
+        next.unwrap().into_pyarray(py).into(),
+    ))
 }
 
 /// Get the number of unweighted shortest paths from a source node

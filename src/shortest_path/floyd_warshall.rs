@@ -148,19 +148,26 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
+    generate_successors: bool,
     parallel_threshold: usize,
-) -> PyResult<(Array2<f64>, Array2<usize>)> {
+) -> PyResult<(Array2<f64>, Option<Array2<usize>>)> {
     let n = graph.node_count();
     // Allocate empty matrix
     let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
-    let mut next = Array2::<usize>::from_elem((n, n), 0);
+    let mut next = if generate_successors {
+        let mut next = Array2::<usize>::from_elem((n, n), 0);
 
-    // Build `next` matrix
-    for i in 0..n {
-        for j in 0..n {
-            next[[i, j]] = j;
+        // Build `next` matrix
+        for i in 0..n {
+            for j in 0..n {
+                next[[i, j]] = j;
+            }
         }
-    }
+        Some(next)
+    } else {
+        None
+    };
+
     // Build adjacency matrix
     for (i, j, weight) in get_edge_iter_with_weights(graph) {
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
@@ -183,12 +190,14 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
                     let d_ijk = mat[[i, k]] + mat[[k, j]];
                     if d_ijk < mat[[i, j]] {
                         mat[[i, j]] = d_ijk;
-                        next[[i, j]] = next[[i, k]]
+                        if let Some(next) = next.as_mut() {
+                            next[[i, j]] = next[[i, k]];
+                        }
                     }
                 }
             }
         }
-    } else {
+    } else if let Some(next) = next.as_mut() {
         for k in 0..n {
             let row_k = mat.slice(s![k, ..]).to_owned();
             mat.axis_iter_mut(Axis(0))
@@ -208,6 +217,21 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
                                 *next_ij = next_ik;
                             }
                         })
+                })
+        }
+    } else {
+        for k in 0..n {
+            let row_k = mat.slice(s![k, ..]).to_owned();
+            mat.axis_iter_mut(Axis(0))
+                .into_par_iter()
+                .for_each(|mut row_i| {
+                    let m_ik = row_i[k];
+                    row_i.iter_mut().zip(row_k.iter()).for_each(|(m_ij, m_kj)| {
+                        let d_ijk = m_ik + *m_kj;
+                        if d_ijk < *m_ij {
+                            *m_ij = d_ijk;
+                        }
+                    })
                 })
         }
     }
