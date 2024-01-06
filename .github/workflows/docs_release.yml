@@ -5,6 +5,9 @@ on:
     tags:
       - "*"
 
+concurrency:
+  group: docs-gh-pages
+
 jobs:
   deploy:
     if: github.repository_owner == 'Qiskit'
