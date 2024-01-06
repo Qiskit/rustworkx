@@ -20,12 +20,15 @@ set -e
 # Build the documentation.
 RUSTWORKX_DEV_DOCS=1 tox -edocs
 
-# Copy the stable docs from the git repository
+# Copy the stable docs from the git repo
 TMP_DIR=$(mktemp -d)
 git clone --depth 1 --branch gh-pages https://github.com/Qiskit/rustworkx.git $TMP_DIR
-mkdir -p docs/build/html/stable
-cp -r $TMP_DIR/stable/* docs/build/html/stable/
-touch docs/build/html/stable/.nojekyll # Prevent GitHub from ignoring the _static directory
+rm -rf $TMP_DIR/dev
+mkdir -p $TMP_DIR/dev
+cp -r docs/build/html/* $TMP_DIR/dev
+mkdir -p dev_docs
+cp -r $TMP_DIR/* dev_docs/
+touch dev_docs/.nojekyll # Prevent GitHub from ignoring the _static directory
 
 # Delete the temporary directory
 rm -rf $TMP_DIR
