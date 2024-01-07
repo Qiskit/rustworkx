@@ -19,7 +19,6 @@ Shortest Paths
    rustworkx.distance_matrix
    rustworkx.floyd_warshall
    rustworkx.floyd_warshall_numpy
-   rustworkx.floyd_warshall_successor_and_distance_numpy
    rustworkx.astar_shortest_path
    rustworkx.k_shortest_path_lengths
    rustworkx.num_shortest_paths_unweighted
