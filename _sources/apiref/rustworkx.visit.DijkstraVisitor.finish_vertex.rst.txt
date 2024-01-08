@@ -1,0 +1,6 @@
+rustworkx.visit.DijkstraVisitor.finish\_vertex
+==============================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DijkstraVisitor.finish_vertex

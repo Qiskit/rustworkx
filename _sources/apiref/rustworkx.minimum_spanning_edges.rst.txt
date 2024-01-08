@@ -1,0 +1,6 @@
+﻿rustworkx.minimum\_spanning\_edges
+==================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: minimum_spanning_edges

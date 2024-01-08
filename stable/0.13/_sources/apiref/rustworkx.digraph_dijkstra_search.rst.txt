@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_dijkstra\_search
+===================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_dijkstra_search

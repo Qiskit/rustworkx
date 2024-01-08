@@ -1,0 +1,20 @@
+﻿BiconnectedComponents
+=====================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: BiconnectedComponents
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~BiconnectedComponents.items
+      ~BiconnectedComponents.keys
+      ~BiconnectedComponents.values
+
+

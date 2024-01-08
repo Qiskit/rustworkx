@@ -1,0 +1,6 @@
+﻿rustworkx.collect\_bicolor\_runs
+================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: collect_bicolor_runs

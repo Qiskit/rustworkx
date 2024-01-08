@@ -1,0 +1,6 @@
+﻿rustworkx.floyd\_warshall
+=========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: floyd_warshall

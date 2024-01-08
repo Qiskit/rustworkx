@@ -1,0 +1,6 @@
+rustworkx.PyGraph.edge\_index\_map
+==================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.edge_index_map

@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_empty\_graph
+===========================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_empty_graph
