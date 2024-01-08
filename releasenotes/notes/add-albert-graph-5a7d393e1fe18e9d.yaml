@@ -1,0 +1,20 @@
+---
+features:
+  - |
+    Added two new random graph generator functions,
+    :func:`.directed_barabasi_albert_graph` and :func:`.barabasi_albert_graph`,
+    to generate a random graph using Barabási–Albert preferential attachment to
+    extend an input graph. For example:
+
+        .. jupyter-execute::
+
+            import rustworkx
+            from rustworkx.visualization import mpl_draw
+
+            starting_graph = rustworkx.generators.path_graph(10)
+            random_graph = rustworkx.barabasi_albert_graph(20, 10, initial_graph=starting_graph)
+            mpl_draw(random_graph)
+  - |
+    Added a new function to the rustworkx-core module ``rustworkx_core::generators``
+    ``barabasi_albert_graph()`` which is used to generate a random graph
+    using Barabási–Albert preferential attachment to extend an input graph.

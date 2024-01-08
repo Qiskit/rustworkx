@@ -17,6 +17,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_distance_matrix
    rustworkx.digraph_floyd_warshall
    rustworkx.digraph_floyd_warshall_numpy
+   rustworkx.digraph_floyd_warshall_successor_and_distance_numpy
    rustworkx.digraph_adjacency_matrix
    rustworkx.digraph_all_simple_paths
    rustworkx.digraph_all_pairs_all_simple_paths
