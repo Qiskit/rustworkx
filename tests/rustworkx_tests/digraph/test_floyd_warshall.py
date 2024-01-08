@@ -295,7 +295,7 @@ class TestFloydWarshall(unittest.TestCase):
         graph.add_edges_from_no_data(
             [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (0, 8)]
         )
-        dist, succ = rustworkx.digraph_floyd_warshall_successor_and_distance_numpy(
+        dist, succ = rustworkx.floyd_warshall_successor_and_distance(
             graph, default_weight=2, parallel_threshold=self.parallel_threshold
         )
         self.assertEqual(succ[1, 1], 1)

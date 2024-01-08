@@ -21,7 +21,7 @@ import subprocess
 
 project = 'rustworkx'
 copyright = '2021, rustworkx Contributors'
-docs_url_prefix = "ecosystem/rustworkx"
+docs_url_prefix = ""
 
 # The short X.Y version.
 version = '0.14.0'
@@ -125,15 +125,15 @@ with open("sources.txt", "r") as fd:
         redirects[f"stubs/{source_str}"] = f"../apiref/{source_str}"
 
 if os.getenv("RUSTWORKX_LEGACY_DOCS", None) is not None:
-    redirects["*"] = "https://qiskit.org/ecosystem/rustworkx/$source.html"
-    html_baseurl = "https://qiskit.org/ecosystem/rustworkx/"
+    redirects["*"] = "https://www.rustworkx.org/$source.html"
+    html_baseurl = "https://www.rustworkx.org/"
 
 
 # Version extensions
 
 def _get_versions(app, config):
     context = config.html_context
-    start_version = (0, 8, 0)
+    start_version = (0, 12, 0)
     proc = subprocess.run(['git', 'describe', '--abbrev=0'],
                           capture_output=True)
     proc.check_returncode()
