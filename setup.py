@@ -79,7 +79,7 @@ setup(
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/rustworkx/issues",
         "Source Code": "https://github.com/Qiskit/rustworkx",
-        "Documentation": "https://qiskit.org/ecosystem/rustworkx/",
+        "Documentation": "https://www.rustworkx.org/",
     },
     rust_extensions=RUST_EXTENSIONS,
     include_package_data=True,
