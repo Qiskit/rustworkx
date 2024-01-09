@@ -232,6 +232,21 @@ def graph_floyd_warshall_numpy(
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
 ) -> np.ndarray: ...
+def digraph_floyd_warshall_successor_and_distance(
+    graph: PyDiGraph[_S, _T],
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    as_undirected: bool | None = ...,
+    default_weight: float | None = ...,
+    parallel_threshold: int | None = ...,
+) -> tuple[np.ndarray, np.ndarray]: ...
+def graph_floyd_warshall_successor_and_distance(
+    graph: PyGraph[_S, _T],
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float | None = ...,
+    parallel_threshold: int | None = ...,
+) -> tuple[np.ndarray, np.ndarray]: ...
 def find_negative_cycle(
     graph: PyDiGraph[_S, _T],
     edge_cost_fn: Callable[[_T], float],

@@ -289,6 +289,22 @@ class TestFloydWarshall(unittest.TestCase):
         self.assertEqual(dist[0, 3], 6)
         self.assertEqual(dist[0, 4], 8)
 
+    def test_floyd_warshall_successors_numpy(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(9)))
+        graph.add_edges_from_no_data(
+            [(1, 2), (1, 7), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (0, 8)]
+        )
+        dist, succ = rustworkx.floyd_warshall_successor_and_distance(
+            graph, default_weight=2, parallel_threshold=self.parallel_threshold
+        )
+        self.assertEqual(succ[1, 1], 1)
+        self.assertEqual(succ[1, 4], 2)
+        self.assertEqual(succ[1, 6], 2)
+        self.assertEqual(succ[1, 7], 7)
+        self.assertEqual(succ[1, 8], 8)
+        self.assertEqual(succ[0, 8], 8)
+
 
 class TestParallelFloydWarshall(TestFloydWarshall):
     parallel_threshold = 0
