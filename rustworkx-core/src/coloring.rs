@@ -237,12 +237,22 @@ where
         MisraGries { graph, colors }
     }
 
+    // Sets/updates edge color
+    fn set_edge_color(&mut self, e: G::EdgeRef, c: usize) {
+        self.colors[EdgeIndexable::to_index(&self.graph, e.id())] = Some(c);
+    }
+
+    // Gets edge color
+    fn get_edge_color(&self, e: G::EdgeRef) -> Option<usize> {
+        self.colors[EdgeIndexable::to_index(&self.graph, e.id())].clone()
+    }
+
     // Computes colors used at node u
     fn get_used_colors(&self, u: G::NodeId) -> HashSet<usize> {
         let used_colors: HashSet<usize> = self
             .graph
             .edges(u)
-            .filter_map(|edge| self.colors[EdgeIndexable::to_index(&self.graph, edge.id())])
+            .filter_map(|edge| self.get_edge_color(edge))
             .collect();
         used_colors
     }
@@ -286,7 +296,7 @@ where
             fan_extended = false;
 
             for (edge, node) in &neighbors {
-                if let Some(color) = self.colors[EdgeIndexable::to_index(&self.graph, edge.id())] {
+                if let Some(color) = self.get_edge_color(*edge) {
                     if self.is_free_color(last_node_in_fan, color) {
                         fan.push((*edge, *node));
                         last_node_in_fan = *node;
@@ -320,7 +330,7 @@ where
         while path_extended {
             path_extended = false;
             for edge in self.graph.edges(cur_node) {
-                if let Some(color) = self.colors[EdgeIndexable::to_index(&self.graph, edge.id())] {
+                if let Some(color) = self.get_edge_color(edge) {
                     if color == cur_color {
                         path_extended = true;
                         path.push((edge, cur_color));
@@ -349,7 +359,7 @@ where
             // invert colors on cdu-path
             for (cdu_edge, color) in cdu_path {
                 let flipped_color = self.flip_color(c, d, color);
-                self.colors[EdgeIndexable::to_index(&self.graph, cdu_edge.id())] = Some(flipped_color);
+                self.set_edge_color(cdu_edge, flipped_color);
             }
 
             // find sub-fan fan[0..w] such that d is free on fan[w]
@@ -363,13 +373,12 @@ where
 
             // rotate fan
             for i in 1..w + 1 {
-                let next_color =
-                    self.colors[EdgeIndexable::to_index(&self.graph, fan[i].0.id())].unwrap();
-                self.colors[EdgeIndexable::to_index(&self.graph, fan[i - 1].0.id())] = Some(next_color);
+                let next_color = self.get_edge_color(fan[i].0).unwrap();
+                self.set_edge_color(fan[i - 1].0, next_color);
             }
 
             // fill additional color
-            self.colors[EdgeIndexable::to_index(&self.graph, fan[w].0.id())] = Some(d);
+            self.set_edge_color(fan[w].0, d);
         }
 
         &self.colors
