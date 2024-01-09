@@ -1911,7 +1911,7 @@ def is_bipartite(graph):
     """
 
 
-rustworkx_dispatch
+@rustworkx_dispatch
 def floyd_warshall_successor_and_distance(
     graph,
     weight_fn=None,
@@ -1972,4 +1972,3 @@ def floyd_warshall_successor_and_distance(
     :rtype: (numpy.ndarray, numpy.ndarray)
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
-
