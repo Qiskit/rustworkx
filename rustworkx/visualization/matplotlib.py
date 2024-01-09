@@ -45,7 +45,7 @@
 # This code is forked from networkx's networkx_pylab.py module and adapted to
 # work with rustworkx instead. The original source can be found at:
 #
-# https://github.com/rustworkx/rustworkx/blob/80b1afa2ae50314a8312998c214a8c1a356adcf1/rustworkx/drawing/rustworkx_pylab.py
+# https://github.com/networkx/networkx/blob/80b1afa2ae50314a8312998c214a8c1a356adcf1/networkx/drawing/nx_pylab.py
 
 """Draw a rustworkx graph with matplotlib."""
 

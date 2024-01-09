@@ -165,7 +165,7 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///
 /// :param bool check_cycle: When this is set to ``True`` the created
 ///     ``PyDiGraph`` has runtime cycle detection enabled.
-/// :param bool multgraph: When this is set to ``False`` the created
+/// :param bool multigraph: When this is set to ``False`` the created
 ///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
 ///     method call is made that would add parallel edges the the weight/weight
 ///     from that method call will be used to update the existing edge in place.
