@@ -312,35 +312,35 @@ where
     }
 
     // Returns the maximal fan on edge (u, v) at u
-    fn get_maximal_fan(
-        &self,
-        e: G::EdgeRef,
-        u: G::NodeId,
-        v: G::NodeId,
-    ) -> Vec<(G::EdgeRef, G::NodeId)> {
-        let mut fan: Vec<(G::EdgeRef, G::NodeId)> = Vec::new();
-        fan.push((e, v));
+    fn get_maximal_fan(&self, e: G::EdgeRef, u: G::NodeId, v: G::NodeId) -> Vec<G::EdgeRef> {
+        let mut fan: Vec<G::EdgeRef> = vec![e];
 
-        let mut neighbors: Vec<(G::EdgeRef, G::NodeId)> = self
-            .graph
-            .edges(u)
-            .map(|edge| (edge, edge.target()))
-            .collect();
+        let mut neighbors: Vec<G::EdgeRef> = self.graph.edges(u).collect();
 
         let mut last_node_in_fan = v;
-        neighbors.remove(neighbors.iter().position(|x| x.1 == v).unwrap());
+        neighbors.remove(
+            neighbors
+                .iter()
+                .position(|x| x.target() == last_node_in_fan)
+                .unwrap(),
+        );
 
         let mut fan_extended: bool = true;
         while fan_extended {
             fan_extended = false;
 
-            for (edge, node) in &neighbors {
+            for edge in &neighbors {
                 if let Some(color) = self.get_edge_color(*edge) {
                     if self.is_free_color(last_node_in_fan, color) {
-                        fan.push((*edge, *node));
-                        last_node_in_fan = *node;
+                        fan.push(*edge);
+                        last_node_in_fan = edge.target();
                         fan_extended = true;
-                        neighbors.remove(neighbors.iter().position(|x| x.1 == *node).unwrap());
+                        neighbors.remove(
+                            neighbors
+                                .iter()
+                                .position(|x| x.target() == last_node_in_fan)
+                                .unwrap(),
+                        );
                         break;
                     }
                 }
@@ -390,7 +390,7 @@ where
             let v: G::NodeId = edge.target();
             let fan = self.get_maximal_fan(edge, u, v);
             let c = self.get_free_color(u);
-            let d = self.get_free_color(fan.last().unwrap().1);
+            let d = self.get_free_color(fan.last().unwrap().target());
 
             // find cdu-path
             let cdu_path = self.get_cdu_path(u, d, c);
@@ -406,8 +406,8 @@ where
 
             // find sub-fan fan[0..w] such that d is free on fan[w]
             let mut w = 0;
-            for (i, (_, z)) in fan.iter().enumerate() {
-                if self.is_free_color(*z, d) {
+            for (i, x) in fan.iter().enumerate() {
+                if self.is_free_color(x.target(), d) {
                     w = i;
                     break;
                 }
@@ -416,10 +416,10 @@ where
             // rotate fan + fill additional color
             let mut new_fan_colors: Vec<(G::EdgeRef, usize)> = Vec::with_capacity(w + 1);
             for i in 1..w + 1 {
-                let next_color = self.get_edge_color(fan[i].0).unwrap();
-                new_fan_colors.push((fan[i - 1].0, next_color));
+                let next_color = self.get_edge_color(fan[i]).unwrap();
+                new_fan_colors.push((fan[i - 1], next_color));
             }
-            new_fan_colors.push((fan[w].0, d));
+            new_fan_colors.push((fan[w], d));
             self.update_edge_colors(&new_fan_colors);
         }
 
