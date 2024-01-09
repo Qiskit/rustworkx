@@ -1,0 +1,23 @@
+﻿BFSVisitor
+==========
+
+.. currentmodule:: rustworkx.visit
+
+.. autoclass:: BFSVisitor
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~BFSVisitor.black_target_edge
+      ~BFSVisitor.discover_vertex
+      ~BFSVisitor.finish_vertex
+      ~BFSVisitor.gray_target_edge
+      ~BFSVisitor.non_tree_edge
+      ~BFSVisitor.tree_edge
+
+

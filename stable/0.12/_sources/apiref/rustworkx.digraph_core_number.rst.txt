@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_core\_number
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_core_number

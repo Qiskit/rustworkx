@@ -1,0 +1,6 @@
+﻿rustworkx.read\_graphml
+=======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: read_graphml

@@ -1,0 +1,6 @@
+rustworkx.visit.DFSVisitor.back\_edge
+=====================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DFSVisitor.back_edge

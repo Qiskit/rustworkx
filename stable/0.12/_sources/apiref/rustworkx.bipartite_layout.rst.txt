@@ -1,0 +1,6 @@
+﻿rustworkx.bipartite\_layout
+===========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: bipartite_layout

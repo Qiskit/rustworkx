@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="16px"
+   height="16px"
+   viewBox="0 0 16 16"
+   version="1.1"
+   id="svg863"
+   sodipodi:docname="search-icon.svg"
+   inkscape:version="1.0.1 (c497b03c, 2020-09-10)">
+  <metadata
+     id="metadata867">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1386"
+     inkscape:window-height="1005"
+     id="namedview865"
+     showgrid="false"
+     inkscape:zoom="45.9375"
+     inkscape:cx="3.8095238"
+     inkscape:cy="8"
+     inkscape:window-x="38"
+     inkscape:window-y="23"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Artboard" />
+  <!-- Generator: Sketch 51.2 (57519) - http://www.bohemiancoding.com/sketch -->
+  <desc
+     id="desc850">Created with Sketch.</desc>
+  <defs
+     id="defs853">
+    <polygon
+       id="path-1"
+       points="0 0 16 0 16 16 0 16" />
+  </defs>
+  <g
+     id="Page-1"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd">
+    <g
+       id="Artboard"
+       transform="translate(-63.000000, -93.000000)">
+      <g
+         id="ic"
+         transform="translate(63.000000, 93.000000)"
+         style="fill:#8a3ffc;fill-opacity:1">
+        <mask
+           id="mask-2"
+           fill="white">
+          <use
+             xlink:href="#path-1"
+             id="use855" />
+        </mask>
+        <g
+           id="Clip-2"
+           style="fill:#8a3ffc;fill-opacity:1" />
+        <path
+           d="M2.95913767,9.58220606 C1.13316435,7.75622206 1.13316435,4.78513897 2.95913767,2.95915497 C3.87212433,2.04616298 5.07138409,1.5896202 6.27064385,1.5896202 C7.46990361,1.5896202 8.66925692,2.04616298 9.58224358,2.95915497 C11.4082169,4.78513897 11.4082169,7.75622206 9.58224358,9.58220606 C8.69769713,10.4667577 7.52163859,10.9538926 6.27064385,10.9538926 C5.01974267,10.9538926 3.84368413,10.4667577 2.95913767,9.58220606 Z M16,14.8357224 L11.2495505,10.0852451 C13.1351173,7.62730486 12.9554949,4.08320445 10.7067543,1.83454417 C8.26070966,-0.611514724 4.28057804,-0.611514724 1.83453345,1.83454417 C-0.611511149,4.28069663 -0.611511149,8.26075796 1.83453345,10.7068169 C3.01947955,11.8917699 4.59491713,12.544308 6.27064385,12.544308 C7.66870437,12.544308 8.99594505,12.0887007 10.085841,11.2501776 L14.8356356,16 L16,14.8357224 Z"
+           id="Fill-1"
+           fill="#EE4C2C"
+           mask="url(#mask-2)"
+           style="fill:#8a3ffc;fill-opacity:1" />
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,536 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting Started &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rustworkx Tutorials and Guides" href="tutorial/index.html" />
+    <link rel="prev" title="rustworkx Documentation" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>Getting Started</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="_sources/install.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
+<p>rustworkx is a general purpose graph library for Python written in Rust to take
+advantage of the performance and safety that Rust provides. It is designed to
+provide a high performance general purpose graph library for any Python
+application.</p>
+</section>
+<section id="installing-rustworkx">
+<h1>Installing Rustworkx<a class="headerlink" href="#installing-rustworkx" title="Permalink to this heading">¶</a></h1>
+<p>rustworkx is published on pypi so on x86_64, i686, ppc64le, s390x, and aarch64
+Linux systems, x86_64 on Mac OSX, and 32 and 64 bit Windows installing is as
+simple as running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rustworkx</span>
+</pre></div>
+</div>
+<p>This will install a precompiled version of rustworkx into your python
+environment.</p>
+<section id="installing-on-a-platform-without-precompiled-binaries">
+<span id="install-unsupported"></span><h2>Installing on a platform without precompiled binaries<a class="headerlink" href="#installing-on-a-platform-without-precompiled-binaries" title="Permalink to this heading">¶</a></h2>
+<p>If there are no precompiled binaries published for your system you’ll have to
+build the package from source. However, to be able able to build the package from
+the published source package you need to have Rust &gt;= 1.48.0 installed (and also
+cargo which is normally included with rust) You can use
+<a class="reference external" href="https://rustup.rs/">rustup</a> (a cross platform installer for rust) to make this
+simpler, or rely on
+<a class="reference external" href="https://forge.rust-lang.org/infra/other-installation-methods.html">other installation methods</a>.
+A source package is also published on PyPI, so you still can run <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install
+it. Once you have Rust properly installed, running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rustworkx</span>
+</pre></div>
+</div>
+<p>will build rustworkx for your local system from the source package and install it
+just as it would if there was a prebuilt binary available.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To build from source you will need to ensure you have pip &gt;=19.0.0
+installed, which supports PEP-517, or that you have manually installed
+setuptools-rust prior to running pip install rustworkx. If you recieve an
+error about <code class="docutils literal notranslate"><span class="pre">setuptools-rust</span></code> not being found you should upgrade pip with
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">pip</span></code> or manually install <code class="docutils literal notranslate"><span class="pre">setuptools-rust</span></code> with:
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">setuptools-rust</span></code> and try again.</p>
+</div>
+</section>
+</section>
+<section id="platform-support">
+<span id="platform-suppport"></span><h1>Platform Support<a class="headerlink" href="#platform-support" title="Permalink to this heading">¶</a></h1>
+<p>Rustworkx strives to support as many platforms as possible, but due to
+limitations in available testing resources and platform availability, not all
+platforms can be supported. Platform support for rustworkx is broken into 4
+tiers with different levels of support for each tier. For platforms outside
+these, rustworkx is probably still installable, but it’s not tested and you will
+need a Rust compiler and have to build retworkx (and likely Numpy too) from
+source.</p>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">Platform Support</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Operating System</p></th>
+<th class="head"><p>CPU Architecture</p></th>
+<th class="head"><p>Support Tier</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Linux</p></td>
+<td><p>x86_64</p></td>
+<td><p><a class="reference internal" href="#tier-1"><span class="std std-ref">Tier 1</span></a></p></td>
+<td><p>Distributions compatible with the [manylinux 2014](<a class="reference external" href="https://peps.python.org/pep-0599/">https://peps.python.org/pep-0599/</a>) packaging specification</p></td>
+</tr>
+<tr class="row-odd"><td><p>Linux</p></td>
+<td><p>i686</p></td>
+<td><p><a class="reference internal" href="#tier-2"><span class="std std-ref">Tier 2</span></a> (Python &lt; 3.10), <a class="reference internal" href="#tier-3"><span class="std std-ref">Tier 3</span></a> (Python &gt;= 3.10)</p></td>
+<td><p>Distributions compatible with the [manylinux 2014](<a class="reference external" href="https://peps.python.org/pep-0599/">https://peps.python.org/pep-0599/</a>) packaging specification</p></td>
+</tr>
+<tr class="row-even"><td><p>Linux</p></td>
+<td><p>aarch64</p></td>
+<td><p><a class="reference internal" href="#tier-2"><span class="std std-ref">Tier 2</span></a></p></td>
+<td><p>Distributions compatible with the [manylinux 2014](<a class="reference external" href="https://peps.python.org/pep-0599/">https://peps.python.org/pep-0599/</a>) packaging specification</p></td>
+</tr>
+<tr class="row-odd"><td><p>Linux</p></td>
+<td><p>pp64le</p></td>
+<td><p><a class="reference internal" href="#tier-3"><span class="std std-ref">Tier 3</span></a></p></td>
+<td><p>Distributions compatible with the [manylinux 2014](<a class="reference external" href="https://peps.python.org/pep-0599/">https://peps.python.org/pep-0599/</a>) packaging specification</p></td>
+</tr>
+<tr class="row-even"><td><p>Linux</p></td>
+<td><p>s390x</p></td>
+<td><p><a class="reference internal" href="#tier-3"><span class="std std-ref">Tier 3</span></a></p></td>
+<td><p>Distributions compatible with the [manylinux 2014](<a class="reference external" href="https://peps.python.org/pep-0599/">https://peps.python.org/pep-0599/</a>) packaging specification</p></td>
+</tr>
+<tr class="row-odd"><td><p>macOS (10.9 or newer)</p></td>
+<td><p>x86_64</p></td>
+<td><p><a class="reference internal" href="#tier-1"><span class="std std-ref">Tier 1</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>macOS (10.15 or newer)</p></td>
+<td><p>arm64</p></td>
+<td><p><a class="reference internal" href="#tier-4"><span class="std std-ref">Tier 4</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Windows 64bit</p></td>
+<td><p>x86_64</p></td>
+<td><p><a class="reference internal" href="#tier-1"><span class="std std-ref">Tier 1</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Windows 32bit</p></td>
+<td><p>i686 or x86_64</p></td>
+<td><p><a class="reference internal" href="#tier-2"><span class="std std-ref">Tier 2</span></a> (Python &lt; 3.10), <a class="reference internal" href="#tier-3"><span class="std std-ref">Tier 3</span></a> (Python &gt;= 3.10)</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<section id="tier-1">
+<span id="id1"></span><h2>Tier 1<a class="headerlink" href="#tier-1" title="Permalink to this heading">¶</a></h2>
+<p>Tier 1 supported platforms are fully tested upstream as part of the development
+process to ensure any proposed change will function correctly. Pre-compiled
+binaries are built, tested, and published to PyPI as part of the release
+process. These platforms are expected to be installable with just a functioning
+Python environment.</p>
+</section>
+<section id="tier-2">
+<span id="id2"></span><h2>Tier 2<a class="headerlink" href="#tier-2" title="Permalink to this heading">¶</a></h2>
+<p>Tier 2 platforms are not tested upstream as part of the development process.
+However, pre-compiled binaries are built, tested, and published to PyPI as part
+of the release process and these packages can be expected to be installed with
+just a functioning Python environment.</p>
+</section>
+<section id="tier-3">
+<span id="id3"></span><h2>Tier 3<a class="headerlink" href="#tier-3" title="Permalink to this heading">¶</a></h2>
+<p>Tier 3 platforms are not tested upstream as part of the development process.
+Pre-compiled binaries are built, tested and published to PyPI as
+part of the release process. However, they may not installable with just a
+functioning Python environment and you may be required to build Numpy from
+source, which requires a C/C++ compiler, as part of the installation process.</p>
+</section>
+<section id="tier-4">
+<span id="id4"></span><h2>Tier 4<a class="headerlink" href="#tier-4" title="Permalink to this heading">¶</a></h2>
+<p>Tier 4 platforms are not tested upstream as part of the development process.
+Pre-compiled binaries are built and published to PyPI as part of the release
+process, with no testing at all. They may not be installable with just a
+functioning Python environment and may require a C/C++ compiler or additional
+programs to build dependencies from source as part of the installation process.
+Support for these platforms are best effort only.</p>
+</section>
+</section>
+<section id="using-rustworkx">
+<h1>Using rustworkx<a class="headerlink" href="#using-rustworkx" title="Permalink to this heading">¶</a></h1>
+<p>Once you have rustworkx installed you can use it by importing rustworkx. All the
+functions and graph classes are off the root of the package. For example,
+calculating the shortest path between A and C would be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+
+<span class="c1"># Each time add node is called, it returns a new node index</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+
+<span class="c1"># add_edges_from takes tuples of node indices and weights,</span>
+<span class="c1"># and returns edge indices</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)])</span>
+
+<span class="c1"># Returns the path A -&gt; B -&gt; C</span>
+<span class="n">rx</span><span class="o">.</span><span class="n">dijkstra_shortest_paths</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">weight_fn</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can refer to the <a class="reference internal" href="tutorial/introduction.html#intro-tutorial"><span class="std std-ref">Introduction to rustworkx</span></a> for more details on getting started
+with rustworkx.</p>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial/index.html" class="btn btn-neutral float-right" title="rustworkx Tutorials and Guides" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="rustworkx Documentation" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Getting Started</a></li>
+<li><a class="reference internal" href="#installing-rustworkx">Installing Rustworkx</a><ul>
+<li><a class="reference internal" href="#installing-on-a-platform-without-precompiled-binaries">Installing on a platform without precompiled binaries</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#platform-support">Platform Support</a><ul>
+<li><a class="reference internal" href="#tier-1">Tier 1</a></li>
+<li><a class="reference internal" href="#tier-2">Tier 2</a></li>
+<li><a class="reference internal" href="#tier-3">Tier 3</a></li>
+<li><a class="reference internal" href="#tier-4">Tier 4</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-rustworkx">Using rustworkx</a></li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/sphinx_highlight.js"></script>
+         <script src="_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>
