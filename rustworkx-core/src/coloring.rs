@@ -308,8 +308,7 @@ where
 
     // Returns true iff color c is free at node u
     fn is_free_color(&self, u: G::NodeId, c: usize) -> bool {
-        let used_colors = self.get_used_colors(u);
-        !used_colors.contains(&c)
+        !self.get_used_colors(u).contains(&c)
     }
 
     // Returns the maximal fan on edge (u, v) at u
