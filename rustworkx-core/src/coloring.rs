@@ -362,7 +362,7 @@ where
     // Returns the longest path starting at node u with alternating colors c, d, c, d, c, etc.
     fn get_cdu_path(&self, u: G::NodeId, c: usize, d: usize) -> Vec<(G::EdgeRef, usize)> {
         let mut path: Vec<(G::EdgeRef, usize)> = Vec::new();
-        let mut cur_node: G::NodeId = u;
+        let mut cur_node = u;
         let mut cur_color = c;
         let mut path_extended = true;
 
