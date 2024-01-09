@@ -25,7 +25,7 @@ def base_test(session):
     session.install(*deps)
     session.install(".[all]", "-c", "constraints.txt")
     session.chdir("tests")
-    session.run("python", "-m", "stestr", "run", *session.posargs)
+    session.run("python", "-m", "unittest", "discover", *session.posargs)
 
 @nox.session(python=["3"])
 def test(session):
