@@ -224,43 +224,83 @@ where
 struct MisraGries<G: GraphBase> {
     // The input graph
     graph: G,
+    // Maximum node degree in the graph
+    max_node_degree: usize,
     // Partially assigned colors (indexed by internal edge index)
     colors: Vec<Option<usize>>,
+    // Performance optimization: explicitly storing edge colors used at each node
+    node_used_colors: Vec<HashSet<usize>>,
 }
 
 impl<G> MisraGries<G>
 where
-    G: EdgeIndexable + IntoEdges,
+    G: EdgeIndexable + IntoEdges + NodeIndexable + IntoNodeIdentifiers,
 {
     pub fn new(graph: G) -> Self {
         let colors = vec![None; graph.edge_bound()];
-        MisraGries { graph, colors }
+        let max_node_degree = graph
+            .node_identifiers()
+            .map(|node| graph.edges(node).count())
+            .max()
+            .unwrap_or(0);
+        let empty_set = HashSet::new();
+        let node_used_colors = vec![empty_set; graph.node_bound()];
+
+        MisraGries {
+            graph,
+            max_node_degree,
+            colors,
+            node_used_colors,
+        }
     }
 
-    // Sets/updates edge color
-    fn set_edge_color(&mut self, e: G::EdgeRef, c: usize) {
-        self.colors[EdgeIndexable::to_index(&self.graph, e.id())] = Some(c);
+    // Updates edge colors for a set of edges while keeping track of
+    // explicitly stored used node colors
+    fn update_edge_colors(&mut self, new_colors: &Vec<(G::EdgeRef, usize)>) {
+        // First, remove node colors that are going to be unassigned
+        for (e, _) in new_colors {
+            if let Some(old_color) = self.get_edge_color(*e) {
+                self.remove_node_used_color(e.source(), old_color);
+                self.remove_node_used_color(e.target(), old_color);
+            }
+        }
+        // Next, add node colors that are going to be assigned
+        for (e, c) in new_colors {
+            self.add_node_used_color(e.source(), *c);
+            self.add_node_used_color(e.target(), *c);
+        }
+        for (e, c) in new_colors {
+            self.colors[EdgeIndexable::to_index(&self.graph, e.id())] = Some(*c);
+        }
+    }
+
+    // Updates used node colors at u adding c
+    fn add_node_used_color(&mut self, u: G::NodeId, c: usize) {
+        let uindex = NodeIndexable::to_index(&self.graph, u);
+        self.node_used_colors[uindex].insert(c);
+    }
+
+    // Updates used node colors at u removing c
+    fn remove_node_used_color(&mut self, u: G::NodeId, c: usize) {
+        let uindex = NodeIndexable::to_index(&self.graph, u);
+        self.node_used_colors[uindex].remove(&c);
     }
 
     // Gets edge color
     fn get_edge_color(&self, e: G::EdgeRef) -> Option<usize> {
-        self.colors[EdgeIndexable::to_index(&self.graph, e.id())].clone()
+        self.colors[EdgeIndexable::to_index(&self.graph, e.id())]
     }
 
-    // Computes colors used at node u
-    fn get_used_colors(&self, u: G::NodeId) -> HashSet<usize> {
-        let used_colors: HashSet<usize> = self
-            .graph
-            .edges(u)
-            .filter_map(|edge| self.get_edge_color(edge))
-            .collect();
-        used_colors
+    // Returns colors used at node u
+    fn get_used_colors(&self, u: G::NodeId) -> &HashSet<usize> {
+        let uindex = NodeIndexable::to_index(&self.graph, u);
+        &self.node_used_colors[uindex]
     }
 
     // Returns the smallest free (aka unused) color at node u
     fn get_free_color(&self, u: G::NodeId) -> usize {
         let used_colors = self.get_used_colors(u);
-        let free_color: usize = (0..)
+        let free_color: usize = (0..self.max_node_degree + 1)
             .position(|color| !used_colors.contains(&color))
             .unwrap();
         free_color
@@ -357,10 +397,13 @@ where
             let cdu_path = self.get_cdu_path(u, d, c);
 
             // invert colors on cdu-path
+            let mut new_cdu_path_colors: Vec<(G::EdgeRef, usize)> =
+                Vec::with_capacity(cdu_path.len());
             for (cdu_edge, color) in cdu_path {
                 let flipped_color = self.flip_color(c, d, color);
-                self.set_edge_color(cdu_edge, flipped_color);
+                new_cdu_path_colors.push((cdu_edge, flipped_color));
             }
+            self.update_edge_colors(&new_cdu_path_colors);
 
             // find sub-fan fan[0..w] such that d is free on fan[w]
             let mut w = 0;
@@ -371,14 +414,14 @@ where
                 }
             }
 
-            // rotate fan
+            // rotate fan + fill additional color
+            let mut new_fan_colors: Vec<(G::EdgeRef, usize)> = Vec::with_capacity(w + 1);
             for i in 1..w + 1 {
                 let next_color = self.get_edge_color(fan[i].0).unwrap();
-                self.set_edge_color(fan[i - 1].0, next_color);
+                new_fan_colors.push((fan[i - 1].0, next_color));
             }
-
-            // fill additional color
-            self.set_edge_color(fan[w].0, d);
+            new_fan_colors.push((fan[w].0, d));
+            self.update_edge_colors(&new_fan_colors);
         }
 
         &self.colors
@@ -426,7 +469,7 @@ where
 ///
 pub fn misra_gries_edge_color<G>(graph: G) -> DictMap<G::EdgeId, usize>
 where
-    G: EdgeIndexable + IntoEdges + EdgeCount,
+    G: EdgeIndexable + IntoEdges + EdgeCount + NodeIndexable + IntoNodeIdentifiers,
     G::EdgeId: Eq + Hash,
 {
     let mut mg: MisraGries<G> = MisraGries::new(graph);
@@ -624,7 +667,7 @@ mod test_edge_coloring {
 mod test_misra_gries_edge_coloring {
     use crate::coloring::misra_gries_edge_color;
     use crate::dictmap::DictMap;
-    use crate::generators::{cycle_graph, heavy_hex_graph, path_graph};
+    use crate::generators::{complete_graph, cycle_graph, heavy_hex_graph, path_graph};
     use crate::petgraph::Graph;
 
     use hashbrown::HashSet;
@@ -723,6 +766,14 @@ mod test_misra_gries_edge_coloring {
     fn test_heavy_hex_graph() {
         let graph: petgraph::graph::UnGraph<(), ()> =
             heavy_hex_graph(7, || (), || (), false).unwrap();
+        let colors = misra_gries_edge_color(&graph);
+        check_edge_coloring(&graph, &colors);
+    }
+
+    #[test]
+    fn test_complete_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            complete_graph(Some(10), None, || (), || ()).unwrap();
         let colors = misra_gries_edge_color(&graph);
         check_edge_coloring(&graph, &colors);
     }
