@@ -7,7 +7,7 @@ line-length = 100
 target-version = ['py38', 'py39', 'py310', 'py311']
 
 [tool.ruff]
-line-length = 100
+line-length = 105 # more lenient than black due to long function signatures
 src = ["rustworkx", "setup.py", "retworkx", "tests"]
 select = [
     "E",   # pycodestyle
@@ -30,11 +30,7 @@ exclude = [
 
 [tool.ruff.per-file-ignores]
 "rustworkx/__init__.py" = ["F405", "F403"]
-"rustworkx/__init__.pyi" = ["F403", "F405", "PYI001"]
-"rustworkx/digraph.pyi" = ["F403", "F405", "PYI001"]
-"rustworkx/graph.pyi" = ["F403", "F405", "PYI001"]
-"rustworkx/iterators.pyi" = ["F403", "F405", "PYI001"]
-"rustworkx/rustworkx.pyi" = ["F403", "F405", "PYI001"]
+"*.pyi" = ["F403", "F405", "PYI001", "PYI002"]
 
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux2014"

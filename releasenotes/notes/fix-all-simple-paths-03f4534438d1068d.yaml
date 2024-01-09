@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed the behavior of :func:`~rustworkx.graph_all_simple_paths` and
+    :func:`~rustworkx.digraph_all_simple_paths` when ``min_depth`` is set to
+    ``0``. Refer to `#955 <https://github.com/Qiskit/rustworkx/issues/955>`__ for
+    more information.

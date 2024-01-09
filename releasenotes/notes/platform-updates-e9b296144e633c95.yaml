@@ -1,7 +1,8 @@
 ---
 features:
   - |
-    Added support for musl Linux platforms on x86_64 and aarch64 at :ref:`tier-3`.
+    Added support for musl Linux platforms on x86_64 at :ref:`tier-3`
+    and aarch64 at :ref:`tier-4`.
 upgrade:
   - |
     Support for the Linux ppc64le pllatform has changed from tier 3 to tier 4

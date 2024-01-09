@@ -4,6 +4,9 @@ on:
   push:
     branches: [ main ]
 
+concurrency:
+  group: docs-gh-pages
+
 jobs:
   deploy:
     if: github.repository_owner == 'Qiskit'
@@ -21,9 +24,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -U virtualenv setuptools wheel nox
         sudo apt-get install graphviz pandoc
-    - name: Build and publish
-      env:
-        encrypted_rclone_key: ${{ secrets.encrypted_rclone_key }}
-        encrypted_rclone_iv: ${{ secrets.encrypted_rclone_iv }}
+    - name: Build docs
       run: |
-        tools/deploy_documentation_dev.sh
+        tools/build_documentation_dev.sh
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
+      with:
+        name: html_docs
+        path: docs/build/html
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: dev_docs
+        force_orphan: true

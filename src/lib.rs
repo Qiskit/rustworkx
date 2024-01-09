@@ -389,6 +389,12 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
+    m.add_wrapped(wrap_pyfunction!(
+        graph_floyd_warshall_successor_and_distance
+    ))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_floyd_warshall_successor_and_distance
+    ))?;
     m.add_wrapped(wrap_pyfunction!(collect_runs))?;
     m.add_wrapped(wrap_pyfunction!(collect_bicolor_runs))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
@@ -404,6 +410,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
@@ -454,6 +462,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
+    m.add_wrapped(wrap_pyfunction!(barabasi_albert_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(simple_cycles))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;

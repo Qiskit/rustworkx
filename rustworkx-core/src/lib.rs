@@ -59,7 +59,7 @@
 //! The release notes for rustworkx-core are included as part of the rustworkx
 //! documentation which is hosted at:
 //!
-//! <https://qiskit.org/ecosystem/rustworkx/release_notes.html>
+//! <https://www.rustworkx.org/release_notes.html>
 
 use std::convert::Infallible;
 

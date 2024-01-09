@@ -379,3 +379,125 @@ pub fn random_geometric_graph(
     };
     Ok(graph)
 }
+
+/// Generate a random graph using Barabási–Albert preferential attachment
+///
+/// A graph is grown to $n$ nodes by adding new nodes each with $m$ edges that
+/// are preferentially attached to existing nodes with high degree. All the edges
+/// and nodes added to this graph will have weights of ``None``.
+///
+/// The algorithm performed by this function is described in:
+///
+/// A. L. Barabási and R. Albert "Emergence of scaling in random networks",
+/// Science 286, pp 509-512, 1999.
+///
+/// :param int n: The number of nodes to extend the graph to.
+/// :param int m: The number of edges to attach from a new node to existing nodes.
+/// :param int seed: An optional seed to use for the random number generator.
+/// :param PyGraph initial_graph: An optional initial graph to use as a starting
+///     point. :func:`.star_graph` is used to create an ``m`` node star graph
+///     to use as a starting point. If specified the input graph will be
+///     modified in place.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+pub fn barabasi_albert_graph(
+    py: Python,
+    n: usize,
+    m: usize,
+    seed: Option<u64>,
+    initial_graph: Option<graph::PyGraph>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    if m < 1 {
+        return Err(PyValueError::new_err("m must be > 0"));
+    }
+    if m >= n {
+        return Err(PyValueError::new_err("m must be < n"));
+    }
+    let graph = match core_generators::barabasi_albert_graph(
+        n,
+        m,
+        seed,
+        initial_graph.map(|x| x.graph),
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "initial_graph has either less nodes than m, or more nodes than n",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a random graph using Barabási–Albert preferential attachment
+///
+/// A graph is grown to $n$ nodes by adding new nodes each with $m$ edges that
+/// are preferentially attached to existing nodes with high degree. All the edges
+/// and nodes added to this graph will have weights of ``None``. For the purposes
+/// of the extension algorithm all edges are treated as weak (meaning directionality
+/// isn't considered).
+///
+/// The algorithm performed by this function is described in:
+///
+/// A. L. Barabási and R. Albert "Emergence of scaling in random networks",
+/// Science 286, pp 509-512, 1999.
+///
+/// :param int n: The number of nodes to extend the graph to.
+/// :param int m: The number of edges to attach from a new node to existing nodes.
+/// :param int seed: An optional seed to use for the random number generator
+/// :param PyDiGraph initial_graph: An optional initial graph to use as a starting
+///     point. :func:`.star_graph` is used to create an ``m`` node star graph
+///     to use as a starting point. If specified the input graph will be
+///     modified in place.
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+#[pyfunction]
+pub fn directed_barabasi_albert_graph(
+    py: Python,
+    n: usize,
+    m: usize,
+    seed: Option<u64>,
+    initial_graph: Option<digraph::PyDiGraph>,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    if m < 1 {
+        return Err(PyValueError::new_err("m must be > 0"));
+    }
+    if m >= n {
+        return Err(PyValueError::new_err("m must be < n"));
+    }
+    let graph = match core_generators::barabasi_albert_graph(
+        n,
+        m,
+        seed,
+        initial_graph.map(|x| x.graph),
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "initial_graph has either less nodes than m, or more nodes than n",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
+}

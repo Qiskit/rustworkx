@@ -1,11 +1,16 @@
 name: Docs Publish
 on:
+  workflow_dispatch:
   push:
     tags:
       - "*"
 
+concurrency:
+  group: docs-gh-pages
+
 jobs:
   deploy:
+    if: github.repository_owner == 'Qiskit'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -20,10 +25,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -U virtualenv setuptools wheel nox
         sudo apt-get install graphviz pandoc
-    - name: Build and publish
-      env:
-        encrypted_rclone_key: ${{ secrets.encrypted_rclone_key }}
-        encrypted_rclone_iv: ${{ secrets.encrypted_rclone_iv }}
-        QISKIT_DOCS_BUILD_TUTORIALS: 'always'
+    - name: Build docs
       run: |
-        tools/deploy_documentation.sh
+        tools/build_documentation_release.sh
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
+      with:
+        name: html_docs
+        path: release_docs/
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: release_docs/
+        force_orphan: true
