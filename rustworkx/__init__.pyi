@@ -184,6 +184,12 @@ from .shortest_path import digraph_floyd_warshall as digraph_floyd_warshall
 from .shortest_path import graph_floyd_warshall as graph_floyd_warshall
 from .shortest_path import digraph_floyd_warshall_numpy as digraph_floyd_warshall_numpy
 from .shortest_path import graph_floyd_warshall_numpy as graph_floyd_warshall_numpy
+from .shortest_path import (
+    digraph_floyd_warshall_successor_and_distance as digraph_floyd_warshall_successor_and_distance,
+)
+from .shortest_path import (
+    graph_floyd_warshall_successor_and_distance as graph_floyd_warshall_successor_and_distance,
+)
 from .shortest_path import find_negative_cycle as find_negative_cycle
 from .shortest_path import negative_edge_cycle as negative_edge_cycle
 
@@ -260,6 +266,13 @@ def floyd_warshall_numpy(
     default_weight: float = ...,
     parallel_threshold: int = ...,
 ) -> np.ndarray: ...
+def floyd_warshall_successor_and_distance(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float | None = ...,
+    parallel_threshold: int | None = ...,
+) -> tuple[np.ndarray, np.ndarray]: ...
 def astar_shortest_path(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     node: int,
