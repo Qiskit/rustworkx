@@ -265,17 +265,17 @@ where
     // Returns the maximal fan on edge (u, v) at u
     fn get_maximal_fan(
         &self,
-        eid: G::EdgeId,
+        e: G::EdgeRef,
         u: G::NodeId,
         v: G::NodeId,
-    ) -> Vec<(G::EdgeId, G::NodeId)> {
-        let mut fan: Vec<(G::EdgeId, G::NodeId)> = Vec::new();
-        fan.push((eid, v));
+    ) -> Vec<(G::EdgeRef, G::NodeId)> {
+        let mut fan: Vec<(G::EdgeRef, G::NodeId)> = Vec::new();
+        fan.push((e, v));
 
-        let mut neighbors: Vec<(G::EdgeId, G::NodeId)> = self
+        let mut neighbors: Vec<(G::EdgeRef, G::NodeId)> = self
             .graph
             .edges(u)
-            .map(|edge| (edge.id(), edge.target()))
+            .map(|edge| (edge, edge.target()))
             .collect();
 
         let mut last_node_in_fan = v;
@@ -286,7 +286,7 @@ where
             fan_extended = false;
 
             for (edge, node) in &neighbors {
-                if let Some(color) = self.colors[EdgeIndexable::to_index(&self.graph, *edge)] {
+                if let Some(color) = self.colors[EdgeIndexable::to_index(&self.graph, edge.id())] {
                     if self.is_free_color(last_node_in_fan, color) {
                         fan.push((*edge, *node));
                         last_node_in_fan = *node;
@@ -311,8 +311,8 @@ where
     }
 
     // Returns the longest path starting at node u with alternating colors c, d, c, d, c, etc.
-    fn get_cdu_path(&self, u: G::NodeId, c: usize, d: usize) -> Vec<(G::EdgeId, usize)> {
-        let mut path: Vec<(G::EdgeId, usize)> = Vec::new();
+    fn get_cdu_path(&self, u: G::NodeId, c: usize, d: usize) -> Vec<(G::EdgeRef, usize)> {
+        let mut path: Vec<(G::EdgeRef, usize)> = Vec::new();
         let mut cur_node: G::NodeId = u;
         let mut cur_color = c;
         let mut path_extended = true;
@@ -323,7 +323,7 @@ where
                 if let Some(color) = self.colors[EdgeIndexable::to_index(&self.graph, edge.id())] {
                     if color == cur_color {
                         path_extended = true;
-                        path.push((edge.id(), cur_color));
+                        path.push((edge, cur_color));
                         cur_node = edge.target();
                         cur_color = self.flip_color(c, d, cur_color);
                         break;
@@ -339,7 +339,7 @@ where
         for edge in self.graph.edge_references() {
             let u: G::NodeId = edge.source();
             let v: G::NodeId = edge.target();
-            let fan = self.get_maximal_fan(edge.id(), u, v);
+            let fan = self.get_maximal_fan(edge, u, v);
             let c = self.get_free_color(u);
             let d = self.get_free_color(fan.last().unwrap().1);
 
@@ -349,7 +349,7 @@ where
             // invert colors on cdu-path
             for (cdu_edge, color) in cdu_path {
                 let flipped_color = self.flip_color(c, d, color);
-                self.colors[EdgeIndexable::to_index(&self.graph, cdu_edge)] = Some(flipped_color);
+                self.colors[EdgeIndexable::to_index(&self.graph, cdu_edge.id())] = Some(flipped_color);
             }
 
             // find sub-fan fan[0..w] such that d is free on fan[w]
@@ -364,12 +364,12 @@ where
             // rotate fan
             for i in 1..w + 1 {
                 let next_color =
-                    self.colors[EdgeIndexable::to_index(&self.graph, fan[i].0)].unwrap();
-                self.colors[EdgeIndexable::to_index(&self.graph, fan[i - 1].0)] = Some(next_color);
+                    self.colors[EdgeIndexable::to_index(&self.graph, fan[i].0.id())].unwrap();
+                self.colors[EdgeIndexable::to_index(&self.graph, fan[i - 1].0.id())] = Some(next_color);
             }
 
             // fill additional color
-            self.colors[EdgeIndexable::to_index(&self.graph, fan[w].0)] = Some(d);
+            self.colors[EdgeIndexable::to_index(&self.graph, fan[w].0.id())] = Some(d);
         }
 
         &self.colors
