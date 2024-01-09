@@ -15,12 +15,18 @@
 use std::hash::Hash;
 
 use petgraph::data::{Build, Create};
-use petgraph::visit::{Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, NodeIndexable};
+use petgraph::visit::{
+    Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected,
+    IntoNodeIdentifiers, NodeCount, NodeIndexable,
+};
+use petgraph::{Incoming, Outgoing};
 
+use hashbrown::HashSet;
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
+use super::star_graph;
 use super::InvalidInputError;
 
 /// Generate a G<sub>np</sub> random graph, also known as an
@@ -99,6 +105,7 @@ where
     if !(0.0..=1.0).contains(&probability) {
         return Err(InvalidInputError {});
     }
+
     if probability > 0.0 {
         if (probability - 1.0).abs() < std::f64::EPSILON {
             for u in 0..num_nodes {
@@ -113,32 +120,49 @@ where
                 }
             }
         } else {
-            let mut v: isize = if directed { 0 } else { 1 };
-            let mut w: isize = -1;
-            let num_nodes: isize = num_nodes as isize;
+            let num_nodes: isize = match num_nodes.try_into() {
+                Ok(nodes) => nodes,
+                Err(_) => return Err(InvalidInputError {}),
+            };
             let lp: f64 = (1.0 - probability).ln();
-
             let between = Uniform::new(0.0, 1.0);
-            while v < num_nodes {
-                let random: f64 = between.sample(&mut rng);
-                let lr: f64 = (1.0 - random).ln();
-                let ratio: isize = (lr / lp) as isize;
-                w = w + 1 + ratio;
 
-                if directed {
-                    // avoid self loops
-                    if v == w {
-                        w += 1;
-                    }
-                }
-                while v < num_nodes && ((directed && num_nodes <= w) || (!directed && v <= w)) {
-                    w -= v;
-                    v += 1;
-                    // avoid self loops
-                    if directed && v == w {
+            // For directed, create inward edges to a v
+            if directed {
+                let mut v: isize = 0;
+                let mut w: isize = -1;
+                while v < num_nodes {
+                    let random: f64 = between.sample(&mut rng);
+                    let lr: f64 = (1.0 - random).ln();
+                    w = w + 1 + ((lr / lp) as isize);
+                    while w >= v && v < num_nodes {
                         w -= v;
                         v += 1;
                     }
+                    // Skip self-loops
+                    if v == w {
+                        w -= v;
+                        v += 1;
+                    }
+                    if v < num_nodes {
+                        let v_index = graph.from_index(v as usize);
+                        let w_index = graph.from_index(w as usize);
+                        graph.add_edge(w_index, v_index, default_edge_weight());
+                    }
+                }
+            }
+
+            // For directed and undirected, create outward edges from a v
+            // Nodes in graph are from 0,n-1 (start with v as the second node index).
+            let mut v: isize = 1;
+            let mut w: isize = -1;
+            while v < num_nodes {
+                let random: f64 = between.sample(&mut rng);
+                let lr: f64 = (1.0 - random).ln();
+                w = w + 1 + ((lr / lp) as isize);
+                while w >= v && v < num_nodes {
+                    w -= v;
+                    v += 1;
                 }
                 if v < num_nodes {
                     let v_index = graph.from_index(v as usize);
@@ -395,10 +419,129 @@ where
     Ok(graph)
 }
 
+/// Generate a random Barabási–Albert preferential attachment algorithm
+///
+/// A graph of `n` nodes is grown by attaching new nodes each with `m`
+/// edges that are preferentially attached to existing nodes with high degree.
+/// If the graph is directed for the purposes of the extension algorithm all
+/// edges are treated as weak (meaning both incoming and outgoing).
+///
+/// The algorithm implemented in this function is described in:
+///
+/// A. L. Barabási and R. Albert "Emergence of scaling in random networks",
+/// Science 286, pp 509-512, 1999.
+///
+/// Arguments:
+///
+/// * `n` - The number of nodes to extend the graph to.
+/// * `m` - The number of edges to attach from a new node to existing nodes.
+/// * `seed` - An optional seed to use for the random number generator.
+/// * `initial_graph` - An optional starting graph to expand, if not specified
+///     a star graph of `m` nodes is generated and used. If specified the input
+///     graph is mutated by this function and is expected to be moved into this
+///     function.
+/// * `default_node_weight` - A callable that will return the weight to use
+///     for newly created nodes.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+///
+/// An `InvalidInput` error is returned under the following conditions. If `m < 1`
+/// or `m >= n` and if an `initial_graph` is specified and the number of nodes in
+/// `initial_graph` is `< m` or `> n`.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::barabasi_albert_graph;
+/// use rustworkx_core::generators::star_graph;
+///
+/// let graph: petgraph::graph::UnGraph<(), ()> = barabasi_albert_graph(
+///     20,
+///     12,
+///     Some(42),
+///     None,
+///     || {()},
+///     || {()},
+/// ).unwrap();
+/// assert_eq!(graph.node_count(), 20);
+/// assert_eq!(graph.edge_count(), 107);
+/// ```
+pub fn barabasi_albert_graph<G, T, F, H, M>(
+    n: usize,
+    m: usize,
+    seed: Option<u64>,
+    initial_graph: Option<G>,
+    mut default_node_weight: F,
+    mut default_edge_weight: H,
+) -> Result<G, InvalidInputError>
+where
+    G: Data<NodeWeight = T, EdgeWeight = M>
+        + NodeIndexable
+        + GraphProp
+        + NodeCount
+        + Build
+        + Create,
+    for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgesDirected + IntoNodeIdentifiers,
+    F: FnMut() -> T,
+    H: FnMut() -> M,
+    G::NodeId: Eq + Hash,
+{
+    if m < 1 || m >= n {
+        return Err(InvalidInputError {});
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut graph = match initial_graph {
+        Some(initial_graph) => initial_graph,
+        None => star_graph(
+            Some(m),
+            None,
+            &mut default_node_weight,
+            &mut default_edge_weight,
+            false,
+            false,
+        )?,
+    };
+    if graph.node_count() < m || graph.node_count() > n {
+        return Err(InvalidInputError {});
+    }
+
+    let mut repeated_nodes: Vec<G::NodeId> = graph
+        .node_identifiers()
+        .flat_map(|x| {
+            let degree = graph
+                .edges_directed(x, Outgoing)
+                .chain(graph.edges_directed(x, Incoming))
+                .count();
+            std::iter::repeat(x).take(degree)
+        })
+        .collect();
+    let mut source = graph.node_count();
+    while source < n {
+        let source_index = graph.add_node(default_node_weight());
+        let mut targets: HashSet<G::NodeId> = HashSet::with_capacity(m);
+        while targets.len() < m {
+            targets.insert(*repeated_nodes.choose(&mut rng).unwrap());
+        }
+        for target in &targets {
+            graph.add_edge(source_index, *target, default_edge_weight());
+        }
+        repeated_nodes.extend(targets);
+        repeated_nodes.extend(vec![source_index; m]);
+        source += 1
+    }
+    Ok(graph)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::generators::InvalidInputError;
-    use crate::generators::{gnm_random_graph, gnp_random_graph, random_geometric_graph};
+    use crate::generators::{
+        barabasi_albert_graph, gnm_random_graph, gnp_random_graph, path_graph,
+        random_geometric_graph,
+    };
     use crate::petgraph;
 
     // Test gnp_random_graph
@@ -408,7 +551,7 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             gnp_random_graph(20, 0.5, Some(10), || (), || ()).unwrap();
         assert_eq!(g.node_count(), 20);
-        assert_eq!(g.edge_count(), 104);
+        assert_eq!(g.edge_count(), 189);
     }
 
     #[test]
@@ -573,5 +716,55 @@ mod tests {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
         };
+    }
+
+    #[test]
+    fn test_barabasi_albert_graph_starting_graph() {
+        let starting_graph: petgraph::graph::UnGraph<(), ()> =
+            path_graph(Some(40), None, || (), || (), false).unwrap();
+        let graph =
+            barabasi_albert_graph(500, 40, None, Some(starting_graph), || (), || ()).unwrap();
+        assert_eq!(graph.node_count(), 500);
+        assert_eq!(graph.edge_count(), 18439);
+    }
+
+    #[test]
+    fn test_barabasi_albert_graph_invalid_starting_size() {
+        match barabasi_albert_graph(
+            5,
+            40,
+            None,
+            None::<petgraph::graph::UnGraph<(), ()>>,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
+    }
+
+    #[test]
+    fn test_barabasi_albert_graph_invalid_equal_starting_size() {
+        match barabasi_albert_graph(
+            5,
+            5,
+            None,
+            None::<petgraph::graph::UnGraph<(), ()>>,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
+    }
+
+    #[test]
+    fn test_barabasi_albert_graph_invalid_starting_graph() {
+        let starting_graph: petgraph::graph::UnGraph<(), ()> =
+            path_graph(Some(4), None, || (), || (), false).unwrap();
+        match barabasi_albert_graph(500, 40, None, Some(starting_graph), || (), || ()) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
     }
 }

@@ -35,7 +35,7 @@ use numpy::IntoPyArray;
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
-    astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
+    all_shortest_paths, astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
 };
 
 use crate::iterators::{
@@ -107,6 +107,52 @@ pub fn graph_dijkstra_shortest_paths(
             })
             .collect(),
     })
+}
+
+/// Find all shortest paths between two nodes
+///
+/// This function will generate all possible shortest paths from a source node to a
+/// target using Dijkstra's algorithm.
+///
+/// :param PyGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: A target to find paths to
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :return: List of paths. Each paths are lists of node indices,
+///     starting at ``source`` and ending at ``target``.
+/// :rtype: list
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, target, weight_fn=None, default_weight=1.0),
+    text_signature = "(graph, source, target, /, weight_fn=None, default_weight=1.0)"
+)]
+pub fn graph_all_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: usize,
+    target: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<Vec<Vec<usize>>> {
+    let start = NodeIndex::new(source);
+    let goal = NodeIndex::new(target);
+
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+
+    let paths = (all_shortest_paths(&graph.graph, start, goal, |e| cost_fn.call(py, e.weight()))
+        as PyResult<Vec<Vec<NodeIndex>>>)?;
+
+    Ok(paths
+        .iter()
+        .map(|v| v.iter().map(|v| v.index()).collect())
+        .collect())
 }
 
 /// Check if a graph has a path between source and target nodes
@@ -208,6 +254,62 @@ pub fn digraph_dijkstra_shortest_paths(
             })
             .collect(),
     })
+}
+
+/// Find all shortest paths between two nodes
+///
+/// This function will generate all possible shortest paths from a source node to a
+/// target using Dijkstra's algorithm.
+///
+/// :param PyDiGraph graph:
+/// :param int source: The node index to find paths from
+/// :param int target: A target to find paths to
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :return: List of paths. Each paths are lists of node indices,
+///     starting at ``source`` and ending at ``target``.
+/// :rtype: list
+/// :raises ValueError: when an edge weight with NaN or negative value
+///     is provided.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, target, weight_fn=None, default_weight=1.0, as_undirected=false),
+    text_signature = "(graph, source, target, /, weight_fn=None, default_weight=1.0, as_undirected=False)"
+)]
+pub fn digraph_all_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: usize,
+    target: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    as_undirected: bool,
+) -> PyResult<Vec<Vec<usize>>> {
+    let start = NodeIndex::new(source);
+    let goal = NodeIndex::new(target);
+
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+
+    let paths = if as_undirected {
+        (all_shortest_paths(
+            &graph.to_undirected(py, true, None)?.graph,
+            start,
+            goal,
+            |e| cost_fn.call(py, e.weight()),
+        ) as PyResult<Vec<Vec<NodeIndex>>>)?
+    } else {
+        (all_shortest_paths(&graph.graph, start, goal, |e| cost_fn.call(py, e.weight()))
+            as PyResult<Vec<Vec<NodeIndex>>>)?
+    };
+
+    Ok(paths
+        .iter()
+        .map(|v| v.iter().map(|v| v.index()).collect())
+        .collect())
 }
 
 /// Check if a digraph has a path between source and target nodes
@@ -608,7 +710,7 @@ pub fn digraph_astar_shortest_path(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn /)")]
+#[pyo3(text_signature = "(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn, /)")]
 pub fn graph_astar_shortest_path(
     py: Python,
     graph: &graph::PyGraph,
@@ -936,15 +1038,92 @@ pub fn graph_floyd_warshall_numpy(
     default_weight: f64,
     parallel_threshold: usize,
 ) -> PyResult<PyObject> {
-    let matrix = floyd_warshall::floyd_warshall_numpy(
+    let (matrix, _) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
         weight_fn,
         true,
         default_weight,
+        false,
         parallel_threshold,
     )?;
     Ok(matrix.into_pyarray(py).into())
+}
+
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
+/// :param PyGraph graph: The graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
+///
+/// :returns: A tuple of two matrices.
+///     First one is a matrix of shortest path distances between nodes. If there is no
+///     path between two nodes then the corresponding matrix entry will be
+///     ``np.inf``.
+///     Second one is a matrix of **next** nodes for given source and target. If there is no
+///     path between two nodes then the corresponding matrix entry will be the same as
+///     a target node. To reconstruct the shortest path among nodes::
+///
+///         def reconstruct_path(source, target, successors):
+///             path = []
+///             if source == target:
+///                 return path
+///             curr = source
+///             while curr != target:
+///                 path.append(curr)
+///                 curr = successors[curr, target]
+///             path.append(target)
+///             return path
+///
+/// :rtype: (numpy.ndarray, numpy.ndarray)
+#[pyfunction]
+#[pyo3(
+signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
+text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
+)]
+pub fn graph_floyd_warshall_successor_and_distance(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<(PyObject, PyObject)> {
+    let (matrix, next) = floyd_warshall::floyd_warshall_numpy(
+        py,
+        &graph.graph,
+        weight_fn,
+        true,
+        default_weight,
+        true,
+        parallel_threshold,
+    )?;
+    Ok((
+        matrix.into_pyarray(py).into(),
+        next.unwrap().into_pyarray(py).into(),
+    ))
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -984,8 +1163,8 @@ pub fn graph_floyd_warshall_numpy(
 /// :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
-    text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
+signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
+text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
 pub fn digraph_floyd_warshall_numpy(
     py: Python,
@@ -995,15 +1174,95 @@ pub fn digraph_floyd_warshall_numpy(
     default_weight: f64,
     parallel_threshold: usize,
 ) -> PyResult<PyObject> {
-    let matrix = floyd_warshall::floyd_warshall_numpy(
+    let (matrix, _) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
         weight_fn,
         as_undirected,
         default_weight,
+        false,
         parallel_threshold,
     )?;
     Ok(matrix.into_pyarray(py).into())
+}
+
+/// Find all-pairs shortest path lengths using Floyd's algorithm
+///
+/// Floyd's algorithm is used for finding shortest paths in dense graphs
+/// or graphs with negative weights (where Dijkstra's algorithm fails).
+///
+/// This function is multithreaded and will launch a pool with threads equal
+/// to the number of CPUs by default if the number of nodes in the graph is
+/// above the value of ``parallel_threshold`` (it defaults to 300).
+/// You can tune the number of threads with the ``RAYON_NUM_THREADS``
+/// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+/// limit the thread pool to 4 threads if parallelization was enabled.
+///
+/// :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
+/// :param weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``. This
+///     tells rustworkx/rust how to extract a numerical weight as a ``float``
+///     for edge object. Some simple examples are::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: 1)
+///
+///     to return a weight of 1 for all edges. Also::
+///
+///         graph_floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+///
+///     to cast the edge object as a float as the weight.
+/// :param as_undirected: If set to true each directed edge will be treated as
+///     bidirectional/undirected.
+/// :param int parallel_threshold: The number of nodes to execute
+///     the algorithm in parallel at. It defaults to 300, but this can
+///     be tuned
+///
+/// :returns: A tuple of two matrices.
+///     First one is a matrix of shortest path distances between nodes. If there is no
+///     path between two nodes then the corresponding matrix entry will be
+///     ``np.inf``.
+///     Second one is a matrix of **next** nodes for given source and target. If there is no
+///     path between two nodes then the corresponding matrix entry will be the same as
+///     a target node. To reconstruct the shortest path among nodes::
+///
+///         def reconstruct_path(source, target, successors):
+///             path = []
+///             if source == target:
+///                 return path
+///             curr = source
+///             while curr != target:
+///                 path.append(curr)
+///                 curr = successors[curr, target]
+///             path.append(target)
+///             return path
+///
+/// :rtype: (numpy.ndarray, numpy.ndarray)
+#[pyfunction]
+#[pyo3(
+signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
+text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
+)]
+pub fn digraph_floyd_warshall_successor_and_distance(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+    as_undirected: bool,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<(PyObject, PyObject)> {
+    let (matrix, next) = floyd_warshall::floyd_warshall_numpy(
+        py,
+        &graph.graph,
+        weight_fn,
+        as_undirected,
+        default_weight,
+        true,
+        parallel_threshold,
+    )?;
+    Ok((
+        matrix.into_pyarray(py).into(),
+        next.unwrap().into_pyarray(py).into(),
+    ))
 }
 
 /// Get the number of unweighted shortest paths from a source node

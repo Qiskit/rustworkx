@@ -53,6 +53,25 @@ class TestDAGAllSimplePaths(unittest.TestCase):
         for i in expected:
             self.assertIn(i, paths)
 
+    def test_all_simple_paths_default_min_depth(self):
+        dag = rustworkx.PyDAG()
+        for i in range(6):
+            dag.add_node(i)
+        dag.add_edges_from_no_data(self.edges)
+        paths = rustworkx.digraph_all_simple_paths(dag, 0, 5, min_depth=0)
+        expected = [
+            [0, 1, 2, 3, 4, 5],
+            [0, 1, 2, 4, 5],
+            [0, 1, 3, 2, 4, 5],
+            [0, 1, 3, 4, 5],
+            [0, 2, 3, 4, 5],
+            [0, 2, 4, 5],
+            [0, 3, 2, 4, 5],
+            [0, 3, 4, 5],
+        ]
+        for i in expected:
+            self.assertIn(i, paths)
+
     def test_all_simple_paths_min_depth(self):
         dag = rustworkx.PyDAG()
         for i in range(6):
