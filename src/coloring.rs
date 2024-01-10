@@ -12,11 +12,12 @@
 
 use crate::{digraph, graph};
 
-use rustworkx_core::coloring::{greedy_edge_color, greedy_node_color, two_color};
-
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
+use rustworkx_core::coloring::{
+    greedy_edge_color, greedy_node_color, misra_gries_edge_color, two_color,
+};
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
@@ -72,16 +73,50 @@ pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObje
 ///
 /// .. jupyter-execute::
 ///
-///   import rustworkx as rx
+///     import rustworkx as rx
 ///
-///   graph = rx.generators.cycle_graph(7)
-///   edge_colors = rx.graph_greedy_edge_color(graph)
-///   assert edge_colors == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}
+///     graph = rx.generators.cycle_graph(7)
+///     edge_colors = rx.graph_greedy_edge_color(graph)
+///     assert edge_colors == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}
 ///
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let colors = greedy_edge_color(&graph.graph);
+    let out_dict = PyDict::new(py);
+    for (node, color) in colors {
+        out_dict.set_item(node.index(), color)?;
+    }
+    Ok(out_dict.into())
+}
+
+/// Color edges of a :class:`~.PyGraph` object using the Misra-Gries edge
+/// coloring algorithm..
+///
+/// Based on the paper: "A constructive proof of Vizing's theorem" by
+/// Misra and Gries, 1992.
+/// <https://www.cs.utexas.edu/users/misra/psp.dir/vizing.pdf>
+///
+/// The coloring produces at most d + 1 colors where d is the maximum degree
+/// of the graph.
+///
+/// :param PyGraph: The input PyGraph object to edge-color
+///
+/// :returns: A dictionary where keys are edge indices and the value is the color
+/// :rtype: dict
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///
+///     graph = rx.generators.cycle_graph(7)
+///     edge_colors = rx.graph_misra_gries_edge_color(graph)
+///     assert edge_colors == {0: 0, 1: 1, 2: 2, 3: 0, 4: 1, 5: 0, 6: 2}
+///
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+    let colors = misra_gries_edge_color(&graph.graph);
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
         out_dict.set_item(node.index(), color)?;

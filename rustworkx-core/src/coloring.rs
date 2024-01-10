@@ -15,10 +15,11 @@ use std::hash::Hash;
 
 use crate::dictmap::*;
 use crate::line_graph::line_graph;
+
 use hashbrown::{HashMap, HashSet};
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNeighborsDirected,
+    EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNeighborsDirected,
     IntoNodeIdentifiers, NodeCount, NodeIndexable,
 };
 use petgraph::{Incoming, Outgoing};
@@ -220,8 +221,269 @@ where
     edge_colors
 }
 
-#[cfg(test)]
+struct MisraGries<G: GraphBase> {
+    // The input graph
+    graph: G,
+    // Maximum node degree in the graph
+    max_node_degree: usize,
+    // Partially assigned colors (indexed by internal edge index)
+    colors: Vec<Option<usize>>,
+    // Performance optimization: explicitly storing edge colors used at each node
+    node_used_colors: Vec<HashSet<usize>>,
+}
 
+impl<G> MisraGries<G>
+where
+    G: EdgeIndexable + IntoEdges + NodeIndexable + IntoNodeIdentifiers,
+{
+    pub fn new(graph: G) -> Self {
+        let colors = vec![None; graph.edge_bound()];
+        let max_node_degree = graph
+            .node_identifiers()
+            .map(|node| graph.edges(node).count())
+            .max()
+            .unwrap_or(0);
+        let empty_set = HashSet::new();
+        let node_used_colors = vec![empty_set; graph.node_bound()];
+
+        MisraGries {
+            graph,
+            max_node_degree,
+            colors,
+            node_used_colors,
+        }
+    }
+
+    // Updates edge colors for a set of edges while keeping track of
+    // explicitly stored used node colors
+    fn update_edge_colors(&mut self, new_colors: &Vec<(G::EdgeRef, usize)>) {
+        // First, remove node colors that are going to be unassigned
+        for (e, _) in new_colors {
+            if let Some(old_color) = self.get_edge_color(*e) {
+                self.remove_node_used_color(e.source(), old_color);
+                self.remove_node_used_color(e.target(), old_color);
+            }
+        }
+        // Next, add node colors that are going to be assigned
+        for (e, c) in new_colors {
+            self.add_node_used_color(e.source(), *c);
+            self.add_node_used_color(e.target(), *c);
+        }
+        for (e, c) in new_colors {
+            self.colors[EdgeIndexable::to_index(&self.graph, e.id())] = Some(*c);
+        }
+    }
+
+    // Updates used node colors at u adding c
+    fn add_node_used_color(&mut self, u: G::NodeId, c: usize) {
+        let uindex = NodeIndexable::to_index(&self.graph, u);
+        self.node_used_colors[uindex].insert(c);
+    }
+
+    // Updates used node colors at u removing c
+    fn remove_node_used_color(&mut self, u: G::NodeId, c: usize) {
+        let uindex = NodeIndexable::to_index(&self.graph, u);
+        self.node_used_colors[uindex].remove(&c);
+    }
+
+    // Gets edge color
+    fn get_edge_color(&self, e: G::EdgeRef) -> Option<usize> {
+        self.colors[EdgeIndexable::to_index(&self.graph, e.id())]
+    }
+
+    // Returns colors used at node u
+    fn get_used_colors(&self, u: G::NodeId) -> &HashSet<usize> {
+        let uindex = NodeIndexable::to_index(&self.graph, u);
+        &self.node_used_colors[uindex]
+    }
+
+    // Returns the smallest free (aka unused) color at node u
+    fn get_free_color(&self, u: G::NodeId) -> usize {
+        let used_colors = self.get_used_colors(u);
+        let free_color: usize = (0..self.max_node_degree + 1)
+            .position(|color| !used_colors.contains(&color))
+            .unwrap();
+        free_color
+    }
+
+    // Returns true iff color c is free at node u
+    fn is_free_color(&self, u: G::NodeId, c: usize) -> bool {
+        !self.get_used_colors(u).contains(&c)
+    }
+
+    // Returns the maximal fan on edge (u, v) at u
+    fn get_maximal_fan(&self, e: G::EdgeRef, u: G::NodeId, v: G::NodeId) -> Vec<G::EdgeRef> {
+        let mut fan: Vec<G::EdgeRef> = vec![e];
+
+        let mut neighbors: Vec<G::EdgeRef> = self.graph.edges(u).collect();
+
+        let mut last_node_in_fan = v;
+        neighbors.remove(
+            neighbors
+                .iter()
+                .position(|x| x.target() == last_node_in_fan)
+                .unwrap(),
+        );
+
+        let mut fan_extended: bool = true;
+        while fan_extended {
+            fan_extended = false;
+
+            for edge in &neighbors {
+                if let Some(color) = self.get_edge_color(*edge) {
+                    if self.is_free_color(last_node_in_fan, color) {
+                        fan.push(*edge);
+                        last_node_in_fan = edge.target();
+                        fan_extended = true;
+                        neighbors.remove(
+                            neighbors
+                                .iter()
+                                .position(|x| x.target() == last_node_in_fan)
+                                .unwrap(),
+                        );
+                        break;
+                    }
+                }
+            }
+        }
+
+        fan
+    }
+
+    // Assuming that color is either c or d, returns the other color
+    fn flip_color(&self, c: usize, d: usize, e: usize) -> usize {
+        if e == c {
+            d
+        } else {
+            c
+        }
+    }
+
+    // Returns the longest path starting at node u with alternating colors c, d, c, d, c, etc.
+    fn get_cdu_path(&self, u: G::NodeId, c: usize, d: usize) -> Vec<(G::EdgeRef, usize)> {
+        let mut path: Vec<(G::EdgeRef, usize)> = Vec::new();
+        let mut cur_node = u;
+        let mut cur_color = c;
+        let mut path_extended = true;
+
+        while path_extended {
+            path_extended = false;
+            for edge in self.graph.edges(cur_node) {
+                if let Some(color) = self.get_edge_color(edge) {
+                    if color == cur_color {
+                        path_extended = true;
+                        path.push((edge, cur_color));
+                        cur_node = edge.target();
+                        cur_color = self.flip_color(c, d, cur_color);
+                        break;
+                    }
+                }
+            }
+        }
+        path
+    }
+
+    // Main function
+    pub fn run_algorithm(&mut self) -> &Vec<Option<usize>> {
+        for edge in self.graph.edge_references() {
+            let u: G::NodeId = edge.source();
+            let v: G::NodeId = edge.target();
+            let fan = self.get_maximal_fan(edge, u, v);
+            let c = self.get_free_color(u);
+            let d = self.get_free_color(fan.last().unwrap().target());
+
+            // find cdu-path
+            let cdu_path = self.get_cdu_path(u, d, c);
+
+            // invert colors on cdu-path
+            let mut new_cdu_path_colors: Vec<(G::EdgeRef, usize)> =
+                Vec::with_capacity(cdu_path.len());
+            for (cdu_edge, color) in cdu_path {
+                let flipped_color = self.flip_color(c, d, color);
+                new_cdu_path_colors.push((cdu_edge, flipped_color));
+            }
+            self.update_edge_colors(&new_cdu_path_colors);
+
+            // find sub-fan fan[0..w] such that d is free on fan[w]
+            let mut w = 0;
+            for (i, x) in fan.iter().enumerate() {
+                if self.is_free_color(x.target(), d) {
+                    w = i;
+                    break;
+                }
+            }
+
+            // rotate fan + fill additional color
+            let mut new_fan_colors: Vec<(G::EdgeRef, usize)> = Vec::with_capacity(w + 1);
+            for i in 1..w + 1 {
+                let next_color = self.get_edge_color(fan[i]).unwrap();
+                new_fan_colors.push((fan[i - 1], next_color));
+            }
+            new_fan_colors.push((fan[w], d));
+            self.update_edge_colors(&new_fan_colors);
+        }
+
+        &self.colors
+    }
+}
+
+/// Color edges of a graph using the Misra-Gries edge coloring algorithm.
+///
+/// Based on the paper: "A constructive proof of Vizing's theorem" by
+/// Misra and Gries, 1992.
+/// <https://www.cs.utexas.edu/users/misra/psp.dir/vizing.pdf>
+///
+/// The coloring produces at most d + 1 colors where d is the maximum degree
+/// of the graph.
+///
+/// The coloring problem is NP-hard and this is a heuristic algorithm
+/// which may not return an optimal solution.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+///
+/// # Example
+/// ```rust
+///
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::EdgeIndex;
+/// use petgraph::Undirected;
+/// use rustworkx_core::dictmap::*;
+/// use rustworkx_core::coloring::misra_gries_edge_color;///
+/// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (0, 2), (2, 3)]);
+/// let colors = misra_gries_edge_color(&g);
+///
+/// let expected_colors: DictMap<EdgeIndex, usize> = [
+///     (EdgeIndex::new(0), 2),
+///     (EdgeIndex::new(1), 1),
+///     (EdgeIndex::new(2), 0),
+///     (EdgeIndex::new(3), 2),
+/// ]
+/// .into_iter()
+/// .collect();
+///
+///  assert_eq!(colors, expected_colors);
+/// ```
+///
+pub fn misra_gries_edge_color<G>(graph: G) -> DictMap<G::EdgeId, usize>
+where
+    G: EdgeIndexable + IntoEdges + EdgeCount + NodeIndexable + IntoNodeIdentifiers,
+    G::EdgeId: Eq + Hash,
+{
+    let mut mg: MisraGries<G> = MisraGries::new(graph);
+    let colors = mg.run_algorithm();
+
+    let mut edge_colors: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
+    for edge in graph.edge_references() {
+        let edge_index = edge.id();
+        let color = colors[EdgeIndexable::to_index(&graph, edge_index)].unwrap();
+        edge_colors.insert(edge_index, color);
+    }
+    edge_colors
+}
+
+#[cfg(test)]
 mod test_node_coloring {
 
     use crate::coloring::greedy_node_color;
@@ -397,5 +659,121 @@ mod test_edge_coloring {
         .into_iter()
         .collect();
         assert_eq!(colors, expected_colors);
+    }
+}
+
+#[cfg(test)]
+mod test_misra_gries_edge_coloring {
+    use crate::coloring::misra_gries_edge_color;
+    use crate::dictmap::DictMap;
+    use crate::generators::{complete_graph, cycle_graph, heavy_hex_graph, path_graph};
+    use crate::petgraph::Graph;
+
+    use hashbrown::HashSet;
+    use petgraph::graph::EdgeIndex;
+    use petgraph::visit::{EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeIndexable};
+    use petgraph::Undirected;
+    use std::fmt::Debug;
+    use std::hash::Hash;
+
+    fn check_edge_coloring<G>(graph: G, colors: &DictMap<G::EdgeId, usize>)
+    where
+        G: NodeIndexable + IntoEdges + IntoNodeIdentifiers,
+        G::EdgeId: Eq + Hash + Debug,
+    {
+        // Check that every edge has valid color
+        for edge in graph.edge_references() {
+            if !colors.contains_key(&edge.id()) {
+                panic!("Problem: edge {:?} has no color assigned.", &edge.id());
+            }
+        }
+
+        // Check that for every node all of its edges have different colors
+        // (i.e. the number of used colors is equal to the degree).
+        // Also compute maximum color used and maximum node degree.
+        let mut max_color = 0;
+        let mut max_node_degree = 0;
+        let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
+        for node in node_indices {
+            let mut cur_node_degree = 0;
+            let mut used_colors: HashSet<usize> = HashSet::new();
+            for edge in graph.edges(node) {
+                let color = colors.get(&edge.id()).unwrap();
+                used_colors.insert(*color);
+                cur_node_degree += 1;
+                if max_color < *color {
+                    max_color = *color;
+                }
+            }
+            if used_colors.len() < cur_node_degree {
+                panic!(
+                    "Problem: node {:?} does not have enough colors.",
+                    NodeIndexable::to_index(&graph, node)
+                );
+            }
+
+            if cur_node_degree > max_node_degree {
+                max_node_degree = cur_node_degree
+            }
+        }
+
+        // Check that number of colors used is at most max_node_degree + 1
+        // (note that number of colors is max_color + 1).
+        if max_color > max_node_degree {
+            panic!(
+                "Problem: too many colors are used ({} colors used, {} max node degree)",
+                max_color + 1,
+                max_node_degree
+            );
+        }
+    }
+
+    #[test]
+    fn test_simple_graph() {
+        let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2), (0, 3), (3, 4)]);
+        let colors = misra_gries_edge_color(&graph);
+        check_edge_coloring(&graph, &colors);
+
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 0),
+            (EdgeIndex::new(1), 2),
+            (EdgeIndex::new(2), 1),
+            (EdgeIndex::new(3), 3),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_path_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            path_graph(Some(7), None, || (), || (), false).unwrap();
+        let colors = misra_gries_edge_color(&graph);
+        check_edge_coloring(&graph, &colors);
+    }
+
+    #[test]
+    fn test_cycle_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            cycle_graph(Some(15), None, || (), || (), false).unwrap();
+        let colors = misra_gries_edge_color(&graph);
+        check_edge_coloring(&graph, &colors);
+    }
+
+    #[test]
+    fn test_heavy_hex_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            heavy_hex_graph(7, || (), || (), false).unwrap();
+        let colors = misra_gries_edge_color(&graph);
+        check_edge_coloring(&graph, &colors);
+    }
+
+    #[test]
+    fn test_complete_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            complete_graph(Some(10), None, || (), || ()).unwrap();
+        let colors = misra_gries_edge_color(&graph);
+        check_edge_coloring(&graph, &colors);
     }
 }
