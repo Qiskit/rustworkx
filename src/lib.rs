@@ -390,10 +390,10 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(
-        graph_floyd_warshall_successor_and_distance_numpy
+        graph_floyd_warshall_successor_and_distance
     ))?;
     m.add_wrapped(wrap_pyfunction!(
-        digraph_floyd_warshall_successor_and_distance_numpy
+        digraph_floyd_warshall_successor_and_distance
     ))?;
     m.add_wrapped(wrap_pyfunction!(collect_runs))?;
     m.add_wrapped(wrap_pyfunction!(collect_bicolor_runs))?;

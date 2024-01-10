@@ -1104,7 +1104,7 @@ pub fn graph_floyd_warshall_numpy(
 signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
 text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn graph_floyd_warshall_successor_and_distance_numpy(
+pub fn graph_floyd_warshall_successor_and_distance(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
@@ -1242,7 +1242,7 @@ pub fn digraph_floyd_warshall_numpy(
 signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
 text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn digraph_floyd_warshall_successor_and_distance_numpy(
+pub fn digraph_floyd_warshall_successor_and_distance(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
