@@ -7,6 +7,7 @@ Algorithm Functions
    :maxdepth: 2
 
    centrality
+   coloring
    connectivity_and_cycles
    dag_algorithms
    graph_operations
