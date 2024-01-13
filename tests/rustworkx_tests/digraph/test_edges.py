@@ -241,6 +241,32 @@ class TestEdges(unittest.TestCase):
         with self.assertRaises(rustworkx.NoSuitableNeighbors):
             dag.find_adjacent_node_by_edge(node_a, compare_edges)
 
+    def test_find_predecessor_node_by_edge(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", "a to b")
+        node_c = dag.add_child(node_b, "c", "b to c")
+        dag.add_child(node_c, "d", "c to d")
+
+        def compare_edges(edge):
+            return "a to b" == edge
+
+        res = dag.find_predecessor_node_by_edge(node_b, compare_edges)
+        self.assertEqual("a", res)
+
+    def test_find_predecessor_node_by_edge_no_match(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", "a to b")
+        node_c = dag.add_child(node_b, "c", "b to c")
+        dag.add_child(node_c, "d", "c to d")
+
+        def compare_edges(edge):
+            return "b to c" == edge
+
+        with self.assertRaises(rustworkx.NoSuitableNeighbors):
+            dag.find_predecessor_node_by_edge(node_b, compare_edges)
+
     def test_add_edge_from(self):
         dag = rustworkx.PyDAG()
         nodes = list(range(4))
@@ -936,3 +962,59 @@ class TestEdgesMultigraphFalse(unittest.TestCase):
         graph.extend_from_weighted_edge_list(edge_list)
         self.assertEqual(len(graph), 4)
         self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
+
+    def test_add_edge_non_existent(self):
+        g = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            g.add_edge(2, 3, None)
+
+    def test_add_edges_from_non_existent(self):
+        g = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            g.add_edges_from([(2, 3, 5)])
+
+    def test_add_edges_from_no_data_non_existent(self):
+        g = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            g.add_edges_from_no_data([(2, 3)])
+
+    def test_reverse_graph(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from([i for i in range(4)])
+        edge_list = [
+            (0, 1, "a"),
+            (1, 2, "b"),
+            (0, 2, "c"),
+            (2, 3, "d"),
+            (0, 3, "e"),
+        ]
+        graph.add_edges_from(edge_list)
+        graph.reverse()
+        self.assertEqual([(1, 0), (2, 1), (2, 0), (3, 2), (3, 0)], graph.edge_list())
+
+    def test_reverse_large_graph(self):
+        LARGE_AMOUNT_OF_NODES = 1000000
+
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(range(LARGE_AMOUNT_OF_NODES))
+        edge_list = list(zip(range(LARGE_AMOUNT_OF_NODES), range(1, LARGE_AMOUNT_OF_NODES)))
+        weighted_edge_list = [(s, d, "a") for s, d in edge_list]
+        graph.add_edges_from(weighted_edge_list)
+        graph.reverse()
+        reversed_edge_list = [(d, s) for s, d in edge_list]
+        self.assertEqual(reversed_edge_list, graph.edge_list())
+
+    def test_reverse_empty_graph(self):
+        graph = rustworkx.PyDiGraph()
+        edges_before = graph.edge_list()
+        graph.reverse()
+        self.assertEqual(graph.edge_list(), edges_before)
+
+    def test_removed_middle_node_reverse(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(5)))
+        edge_list = [(0, 1), (2, 1), (1, 3), (3, 4), (4, 0)]
+        graph.extend_from_edge_list(edge_list)
+        graph.remove_node(1)
+        graph.reverse()
+        self.assertEqual(graph.edge_list(), [(4, 3), (0, 4)])

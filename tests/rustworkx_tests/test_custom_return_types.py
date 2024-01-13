@@ -174,6 +174,12 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         self.assertEqual([2, 3], slice_return)
         self.assertEqual([], indices[-1:-2])
 
+    def test_reversed(self):
+        indices = self.dag.node_indices()
+        reversed_slice = indices[::-1]
+        reversed_elems = list(reversed(indices))
+        self.assertEqual(reversed_slice, reversed_elems)
+
     def test_numpy_conversion(self):
         res = self.dag.node_indexes()
         np.testing.assert_array_equal(np.asarray(res, dtype=np.uintp), np.array([0, 1]))
@@ -1169,7 +1175,7 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
 
     def test_keys(self):
         keys = rustworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn).keys()
-        self.assertEqual([0, 1], list(sorted((keys))))
+        self.assertEqual([0, 1], list(sorted(keys)))
 
     def test_values(self):
         values = rustworkx.all_pairs_dijkstra_path_lengths(self.dag, self.fn).values()

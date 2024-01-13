@@ -17,10 +17,20 @@ import rustworkx
 
 
 class TestGNPRandomGraph(unittest.TestCase):
-    def test_random_gnp_directed(self):
+    def test_random_gnp_directed_1(self):
+        graph = rustworkx.directed_gnp_random_graph(15, 0.7, seed=20)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 156)
+
+    def test_random_gnp_directed_2(self):
         graph = rustworkx.directed_gnp_random_graph(20, 0.5, seed=10)
         self.assertEqual(len(graph), 20)
-        self.assertEqual(len(graph.edges()), 104)
+        self.assertEqual(len(graph.edges()), 189)
+
+    def test_random_gnp_directed_3(self):
+        graph = rustworkx.directed_gnp_random_graph(22, 0.2, seed=6)
+        self.assertEqual(len(graph), 22)
+        self.assertEqual(len(graph.edges()), 91)
 
     def test_random_gnp_directed_empty_graph(self):
         graph = rustworkx.directed_gnp_random_graph(20, 0)
@@ -34,11 +44,15 @@ class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_directed_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            rustworkx.directed_gnp_random_graph(-23, 0.5)
+            rustworkx.directed_gnp_random_graph(0, 0.5)
 
     def test_random_gnp_directed_invalid_probability(self):
         with self.assertRaises(ValueError):
             rustworkx.directed_gnp_random_graph(23, 123.5)
+
+    def test_random_gnp_directed_payload(self):
+        graph = rustworkx.directed_gnp_random_graph(3, 0.5)
+        self.assertEqual(graph.nodes(), [0, 1, 2])
 
     def test_random_gnp_undirected(self):
         graph = rustworkx.undirected_gnp_random_graph(20, 0.5, seed=10)
@@ -57,11 +71,15 @@ class TestGNPRandomGraph(unittest.TestCase):
 
     def test_random_gnp_undirected_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            rustworkx.undirected_gnp_random_graph(-23, 0.5)
+            rustworkx.undirected_gnp_random_graph(0, 0.5)
 
     def test_random_gnp_undirected_invalid_probability(self):
         with self.assertRaises(ValueError):
             rustworkx.undirected_gnp_random_graph(23, 123.5)
+
+    def test_random_gnp_undirected_payload(self):
+        graph = rustworkx.undirected_gnp_random_graph(3, 0.5)
+        self.assertEqual(graph.nodes(), [0, 1, 2])
 
 
 class TestGNMRandomGraph(unittest.TestCase):
@@ -101,11 +119,15 @@ class TestGNMRandomGraph(unittest.TestCase):
 
     def test_random_gnm_directed_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            rustworkx.directed_gnm_random_graph(-23, 5)
+            rustworkx.directed_gnm_random_graph(0, 0)
 
     def test_random_gnm_directed_invalid_num_edges(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(OverflowError):
             rustworkx.directed_gnm_random_graph(23, -5)
+
+    def test_random_gnm_directed_payload(self):
+        graph = rustworkx.directed_gnm_random_graph(3, 3)
+        self.assertEqual(graph.nodes(), [0, 1, 2])
 
     def test_random_gnm_undirected(self):
         graph = rustworkx.undirected_gnm_random_graph(20, 100)
@@ -143,11 +165,15 @@ class TestGNMRandomGraph(unittest.TestCase):
 
     def test_random_gnm_undirected_invalid_num_nodes(self):
         with self.assertRaises(ValueError):
-            rustworkx.undirected_gnm_random_graph(-23, 5)
+            rustworkx.undirected_gnm_random_graph(0, 5)
 
-    def test_random_gnm_undirected_invalid_probability(self):
-        with self.assertRaises(ValueError):
+    def test_random_gnm_undirected_invalid_num_edges(self):
+        with self.assertRaises(OverflowError):
             rustworkx.undirected_gnm_random_graph(23, -5)
+
+    def test_random_gnm_undirected_payload(self):
+        graph = rustworkx.undirected_gnm_random_graph(3, 3)
+        self.assertEqual(graph.nodes(), [0, 1, 2])
 
 
 class TestGeometricRandomGraph(unittest.TestCase):
@@ -220,3 +246,45 @@ class TestRandomSubGraphIsomorphism(unittest.TestCase):
         self.assertTrue(
             rustworkx.is_subgraph_isomorphic(graph, subgraph, id_order=True, induced=False)
         )
+
+
+class TestBarabasiAlbertGraph(unittest.TestCase):
+    def test_barabasi_albert_graph(self):
+        graph = rustworkx.barabasi_albert_graph(500, 450, 42)
+        self.assertEqual(graph.num_nodes(), 500)
+        self.assertEqual(graph.num_edges(), (50 * 450) + 449)
+
+    def test_directed_barabasi_albert_graph(self):
+        graph = rustworkx.directed_barabasi_albert_graph(500, 450, 42)
+        self.assertEqual(graph.num_nodes(), 500)
+        self.assertEqual(graph.num_edges(), (50 * 450) + 449)
+
+    def test_barabasi_albert_graph_with_starting_graph(self):
+        initial_graph = rustworkx.generators.path_graph(450)
+        graph = rustworkx.barabasi_albert_graph(500, 450, 42, initial_graph)
+        self.assertEqual(graph.num_nodes(), 500)
+        self.assertEqual(graph.num_edges(), (50 * 450) + 449)
+
+    def test_directed_barabasi_albert_graph_with_starting_graph(self):
+        initial_graph = rustworkx.generators.directed_path_graph(450)
+        graph = rustworkx.directed_barabasi_albert_graph(500, 450, 42, initial_graph)
+        self.assertEqual(graph.num_nodes(), 500)
+        self.assertEqual(graph.num_edges(), (50 * 450) + 449)
+
+    def test_invalid_barabasi_albert_graph_args(self):
+        with self.assertRaises(ValueError):
+            rustworkx.barabasi_albert_graph(5, 400)
+        with self.assertRaises(ValueError):
+            rustworkx.barabasi_albert_graph(5, 0)
+        initial_graph = rustworkx.generators.path_graph(450)
+        with self.assertRaises(ValueError):
+            rustworkx.barabasi_albert_graph(5, 4, initial_graph=initial_graph)
+
+    def test_invalid_directed_barabasi_albert_graph_args(self):
+        with self.assertRaises(ValueError):
+            rustworkx.directed_barabasi_albert_graph(5, 400)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_barabasi_albert_graph(5, 0)
+        initial_graph = rustworkx.generators.directed_path_graph(450)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_barabasi_albert_graph(5, 4, initial_graph=initial_graph)

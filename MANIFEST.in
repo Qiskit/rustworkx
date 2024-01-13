@@ -4,3 +4,4 @@ include Cargo.toml
 include Cargo.lock
 recursive-include src *
 recursive-include rustworkx-core *
+recursive-include rustworkx *.pyi py.typed

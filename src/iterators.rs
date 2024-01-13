@@ -295,7 +295,7 @@ where
 
 impl<K, V> PyEq<PyAny> for DictMap<K, V>
 where
-    for<'p> K: PyEq<K> + Clone + pyo3::ToBorrowedObject,
+    for<'p> K: PyEq<K> + Clone + pyo3::ToPyObject,
     for<'p> V: PyEq<PyAny>,
 {
     #[inline]
@@ -475,7 +475,7 @@ impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
-        #[pyclass(module = "rustworkx")]
+        #[pyclass(module = "rustworkx", sequence)]
         #[derive(Clone)]
         pub struct $name {
             pub $data: Vec<$T>,
@@ -646,6 +646,58 @@ impl PyGCProtocol for BFSSuccessors {
 
     fn __clear__(&mut self) {
         self.bfs_successors = Vec::new();
+    }
+}
+
+custom_vec_iter_impl!(
+    BFSPredecessors,
+    bfs_predecessors,
+    (PyObject, Vec<PyObject>),
+    "A custom class for the return from :func:`rustworkx.bfs_predecessors`
+
+    The class can is a read-only sequence of tuples of the form::
+
+        [(node, [predecessor_a, predecessor_b])]
+
+    where ``node``, ``predecessor_a``, and ``predecessor_b`` are the data payloads
+    for the nodes in the graph.
+
+    This class is a container class for the results of the
+    :func:`rustworkx.bfs_predecessors` function. It implements the Python
+    sequence protocol. So you can treat the return as read-only
+    sequence/list that is integer indexed. If you want to use it as an
+    iterator you can by wrapping it in an ``iter()`` that will yield the
+    results in order.
+
+    For example::
+
+        import rustworkx as rx
+
+        graph = rx.generators.directed_path_graph(5)
+        bfs_succ = rx.bfs_predecessors(0)
+        # Index based access
+        third_element = bfs_succ[2]
+        # Use as iterator
+        bfs_iter = iter(bfs_succ)
+        first_element = next(bfs_iter)
+        second_element = next(bfs_iter)
+
+    "
+);
+
+impl PyGCProtocol for BFSPredecessors {
+    fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
+        for node in &self.bfs_predecessors {
+            visit.call(&node.0)?;
+            for succ in &node.1 {
+                visit.call(succ)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn __clear__(&mut self) {
+        self.bfs_predecessors = Vec::new();
     }
 }
 
@@ -1465,6 +1517,27 @@ custom_hash_map_iter_impl!(
     "
 );
 impl PyGCProtocol for CentralityMapping {}
+
+custom_hash_map_iter_impl!(
+    EdgeCentralityMapping,
+    EdgeCentralityMappingKeys,
+    EdgeCentralityMappingValues,
+    EdgeCentralityMappingItems,
+    centralities,
+    centralities_keys,
+    centralities_values,
+    centralities_items,
+    usize,
+    f64,
+    "A custom class for the return of edge centralities at target edges
+
+    This class is a container class for the results of functions that
+    return a mapping of integer edge indices to the float betweenness score for
+    that edge. It implements the Python mapping protocol so you can treat the
+    return as a read-only mapping/dict.
+    "
+);
+impl PyGCProtocol for EdgeCentralityMapping {}
 
 custom_hash_map_iter_impl!(
     NodesCountMapping,

@@ -14,6 +14,7 @@ import math
 import unittest
 
 import rustworkx
+import networkx as nx
 
 
 class TestCentralityGraph(unittest.TestCase):
@@ -101,6 +102,16 @@ class TestCentralityGraphDeletedNode(unittest.TestCase):
         expected = {0: 0.0, 1: 2.0, 2: 2.0, 4: 0.0}
         self.assertEqual(expected, betweenness)
 
+    def test_closeness_centrality(self):
+        closeness = rustworkx.graph_closeness_centrality(self.graph)
+        expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
+        self.assertEqual(expected, closeness)
+
+    def test_closeness_centrality_wf_improved(self):
+        closeness = rustworkx.graph_closeness_centrality(self.graph, wf_improved=False)
+        expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
+        self.assertEqual(expected, closeness)
+
 
 class TestEigenvectorCentrality(unittest.TestCase):
     def test_complete_graph(self):
@@ -121,3 +132,101 @@ class TestEigenvectorCentrality(unittest.TestCase):
         graph = rustworkx.PyGraph()
         with self.assertRaises(rustworkx.FailedToConverge):
             rustworkx.eigenvector_centrality(graph, max_iter=0)
+
+
+class TestKatzCentrality(unittest.TestCase):
+    def test_complete_graph(self):
+        graph = rustworkx.generators.complete_graph(5)
+        centrality = rustworkx.graph_katz_centrality(graph)
+        expected_value = math.sqrt(1.0 / 5.0)
+        for value in centrality.values():
+            self.assertAlmostEqual(value, expected_value, delta=1e-4)
+
+    def test_no_convergence(self):
+        graph = rustworkx.generators.complete_graph(5)
+        with self.assertRaises(rustworkx.FailedToConverge):
+            rustworkx.katz_centrality(graph, max_iter=0)
+
+    def test_beta_scalar(self):
+        graph = rustworkx.generators.generalized_petersen_graph(5, 2)
+        expected_value = 0.31622776601683794
+
+        centrality = rustworkx.katz_centrality(graph, alpha=0.1, beta=0.1, tol=1e-8)
+
+        for value in centrality.values():
+            self.assertAlmostEqual(value, expected_value, delta=1e-4)
+
+    def test_beta_dictionary(self):
+        rx_graph = rustworkx.generators.generalized_petersen_graph(5, 2)
+        beta = {i: 0.1 * i**2 for i in range(10)}
+
+        rx_centrality = rustworkx.katz_centrality(rx_graph, alpha=0.25, beta=beta)
+
+        nx_graph = nx.Graph()
+        nx_graph.add_edges_from(rx_graph.edge_list())
+        nx_centrality = nx.katz_centrality(nx_graph, alpha=0.25, beta=beta)
+
+        for key in rx_centrality.keys():
+            self.assertAlmostEqual(rx_centrality[key], nx_centrality[key], delta=1e-4)
+
+    def test_beta_incomplete(self):
+        graph = rustworkx.generators.generalized_petersen_graph(5, 2)
+        with self.assertRaises(ValueError):
+            rustworkx.katz_centrality(graph, beta={0: 0.25})
+
+
+class TestEdgeBetweennessCentrality(unittest.TestCase):
+    def test_complete_graph(self):
+        graph = rustworkx.generators.mesh_graph(5)
+        centrality = rustworkx.edge_betweenness_centrality(graph)
+        for value in centrality.values():
+            self.assertAlmostEqual(value, 0.1)
+
+    def test_path_graph(self):
+        graph = rustworkx.generators.path_graph(5)
+        centrality = rustworkx.edge_betweenness_centrality(graph)
+        expected = {0: 0.4, 1: 0.6, 2: 0.6, 3: 0.4}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_cycle_graph(self):
+        graph = rustworkx.generators.cycle_graph(5)
+        centrality = rustworkx.edge_betweenness_centrality(graph)
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, 0.3)
+
+    def test_tree_unnormalized(self):
+        graph = rustworkx.generators.full_rary_tree(2, 7)
+        centrality = rustworkx.edge_betweenness_centrality(graph, normalized=False)
+        expected = {0: 12.0, 1: 12.0, 2: 6.0, 3: 6.0, 4: 6.0, 5: 6.0}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_path_graph_unnormalized(self):
+        graph = rustworkx.generators.path_graph(5)
+        centrality = rustworkx.edge_betweenness_centrality(graph, normalized=False)
+        expected = {0: 4.0, 1: 6.0, 2: 6.0, 3: 4.0}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_custom_graph_unnormalized(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(10))
+        graph.add_edges_from(
+            [
+                (0, 1, 1),
+                (0, 2, 1),
+                (0, 3, 1),
+                (0, 4, 1),
+                (3, 5, 1),
+                (4, 6, 1),
+                (5, 7, 1),
+                (6, 8, 1),
+                (7, 8, 1),
+                (8, 9, 1),
+            ]
+        )
+        centrality = rustworkx.edge_betweenness_centrality(graph, normalized=False)
+        expected = {0: 9, 1: 9, 2: 12, 3: 15, 4: 11, 5: 14, 6: 10, 7: 13, 8: 9, 9: 9}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])

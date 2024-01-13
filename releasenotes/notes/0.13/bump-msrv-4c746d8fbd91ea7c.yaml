@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The minimum supported Rust version has been increased from 1.48 to 1.56.1.
+    This applies to both building the rustworkx package from source as well as the
+    rustworkx-core crate. This change was made to facilitate using newer versions of our
+    upstream dependencies as well as leveraging newer Rust language features.

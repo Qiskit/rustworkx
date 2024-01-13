@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new algorithm function,
+    :func:`rustworkx.floyd_warshall_successor_and_distance`, that calculates
+    the shortest path distance and the successor nodes for all node pairs in
+    :class:`~rustworkx.PyGraph` and :class:`~rustworkx.PyDiGraph` graphs.

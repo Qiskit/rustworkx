@@ -120,16 +120,6 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         self.assertEqual(len(graph.edges()), len(expected_edges))
         self.assertEqual(list(graph.edge_list()), expected_edges)
 
-    def test_directed_hexagonal_graph_0_0(self):
-        graph = rustworkx.generators.directed_hexagonal_lattice_graph(0, 0)
-        self.assertEqual(len(graph), 0)
-        self.assertEqual(len(graph.edges()), 0)
-
-    def test_directed_hexagonal_graph_0_0_bidirectional(self):
-        graph = rustworkx.generators.directed_hexagonal_lattice_graph(0, 0, bidirectional=True)
-        self.assertEqual(len(graph), 0)
-        self.assertEqual(len(graph.edges()), 0)
-
     def test_directed_hexagonal_graph_2_2_bidirectional(self):
         graph = rustworkx.generators.directed_hexagonal_lattice_graph(2, 2, bidirectional=True)
         expected_edges = [

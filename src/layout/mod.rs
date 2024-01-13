@@ -73,6 +73,7 @@ use crate::iterators::Pos2DMapping;
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(
+    signature=(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=true, num_iter=50, tol=1e-6, weight_fn=None, default_weight=1., scale=1., center=None, seed=None),
     text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
                      num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
                      center=None, seed=None, /)"
@@ -84,13 +85,13 @@ pub fn graph_spring_layout(
     pos: Option<HashMap<usize, Point>>,
     fixed: Option<HashSet<usize>>,
     k: Option<f64>,
-    repulsive_exponent: Option<i32>,
-    adaptive_cooling: Option<bool>,
-    num_iter: Option<usize>,
-    tol: Option<f64>,
+    repulsive_exponent: i32,
+    adaptive_cooling: bool,
+    num_iter: usize,
+    tol: f64,
     weight_fn: Option<PyObject>,
     default_weight: f64,
-    scale: Option<f64>,
+    scale: f64,
     center: Option<Point>,
     seed: Option<u64>,
 ) -> PyResult<Pos2DMapping> {
@@ -100,13 +101,13 @@ pub fn graph_spring_layout(
         pos,
         fixed,
         k,
-        repulsive_exponent,
-        adaptive_cooling,
-        num_iter,
-        tol,
+        Some(repulsive_exponent),
+        Some(adaptive_cooling),
+        Some(num_iter),
+        Some(tol),
         weight_fn,
         default_weight,
-        scale,
+        Some(scale),
         center,
         seed,
     )
@@ -156,6 +157,7 @@ pub fn graph_spring_layout(
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(
+    signature=(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=true, num_iter=50, tol=1e-6, weight_fn=None, default_weight=1., scale=1., center=None, seed=None),
     text_signature = "(graph, pos=None, fixed=None, k=None, repulsive_exponent=2, adaptive_cooling=True,
                      num_iter=50, tol=1e-6, weight_fn=None, default_weight=1, scale=1,
                      center=None, seed=None, /)"
@@ -167,13 +169,13 @@ pub fn digraph_spring_layout(
     pos: Option<HashMap<usize, Point>>,
     fixed: Option<HashSet<usize>>,
     k: Option<f64>,
-    repulsive_exponent: Option<i32>,
-    adaptive_cooling: Option<bool>,
-    num_iter: Option<usize>,
+    repulsive_exponent: i32,
+    adaptive_cooling: bool,
+    num_iter: usize,
     tol: Option<f64>,
     weight_fn: Option<PyObject>,
     default_weight: f64,
-    scale: Option<f64>,
+    scale: f64,
     center: Option<Point>,
     seed: Option<u64>,
 ) -> PyResult<Pos2DMapping> {
@@ -183,13 +185,13 @@ pub fn digraph_spring_layout(
         pos,
         fixed,
         k,
-        repulsive_exponent,
-        adaptive_cooling,
-        num_iter,
+        Some(repulsive_exponent),
+        Some(adaptive_cooling),
+        Some(num_iter),
         tol,
         weight_fn,
         default_weight,
-        scale,
+        Some(scale),
         center,
         seed,
     )
@@ -276,7 +278,9 @@ pub fn digraph_random_layout(
 /// :returns: The bipartite layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, first_nodes, /, horitontal=False, scale=1,
+#[pyo3(
+    signature=(graph, first_nodes, horizontal=false, scale=1.0, center=None, aspect_ratio=1.33333333333333),
+    text_signature = "(graph, first_nodes, /, horizontal=False, scale=1,
                      center=None, aspect_ratio=1.33333333333333)")]
 pub fn graph_bipartite_layout(
     graph: &graph::PyGraph,
@@ -312,7 +316,9 @@ pub fn graph_bipartite_layout(
 /// :returns: The bipartite layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, first_nodes, /, horitontal=False, scale=1,
+#[pyo3(
+    signature=(graph, first_nodes, horizontal=false, scale=1.0, center=None, aspect_ratio=1.33333333333333),
+    text_signature = "(graph, first_nodes, /, horizontal=False, scale=1,
                      center=None, aspect_ratio=1.33333333333333)")]
 pub fn digraph_bipartite_layout(
     graph: &digraph::PyDiGraph,
@@ -433,7 +439,9 @@ pub fn digraph_shell_layout(
 /// :returns: The spiral layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, scale=1, center=None, resolution=0.35,
+#[pyo3(
+    signature=(graph, scale=1.0, center=None, resolution=0.35, equidistant=false),
+    text_signature = "(graph, /, scale=1, center=None, resolution=0.35,
                      equidistant=False)")]
 pub fn graph_spiral_layout(
     graph: &graph::PyGraph,
@@ -459,7 +467,9 @@ pub fn graph_spiral_layout(
 /// :returns: The spiral layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, scale=1, center=None, resolution=0.35,
+#[pyo3(
+    signature=(graph, scale=1.0, center=None, resolution=0.35, equidistant=false),
+    text_signature = "(graph, /, scale=1, center=None, resolution=0.35,
                      equidistant=False)")]
 pub fn digraph_spiral_layout(
     graph: &digraph::PyDiGraph,

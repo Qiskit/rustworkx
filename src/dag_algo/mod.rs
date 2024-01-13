@@ -12,12 +12,17 @@
 
 mod longest_path;
 
+use super::DictMap;
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
+use rustworkx_core::dictmap::InitWithHasher;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use super::iterators::NodeIndices;
-use crate::{digraph, DAGHasCycle, InvalidNode};
+use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
+
+use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -223,8 +228,11 @@ pub fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
 /// :rtype: list
 ///
 /// :raises InvalidNode: If a node index in ``first_layer`` is not in the graph
-#[pyfunction(index_output = "false")]
-#[pyo3(text_signature = "(dag, first_layer, /, index_output=False)")]
+#[pyfunction]
+#[pyo3(
+    signature=(dag, first_layer, index_output=false),
+    text_signature = "(dag, first_layer, /, index_output=False)"
+)]
 pub fn layers(
     py: Python,
     dag: &digraph::PyDiGraph,
@@ -456,7 +464,7 @@ pub fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
 ///     payload/weight for the nodes in the run
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, filter)")]
+#[pyo3(text_signature = "(graph, filter_fn)")]
 pub fn collect_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -620,7 +628,6 @@ pub fn collect_bicolor_runs(
                 }
             } else {
                 for color in colors {
-                    let color = color;
                     ensure_vector_has_index!(pending_list, block_id, color);
                     if let Some(color_block_id) = block_id[color] {
                         block_list[color_block_id].append(&mut pending_list[color]);
@@ -633,4 +640,90 @@ pub fn collect_bicolor_runs(
     }
 
     Ok(block_list)
+}
+
+/// Returns the transitive reduction of a directed acyclic graph
+///
+/// The transitive reduction of :math:`G = (V,E)` is a graph :math:`G\prime = (V,E\prime)`
+/// such that for all :math:`v` and :math:`w` in :math:`V` there is an edge :math:`(v, w)` in
+/// :math:`E\prime` if and only if :math:`(v, w)` is in :math:`E`
+/// and there is no path from :math:`v` to :math:`w` in :math:`G` with length greater than 1.
+///
+/// :param PyDiGraph graph: A directed acyclic graph
+///
+/// :returns: a directed acyclic graph representing the transitive reduction, and
+///     a map containing the index of a node in the original graph mapped to its
+///     equivalent in the resulting graph.
+/// :rtype: Tuple[PyGraph, dict]
+///
+/// :raises PyValueError: if ``graph`` is not a DAG
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn transitive_reduction(
+    graph: &digraph::PyDiGraph,
+    py: Python,
+) -> PyResult<(digraph::PyDiGraph, DictMap<usize, usize>)> {
+    let g = &graph.graph;
+    let mut index_map = DictMap::with_capacity(g.node_count());
+    if !is_directed_acyclic_graph(graph) {
+        return Err(PyValueError::new_err(
+            "Directed Acyclic Graph required for transitive_reduction",
+        ));
+    }
+    let mut tr = StablePyGraph::<Directed>::with_capacity(g.node_count(), 0);
+    let mut descendants = DictMap::new();
+    let mut check_count = HashMap::with_capacity(g.node_count());
+
+    for node in g.node_indices() {
+        let i = node.index();
+        index_map.insert(
+            node,
+            tr.add_node(graph.get_node_data(i).unwrap().clone_ref(py)),
+        );
+        check_count.insert(node, graph.in_degree(i));
+    }
+
+    for u in g.node_indices() {
+        let mut u_nbrs: IndexSet<NodeIndex> = g.neighbors(u).collect();
+        for v in g.neighbors(u) {
+            if u_nbrs.contains(&v) {
+                if !descendants.contains_key(&v) {
+                    let dfs = dfs_edges(&g, Some(v));
+                    descendants.insert(v, dfs);
+                }
+                for desc in &descendants[&v] {
+                    u_nbrs.remove(&NodeIndex::new(desc.1));
+                }
+            }
+            *check_count.get_mut(&v).unwrap() -= 1;
+            if check_count[&v] == 0 {
+                descendants.remove(&v);
+            }
+        }
+        for v in u_nbrs {
+            tr.add_edge(
+                *index_map.get(&u).unwrap(),
+                *index_map.get(&v).unwrap(),
+                graph
+                    .get_edge_data(u.index(), v.index())
+                    .unwrap()
+                    .clone_ref(py),
+            );
+        }
+    }
+    return Ok((
+        digraph::PyDiGraph {
+            graph: tr,
+            node_removed: false,
+            multigraph: graph.multigraph,
+            attrs: py.None(),
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: graph.check_cycle,
+        },
+        index_map
+            .iter()
+            .map(|(k, v)| (k.index(), v.index()))
+            .collect::<DictMap<usize, usize>>(),
+    ));
 }

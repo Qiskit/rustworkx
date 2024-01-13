@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Fixed an issue with the custom sequence return types,
+    :class:`~.BFSSuccessors`, :class:`~.NodeIndices`, :class:`~.EdgeList`,
+    :class:`~.WeightedEdgeList`, :class:`~.EdgeIndices`, and :class:`~.Chains`
+    where they previosuly were missing certain attributes that prevented them
+    being used as a sequence for certain built-in functions such as
+    ``reversed()``.
+    Fixed `#696 <https://github.com/Qiskit/rustworkx/issues/696>`__.

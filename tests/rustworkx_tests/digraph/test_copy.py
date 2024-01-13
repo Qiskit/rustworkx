@@ -11,6 +11,7 @@
 # under the License.
 
 import unittest
+import copy
 
 import rustworkx
 
@@ -53,3 +54,25 @@ class TestCopy(unittest.TestCase):
         graph_b.get_edge_data(0, 1)["edge"] = 162
         self.assertEqual(graph_b[0]["a"], 42)
         self.assertEqual(graph_a.get_edge_data(0, 1), {"edge": 162})
+
+    def test_python_copy_check_cycle(self):
+        graph_a = rustworkx.PyDiGraph(check_cycle=True)
+        graph_b = copy.copy(graph_a)
+        graph_c = rustworkx.PyDiGraph(check_cycle=False)
+        graph_d = copy.copy(graph_c)
+        self.assertTrue(graph_b.check_cycle)
+        self.assertFalse(graph_d.check_cycle)
+
+    def test_python_copy_same_objects(self):
+        graph_a = rustworkx.PyDiGraph(attrs=[1])
+        node_a = graph_a.add_node([2])
+        node_b = graph_a.add_child(node_a, [3], [4])
+        graph_b = copy.copy(graph_a)
+        self.assertEqual(graph_a.attrs, graph_b.attrs)
+        self.assertIs(graph_a.attrs, graph_b.attrs)
+        self.assertEqual(graph_a[node_a], graph_b[node_a])
+        self.assertIs(graph_a[node_a], graph_b[node_a])
+        self.assertEqual(
+            graph_a.get_edge_data(node_a, node_b), graph_b.get_edge_data(node_a, node_b)
+        )
+        self.assertIs(graph_a.get_edge_data(node_a, node_b), graph_b.get_edge_data(node_a, node_b))

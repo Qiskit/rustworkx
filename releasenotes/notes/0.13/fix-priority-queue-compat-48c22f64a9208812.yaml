@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a compatibility issue when building ``rustworkx-core`` with
+    priority-queue 1.3.0.
+    Fixed `#744 <https://github.com/Qiskit/rustworkx/issues/744>`__

@@ -6,15 +6,13 @@
 [![](https://img.shields.io/github/release/Qiskit/rustworkx.svg?style=popout-square)](https://github.com/Qiskit/rustworkx/releases)
 [![](https://img.shields.io/pypi/dm/rustworkx.svg?style=popout-square)](https://pypi.org/project/rustworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/rustworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/rustworkx?branch=main)
-[![Minimum rustc 1.48.0](https://img.shields.io/badge/rustc-1.48.0+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Minimum rustc 1.64](https://img.shields.io/badge/rustc-1.64+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.03968/status.svg)](https://doi.org/10.21105/joss.03968)
 [![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
+[![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.5879859-blue)](https://doi.org/10.5281/zenodo.5879859)
 
   - You can see the full rendered docs at:
-    <https://qiskit.org/documentation/rustworkx/dev>
-
-|:warning:| The retworkx project has been renamed to **rustworkx**. The use of the
-retworkx package will still work for the time being but starting in the 1.0.0
-release retworkx will no longer be supported
+    <https://www.rustworkx.org/>
 
 rustworkx is a general purpose graph library for Python written in Rust to
 take advantage of the performance and safety that Rust provides. It is
@@ -23,9 +21,9 @@ any Python application.
 
 ## Project history
 
-Rustworkx was originally called retworkx and was was created initially to be
+Rustworkx was originally called retworkx and was created initially to be
 a replacement for [qiskit](https://qiskit.org/)'s previous (and current)
-networkx usage (hence the original name).  The project was originally started
+NetworkX usage (hence the original name).  The project was originally started
 to build a faster directed graph to use as the underlying data structure for
 the DAG at the center of
 [qiskit-terra](https://github.com/Qiskit/qiskit-terra/)'s transpiler. However,
@@ -50,7 +48,7 @@ environment.
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able able to build the package
-from the published source package you need to have Rust >= 1.48.0 installed (and
+from the published source package you need to have Rust >= 1.64 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
 rust) to make this simpler, or rely on
@@ -171,7 +169,7 @@ you want to build rustworkx in debug mode you have to use
 
 rustworkx is the work of [many people](https://github.com/Qiskit/rustworkx/graphs/contributors) who contribute
 to the project at different levels. If you use rustworkx in your research, please cite our
-[paper](https://arxiv.org/abs/2110.15221) as per the included [BibTeX file](CITATION.bib).
+[paper](https://doi.org/10.21105/joss.03968) as per the included [BibTeX file](CITATION.bib).
 
 ## Community
 

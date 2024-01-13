@@ -28,6 +28,7 @@ use std::convert::TryFrom;
 
 use hashbrown::HashSet;
 
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
@@ -146,22 +147,62 @@ pub fn bfs_successors(
     let mut bfs = Bfs::new(&graph.graph, index);
     let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
     while let Some(nx) = bfs.next(&graph.graph) {
-        let children = graph
+        let successors: Vec<PyObject> = graph
             .graph
-            .neighbors_directed(nx, petgraph::Direction::Outgoing);
-        let mut succesors: Vec<PyObject> = Vec::new();
-        for succ in children {
-            succesors.push(graph.graph.node_weight(succ).unwrap().clone_ref(py));
-        }
-        if !succesors.is_empty() {
+            .neighbors_directed(nx, petgraph::Direction::Outgoing)
+            .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
+            .collect();
+        if !successors.is_empty() {
             out_list.push((
                 graph.graph.node_weight(nx).unwrap().clone_ref(py),
-                succesors,
+                successors,
             ));
         }
     }
     iterators::BFSSuccessors {
         bfs_successors: out_list,
+    }
+}
+
+/// Return predecessors in a breadth-first-search from a source node.
+///
+/// The return format is ``[(Parent Node, [Children Nodes])]`` in a bfs order
+/// from the source node provided.
+///
+/// :param PyDiGraph graph: The DAG to get the bfs_predecessors from
+/// :param int node: The index of the dag node to get the bfs predecessors for
+///
+/// :returns: A list of nodes's data and their children in bfs order. The
+///     BFSPredecessors class that is returned is a custom container class that
+///     implements the sequence protocol. This can be used as a python list
+///     with index based access.
+/// :rtype: BFSPredecessors
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, /)")]
+pub fn bfs_predecessors(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> iterators::BFSPredecessors {
+    let index = NodeIndex::new(node);
+    let reverse_graph = Reversed(&graph.graph);
+    let mut bfs = Bfs::new(reverse_graph, index);
+    let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
+    while let Some(nx) = bfs.next(reverse_graph) {
+        let predecessors: Vec<PyObject> = graph
+            .graph
+            .neighbors_directed(nx, petgraph::Direction::Incoming)
+            .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
+            .collect();
+        if !predecessors.is_empty() {
+            out_list.push((
+                graph.graph.node_weight(nx).unwrap().clone_ref(py),
+                predecessors,
+            ));
+        }
+    }
+    iterators::BFSPredecessors {
+        bfs_predecessors: out_list,
     }
 }
 
@@ -284,14 +325,20 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, visitor)")]
 pub fn digraph_bfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
-    visitor: PyBfsVisitor,
+    visitor: Option<PyBfsVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -370,14 +417,20 @@ pub fn digraph_bfs_search(
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, visitor)")]
 pub fn graph_bfs_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
-    visitor: PyBfsVisitor,
+    visitor: Option<PyBfsVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -454,14 +507,20 @@ pub fn graph_bfs_search(
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, visitor)")]
 pub fn digraph_dfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
-    visitor: PyDfsVisitor,
+    visitor: Option<PyDfsVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -538,14 +597,20 @@ pub fn digraph_dfs_search(
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, visitor)")]
 pub fn graph_dfs_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
-    visitor: PyDfsVisitor,
+    visitor: Option<PyDfsVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -608,15 +673,21 @@ pub fn graph_dfs_search(
 ///     a default value of cost ``1.0`` will be used for each edge.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DijkstraVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, weight_fn, visitor)")]
 pub fn digraph_dijkstra_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
     weight_fn: Option<PyObject>,
-    visitor: PyDijkstraVisitor,
+    visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -683,15 +754,21 @@ pub fn digraph_dijkstra_search(
 ///     a default value of cost ``1.0`` will be used for each edge.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DijkstraVisitor`.
+///     This has a default value of ``None`` as a backwards compatibility artifact (to
+///     preserve argument ordering from an earlier version) but it is a required argument
+///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, source, weight_fn, visitor)")]
 pub fn graph_dijkstra_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
     weight_fn: Option<PyObject>,
-    visitor: PyDijkstraVisitor,
+    visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
+    if visitor.is_none() {
+        return Err(PyTypeError::new_err("Missing required argument visitor"));
+    }
+    let visitor = visitor.unwrap();
     let starts: Vec<_> = match source {
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),

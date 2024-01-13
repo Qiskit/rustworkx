@@ -172,12 +172,12 @@ not include any way to view the images from the visualization tests.
 
 If you want to inspect the output from the visualization tests (which is common
 if you're working on visualizations) you can set the
-`RETWORKX_TEST_PRESERVE_IMAGES` environment variable to any value and this will
+`RUSTWORKX_TEST_PRESERVE_IMAGES` environment variable to any value and this will
 skip the cleanup. This will enable you to look at the output image and ensure the
 visualization is correct. For example, running:
 
 ```
-RETWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
+RUSTWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
 ```
 
 will run the visualization tests and preserve the generated image files after
@@ -270,6 +270,21 @@ web browser by running:
 
 ```
 cargo doc --open
+```
+
+### Type Annotations
+
+If you have added new methods or changed method signatures, we encourage you to add annotations for 
+those methods in stub files. The stub files are in the `rustworkx` directory and have a `.pyi` file extension.
+They contain annotated signatures for Python functions, stripped of their implementation.
+
+While this step is optional, it is very helpful for end-users. Adding annotations lets users type check
+their code with [mypy](http://mypy-lang.org/), which can be helpful for finding bugs.
+
+Just like with tests for the code, annotations are also tested via tox.
+
+```
+tox -estubs
 ```
 
 ### Release Notes

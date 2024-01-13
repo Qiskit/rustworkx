@@ -50,14 +50,16 @@
 //! * [`connectivity`](./connectivity/index.html)
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
+//! * [`token_swapper`](./token_swapper/index.html)
 //! * [`traversal`](./traversal/index.html)
+//! * [`generators`](./generators/index.html)
 //!
 //! ## Release Notes
 //!
 //! The release notes for rustworkx-core are included as part of the rustworkx
 //! documentation which is hosted at:
 //!
-//! <https://qiskit.org/documentation/rustworkx/release_notes.html>
+//! <https://www.rustworkx.org/release_notes.html>
 
 use std::convert::Infallible;
 
@@ -70,7 +72,11 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 
 /// Module for centrality algorithms.
 pub mod centrality;
+/// Module for coloring algorithms.
+pub mod coloring;
 pub mod connectivity;
+pub mod generators;
+pub mod line_graph;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
 pub mod planar;
@@ -80,6 +86,9 @@ pub mod traversal;
 pub mod dictmap;
 pub mod distancemap;
 mod min_scored;
+/// Module for swapping tokens
+pub mod token_swapper;
+pub mod utils;
 
 // re-export petgraph so there is a consistent version available to users and
 // then only need to require rustworkx-core in their dependencies

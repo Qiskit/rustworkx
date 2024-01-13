@@ -1,9 +1,6 @@
 queue_rules:
   - name: automerge
     conditions:
-      - check-success=python3.7-x64 windows-latest
-      - check-success=python3.7-x64 ubuntu-latest
-      - check-success=python3.7-x64 macOS-latest
       - check-success=python3.8-x64 windows-latest
       - check-success=python3.8-x64 ubuntu-latest
       - check-success=python3.8-x64 macOS-latest
@@ -13,6 +10,9 @@ queue_rules:
       - check-success=python3.10-x64 windows-latest
       - check-success=python3.10-x64 ubuntu-latest
       - check-success=python3.10-x64 macOS-latest
+      - check-success=python3.11-x64 windows-latest
+      - check-success=python3.11-x64 ubuntu-latest
+      - check-success=python3.11-x64 macOS-latest
       - check-success=Build, rustfmt, and python lint
       - check-success=Coverage
       - check-success=Build Docs
@@ -33,4 +33,4 @@ pull_request_rules:
     actions:
       backport:
         branches:
-          - stable/0.11
+          - stable/0.13

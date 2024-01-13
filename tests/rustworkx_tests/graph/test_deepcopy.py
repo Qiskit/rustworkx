@@ -48,3 +48,29 @@ class TestDeepcopy(unittest.TestCase):
         graph = rustworkx.PyGraph(attrs="abc")
         graph_copy = copy.deepcopy(graph)
         self.assertEqual(graph.attrs, graph_copy.attrs)
+
+    def test_deepcopy_multinode_hole_in_middle(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(20))
+        graph.remove_nodes_from([10, 11, 12, 13, 14])
+        graph.add_edges_from_no_data(
+            [
+                (4, 5),
+                (16, 18),
+                (2, 19),
+                (0, 15),
+                (15, 16),
+                (16, 17),
+                (6, 17),
+                (8, 18),
+                (17, 1),
+                (17, 7),
+                (18, 3),
+                (18, 9),
+                (19, 16),
+            ]
+        )
+        copied_graph = copy.deepcopy(graph)
+        self.assertEqual(
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16, 17, 18, 19], copied_graph.node_indices()
+        )

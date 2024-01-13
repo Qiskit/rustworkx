@@ -124,8 +124,8 @@ fn union<Ty: EdgeType>(
 ///     ``first``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
 /// :rtype: PyGraph
-#[pyfunction(merge_nodes = false, merge_edges = false)]
-#[pyo3(text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
+#[pyfunction]
+#[pyo3(signature=(first, second, merge_nodes=false, merge_edges=false), text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
 pub fn graph_union(
     py: Python,
     first: &graph::PyGraph,
@@ -173,8 +173,8 @@ pub fn graph_union(
 ///     ``first``. It's worth noting the weight/data payload objects are
 ///     passed by reference from ``first`` and ``second`` to this new object.
 /// :rtype: PyDiGraph
-#[pyfunction(merge_nodes = false, merge_edges = false)]
-#[pyo3(text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
+#[pyfunction]
+#[pyo3(signature=(first, second, merge_nodes=false, merge_edges=false), text_signature = "(first, second, /, merge_nodes=False, merge_edges=False)")]
 pub fn digraph_union(
     py: Python,
     first: &digraph::PyDiGraph,

@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use ahash::RandomState;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 
@@ -61,7 +62,7 @@ pub struct SimpleCycleIter {
     blocked: HashSet<NodeIndex>,
     closed: HashSet<NodeIndex>,
     block: HashMap<NodeIndex, HashSet<NodeIndex>>,
-    stack: Vec<(NodeIndex, IndexSet<NodeIndex, ahash::RandomState>)>,
+    stack: Vec<(NodeIndex, IndexSet<NodeIndex, RandomState>)>,
     start_node: NodeIndex,
     node_map: HashMap<NodeIndex, NodeIndex>,
     reverse_node_map: HashMap<NodeIndex, NodeIndex>,
@@ -115,8 +116,7 @@ fn unblock(
     blocked: &mut HashSet<NodeIndex>,
     block: &mut HashMap<NodeIndex, HashSet<NodeIndex>>,
 ) {
-    let mut stack: IndexSet<NodeIndex, ahash::RandomState> =
-        IndexSet::with_hasher(ahash::RandomState::new());
+    let mut stack: IndexSet<NodeIndex, RandomState> = IndexSet::with_hasher(RandomState::default());
     stack.insert(node);
     while let Some(stack_node) = stack.pop() {
         if blocked.remove(&stack_node) {

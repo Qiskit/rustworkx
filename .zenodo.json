@@ -1,5 +1,5 @@
 {
-    "title":"rustworkx",
+    "title":"rustworkx: A High-Performance Graph Library for Python",
     "description":"rustworkx is a general-purpose graph theory library focused on performance. It wraps low-level Rust code into a flexible Python API, providing fast implementations for popular graph algorithms.",
     "license":"Apache-2.0",
     "upload_type":"software",
@@ -30,5 +30,12 @@
     ],
     "communities": [
         {"identifier": "qiskit"}
+    ],
+    "related_identifiers": [
+        {
+            "scheme": "doi",
+            "identifier": "10.21105/joss.03968",
+            "relation": "isSupplementTo"
+        }
     ]
  }
