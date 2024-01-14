@@ -442,7 +442,7 @@ pub fn lexicographical_topological_sort(
 ///
 /// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
+#[pyo3(text_signature = "(dag, /)")]
 pub fn topological_generations(dag: &digraph::PyDiGraph) -> PyResult<Vec<NodeIndices>> {
     if !is_directed_acyclic_graph(dag) {
         return Err(DAGHasCycle::new_err("Topological sort encountered a cycle"));
