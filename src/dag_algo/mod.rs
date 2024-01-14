@@ -444,10 +444,6 @@ pub fn lexicographical_topological_sort(
 #[pyfunction]
 #[pyo3(text_signature = "(dag, /)")]
 pub fn topological_generations(dag: &digraph::PyDiGraph) -> PyResult<Vec<NodeIndices>> {
-    if !is_directed_acyclic_graph(dag) {
-        return Err(DAGHasCycle::new_err("Topological sort encountered a cycle"));
-    }
-
     let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::new();
     let mut zero_in_degree: Vec<NodeIndex> = Vec::new();
     for node in dag.graph.node_indices() {
@@ -478,6 +474,11 @@ pub fn topological_generations(dag: &digraph::PyDiGraph) -> PyResult<Vec<NodeInd
         generations.push(NodeIndices {
             nodes: this_generation.iter().map(|node| node.index()).collect(),
         });
+    }
+
+    // Check for cycle
+    if !in_degree_map.is_empty() {
+        return Err(DAGHasCycle::new_err("Topological sort encountered a cycle"));
     }
     Ok(generations)
 }
