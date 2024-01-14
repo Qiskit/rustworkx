@@ -194,6 +194,34 @@ class TestNodes(unittest.TestCase):
         dag.add_edge(node_b, node_a, {})
         self.assertRaises(rustworkx.DAGHasCycle, rustworkx.topological_sort, dag)
 
+    def test_topo_generations_empty(self):
+        dag = rustworkx.PyDAG()
+        self.assertEqual([], rustworkx.topological_generations(dag))
+
+    def test_topo_generations(self):
+        dag = rustworkx.PyDAG()
+        dag.extend_from_edge_list(
+            [
+                (4, 2),
+                (6, 5),
+                (7, 3),
+                (3, 1),
+                (5, 2),
+                (3, 0),
+                (2, 1),
+            ]
+        )
+        generations = [sorted(gen) for gen in rustworkx.topological_generations(dag)]
+        expected = [[4, 6, 7], [3, 5], [0, 2], [1]]
+        self.assertEqual(expected, generations)
+
+    def test_topo_generations_with_cycle(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", {})
+        dag.add_edge(node_b, node_a, {})
+        self.assertRaises(rustworkx.DAGHasCycle, rustworkx.topological_generations, dag)
+
     def test_lexicographical_topo_sort(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
