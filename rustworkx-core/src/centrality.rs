@@ -850,7 +850,7 @@ mod test_eigenvector_centrality {
         let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
         let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(1.), None, None);
         let result = output.unwrap().unwrap();
-        let expected_values: Vec<f64> = vec![0.5, 0.7071, 0.5];
+        let expected_values: Vec<f64> = vec![0.5, std::f64::consts::FRAC_1_SQRT_2, 0.5];
         for i in 0..3 {
             assert_almost_equal!(expected_values[i], result[i], 1e-4);
         }

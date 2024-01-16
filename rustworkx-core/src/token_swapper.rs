@@ -639,9 +639,8 @@ mod test_token_swapper {
         // Remove self-loops
         let nodes: Vec<_> = g.node_indices().collect();
         for node in nodes {
-            let edge = g.find_edge(node, node);
-            if edge.is_some() {
-                g.remove_edge(edge.unwrap());
+            if let Some(edge) = g.find_edge(node, node) {
+                g.remove_edge(edge);
             }
         }
         // Make sure the graph is connected by adding C_n
@@ -705,10 +704,10 @@ mod test_token_swapper {
             (NodeIndex::new(0), NodeIndex::new(2)),
             (NodeIndex::new(3), NodeIndex::new(3)),
         ]);
-        match token_swapper(&g, mapping, Some(10), Some(4), Some(50)) {
-            Ok(_) => panic!("This should error"),
-            Err(_) => (),
-        };
+        assert!(
+            token_swapper(&g, mapping, Some(10), Some(4), Some(50)).is_err(),
+            "This should error"
+        );
     }
 
     #[test]
@@ -720,9 +719,9 @@ mod test_token_swapper {
         let d = g.add_node(());
         g.add_edge(c, d, ());
         let mapping = HashMap::from([(a, b), (b, a)]);
-        match token_swapper(&g, mapping, Some(10), Some(4), Some(50)) {
-            Ok(_) => panic!("This should error"),
-            Err(_) => (),
-        };
+        assert!(
+            token_swapper(&g, mapping, Some(10), Some(4), Some(50)).is_err(),
+            "This should error"
+        );
     }
 }
