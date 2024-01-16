@@ -17,7 +17,7 @@ use rustworkx_core::planar::is_planar;
 
 #[test]
 fn test_simple_planar_graph() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (1, 2),
         (2, 3),
         (3, 4),
@@ -36,7 +36,7 @@ fn test_simple_planar_graph() {
 
 #[test]
 fn test_planar_grid_3_3_graph() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         // row edges
         (0, 1),
         (1, 2),
@@ -58,7 +58,7 @@ fn test_planar_grid_3_3_graph() {
 
 #[test]
 fn test_planar_with_self_loop() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (1, 1),
         (2, 2),
         (3, 3),
@@ -80,7 +80,7 @@ fn test_planar_with_self_loop() {
 #[test]
 fn test_goldner_harary_planar_graph() {
     // test goldner-harary graph (a maximal planar graph)
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (1, 2),
         (1, 3),
         (1, 4),
@@ -115,21 +115,21 @@ fn test_goldner_harary_planar_graph() {
 
 #[test]
 fn test_multiple_components_planar_graph() {
-    let graph = UnGraph::<(), ()>::from_edges(&[(1, 2), (2, 3), (3, 1), (4, 5), (5, 6), (6, 4)]);
+    let graph = UnGraph::<(), ()>::from_edges([(1, 2), (2, 3), (3, 1), (4, 5), (5, 6), (6, 4)]);
     let res = is_planar(&graph);
     assert!(res)
 }
 
 #[test]
 fn test_planar_multi_graph() {
-    let graph = UnGraph::<(), ()>::from_edges(&[(0, 1), (0, 1), (0, 1), (1, 2), (2, 0)]);
+    let graph = UnGraph::<(), ()>::from_edges([(0, 1), (0, 1), (0, 1), (1, 2), (2, 0)]);
     let res = is_planar(&graph);
     assert!(res)
 }
 
 #[test]
 fn test_k3_3_non_planar() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (0, 3),
         (0, 4),
         (0, 5),
@@ -141,12 +141,12 @@ fn test_k3_3_non_planar() {
         (2, 5),
     ]);
     let res = is_planar(&graph);
-    assert_eq!(res, false)
+    assert!(!res)
 }
 
 #[test]
 fn test_k5_non_planar() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (0, 1),
         (0, 2),
         (0, 3),
@@ -159,12 +159,12 @@ fn test_k5_non_planar() {
         (3, 4),
     ]);
     let res = is_planar(&graph);
-    assert_eq!(res, false)
+    assert!(!res)
 }
 
 #[test]
 fn test_multiple_components_non_planar() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (0, 1),
         (0, 2),
         (0, 3),
@@ -180,13 +180,13 @@ fn test_multiple_components_non_planar() {
         (8, 6),
     ]);
     let res = is_planar(&graph);
-    assert_eq!(res, false)
+    assert!(!res)
 }
 
 #[test]
 fn test_non_planar() {
     // tests a graph that has no subgraph directly isomorphic to K5 or K3_3.
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (1, 5),
         (1, 6),
         (1, 7),
@@ -199,12 +199,12 @@ fn test_non_planar() {
         (4, 7),
     ]);
     let res = is_planar(&graph);
-    assert_eq!(res, false)
+    assert!(!res)
 }
 
 #[test]
 fn test_planar_graph1() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (3, 10),
         (2, 13),
         (1, 13),
@@ -222,7 +222,7 @@ fn test_planar_graph1() {
 
 #[test]
 fn test_non_planar_graph2() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (1, 2),
         (4, 13),
         (0, 13),
@@ -242,12 +242,12 @@ fn test_non_planar_graph2() {
         (2, 8),
     ]);
     let res = is_planar(&graph);
-    assert_eq!(res, false)
+    assert!(!res)
 }
 
 #[test]
 fn test_non_planar_graph3() {
-    let graph = UnGraph::<(), ()>::from_edges(&[
+    let graph = UnGraph::<(), ()>::from_edges([
         (0, 7),
         (3, 11),
         (3, 4),
@@ -264,5 +264,5 @@ fn test_non_planar_graph3() {
         (5, 13),
     ]);
     let res = is_planar(&graph);
-    assert_eq!(res, false)
+    assert!(!res)
 }
