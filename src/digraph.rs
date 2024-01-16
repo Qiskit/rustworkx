@@ -547,6 +547,25 @@ impl PyDiGraph {
         }
     }
 
+    /// Return a list of indices of all directed edges between specified nodes
+    ///
+    /// :returns: A list of all the edge indices connecting the specified start and end node
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self)")]
+    pub fn edge_indices_from_endpoints(&self, node_a: usize, node_b: usize) -> EdgeIndices {
+        let node_a_index = NodeIndex::new(node_a);
+        let node_b_index = NodeIndex::new(node_b);
+
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges_directed(node_a_index, petgraph::Direction::Outgoing)
+                .filter(|edge| edge.target() == node_b_index)
+                .map(|edge| edge.id().index())
+                .collect(),
+        }
+    }
+
     /// Return a list of all node data.
     ///
     /// :returns: A list of all the node data objects in the graph
