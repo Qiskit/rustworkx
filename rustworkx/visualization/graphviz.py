@@ -10,53 +10,67 @@ import subprocess
 import tempfile
 import io
 
-try:
-    from PIL import Image
-
-    HAS_PILLOW = True
-except ImportError:
-    HAS_PILLOW = False
-
-__all__ = ["graphviz_draw"]
+__all__ = ["graphviz_draw", "have_dot", "is_format_supported"]
 
 METHODS = {"twopi", "neato", "circo", "fdp", "sfdp", "dot"}
-IMAGE_TYPES = {
-    "canon",
-    "cmap",
-    "cmapx",
-    "cmapx_np",
-    "dia",
-    "dot",
-    "fig",
-    "gd",
-    "gd2",
-    "gif",
-    "hpgl",
-    "imap",
-    "imap_np",
-    "ismap",
-    "jpe",
-    "jpeg",
-    "jpg",
-    "mif",
-    "mp",
-    "pcl",
-    "pdf",
-    "pic",
-    "plain",
-    "plain-ext",
-    "png",
-    "ps",
-    "ps2",
-    "svg",
-    "svgz",
-    "vml",
-    "vmlz" "vrml",
-    "vtx",
-    "wbmp",
-    "xdor",
-    "xlib",
-}
+
+_NO_PILLOW_MSG = """
+Pillow is necessary to use graphviz_draw() it can be installed
+with 'pip install pydot pillow.
+"""
+
+_NO_DOT_MSG = """
+Graphviz could not be found or run. This function requires that
+Graphviz is installed. If you need to install Graphviz you can
+refer to: https://graphviz.org/download/#executable-packages for
+instructions.
+"""
+
+try:
+    import PIL
+
+    HAVE_PILLOW = True
+except Exception:
+    HAVE_PILLOW = False
+
+
+# Return True if `dot` is found and executes.
+def have_dot():
+    try:
+        subprocess.run(
+            ["dot", "-V"],
+            cwd=tempfile.gettempdir(),
+            check=True,
+            capture_output=True,
+        )
+    except Exception:
+        return False
+    return True
+
+
+def _capture_support_string():
+    try:
+        subprocess.check_output(
+            ["dot", "-T", "bogus_format"],
+            cwd=tempfile.gettempdir(),
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as exerr:
+        return exerr.output.decode()
+
+
+# Return collection of image formats supported by dot, as
+# a `set` of `str`.
+def _supported_image_formats():
+    error_string = _capture_support_string()
+    # 7 is a magic number based error message.
+    # The words following the first seven are the formats.
+    return set(error_string.split()[7:])
+
+
+def is_format_supported(image_format: str):
+    """Return true if `image_format` is supported by the installed graphviz."""
+    return image_format in _supported_image_formats()
 
 
 def graphviz_draw(
@@ -141,37 +155,27 @@ def graphviz_draw(
         graphviz_draw(graph, node_attr_fn=node_attr, method='sfdp')
 
     """
-    if not HAS_PILLOW:
-        raise ImportError(
-            "Pillow is necessary to use graphviz_draw() "
-            "it can be installed with 'pip install pydot pillow'"
-        )
-    try:
-        subprocess.run(
-            ["dot", "-V"],
-            cwd=tempfile.gettempdir(),
-            check=True,
-            capture_output=True,
-        )
-    except Exception:
-        raise RuntimeError(
-            "Graphviz could not be found or run. This function requires that "
-            "Graphviz is installed. If you need to install Graphviz you can "
-            "refer to: https://graphviz.org/download/#executable-packages for "
-            "instructions."
-        )
+    _have_dot = have_dot()
+    if not (HAVE_PILLOW and _have_dot):
+        raise RuntimeError(_NO_DOT_MSG + _NO_PILLOW_MSG)
+    if not HAVE_PILLOW:
+        raise ImportError(_NO_PILLOW_MSG)
+    if not _have_dot:
+        raise RuntimeError(_NO_DOT_MSG)
 
     dot_str = graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr)
     if image_type is None:
         output_format = "png"
     else:
-        if image_type not in IMAGE_TYPES:
-            raise ValueError(
-                "The specified value for the image_type argument, "
-                f"'{image_type}' is not a valid choice. It must be one of: "
-                f"{IMAGE_TYPES}"
-            )
         output_format = image_type
+
+    supported_formats = _supported_image_formats()
+    if output_format not in supported_formats:
+        raise ValueError(
+            "The specified value for the image_type argument, "
+            f"'{output_format}' is not a valid choice. It must be one of: "
+            f"{supported_formats}"
+        )
 
     if method is None:
         prog = "dot"
@@ -193,7 +197,7 @@ def graphviz_draw(
             text=False,
         )
         dot_bytes_image = io.BytesIO(dot_result.stdout)
-        image = Image.open(dot_bytes_image)
+        image = PIL.Image.open(dot_bytes_image)
         return image
     else:
         subprocess.run(

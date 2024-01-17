@@ -11,25 +11,17 @@
 # under the License.
 
 import os
-import subprocess
-import tempfile
 import unittest
 
 import rustworkx
-from rustworkx.visualization import graphviz_draw
+from rustworkx.visualization import graphviz_draw, have_dot, is_format_supported
 
 try:
     import PIL
 
-    subprocess.run(
-        ["dot", "-V"],
-        cwd=tempfile.gettempdir(),
-        check=True,
-        capture_output=True,
-    )
-    HAS_PILLOW = True
+    HAVE_PILLOW = True
 except Exception:
-    HAS_PILLOW = False
+    HAVE_PILLOW = False
 
 SAVE_IMAGES = os.getenv("RUSTWORKX_TEST_PRESERVE_IMAGES", None)
 
@@ -39,7 +31,9 @@ def _save_image(image, path):
         image.save(path)
 
 
-@unittest.skipUnless(HAS_PILLOW, "pillow and graphviz are required for running these tests")
+@unittest.skipUnless(
+    HAVE_PILLOW and have_dot(), "pillow and graphviz are required for running these tests"
+)
 class TestGraphvizDraw(unittest.TestCase):
     def test_draw_no_args(self):
         graph = rustworkx.generators.star_graph(24)
@@ -117,6 +111,9 @@ class TestGraphvizDraw(unittest.TestCase):
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_draw_graph_attr.png")
 
+    @unittest.skipUnless(
+        is_format_supported("jpg"), "Installed graphviz does not support jpg image format."
+    )
     def test_image_type(self):
         graph = rustworkx.directed_gnp_random_graph(50, 0.8)
         image = graphviz_draw(graph, image_type="jpg")
