@@ -239,7 +239,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -259,7 +259,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -287,7 +287,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -312,7 +312,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[
+        graph.extend_with_edges([
             (a, b, 1),
             (a, c, 1),
             (a, d, 1),
@@ -350,7 +350,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -372,7 +372,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -394,7 +394,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(c);
@@ -415,7 +415,7 @@ mod tests {
         let c = graph.add_node(2);
         let d = graph.add_node(3);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -434,7 +434,7 @@ mod tests {
         let c = graph.add_node(2);
         let d = graph.add_node(3);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(c);
@@ -456,7 +456,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(a);
@@ -477,7 +477,7 @@ mod tests {
         let e = graph.add_node(4);
         let f = graph.add_node(5);
 
-        graph.extend_with_edges(&[
+        graph.extend_with_edges([
             (a, b, 1),
             (b, c, 1),
             (c, d, 1),
@@ -544,7 +544,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -564,7 +564,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -585,7 +585,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -606,7 +606,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(c);
@@ -627,7 +627,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(a);
@@ -648,7 +648,7 @@ mod tests {
         let e = graph.add_node(4);
         let f = graph.add_node(5);
 
-        graph.extend_with_edges(&[
+        graph.extend_with_edges([
             (a, b, 1),
             (b, c, 1),
             (c, d, 1),

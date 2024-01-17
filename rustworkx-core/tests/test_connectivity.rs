@@ -20,7 +20,7 @@ use rustworkx_core::connectivity;
 
 #[test]
 fn test_is_connected() {
-    let graph = Graph::<(), (), Undirected>::from_edges(&[
+    let graph = Graph::<(), (), Undirected>::from_edges([
         (0, 1),
         (1, 2),
         (2, 3),
