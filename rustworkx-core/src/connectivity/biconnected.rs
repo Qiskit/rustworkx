@@ -39,7 +39,8 @@ fn is_root(parent: &[usize], u: usize) -> bool {
 /// a graph. An undirected connected graph without articulation points is
 /// biconnected.
 ///
-/// At the same time, you can record the biconnected components in `components`.
+/// At the same time, you can record the biconnected components in `components`
+/// or the bridges in `bridges`.
 ///
 /// Biconnected components are maximal subgraphs such that the removal
 /// of a node (and all edges incident on that node) will not disconnect
@@ -47,6 +48,9 @@ fn is_root(parent: &[usize], u: usize) -> bool {
 /// component. Those nodes are articulation points, or cut vertices. The
 /// algorithm computes how many biconnected components are in the graph,
 /// and assigning each component an integer label.
+///
+/// Bridges are edges that, if removed, would increase the number of
+/// connected components of a graph.
 ///
 /// # Note
 /// The function implicitly assumes that there are no parallel edges
@@ -68,13 +72,15 @@ fn is_root(parent: &[usize], u: usize) -> bool {
 /// ]);
 ///
 /// let mut bicomp = HashMap::new();
-/// let a_points = articulation_points(&graph, Some(&mut bicomp));
+/// let mut bridges = HashSet::new();
+/// let a_points = articulation_points(&graph, Some(&mut bicomp), Some(&mut bridges));
 ///
 /// assert_eq!(a_points, HashSet::from_iter([nx(1)]));
 /// assert_eq!(bicomp, HashMap::from_iter([
 ///     ((nx(0), nx(2)), 1), ((nx(2), nx(1)), 1), ((nx(1), nx(0)), 1),
 ///     ((nx(1), nx(3)), 0)
 /// ]));
+/// assert_eq!(bridges, HashSet::from_iter([(nx(1), nx(3))]));
 /// ```
 pub fn articulation_points<G>(
     graph: G,
@@ -222,6 +228,41 @@ mod tests {
         let a_points = articulation_points(&graph, None, None);
 
         assert_eq!(a_points, HashSet::from_iter([nx(1)]));
+    }
+
+    #[test]
+    fn test_single_bridge() {
+        let graph = UnGraph::<(), ()>::from_edges([
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (3, 5),
+            (5, 6),
+            (6, 7),
+            (7, 8),
+            (5, 9),
+            (9, 10),
+            // Nontree edges.
+            (1, 3),
+            (1, 4),
+            (2, 5),
+            (5, 10),
+            (6, 8),
+        ]);
+
+        let mut bridges = HashSet::new();
+        articulation_points(&graph, None, Some(&mut bridges));
+        assert_eq!(bridges, HashSet::from_iter([(nx(5), nx(6))]));
+    }
+
+    #[test]
+    // generate test cases for bridges
+    fn test_bridges_cycle() {
+        let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
+
+        let mut bridges = HashSet::new();
+        articulation_points(&graph, None, Some(&mut bridges));
+        assert_eq!(bridges, HashSet::from_iter([]));
     }
 
     #[test]

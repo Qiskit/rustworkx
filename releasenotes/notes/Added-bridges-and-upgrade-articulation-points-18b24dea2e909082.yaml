@@ -1,0 +1,34 @@
+---
+features:
+  - |
+    Added a new function, :func:`~rustworkx.bridges` that finds the bridges of
+    an undirected :class:`~rustworkx.PyGraph`.
+    Bridges are edges that, if removed, would increase the number of connected 
+    components of a graph. For example:
+
+    .. jupyter-execute::
+
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.PyGraph()
+      graph.extend_from_edge_list([
+          (0, 1), (1, 2), (0, 2), (1, 3)
+      ])
+      bridges = rustworkx.bridges(graph)
+      bridges_set = [set(edge) for edge in bridges]
+      
+      colors = []
+      for edge in graph.edge_list():
+        color = "red" if set(edge) in bridges_set else "black"
+        colors.append(color)
+      mpl_draw(graph, edge_color=colors)
+
+upgrade:
+  - |
+    The function, ``articulation_points`` in the ``rustworkx_core:connectivity:biconnected``
+    module now accepts one more argument ``bridges: Option<&mut HashSet<Edge<G>>>`` which
+    can be used to record the bridges of the graph.
+    Bridges are edges that, if removed, would increase the number of connected 
+    components of a graph.
+    

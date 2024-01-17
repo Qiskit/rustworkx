@@ -512,6 +512,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
+    m.add_wrapped(wrap_pyfunction!(bridges))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_wrapped(wrap_pyfunction!(graph_isolates))?;
