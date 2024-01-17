@@ -477,7 +477,7 @@ mod test_edge_betweenness_centrality {
 
     #[test]
     fn test_undirected_graph_normalized() {
-        let graph = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+        let graph = petgraph::graph::UnGraph::<(), ()>::from_edges([
             (0, 6),
             (0, 4),
             (0, 1),
@@ -496,7 +496,7 @@ mod test_edge_betweenness_centrality {
         ]);
         let output = edge_betweenness_centrality(&graph, true, 50);
         let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
-        let expected_values = vec![
+        let expected_values = [
             0.1023809, 0.0547619, 0.0922619, 0.05654762, 0.09940476, 0.125, 0.09940476, 0.12440476,
             0.12857143, 0.12142857, 0.13511905, 0.125, 0.06547619, 0.08869048, 0.08154762,
         ];
@@ -507,7 +507,7 @@ mod test_edge_betweenness_centrality {
 
     #[test]
     fn test_undirected_graph_unnormalized() {
-        let graph = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+        let graph = petgraph::graph::UnGraph::<(), ()>::from_edges([
             (0, 2),
             (0, 4),
             (0, 1),
@@ -523,7 +523,7 @@ mod test_edge_betweenness_centrality {
         ]);
         let output = edge_betweenness_centrality(&graph, false, 50);
         let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
-        let expected_values = vec![
+        let expected_values = [
             3.83333, 5.5, 5.33333, 3.5, 2.5, 3.0, 3.5, 4.0, 3.66667, 6.5, 3.5, 2.16667,
         ];
         for i in 0..12 {
@@ -533,7 +533,7 @@ mod test_edge_betweenness_centrality {
 
     #[test]
     fn test_directed_graph_normalized() {
-        let graph = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+        let graph = petgraph::graph::DiGraph::<(), ()>::from_edges([
             (0, 1),
             (1, 0),
             (1, 3),
@@ -547,7 +547,7 @@ mod test_edge_betweenness_centrality {
         ]);
         let output = edge_betweenness_centrality(&graph, true, 50);
         let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
-        let expected_values = vec![0.2, 0.2, 0.1, 0.1, 0.1, 0.05, 0.1, 0.3, 0.35, 0.2];
+        let expected_values = [0.2, 0.2, 0.1, 0.1, 0.1, 0.05, 0.1, 0.3, 0.35, 0.2];
         for i in 0..10 {
             assert_almost_equal!(result[i], expected_values[i], 1e-4);
         }
@@ -555,7 +555,7 @@ mod test_edge_betweenness_centrality {
 
     #[test]
     fn test_directed_graph_unnormalized() {
-        let graph = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+        let graph = petgraph::graph::DiGraph::<(), ()>::from_edges([
             (0, 4),
             (1, 0),
             (1, 3),
@@ -569,7 +569,7 @@ mod test_edge_betweenness_centrality {
         ]);
         let output = edge_betweenness_centrality(&graph, false, 50);
         let result = output.iter().map(|x| x.unwrap()).collect::<Vec<f64>>();
-        let expected_values = vec![4.5, 3.0, 6.5, 1.5, 1.5, 1.5, 1.5, 4.5, 2.0, 7.5];
+        let expected_values = [4.5, 3.0, 6.5, 1.5, 1.5, 1.5, 1.5, 4.5, 2.0, 7.5];
         for i in 0..10 {
             assert_almost_equal!(result[i], expected_values[i], 1e-4);
         }
@@ -578,7 +578,7 @@ mod test_edge_betweenness_centrality {
     #[test]
     fn test_stable_graph_with_removed_edges() {
         let mut graph: StableGraph<(), (), Undirected> =
-            StableGraph::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 0)]);
+            StableGraph::from_edges([(0, 1), (1, 2), (2, 3), (3, 0)]);
         graph.remove_edge(edge_index(1));
         let result = edge_betweenness_centrality(&graph, false, 50);
         let expected_values = vec![Some(3.0), None, Some(3.0), Some(4.0)];
@@ -815,7 +815,7 @@ mod test_eigenvector_centrality {
     }
     #[test]
     fn test_no_convergence() {
-        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
         let output: Result<Option<Vec<f64>>> =
             eigenvector_centrality(&g, |_| Ok(1.), Some(0), None);
         let result = output.unwrap();
@@ -847,10 +847,10 @@ mod test_eigenvector_centrality {
 
     #[test]
     fn test_undirected_path_graph() {
-        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
         let output: Result<Option<Vec<f64>>> = eigenvector_centrality(&g, |_| Ok(1.), None, None);
         let result = output.unwrap().unwrap();
-        let expected_values: Vec<f64> = vec![0.5, 0.7071, 0.5];
+        let expected_values: Vec<f64> = vec![0.5, std::f64::consts::FRAC_1_SQRT_2, 0.5];
         for i in 0..3 {
             assert_almost_equal!(expected_values[i], result[i], 1e-4);
         }
@@ -905,7 +905,7 @@ mod test_katz_centrality {
     }
     #[test]
     fn test_no_convergence() {
-        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
         let output: Result<Option<Vec<f64>>> =
             katz_centrality(&g, |_| Ok(1.), None, None, None, Some(0), None);
         let result = output.unwrap();
@@ -914,7 +914,7 @@ mod test_katz_centrality {
 
     #[test]
     fn test_incomplete_beta() {
-        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
         let beta_map: HashMap<usize, f64> = [(0, 1.0)].iter().cloned().collect();
         let output: Result<Option<Vec<f64>>> =
             katz_centrality(&g, |_| Ok(1.), None, Some(beta_map), None, None, None);
@@ -924,7 +924,7 @@ mod test_katz_centrality {
 
     #[test]
     fn test_complete_beta() {
-        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+        let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
         let beta_map: HashMap<usize, f64> =
             [(0, 0.5), (1, 1.0), (2, 0.5)].iter().cloned().collect();
         let output: Result<Option<Vec<f64>>> =

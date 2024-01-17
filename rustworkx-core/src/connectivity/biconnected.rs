@@ -193,7 +193,7 @@ mod tests {
 
     #[test]
     fn test_articulation_points_repetitions() {
-        let graph = UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (1, 3)]);
+        let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (1, 3)]);
 
         let a_points = articulation_points(&graph, None);
 
@@ -203,8 +203,7 @@ mod tests {
     #[test]
     fn test_articulation_points_cycle() {
         // create a cycle graph
-        let graph =
-            UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
+        let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
 
         let a_points = articulation_points(&graph, None);
 
@@ -214,8 +213,7 @@ mod tests {
     #[test]
     fn test_biconnected_components_cycle() {
         // create a cycle graph
-        let graph =
-            UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
+        let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
 
         let mut components = HashMap::new();
         let _ = articulation_points(&graph, Some(&mut components));
@@ -236,7 +234,7 @@ mod tests {
     #[test]
     fn test_biconnected_components1() {
         // exmaple from https://web.archive.org/web/20121229123447/http://www.ibluemojo.com/school/articul_algorithm.html
-        let graph = UnGraph::<(), ()>::from_edges(&[
+        let graph = UnGraph::<(), ()>::from_edges([
             (0, 1),
             (0, 5),
             (0, 6),
@@ -315,7 +313,7 @@ mod tests {
         let i = graph.add_node("I");
         let j = graph.add_node("J");
 
-        graph.extend_with_edges(&[
+        graph.extend_with_edges([
             (a, b),
             (b, c),
             (c, a),

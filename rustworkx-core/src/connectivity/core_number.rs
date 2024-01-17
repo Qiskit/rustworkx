@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn test_directed_all_3() {
         let edge_list = vec![(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)];
-        let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
         let res: Vec<(usize, usize)> = core_number(graph)
             .iter()
             .map(|(k, v)| (k.index(), *v))
@@ -198,7 +198,7 @@ mod tests {
             example_core.push((i, 1));
         }
         example_core.push((20, 0));
-        let mut graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let mut graph = DiGraph::<i32, i32>::from_edges(edge_list);
         graph.add_node(0);
         let res: Vec<(usize, usize)> = core_number(graph)
             .iter()
