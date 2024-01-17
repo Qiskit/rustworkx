@@ -915,9 +915,36 @@ pub fn stoer_wagner_min_cut(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
-    connectivity::articulation_points(&graph.graph, None)
+    connectivity::articulation_points(&graph.graph, None, None)
         .into_iter()
         .map(|nx| nx.index())
+        .collect()
+}
+
+/// Return the bridges of an undirected graph.
+///
+/// A bridge is any edge whose removal increases the number of connected
+/// components of a graph.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph: The undirected graph to be used.
+///
+/// :returns: A set with edges of the bridges in the graph, each edge is
+/// represented by a pair of node index.
+/// :rtype: set
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn bridges(graph: &graph::PyGraph) -> HashSet<(usize, usize)> {
+    let mut bridges = HashSet::new();
+    connectivity::articulation_points(&graph.graph, None, Some(&mut bridges));
+    bridges
+        .into_iter()
+        .map(|(a, b)| (a.index(), b.index()))
         .collect()
 }
 
@@ -945,7 +972,7 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 #[pyo3(text_signature = "(graph, /)")]
 pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
     let mut bicomp = HashMap::new();
-    connectivity::articulation_points(&graph.graph, Some(&mut bicomp));
+    connectivity::articulation_points(&graph.graph, Some(&mut bicomp), None);
 
     BiconnectedComponents {
         bicon_comp: bicomp

@@ -79,6 +79,7 @@ fn is_root(parent: &[usize], u: usize) -> bool {
 pub fn articulation_points<G>(
     graph: G,
     components: Option<&mut HashMap<Edge<G>, usize>>,
+    bridges: Option<&mut HashSet<Edge<G>>>,
 ) -> HashSet<G::NodeId>
 where
     G: GraphProp<EdgeType = Undirected>
@@ -99,10 +100,17 @@ where
     let mut points = HashSet::new();
 
     let mut edge_stack = Vec::new();
-    let mut tmp_components = if components.is_some() {
+    let need_components = components.is_some();
+    let mut tmp_components = if need_components {
         HashMap::with_capacity(graph.edge_count())
     } else {
         HashMap::new()
+    };
+    let need_bridges = bridges.is_some();
+    let mut tmp_bridges = if need_bridges {
+        HashSet::with_capacity(graph.edge_count())
+    } else {
+        HashSet::new()
     };
     let mut num_components: usize = 0;
 
@@ -119,7 +127,7 @@ where
             if is_root(&parent, u) {
                 root_children += 1;
             }
-            if components.is_some() {
+            if need_components {
                 edge_stack.push((u_id, v_id));
             }
         }
@@ -130,7 +138,7 @@ where
             // do *not* consider ``(u, v)`` as a back edge if ``(v, u)`` is a tree edge.
             if v != parent[u] {
                 low[u] = low[u].min(disc[v]);
-                if components.is_some() {
+                if need_components {
                     edge_stack.push((u_id, v_id));
                 }
             }
@@ -152,7 +160,7 @@ where
                     points.insert(pu_id);
                     // now find a biconnected component that the
                     // current articulation point belongs.
-                    if components.is_some() {
+                    if need_components {
                         if let Some(at) = edge_stack.iter().rposition(|&x| x == (pu_id, u_id)) {
                             tmp_components.extend(
                                 edge_stack[at..].iter().map(|edge| (*edge, num_components)),
@@ -161,9 +169,12 @@ where
                             num_components += 1;
                         }
                     }
+                    if low[u] != disc[pu] {
+                        tmp_bridges.insert((pu_id, u_id));
+                    }
                 }
 
-                if is_root(&parent, pu) && components.is_some() {
+                if is_root(&parent, pu) && need_components {
                     if let Some(at) = edge_stack.iter().position(|&x| x == (pu_id, u_id)) {
                         tmp_components
                             .extend(edge_stack[at..].iter().map(|edge| (*edge, num_components)));
@@ -178,6 +189,9 @@ where
 
     if let Some(x) = components {
         *x = tmp_components;
+    }
+    if let Some(x) = bridges {
+        *x = tmp_bridges;
     }
 
     points
@@ -195,7 +209,7 @@ mod tests {
     fn test_articulation_points_repetitions() {
         let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (1, 3)]);
 
-        let a_points = articulation_points(&graph, None);
+        let a_points = articulation_points(&graph, None, None);
 
         assert_eq!(a_points, HashSet::from_iter([nx(1)]));
     }
@@ -205,7 +219,7 @@ mod tests {
         // create a cycle graph
         let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
 
-        let a_points = articulation_points(&graph, None);
+        let a_points = articulation_points(&graph, None, None);
 
         assert_eq!(a_points, HashSet::from_iter([nx(1)]));
     }
@@ -216,7 +230,7 @@ mod tests {
         let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
 
         let mut components = HashMap::new();
-        let _ = articulation_points(&graph, Some(&mut components));
+        let _ = articulation_points(&graph, Some(&mut components), None);
 
         assert_eq!(
             components,
@@ -262,7 +276,7 @@ mod tests {
         ]);
 
         let mut components = HashMap::new();
-        let a_points = articulation_points(&graph, Some(&mut components));
+        let a_points = articulation_points(&graph, Some(&mut components), None);
 
         assert_eq!(
             a_points,
@@ -331,7 +345,7 @@ mod tests {
         ]);
 
         let mut components = HashMap::new();
-        let _ = articulation_points(&graph, Some(&mut components));
+        let _ = articulation_points(&graph, Some(&mut components), None);
 
         assert_eq!(
             components,
@@ -359,9 +373,11 @@ mod tests {
         let graph: Graph<(), (), Undirected> = Graph::new_undirected();
 
         let mut components = HashMap::new();
-        let a_points = articulation_points(&graph, Some(&mut components));
+        let mut bridges = HashSet::new();
+        let a_points = articulation_points(&graph, Some(&mut components), Some(&mut bridges));
 
         assert_eq!(a_points, HashSet::new());
+        assert_eq!(bridges, HashSet::new());
         assert_eq!(components, HashMap::new());
     }
 }
