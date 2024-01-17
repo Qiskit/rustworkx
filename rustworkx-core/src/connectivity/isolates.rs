@@ -112,7 +112,7 @@ mod tests {
             (7, 8),
             (8, 9),
         ];
-        let mut graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let mut graph = DiGraph::<i32, i32>::from_edges(edge_list);
         graph.add_node(10);
         graph.add_node(11);
         let res: Vec<usize> = isolates(&graph).into_iter().map(|x| x.index()).collect();
@@ -135,7 +135,7 @@ mod tests {
             (7, 8),
             (8, 9),
         ];
-        let mut graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        let mut graph = UnGraph::<i32, i32>::from_edges(edge_list);
         graph.add_node(10);
         graph.add_node(11);
         let res: Vec<usize> = isolates(&graph).into_iter().map(|x| x.index()).collect();
