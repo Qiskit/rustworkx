@@ -495,7 +495,7 @@ mod test_token_swapper {
     #[test]
     fn test_simple_swap() {
         // Simple arbitrary swap
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let mapping = HashMap::from([
             (NodeIndex::new(0), NodeIndex::new(0)),
             (NodeIndex::new(1), NodeIndex::new(3)),
@@ -509,7 +509,7 @@ mod test_token_swapper {
     #[test]
     fn test_small_swap() {
         // Reverse all small swap
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([
             (0, 1),
             (1, 2),
             (2, 3),
@@ -537,7 +537,7 @@ mod test_token_swapper {
     #[test]
     fn test_happy_swap_chain() {
         // Reverse all happy swap chain > 2
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([
             (0, 1),
             (0, 2),
             (0, 3),
@@ -573,7 +573,7 @@ mod test_token_swapper {
     #[test]
     fn test_partial_simple() {
         // Simple partial swap
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(3))]);
         let mut new_map = mapping.clone();
         let swaps =
@@ -588,7 +588,7 @@ mod test_token_swapper {
     fn test_partial_simple_remove_node() {
         // Simple partial swap
         let mut g =
-            petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+            petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3), (3, 4)]);
         let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(3))]);
         g.remove_node(NodeIndex::new(2));
         g.add_edge(NodeIndex::new(1), NodeIndex::new(3), ());
@@ -604,7 +604,7 @@ mod test_token_swapper {
     #[test]
     fn test_partial_small() {
         // Partial inverting on small path graph
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let mapping = HashMap::from([
             (NodeIndex::new(0), NodeIndex::new(3)),
             (NodeIndex::new(1), NodeIndex::new(2)),
@@ -639,9 +639,8 @@ mod test_token_swapper {
         // Remove self-loops
         let nodes: Vec<_> = g.node_indices().collect();
         for node in nodes {
-            let edge = g.find_edge(node, node);
-            if edge.is_some() {
-                g.remove_edge(edge.unwrap());
+            if let Some(edge) = g.find_edge(node, node) {
+                g.remove_edge(edge);
             }
         }
         // Make sure the graph is connected by adding C_n
@@ -675,7 +674,7 @@ mod test_token_swapper {
 
     #[test]
     fn test_disjoint_graph_works() {
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (2, 3)]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (2, 3)]);
         let mapping = HashMap::from([
             (NodeIndex::new(1), NodeIndex::new(0)),
             (NodeIndex::new(0), NodeIndex::new(1)),
@@ -698,17 +697,17 @@ mod test_token_swapper {
 
     #[test]
     fn test_disjoint_graph_fails() {
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (2, 3)]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (2, 3)]);
         let mapping = HashMap::from([
             (NodeIndex::new(2), NodeIndex::new(0)),
             (NodeIndex::new(1), NodeIndex::new(1)),
             (NodeIndex::new(0), NodeIndex::new(2)),
             (NodeIndex::new(3), NodeIndex::new(3)),
         ]);
-        match token_swapper(&g, mapping, Some(10), Some(4), Some(50)) {
-            Ok(_) => panic!("This should error"),
-            Err(_) => (),
-        };
+        assert!(
+            token_swapper(&g, mapping, Some(10), Some(4), Some(50)).is_err(),
+            "This should error"
+        );
     }
 
     #[test]
@@ -720,9 +719,9 @@ mod test_token_swapper {
         let d = g.add_node(());
         g.add_edge(c, d, ());
         let mapping = HashMap::from([(a, b), (b, a)]);
-        match token_swapper(&g, mapping, Some(10), Some(4), Some(50)) {
-            Ok(_) => panic!("This should error"),
-            Err(_) => (),
-        };
+        assert!(
+            token_swapper(&g, mapping, Some(10), Some(4), Some(50)).is_err(),
+            "This should error"
+        );
     }
 }
