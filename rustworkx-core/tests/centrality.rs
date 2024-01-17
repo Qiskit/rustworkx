@@ -16,7 +16,7 @@ use rustworkx_core::petgraph::graph::{DiGraph, UnGraph};
 
 #[test]
 fn test_simple() {
-    let g = UnGraph::<i32, ()>::from_edges(&[(1, 2), (2, 3), (3, 4), (1, 4)]);
+    let g = UnGraph::<i32, ()>::from_edges([(1, 2), (2, 3), (3, 4), (1, 4)]);
     let c = closeness_centrality(&g, true);
     assert_eq!(
         vec![
@@ -32,7 +32,7 @@ fn test_simple() {
 
 #[test]
 fn test_wf_improved() {
-    let g = UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (4, 5), (5, 6)]);
+    let g = UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2), (2, 3), (4, 5), (5, 6)]);
     let c = closeness_centrality(&g, true);
     assert_eq!(
         vec![
@@ -63,7 +63,7 @@ fn test_wf_improved() {
 
 #[test]
 fn test_digraph() {
-    let g = DiGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+    let g = DiGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
     let c = closeness_centrality(&g, true);
     assert_eq!(vec![Some(0.), Some(1. / 2.), Some(2. / 3.)], c);
 
@@ -73,7 +73,7 @@ fn test_digraph() {
 
 #[test]
 fn test_k5() {
-    let g = UnGraph::<i32, ()>::from_edges(&[
+    let g = UnGraph::<i32, ()>::from_edges([
         (0, 1),
         (0, 2),
         (0, 3),
@@ -94,7 +94,7 @@ fn test_k5() {
 
 #[test]
 fn test_path() {
-    let g = UnGraph::<i32, ()>::from_edges(&[(0, 1), (1, 2)]);
+    let g = UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
     let c = closeness_centrality(&g, true);
     assert_eq!(vec![Some(2.0 / 3.0), Some(1.0), Some(2.0 / 3.0)], c);
 }

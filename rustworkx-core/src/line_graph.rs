@@ -116,8 +116,7 @@ mod test_line_graph {
     #[test]
     fn test_simple_graph() {
         // Simple graph
-        let input_graph =
-            Graph::<(), (), Undirected>::from_edges(&[(0, 1), (2, 3), (3, 4), (4, 5)]);
+        let input_graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (2, 3), (3, 4), (4, 5)]);
 
         let (output_graph, output_edge_map): (
             petgraph::graph::UnGraph<(), ()>,

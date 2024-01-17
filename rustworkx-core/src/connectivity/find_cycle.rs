@@ -140,7 +140,7 @@ mod tests {
             (7, 8),
             (8, 9),
         ];
-        let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
         let mut res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
             .iter()
             .map(|(s, t)| (s.index(), t.index()))
@@ -174,7 +174,7 @@ mod tests {
             (7, 8),
             (8, 9),
         ];
-        let mut graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let mut graph = DiGraph::<i32, i32>::from_edges(edge_list);
         graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
         let res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
             .iter()
