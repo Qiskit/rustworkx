@@ -197,7 +197,7 @@ mod test_conn_components {
 
     #[test]
     fn test_connected_components() {
-        let graph = Graph::<(), (), Undirected>::from_edges(&[
+        let graph = Graph::<(), (), Undirected>::from_edges([
             (0, 1),
             (1, 2),
             (2, 3),
@@ -216,7 +216,7 @@ mod test_conn_components {
 
     #[test]
     fn test_bfs_undirected() {
-        let graph = Graph::<(), (), Directed>::from_edges(&[
+        let graph = Graph::<(), (), Directed>::from_edges([
             (0, 1),
             (1, 2),
             (2, 3),
