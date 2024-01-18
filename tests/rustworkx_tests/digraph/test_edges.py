@@ -389,8 +389,6 @@ class TestEdges(unittest.TestCase):
         indices = dag.edge_indices_from_endpoints(0, 2)
         self.assertEqual(set(indices), {2, 5})
 
-
-
     def test_extend_from_edge_list(self):
         dag = rustworkx.PyDAG()
         edge_list = [(0, 1), (1, 2), (0, 2), (2, 3), (0, 3)]
