@@ -2662,7 +2662,8 @@ impl PyDiGraph {
         edge_weight_map: Option<PyObject>,
         cycle_check: bool,
     ) -> PyResult<NodeMap> {
-        let mut io_nodes: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
+        let mut in_nodes: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
+        let mut out_nodes: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
         let mut node_map: IndexMap<usize, usize, ahash::RandomState> =
             IndexMap::with_capacity_and_hasher(
                 other.graph.node_count(),
@@ -2678,7 +2679,7 @@ impl PyDiGraph {
         };
         for node in nodes {
             let index = NodeIndex::new(node);
-            io_nodes.extend(
+            in_nodes.extend(
                 self.graph
                     .edges_directed(index, petgraph::Direction::Incoming)
                     .filter_map(|edge| {
@@ -2689,7 +2690,7 @@ impl PyDiGraph {
                         }
                     }),
             );
-            io_nodes.extend(
+            out_nodes.extend(
                 self.graph
                     .edges_directed(index, petgraph::Direction::Outgoing)
                     .filter_map(|edge| {
@@ -2717,38 +2718,33 @@ impl PyDiGraph {
                 cycle_check,
             )?;
         }
-        for edge in io_nodes {
+        for edge in out_nodes {
             let old_source = edge.0;
-            let new_source = if removed_nodes.contains(&old_source) {
-                match input_node_map.get(&old_source.index()) {
-                    Some(new_source) => NodeIndex::new(node_map[new_source]),
-                    None => {
-                        let missing_index = old_source.index();
-                        return Err(PyIndexError::new_err(format!(
-                            "Input/Output node {} not found in io_node_map",
-                            missing_index
-                        )));
-                    }
+            let new_source = match input_node_map.get(&old_source.index()) {
+                Some(new_source) => NodeIndex::new(node_map[new_source]),
+                None => {
+                    let missing_index = old_source.index();
+                    return Err(PyIndexError::new_err(format!(
+                        "Input node {} not found in io_node_map",
+                        missing_index
+                    )));
                 }
-            } else {
-                old_source
             };
+            self._add_edge(new_source, edge.1, edge.2, cycle_check)?;
+        }
+        for edge in in_nodes {
             let old_target = edge.1;
-            let new_target = if removed_nodes.contains(&old_target) {
-                match input_node_map.get(&old_target.index()) {
-                    Some(new_target) => NodeIndex::new(node_map[new_target]),
-                    None => {
-                        let missing_index = old_target.index();
-                        return Err(PyIndexError::new_err(format!(
-                            "Input/Output node {} not found in io_node_map",
-                            missing_index
-                        )));
-                    }
+            let new_target = match input_node_map.get(&old_target.index()) {
+                Some(new_target) => NodeIndex::new(node_map[new_target]),
+                None => {
+                    let missing_index = old_target.index();
+                    return Err(PyIndexError::new_err(format!(
+                        "Output node {} not found in io_node_map",
+                        missing_index
+                    )));
                 }
-            } else {
-                old_target
             };
-            self._add_edge(new_source, new_target, edge.2, cycle_check)?;
+            self._add_edge(edge.0, new_target, edge.2, cycle_check)?;
         }
         Ok(NodeMap { node_map })
     }

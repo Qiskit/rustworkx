@@ -35,8 +35,6 @@ use num_traits::Zero;
 use numpy::Complex64;
 use numpy::PyReadonlyArray2;
 
-use crate::iterators::NodeMap;
-
 use super::dot_utils::build_dot;
 use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,

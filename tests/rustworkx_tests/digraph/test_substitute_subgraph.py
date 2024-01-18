@@ -29,7 +29,7 @@ class TestSubstitute(unittest.TestCase):
         in_graph.add_node(0)
         in_graph.add_child(0, 1, "edge")
         res = self.graph.substitute_subgraph([2], in_graph, {2: 0})
-        self.assertEqual([(0, 1), (2, 5), (1, 2), (3, 4), (2, 3)], self.graph.edge_list())
+        self.assertEqual([(0, 1), (2, 5), (2, 3), (3, 4), (1, 2)], self.graph.edge_list())
         self.assertEqual("edge", self.graph.get_edge_data(2, 5))
         self.assertEqual(res, {0: 2, 1: 5})
 
@@ -43,7 +43,8 @@ class TestSubstitute(unittest.TestCase):
             {2: 0},
             edge_weight_map=lambda edge: edge + "-migrated",
         )
-        self.assertEqual([(0, 1), (2, 5), (1, 2), (3, 4), (2, 3)], self.graph.edge_list())
+
+        self.assertEqual([(0, 1), (2, 5), (2, 3), (3, 4), (1, 2)], self.graph.edge_list())
         self.assertEqual("edge-migrated", self.graph.get_edge_data(2, 5))
         self.assertEqual(res, {0: 2, 1: 5})
 
