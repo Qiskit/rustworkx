@@ -34,7 +34,7 @@ jobs:
       - name: Rust Format
         run: cargo fmt --all -- --check
       - name: Clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
       - name: Black Codestyle Format
         run: black --check --diff retworkx rustworkx retworkx tests
       - name: Python Lint

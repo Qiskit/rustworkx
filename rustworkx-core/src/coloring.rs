@@ -506,7 +506,7 @@ mod test_node_coloring {
     #[test]
     fn test_greedy_node_color_simple_graph() {
         // Simple graph
-        let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
+        let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (0, 2)]);
         let colors = greedy_node_color(&graph);
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
@@ -521,7 +521,7 @@ mod test_node_coloring {
     #[test]
     fn test_greedy_node_color_simple_graph_large_degree() {
         // Graph with multiple edges
-        let graph = Graph::<(), (), Undirected>::from_edges(&[
+        let graph = Graph::<(), (), Undirected>::from_edges([
             (0, 1),
             (0, 2),
             (0, 2),
@@ -544,7 +544,7 @@ mod test_node_coloring {
     fn test_two_color_directed() {
         let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
 
-        let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
         let coloring = two_color(&graph).unwrap();
         let mut expected_colors = DictMap::new();
         expected_colors.insert(NodeIndex::new(0), 1);
@@ -559,7 +559,7 @@ mod test_node_coloring {
     fn test_two_color_directed_not_bipartite() {
         let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 0), (3, 1)];
 
-        let graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
         let coloring = two_color(&graph);
         assert_eq!(None, coloring)
     }
@@ -568,7 +568,7 @@ mod test_node_coloring {
     fn test_two_color_undirected_not_bipartite() {
         let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 0), (3, 1)];
 
-        let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        let graph = UnGraph::<i32, i32>::from_edges(edge_list);
         let coloring = two_color(&graph);
         assert_eq!(None, coloring)
     }
@@ -577,7 +577,7 @@ mod test_node_coloring {
     fn test_two_color_directed_with_isolates() {
         let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
 
-        let mut graph = DiGraph::<i32, i32>::from_edges(&edge_list);
+        let mut graph = DiGraph::<i32, i32>::from_edges(edge_list);
         graph.add_node(10);
         graph.add_node(11);
         let coloring = two_color(&graph).unwrap();
@@ -596,7 +596,7 @@ mod test_node_coloring {
     fn test_two_color_undirected_with_isolates() {
         let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
 
-        let mut graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        let mut graph = UnGraph::<i32, i32>::from_edges(edge_list);
         graph.add_node(10);
         graph.add_node(11);
         let coloring = two_color(&graph).unwrap();
@@ -633,7 +633,7 @@ mod test_edge_coloring {
     #[test]
     fn test_greedy_edge_color_simple_graph() {
         // Graph with an edge removed
-        let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let colors = greedy_edge_color(&graph);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
@@ -648,7 +648,7 @@ mod test_edge_coloring {
     #[test]
     fn test_greedy_edge_color_graph_with_removed_edges() {
         // Simple graph
-        let mut graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 0)]);
+        let mut graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0)]);
         graph.remove_edge(edge_index(1));
         let colors = greedy_edge_color(&graph);
         let expected_colors: DictMap<EdgeIndex, usize> = [
@@ -730,7 +730,7 @@ mod test_misra_gries_edge_coloring {
 
     #[test]
     fn test_simple_graph() {
-        let graph = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2), (0, 3), (3, 4)]);
+        let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (0, 2), (0, 3), (3, 4)]);
         let colors = misra_gries_edge_color(&graph);
         check_edge_coloring(&graph, &colors);
 

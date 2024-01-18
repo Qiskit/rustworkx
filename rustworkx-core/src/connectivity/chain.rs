@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn test_decomposition() {
-        let graph = UnGraph::<(), ()>::from_edges(&[
+        let graph = UnGraph::<(), ()>::from_edges([
             //  DFS tree edges.
             (1, 2),
             (2, 3),
