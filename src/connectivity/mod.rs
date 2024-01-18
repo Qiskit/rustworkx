@@ -915,7 +915,7 @@ pub fn stoer_wagner_min_cut(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
-    connectivity::articulation_points(&graph.graph, None, None)
+    connectivity::articulation_points(&graph.graph, None)
         .into_iter()
         .map(|nx| nx.index())
         .collect()
@@ -940,8 +940,7 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn bridges(graph: &graph::PyGraph) -> HashSet<(usize, usize)> {
-    let mut bridges = HashSet::new();
-    connectivity::articulation_points(&graph.graph, None, Some(&mut bridges));
+    let bridges = connectivity::bridges(&graph.graph);
     bridges
         .into_iter()
         .map(|(a, b)| (a.index(), b.index()))
@@ -972,7 +971,7 @@ pub fn bridges(graph: &graph::PyGraph) -> HashSet<(usize, usize)> {
 #[pyo3(text_signature = "(graph, /)")]
 pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
     let mut bicomp = HashMap::new();
-    connectivity::articulation_points(&graph.graph, Some(&mut bicomp), None);
+    connectivity::articulation_points(&graph.graph, Some(&mut bicomp));
 
     BiconnectedComponents {
         bicon_comp: bicomp

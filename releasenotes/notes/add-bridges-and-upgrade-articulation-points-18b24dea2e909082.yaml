@@ -23,12 +23,9 @@ features:
         color = "red" if set(edge) in bridges_set else "black"
         colors.append(color)
       mpl_draw(graph, edge_color=colors)
-
-upgrade:
   - |
-    The function, ``articulation_points`` in the ``rustworkx_core:connectivity:biconnected``
-    module now accepts one more argument ``bridges: Option<&mut HashSet<Edge<G>>>`` which
-    can be used to record the bridges of the graph.
+    Added a new function ``bridges`` to the ``rustworkx_core:connectivity:biconnected``
+    module that finds the bridges of an undirected graph.
     Bridges are edges that, if removed, would increase the number of connected 
-    components of a graph.
-    
+    components of a graph. For example:
+

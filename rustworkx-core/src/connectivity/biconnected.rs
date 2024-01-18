@@ -32,57 +32,7 @@ fn is_root(parent: &[usize], u: usize) -> bool {
     parent[u] == NULL
 }
 
-/// Return the articulation points of an undirected graph.
-///
-/// An articulation point or cut vertex is any node whose removal (along with
-/// all its incident edges) increases the number of connected components of
-/// a graph. An undirected connected graph without articulation points is
-/// biconnected.
-///
-/// At the same time, you can record the biconnected components in `components`
-/// or the bridges in `bridges`.
-///
-/// Biconnected components are maximal subgraphs such that the removal
-/// of a node (and all edges incident on that node) will not disconnect
-/// the subgraph. Note that nodes may be part of more than one biconnected
-/// component. Those nodes are articulation points, or cut vertices. The
-/// algorithm computes how many biconnected components are in the graph,
-/// and assigning each component an integer label.
-///
-/// Bridges are edges that, if removed, would increase the number of
-/// connected components of a graph.
-///
-/// # Note
-/// The function implicitly assumes that there are no parallel edges
-/// or self loops. It may produce incorrect/unexpected results if the
-/// input graph has self loops or parallel edges.
-///
-///
-/// # Example:
-/// ```rust
-/// use std::iter::FromIterator;
-/// use hashbrown::{HashMap, HashSet};
-///
-/// use rustworkx_core::connectivity::articulation_points;
-/// use rustworkx_core::petgraph::graph::UnGraph;
-/// use rustworkx_core::petgraph::graph::node_index as nx;
-///
-/// let graph = UnGraph::<(), ()>::from_edges(&[
-///    (0, 1), (0, 2), (1, 2), (1, 3),
-/// ]);
-///
-/// let mut bicomp = HashMap::new();
-/// let mut bridges = HashSet::new();
-/// let a_points = articulation_points(&graph, Some(&mut bicomp), Some(&mut bridges));
-///
-/// assert_eq!(a_points, HashSet::from_iter([nx(1)]));
-/// assert_eq!(bicomp, HashMap::from_iter([
-///     ((nx(0), nx(2)), 1), ((nx(2), nx(1)), 1), ((nx(1), nx(0)), 1),
-///     ((nx(1), nx(3)), 0)
-/// ]));
-/// assert_eq!(bridges, HashSet::from_iter([(nx(1), nx(3))]));
-/// ```
-pub fn articulation_points<G>(
+fn _articulation_points<G>(
     graph: G,
     components: Option<&mut HashMap<Edge<G>, usize>>,
     bridges: Option<&mut HashSet<Edge<G>>>,
@@ -175,7 +125,7 @@ where
                             num_components += 1;
                         }
                     }
-                    if low[u] != disc[pu] {
+                    if need_bridges && low[u] != disc[pu] {
                         tmp_bridges.insert((pu_id, u_id));
                     }
                 }
@@ -203,9 +153,112 @@ where
     points
 }
 
+/// Return the articulation points of an undirected graph.
+///
+/// An articulation point or cut vertex is any node whose removal (along with
+/// all its incident edges) increases the number of connected components of
+/// a graph. An undirected connected graph without articulation points is
+/// biconnected.
+///
+/// At the same time, you can record the biconnected components in `components`.
+///
+/// Biconnected components are maximal subgraphs such that the removal
+/// of a node (and all edges incident on that node) will not disconnect
+/// the subgraph. Note that nodes may be part of more than one biconnected
+/// component. Those nodes are articulation points, or cut vertices. The
+/// algorithm computes how many biconnected components are in the graph,
+/// and assigning each component an integer label.
+///
+/// # Note
+/// The function implicitly assumes that there are no parallel edges
+/// or self loops. It may produce incorrect/unexpected results if the
+/// input graph has self loops or parallel edges.
+///
+///
+/// # Example:
+/// ```rust
+/// use std::iter::FromIterator;
+/// use hashbrown::{HashMap, HashSet};
+///
+/// use rustworkx_core::connectivity::articulation_points;
+/// use rustworkx_core::petgraph::graph::UnGraph;
+/// use rustworkx_core::petgraph::graph::node_index as nx;
+///
+/// let graph = UnGraph::<(), ()>::from_edges(&[
+///    (0, 1), (0, 2), (1, 2), (1, 3),
+/// ]);
+///
+/// let mut bicomp = HashMap::new();
+/// let a_points = articulation_points(&graph, Some(&mut bicomp));
+///
+/// assert_eq!(a_points, HashSet::from_iter([nx(1)]));
+/// assert_eq!(bicomp, HashMap::from_iter([
+///     ((nx(0), nx(2)), 1), ((nx(2), nx(1)), 1), ((nx(1), nx(0)), 1),
+///     ((nx(1), nx(3)), 0)
+/// ]));
+/// ```
+pub fn articulation_points<G>(
+    graph: G,
+    components: Option<&mut HashMap<Edge<G>, usize>>,
+) -> HashSet<G::NodeId>
+where
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+{
+    _articulation_points(graph, components, None)
+}
+
+/// Return the bridges of an undirected graph.
+///
+/// Bridges are edges that, if removed, would increase the number of
+/// connected components of a graph.
+///
+/// # Note
+/// The function implicitly assumes that there are no parallel edges
+/// or self loops. It may produce incorrect/unexpected results if the
+/// input graph has self loops or parallel edges.
+///
+///
+/// # Example:
+/// ```rust
+/// use std::iter::FromIterator;
+/// use hashbrown::{HashMap, HashSet};
+///
+/// use rustworkx_core::connectivity::bridges;
+/// use rustworkx_core::petgraph::graph::UnGraph;
+/// use rustworkx_core::petgraph::graph::node_index as nx;
+///
+/// let graph = UnGraph::<(), ()>::from_edges(&[
+///    (0, 1), (0, 2), (1, 2), (1, 3),
+/// ]);
+///
+/// let bridges = bridges(&graph);
+///
+/// assert_eq!(bridges, HashSet::from_iter([(nx(1), nx(3))]));
+/// ```
+pub fn bridges<G>(graph: G) -> HashSet<Edge<G>>
+where
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+{
+    let mut bridges = HashSet::new();
+    _articulation_points(graph, None, Some(&mut bridges));
+    bridges
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::connectivity::articulation_points;
+    use crate::connectivity::{articulation_points, bridges};
     use hashbrown::{HashMap, HashSet};
     use petgraph::graph::node_index as nx;
     use petgraph::prelude::*;
@@ -215,7 +268,7 @@ mod tests {
     fn test_articulation_points_repetitions() {
         let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (1, 3)]);
 
-        let a_points = articulation_points(&graph, None, None);
+        let a_points = articulation_points(&graph, None);
 
         assert_eq!(a_points, HashSet::from_iter([nx(1)]));
     }
@@ -225,7 +278,7 @@ mod tests {
         // create a cycle graph
         let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
 
-        let a_points = articulation_points(&graph, None, None);
+        let a_points = articulation_points(&graph, None);
 
         assert_eq!(a_points, HashSet::from_iter([nx(1)]));
     }
@@ -250,19 +303,14 @@ mod tests {
             (6, 8),
         ]);
 
-        let mut bridges = HashSet::new();
-        articulation_points(&graph, None, Some(&mut bridges));
-        assert_eq!(bridges, HashSet::from_iter([(nx(5), nx(6))]));
+        assert_eq!(bridges(&graph), HashSet::from_iter([(nx(5), nx(6))]));
     }
 
     #[test]
     // generate test cases for bridges
     fn test_bridges_cycle() {
         let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
-
-        let mut bridges = HashSet::new();
-        articulation_points(&graph, None, Some(&mut bridges));
-        assert_eq!(bridges, HashSet::from_iter([]));
+        assert_eq!(bridges(&graph), HashSet::from_iter([]));
     }
 
     #[test]
@@ -271,7 +319,7 @@ mod tests {
         let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
 
         let mut components = HashMap::new();
-        let _ = articulation_points(&graph, Some(&mut components), None);
+        let _ = articulation_points(&graph, Some(&mut components));
 
         assert_eq!(
             components,
@@ -317,7 +365,7 @@ mod tests {
         ]);
 
         let mut components = HashMap::new();
-        let a_points = articulation_points(&graph, Some(&mut components), None);
+        let a_points = articulation_points(&graph, Some(&mut components));
 
         assert_eq!(
             a_points,
@@ -386,7 +434,7 @@ mod tests {
         ]);
 
         let mut components = HashMap::new();
-        let _ = articulation_points(&graph, Some(&mut components), None);
+        let _ = articulation_points(&graph, Some(&mut components));
 
         assert_eq!(
             components,
@@ -414,8 +462,8 @@ mod tests {
         let graph: Graph<(), (), Undirected> = Graph::new_undirected();
 
         let mut components = HashMap::new();
-        let mut bridges = HashSet::new();
-        let a_points = articulation_points(&graph, Some(&mut components), Some(&mut bridges));
+        let a_points = articulation_points(&graph, Some(&mut components));
+        let bridges = bridges(&graph);
 
         assert_eq!(a_points, HashSet::new());
         assert_eq!(bridges, HashSet::new());
