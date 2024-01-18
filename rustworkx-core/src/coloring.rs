@@ -11,6 +11,7 @@
 // under the License.
 
 use std::cmp::Reverse;
+use std::convert::Infallible;
 use std::hash::Hash;
 
 use crate::dictmap::*;
@@ -96,6 +97,50 @@ where
     Some(colors)
 }
 
+fn inner_greedy_node_color<G, F, E>(
+    graph: G,
+    mut preset_color_fn: F,
+) -> Result<DictMap<G::NodeId, usize>, E>
+where
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
+    G::NodeId: Hash + Eq + Send + Sync,
+    F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
+{
+    let mut colors: DictMap<G::NodeId, usize> = DictMap::with_capacity(graph.node_count());
+    let mut node_vec: Vec<G::NodeId> = Vec::with_capacity(graph.node_count());
+    let mut sort_map: HashMap<G::NodeId, usize> = HashMap::with_capacity(graph.node_count());
+    for k in graph.node_identifiers() {
+        if let Some(color) = preset_color_fn(k)? {
+            colors.insert(k, color);
+            continue;
+        }
+        node_vec.push(k);
+        sort_map.insert(k, graph.edges(k).count());
+    }
+    node_vec.par_sort_by_key(|k| Reverse(sort_map.get(k)));
+
+    for node in node_vec {
+        let mut neighbor_colors: HashSet<usize> = HashSet::new();
+        for edge in graph.edges(node) {
+            let target = edge.target();
+            let existing_color = match colors.get(&target) {
+                Some(color) => color,
+                None => continue,
+            };
+            neighbor_colors.insert(*existing_color);
+        }
+        let mut current_color: usize = 0;
+        loop {
+            if !neighbor_colors.contains(&current_color) {
+                break;
+            }
+            current_color += 1;
+        }
+        colors.insert(node, current_color);
+    }
+    Ok(colors)
+}
+
 /// Color a graph using a greedy graph coloring algorithm.
 ///
 /// This function uses a `largest-first` strategy as described in:
@@ -135,36 +180,65 @@ where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
 {
-    let mut colors: DictMap<G::NodeId, usize> = DictMap::with_capacity(graph.node_count());
-    let mut node_vec: Vec<G::NodeId> = graph.node_identifiers().collect();
+    inner_greedy_node_color(graph, |_| Ok::<Option<usize>, Infallible>(None)).unwrap()
+}
 
-    let mut sort_map: HashMap<G::NodeId, usize> = HashMap::with_capacity(graph.node_count());
-    for k in node_vec.iter() {
-        sort_map.insert(*k, graph.edges(*k).count());
-    }
-    node_vec.par_sort_by_key(|k| Reverse(sort_map.get(k)));
-
-    for node in node_vec {
-        let mut neighbor_colors: HashSet<usize> = HashSet::new();
-        for edge in graph.edges(node) {
-            let target = edge.target();
-            let existing_color = match colors.get(&target) {
-                Some(color) => color,
-                None => continue,
-            };
-            neighbor_colors.insert(*existing_color);
-        }
-        let mut current_color: usize = 0;
-        loop {
-            if !neighbor_colors.contains(&current_color) {
-                break;
-            }
-            current_color += 1;
-        }
-        colors.insert(node, current_color);
-    }
-
-    colors
+/// Color a graph using a greedy graph coloring algorithm with preset colors
+///
+/// This function uses a `largest-first` strategy as described in:
+///
+/// Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
+/// Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
+///
+/// to color the nodes with higher degree first.
+///
+/// The coloring problem is NP-hard and this is a heuristic algorithm
+/// which may not return an optimal solution.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `preset_color_fn` - A callback function that will recieve the node identifier
+///     for each node in the graph and is expected to return an `Option<usize>`
+///     (wrapped in a `Result`) that is `None` if the node has no preset and
+///     the usize represents the preset color.
+///
+/// # Example
+/// ```rust
+///
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::NodeIndex;
+/// use petgraph::Undirected;
+/// use rustworkx_core::dictmap::*;
+/// use std::convert::Infallible;
+/// use rustworkx_core::coloring::greedy_node_color_with_preset_colors;
+///
+/// let preset_color_fn = |node_idx: NodeIndex| -> Result<Option<usize>, Infallible> {
+///     if node_idx.index() == 0 {
+///         Ok(Some(1))
+///     } else {
+///         Ok(None)
+///     }
+/// };
+///
+/// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
+/// let colors = greedy_node_color_with_preset_colors(&g, preset_color_fn).unwrap();
+/// let mut expected_colors = DictMap::new();
+/// expected_colors.insert(NodeIndex::new(0), 1);
+/// expected_colors.insert(NodeIndex::new(1), 0);
+/// expected_colors.insert(NodeIndex::new(2), 0);
+/// assert_eq!(colors, expected_colors);
+/// ```
+pub fn greedy_node_color_with_preset_colors<G, F, E>(
+    graph: G,
+    preset_color_fn: F,
+) -> Result<DictMap<G::NodeId, usize>, E>
+where
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
+    G::NodeId: Hash + Eq + Send + Sync,
+    F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
+{
+    inner_greedy_node_color(graph, preset_color_fn)
 }
 
 /// Color edges of a graph using a greedy approach.
