@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added a new function :func:`~rustworkx.topological_generations` which stratifies a :class:`~rustworkx.PyDiGraph` into topological generations.

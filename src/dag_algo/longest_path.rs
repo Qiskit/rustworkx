@@ -17,8 +17,8 @@ use hashbrown::HashMap;
 use pyo3::prelude::*;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::stable_graph::NodeIndex;
 
 use num_traits::{Num, Zero};
 
@@ -61,7 +61,7 @@ where
     }
     let first = dist
         .keys()
-        .max_by(|a, b| dist[a].partial_cmp(&dist[b]).unwrap())
+        .max_by(|a, b| dist[*a].partial_cmp(&dist[*b]).unwrap())
         .unwrap();
     let mut v = *first;
     let mut u: Option<NodeIndex> = None;

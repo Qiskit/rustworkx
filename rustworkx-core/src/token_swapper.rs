@@ -13,6 +13,8 @@
 use rand::distributions::{Standard, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
+use std::error::Error;
+use std::fmt;
 use std::hash::Hash;
 
 use hashbrown::HashMap;
@@ -23,6 +25,7 @@ use petgraph::visit::{
 };
 use petgraph::Directed;
 use petgraph::Direction::{Incoming, Outgoing};
+use rayon::prelude::*;
 use rayon_cond::CondIterator;
 
 use crate::connectivity::find_cycle;
@@ -32,6 +35,18 @@ use crate::traversal::dfs_edges;
 
 type Swap = (NodeIndex, NodeIndex);
 type Edge = (NodeIndex, NodeIndex);
+
+/// Error returned by token swapper if the request mapping
+/// is impossible
+#[derive(Debug, PartialEq, Eq, Ord, PartialOrd, Copy, Clone)]
+pub struct MapNotPossible;
+
+impl Error for MapNotPossible {}
+impl fmt::Display for MapNotPossible {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "No mapping possible.")
+    }
+}
 
 struct TokenSwapper<G: GraphBase>
 where
@@ -84,7 +99,7 @@ where
         }
     }
 
-    fn map(&mut self) -> Vec<Swap> {
+    fn map(&mut self) -> Result<Vec<Swap>, MapNotPossible> {
         let num_nodes = self.graph.node_bound();
         let num_edges = self.graph.edge_count();
 
@@ -127,10 +142,11 @@ where
             .collect();
 
         // todo_nodes are all the mapping entries where left != right
-        let todo_nodes: Vec<NodeIndex> = tokens
+        let mut todo_nodes: Vec<NodeIndex> = tokens
             .iter()
             .filter_map(|(node, dest)| if node != dest { Some(*node) } else { None })
             .collect();
+        todo_nodes.par_sort();
 
         // Add initial edges to the digraph/sub_digraph
         for node in self.graph.node_identifiers() {
@@ -139,7 +155,7 @@ where
                 &mut digraph,
                 &mut sub_digraph,
                 &mut tokens,
-            );
+            )?;
         }
         // First collect the self.trial number of random numbers
         // into a Vec based on the given seed
@@ -163,7 +179,10 @@ where
                 trial_seed,
             )
         })
-        .min_by_key(|result| result.len())
+        .min_by_key(|result| match result {
+            Ok(res) => Ok(res.len()),
+            Err(e) => Err(*e),
+        })
         .unwrap()
     }
 
@@ -173,19 +192,24 @@ where
         digraph: &mut StableGraph<(), (), Directed>,
         sub_digraph: &mut StableGraph<(), (), Directed>,
         tokens: &mut HashMap<NodeIndex, NodeIndex>,
-    ) {
+    ) -> Result<(), MapNotPossible> {
         // Adds an edge to digraph if distance from the token to a neighbor is
         // less than distance from token to node. sub_digraph is same except
         // for self-edges.
         if !(tokens.contains_key(&node)) {
-            return;
+            return Ok(());
         }
         if tokens[&node] == node {
             digraph.update_edge(node, node, ());
-            return;
+            return Ok(());
         }
         let id_node = self.rev_node_map[&node];
         let id_token = self.rev_node_map[&tokens[&node]];
+
+        if self.graph.neighbors(id_node).next().is_none() {
+            return Err(MapNotPossible {});
+        }
+
         for id_neighbor in self.graph.neighbors(id_node) {
             let neighbor = self.node_map[&id_neighbor];
             let dist_neighbor: DictMap<G::NodeId, usize> = dijkstra(
@@ -205,12 +229,21 @@ where
                 None,
             )
             .unwrap();
+            let neigh_dist = dist_neighbor.get(&id_token);
+            let node_dist = dist_node.get(&id_token);
+            if neigh_dist.is_none() {
+                return Err(MapNotPossible {});
+            }
+            if node_dist.is_none() {
+                return Err(MapNotPossible {});
+            }
 
-            if dist_neighbor[&id_token] < dist_node[&id_token] {
+            if neigh_dist < node_dist {
                 digraph.update_edge(node, neighbor, ());
                 sub_digraph.update_edge(node, neighbor, ());
             }
         }
+        Ok(())
     }
 
     fn trial_map(
@@ -220,7 +253,7 @@ where
         mut tokens: HashMap<NodeIndex, NodeIndex>,
         mut todo_nodes: Vec<NodeIndex>,
         trial_seed: u64,
-    ) -> Vec<Swap> {
+    ) -> Result<Vec<Swap>, MapNotPossible> {
         // Create a random trial list of swaps to move tokens to optimal positions
         let mut steps = 0;
         let mut swap_edges: Vec<Swap> = vec![];
@@ -243,7 +276,7 @@ where
                         &mut sub_digraph,
                         &mut tokens,
                         &mut todo_nodes,
-                    );
+                    )?;
                 }
                 steps += cycle.len() - 1;
             // If there's no cycle, see if there's an edge target that matches a token key.
@@ -262,7 +295,7 @@ where
                             &mut sub_digraph,
                             &mut tokens,
                             &mut todo_nodes,
-                        );
+                        )?;
                         steps += 1;
                         found = true;
                         break;
@@ -286,7 +319,7 @@ where
                                 &mut sub_digraph,
                                 &mut tokens,
                                 &mut todo_nodes,
-                            );
+                            )?;
                             steps += 1;
                             found = true;
                             break;
@@ -303,7 +336,7 @@ where
             todo_nodes.is_empty(),
             "The output final swap map is incomplete, this points to a bug in rustworkx, please open an issue."
         );
-        swap_edges
+        Ok(swap_edges)
     }
 
     fn swap(
@@ -314,7 +347,7 @@ where
         sub_digraph: &mut StableGraph<(), (), Directed>,
         tokens: &mut HashMap<NodeIndex, NodeIndex>,
         todo_nodes: &mut Vec<NodeIndex>,
-    ) {
+    ) -> Result<(), MapNotPossible> {
         // Get token values for the 2 nodes and remove them
         let token1 = tokens.remove(&node1);
         let token2 = tokens.remove(&node2);
@@ -345,7 +378,7 @@ where
                 let edge = sub_digraph.find_edge(edge_node1, edge_node2).unwrap();
                 sub_digraph.remove_edge(edge);
             }
-            self.add_token_edges(node, digraph, sub_digraph, tokens);
+            self.add_token_edges(node, digraph, sub_digraph, tokens)?;
 
             // If a node is a token key and not equal to the value, add it to todo_nodes
             if tokens.contains_key(&node) && tokens[&node] != node {
@@ -357,6 +390,7 @@ where
                 todo_nodes.swap_remove(todo_nodes.iter().position(|x| *x == node).unwrap());
             }
         }
+        Ok(())
     }
 }
 
@@ -376,7 +410,8 @@ where
 ///     trigger the use of parallel threads. If the number of nodes in the graph is less than this value
 ///     it will run in a single thread. The default value is 50.
 ///
-/// It returns a list of tuples representing the swaps to perform.
+/// It returns a list of tuples representing the swaps to perform. The result will be an
+/// `Err(MapNotPossible)` if the `token_swapper()` function can't find a mapping.
 ///
 /// This function is multithreaded and will launch a thread pool with threads equal to
 /// the number of CPUs by default. You can tune the number of threads with
@@ -398,7 +433,7 @@ where
 ///   (NodeIndex::new(2), NodeIndex::new(2)),
 ///  ]);
 ///  // Do the token swap
-///  let output = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
+///  let output = token_swapper(&g, mapping, Some(4), Some(4), Some(50)).expect("Swap mapping failed.");
 ///  assert_eq!(3, output.len());
 ///
 /// ```
@@ -409,7 +444,7 @@ pub fn token_swapper<G>(
     trials: Option<usize>,
     seed: Option<u64>,
     parallel_threshold: Option<usize>,
-) -> Vec<Swap>
+) -> Result<Vec<Swap>, MapNotPossible>
 where
     G: NodeCount
         + EdgeCount
@@ -460,7 +495,7 @@ mod test_token_swapper {
     #[test]
     fn test_simple_swap() {
         // Simple arbitrary swap
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let mapping = HashMap::from([
             (NodeIndex::new(0), NodeIndex::new(0)),
             (NodeIndex::new(1), NodeIndex::new(3)),
@@ -468,13 +503,13 @@ mod test_token_swapper {
             (NodeIndex::new(2), NodeIndex::new(2)),
         ]);
         let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
-        assert_eq!(3, swaps.len());
+        assert_eq!(3, swaps.expect("swap mapping errored").len());
     }
 
     #[test]
     fn test_small_swap() {
         // Reverse all small swap
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([
             (0, 1),
             (1, 2),
             (2, 3),
@@ -489,7 +524,8 @@ mod test_token_swapper {
         }
         // Do the token swap
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
+        let swaps =
+            token_swapper(&g, mapping, Some(4), Some(4), Some(50)).expect("swap mapping errored");
         do_swap(&mut new_map, &swaps);
         let mut expected = HashMap::with_capacity(8);
         for i in 0..8 {
@@ -501,7 +537,7 @@ mod test_token_swapper {
     #[test]
     fn test_happy_swap_chain() {
         // Reverse all happy swap chain > 2
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([
             (0, 1),
             (0, 2),
             (0, 3),
@@ -524,7 +560,8 @@ mod test_token_swapper {
         ]);
         // Do the token swap
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
+        let swaps =
+            token_swapper(&g, mapping, Some(4), Some(4), Some(50)).expect("swap mapping errored");
         do_swap(&mut new_map, &swaps);
         let mut expected = HashMap::with_capacity(6);
         for i in (0..5).chain(6..7) {
@@ -536,10 +573,11 @@ mod test_token_swapper {
     #[test]
     fn test_partial_simple() {
         // Simple partial swap
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(3))]);
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(1));
+        let swaps =
+            token_swapper(&g, mapping, Some(4), Some(4), Some(1)).expect("swap mapping errored");
         do_swap(&mut new_map, &swaps);
         let mut expected = HashMap::with_capacity(4);
         expected.insert(NodeIndex::new(3), NodeIndex::new(3));
@@ -550,12 +588,13 @@ mod test_token_swapper {
     fn test_partial_simple_remove_node() {
         // Simple partial swap
         let mut g =
-            petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+            petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3), (3, 4)]);
         let mapping = HashMap::from([(NodeIndex::new(0), NodeIndex::new(3))]);
         g.remove_node(NodeIndex::new(2));
         g.add_edge(NodeIndex::new(1), NodeIndex::new(3), ());
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(1));
+        let swaps =
+            token_swapper(&g, mapping, Some(4), Some(4), Some(1)).expect("swap mapping errored");
         do_swap(&mut new_map, &swaps);
         let mut expected = HashMap::with_capacity(4);
         expected.insert(NodeIndex::new(3), NodeIndex::new(3));
@@ -565,13 +604,14 @@ mod test_token_swapper {
     #[test]
     fn test_partial_small() {
         // Partial inverting on small path graph
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let mapping = HashMap::from([
             (NodeIndex::new(0), NodeIndex::new(3)),
             (NodeIndex::new(1), NodeIndex::new(2)),
         ]);
         let mut new_map = mapping.clone();
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
+        let swaps =
+            token_swapper(&g, mapping, Some(4), Some(4), Some(50)).expect("swap mapping errored");
         do_swap(&mut new_map, &swaps);
         let expected = HashMap::from([
             (NodeIndex::new(2), NodeIndex::new(2)),
@@ -599,9 +639,8 @@ mod test_token_swapper {
         // Remove self-loops
         let nodes: Vec<_> = g.node_indices().collect();
         for node in nodes {
-            let edge = g.find_edge(node, node);
-            if edge.is_some() {
-                g.remove_edge(edge.unwrap());
+            if let Some(edge) = g.find_edge(node, node) {
+                g.remove_edge(edge);
             }
         }
         // Make sure the graph is connected by adding C_n
@@ -627,8 +666,62 @@ mod test_token_swapper {
         let expected: HashMap<NodeIndex, NodeIndex> =
             mapping.values().map(|val| (*val, *val)).collect();
 
-        let swaps = token_swapper(&g, mapping, Some(4), Some(4), Some(50));
+        let swaps =
+            token_swapper(&g, mapping, Some(4), Some(4), Some(50)).expect("swap mapping errored");
         do_swap(&mut new_map, &swaps);
         assert_eq!(expected, new_map)
+    }
+
+    #[test]
+    fn test_disjoint_graph_works() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (2, 3)]);
+        let mapping = HashMap::from([
+            (NodeIndex::new(1), NodeIndex::new(0)),
+            (NodeIndex::new(0), NodeIndex::new(1)),
+            (NodeIndex::new(2), NodeIndex::new(3)),
+            (NodeIndex::new(3), NodeIndex::new(2)),
+        ]);
+        let mut new_map = mapping.clone();
+        let swaps =
+            token_swapper(&g, mapping, Some(10), Some(4), Some(50)).expect("swap mapping errored");
+        do_swap(&mut new_map, &swaps);
+        let expected = HashMap::from([
+            (NodeIndex::new(2), NodeIndex::new(2)),
+            (NodeIndex::new(3), NodeIndex::new(3)),
+            (NodeIndex::new(1), NodeIndex::new(1)),
+            (NodeIndex::new(0), NodeIndex::new(0)),
+        ]);
+        assert_eq!(2, swaps.len());
+        assert_eq!(expected, new_map);
+    }
+
+    #[test]
+    fn test_disjoint_graph_fails() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (2, 3)]);
+        let mapping = HashMap::from([
+            (NodeIndex::new(2), NodeIndex::new(0)),
+            (NodeIndex::new(1), NodeIndex::new(1)),
+            (NodeIndex::new(0), NodeIndex::new(2)),
+            (NodeIndex::new(3), NodeIndex::new(3)),
+        ]);
+        assert!(
+            token_swapper(&g, mapping, Some(10), Some(4), Some(50)).is_err(),
+            "This should error"
+        );
+    }
+
+    #[test]
+    fn test_edgeless_graph_fails() {
+        let mut g = petgraph::graph::UnGraph::<(), ()>::new_undirected();
+        let a = g.add_node(());
+        let b = g.add_node(());
+        let c = g.add_node(());
+        let d = g.add_node(());
+        g.add_edge(c, d, ());
+        let mapping = HashMap::from([(a, b), (b, a)]);
+        assert!(
+            token_swapper(&g, mapping, Some(10), Some(4), Some(50)).is_err(),
+            "This should error"
+        );
     }
 }

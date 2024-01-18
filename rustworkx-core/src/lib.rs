@@ -59,7 +59,7 @@
 //! The release notes for rustworkx-core are included as part of the rustworkx
 //! documentation which is hosted at:
 //!
-//! <https://qiskit.org/ecosystem/rustworkx/release_notes.html>
+//! <https://www.rustworkx.org/release_notes.html>
 
 use std::convert::Infallible;
 
@@ -72,8 +72,11 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 
 /// Module for centrality algorithms.
 pub mod centrality;
+/// Module for coloring algorithms.
+pub mod coloring;
 pub mod connectivity;
 pub mod generators;
+pub mod line_graph;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
 pub mod planar;

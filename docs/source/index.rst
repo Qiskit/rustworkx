@@ -2,12 +2,6 @@
 rustworkx Documentation
 #######################
 
-.. note::
-
-    The project has been renamed to **rustworkx**. You can still use the legavcy
-    retworkx name for now but starting in the 1.0.0 release the retworkx name
-    will no longer be supported.
-
 rustworkx is a Python package for working with graphs and complex networks. It
 enables the creation, interaction with, and study of graphs and networks.
 
@@ -35,8 +29,33 @@ MacOS on x86_64, and arm64, and Windows 32bit and 64bit systems. However, if
 you are not running on one of these platforms, you will need a rust compiler
 to install rustworkx.
 
+rustworkx-core
+--------------
+
+In addition to the Python library, as part of rustworkx a standalone Rust library
+is also included. This library provides a generic interface for Rust users
+that wish to use the same graph algorithm implementations exposed in the Python
+library. This library, rustworkx-core, is used to build the Python rustworkx
+library but can be used for any Rust application that needs the same graph
+functionality that rustworkx provides.
+
+You can find more details on rustworkx-core here:
+
+https://crates.io/crates/rustworkx-core
+
+and the documentation for the library is hosted here:
+
+https://docs.rs/rustworkx-core/0.13.0/rustworkx_core/
+
+
 Project history
 ---------------
+
+.. note::
+
+    The project has been renamed to **rustworkx**. You can still use the legacy
+    retworkx name for now but starting in the 1.0.0 release the retworkx name
+    will no longer be supported.
 
 rustworkx was originally called retworkx and was created to be a high
 performance replacement for the Qiskit project's internal usage of the
@@ -52,9 +71,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   About Rustworkx <self>
    Installation and Getting Started <install>
    Rustworkx Tutorials and Guides <tutorial/index>
-   Rustworkx API <api>
+   Rustworkx API <api/index>
    Visualization <visualization>
    Release Notes <release_notes>
    Contributing Guide <CONTRIBUTING>

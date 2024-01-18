@@ -1,3 +1,4 @@
+===============
 Getting Started
 ===============
 
@@ -10,8 +11,8 @@ Installing Rustworkx
 ====================
 
 rustworkx is published on pypi so on x86_64, i686, ppc64le, s390x, and aarch64
-Linux systems, x86_64 on Mac OSX, and 32 and 64 bit Windows installing is as
-simple as running::
+Linux systems, x86_64 and arm64 on macOS, and 32 and 64 bit Windows
+installing is as simple as running::
 
     pip install rustworkx
 
@@ -25,7 +26,7 @@ Installing on a platform without precompiled binaries
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able able to build the package from
-the published source package you need to have Rust >= 1.56.1 installed (and also
+the published source package you need to have Rust >= 1.64 installed (and also
 cargo which is normally included with rust) You can use
 `rustup <https://rustup.rs/>`_ (a cross platform installer for rust) to make this
 simpler, or rely on
@@ -58,7 +59,7 @@ limitations in available testing resources and platform availability, not all
 platforms can be supported. Platform support for rustworkx is broken into 4
 tiers with different levels of support for each tier. For platforms outside
 these, rustworkx is probably still installable, but it’s not tested and you will
-need a Rust compiler and have to build retworkx (and likely Numpy too) from
+need a Rust compiler and have to build rustworkx (and likely Numpy too) from
 source.
 
 .. list-table:: Platform Support
@@ -71,28 +72,36 @@ source.
    * - Linux
      - x86_64
      - :ref:`tier-1`
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - i686 
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - aarch64
      - :ref:`tier-2`
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - pp64le
      - :ref:`tier-3`
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - s390x
+     - :ref:`tier-4`
+     - Distributions compatible with the `manylinux 2014`_ packaging specification
+   * - Linux (musl)
+     - x86_64
      - :ref:`tier-3`
-     - Distributions compatible with the [manylinux 2014](https://peps.python.org/pep-0599/) packaging specification
-   * - macOS (10.9 or newer)
+     -
+   * - Linux (musl)
+     - aarch64
+     - :ref:`tier-4`
+     - 
+   * - macOS (10.12 or newer)
      - x86_64
      - :ref:`tier-1`
      -
-   * - macOS (10.15 or newer)
+   * - macOS (11 or newer)
      - arm64
      - :ref:`tier-4`
      -
@@ -104,6 +113,9 @@ source.
      - i686 or x86_64
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
      -
+
+
+.. _manylinux 2014: https://peps.python.org/pep-0599/>
 
 .. _tier-1:
 

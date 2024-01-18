@@ -21,12 +21,12 @@ import subprocess
 
 project = 'rustworkx'
 copyright = '2021, rustworkx Contributors'
-docs_url_prefix = "ecosystem/rustworkx"
+docs_url_prefix = ""
 
 # The short X.Y version.
-version = '0.13.0'
+version = '0.14.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.13.0'
+release = '0.14.0'
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
@@ -42,7 +42,6 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx_reredirects',
               'qiskit_sphinx_theme',
              ]
-html_static_path = ["_static"]
 templates_path = ['_templates']
 extra_css_files = ["overrides.css"]
 
@@ -72,7 +71,7 @@ intersphinx_mapping = {
 
 # Prepend warning for development docs:
 
-if not os.getenv('RETWORKX_DEV_DOCS', None):
+if not os.getenv('RUSTWORKX_DEV_DOCS', None):
     rst_prolog = """
 .. raw:: html
 
@@ -94,15 +93,13 @@ else:
 """
 
 # HTML Output Options
-html_theme = 'qiskit_sphinx_theme'
-html_theme_options = {
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
-}
+html_theme = 'qiskit-ecosystem'
+html_title = f"{project} {release}"
 htmlhelp_basename = 'rustworkx'
 
+html_theme_options = {
+    "disable_ecosystem_logo": True,
+}
 
 # Latex options
 latex_elements = {}
@@ -127,16 +124,16 @@ with open("sources.txt", "r") as fd:
     for source_str in fd:
         redirects[f"stubs/{source_str}"] = f"../apiref/{source_str}"
 
-if os.getenv("RETWORKX_LEGACY_DOCS", None) is not None:
-    redirects["*"] = "https://qiskit.org/ecosystem/rustworkx/$source.html"
-    html_baseurl = "https://qiskit.org/ecosystem/rustworkx/"
+if os.getenv("RUSTWORKX_LEGACY_DOCS", None) is not None:
+    redirects["*"] = "https://www.rustworkx.org/$source.html"
+    html_baseurl = "https://www.rustworkx.org/"
 
 
 # Version extensions
 
 def _get_versions(app, config):
     context = config.html_context
-    start_version = (0, 8, 0)
+    start_version = (0, 12, 0)
     proc = subprocess.run(['git', 'describe', '--abbrev=0'],
                           capture_output=True)
     proc.check_returncode()
@@ -155,7 +152,7 @@ def _get_versions(app, config):
 
 
 def _get_version_label(current_version):
-    if not os.getenv('RETWORKX_DEV_DOCS', None):
+    if not os.getenv('RUSTWORKX_DEV_DOCS', None):
         current_version_info = current_version.split('.')
         return ".".join(current_version_info[:-1])
     else:
