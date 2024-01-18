@@ -2626,10 +2626,10 @@ impl PyDiGraph {
     ///
     /// :param list nodes: A list of nodes in this graph representing the subgraph
     ///     to be removed.
-    /// :param PyDiGraph subgraph: The subgraph to replace ``nodes`` with
-    /// :param dict input_node_map: The mapping of node indices from ```nodes`` to a node
+    /// :param PyDiGraph other: The subgraph to replace ``nodes`` with
+    /// :param dict input_node_map: The mapping of node indices from ``nodes`` to a node
     ///     in ``subgraph``. This is used for incoming and outgoing edges into the removed
-    ///     subgraph. This will replace any edges conneted to a node in  ``nodes`` with the
+    ///     subgraph. This will replace any edges connected to a node in  ``nodes`` with the
     ///     other endpoint outside ``nodes`` where the node in ``nodes`` replaced via this
     ///     mapping.
     /// :param callable edge_weight_map: An optional callable object that when
@@ -2641,7 +2641,7 @@ impl PyDiGraph {
     /// :param bool cycle_check: To check and raise if the substitution would introduce a cycle.
     ///     If set to ``True`` or :attr:`.check_cycle` is set to ``True`` when a cycle would be
     ///     added a :class:`~.DAGWouldCycle` exception will be raised. However, in this case the
-    ///     state of the graph will be partially through the internal steps required for the
+    ///     state of the graph will be partially modified through the internal steps required for the
     ///     substitution. If your intent is to detect and use the graph if a
     ///     cycle were to be detected, you should make a copy of the graph
     ///     (see :meth:`.copy`) prior to calling this method so you have a
@@ -2651,7 +2651,7 @@ impl PyDiGraph {
     /// :rtype: NodeMap
     ///
     /// :raises DAGWouldCycle: If ``cycle_check`` or the :attr:`.check_cycle` attribute are set to
-    ///     ``True`` and a cycle were to be introduced by the substitution.
+    ///     ``True`` and a cycle would be introduced by the substitution.
     #[pyo3(signature=(nodes, other, input_node_map, edge_weight_map=None, cycle_check=false))]
     pub fn substitute_subgraph(
         &mut self,
