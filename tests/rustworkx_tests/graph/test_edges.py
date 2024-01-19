@@ -331,6 +331,26 @@ class TestEdges(unittest.TestCase):
         graph = rustworkx.PyGraph()
         self.assertEqual([], graph.weighted_edge_list())
 
+    def test_edge_indices_from_endpoints(self):
+        dag = rustworkx.PyGraph()
+        dag.add_nodes_from(list(range(4)))
+        edge_list = [
+            (0, 1, None),
+            (1, 2, None),
+            (0, 2, None),
+            (2, 3, None),
+            (0, 3, None),
+            (0, 2, None),
+            (2, 0, None),
+        ]
+        dag.add_edges_from(edge_list)
+        indices = dag.edge_indices_from_endpoints(0, 0)
+        self.assertEqual(indices, [])
+        indices = dag.edge_indices_from_endpoints(0, 1)
+        self.assertEqual(set(indices), {0})
+        indices = dag.edge_indices_from_endpoints(0, 2)
+        self.assertEqual(set(indices), {2, 5, 6})
+
     def test_extend_from_edge_list(self):
         graph = rustworkx.PyGraph()
         edge_list = [(0, 1), (1, 2), (0, 2), (2, 3), (0, 3)]
