@@ -15,6 +15,8 @@ from .rustworkx import *
 # flake8: noqa
 import rustworkx.visit
 
+sys.modules["rustworkx.generators"] = generators
+
 
 class PyDAG(PyDiGraph):
     """A class for creating direct acyclic graphs.
