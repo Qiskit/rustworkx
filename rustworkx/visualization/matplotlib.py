@@ -196,7 +196,7 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=False, **kwds):
         plt.draw()
     """
     try:
-        import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt  # type: ignore
     except ImportError as e:
         raise ImportError(
             "matplotlib needs to be installed prior to running "
@@ -427,7 +427,7 @@ def draw_nodes(
     """
     try:
         import matplotlib as mpl
-        import matplotlib.collections  # call as mpl.collections
+        import matplotlib.collections  # type: ignore
         import matplotlib.pyplot as plt
     except ImportError as e:
         raise ImportError(
@@ -602,9 +602,9 @@ def draw_edges(
     """
     try:
         import matplotlib as mpl
-        import matplotlib.colors  # call as mpl.colors
-        import matplotlib.patches  # call as mpl.patches
-        import matplotlib.path  # call as mpl.path
+        import matplotlib.colors  # type: ignore
+        import matplotlib.patches  # type: ignore
+        import matplotlib.path  # type: ignore
         import matplotlib.pyplot as plt
     except ImportError as e:
         raise ImportError(
@@ -1092,7 +1092,7 @@ def apply_alpha(colors, alpha, elem_list, cmap=None, vmin=None, vmax=None):
     try:
         import matplotlib as mpl
         import matplotlib.colors  # call as mpl.colors
-        import matplotlib.cm  # call as mpl.cm
+        import matplotlib.cm  # type: ignore
     except ImportError as e:
         raise ImportError(
             "matplotlib needs to be installed prior to running "
