@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added method :meth:`~rustworkx.PyGraph.edge_indices_from_endpoints` which returns the indices of all edges
+    between the specified endpoints. For :class:`~rustworkx.PyDiGraph` there is a corresponding method that returns the 
+    directed edges.
