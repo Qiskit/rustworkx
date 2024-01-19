@@ -514,19 +514,19 @@ def cartesian_product(
 ) -> tuple[PyDiGraph, ProductNodeMap]: ...
 def bfs_search(
     graph: PyGraph | PyDiGraph,
-    source: int | None = ...,
-    visitor: _BFSVisitor | None = ...,
+    source: int,
+    visitor: _BFSVisitor,
 ) -> None: ...
 def dfs_search(
     graph: PyGraph | PyDiGraph,
-    source: int | None = ...,
-    visitor: _DFSVisitor | None = ...,
+    source: int,
+    visitor: _DFSVisitor,
 ) -> None: ...
 def dijkstra_search(
     graph: PyGraph | PyDiGraph,
-    source: int | None = ...,
-    weight_fn: Callable[[Any], float] | None = ...,
-    visitor: _DijkstraVisitor | None = ...,
+    source: int,
+    weight_fn: Callable[[Any], float],
+    visitor: _DijkstraVisitor,
 ) -> None: ...
 def bellman_ford_shortest_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
