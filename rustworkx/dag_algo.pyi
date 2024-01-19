@@ -12,7 +12,7 @@
 from .iterators import *
 from .digraph import PyDiGraph
 
-from typing import TypeVar, Callable, final
+from typing import TypeVar, Callable, final, Sequence
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")

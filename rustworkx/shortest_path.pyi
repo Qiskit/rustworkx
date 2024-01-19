@@ -262,7 +262,7 @@ def digraph_all_shortest_paths(
     source: int,
     target: int,
     /,
-    weight_fn: Callable[_T, float] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     as_undirected: bool = ...,
 ) -> list[list[int]]: ...
@@ -271,6 +271,6 @@ def graph_all_shortest_paths(
     source: int,
     target: int,
     /,
-    weight_fn: Callable[_T, float] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
 ) -> list[list[int]]: ...

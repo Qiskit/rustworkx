@@ -19,6 +19,7 @@ from typing import (
     TypeVar,
     Sequence,
     TYPE_CHECKING,
+    overload,
 )
 
 if TYPE_CHECKING:
@@ -132,14 +133,22 @@ class PyGraph(Generic[S, T]):
         node_filter: Callable[[S], bool] | None = ...,
         edge_weight_map: Callable[[T], T] | None = ...,
     ) -> NodeMap: ...
+    @overload
     def to_dot(
         self,
-        /,
         node_attr: Callable[[S], dict[str, str]] | None = ...,
         edge_attr: Callable[[T], dict[str, str]] | None = ...,
         graph_attr: dict[str, str] | None = ...,
-        filename: str | None = ...,
-    ) -> str | None: ...
+        filename: str = ...,
+    ) -> None: ...
+    @overload
+    def to_dot(
+        self,
+        node_attr: Callable[[S], dict[str, str]] | None = ...,
+        edge_attr: Callable[[T], dict[str, str]] | None = ...,
+        graph_attr: dict[str, str] | None = ...,
+        filename: None = ...,
+    ) -> str: ...
     def to_directed(self) -> PyDiGraph[S, T]: ...
     def update_edge(
         self,

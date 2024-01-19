@@ -33,6 +33,7 @@ from .tree import *
 from .tensor_product import *
 from .token_swapper import *
 from .union import *
+from . import generators as generators
 
 class DAGHasCycle(Exception): ...
 class DAGWouldCycle(Exception): ...

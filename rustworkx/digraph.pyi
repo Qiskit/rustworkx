@@ -12,7 +12,7 @@
 import numpy as np
 from .iterators import *
 
-from typing import Any, Callable, Generic, TypeVar, Sequence, TYPE_CHECKING
+from typing import Any, Callable, Generic, TypeVar, Sequence, TYPE_CHECKING, overload
 
 if TYPE_CHECKING:
     from .graph import PyGraph
@@ -160,14 +160,22 @@ class PyDiGraph(Generic[S, T]):
     ) -> NodeMap: ...
     def successor_indices(self, node: int, /) -> NodeIndices: ...
     def successors(self, node: int, /) -> list[S]: ...
+    @overload
     def to_dot(
         self,
-        /,
         node_attr: Callable[[S], dict[str, str]] | None = ...,
         edge_attr: Callable[[T], dict[str, str]] | None = ...,
         graph_attr: dict[str, str] | None = ...,
-        filename: str | None = ...,
-    ) -> str | None: ...
+        filename: str = ...,
+    ) -> None: ...
+    @overload
+    def to_dot(
+        self,
+        node_attr: Callable[[S], dict[str, str]] | None = ...,
+        edge_attr: Callable[[T], dict[str, str]] | None = ...,
+        graph_attr: dict[str, str] | None = ...,
+        filename: None = ...,
+    ) -> str: ...
     def to_undirected(
         self,
         /,

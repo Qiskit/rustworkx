@@ -9,13 +9,21 @@
 import subprocess
 import tempfile
 import io
+from typing import TypeVar, Callable
+
+from rustworkx import PyDiGraph, PyGraph
+
 
 try:
-    from PIL import Image
+    from PIL import Image  # type: ignore
 
     HAS_PILLOW = True
 except ImportError:
     HAS_PILLOW = False
+
+_S = TypeVar("_S")
+_T = TypeVar("_T")
+
 
 __all__ = ["graphviz_draw"]
 
@@ -60,14 +68,14 @@ IMAGE_TYPES = {
 
 
 def graphviz_draw(
-    graph,
-    node_attr_fn=None,
-    edge_attr_fn=None,
-    graph_attr=None,
-    filename=None,
-    image_type=None,
-    method=None,
-):
+    graph: "PyDiGraph[_S, _T] | PyGraph[_S, _T]",
+    node_attr_fn: Callable[[_S], dict[str, str]] | None = None,
+    edge_attr_fn: Callable[[_T], dict[str, str]] | None = None,
+    graph_attr: dict[str, str] | None = None,
+    filename: str | None = None,
+    image_type: str | None = None,
+    method: str | None = None,
+) -> "Image | None":
     """Draw a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph` object
     using graphviz
 

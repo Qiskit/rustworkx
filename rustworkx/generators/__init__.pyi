@@ -9,9 +9,8 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/shortest_path/mod.rs
 
-from .iterators import *
-from .graph import PyGraph
-from .digraph import PyDiGraph
+from rustworkx import PyGraph
+from rustworkx import PyDiGraph
 
 from typing import Sequence, Any
 
