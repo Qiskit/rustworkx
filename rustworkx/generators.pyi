@@ -9,8 +9,6 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/shortest_path/mod.rs
 
-import numpy as np
-
 from .iterators import *
 from .graph import PyGraph
 from .digraph import PyDiGraph
@@ -119,12 +117,8 @@ def generalized_petersen_graph(
     k: int,
     multigraph: bool = ...,
 ) -> PyGraph: ...
-def empty_graph(n: int, multigraph: bool = ...) -> PyGraph:
-    ...,
-
-def directed_empty_graph(n: int, multigraph: bool = ...) -> PyDiGraph:
-    ...,
-
+def empty_graph(n: int, multigraph: bool = ...) -> PyGraph: ...
+def directed_empty_graph(n: int, multigraph: bool = ...) -> PyDiGraph: ...
 def complete_graph(
     num_nodes: int | None = ..., weights: Sequence[Any] | None = ..., multigraph: bool = ...
 ) -> PyGraph: ...
