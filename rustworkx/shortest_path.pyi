@@ -257,3 +257,20 @@ def negative_edge_cycle(
     edge_cost_fn: Callable[[_T], float],
     /,
 ) -> bool: ...
+def digraph_all_shortest_paths(
+    graph: PyDiGraph[_S, _T],
+    source: int,
+    target: int,
+    /,
+    weight_fn: Callable[_T, float] | None = ...,
+    default_weight: float = ...,
+    as_undirected: bool = ...,
+) -> list[list[int]]: ...
+def graph_all_shortest_paths(
+    graph: PyGraph[_S, _T],
+    source: int,
+    target: int,
+    /,
+    weight_fn: Callable[_T, float] | None = ...,
+    default_weight: float = ...,
+) -> list[list[int]]: ...

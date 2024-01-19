@@ -11,6 +11,7 @@
 
 import numpy as np
 import rustworkx.visit as visit
+import rustworkx.generators as generators
 
 from .rustworkx import *
 from typing import Generic, TypeVar, Any, Callable, Iterator, overload

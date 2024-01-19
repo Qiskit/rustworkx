@@ -12,7 +12,7 @@
 from .iterators import *
 from .digraph import PyDiGraph
 
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, final
 
 _S = TypeVar("_S")
 _T = TypeVar("_T")
@@ -57,3 +57,9 @@ def layers(
     /,
     index_output: bool = ...,
 ) -> list[_S] | list[int]: ...
+@final
+class TopologicalSorter:
+    def __init__(self, dag: PyDiGraph, check_cycle: bool) -> None: ...
+    def is_active(self) -> bool: ...
+    def get_ready(self) -> list[int]: ...
+    def done(self, nodes: Sequence[int]) -> None: ...
