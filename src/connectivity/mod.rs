@@ -934,7 +934,7 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
 ///
 /// :param PyGraph: The undirected graph to be used.
 ///
-/// :returns: A set with edges of the bridges in the graph, each edge is 
+/// :returns: A set with edges of the bridges in the graph, each edge is
 ///     represented by a pair of node index.
 /// :rtype: set
 #[pyfunction]
