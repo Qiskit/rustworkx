@@ -551,7 +551,6 @@ impl PyDiGraph {
     ///
     /// :returns: A list of all the edge indices connecting the specified start and end node
     /// :rtype: EdgeIndices
-    #[pyo3(text_signature = "(self)")]
     pub fn edge_indices_from_endpoints(&self, node_a: usize, node_b: usize) -> EdgeIndices {
         let node_a_index = NodeIndex::new(node_a);
         let node_b_index = NodeIndex::new(node_b);
