@@ -19,7 +19,6 @@ from typing import (
     TypeVar,
     Sequence,
     TYPE_CHECKING,
-    overload,
 )
 
 if TYPE_CHECKING:

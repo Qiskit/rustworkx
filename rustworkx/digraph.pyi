@@ -12,7 +12,7 @@
 import numpy as np
 from .iterators import *
 
-from typing import Any, Callable, Generic, TypeVar, Sequence, TYPE_CHECKING, overload
+from typing import Any, Callable, Generic, TypeVar, Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .graph import PyGraph
