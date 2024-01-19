@@ -6,10 +6,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+from __future__ import annotations
+
 import subprocess
 import tempfile
 import io
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, Dict, cast
 
 from rustworkx import PyDiGraph, PyGraph
 
@@ -69,9 +71,9 @@ IMAGE_TYPES = {
 
 def graphviz_draw(
     graph: "PyDiGraph[_S, _T] | PyGraph[_S, _T]",
-    node_attr_fn: Callable[[_S], dict[str, str]] | None = None,
-    edge_attr_fn: Callable[[_T], dict[str, str]] | None = None,
-    graph_attr: dict[str, str] | None = None,
+    node_attr_fn: Callable[[_S], Dict[str, str]] | None = None,
+    edge_attr_fn: Callable[[_T], Dict[str, str]] | None = None,
+    graph_attr: Dict[str, str] | None = None,
     filename: str | None = None,
     image_type: str | None = None,
     method: str | None = None,
@@ -169,7 +171,7 @@ def graphviz_draw(
             "instructions."
         )
 
-    dot_str = graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr)
+    dot_str = cast(str, graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr))
     if image_type is None:
         output_format = "png"
     else:
