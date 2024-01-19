@@ -13,7 +13,7 @@ import numpy as np
 import rustworkx.visit as visit
 
 from .rustworkx import *
-from typing import Generic, TypeVar, Any, Callable, Iterator
+from typing import Generic, TypeVar, Any, Callable, Iterator, overload
 
 from .graph import PyGraph as PyGraph
 from .digraph import PyDiGraph as PyDiGraph
@@ -248,7 +248,7 @@ def adjacency_matrix(
     null_value: float = ...,
 ) -> np.ndarray: ...
 def all_simple_paths(
-    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    graph: PyGraph | PyDiGraph,
     from_: int,
     to: int,
     min_depth: int | None = ...,
@@ -268,7 +268,6 @@ def floyd_warshall_numpy(
 ) -> np.ndarray: ...
 def floyd_warshall_successor_and_distance(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    /,
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
@@ -318,23 +317,52 @@ def k_shortest_path_lengths(
     goal: int | None = ...,
 ) -> PathLengthMapping: ...
 def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> EdgeList: ...
+@overload
 def is_isomorphic(
-    first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    first: PyGraph[_S, _T],
+    second: PyGraph[_S, _T],
     node_matcher: Callable[[_S, _S], bool] | None = ...,
     edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
     call_limit: int | None = ...,
 ) -> bool: ...
+@overload
+def is_isomorphic(
+    first: PyDiGraph[_S, _T],
+    second: PyDiGraph[_S, _T],
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
+    id_order: bool = ...,
+    call_limit: int | None = ...,
+) -> bool: ...
+@overload
 def is_isomorphic_node_match(
-    first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    first: PyGraph[_S, _T],
+    second: PyGraph[_S, _T],
     matcher: Callable[[_S, _S], bool],
     id_order: bool = ...,
 ) -> bool: ...
+@overload
+def is_isomorphic_node_match(
+    first: PyDiGraph[_S, _T],
+    second: PyDiGraph[_S, _T],
+    matcher: Callable[[_S, _S], bool],
+    id_order: bool = ...,
+) -> bool: ...
+@overload
 def is_subgraph_isomorphic(
-    first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    first: PyGraph[_S, _T],
+    second: PyGraph[_S, _T],
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
+    id_order: bool = ...,
+    induced: bool = ...,
+    call_limit: int | None = ...,
+) -> bool: ...
+@overload
+def is_subgraph_isomorphic(
+    first: PyDiGraph[_S, _T],
+    second: PyDiGraph[_S, _T],
     node_matcher: Callable[[_S, _S], bool] | None = ...,
     edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
@@ -427,9 +455,10 @@ def katz_centrality(
     max_iter: int = ...,
     tol: float = ...,
 ) -> CentralityMapping: ...
+@overload
 def vf2_mapping(
-    first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    first: PyGraph[_S, _T],
+    second: PyGraph[_S, _T],
     node_matcher: Callable[[_S, _S], bool] | None = ...,
     edge_matcher: Callable[[_T, _T], bool] | None = ...,
     id_order: bool = ...,
@@ -437,20 +466,51 @@ def vf2_mapping(
     induced: bool = ...,
     call_limit: int | None = ...,
 ) -> Iterator[NodeMap]: ...
+@overload
+def vf2_mapping(
+    first: PyDiGraph[_S, _T],
+    second: PyDiGraph[_S, _T],
+    node_matcher: Callable[[_S, _S], bool] | None = ...,
+    edge_matcher: Callable[[_T, _T], bool] | None = ...,
+    id_order: bool = ...,
+    subgraph: bool = ...,
+    induced: bool = ...,
+    call_limit: int | None = ...,
+) -> Iterator[NodeMap]: ...
+@overload
 def union(
-    first: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    second: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    first: PyGraph[_S, _T],
+    second: PyGraph[_S, _T],
     merge_nodes: bool = ...,
     merge_edges: bool = ...,
-) -> PyGraph[_S, _T] | PyDiGraph[_S, _T]: ...
+) -> PyGraph[_S, _T]: ...
+@overload
+def union(
+    first: PyDiGraph[_S, _T],
+    second: PyDiGraph[_S, _T],
+    merge_nodes: bool = ...,
+    merge_edges: bool = ...,
+) -> PyDiGraph[_S, _T]: ...
+@overload
 def tensor_product(
-    first: PyGraph | PyDiGraph,
-    second: PyGraph | PyDiGraph,
-) -> tuple[PyGraph | PyDiGraph, ProductNodeMap]: ...
+    first: PyGraph,
+    second: PyGraph,
+) -> tuple[PyGraph, ProductNodeMap]: ...
+@overload
+def tensor_product(
+    first: PyDiGraph,
+    second: PyDiGraph,
+) -> tuple[PyDiGraph, ProductNodeMap]: ...
+@overload
 def cartesian_product(
-    first: PyGraph | PyDiGraph,
-    second: PyGraph | PyDiGraph,
-) -> tuple[PyGraph | PyDiGraph, ProductNodeMap]: ...
+    first: PyGraph,
+    second: PyGraph,
+) -> tuple[PyGraph, ProductNodeMap]: ...
+@overload
+def cartesian_product(
+    first: PyDiGraph,
+    second: PyDiGraph,
+) -> tuple[PyDiGraph, ProductNodeMap]: ...
 def bfs_search(
     graph: PyGraph | PyDiGraph,
     source: int | None = ...,
