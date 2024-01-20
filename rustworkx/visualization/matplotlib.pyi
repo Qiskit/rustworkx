@@ -54,5 +54,5 @@ def mpl_draw(
     ax: Axes | None = ...,
     arrows: bool = ...,
     with_labels: bool = ...,
-    **kwards: typing.Unpack[_DrawKwargs],
+    **kwds: typing.Unpack[_DrawKwargs],
 ) -> Figure | None: ...
