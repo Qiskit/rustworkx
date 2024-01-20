@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:
 _S = typing.TypeVar("_S")
 _T = typing.TypeVar("_T")
 
-class DrawKwargs(typing.TypedDict):
+class _DrawKwargs(typing.TypedDict):
     arrowstyle: str
     arrow_size: int
     node_list: list[int]
@@ -54,5 +54,5 @@ def mpl_draw(
     ax: Axes | None = ...,
     arrows: bool = ...,
     with_labels: bool = ...,
-    **kwards: typing.Unpack[DrawKwargs],
+    **kwards: typing.Unpack[_DrawKwargs],
 ) -> Figure | None: ...
