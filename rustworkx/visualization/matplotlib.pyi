@@ -7,6 +7,9 @@
 # that they have been altered from the originals.
 
 import typing
+
+import typing_extensions
+
 from rustworkx.rustworkx import PyGraph, PyDiGraph
 
 if typing.TYPE_CHECKING:
@@ -54,5 +57,5 @@ def mpl_draw(
     ax: Axes | None = ...,
     arrows: bool = ...,
     with_labels: bool = ...,
-    **kwds: typing.Unpack[_DrawKwargs],
+    **kwds: typing_extensions.Unpack[_DrawKwargs],
 ) -> Figure | None: ...
