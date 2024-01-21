@@ -428,13 +428,13 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
 /// use petgraph::graph::{EdgeIndex, NodeIndex};
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::bipartite_coloring::bipartite_edge_color;
+/// use rustworkx_core::bipartite_coloring::bipartite_edge_color_given_partition;
 ///
 /// let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 0)];
 /// let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
 /// let l_nodes = vec![NodeIndex::new(0), NodeIndex::new(2)];
 /// let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(3)];
-/// let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+/// let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
 /// let expected_colors: DictMap<EdgeIndex, usize> = [
 ///     (EdgeIndex::new(0), 0),
 ///     (EdgeIndex::new(1), 1),
@@ -445,7 +445,7 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
 /// .collect();
 /// assert_eq!(colors, expected_colors);
 /// ```
-pub fn bipartite_edge_color<G>(
+pub fn bipartite_edge_color_given_partition<G>(
     graph: G,
     l_nodes: &Vec<G::NodeId>,
     r_nodes: &Vec<G::NodeId>,
@@ -648,7 +648,11 @@ where
                 r_nodes.push(*node_id);
             }
         }
-        Ok(bipartite_edge_color(input_graph, &l_nodes, &r_nodes))
+        Ok(bipartite_edge_color_given_partition(
+            input_graph,
+            &l_nodes,
+            &r_nodes,
+        ))
     } else {
         Err(GraphNotBipartite {})
     }
@@ -662,7 +666,9 @@ mod test_bipartite_coloring {
 
     use hashbrown::HashSet;
 
-    use crate::bipartite_coloring::{bipartite_edge_color, if_bipartite_edge_color};
+    use crate::bipartite_coloring::{
+        bipartite_edge_color_given_partition, if_bipartite_edge_color,
+    };
     use crate::generators::{heavy_hex_graph, petersen_graph, random_bipartite_graph};
 
     use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -767,7 +773,7 @@ mod test_bipartite_coloring {
         ];
         let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
 
-        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 2),
             (EdgeIndex::new(1), 1),
@@ -793,7 +799,7 @@ mod test_bipartite_coloring {
         ];
         let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
 
-        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 2),
             (EdgeIndex::new(1), 1),
@@ -812,7 +818,7 @@ mod test_bipartite_coloring {
         let graph = Graph::<(), (), Undirected>::default();
         let l_nodes = vec![];
         let r_nodes = vec![];
-        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -822,7 +828,7 @@ mod test_bipartite_coloring {
         let graph = Graph::<(), (), Directed>::default();
         let l_nodes = vec![];
         let r_nodes = vec![];
-        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -836,7 +842,7 @@ mod test_bipartite_coloring {
         let d = graph.add_node(());
         let l_nodes = vec![a, b];
         let r_nodes = vec![c, d];
-        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -850,7 +856,7 @@ mod test_bipartite_coloring {
         let d = graph.add_node(());
         let l_nodes = vec![a, b];
         let r_nodes = vec![c, d];
-        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -876,7 +882,7 @@ mod test_bipartite_coloring {
         ];
         let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
 
-        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
 
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 2),
@@ -914,7 +920,7 @@ mod test_bipartite_coloring {
         ];
         let r_nodes = vec![NodeIndex::new(1), NodeIndex::new(2), NodeIndex::new(3)];
 
-        let colors = bipartite_edge_color(&graph, &l_nodes, &r_nodes);
+        let colors = bipartite_edge_color_given_partition(&graph, &l_nodes, &r_nodes);
 
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 2),
