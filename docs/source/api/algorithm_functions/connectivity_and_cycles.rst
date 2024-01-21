@@ -18,6 +18,7 @@ Connectivity and Cycles
    rustworkx.simple_cycles
    rustworkx.digraph_find_cycle
    rustworkx.articulation_points
+   rustworkx.bridges
    rustworkx.biconnected_components
    rustworkx.chain_decomposition
    rustworkx.all_simple_paths

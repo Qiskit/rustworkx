@@ -17,16 +17,7 @@ select = [
     "Q",   # flake8-quotes
 ]
 target-version = "py38"
-exclude = [
-    ".venv",
-    ".git",
-    ".tox",
-    ".nox",
-    ".eggs",
-    "dist",
-    "doc",
-    "build",
-]
+extend-exclude = ["doc"]
 
 [tool.ruff.per-file-ignores]
 "rustworkx/__init__.py" = ["F405", "F403"]
