@@ -61,7 +61,7 @@ rustworkx-core = { path = "rustworkx-core", version = "=0.14.0" }
 
 [dependencies.pyo3]
 version = "0.20.2"
-features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
+features = ["abi3-py38","extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.ndarray]
 version = "^0.15.6"

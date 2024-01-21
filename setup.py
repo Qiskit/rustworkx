@@ -30,7 +30,7 @@ PKG_VERSION = "0.14.0"
 PKG_PACKAGES = ["rustworkx", "rustworkx.visualization"]
 PKG_INSTALL_REQUIRES = ["numpy>=1.16.0,<2"]
 RUST_EXTENSIONS = [RustExtension("rustworkx.rustworkx", "Cargo.toml",
-                                 binding=Binding.PyO3, debug=rustworkx_debug)]
+                                 binding=Binding.PyO3, debug=rustworkx_debug, py_limited_api=True)]
 
 retworkx_readme_compat = """# retworkx
 
