@@ -283,18 +283,40 @@ cargo doc --open
 
 ### Type Annotations
 
-If you have added new methods or changed method signatures, we encourage you to add annotations for 
-those methods in stub files. The stub files are in the `rustworkx` directory and have a `.pyi` file extension.
-They contain annotated signatures for Python functions, stripped of their implementation.
+If you have added new methods, functions, or classes, and/or changed any
+signatures, type anotations for Python are required to be included in a pull
+request. Type annotations are added using type
+[stub files](https://typing.readthedocs.io/en/latest/source/stubs.html) which
+provide type annotations to python tooling which use type annotations. The stub
+files are in the `rustworkx/` directory and have a `.pyi` file extension. They
+contain annotated signatures for Python functions, stripped of their
+implementation. You can find more details on typing in Python at:
 
-While this step is optional, it is very helpful for end-users. Adding annotations lets users type check
-their code with [mypy](http://mypy-lang.org/), which can be helpful for finding bugs.
+ * https://mypy.readthedocs.io/en/stable/
+ * https://typing.readthedocs.io/en/latest/
+ * https://docs.python.org/3/library/typing.html
+
+Having type annotations is very helpful for Python end-users. Adding
+annotations lets users type check their code with [mypy](http://mypy-lang.org/),
+which can be helpful for finding bugs when using rustworkx.
 
 Just like with tests for the code, annotations are also tested via Nox.
 
 ```
 nox -e stubs
 ```
+
+One important thing to note is that if you're adding a new function to the Rust
+module you will need to ensure that the signature with annotations is added to
+`rustworkx/rustworkx.pyi`. Then it is also necessary to re-export the annotation
+by adding an import line to `rustworkx/__init__.pyi` in the form:
+
+```python
+from .rustworkx import foo as foo
+```
+
+which ensures that mypy is able to find the type annotations when users import
+from the root `rustworkx` package (which is the most common access pattern).
 
 ### Release Notes
 
