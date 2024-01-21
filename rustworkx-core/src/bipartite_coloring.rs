@@ -607,11 +607,11 @@ where
 /// use petgraph::graph::{EdgeIndex, NodeIndex};
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::bipartite_coloring::if_bipartite_edge_color;
+/// use rustworkx_core::bipartite_coloring::bipartite_edge_color;
 ///
 /// let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 0)];
 /// let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
-/// let colors = if_bipartite_edge_color(&graph);
+/// let colors = bipartite_edge_color(&graph);
 /// assert!(colors.is_ok());
 /// let expected_colors: DictMap<EdgeIndex, usize> = [
 ///     (EdgeIndex::new(0), 0),
@@ -623,7 +623,7 @@ where
 /// .collect();
 /// assert_eq!(colors.unwrap(), expected_colors);
 /// ```
-pub fn if_bipartite_edge_color<G>(
+pub fn bipartite_edge_color<G>(
     input_graph: G,
 ) -> Result<DictMap<G::EdgeId, usize>, GraphNotBipartite>
 where
@@ -666,9 +666,7 @@ mod test_bipartite_coloring {
 
     use hashbrown::HashSet;
 
-    use crate::bipartite_coloring::{
-        bipartite_edge_color_given_partition, if_bipartite_edge_color,
-    };
+    use crate::bipartite_coloring::{bipartite_edge_color, bipartite_edge_color_given_partition};
     use crate::generators::{heavy_hex_graph, petersen_graph, random_bipartite_graph};
 
     use petgraph::graph::{EdgeIndex, NodeIndex};
@@ -937,13 +935,13 @@ mod test_bipartite_coloring {
         assert_eq!(colors, expected_colors);
     }
 
-    // Test if_bipartite_edge_color
+    // Test bipartite_edge_color
 
     #[test]
     fn test_if_bipartite_multiple_edges_undirected() {
         let edge_list = vec![(0, 1), (0, 1), (0, 1), (2, 0), (0, 2)];
         let graph = Graph::<(), (), Undirected>::from_edges(&edge_list);
-        let colors = if_bipartite_edge_color(&graph).unwrap();
+        let colors = bipartite_edge_color(&graph).unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 2),
             (EdgeIndex::new(1), 1),
@@ -960,7 +958,7 @@ mod test_bipartite_coloring {
     fn test_if_bipartite_multiple_edges_directed() {
         let edge_list = vec![(0, 1), (0, 1), (0, 1), (2, 0), (0, 2)];
         let graph = Graph::<(), (), Directed>::from_edges(&edge_list);
-        let colors = if_bipartite_edge_color(&graph).unwrap();
+        let colors = bipartite_edge_color(&graph).unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 2),
             (EdgeIndex::new(1), 1),
@@ -978,7 +976,7 @@ mod test_bipartite_coloring {
         for n in (3..20).step_by(2) {
             let graph: petgraph::graph::UnGraph<(), ()> =
                 heavy_hex_graph(n, || (), || (), false).unwrap();
-            match if_bipartite_edge_color(&graph) {
+            match bipartite_edge_color(&graph) {
                 Ok(edge_coloring) => {
                     check_edge_coloring_undirected(&graph, &edge_coloring, Some(3));
                     // check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
@@ -993,7 +991,7 @@ mod test_bipartite_coloring {
         for n in (3..20).step_by(2) {
             let graph: petgraph::graph::DiGraph<(), ()> =
                 heavy_hex_graph(n, || (), || (), false).unwrap();
-            match if_bipartite_edge_color(&graph) {
+            match bipartite_edge_color(&graph) {
                 Ok(edge_coloring) => {
                     check_edge_coloring_directed(&graph, &edge_coloring, Some(3));
                 }
@@ -1007,7 +1005,7 @@ mod test_bipartite_coloring {
         for n in (3..20).step_by(2) {
             let graph: petgraph::graph::UnGraph<(), ()> =
                 heavy_hex_graph(n, || (), || (), true).unwrap();
-            match if_bipartite_edge_color(&graph) {
+            match bipartite_edge_color(&graph) {
                 Ok(edge_coloring) => {
                     check_edge_coloring_undirected(&graph, &edge_coloring, Some(6));
                 }
@@ -1027,7 +1025,7 @@ mod test_bipartite_coloring {
                 }
                 let graph: petgraph::graph::UnGraph<(), ()> =
                     petersen_graph(n, k, || (), || ()).unwrap();
-                match if_bipartite_edge_color(&graph) {
+                match bipartite_edge_color(&graph) {
                     Ok(edge_coloring) => {
                         check_edge_coloring_undirected(&graph, &edge_coloring, Some(3));
                     }
@@ -1046,7 +1044,7 @@ mod test_bipartite_coloring {
                 if n > 2 * k {
                     let graph: petgraph::graph::UnGraph<(), ()> =
                         petersen_graph(n, k, || (), || ()).unwrap();
-                    match if_bipartite_edge_color(&graph) {
+                    match bipartite_edge_color(&graph) {
                         Ok(_) => panic!("This should error"),
                         Err(_) => (),
                     }
@@ -1069,7 +1067,7 @@ mod test_bipartite_coloring {
                         || (),
                     )
                     .unwrap();
-                    match if_bipartite_edge_color(&graph) {
+                    match bipartite_edge_color(&graph) {
                         Ok(edge_coloring) => {
                             let max_degree = graph
                                 .node_indices()
@@ -1103,7 +1101,7 @@ mod test_bipartite_coloring {
                         || (),
                     )
                     .unwrap();
-                    match if_bipartite_edge_color(&graph) {
+                    match bipartite_edge_color(&graph) {
                         Ok(edge_coloring) => {
                             let max_degree = graph
                                 .node_indices()

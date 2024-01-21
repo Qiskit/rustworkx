@@ -455,7 +455,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_misra_gries_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
-    m.add_wrapped(wrap_pyfunction!(graph_if_bipartite_edge_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bipartite_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_two_color))?;
     m.add_wrapped(wrap_pyfunction!(digraph_two_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_is_bipartite))?;
