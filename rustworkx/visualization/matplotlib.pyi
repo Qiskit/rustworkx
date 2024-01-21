@@ -13,9 +13,9 @@ import typing_extensions
 from rustworkx.rustworkx import PyGraph, PyDiGraph
 
 if typing.TYPE_CHECKING:
-    from matplotlib.axes import Axes
-    from matplotlib.figure import Figure
-    from matplotlib.colors import Colormap
+    from matplotlib.axes import Axes  # type: ignore
+    from matplotlib.figure import Figure  # type: ignore
+    from matplotlib.colors import Colormap  # type: ignore
 
 _S = typing.TypeVar("_S")
 _T = typing.TypeVar("_T")
