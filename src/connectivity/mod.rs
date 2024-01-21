@@ -921,6 +921,32 @@ pub fn articulation_points(graph: &graph::PyGraph) -> HashSet<usize> {
         .collect()
 }
 
+/// Return the bridges of an undirected graph.
+///
+/// A bridge is any edge whose removal increases the number of connected
+/// components of a graph.
+///
+/// .. note::
+///
+///     The function implicitly assumes that there are no parallel edges
+///     or self loops. It may produce incorrect/unexpected results if the
+///     input graph has self loops or parallel edges.
+///
+/// :param PyGraph: The undirected graph to be used.
+///
+/// :returns: A set with edges of the bridges in the graph, each edge is
+///     represented by a pair of node index.
+/// :rtype: set
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn bridges(graph: &graph::PyGraph) -> HashSet<(usize, usize)> {
+    let bridges = connectivity::bridges(&graph.graph);
+    bridges
+        .into_iter()
+        .map(|(a, b)| (a.index(), b.index()))
+        .collect()
+}
+
 /// Return the biconnected components of an undirected graph.
 ///
 /// Biconnected components are maximal subgraphs such that the removal

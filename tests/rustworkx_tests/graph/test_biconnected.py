@@ -15,6 +15,10 @@ import unittest
 import rustworkx
 
 
+def sorted_edges(edges):
+    return set([tuple(sorted(edge)) for edge in edges])
+
+
 class TestBiconnected(unittest.TestCase):
     def setUp(self):
         super().setUp()
@@ -56,6 +60,7 @@ class TestBiconnected(unittest.TestCase):
     def test_null_graph(self):
         graph = rustworkx.PyGraph()
         self.assertEqual(rustworkx.articulation_points(graph), set())
+        self.assertEqual(rustworkx.bridges(graph), set())
         self.assertEqual(rustworkx.biconnected_components(graph), {})
 
     def test_graph(self):
@@ -77,6 +82,7 @@ class TestBiconnected(unittest.TestCase):
         }
         self.assertEqual(rustworkx.biconnected_components(self.graph), components)
         self.assertEqual(rustworkx.articulation_points(self.graph), {4, 5})
+        self.assertEqual(sorted_edges(rustworkx.bridges(self.graph)), {(4, 5)})
 
     def test_barbell_graph(self):
         components = {
@@ -90,6 +96,7 @@ class TestBiconnected(unittest.TestCase):
         }
         self.assertEqual(rustworkx.biconnected_components(self.barbell_graph), components)
         self.assertEqual(rustworkx.articulation_points(self.barbell_graph), {2, 3})
+        self.assertEqual(sorted_edges(rustworkx.bridges(self.barbell_graph)), {(2, 3)})
 
     def test_disconnected_graph(self):
         graph = rustworkx.union(self.barbell_graph, self.barbell_graph)
@@ -113,6 +120,7 @@ class TestBiconnected(unittest.TestCase):
         }
         self.assertEqual(rustworkx.biconnected_components(graph), components)
         self.assertEqual(rustworkx.articulation_points(graph), {2, 3, 8, 9})
+        self.assertEqual(sorted_edges(rustworkx.bridges(graph)), {(2, 3), (8, 9)})
 
     def test_biconnected_graph(self):
         graph = rustworkx.PyGraph()
@@ -133,6 +141,7 @@ class TestBiconnected(unittest.TestCase):
         )
         num_edges = graph.num_edges()
         self.assertEqual(rustworkx.articulation_points(graph), set())
+        self.assertEqual(rustworkx.bridges(graph), set())
         bicomp = rustworkx.biconnected_components(graph)
         self.assertEqual(len(bicomp), num_edges)
         self.assertEqual(list(bicomp.values()), [0] * num_edges)
