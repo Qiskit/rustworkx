@@ -1,9 +1,9 @@
 ---
-name: Wheel Builds
+name: Wheel Test Build
 on:
   push:
-    tags:
-      - '*'
+    branches: [ stable-abi-work ]
+
 jobs:
   rustworkx-core:
     name: Publish rustworkx-core
