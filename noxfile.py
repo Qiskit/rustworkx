@@ -64,6 +64,6 @@ def black(session):
 def stubs(session):
     session.install(*deps)
     session.install(".[all]", "-c", "constraints.txt")
-    session.install("mypy==1.0.1")
+    session.install("mypy==1.8.0 typing-extensions")
     session.chdir("tests")
-    session.run("python", "-m", "mypy.stubtest", "--concise", "--ignore-missing-stub", "rustworkx.rustworkx")
+    session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx")
