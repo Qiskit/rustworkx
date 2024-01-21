@@ -28,7 +28,7 @@ manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
 skip = "pp* cp36-* cp37-* *win32 *musllinux*i686"
 test-requires = "networkx"
-test-command = "python -m unittest discover {project}/tests/rustworkx_tests"
+test-command = "python -m unittest discover {project}/tests"
 before-build = "pip install -U setuptools-rust"
 test-skip = "cp38-*musllinux* *linux_s390x *ppc64le"
 
