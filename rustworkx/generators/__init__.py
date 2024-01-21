@@ -6,17 +6,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# This file contains only type annotations for PyO3 functions and classes
-# For implementation details, see __init__.py and src/token_swapper.rs
-
-from .iterators import *
-from .graph import PyGraph
-
-def graph_token_swapper(
-    graph: PyGraph,
-    mapping: dict[int, int],
-    /,
-    trials: int | None = ...,
-    seed: int | None = ...,
-    parallel_threshold: int | None = ...,
-) -> EdgeList: ...
+from rustworkx.rustworkx.generators import *  # noqa
