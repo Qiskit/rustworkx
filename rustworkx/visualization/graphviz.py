@@ -6,16 +6,29 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+from __future__ import annotations
+
 import subprocess
 import tempfile
 import io
+from typing import TypeVar, Callable, cast, TYPE_CHECKING
+
+from rustworkx import PyDiGraph, PyGraph
+
 
 try:
-    from PIL import Image
+    from PIL import Image  # type: ignore
 
     HAS_PILLOW = True
 except ImportError:
     HAS_PILLOW = False
+
+if TYPE_CHECKING:
+    from PIL import Image  # type: ignore
+
+_S = TypeVar("_S")
+_T = TypeVar("_T")
+
 
 __all__ = ["graphviz_draw"]
 
@@ -60,14 +73,14 @@ IMAGE_TYPES = {
 
 
 def graphviz_draw(
-    graph,
-    node_attr_fn=None,
-    edge_attr_fn=None,
-    graph_attr=None,
-    filename=None,
-    image_type=None,
-    method=None,
-):
+    graph: "PyDiGraph[_S, _T] | PyGraph[_S, _T]",  # noqa
+    node_attr_fn: Callable[[_S], dict[str, str]] | None = None,
+    edge_attr_fn: Callable[[_T], dict[str, str]] | None = None,
+    graph_attr: dict[str, str] | None = None,
+    filename: str | None = None,
+    image_type: str | None = None,
+    method: str | None = None,
+) -> Image | None:
     """Draw a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph` object
     using graphviz
 
@@ -161,7 +174,7 @@ def graphviz_draw(
             "instructions."
         )
 
-    dot_str = graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr)
+    dot_str = cast(str, graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr))
     if image_type is None:
         output_format = "png"
     else:
