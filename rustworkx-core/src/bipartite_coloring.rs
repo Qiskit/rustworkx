@@ -91,7 +91,7 @@ impl RegularBipartiteMultiGraph {
     fn add_edge(&mut self, a: NodeIndex, b: NodeIndex, multiplicity: usize, bad: bool) {
         match self.graph.find_edge(a, b) {
             Some(edge) => {
-                let mut edge_data = self.graph.edge_weight_mut(edge).unwrap();
+                let edge_data = self.graph.edge_weight_mut(edge).unwrap();
                 edge_data.multiplicity += multiplicity;
             }
             None => {
@@ -103,7 +103,7 @@ impl RegularBipartiteMultiGraph {
 
     fn remove_edge(&mut self, a: NodeIndex, b: NodeIndex, multiplicity: usize) {
         let edge = self.graph.find_edge(a, b);
-        let mut edge_data = self.graph.edge_weight_mut(edge.unwrap()).unwrap();
+        let edge_data = self.graph.edge_weight_mut(edge.unwrap()).unwrap();
         edge_data.multiplicity -= multiplicity;
         if edge_data.multiplicity == 0 {
             self.graph.remove_edge(edge.unwrap());

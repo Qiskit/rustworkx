@@ -12,7 +12,7 @@
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.5879859-blue)](https://doi.org/10.5281/zenodo.5879859)
 
   - You can see the full rendered docs at:
-    <https://qiskit.org/ecosystem/rustworkx/>
+    <https://www.rustworkx.org/>
 
 rustworkx is a general purpose graph library for Python written in Rust to
 take advantage of the performance and safety that Rust provides. It is

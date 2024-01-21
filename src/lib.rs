@@ -385,6 +385,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
+    m.add_wrapped(wrap_pyfunction!(topological_generations))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
@@ -392,6 +393,12 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall))?;
     m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
     m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
+    m.add_wrapped(wrap_pyfunction!(
+        graph_floyd_warshall_successor_and_distance
+    ))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_floyd_warshall_successor_and_distance
+    ))?;
     m.add_wrapped(wrap_pyfunction!(collect_runs))?;
     m.add_wrapped(wrap_pyfunction!(collect_bicolor_runs))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
@@ -407,6 +414,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_all_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_all_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
@@ -444,6 +453,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_misra_gries_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_if_bipartite_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_two_color))?;
@@ -458,6 +468,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
+    m.add_wrapped(wrap_pyfunction!(barabasi_albert_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(simple_cycles))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
@@ -504,6 +516,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
+    m.add_wrapped(wrap_pyfunction!(bridges))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_wrapped(wrap_pyfunction!(graph_isolates))?;

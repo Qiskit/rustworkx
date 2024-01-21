@@ -428,6 +428,61 @@ pub fn lexicographical_topological_sort(
     Ok(PyList::new(py, out_list).into())
 }
 
+/// Return the topological generations of a DAG
+///
+/// A topological generation is node collection in which ancestors of a node in each
+/// generation are guaranteed to be in a previous generation, and any descendants of
+/// a node are guaranteed to be in a following generation. Nodes are guaranteed to
+/// be in the earliest possible generation that they can belong to.
+///
+/// :param PyDiGraph graph: The DAG to get the topological generations from
+///
+/// :returns: A list of topological generations.
+/// :rtype: list
+///
+/// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
+#[pyfunction]
+#[pyo3(text_signature = "(dag, /)")]
+pub fn topological_generations(dag: &digraph::PyDiGraph) -> PyResult<Vec<NodeIndices>> {
+    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::new();
+    let mut zero_in_degree: Vec<NodeIndex> = Vec::new();
+    for node in dag.graph.node_indices() {
+        let in_degree = dag.in_degree(node.index());
+        if in_degree == 0 {
+            zero_in_degree.push(node);
+        } else {
+            in_degree_map.insert(node, in_degree);
+        }
+    }
+
+    let mut generations: Vec<NodeIndices> = Vec::new();
+    let dir = petgraph::Direction::Outgoing;
+    while !zero_in_degree.is_empty() {
+        let this_generation = zero_in_degree.clone();
+        zero_in_degree.clear();
+        for node in this_generation.iter() {
+            let neighbors = dag.graph.neighbors_directed(*node, dir);
+            for child in neighbors {
+                let child_degree = in_degree_map.get_mut(&child).unwrap();
+                *child_degree -= 1;
+                if *child_degree == 0 {
+                    zero_in_degree.push(child);
+                    in_degree_map.remove(&child);
+                }
+            }
+        }
+        generations.push(NodeIndices {
+            nodes: this_generation.iter().map(|node| node.index()).collect(),
+        });
+    }
+
+    // Check for cycle
+    if !in_degree_map.is_empty() {
+        return Err(DAGHasCycle::new_err("Topological sort encountered a cycle"));
+    }
+    Ok(generations)
+}
+
 /// Return the topological sort of node indices from the provided graph
 ///
 /// :param PyDiGraph graph: The DAG to get the topological sort on
@@ -464,7 +519,7 @@ pub fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
 ///     payload/weight for the nodes in the run
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, filter)")]
+#[pyo3(text_signature = "(graph, filter_fn)")]
 pub fn collect_runs(
     py: Python,
     graph: &digraph::PyDiGraph,

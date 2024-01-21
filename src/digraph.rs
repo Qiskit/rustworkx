@@ -165,7 +165,7 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///
 /// :param bool check_cycle: When this is set to ``True`` the created
 ///     ``PyDiGraph`` has runtime cycle detection enabled.
-/// :param bool multgraph: When this is set to ``False`` the created
+/// :param bool multigraph: When this is set to ``False`` the created
 ///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
 ///     method call is made that would add parallel edges the the weight/weight
 ///     from that method call will be used to update the existing edge in place.
@@ -544,6 +544,24 @@ impl PyDiGraph {
     pub fn edge_indices(&self) -> EdgeIndices {
         EdgeIndices {
             edges: self.graph.edge_indices().map(|edge| edge.index()).collect(),
+        }
+    }
+
+    /// Return a list of indices of all directed edges between specified nodes
+    ///
+    /// :returns: A list of all the edge indices connecting the specified start and end node
+    /// :rtype: EdgeIndices
+    pub fn edge_indices_from_endpoints(&self, node_a: usize, node_b: usize) -> EdgeIndices {
+        let node_a_index = NodeIndex::new(node_a);
+        let node_b_index = NodeIndex::new(node_b);
+
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges_directed(node_a_index, petgraph::Direction::Outgoing)
+                .filter(|edge| edge.target() == node_b_index)
+                .map(|edge| edge.id().index())
+                .collect(),
         }
     }
 

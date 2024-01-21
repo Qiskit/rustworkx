@@ -148,7 +148,7 @@ mod tests {
             (7, 8),
             (8, 9),
         ];
-        let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        let graph = UnGraph::<i32, i32>::from_edges(edge_list);
         let expected = vec![vec![0, 1, 2, 3], vec![0, 1, 6, 7, 8], vec![0, 3, 4, 5]];
         let res_0 = cycle_basis(&graph, Some(NodeIndex::new(0)));
         assert_eq!(sorted_cycle(res_0), expected);
@@ -174,7 +174,7 @@ mod tests {
             (7, 8),
             (8, 9),
         ];
-        let mut graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        let mut graph = UnGraph::<i32, i32>::from_edges(edge_list);
         graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
         let res_0 = cycle_basis(&graph, Some(NodeIndex::new(0)));
         assert_eq!(

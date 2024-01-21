@@ -56,6 +56,7 @@ pub use hexagonal_lattice_graph::hexagonal_lattice_graph;
 pub use lollipop_graph::lollipop_graph;
 pub use path_graph::path_graph;
 pub use petersen_graph::petersen_graph;
+pub use random_graph::barabasi_albert_graph;
 pub use random_graph::gnm_random_graph;
 pub use random_graph::gnp_random_graph;
 pub use random_graph::random_bipartite_graph;
