@@ -2,8 +2,8 @@
 name: Wheel Builds
 on:
   push:
-    tags:
-      - '*'
+    branches: [ stable-abi-work ]
+
 jobs:
   rustworkx-core:
     name: Publish rustworkx-core
