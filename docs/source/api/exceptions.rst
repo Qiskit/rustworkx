@@ -15,3 +15,4 @@ Exceptions
    rustworkx.visit.StopSearch
    rustworkx.visit.PruneSearch
    rustworkx.JSONSerializationError
+   rustworkx.InvalidMapping

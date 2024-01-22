@@ -345,6 +345,14 @@ def k_shortest_path_lengths(
     edge_cost: Callable[[_T], float],
     goal: int | None = ...,
 ) -> PathLengthMapping: ...
+def all_shortest_paths(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    source: int,
+    target: int,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    as_undirected: bool = ...,
+) -> list[list[int]]: ...
 def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> EdgeList: ...
 @overload
 def is_isomorphic(

@@ -25,3 +25,6 @@ Connectivity and Cycles
    rustworkx.all_pairs_all_simple_paths
    rustworkx.stoer_wagner_min_cut
    rustworkx.longest_simple_path
+   rustworkx.is_bipartite
+   rustworkx.isolates
+   rustworkx.has_path
