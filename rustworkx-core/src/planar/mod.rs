@@ -12,6 +12,6 @@
 
 //! Module for planar graphs.
 
-mod lr_planar;
+pub mod lr_planar;
 
-pub use lr_planar::is_planar;
+pub use lr_planar::{is_planar, is_planar_for_layout, LRState};

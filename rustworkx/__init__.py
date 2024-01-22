@@ -966,6 +966,31 @@ random_layout.register(PyGraph, graph_random_layout)
 
 
 @functools.singledispatch
+def planar_layout(graph, scale=None, center=None):
+    """Generate a planar layout
+
+    :param PyGraph graph: The graph to generate the layout for
+    :param tuple center: An optional center position. This is a 2 tuple of two
+        ``float`` values for the center position
+    :param int seed: An optional seed to set for the random number generator.
+
+    :returns: The planar layout of the graph.
+    :rtype: Pos2DMapping
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@planar_layout.register(PyDiGraph)
+def _digraph_planar_layout(graph, scale=None, center=None):
+    return digraph_planar_layout(graph, scale=scale, center=center)
+
+
+@planar_layout.register(PyGraph)
+def _graph_planar_layout(graph, scale=None, center=None):
+    return graph_planar_layout(graph, scale=scale, center=center)
+
+
+@functools.singledispatch
 def spring_layout(
     graph,
     pos=None,
@@ -1990,7 +2015,7 @@ def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_att
     """Generate a JSON object representing a graph in a node-link format
 
     :param graph: The graph to generate the JSON for. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param str path: An optional path to write the JSON output to. If specified
         the function will not return anything and instead will write the JSON
         to the file specified.

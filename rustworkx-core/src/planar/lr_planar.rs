@@ -16,11 +16,13 @@ use std::vec::IntoIter;
 
 use hashbrown::{hash_map::Entry, HashMap};
 use petgraph::{
+    graph::NodeIndex,
+    stable_graph::StableGraph,
     visit::{
         EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
-        Visitable,
+        NodeIndexable, Visitable,
     },
-    Undirected,
+    Directed, Undirected,
 };
 
 use crate::traversal::{depth_first_search, DfsEvent};
@@ -191,7 +193,8 @@ where
     }
 }
 
-enum Sign {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Sign {
     Plus,
     Minus,
 }
@@ -208,17 +211,17 @@ enum LRTestDfsEvent<N> {
 // An error: graph is *not* planar.
 struct NonPlanar {}
 
-struct LRState<G: GraphBase>
+pub struct LRState<G: GraphBase>
 where
     G::NodeId: Hash + Eq,
 {
-    graph: G,
+    pub graph: G,
     /// roots of the DFS forest.
-    roots: Vec<G::NodeId>,
+    pub roots: Vec<G::NodeId>,
     /// distnace from root.
     height: HashMap<G::NodeId, usize>,
     /// parent edge.
-    eparent: HashMap<G::NodeId, Edge<G>>,
+    pub eparent: HashMap<G::NodeId, Edge<G>>,
     /// height of lowest return point.
     lowpt: HashMap<Edge<G>, usize>,
     /// height of next-to-lowest return point. Only used to check if an edge is chordal.
@@ -226,23 +229,31 @@ where
     /// next back edge in traversal with lowest return point.
     lowpt_edge: HashMap<Edge<G>, Edge<G>>,
     /// proxy for nesting order ≺ given by twice lowpt (plus 1 if chordal).
-    nesting_depth: HashMap<Edge<G>, usize>,
+    pub nesting_depth: HashMap<Edge<G>, isize>,
     /// stack for conflict pairs.
     stack: Vec<ConflictPair<Edge<G>>>,
     /// marks the top conflict pair when an edge was pushed in the stack.
     stack_emarker: HashMap<Edge<G>, ConflictPair<Edge<G>>>,
     /// edge relative to which side is defined.
-    eref: HashMap<Edge<G>, Edge<G>>,
+    pub eref: HashMap<Edge<G>, Edge<G>>,
     /// side of edge, or modifier for side of reference edge.
-    side: HashMap<Edge<G>, Sign>,
+    pub side: HashMap<Edge<G>, Sign>,
+    /// directed graph used to build the embedding
+    pub dir_graph: StableGraph<(), (), Directed>,
 }
 
 impl<G> LRState<G>
 where
-    G: GraphBase + NodeCount + EdgeCount + IntoEdges + Visitable,
+    G: GraphBase
+        + NodeCount
+        + EdgeCount
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + IntoEdges
+        + Visitable,
     G::NodeId: Hash + Eq,
 {
-    fn new(graph: G) -> Self {
+    pub fn new(graph: G) -> Self {
         let num_nodes = graph.node_count();
         let num_edges = graph.edge_count();
 
@@ -262,6 +273,33 @@ where
                 .edge_references()
                 .map(|e| ((e.source(), e.target()), Sign::Plus))
                 .collect(),
+            dir_graph: StableGraph::with_capacity(num_nodes, 0),
+        }
+    }
+
+    // Create the directed graph for the embedding in stable format
+    // to match the original graph.
+    fn build_dir_graph(&mut self)
+    where
+        <G as GraphBase>::NodeId: Ord,
+    {
+        let mut tmp_nodes: Vec<usize> = Vec::new();
+        let mut count: usize = 0;
+        for _ in 0..self.graph.node_bound() {
+            self.dir_graph.add_node(());
+        }
+        for gnode in self.graph.node_identifiers() {
+            let gidx = self.graph.to_index(gnode);
+            if gidx != count {
+                for idx in count..gidx {
+                    tmp_nodes.push(idx);
+                }
+                count = gidx;
+            }
+            count += 1;
+        }
+        for tmp_node in tmp_nodes {
+            self.dir_graph.remove_node(NodeIndex::new(tmp_node));
         }
     }
 
@@ -274,6 +312,11 @@ where
                 }
             }
             DfsEvent::TreeEdge(v, w, _) => {
+                let v_dir = NodeIndex::new(self.graph.to_index(v));
+                let w_dir = NodeIndex::new(self.graph.to_index(w));
+                if !self.dir_graph.contains_edge(v_dir, w_dir) {
+                    self.dir_graph.add_edge(v_dir, w_dir, ());
+                }
                 let ei = (v, w);
                 let v_height = self.height[&v];
                 let w_height = v_height + 1;
@@ -287,6 +330,11 @@ where
             DfsEvent::BackEdge(v, w, _) => {
                 // do *not* consider ``(v, w)`` as a back edge if ``(w, v)`` is a tree edge.
                 if Some(&(w, v)) != self.eparent.get(&v) {
+                    let v_dir = NodeIndex::new(self.graph.to_index(v));
+                    let w_dir = NodeIndex::new(self.graph.to_index(w));
+                    if !self.dir_graph.contains_edge(v_dir, w_dir) {
+                        self.dir_graph.add_edge(v_dir, w_dir, ());
+                    }
                     let ei = (v, w);
                     self.lowpt.insert(ei, self.height[&w]);
                     self.lowpt_2.insert(ei, self.height[&v]);
@@ -311,9 +359,9 @@ where
 
                     if self.lowpt_2[&ei] < self.height[&v] {
                         // if it's chordal, add one.
-                        self.nesting_depth.insert(ei, 2 * low + 1);
+                        self.nesting_depth.insert(ei, (2 * low) as isize + 1);
                     } else {
-                        self.nesting_depth.insert(ei, 2 * low);
+                        self.nesting_depth.insert(ei, (2 * low) as isize);
                     }
 
                     // update lowpoints of parent edge.
@@ -656,6 +704,69 @@ where
 /// # Example:
 /// ```rust
 /// use rustworkx_core::petgraph::graph::UnGraph;
+/// use rustworkx_core::planar::{is_planar_for_layout, LRState};
+///
+/// let grid = UnGraph::<(), ()>::from_edges(&[
+///    // row edges
+///    (0, 1), (1, 2), (3, 4), (4, 5), (6, 7), (7, 8),
+///    // col edges
+///    (0, 3), (3, 6), (1, 4), (4, 7), (2, 5), (5, 8),
+/// ]);
+/// let mut lr_state = LRState::new(&grid);
+/// assert!(is_planar_for_layout(&grid, Some(&mut lr_state)))
+/// ```
+pub fn is_planar_for_layout<G>(graph: G, state: Option<&mut LRState<G>>) -> bool
+where
+    G: GraphProp<EdgeType = Undirected>
+        + NodeCount
+        + EdgeCount
+        + IntoEdges
+        + NodeIndexable
+        + IntoNodeIdentifiers
+        + Visitable,
+    G::NodeId: Hash + Eq + Ord,
+{
+    // If None passed for state, create new LRState
+    let mut lr_state = LRState::new(graph);
+    let lr_state = match state {
+        Some(state) => state,
+        None => &mut lr_state,
+    };
+
+    // Build directed graph for the embedding
+    lr_state.build_dir_graph();
+
+    // Dfs orientation phase
+    depth_first_search(graph, graph.node_identifiers(), |event| {
+        lr_state.lr_orientation_visitor(event)
+    });
+
+    // Left - Right partition.
+    for v in lr_state.roots.clone() {
+        let res = lr_visit_ordered_dfs_tree(lr_state, v, |lr_state, event| {
+            lr_state.lr_testing_visitor(event)
+        });
+        if res.is_err() {
+            return false;
+        }
+    }
+
+    true
+}
+
+/// Check if an undirected graph is planar.
+///
+/// A graph is planar iff it can be drawn in a plane without any edge
+/// intersections.
+///
+/// The planarity check algorithm  is based on the
+/// Left-Right Planarity Test:
+///
+/// [`Ulrik Brandes:  The Left-Right Planarity Test (2009)`](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.217.9208)
+///
+/// # Example:
+/// ```rust
+/// use rustworkx_core::petgraph::graph::UnGraph;
 /// use rustworkx_core::planar::is_planar;
 ///
 /// let grid = UnGraph::<(), ()>::from_edges(&[
@@ -673,25 +784,9 @@ where
         + EdgeCount
         + IntoEdges
         + IntoNodeIdentifiers
+        + NodeIndexable
         + Visitable,
-    G::NodeId: Hash + Eq,
+    G::NodeId: Hash + Eq + Ord,
 {
-    let mut state = LRState::new(graph);
-
-    // Dfs orientation phase
-    depth_first_search(graph, graph.node_identifiers(), |event| {
-        state.lr_orientation_visitor(event)
-    });
-
-    // Left - Right partition.
-    for v in state.roots.clone() {
-        let res = lr_visit_ordered_dfs_tree(&mut state, v, |state, event| {
-            state.lr_testing_visitor(event)
-        });
-        if res.is_err() {
-            return false;
-        }
-    }
-
-    true
+    is_planar_for_layout(graph, None)
 }
