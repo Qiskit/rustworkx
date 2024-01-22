@@ -1,0 +1,32 @@
+---
+features:
+  - |
+    Added a new keyword argument, ``preset_color_fn``, to :func:`.graph_greedy_color`
+    which is used to provide preset colors for specific nodes when computing the graph
+    coloring. You can optionally pass a callable to that argument which will
+    be passed node index from the graph and is either expected to return an
+    integer color to use for that node, or `None` to indicate there is no
+    preset color for that node. For example:
+
+    .. jupyter-execute::
+
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+
+        graph = rx.generators.generalized_petersen_graph(5, 2)
+
+        def preset_colors(node_index):
+            if node_index == 0:
+                return 3
+
+        coloring = rx.graph_greedy_color(graph, preset_color_fn=preset_colors)
+        colors = [coloring[node] for node in graph.node_indices()]
+
+        layout = rx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
+        mpl_draw(graph, node_color=colors, pos=layout)
+  - |
+    Added a new function ``greedy_node_color_with_preset_colors`` to the
+    rustworkx-core module ``coloring``. This new function is identical to the
+    ``rustworkx_core::coloring::greedy_node_color`` except it has a second
+    preset parameter which is passed a callable which is used to provide preset
+    colors for particular node ids.

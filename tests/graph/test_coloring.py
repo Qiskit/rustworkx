@@ -45,6 +45,48 @@ class TestGraphColoring(unittest.TestCase):
         res = rustworkx.graph_greedy_color(graph)
         self.assertEqual({0: 0, 1: 1, 2: 1}, res)
 
+    def test_simple_graph_with_preset(self):
+        def preset(node_idx):
+            if node_idx == 0:
+                return 1
+            return None
+
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, 1)
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_c, 1)
+        res = rustworkx.graph_greedy_color(graph, preset)
+        self.assertEqual({0: 1, 1: 0, 2: 0}, res)
+
+    def test_simple_graph_large_degree_with_preset(self):
+        def preset(node_idx):
+            if node_idx == 0:
+                return 1
+            return None
+
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, 1)
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        res = rustworkx.graph_greedy_color(graph, preset)
+        self.assertEqual({0: 1, 1: 0, 2: 0}, res)
+
+    def test_preset_raises_exception(self):
+        def preset(node_idx):
+            raise OverflowError("I am invalid")
+
+        graph = rustworkx.generators.path_graph(5)
+        with self.assertRaises(OverflowError):
+            rustworkx.graph_greedy_color(graph, preset)
+
 
 class TestGraphEdgeColoring(unittest.TestCase):
     def test_graph(self):

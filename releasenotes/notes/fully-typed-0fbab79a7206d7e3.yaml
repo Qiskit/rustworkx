@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    The ``rustworkx`` Python package is now fully typed with
+    `mypy <https://mypy-lang.org/>`__. Building off of the previous 0.13.0
+    release which introduced partial type annotations to the library, rustworkx
+    now includes type annotations for the entire public API.

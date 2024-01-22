@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::GraphNotBipartite;
-use crate::{digraph, graph};
+use crate::{digraph, graph, NodeIndex};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -19,7 +19,8 @@ use pyo3::Python;
 
 use rustworkx_core::bipartite_coloring::bipartite_edge_color;
 use rustworkx_core::coloring::{
-    greedy_edge_color, greedy_node_color, misra_gries_edge_color, two_color,
+    greedy_edge_color, greedy_node_color, greedy_node_color_with_preset_colors,
+    misra_gries_edge_color, two_color,
 };
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
@@ -33,6 +34,13 @@ use rustworkx_core::coloring::{
 ///     may not return an optimal solution.
 ///
 /// :param PyGraph: The input PyGraph object to color
+/// :param preset_color_fn: An optional callback function that is used to manually
+///     specify a color to use for particular nodes in the graph. If specified
+///     this takes a callable that will be passed a node index and is expected to
+///     either return an integer representing a color or ``None`` to indicate there
+///     is no preset. Note if you do use a callable there is no validation that
+///     the preset values are valid colors. You can generate an invalid coloring
+///     if you the specified function returned invalid colors for any nodes.
 ///
 /// :returns: A dictionary where keys are node indices and the value is
 ///     the color
@@ -55,9 +63,23 @@ use rustworkx_core::coloring::{
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    let colors = greedy_node_color(&graph.graph);
+#[pyo3(text_signature = "(graph, /, preset_color_fn=None)")]
+pub fn graph_greedy_color(
+    py: Python,
+    graph: &graph::PyGraph,
+    preset_color_fn: Option<PyObject>,
+) -> PyResult<PyObject> {
+    let colors = match preset_color_fn {
+        Some(preset_color_fn) => {
+            let callback = |node_idx: NodeIndex| -> PyResult<Option<usize>> {
+                preset_color_fn
+                    .call1(py, (node_idx.index(),))
+                    .map(|x| x.extract(py).ok())
+            };
+            greedy_node_color_with_preset_colors(&graph.graph, callback)?
+        }
+        None => greedy_node_color(&graph.graph),
+    };
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
         out_dict.set_item(node.index(), color)?;
