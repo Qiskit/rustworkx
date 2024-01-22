@@ -52,6 +52,7 @@ from .rustworkx import digraph_is_bipartite as digraph_is_bipartite
 from .rustworkx import graph_two_color as graph_two_color
 from .rustworkx import digraph_two_color as digraph_two_color
 from .rustworkx import graph_misra_gries_edge_color as graph_misra_gries_edge_color
+from .rustworkx import graph_bipartite_edge_color as graph_bipartite_edge_color
 from .rustworkx import connected_components as connected_components
 from .rustworkx import is_connected as is_connected
 from .rustworkx import is_weakly_connected as is_weakly_connected
