@@ -32,6 +32,7 @@ from .rustworkx import NegativeCycle as NegativeCycle
 from .rustworkx import JSONSerializationError as JSONSerializationError
 from .rustworkx import FailedToConverge as FailedToConverge
 from .rustworkx import InvalidMapping as InvalidMapping
+from .rustworkx import GraphNotBipartite as GraphNotBipartite
 
 from .rustworkx import digraph_cartesian_product as digraph_cartesian_product
 from .rustworkx import graph_cartesian_product as graph_cartesian_product
