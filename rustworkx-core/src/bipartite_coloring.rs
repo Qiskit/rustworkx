@@ -413,7 +413,8 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
 /// The input to the algorithm is a bipartite graph and an explicit partition of
 /// its nodes into "left" and "right" nodes. The output is an assignment of colors
 /// to the edges so that no two incident edges have the same color. The algorithm
-/// runs in time `O (m log m)`, where `m` is the number of edges of the graph.
+/// runs in time `O (n + m log m)`, where `n` is the number of vertices and
+/// `m` is the number of edges of the graph.
 ///
 /// Arguments:
 ///
@@ -594,7 +595,8 @@ where
 /// The input to the algorithm is a graph. If the graph is bipartite, the
 /// output is an assignment of colors to the edges of the graph so that
 /// no two incident edges have the same color. The algorithm runs in
-/// time `O (m log m)`, where `m` is the number of edges of the graph.
+/// time `O (n + m log m)`, where `n` is the number of vertices and `m`
+/// is the number of edges of the graph.
 /// If the graph is not bipartite, `GraphNotBipartite` is returned instead.
 ///
 /// Arguments:

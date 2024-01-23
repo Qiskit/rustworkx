@@ -208,8 +208,8 @@ pub fn digraph_two_color(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Opt
 /// Inf. Process. Lett. 85(6), (2003).
 /// <https://www.tau.ac.il/~nogaa/PDFS/lex2.pdf>
 ///
-/// The algorithm runs in time `O (m log m)`, where `m` is the number of edges
-/// of the graph.
+/// The algorithm runs in time `O (n + m log m)`, where `n` is the number of
+/// vertices and `m` is the number of edges of the graph.
 ///
 /// :param PyGraph graph: The graph to find the coloring for
 ///

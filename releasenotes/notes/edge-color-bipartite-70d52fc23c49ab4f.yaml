@@ -16,7 +16,8 @@ features:
     bipartite multigraphs" by Noga Alon, 2003.
        
     The coloring produces at most d colors where d is the maximum degree of a node in the graph.
-    The algorithm runs in time ``O (m log m)``, where ``m`` is the number of edges in the graph.
+    The algorithm runs in time ``O (n + m log m)``, where ``n`` is the number of vertices and
+    ``m`` is the number of edges in the graph.
     
     .. jupyter-execute::
     
