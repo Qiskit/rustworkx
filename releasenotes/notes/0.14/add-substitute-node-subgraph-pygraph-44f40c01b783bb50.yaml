@@ -19,7 +19,3 @@ features:
 
       # Draw the updated graph
       mpl_draw(graph, with_labels=True)
-fixes:
-  - |
-    Fixes missing method that is present in PyDiGraph but not in PyGraph.
-    see `#837 <https://github.com/Qiskit/rustworkx/issues/837>`__ for more info.
