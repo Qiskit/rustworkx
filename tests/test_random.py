@@ -288,3 +288,71 @@ class TestBarabasiAlbertGraph(unittest.TestCase):
         initial_graph = rustworkx.generators.directed_path_graph(450)
         with self.assertRaises(ValueError):
             rustworkx.directed_barabasi_albert_graph(5, 4, initial_graph=initial_graph)
+
+
+class TestRandomBipartiteGraph(unittest.TestCase):
+    def test_random_bipartite_directed_1(self):
+        graph = rustworkx.directed_random_bipartite_graph(5, 10, 0.7, seed=0)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 36)
+
+    def test_random_bipartite_directed_2(self):
+        graph = rustworkx.directed_random_bipartite_graph(10, 5, 0.2, seed=20)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 11)
+
+    def test_random_bipartite_directed_empty_1(self):
+        graph = rustworkx.directed_random_bipartite_graph(5, 10, 0.0)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_bipartite_directed_empty_2(self):
+        graph = rustworkx.directed_random_bipartite_graph(5, 0, 1.0)
+        self.assertEqual(len(graph), 5)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_bipartite_directed_complete(self):
+        graph = rustworkx.directed_random_bipartite_graph(10, 5, 1.0)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 10 * 5)
+
+    def test_random_bipartite_directed_invalid_num_nodes(self):
+        with self.assertRaises(ValueError):
+            rustworkx.directed_random_bipartite_graph(0, 0, 1.0)
+
+    def test_random_bipartite_directed_invalid_probability(self):
+        with self.assertRaises(ValueError):
+            rustworkx.directed_random_bipartite_graph(5, 10, 123.5)
+
+    def test_random_bipartite_undirected_1(self):
+        graph = rustworkx.undirected_random_bipartite_graph(5, 10, 0.7, seed=0)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 36)
+
+    def test_random_bipartite_undirected_2(self):
+        graph = rustworkx.undirected_random_bipartite_graph(10, 5, 0.2, seed=20)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 11)
+
+    def test_random_bipartite_undirected_empty_1(self):
+        graph = rustworkx.undirected_random_bipartite_graph(5, 10, 0.0)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_bipartite_undirected_empty_2(self):
+        graph = rustworkx.undirected_random_bipartite_graph(5, 0, 1.0)
+        self.assertEqual(len(graph), 5)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_bipartite_undirected_complete(self):
+        graph = rustworkx.undirected_random_bipartite_graph(10, 5, 1.0)
+        self.assertEqual(len(graph), 15)
+        self.assertEqual(len(graph.edges()), 10 * 5)
+
+    def test_random_bipartite_undirected_invalid_num_nodes(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_random_bipartite_graph(0, 0, 1.0)
+
+    def test_random_bipartite_undirected_invalid_probability(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_random_bipartite_graph(5, 10, 123.5)

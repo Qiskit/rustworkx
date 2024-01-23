@@ -10,11 +10,14 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use crate::GraphNotBipartite;
 use crate::{digraph, graph, NodeIndex};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
+
+use rustworkx_core::bipartite_coloring::bipartite_edge_color;
 use rustworkx_core::coloring::{
     greedy_edge_color, greedy_node_color, greedy_node_color_with_preset_colors,
     misra_gries_edge_color, two_color,
@@ -192,4 +195,37 @@ pub fn digraph_two_color(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Opt
         }
         None => Ok(None),
     }
+}
+
+/// Color edges of a graph by checking whether the graph is bipartite,
+/// and if so, calling the algorithm for edge-coloring bipartite graphs.
+///
+/// If the input graph is not bipartite, ``None`` is returned.
+///
+/// The implementation is based on the following paper:
+///
+/// Noga Alon. "A simple algorithm for edge-coloring bipartite multigraphs".
+/// Inf. Process. Lett. 85(6), (2003).
+/// <https://www.tau.ac.il/~nogaa/PDFS/lex2.pdf>
+///
+/// The algorithm runs in time `O (n + m log m)`, where `n` is the number of
+/// vertices and `m` is the number of edges of the graph.
+///
+/// :param PyGraph graph: The graph to find the coloring for
+///
+/// :returns: A dictionary where keys are edge indices and the value is the color
+///  (provided that the graph is bipartite)
+/// :rtype: dict
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_bipartite_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+    let colors = match bipartite_edge_color(&graph.graph) {
+        Ok(colors) => colors,
+        Err(_) => return Err(GraphNotBipartite::new_err("Graph is not bipartite")),
+    };
+    let out_dict = PyDict::new(py);
+    for (node, color) in colors {
+        out_dict.set_item(node.index(), color)?;
+    }
+    Ok(out_dict.into())
 }

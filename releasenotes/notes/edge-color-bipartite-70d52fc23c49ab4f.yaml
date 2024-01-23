@@ -1,0 +1,42 @@
+---
+features:
+  - | 
+    Added a new exception class :class:`~.GraphNotBipartite` which is raised when a 
+    graph is not bipartite. The sole user of this exception is the :func:`~.graph_bipartite_edge_color` 
+    which will raise it when the user provided graph is not bipartite.
+  - |
+    Added a new function, :func:`~.graph_bipartite_edge_color` to color edges
+    of a :class:`~.PyGraph` object. The function first checks whether a graph is
+    bipartite, raising exception of type :class:`~.GraphNotBipartite` if this is not the case.
+    Otherwise, the function calls the algorithm for edge-coloring bipartite graphs,
+    and returns a dictionary with key being the edge index and value being the assigned
+    color.
+    
+    The implemented algorithm is based on the paper "A simple algorithm for edge-coloring 
+    bipartite multigraphs" by Noga Alon, 2003.
+       
+    The coloring produces at most d colors where d is the maximum degree of a node in the graph.
+    The algorithm runs in time ``O (n + m log m)``, where ``n`` is the number of vertices and
+    ``m`` is the number of edges in the graph.
+    
+    .. jupyter-execute::
+    
+        import rustworkx as rx  
+        from rustworkx.visualization import mpl_draw
+    
+        graph = rx.generators.cycle_graph(8)
+        edge_colors = rx.graph_bipartite_edge_color(graph)
+        assert edge_colors == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 0, 7: 1}
+        mpl_draw(graph, edge_color=[edge_colors[i] for i in range(graph.num_edges())])
+  - |
+    Added two new random graph generator functions,
+    :func:`.directed_random_bipartite_graph` and :func:`.undirected_random_bipartite_graph`,
+    to generate a random bipartite graph. For example:
+
+        .. jupyter-execute::
+
+            import rustworkx as rx
+            from rustworkx.visualization import mpl_draw
+
+            random_graph = rx.undirected_random_bipartite_graph(10, 5, 0.5, seed=20)
+            mpl_draw(random_graph)
