@@ -183,7 +183,7 @@ fn rbmg_split_into_two(
     g: &RegularBipartiteMultiGraph,
 ) -> (RegularBipartiteMultiGraph, RegularBipartiteMultiGraph) {
     if g.degree % 2 == 1 {
-        panic!("Cannot split multi-graph of odd degree.")
+        unreachable!("This function should not be called when degree is odd")
     }
 
     let mut h1: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone_without_edges(g);
@@ -293,7 +293,7 @@ fn rbmg_find_perfect_matching(g: &RegularBipartiteMultiGraph) -> Matching {
 /// into pairs of multigraphs of half-degree..
 fn rbmg_edge_color_when_power_of_two(g: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     if !g.degree.is_power_of_two() {
-        panic!("degree is not power of 2");
+        unreachable!("This function should not be called when degree is not a power of 2");
     }
 
     let mut coloring: Vec<Matching> = Vec::with_capacity(g.degree);
@@ -314,7 +314,7 @@ fn rbmg_edge_color_when_power_of_two(g: &RegularBipartiteMultiGraph) -> Vec<Matc
     coloring.append(&mut h2_coloring);
 
     if coloring.len() != g.degree {
-        panic!("wrong len of coloring!!");
+        unreachable!("The coloring is has an incorrect number of colors");
     }
 
     coloring
@@ -389,7 +389,7 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     }
 
     if coloring.len() != g0.degree {
-        panic!("Wrong output coloring length");
+        unreachable!("The coloring is has an incorrect number of colors");
     }
     coloring
 }
