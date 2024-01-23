@@ -15,9 +15,9 @@ features:
     The implemented algorithm is based on the paper "A simple algorithm for edge-coloring 
     bipartite multigraphs" by Noga Alon, 2003.
        
-    The coloring produces at most d colors where d is the maximum degree of a node in the graph.
-    The algorithm runs in time ``O (n + m log m)``, where ``n`` is the number of vertices and
-    ``m`` is the number of edges in the graph.
+    The coloring produces at most :math:`d` colors where :math:`d` is the maximum degree of a node in the graph.
+    The algorithm runs in time :math:`\mathcal{O}(n + m\log{}m)`, where :math:`n` is the number of vertices and
+    :math:`m` is the number of edges in the graph.
     
     .. jupyter-execute::
     
@@ -39,4 +39,5 @@ features:
             from rustworkx.visualization import mpl_draw
 
             random_graph = rx.undirected_random_bipartite_graph(10, 5, 0.5, seed=20)
-            mpl_draw(random_graph)
+            layout = rx.bipartite_layout(random_graph, set(range(10)))
+            mpl_draw(random_graph, pos=layout)

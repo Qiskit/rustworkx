@@ -16,3 +16,4 @@ Exceptions
    rustworkx.visit.PruneSearch
    rustworkx.JSONSerializationError
    rustworkx.InvalidMapping
+   rustworkx.GraphNotBipartite
