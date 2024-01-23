@@ -51,6 +51,7 @@ struct EdgeData {
 type EdgedGraph = StableGraph<(), EdgeData, Undirected>;
 type Matching = Vec<(NodeIndex, NodeIndex)>;
 
+#[derive(Clone)]
 struct RegularBipartiteMultiGraph {
     graph: EdgedGraph,
     degree: usize,
@@ -65,15 +66,6 @@ impl RegularBipartiteMultiGraph {
             degree: 0,
             l_nodes: vec![],
             r_nodes: vec![],
-        }
-    }
-
-    fn clone(parent: &RegularBipartiteMultiGraph) -> Self {
-        RegularBipartiteMultiGraph {
-            graph: parent.graph.clone(),
-            degree: parent.degree,
-            l_nodes: parent.l_nodes.clone(),
-            r_nodes: parent.r_nodes.clone(),
         }
     }
 
