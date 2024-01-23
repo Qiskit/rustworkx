@@ -555,6 +555,20 @@ def directed_barabasi_albert_graph(
     seed: int | None = ...,
     initial_graph: PyDiGraph | None = ...,
 ) -> PyDiGraph: ...
+def undirected_random_bipartite_graph(
+    num_l_nodes: int,
+    num_r_nodes: int,
+    probability: float,
+    /,
+    seed: int | None = ...,
+) -> PyGraph: ...
+def directed_random_bipartite_graph(
+    num_l_nodes: int,
+    num_r_nodes: int,
+    probability: float,
+    /,
+    seed: int | None = ...,
+) -> PyDiGraph: ...
 
 # Read Write
 
