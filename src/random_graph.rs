@@ -501,3 +501,107 @@ pub fn directed_barabasi_albert_graph(
         attrs: py.None(),
     })
 }
+
+/// Generate a directed random bipartite graph.
+///
+/// A bipartite graph is a graph whose nodes can be divided into two disjoint sets,
+/// informally called "left nodes" and "right nodes", so that every edge connects
+/// some left node and some right node.
+///
+/// Given a number `n` of left nodes, a number `m` of right nodes, and a probability `p`,
+/// the algorithm creates a graph with `n + m` nodes. For all the `n * m` possible
+/// directed edges from a left node to a right node, each edge is created independently
+/// with probability `p`.
+///
+/// :param int num_l_nodes: The number of "left" nodes in the random bipartite graph.
+/// :param int num_r_nodes: The number of "right" nodes in the random bipartite graph.
+/// :param float probability: The probability of creating an edge between two nodes as a float.
+/// :param int seed: An optional seed to use for the random number generator.
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+#[pyfunction]
+#[pyo3(text_signature = "(num_l_nodes, num_r_nodes, probability, /, seed=None)")]
+pub fn directed_random_bipartite_graph(
+    py: Python,
+    num_l_nodes: usize,
+    num_r_nodes: usize,
+    probability: f64,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::random_bipartite_graph(
+        num_l_nodes,
+        num_r_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid number of nodes num_l_nodes + num_r_nodes or invalid probability",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Generate an undirected random bipartite graph.
+///
+/// A bipartite graph is a graph whose nodes can be divided into two disjoint sets,
+/// informally called "left nodes" and "right nodes", so that every edge connects
+/// some left node and some right node.
+///
+/// Given a number `n` of left nodes, a number `m` of right nodes, and a probability `p`,
+/// the algorithm creates a graph with `n + m` nodes. For all the `n * m` possible
+/// undirected edges connecting a left node and a right node, each edge is created
+/// independently with probability `p`.
+///
+/// :param int num_l_nodes: The number of "left" nodes in the random bipartite graph.
+/// :param int num_r_nodes: The number of "right" nodes in the random bipartite graph.
+/// :param float probability: The probability of creating an edge between two nodes as a float.
+/// :param int seed: An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(num_l_nodes, num_r_nodes, probability, /, seed=None)")]
+pub fn undirected_random_bipartite_graph(
+    py: Python,
+    num_l_nodes: usize,
+    num_r_nodes: usize,
+    probability: f64,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::random_bipartite_graph(
+        num_l_nodes,
+        num_r_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid number of nodes num_l_nodes + num_r_nodes or invalid probability",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
+}

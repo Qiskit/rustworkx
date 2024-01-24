@@ -31,6 +31,7 @@ typed API based on the data type.
    rustworkx.graph_bellman_ford_shortest_path_lengths
    rustworkx.graph_all_pairs_bellman_ford_shortest_paths
    rustworkx.graph_all_pairs_bellman_ford_path_lengths
+   rustworkx.graph_all_shortest_paths
    rustworkx.graph_dfs_edges
    rustworkx.graph_dfs_search
    rustworkx.graph_transitivity

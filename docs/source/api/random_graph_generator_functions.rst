@@ -13,3 +13,5 @@ Random Graph Generator Functions
     rustworkx.random_geometric_graph
     rustworkx.barabasi_albert_graph
     rustworkx.directed_barabasi_albert_graph
+    rustworkx.directed_random_bipartite_graph
+    rustworkx.undirected_random_bipartite_graph

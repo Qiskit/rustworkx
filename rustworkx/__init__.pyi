@@ -32,6 +32,7 @@ from .rustworkx import NegativeCycle as NegativeCycle
 from .rustworkx import JSONSerializationError as JSONSerializationError
 from .rustworkx import FailedToConverge as FailedToConverge
 from .rustworkx import InvalidMapping as InvalidMapping
+from .rustworkx import GraphNotBipartite as GraphNotBipartite
 
 from .rustworkx import digraph_cartesian_product as digraph_cartesian_product
 from .rustworkx import graph_cartesian_product as graph_cartesian_product
@@ -52,6 +53,7 @@ from .rustworkx import digraph_is_bipartite as digraph_is_bipartite
 from .rustworkx import graph_two_color as graph_two_color
 from .rustworkx import digraph_two_color as digraph_two_color
 from .rustworkx import graph_misra_gries_edge_color as graph_misra_gries_edge_color
+from .rustworkx import graph_bipartite_edge_color as graph_bipartite_edge_color
 from .rustworkx import connected_components as connected_components
 from .rustworkx import is_connected as is_connected
 from .rustworkx import is_weakly_connected as is_weakly_connected
@@ -127,6 +129,8 @@ from .rustworkx import undirected_gnp_random_graph as undirected_gnp_random_grap
 from .rustworkx import random_geometric_graph as random_geometric_graph
 from .rustworkx import barabasi_albert_graph as barabasi_albert_graph
 from .rustworkx import directed_barabasi_albert_graph as directed_barabasi_albert_graph
+from .rustworkx import undirected_random_bipartite_graph as undirected_random_bipartite_graph
+from .rustworkx import directed_random_bipartite_graph as directed_random_bipartite_graph
 from .rustworkx import read_graphml as read_graphml
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
@@ -341,6 +345,14 @@ def k_shortest_path_lengths(
     edge_cost: Callable[[_T], float],
     goal: int | None = ...,
 ) -> PathLengthMapping: ...
+def all_shortest_paths(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    source: int,
+    target: int,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    as_undirected: bool = ...,
+) -> list[list[int]]: ...
 def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> EdgeList: ...
 @overload
 def is_isomorphic(

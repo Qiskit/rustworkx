@@ -1,6 +1,0 @@
----
-features:
-  - |
-    Added new functions :func:`~rustworkx.graph_all_shortest_paths` and
-    :func:`~rustworkx.digraph_all_shortest_paths` that finds every
-    simple shortest path in a (di)graph.

@@ -10,13 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{digraph, graph};
+use crate::GraphNotBipartite;
+use crate::{digraph, graph, NodeIndex};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
+
+use rustworkx_core::bipartite_coloring::bipartite_edge_color;
 use rustworkx_core::coloring::{
-    greedy_edge_color, greedy_node_color, misra_gries_edge_color, two_color,
+    greedy_edge_color, greedy_node_color, greedy_node_color_with_preset_colors,
+    misra_gries_edge_color, two_color,
 };
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
@@ -30,6 +34,13 @@ use rustworkx_core::coloring::{
 ///     may not return an optimal solution.
 ///
 /// :param PyGraph: The input PyGraph object to color
+/// :param preset_color_fn: An optional callback function that is used to manually
+///     specify a color to use for particular nodes in the graph. If specified
+///     this takes a callable that will be passed a node index and is expected to
+///     either return an integer representing a color or ``None`` to indicate there
+///     is no preset. Note if you do use a callable there is no validation that
+///     the preset values are valid colors. You can generate an invalid coloring
+///     if you the specified function returned invalid colors for any nodes.
 ///
 /// :returns: A dictionary where keys are node indices and the value is
 ///     the color
@@ -52,9 +63,23 @@ use rustworkx_core::coloring::{
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-pub fn graph_greedy_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    let colors = greedy_node_color(&graph.graph);
+#[pyo3(text_signature = "(graph, /, preset_color_fn=None)")]
+pub fn graph_greedy_color(
+    py: Python,
+    graph: &graph::PyGraph,
+    preset_color_fn: Option<PyObject>,
+) -> PyResult<PyObject> {
+    let colors = match preset_color_fn {
+        Some(preset_color_fn) => {
+            let callback = |node_idx: NodeIndex| -> PyResult<Option<usize>> {
+                preset_color_fn
+                    .call1(py, (node_idx.index(),))
+                    .map(|x| x.extract(py).ok())
+            };
+            greedy_node_color_with_preset_colors(&graph.graph, callback)?
+        }
+        None => greedy_node_color(&graph.graph),
+    };
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
         out_dict.set_item(node.index(), color)?;
@@ -170,4 +195,37 @@ pub fn digraph_two_color(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Opt
         }
         None => Ok(None),
     }
+}
+
+/// Color edges of a graph by checking whether the graph is bipartite,
+/// and if so, calling the algorithm for edge-coloring bipartite graphs.
+///
+/// If the input graph is not bipartite, ``None`` is returned.
+///
+/// The implementation is based on the following paper:
+///
+/// Noga Alon. "A simple algorithm for edge-coloring bipartite multigraphs".
+/// Inf. Process. Lett. 85(6), (2003).
+/// <https://www.tau.ac.il/~nogaa/PDFS/lex2.pdf>
+///
+/// The algorithm runs in time `O (n + m log m)`, where `n` is the number of
+/// vertices and `m` is the number of edges of the graph.
+///
+/// :param PyGraph graph: The graph to find the coloring for
+///
+/// :returns: A dictionary where keys are edge indices and the value is the color
+///  (provided that the graph is bipartite)
+/// :rtype: dict
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_bipartite_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+    let colors = match bipartite_edge_color(&graph.graph) {
+        Ok(colors) => colors,
+        Err(_) => return Err(GraphNotBipartite::new_err("Graph is not bipartite")),
+    };
+    let out_dict = PyDict::new(py);
+    for (node, color) in colors {
+        out_dict.set_item(node.index(), color)?;
+    }
+    Ok(out_dict.into())
 }
