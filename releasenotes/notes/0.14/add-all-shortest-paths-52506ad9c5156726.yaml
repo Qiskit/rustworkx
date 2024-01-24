@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Added a new function :func:`.all_shortest_paths` (and the graph type specific
+    variants: :func:`~rustworkx.graph_all_shortest_paths` and
+    :func:`~rustworkx.digraph_all_shortest_paths`) that finds every
+    simple shortest path two nodes in a graph.
+  - |
+    Added a new function to the ``rustworkx-core`` module
+    ``rustworkx_core::shortest_path`` module ``all_shortest_path()`` which is
+    used to find every simple shortest path in a graph.

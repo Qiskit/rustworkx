@@ -1972,3 +1972,37 @@ def floyd_warshall_successor_and_distance(
     :rtype: (numpy.ndarray, numpy.ndarray)
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@_rustworkx_dispatch
+def all_shortest_paths(
+    graph,
+    source,
+    target,
+    weight_fn=None,
+    default_weight=1.0,
+    as_undirected=False,
+):
+    """
+    Find all shortest paths between two nodes
+
+    This function will generate all possible shortest paths from a source node to a
+    target using Dijkstra's algorithm.
+
+    :param graph: The input graph to find the shortest paths for
+    :param int source: The node index to find paths from
+    :param int target: A target to find paths to
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float which
+        will be used to represent the weight/cost of the edge
+    :param float default_weight: If ``weight_fn`` isn't specified this optional
+        float value will be used for the weight/cost of each edge.
+
+    :return: List of paths. Each paths are lists of node indices,
+        starting at ``source`` and ending at ``target``.
+    :rtype: list
+    :raises ValueError: when an edge weight with NaN or negative value
+        is provided.
+
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
