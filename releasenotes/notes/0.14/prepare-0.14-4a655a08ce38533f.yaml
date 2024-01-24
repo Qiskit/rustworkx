@@ -1,0 +1,14 @@
+---
+prelude: |
+  This is a new feature release of Rustworkx that adds many new features to
+  the library. The highlights of this release are:
+
+    * Fully type annotated for support with `mypy <https://mypy-lang.org/>`__
+      and other tooling
+    * Improvements to the graph coloring functions
+
+  This release supports running with Python 3.8 through 3.12. The minimum
+  supported Rust version for building rustworkx and rustworkx-core from source
+  is now 1.64.0. The minimum supported version of macOS for this release has
+  been increased from 10.9 to 10.12. Also, the Linux ppc64le and s390x platform
+  support has been downgraded from :ref:`tier-3` to :ref:`tier-4`.

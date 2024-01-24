@@ -45,6 +45,48 @@ class TestGraphColoring(unittest.TestCase):
         res = rustworkx.graph_greedy_color(graph)
         self.assertEqual({0: 0, 1: 1, 2: 1}, res)
 
+    def test_simple_graph_with_preset(self):
+        def preset(node_idx):
+            if node_idx == 0:
+                return 1
+            return None
+
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, 1)
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_c, 1)
+        res = rustworkx.graph_greedy_color(graph, preset)
+        self.assertEqual({0: 1, 1: 0, 2: 0}, res)
+
+    def test_simple_graph_large_degree_with_preset(self):
+        def preset(node_idx):
+            if node_idx == 0:
+                return 1
+            return None
+
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, 1)
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_a, node_c, 1)
+        res = rustworkx.graph_greedy_color(graph, preset)
+        self.assertEqual({0: 1, 1: 0, 2: 0}, res)
+
+    def test_preset_raises_exception(self):
+        def preset(node_idx):
+            raise OverflowError("I am invalid")
+
+        graph = rustworkx.generators.path_graph(5)
+        with self.assertRaises(OverflowError):
+            rustworkx.graph_greedy_color(graph, preset)
+
 
 class TestGraphEdgeColoring(unittest.TestCase):
     def test_graph(self):
@@ -185,3 +227,97 @@ class TestMisraGriesColoring(unittest.TestCase):
         edge_colors = rustworkx.graph_misra_gries_edge_color(graph)
         num_colors = max(edge_colors.values()) + 1
         self.assertLessEqual(num_colors, 11)
+
+
+class TestBipartiteGraphEdgeColoring(unittest.TestCase):
+    def test_graph(self):
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+
+        graph.add_edge(node_a, node_b, 1)
+        graph.add_edge(node_b, node_c, 1)
+        graph.add_edge(node_c, node_d, 1)
+        graph.add_edge(node_a, node_d, 1)
+
+        edge_colors = rustworkx.graph_bipartite_edge_color(graph)
+        self.assertEqual({0: 1, 1: 0, 2: 1, 3: 0}, edge_colors)
+
+    def test_graph_multiple_edges(self):
+        """Graph with multiple edges between two nodes."""
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, 1)
+        graph.add_edge(node_a, node_b, 1)
+        graph.add_edge(node_b, node_a, 1)
+        graph.add_edge(node_a, node_b, 1)
+        edge_colors = rustworkx.graph_bipartite_edge_color(graph)
+        self.assertEqual({0: 3, 1: 2, 2: 1, 3: 0}, edge_colors)
+
+    def test_graph_not_bipartite(self):
+        """Test that assert is raised on non-bipartite graphs."""
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_b, 1)
+        graph.add_edge(node_a, node_c, 1)
+        graph.add_edge(node_b, node_c, 1)
+        with self.assertRaises(rustworkx.GraphNotBipartite):
+            rustworkx.graph_bipartite_edge_color(graph)
+
+    def test_graph_not_bipartite_self_loop(self):
+        """Test that assert is raised on non-bipartite graphs."""
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        graph.add_edge(node_a, node_a, 1)
+        with self.assertRaises(rustworkx.GraphNotBipartite):
+            rustworkx.graph_bipartite_edge_color(graph)
+
+    def test_graph_with_holes(self):
+        """Graph with missing node and edge indices."""
+        graph = rustworkx.PyGraph()
+
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        node_e = graph.add_node("e")
+
+        graph.add_edge(node_a, node_b, 1)
+        graph.add_edge(node_b, node_c, 1)
+        graph.add_edge(node_c, node_d, 1)
+        graph.add_edge(node_d, node_e, 1)
+
+        graph.remove_node(node_c)
+
+        edge_colors = rustworkx.graph_bipartite_edge_color(graph)
+        self.assertEqual({0: 0, 3: 0}, edge_colors)
+
+    def test_graph_without_edges(self):
+        graph = rustworkx.PyGraph()
+        graph.add_node("a")
+        graph.add_node("b")
+        edge_colors = rustworkx.rustworkx.graph_bipartite_edge_color(graph)
+        self.assertEqual({}, edge_colors)
+
+    def test_empty_graph(self):
+        graph = rustworkx.PyGraph()
+        edge_colors = rustworkx.rustworkx.graph_bipartite_edge_color(graph)
+        self.assertEqual({}, edge_colors)
+
+    def test_cycle_graph(self):
+        graph = rustworkx.generators.cycle_graph(8)
+        edge_colors = rustworkx.rustworkx.graph_bipartite_edge_color(graph)
+        self.assertEqual({0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 0, 7: 1}, edge_colors)
+
+    def test_heavy_hex_graph(self):
+        """Test that we color the heavy hex with exactly 3 colors (it's bipartite
+        and has max degree 3)."""
+        graph = rustworkx.generators.heavy_hex_graph(9)
+        edge_colors = rustworkx.rustworkx.graph_bipartite_edge_color(graph)
+        num_colors = max(edge_colors.values()) + 1
+        self.assertEqual(num_colors, 3)

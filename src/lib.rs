@@ -334,6 +334,8 @@ create_exception!(rustworkx, JSONSerializationError, PyException);
 create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
 create_exception!(rustworkx, FailedToConverge, PyException);
+// Graph is not bipartite
+create_exception!(rustworkx, GraphNotBipartite, PyException);
 
 #[pymodule]
 fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -352,6 +354,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         py.get_type::<JSONSerializationError>(),
     )?;
     m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
+    m.add("GraphNotBipartite", py.get_type::<GraphNotBipartite>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -452,6 +455,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_misra_gries_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bipartite_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_two_color))?;
     m.add_wrapped(wrap_pyfunction!(digraph_two_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_is_bipartite))?;
@@ -466,6 +470,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
     m.add_wrapped(wrap_pyfunction!(barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_barabasi_albert_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_random_bipartite_graph))?;
+    m.add_wrapped(wrap_pyfunction!(undirected_random_bipartite_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(simple_cycles))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;

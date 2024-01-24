@@ -13,3 +13,4 @@ DAG Algorithms
    rustworkx.is_directed_acyclic_graph
    rustworkx.layers
    rustworkx.transitive_reduction
+   rustworkx.topological_generations
