@@ -9,7 +9,7 @@ jobs:
     name: Publish rustworkx-core
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Run cargo publish
         run: |
@@ -25,8 +25,8 @@ jobs:
       id-token: write
     needs: ["upload_shared_wheels"]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -34,7 +34,7 @@ jobs:
         run: pip install -U setuptools-rust
       - name: Build sdist
         run: python setup.py sdist
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./dist/*
       - name: Publish package distributions to PyPI
@@ -48,8 +48,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -60,7 +60,7 @@ jobs:
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
           name: shared-wheel-builds
@@ -91,8 +91,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -110,7 +110,7 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: aarch64
           CIBW_SKIP: cp36-* cp37-* cp311-* cp312-* pp* *musl*
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
       - name: Publish package distributions to PyPI
@@ -128,8 +128,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -147,7 +147,7 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: aarch64
           CIBW_SKIP: cp36-* cp37-* cp38-* cp39-* cp310-* pp* *musl*
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
       - name: Publish package distributions to PyPI
@@ -165,8 +165,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -185,7 +185,7 @@ jobs:
           CIBW_ARCHS_LINUX: aarch64
           CIBW_SKIP: cp36-* cp37-* cp311-* cp312-* *many*
           CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-* *many*
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
       - name: Publish package distributions to PyPI
@@ -203,8 +203,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -223,7 +223,7 @@ jobs:
           CIBW_ARCHS_LINUX: aarch64
           CIBW_SKIP: cp36-* cp37-* cp38-* cp39-* cp310-* *many*
           CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-* *many*
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
       - name: Publish package distributions to PyPI
@@ -241,8 +241,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -260,7 +260,7 @@ jobs:
         env:
           CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32
           CIBW_ARCHS_LINUX: ppc64le
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
       - name: Publish package distributions to PyPI
@@ -278,8 +278,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -297,7 +297,7 @@ jobs:
         env:
           CIBW_SKIP: cp36-* cp37-* cp38-* cp312-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: ppc64le
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
       - name: Publish package distributions to PyPI
@@ -315,8 +315,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -334,7 +334,7 @@ jobs:
         env:
           CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: s390x
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
       - name: Publish package distributions to PyPI
@@ -352,8 +352,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -371,7 +371,7 @@ jobs:
         env:
           CIBW_SKIP: cp36-* cp37-* cp38-* cp312-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: s390x
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
       - name: Publish package distributions to PyPI
@@ -383,7 +383,7 @@ jobs:
     runs-on: macos-latest
     environment: release
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build wheels
         uses: joerick/cibuildwheel@v2.16.2
         env:
@@ -391,7 +391,7 @@ jobs:
           CIBW_ARCHS_MACOS: arm64 universal2
           CIBW_BEFORE_BUILD: pip install -U setuptools-rust
           CIBW_ENVIRONMENT: CARGO_BUILD_TARGET="aarch64-apple-darwin" PYO3_CROSS_LIB_DIR="/Library/Frameworks/Python.framework/Versions/$(python -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')/lib/python$(python -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
           name: shared-wheel-builds
@@ -400,8 +400,8 @@ jobs:
     runs-on: windows-latest
     environment: release
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.8'
@@ -419,7 +419,7 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_SKIP: cp36-* cp37-* pp* *amd64 *musl*
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
           name: shared-wheel-builds
@@ -431,8 +431,8 @@ jobs:
       id-token: write
     needs: ["upload_shared_wheels"]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.10'
@@ -442,7 +442,7 @@ jobs:
         run: python setup.py bdist_wheel
         env:
           RUSTWORKX_PKG_NAME: retworkx
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./dist/*
       - name: Publish package distributions to PyPI
