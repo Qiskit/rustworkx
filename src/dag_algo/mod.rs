@@ -748,12 +748,12 @@ pub fn transitive_reduction(
                     descendants.insert(v, dfs);
                 }
                 for desc in &descendants[&v] {
-                    u_nbrs.remove(&NodeIndex::new(desc.1));
+                    u_nbrs.swap_remove(&NodeIndex::new(desc.1));
                 }
             }
             *check_count.get_mut(&v).unwrap() -= 1;
             if check_count[&v] == 0 {
-                descendants.remove(&v);
+                descendants.swap_remove(&v);
             }
         }
         for v in u_nbrs {

@@ -156,8 +156,8 @@ fn fast_metric_edges(
     let mut paths = DictMap::with_capacity(graph.graph.node_count());
     let mut distance: DictMap<NodeIndex, f64> =
         dijkstra(&graph.graph, dummy, None, cost_fn, Some(&mut paths))?;
-    paths.remove(&dummy);
-    distance.remove(&dummy);
+    paths.swap_remove(&dummy);
+    distance.swap_remove(&dummy);
     graph.graph.remove_node(dummy);
 
     // ``partition[u]`` holds the terminal node closest to node ``u``.
