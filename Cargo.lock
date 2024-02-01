@@ -164,7 +164,6 @@ checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
  "hashbrown 0.12.3",
- "rayon",
 ]
 
 [[package]]
@@ -175,6 +174,7 @@ checksum = "824b2ae422412366ba479e8111fd301f7b5faece8149317bb81925979a53f520"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
+ "rayon",
 ]
 
 [[package]]
@@ -439,7 +439,7 @@ checksum = "9a89dc7a5850d0e983be1ec2a463a171d20990487c3cfcd68b5363f1ee3d6fe0"
 dependencies = [
  "cfg-if",
  "hashbrown 0.12.3",
- "indexmap 1.9.3",
+ "indexmap 2.2.2",
  "indoc",
  "libc",
  "memoffset",
@@ -612,7 +612,7 @@ dependencies = [
  "ahash 0.8.6",
  "fixedbitset",
  "hashbrown 0.14.3",
- "indexmap 1.9.3",
+ "indexmap 2.2.2",
  "ndarray",
  "ndarray-stats",
  "num-bigint",
@@ -638,7 +638,7 @@ dependencies = [
  "ahash 0.8.6",
  "fixedbitset",
  "hashbrown 0.14.3",
- "indexmap 1.9.3",
+ "indexmap 2.2.2",
  "num-traits",
  "petgraph",
  "priority-queue",
