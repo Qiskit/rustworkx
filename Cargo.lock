@@ -154,9 +154,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.2.1"
+version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "433de089bd45971eecf4668ee0ee8f4cec17db4f8bd8f7bc3197a6ce37aa7d9b"
+checksum = "824b2ae422412366ba479e8111fd301f7b5faece8149317bb81925979a53f520"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
@@ -195,9 +195,9 @@ checksum = "b1a46d1a171d865aa5f83f92695765caa047a9b4cbae2cbf37dbd613a793fd4c"
 
 [[package]]
 name = "libc"
-version = "0.2.152"
+version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13e3bf6590cbc649f4d1a3eefc9d5d6eb746f5200ffb04e5e142700b8faa56e7"
+checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 
 [[package]]
 name = "libm"
@@ -389,7 +389,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1d3afd2628e69da2be385eb6f2fd57c8ac7977ceeff6dc166ff1657b0e386a9"
 dependencies = [
  "fixedbitset",
- "indexmap 2.2.1",
+ "indexmap 2.2.2",
 ]
 
 [[package]]
@@ -425,7 +425,7 @@ checksum = "9a89dc7a5850d0e983be1ec2a463a171d20990487c3cfcd68b5363f1ee3d6fe0"
 dependencies = [
  "cfg-if",
  "hashbrown 0.14.3",
- "indexmap 2.2.1",
+ "indexmap 2.2.2",
  "indoc",
  "libc",
  "memoffset",
@@ -598,7 +598,7 @@ dependencies = [
  "ahash",
  "fixedbitset",
  "hashbrown 0.14.3",
- "indexmap 2.2.1",
+ "indexmap 2.2.2",
  "ndarray",
  "ndarray-stats",
  "num-bigint",
@@ -624,7 +624,7 @@ dependencies = [
  "ahash",
  "fixedbitset",
  "hashbrown 0.14.3",
- "indexmap 2.2.1",
+ "indexmap 2.2.2",
  "num-traits",
  "petgraph",
  "priority-queue",
