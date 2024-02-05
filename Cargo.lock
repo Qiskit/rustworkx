@@ -614,6 +614,7 @@ dependencies = [
  "rustworkx-core",
  "serde",
  "serde_json",
+ "smallvec",
  "sprs",
 ]
 

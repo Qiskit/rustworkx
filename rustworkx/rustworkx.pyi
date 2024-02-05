@@ -23,6 +23,7 @@ from typing import (
     ValuesView,
     Mapping,
     overload,
+    Hashable,
 )
 from abc import ABC
 from rustworkx import generators  # noqa
@@ -1325,8 +1326,17 @@ class PyDiGraph(Generic[_S, _T]):
         self,
         node: int,
         /,
-        use_outgoing: bool | None = ...,
-        condition: Callable[[_S, _S], bool] | None = ...,
+        use_outgoing: bool = ...,
+        condition: Callable[[_T, _T], bool] | None = ...,
+    ) -> None: ...
+    def remove_node_retain_edges_by_id(self, node: int, /) -> None: ...
+    def remove_node_retain_edges_by_key(
+        self,
+        node: int,
+        /,
+        key: Callable[[_T], Hashable] | None = ...,
+        *,
+        use_outgoing: bool = ...,
     ) -> None: ...
     def remove_nodes_from(self, index_list: Sequence[int], /) -> None: ...
     def subgraph(
