@@ -137,7 +137,7 @@ networkx has a concept of
 `graph <https://networkx.org/documentation/stable/tutorial.html#graph-attributes>`__,
 `node <https://networkx.org/documentation/stable/tutorial.html#node-attributes>`__,
 and `edge attributes <https://networkx.org/documentation/stable/tutorial.html#edge-attributes>`__
-in addition to the hashable object used for a node's payload. Retworkx has
+in addition to the hashable object used for a node's payload. Rustworkx has
 graph attributes similar to NetworkX however instead of being treated like
 a dictionary on the graph object itself they're accessible from a dedicated
 :class:`~.PyGraph.attrs` attribute. This attribute can be any Python object
@@ -362,7 +362,7 @@ networkx which returns a normal dictionary that can be modified).
 Matplotlib Drawers
 ^^^^^^^^^^^^^^^^^^
 
-The retwork function :func:`~rustworkx.visualization.mpl_draw` function is
+The rustworkx function :func:`~rustworkx.visualization.mpl_draw` function is
 basically equivalent to the networkx function ``draw_networkx`` (it was
 actually originally forked from the networkx drawer). However, there are some
 key differences to keep in mind between the networkx and rustworkx matplotlib
