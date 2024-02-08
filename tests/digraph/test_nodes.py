@@ -336,7 +336,9 @@ class TestNodes(unittest.TestCase):
         after = dag.add_node(2)
         dag.add_edge(before, middle, 0)
         dag.add_edge(middle, after, 2)
-        dag.remove_node_retain_edges_by_key(middle, key=lambda weight: weight % 2, use_outgoing=True)
+        dag.remove_node_retain_edges_by_key(
+            middle, key=lambda weight: weight % 2, use_outgoing=True
+        )
         self.assertEqual(set(dag.node_indices()), {before, after})
         self.assertEqual(set(dag.weighted_edge_list()), {(before, after, 2)})
 
