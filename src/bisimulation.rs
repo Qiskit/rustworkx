@@ -16,7 +16,7 @@ type Block = Vec<graph::NodeIndex>;
 
 type Image = HashMap<graph::NodeIndex, Vec<graph::NodeIndex>>;
 type Counterimage = Image;
-type CounterimageGrouped = HashMap<Rc<Block>, Rc<SubBlock>>;
+type CounterimageGrouped = HashMap<Block, CounterImageGroup>;
 
 struct FineBlock {
     values: Block,
@@ -26,6 +26,14 @@ struct FineBlock {
 struct CoarseBlock {
     values: Block,
     fine_blocks_that_are_subsets_of_self: RefCell<Vec<Rc<RefCell<FineBlock>>>>,
+}
+
+struct CounterImageGroup {
+    block: Rc<RefCell<FineBlock>>,
+    subblock: Block,
+}
+impl CounterImageGroup {
+    fn subblock_to_fine_block(&self) -> Rc<RefCell<FineBlock>> {}
 }
 
 type NodeToBlockVec = Vec<Rc<RefCell<FineBlock>>>;
@@ -79,16 +87,21 @@ fn initialization(
             Rc::clone(&non_leaf_node_block_pointer),
         ]);
 
-    let node_to_block_vec = leaf_node_block_pointer.borrow().values.clone().iter().fold(
-        vec![
-            Rc::clone(&non_leaf_node_block_pointer);
-            graph_node_indices.last().unwrap().clone().index() as usize
-        ],
-        |mut accumulator, value| {
-            accumulator[value.index()] = Rc::clone(&leaf_node_block_pointer);
-            accumulator
-        },
-    );
+    let node_to_block_vec = (*leaf_node_block_pointer)
+        .borrow()
+        .values
+        .clone()
+        .iter()
+        .fold(
+            vec![
+                Rc::clone(&non_leaf_node_block_pointer);
+                graph_node_indices.last().unwrap().clone().index() as usize
+            ],
+            |mut accumulator, value| {
+                accumulator[value.index()] = Rc::clone(&leaf_node_block_pointer);
+                accumulator
+            },
+        );
 
     (
         (leaf_node_block_pointer, non_leaf_node_block_pointer),
@@ -130,34 +143,56 @@ fn group_by_counterimage(
             let block = node_to_block[node.index()];
 
             counterimage_grouped
-                .entry(block)
-                .or_insert(Rc::new(vec![*node]))
+                .entry((*block).borrow().values.clone())
+                .or_insert(CounterImageGroup {
+                    block: Rc::clone(&block),
+                    subblock: Vec::from([*node]),
+                })
+                .subblock
                 .push(*node);
         }
     }
 
-    return counterimage_grouped;
+    counterimage_grouped
 }
 
 fn split_blocks_with_grouped_counterimage(
     mut counterimage_grouped: CounterimageGrouped,
     node_to_block_vec: &mut NodeToBlockVec,
-) -> Vec<(Rc<Block>, Rc<SubBlock>)> {
+) -> Vec<(Rc<RefCell<FineBlock>>, Rc<RefCell<FineBlock>>)> {
     let mut changed_blocks = Vec::new();
-    for (block, subblock) in counterimage_grouped.iter_mut() {
-        for node_index in subblock.into_iter() {
-            node_to_block_vec[node_index.index()] = Rc::clone(&subblock);
+
+    for (block, counter_image_group) in counterimage_grouped.iter_mut() {
+        let proper_subblock = {
+            let fine_block = FineBlock {
+                values: counter_image_group.subblock,
+                coarse_block_that_supersets_self: Rc::clone(
+                    &(*counter_image_group.block)
+                        .borrow()
+                        .coarse_block_that_supersets_self,
+                ),
+            };
+
+            Rc::new(RefCell::new(fine_block))
+        };
+
+        for node_index in counter_image_group.subblock.into_iter() {
+            node_to_block_vec[node_index.index()] = Rc::clone(&proper_subblock);
         }
+
         // subtract subblock from block
-        (**block) = block
+        (*counter_image_group.block).borrow_mut().values = block
             .iter()
-            .filter(|x| !subblock.contains(x))
+            .filter(|x| !(*proper_subblock).borrow().values.contains(x))
             .map(|x| *x)
             .collect();
 
-        changed_blocks.push((Rc::clone(block), Rc::clone(subblock)));
+        changed_blocks.push((
+            Rc::clone(&counter_image_group.block),
+            Rc::clone(&proper_subblock),
+        ));
     }
-    return changed_blocks;
+    changed_blocks
 }
 
 fn repartition(
