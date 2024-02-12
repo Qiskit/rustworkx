@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -96,19 +97,26 @@ fn initialization(
     )
 }
 
-fn build_counterimage(graph: &StablePyGraph<Directed>, block: Block) -> Counterimage {
+fn build_counterimage(
+    graph: &StablePyGraph<Directed>,
+    fine_block: Rc<RefCell<FineBlock>>,
+) -> Counterimage {
     let mut counterimage = HashMap::new();
-    block.iter().for_each(|node_index_pointer| {
-        counterimage.insert(
-            (*node_index_pointer),
-            graph
-                .neighbors_directed(*node_index_pointer, Incoming)
-                .into_iter()
-                .collect::<Vec<graph::NodeIndex>>(),
-        );
-    });
+    (*fine_block)
+        .borrow()
+        .values
+        .iter()
+        .for_each(|node_index_pointer| {
+            counterimage.insert(
+                *node_index_pointer,
+                graph
+                    .neighbors_directed(*node_index_pointer, Incoming)
+                    .into_iter()
+                    .collect::<Vec<graph::NodeIndex>>(),
+            );
+        });
 
-    return counterimage;
+    counterimage
 }
 
 fn group_by_counterimage(
@@ -206,21 +214,30 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Partition {
 
             let smaller_component = fine_blocks_in_splitter_block
                 .iter()
-                .min_by(|x, y| x.borrow().values.len().cmp(&y.borrow().values.len()))
+                .min_by(|x, y| {
+                    (***x)
+                        .borrow()
+                        .values
+                        .len()
+                        .cmp(&(***x).borrow().values.len())
+                })
                 .unwrap()
                 .clone();
-            let simple_splitter_block_subsets = RefCell::new(
-                fine_blocks_in_splitter_block
+
+            let simple_splitter_block_subsets = {
+                let t = fine_blocks_in_splitter_block
                     .iter()
-                    .filter(|x| x.borrow().values != smaller_component.borrow().values)
-                    .collect(),
-            );
+                    .filter(|x| (***x).borrow().values != (*smaller_component).borrow().values)
+                    .map(|x| *x)
+                    .collect::<Vec<Rc<RefCell<FineBlock>>>>();
+                RefCell::new(t)
+            };
 
             let simple_splitter_block_values: Block = splitter_block
                 .values
                 .clone()
                 .iter()
-                .filter(|x| !smaller_component.borrow().values.contains(x))
+                .filter(|x| !(*smaller_component).borrow().values.contains(x))
                 .map(|x| *x)
                 .collect();
 
