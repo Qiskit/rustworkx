@@ -4,6 +4,17 @@ version = 3
 
 [[package]]
 name = "ahash"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "891477e0c6a8957309ee5c45a6368af3ae14bb510732d2684ffa19af310920f9"
+dependencies = [
+ "getrandom",
+ "once_cell",
+ "version_check",
+]
+
+[[package]]
+name = "ahash"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "91429305e9f0a25f6205c5b8e0d2db09e0708a7a6df0f42212bb56c32c8ac97a"
@@ -118,6 +129,9 @@ name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+dependencies = [
+ "ahash 0.7.8",
+]
 
 [[package]]
 name = "hashbrown"
@@ -125,7 +139,7 @@ version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
 dependencies = [
- "ahash",
+ "ahash 0.8.6",
  "allocator-api2",
  "rayon",
 ]
@@ -150,17 +164,17 @@ checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
  "hashbrown 0.12.3",
+ "rayon",
 ]
 
 [[package]]
 name = "indexmap"
-version = "2.2.2"
+version = "2.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "824b2ae422412366ba479e8111fd301f7b5faece8149317bb81925979a53f520"
+checksum = "233cf39063f058ea2caae4091bf4a3ef70a653afbc026f5c4a4135d114e3c177"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
- "rayon",
 ]
 
 [[package]]
@@ -389,7 +403,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1d3afd2628e69da2be385eb6f2fd57c8ac7977ceeff6dc166ff1657b0e386a9"
 dependencies = [
  "fixedbitset",
- "indexmap 2.2.2",
+ "indexmap 2.2.3",
 ]
 
 [[package]]
@@ -424,8 +438,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a89dc7a5850d0e983be1ec2a463a171d20990487c3cfcd68b5363f1ee3d6fe0"
 dependencies = [
  "cfg-if",
- "hashbrown 0.14.3",
- "indexmap 2.2.2",
+ "hashbrown 0.12.3",
+ "indexmap 1.9.3",
  "indoc",
  "libc",
  "memoffset",
@@ -595,10 +609,10 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 name = "rustworkx"
 version = "0.15.0"
 dependencies = [
- "ahash",
+ "ahash 0.8.6",
  "fixedbitset",
  "hashbrown 0.14.3",
- "indexmap 2.2.2",
+ "indexmap 1.9.3",
  "ndarray",
  "ndarray-stats",
  "num-bigint",
@@ -621,10 +635,10 @@ dependencies = [
 name = "rustworkx-core"
 version = "0.15.0"
 dependencies = [
- "ahash",
+ "ahash 0.8.6",
  "fixedbitset",
  "hashbrown 0.14.3",
- "indexmap 2.2.2",
+ "indexmap 1.9.3",
  "num-traits",
  "petgraph",
  "priority-queue",
