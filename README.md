@@ -22,11 +22,11 @@ any Python application.
 ## Project history
 
 Rustworkx was originally called retworkx and was created initially to be
-a replacement for [qiskit](https://qiskit.org/)'s previous (and current)
+a replacement for [Qiskit](https://www.ibm.com/quantum/qiskit)'s previous (and current)
 NetworkX usage (hence the original name).  The project was originally started
 to build a faster directed graph to use as the underlying data structure for
 the DAG at the center of
-[qiskit-terra](https://github.com/Qiskit/qiskit-terra/)'s transpiler. However,
+[qiskit](https://github.com/Qiskit/qiskit/)'s transpiler. However,
 since it's initial introduction the project has grown substantially and now
 covers all applications that need to work with graphs which includes
 Qiskit.
