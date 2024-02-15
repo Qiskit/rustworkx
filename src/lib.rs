@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+mod bisimulation;
 mod cartesian_product;
 mod centrality;
 mod coloring;
@@ -40,6 +41,7 @@ mod traversal;
 mod tree;
 mod union;
 
+use bisimulation::*;
 use cartesian_product::*;
 use centrality::*;
 use coloring::*;
@@ -382,6 +384,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(graph_union))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_maximum_bisimulation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
@@ -532,6 +535,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
+    m.add_class::<iterators::RelationalCoarsestPartition>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::BFSPredecessors>()?;
     m.add_class::<iterators::Chains>()?;

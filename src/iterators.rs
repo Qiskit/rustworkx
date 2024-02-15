@@ -443,6 +443,7 @@ macro_rules! py_convert_to_py_array_obj_impl {
 py_convert_to_py_array_impl! {usize u8 u16 u32 u64 isize i8 i16 i32 i64 f32 f64}
 
 py_convert_to_py_array_obj_impl! {EdgeList}
+py_convert_to_py_array_obj_impl! {NodeIndices}
 py_convert_to_py_array_obj_impl! {(PyObject, Vec<PyObject>)}
 
 impl PyConvertToPyArray for Vec<(usize, usize)> {
@@ -904,6 +905,58 @@ custom_vec_iter_impl!(
     "
 );
 impl PyGCProtocol for Chains {}
+
+impl PyHash for NodeIndices {
+    fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
+        PyHash::hash(&self.nodes, py, state)?;
+        Ok(())
+    }
+}
+
+impl PyEq<PyAny> for NodeIndices {
+    #[inline]
+    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+        PyEq::eq(&self.nodes, other, py)
+    }
+}
+
+impl PyDisplay for NodeIndices {
+    fn str(&self, py: Python) -> PyResult<String> {
+        Ok(format!("NodeList{}", self.nodes.str(py)?))
+    }
+}
+
+custom_vec_iter_impl!(
+    RelationalCoarsestPartition,
+    partition,
+    NodeIndices,
+    "A custom class for the return of a list of list of edges.
+
+    The class is a read-only sequence of :class:`.EdgeList` instances.
+
+    This class is a container class for the results of functions that
+    return a list of list of edges. It implements the Python sequence
+    protocol. So you can treat the return as a read-only sequence/list
+    that is integer indexed. If you want to use it as an iterator you
+    can by wrapping it in an ``iter()`` that will yield the results in
+    order.
+
+    For example::
+
+        import rustworkx as rx
+
+        graph = rx.generators.hexagonal_lattice_graph(2, 2)
+        chains = rx.chain_decomposition(graph)
+        # Index based access
+        third_chain = chains[2]
+        # Use as iterator
+        chains_iter = iter(chains)
+        first_chain = next(chains_iter)
+        second_chain = next(chains_iter)
+
+    "
+);
+impl PyGCProtocol for RelationalCoarsestPartition {}
 
 macro_rules! py_iter_protocol_impl {
     ($name:ident, $data:ident, $T:ty) => {
