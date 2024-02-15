@@ -23,6 +23,7 @@ struct FineBlock {
     coarse_block_that_supersets_self: Rc<CoarseBlock>,
 }
 
+#[derive(Clone)]
 struct CoarseBlock {
     values: Block,
     fine_blocks_that_are_subsets_of_self: RefCell<Vec<Rc<RefCell<FineBlock>>>>,
@@ -38,6 +39,9 @@ impl CoarseBlock {
             .borrow_mut()
             .retain(|x| !Rc::ptr_eq(x, fine_block));
     }
+    fn fine_block_count(&self) -> usize {
+        self.fine_blocks_that_are_subsets_of_self.borrow().len()
+    }
 }
 
 struct CounterImageGroup {
@@ -46,17 +50,17 @@ struct CounterImageGroup {
 }
 
 trait HasValues {
-    fn values(&self) -> &Block;
+    fn values(&self) -> Block;
 }
 
 impl HasValues for FineBlockPointer {
-    fn values(&self) -> &Block {
-        &(**self).borrow().values
+    fn values(&self) -> Block {
+        (**self).borrow().values.clone()
     }
 }
 impl HasValues for CoarseBlock {
-    fn values(&self) -> &Block {
-        &self.values
+    fn values(&self) -> Block {
+        self.values.clone()
     }
 }
 
@@ -115,7 +119,7 @@ fn initialization(
         .fold(
             vec![
                 Rc::clone(&non_leaf_node_block_pointer);
-                graph_node_indices.last().unwrap().clone().index() as usize
+                graph_node_indices.last().unwrap().clone().index() as usize + 1
             ],
             |mut accumulator, value| {
                 accumulator[value.index()] = Rc::clone(&leaf_node_block_pointer);
@@ -150,22 +154,33 @@ fn build_counterimage<IndexHolder: HasValues>(
 
 fn group_by_counterimage(
     counterimage: Counterimage,
-    node_to_block: NodeToBlockVec,
+    node_to_block: &NodeToBlockVec,
 ) -> CounterimageGrouped {
     let mut counterimage_grouped: CounterimageGrouped = HashMap::new();
 
     for incoming_neighbor_group in counterimage.values() {
         for node in incoming_neighbor_group {
-            let block = node_to_block[node.index()];
+            let block = Rc::clone(&node_to_block[node.index()]);
 
-            counterimage_grouped
-                .entry((*block).borrow().values.clone())
-                .or_insert(CounterImageGroup {
-                    block: Rc::clone(&block),
-                    subblock: Vec::from([*node]),
-                })
-                .subblock
-                .push(*node);
+            let key = (*block).borrow().values.clone();
+            match counterimage_grouped.contains_key(&key) {
+                true => {
+                    counterimage_grouped
+                        .get_mut(&key)
+                        .unwrap()
+                        .subblock
+                        .push(*node);
+                }
+                false => {
+                    counterimage_grouped.insert(
+                        key,
+                        CounterImageGroup {
+                            block: Rc::clone(&block),
+                            subblock: Vec::from([*node]),
+                        },
+                    );
+                }
+            }
         }
     }
 
@@ -175,27 +190,37 @@ fn group_by_counterimage(
 fn split_blocks_with_grouped_counterimage(
     mut counterimage_grouped: CounterimageGrouped,
     node_to_block_vec: &mut NodeToBlockVec,
-) -> (Vec<Rc<RefCell<FineBlock>>>, Vec<Rc<RefCell<FineBlock>>>) {
+) -> (
+    (Vec<Rc<RefCell<FineBlock>>>, Vec<Rc<RefCell<FineBlock>>>),
+    Vec<Rc<CoarseBlock>>,
+) {
     let mut all_new_fine_blocks: Vec<Rc<RefCell<FineBlock>>> = vec![];
     let mut all_removed_fine_blocks: Vec<Rc<RefCell<FineBlock>>> = vec![];
+    let mut new_compound_coarse_blocks: Vec<Rc<CoarseBlock>> = vec![];
 
     for (block, counter_image_group) in counterimage_grouped.iter_mut() {
-        let borrowed_coarse_block = (*counter_image_group.block)
-            .borrow()
-            .coarse_block_that_supersets_self;
+        let borrowed_coarse_block = Rc::clone(
+            &(*counter_image_group.block)
+                .borrow()
+                .coarse_block_that_supersets_self,
+        );
 
         let proper_subblock = {
             let fine_block = FineBlock {
-                values: counter_image_group.subblock,
+                values: counter_image_group.subblock.clone(),
                 coarse_block_that_supersets_self: Rc::clone(&borrowed_coarse_block),
             };
 
             Rc::new(RefCell::new(fine_block))
         };
+        let prior_count = borrowed_coarse_block.fine_block_count();
+        borrowed_coarse_block.add_fine_block(Rc::clone(&proper_subblock));
 
-        borrowed_coarse_block.add_fine_block(proper_subblock);
+        if prior_count == 1 {
+            new_compound_coarse_blocks.push(Rc::clone(&borrowed_coarse_block));
+        }
 
-        for node_index in counter_image_group.subblock.into_iter() {
+        for node_index in counter_image_group.subblock.iter() {
             node_to_block_vec[node_index.index()] = Rc::clone(&proper_subblock);
         }
 
@@ -208,24 +233,17 @@ fn split_blocks_with_grouped_counterimage(
 
         if (*counter_image_group.block).borrow().values.is_empty() {
             borrowed_coarse_block.remove_fine_block(&counter_image_group.block);
-        } else {
             all_removed_fine_blocks.push(Rc::clone(&counter_image_group.block));
         }
         all_new_fine_blocks.push(Rc::clone(&proper_subblock));
     }
-    (all_new_fine_blocks, all_removed_fine_blocks)
+    (
+        (all_new_fine_blocks, all_removed_fine_blocks),
+        new_compound_coarse_blocks,
+    )
 }
 
-fn find_smallest_component_block_and_copy(coarse_block_makeup: Vec<Rc<Block>>) -> Block {
-    let smallest_component_block_pointer = coarse_block_makeup
-        .iter()
-        .min_by(|x, y| x.len().cmp(&y.len()))
-        .unwrap();
-
-    (**smallest_component_block_pointer).clone()
-}
-
-fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Partition {
+fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Vec<Block> {
     let (fine_block_tuple, initial_coarse_partition, mut node_to_block_vec) = initialization(graph);
 
     let mut queue: CoarsePartition = initial_coarse_partition;
@@ -234,35 +252,25 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Partition {
     while !queue.is_empty() {
         let (smaller_component, simple_splitter_block) = {
             let splitter_block = queue.pop().unwrap();
-            let fine_blocks_in_splitter_block = splitter_block
+            let mut fine_blocks_in_splitter_block = splitter_block
                 .fine_blocks_that_are_subsets_of_self
                 .borrow()
                 .clone();
 
-            if !(fine_blocks_in_splitter_block.len() == 2) {
-                queue.push(splitter_block);
-            }
-
-            let smaller_component = fine_blocks_in_splitter_block
+            let smaller_component_index = fine_blocks_in_splitter_block
                 .iter()
-                .min_by(|x, y| {
+                .enumerate()
+                .min_by(|(_, x), (_, y)| {
                     (***x)
                         .borrow()
                         .values
                         .len()
-                        .cmp(&(***x).borrow().values.len())
+                        .cmp(&(***y).borrow().values.len())
                 })
-                .unwrap()
-                .clone();
+                .map(|(index, _)| index)
+                .unwrap();
 
-            let simple_splitter_block_subsets = {
-                let t = fine_blocks_in_splitter_block
-                    .iter()
-                    .filter(|x| Rc::ptr_eq(*x, &smaller_component))
-                    .map(|x| *x)
-                    .collect::<Vec<Rc<RefCell<FineBlock>>>>();
-                RefCell::new(t)
-            };
+            let smaller_component = fine_blocks_in_splitter_block.remove(smaller_component_index);
 
             let simple_splitter_block_values: Block = splitter_block
                 .values
@@ -274,23 +282,43 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Partition {
 
             let simple_splitter_block = CoarseBlock {
                 values: simple_splitter_block_values,
-                fine_blocks_that_are_subsets_of_self: simple_splitter_block_subsets,
+                fine_blocks_that_are_subsets_of_self: RefCell::new(fine_blocks_in_splitter_block),
             };
+            let simple_splitter_block_pointer = Rc::new(simple_splitter_block);
 
-            (smaller_component, simple_splitter_block)
+            if simple_splitter_block_pointer
+                .fine_blocks_that_are_subsets_of_self
+                .borrow()
+                .len()
+                > 1
+            {
+                queue.push(Rc::clone(&simple_splitter_block_pointer));
+            }
+
+            (smaller_component, simple_splitter_block_pointer)
         };
+        simple_splitter_block
+            .fine_blocks_that_are_subsets_of_self
+            .borrow()
+            .iter()
+            .for_each(|x| {
+                (*x).borrow_mut().coarse_block_that_supersets_self =
+                    Rc::clone(&simple_splitter_block);
+            });
 
         let mut counterimage = build_counterimage(graph, smaller_component);
 
-        let counterimage_group = group_by_counterimage(counterimage, node_to_block_vec);
-        let (new_fine_blocks, removeable_fine_blocks) =
+        let counterimage_group = group_by_counterimage(counterimage.clone(), &node_to_block_vec);
+        let ((new_fine_blocks, removeable_fine_blocks), coarse_block_that_are_now_compound) =
             split_blocks_with_grouped_counterimage(counterimage_group, &mut node_to_block_vec);
 
         all_fine_blocks.extend(new_fine_blocks);
         all_fine_blocks.retain(|x| !removeable_fine_blocks.iter().any(|y| Rc::ptr_eq(x, y)));
+        queue.extend(coarse_block_that_are_now_compound);
 
         {
-            let counterimage_splitter_complement = build_counterimage(graph, simple_splitter_block);
+            let counterimage_splitter_complement =
+                build_counterimage(graph, (*simple_splitter_block).clone());
 
             counterimage_splitter_complement
                 .keys()
@@ -300,23 +328,31 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Partition {
                 });
         }
 
-        let counterimage_group = group_by_counterimage(counterimage, node_to_block_vec);
-        let (new_fine_blocks, removeable_fine_blocks) =
+        let counterimage_group = group_by_counterimage(counterimage, &node_to_block_vec);
+        let ((new_fine_blocks, removeable_fine_blocks), coarse_block_that_are_now_compound) =
             split_blocks_with_grouped_counterimage(counterimage_group, &mut node_to_block_vec);
 
         all_fine_blocks.extend(new_fine_blocks);
         all_fine_blocks.retain(|x| !removeable_fine_blocks.iter().any(|y| Rc::ptr_eq(x, y)));
+        queue.extend(coarse_block_that_are_now_compound);
     }
 
-    all_fine_blocks.iter().map(|x| x.borrow().values).collect()
+    all_fine_blocks
+        .iter()
+        .map(|x| (**x).borrow().values.clone())
+        .filter(|x| !x.is_empty()) // remove leaf block when there are no leaves
+        .collect()
 }
 
 #[pyfunction()]
 #[pyo3(text_signature = "(graph)")]
 pub fn digraph_maximum_bisimulation(
-    py: Python,
+    _py: Python,
     graph: &digraph::PyDiGraph,
 ) -> RelationalCoarsestPartition {
+    if (&graph.graph).node_count() == 0 {
+        return RelationalCoarsestPartition { partition: vec![] };
+    }
     let result = maximum_bisimulation(&graph.graph)
         .into_iter()
         .map(|block| NodeIndices {
