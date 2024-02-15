@@ -125,11 +125,11 @@ Qiskit's Compiler
 -----------------
 
 Another application using directed acyclic graphs is the compiler in
-`Qiskit <https://qiskit.org>`__. Qiskit is an SDK for working with
+`Qiskit <https://www.ibm.com/quantum/qiskit>`__. Qiskit is an SDK for working with
 quantum computing. Qiskit's
-`compiler <https://qiskit.org/documentation/apidoc/transpiler.html>`__
+`compiler <https://docs.quantum.ibm.com/api/qiskit/transpiler>`__
 internally represents a quantum circuit as a
-`directed acyclic graph <https://qiskit.org/documentation/stubs/qiskit.dagcircuit.DAGCircuit.html>`__.
+`directed acyclic graph <https://docs.quantum.ibm.com/api/qiskit/qiskit.dagcircuit.DAGCircuit>`__.
 Rustworkx was originally started to accelerate the performance of the Qiskit
 compiler's use of directed acyclic graphs.
 
