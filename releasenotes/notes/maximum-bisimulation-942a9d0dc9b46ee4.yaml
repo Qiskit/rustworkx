@@ -1,0 +1,63 @@
+features:
+  - |
+    Added a new function :func:`~rustworkx.digraph_maximum_bisimulation` to
+    compute the maximum bisimulation or relational coarsest partition of a
+    graph. This function is based on the algorithm described in the publication
+    "Three partition refinement algorithms" by Paige and Tarjan. This function
+    recieves a graph and returns a
+    :class:`~rustworkx.RelationalCoarsestPartition`. This function is in regards
+    to issue `#1075 <https://github.com/Qiskit/rustworkx/issues/1075>`__.
+  - |
+    Added a new class :class:`~rustworkx.RelationalCoarsestPartition` to output
+    the maximum bisimulation or relational coarsest partition of a graph. This
+    class contains instances of :class:`~rustworkx.NodeIndices` and can be
+    iterated over.
+issues:
+  - |
+    List known issues here, or remove this section.  All of the list items in
+    this section are combined when the release notes are rendered, so the text
+    needs to be worded so that it does not depend on any information only
+    available in another section, such as the prelude. This may mean repeating
+    some details.
+upgrade:
+  - |
+    List upgrade notes here, or remove this section.  All of the list items in
+    this section are combined when the release notes are rendered, so the text
+    needs to be worded so that it does not depend on any information only
+    available in another section, such as the prelude. This may mean repeating
+    some details.
+deprecations:
+  - |
+    List deprecations notes here, or remove this section.  All of the list
+    items in this section are combined when the release notes are rendered, so
+    the text needs to be worded so that it does not depend on any information
+    only available in another section, such as the prelude. This may mean
+    repeating some details.
+critical:
+  - |
+    Add critical notes here, or remove this section.  All of the list items in
+    this section are combined when the release notes are rendered, so the text
+    needs to be worded so that it does not depend on any information only
+    available in another section, such as the prelude. This may mean repeating
+    some details.
+security:
+  - |
+    Add security notes here, or remove this section.  All of the list items in
+    this section are combined when the release notes are rendered, so the text
+    needs to be worded so that it does not depend on any information only
+    available in another section, such as the prelude. This may mean repeating
+    some details.
+fixes:
+  - |
+    Add normal bug fixes here, or remove this section.  All of the list items
+    in this section are combined when the release notes are rendered, so the
+    text needs to be worded so that it does not depend on any information only
+    available in another section, such as the prelude. This may mean repeating
+    some details.
+other:
+  - |
+    Add other notes here, or remove this section.  All of the list items in
+    this section are combined when the release notes are rendered, so the text
+    needs to be worded so that it does not depend on any information only
+    available in another section, such as the prelude. This may mean repeating
+    some details.
