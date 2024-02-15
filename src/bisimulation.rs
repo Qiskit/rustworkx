@@ -16,6 +16,7 @@ type Counterimage = HashMap<graph::NodeIndex, Vec<graph::NodeIndex>>;
 type NodeToBlockVec = Vec<Rc<RefCell<FineBlock>>>;
 type CoarsePartition = Vec<Rc<CoarseBlock>>;
 type FineBlockPointer = Rc<RefCell<FineBlock>>;
+type CoarseBlockPointer = Rc<CoarseBlock>;
 type CounterimageGrouped = HashMap<Block, CounterImageGroup>;
 
 struct FineBlock {
@@ -67,11 +68,11 @@ impl HasValues for CoarseBlock {
 fn initialization(
     graph: &StablePyGraph<Directed>,
 ) -> (
-    (Rc<RefCell<FineBlock>>, Rc<RefCell<FineBlock>>),
+    (FineBlockPointer, FineBlockPointer),
     CoarsePartition,
     NodeToBlockVec,
 ) {
-    let graph_node_indices: Block = graph.node_indices().clone().into_iter().collect();
+    let graph_node_indices: Block = graph.node_indices().clone().collect();
 
     let coarse_initial_block_pointer: Rc<CoarseBlock> = {
         let coarse_initial_block = CoarseBlock {
@@ -119,7 +120,7 @@ fn initialization(
         .fold(
             vec![
                 Rc::clone(&non_leaf_node_block_pointer);
-                graph_node_indices.last().unwrap().clone().index() as usize + 1
+                (*graph_node_indices.last().unwrap()).index() as usize + 1
             ],
             |mut accumulator, value| {
                 accumulator[value.index()] = Rc::clone(&leaf_node_block_pointer);
@@ -144,7 +145,6 @@ fn build_counterimage<IndexHolder: HasValues>(
             *node_index_pointer,
             graph
                 .neighbors_directed(*node_index_pointer, Incoming)
-                .into_iter()
                 .collect::<Vec<graph::NodeIndex>>(),
         );
     });
@@ -191,8 +191,8 @@ fn split_blocks_with_grouped_counterimage(
     mut counterimage_grouped: CounterimageGrouped,
     node_to_block_vec: &mut NodeToBlockVec,
 ) -> (
-    (Vec<Rc<RefCell<FineBlock>>>, Vec<Rc<RefCell<FineBlock>>>),
-    Vec<Rc<CoarseBlock>>,
+    (Vec<FineBlockPointer>, Vec<FineBlockPointer>),
+    Vec<CoarseBlockPointer>,
 ) {
     let mut all_new_fine_blocks: Vec<Rc<RefCell<FineBlock>>> = vec![];
     let mut all_removed_fine_blocks: Vec<Rc<RefCell<FineBlock>>> = vec![];
@@ -228,7 +228,7 @@ fn split_blocks_with_grouped_counterimage(
         (*counter_image_group.block).borrow_mut().values = block
             .iter()
             .filter(|x| !(*proper_subblock).borrow().values.contains(x))
-            .map(|x| *x)
+            .copied()
             .collect();
 
         if (*counter_image_group.block).borrow().values.is_empty() {
@@ -277,7 +277,7 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Vec<Block> {
                 .clone()
                 .iter()
                 .filter(|x| !(*smaller_component).borrow().values.contains(x))
-                .map(|x| *x)
+                .copied()
                 .collect();
 
             let simple_splitter_block = CoarseBlock {
@@ -320,12 +320,9 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Vec<Block> {
             let counterimage_splitter_complement =
                 build_counterimage(graph, (*simple_splitter_block).clone());
 
-            counterimage_splitter_complement
-                .keys()
-                .into_iter()
-                .for_each(|node| {
-                    counterimage.remove(node);
-                });
+            counterimage_splitter_complement.keys().for_each(|node| {
+                counterimage.remove(node);
+            });
         }
 
         let counterimage_group = group_by_counterimage(counterimage, &node_to_block_vec);
@@ -344,13 +341,21 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Vec<Block> {
         .collect()
 }
 
+/// Calculates the relational coarsest partition otherwise known as the maximum bisimulation relation
+/// using the Paige-Tarjan algorithm described in "Three partition refinement algorithms".
+///
+/// :param PyDiGraph graph: The graph to find the maximum bisimulation relation for
+///
+/// :returns: The relational coarsest partition which is an iterator of :class:`~rustworkx.NodeIndices`.
+///
+/// :rtype: :class:`~rustworkx.RelationalCoarsestPartition`
 #[pyfunction()]
 #[pyo3(text_signature = "(graph)")]
 pub fn digraph_maximum_bisimulation(
     _py: Python,
     graph: &digraph::PyDiGraph,
 ) -> RelationalCoarsestPartition {
-    if (&graph.graph).node_count() == 0 {
+    if graph.graph.node_count() == 0 {
         return RelationalCoarsestPartition { partition: vec![] };
     }
     let result = maximum_bisimulation(&graph.graph)

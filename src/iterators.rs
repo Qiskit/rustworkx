@@ -930,12 +930,12 @@ custom_vec_iter_impl!(
     RelationalCoarsestPartition,
     partition,
     NodeIndices,
-    "A custom class for the return of a list of list of edges.
+    "A custom class for the return of a partition of node indices.
 
-    The class is a read-only sequence of :class:`.EdgeList` instances.
+    The class is a read-only sequence of :class:`.NodeIndices` instances.
 
-    This class is a container class for the results of functions that
-    return a list of list of edges. It implements the Python sequence
+    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
     can by wrapping it in an ``iter()`` that will yield the results in
@@ -945,15 +945,14 @@ custom_vec_iter_impl!(
 
         import rustworkx as rx
 
-        graph = rx.generators.hexagonal_lattice_graph(2, 2)
-        chains = rx.chain_decomposition(graph)
+        graph = rx.generators.directed_path_graph(2)
+        partition = rx.digraph_maximum_bisimulation(graph)
         # Index based access
-        third_chain = chains[2]
+        a_partition_block = partition[0]
         # Use as iterator
-        chains_iter = iter(chains)
-        first_chain = next(chains_iter)
-        second_chain = next(chains_iter)
-
+        partition_iter = iter(partition)
+        another_block = next(parititon_iter)
+        the_second_block = next(parititon_iter)
     "
 );
 impl PyGCProtocol for RelationalCoarsestPartition {}

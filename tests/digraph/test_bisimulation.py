@@ -14,6 +14,7 @@ import unittest
 
 import rustworkx
 
+
 class TestBisimulation(unittest.TestCase):
     def test_is_maximum_bisimulation(self):
         for graph, solution in zip(self.graphs, self.reference_solution):
@@ -39,14 +40,13 @@ class TestBisimulation(unittest.TestCase):
         graphs[0].add_nodes_from(list(range(5)))
         graphs[0].add_edges_from_no_data([(0, 1), (0, 2), (0, 3), (1, 2)])
 
-        reference_solution.append({(1,), (2,3,4), (0,)})
-
+        reference_solution.append({(1,), (2, 3, 4), (0,)})
 
         graphs.append(rustworkx.PyDiGraph())
         graphs[1].add_nodes_from(list(range(5)))
         graphs[1].add_edges_from([(0, 1, "C"), (0, 2, "D"), (0, 3, "B"), (1, 2, "G")])
 
-        reference_solution.append({(1,), (2,3,4), (0,)})
+        reference_solution.append({(1,), (2, 3, 4), (0,)})
 
         graphs.append(rustworkx.PyDiGraph())
         graphs[2].add_nodes_from(list(range(4)))
@@ -62,13 +62,29 @@ class TestBisimulation(unittest.TestCase):
 
         graphs.append(rustworkx.PyDiGraph())
         graphs[4].add_nodes_from(list(range(12)))
-        graphs[4].add_edges_from_no_data([(0, 1), (1, 2), (2, 3), (4, 5), (5, 6), (6, 7), (8, 9), (9, 10), (10, 11)])
+        graphs[4].add_edges_from_no_data(
+            [(0, 1), (1, 2), (2, 3), (4, 5), (5, 6), (6, 7), (8, 9), (9, 10), (10, 11)]
+        )
 
         reference_solution.append({(0, 4, 8), (3, 7, 11), (2, 6, 10), (1, 5, 9)})
 
         graphs.append(rustworkx.PyDiGraph())
         graphs[5].add_nodes_from(list(range(12)))
-        graphs[5].add_edges_from_no_data([(0, 1), (0, 7), (1, 2), (2, 3), (4, 5), (5, 6), (6, 7), (8, 9), (9, 10), (10, 11), (11, 5)])
+        graphs[5].add_edges_from_no_data(
+            [
+                (0, 1),
+                (0, 7),
+                (1, 2),
+                (2, 3),
+                (4, 5),
+                (5, 6),
+                (6, 7),
+                (8, 9),
+                (9, 10),
+                (10, 11),
+                (11, 5),
+            ]
+        )
 
         reference_solution.append({(8,), (3, 7), (2, 6), (1, 5), (0,), (4, 11), (10,), (9,)})
 
