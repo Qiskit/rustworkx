@@ -15,7 +15,7 @@ mod node_link_data;
 use std::fs::File;
 use std::io::BufReader;
 
-use crate::{digraph, graph, JSONDeSerializationError, StablePyGraph};
+use crate::{digraph, graph, JSONDeserializationError, StablePyGraph};
 use petgraph::{algo, Directed, Undirected};
 
 use pyo3::prelude::*;
@@ -55,7 +55,7 @@ pub fn parse_node_link_json_file(
     let graph: node_link_data::Graph = match serde_json::from_reader(reader) {
         Ok(v) => v,
         Err(e) => {
-            return Err(JSONDeSerializationError::new_err(format!(
+            return Err(JSONDeserializationError::new_err(format!(
                 "JSON Deserialization Error {}",
                 e
             )));
@@ -130,7 +130,7 @@ pub fn parse_node_link_json_str(
     let graph: node_link_data::Graph = match serde_json::from_str(data) {
         Ok(v) => v,
         Err(e) => {
-            return Err(JSONDeSerializationError::new_err(format!(
+            return Err(JSONDeserializationError::new_err(format!(
                 "JSON Deserialization Error {}",
                 e
             )));

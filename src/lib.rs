@@ -331,7 +331,7 @@ import_exception!(rustworkx.visit, StopSearch);
 // JSON Error
 create_exception!(rustworkx, JSONSerializationError, PyException);
 // JSON Error
-create_exception!(rustworkx, JSONDeSerializationError, PyException);
+create_exception!(rustworkx, JSONDeserializationError, PyException);
 // Negative Cycle found on shortest-path algorithm
 create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
@@ -356,8 +356,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         py.get_type::<JSONSerializationError>(),
     )?;
     m.add(
-        "JSONDeSerializationError",
-        py.get_type::<JSONSerializationError>(),
+        "JSONDeserializationError",
+        py.get_type::<JSONDeserializationError>(),
     )?;
     m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
     m.add("GraphNotBipartite", py.get_type::<GraphNotBipartite>())?;

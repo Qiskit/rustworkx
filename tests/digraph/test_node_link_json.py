@@ -191,3 +191,22 @@ class TestNodeLinkJSON(unittest.TestCase):
         self.assertEqual(new.nodes(), graph.nodes())
         self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
         self.assertEqual(new.attrs, {"label": graph.attrs})
+
+    def test_invalid_path(self):
+        with self.assertRaises(FileNotFoundError):
+            rustworkx.parse_node_link_json_file("/invalid_path/I_AM_INVALID.json")
+
+    def test_not_JSON(self):
+        invalid_input = """<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <graph id="G" edgedefault="undirected">
+    <node id="n0"/>
+    <node id="n1"/>
+    <edge id="e1" source="n0" target="n1"/>
+  </graph>
+</graphml>
+"""
+        with self.assertRaises(rustworkx.JSONDeserializationError):
+            rustworkx.parse_node_link_json_str(invalid_input)
