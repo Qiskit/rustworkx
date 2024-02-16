@@ -147,7 +147,7 @@ class TestNodeLinkJSON(unittest.TestCase):
         new = rustworkx.parse_node_link_json_str(res)
         self.assertIsInstance(new, type(graph))
         self.assertEqual(new.nodes(), graph.nodes())
-        self.assertEquals(new.weighted_edge_list(), graph.weighted_edge_list())
+        self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
         self.assertEqual(new.attrs, graph.attrs)
 
     def test_round_trip_with_file(self):
@@ -158,7 +158,7 @@ class TestNodeLinkJSON(unittest.TestCase):
         for edge, (source, target, _weight) in graph.edge_index_map().items():
             graph.update_edge_by_index(edge, {"edgeLabel": f"{source}->{target}"})
         with tempfile.NamedTemporaryFile() as fd:
-            res = rustworkx.node_link_json(
+            rustworkx.node_link_json(
                 graph,
                 path=fd.name,
                 graph_attrs=lambda x: {"label": x},
@@ -168,7 +168,7 @@ class TestNodeLinkJSON(unittest.TestCase):
             new = rustworkx.parse_node_link_json_file(fd.name, graph_attrs=lambda x: x["label"])
         self.assertIsInstance(new, type(graph))
         self.assertEqual(new.nodes(), graph.nodes())
-        self.assertEquals(new.weighted_edge_list(), graph.weighted_edge_list())
+        self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
         self.assertEqual(new.attrs, graph.attrs)
 
     def test_round_trip_with_file_no_graph_attr(self):
@@ -179,7 +179,7 @@ class TestNodeLinkJSON(unittest.TestCase):
         for edge, (source, target, _weight) in graph.edge_index_map().items():
             graph.update_edge_by_index(edge, {"edgeLabel": f"{source}->{target}"})
         with tempfile.NamedTemporaryFile() as fd:
-            res = rustworkx.node_link_json(
+            rustworkx.node_link_json(
                 graph,
                 path=fd.name,
                 graph_attrs=lambda x: {"label": x},
@@ -189,5 +189,5 @@ class TestNodeLinkJSON(unittest.TestCase):
             new = rustworkx.parse_node_link_json_file(fd.name)
         self.assertIsInstance(new, type(graph))
         self.assertEqual(new.nodes(), graph.nodes())
-        self.assertEquals(new.weighted_edge_list(), graph.weighted_edge_list())
+        self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
         self.assertEqual(new.attrs, {"label": graph.attrs})
