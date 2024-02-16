@@ -589,6 +589,18 @@ def graph_node_link_json(
     node_attrs: Callable[[_S], str] | None = ...,
     edge_attrs: Callable[[_T], str] | None = ...,
 ) -> str | None: ...
+def parse_node_link_json_str(
+    data: str,
+    graph_attrs: Callable[[dict[str, str]], Any] | None = ...,
+    node_attrs: Callable[[dict[str, str]], _S] | None = ...,
+    edge_attrs: Callable[[dict[str, str]], _T] | None = ...,
+) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def parse_node_link_json_file(
+    path: str,
+    graph_attrs: Callable[[dict[str, str]], Any] | None = ...,
+    node_attrs: Callable[[dict[str, str]], _S] | None = ...,
+    edge_attrs: Callable[[dict[str, str]], _T] | None = ...,
+) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
 
 # Shortest Path
 
