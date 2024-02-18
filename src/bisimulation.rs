@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use hashbrown::hash_map::Entry;
 use pyo3::prelude::*;
 use pyo3::Python;
 
@@ -161,24 +162,15 @@ fn group_by_counterimage(
     for incoming_neighbor_group in counterimage.values() {
         for node in incoming_neighbor_group {
             let block = Rc::clone(&node_to_block[node.index()]);
-
             let key = (*block).borrow().values.clone();
-            match counterimage_grouped.contains_key(&key) {
-                true => {
-                    counterimage_grouped
-                        .get_mut(&key)
-                        .unwrap()
-                        .subblock
-                        .push(*node);
-                }
-                false => {
-                    counterimage_grouped.insert(
-                        key,
-                        CounterImageGroup {
-                            block: Rc::clone(&block),
-                            subblock: Vec::from([*node]),
-                        },
-                    );
+
+            match counterimage_grouped.entry(key) {
+                Entry::Occupied(mut entry) => entry.get_mut().subblock.push(*node),
+                Entry::Vacant(entry) => {
+                    entry.insert(CounterImageGroup {
+                        block: Rc::clone(&block),
+                        subblock: Vec::from([*node]),
+                    });
                 }
             }
         }
