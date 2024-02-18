@@ -20,6 +20,10 @@ type FineBlockPointer = Rc<RefCell<FineBlock>>;
 type CoarseBlockPointer = Rc<CoarseBlock>;
 type CounterimageGrouped = HashMap<Block, CounterImageGroup>;
 
+enum BisimulationError {
+    QueueEmpty,
+}
+
 struct FineBlock {
     values: Block,
     coarse_block_that_supersets_self: Rc<CoarseBlock>,
@@ -121,7 +125,11 @@ fn initialization(
         .fold(
             vec![
                 Rc::clone(&non_leaf_node_block_pointer);
-                (*graph_node_indices.last().unwrap()).index() as usize + 1
+                (*graph_node_indices
+                    .last()
+                    .unwrap_or(&graph::NodeIndex::new(0)))
+                .index() as usize
+                    + 1
             ],
             |mut accumulator, value| {
                 accumulator[value.index()] = Rc::clone(&leaf_node_block_pointer);
@@ -235,15 +243,18 @@ fn split_blocks_with_grouped_counterimage(
     )
 }
 
-fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Vec<Block> {
+fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Option<Vec<Block>> {
     let (fine_block_tuple, initial_coarse_partition, mut node_to_block_vec) = initialization(graph);
 
     let mut queue: CoarsePartition = initial_coarse_partition;
     let mut all_fine_blocks = vec![fine_block_tuple.0, fine_block_tuple.1];
 
-    while !queue.is_empty() {
+    loop {
         let (smaller_component, simple_splitter_block) = {
-            let splitter_block = queue.pop().unwrap();
+            let splitter_block = match queue.pop() {
+                Some(coarse_block) => coarse_block,
+                None => break,
+            };
             let mut fine_blocks_in_splitter_block = splitter_block
                 .fine_blocks_that_are_subsets_of_self
                 .borrow()
@@ -259,8 +270,7 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Vec<Block> {
                         .len()
                         .cmp(&(***y).borrow().values.len())
                 })
-                .map(|(index, _)| index)
-                .unwrap();
+                .map(|(index, _)| index)?;
 
             let smaller_component = fine_blocks_in_splitter_block.remove(smaller_component_index);
 
@@ -326,11 +336,13 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Vec<Block> {
         queue.extend(coarse_block_that_are_now_compound);
     }
 
-    all_fine_blocks
-        .iter()
-        .map(|x| (**x).borrow().values.clone())
-        .filter(|x| !x.is_empty()) // remove leaf block when there are no leaves
-        .collect()
+    Some(
+        all_fine_blocks
+            .iter()
+            .map(|x| (**x).borrow().values.clone())
+            .filter(|x| !x.is_empty()) // remove leaf block when there are no leaves
+            .collect(),
+    )
 }
 
 /// Calculates the relational coarsest partition otherwise known as the maximum bisimulation relation
@@ -346,11 +358,11 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Vec<Block> {
 pub fn digraph_maximum_bisimulation(
     _py: Python,
     graph: &digraph::PyDiGraph,
-) -> RelationalCoarsestPartition {
+) -> Option<RelationalCoarsestPartition> {
     if graph.graph.node_count() == 0 {
-        return RelationalCoarsestPartition { partition: vec![] };
+        return Some(RelationalCoarsestPartition { partition: vec![] });
     }
-    let result = maximum_bisimulation(&graph.graph)
+    let result = maximum_bisimulation(&graph.graph)?
         .into_iter()
         .map(|block| NodeIndices {
             nodes: block
@@ -358,7 +370,8 @@ pub fn digraph_maximum_bisimulation(
                 .map(|node| node.index())
                 .collect::<Vec<usize>>(),
         });
-    RelationalCoarsestPartition {
+
+    Some(RelationalCoarsestPartition {
         partition: result.collect(),
-    }
+    })
 }
