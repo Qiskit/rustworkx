@@ -20,8 +20,10 @@ class TestBisimulation(unittest.TestCase):
         for graph, solution in zip(self.graphs, self.reference_solution):
             res = rustworkx.digraph_maximum_bisimulation(graph)
             res_format = [tuple(element) for element in res]
-            for element in res_format:
-                self.assertTrue(all([any([el in sol for sol in solution]) for el in element]))
+
+            with self.subTest(calculated_result=res_format, expected_result=solution):
+                for element in res_format:
+                    self.assertTrue(all([any([el in sol for sol in solution]) for el in element]))
 
     def test_failure(self):
         with self.assertRaises(TypeError):
