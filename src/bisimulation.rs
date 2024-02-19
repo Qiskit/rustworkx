@@ -20,10 +20,6 @@ type FineBlockPointer = Rc<RefCell<FineBlock>>;
 type CoarseBlockPointer = Rc<CoarseBlock>;
 type CounterimageGrouped = HashMap<Block, CounterImageGroup>;
 
-enum BisimulationError {
-    QueueEmpty,
-}
-
 struct FineBlock {
     values: Block,
     coarse_block_that_supersets_self: Rc<CoarseBlock>,
