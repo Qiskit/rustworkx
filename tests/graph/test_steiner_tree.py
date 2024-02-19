@@ -151,7 +151,7 @@ class TestSteinerTree(unittest.TestCase):
     def test_not_connected_steiner_tree(self):
         self.graph.add_node(None)
         with self.assertRaises(ValueError):
-            rustworkx.steiner_tree(self.graph, [1, 2, 8], weight_fn=float)
+            rustworkx.steiner_tree(self.graph, [1, 2, 0], weight_fn=float)
 
     def test_steiner_tree_empty_graph(self):
         graph = rustworkx.PyGraph()
