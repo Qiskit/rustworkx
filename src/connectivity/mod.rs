@@ -661,13 +661,13 @@ pub fn digraph_all_pairs_all_simple_paths(
     ))
 }
 
-/// Return all the connected subgraphs with <= k nodes
+/// Return all the connected subgraphs (as a list of node indices) with exactly k nodes
 ///
 ///
 /// :param PyGraph graph: The graph to find all connected subgraphs in
 /// :param int k: The maximum number of nodes in a returned connected subgraph.
 ///
-/// :returns: A set of graphs
+/// :returns: A list of connected subgraphs with k nodes, represented by their node indices
 ///
 /// :raises ValueError: If ``k`` is larger than the number of nodes in ``graph``
 #[pyfunction]
