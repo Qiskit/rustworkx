@@ -40,9 +40,9 @@ use crate::iterators::{
 };
 use crate::{EdgeType, StablePyGraph};
 
+use crate::graph::PyGraph;
 use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
-use crate::graph::PyGraph;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -672,21 +672,15 @@ pub fn digraph_all_pairs_all_simple_paths(
 /// :raises ValueError: If ``k`` is larger than the number of nodes in ``graph``
 #[pyfunction]
 #[pyo3(text_signature = "(graph, k, /)")]
-pub fn connected_subgraphs(
-    graph: &PyGraph,
-    k: usize
-) -> PyResult<Vec<Vec<usize>>> {
+pub fn connected_subgraphs(graph: &PyGraph, k: usize) -> PyResult<Vec<Vec<usize>>> {
     if k > graph.node_count() {
-        return Err(PyValueError::new_err("Value for k must be < node count in input graph"));
+        return Err(PyValueError::new_err(
+            "Value for k must be < node count in input graph",
+        ));
     }
 
-    Ok(subgraphs::k_connected_subgraphs(
-        &graph.graph,
-        k,
-    ))
+    Ok(subgraphs::k_connected_subgraphs(&graph.graph, k))
 }
-
-
 
 /// Return all the simple paths between all pairs of nodes in the graph
 ///

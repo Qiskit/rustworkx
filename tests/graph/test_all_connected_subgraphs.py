@@ -11,8 +11,8 @@
 # under the License.
 
 import unittest
-from copy import copy
 
+from copy import copy
 import rustworkx
 
 
@@ -113,18 +113,13 @@ class TestGraphAllConnectedSubgraphs(unittest.TestCase):
             g.add_node(n)
             self.expected_subgraphs.setdefault(1, list()).append(g.nodes())
 
-        for e in enumerate(self.edges):
-            g = rustworkx.PyGraph()
-            g.add_nodes_from(e)
-            node_index_map = {n: i for i, n in enumerate(e)}
-            g.add_edge(node_index_map[e[0]], node_index_map[e[1]], None)
-            self.expected_subgraphs.setdefault(2, list()).append(g.nodes())
+        self.expected_subgraphs[8] = [self.nodes]
 
     def test_empty_graph(self):
         graph = rustworkx.PyGraph()
         subgraphs = rustworkx.connected_subgraphs(graph, 0)
         expected = []
-        self.assertEqual(subgraphs, expected)
+        self.assertConnectedSubgraphsEqual(subgraphs, expected)
 
     def test_empty_graph_2(self):
         graph = rustworkx.PyGraph()
@@ -132,32 +127,46 @@ class TestGraphAllConnectedSubgraphs(unittest.TestCase):
         graph.add_edges_from_no_data(self.edges)
         subgraphs = rustworkx.connected_subgraphs(graph, 0)
         expected = []
-        self.assertEqual(subgraphs, expected)
+        self.assertConnectedSubgraphsEqual(subgraphs, expected)
 
     def test_size_one_subgraphs(self):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(self.nodes)
         graph.add_edges_from_no_data(self.edges)
         subgraphs = rustworkx.connected_subgraphs(graph, 1)
-        self.assertEqual(subgraphs, self.expected_subgraphs[1])
+        self.assertConnectedSubgraphsEqual(subgraphs, self.expected_subgraphs[1])
 
-    def test_size_two_subgraphs(self):
+    def test_sized_subgraphs(self):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(self.nodes)
         graph.add_edges_from_no_data(self.edges)
-        subgraphs = rustworkx.connected_subgraphs(graph, 2)
-        self.assertEqual(subgraphs, self.expected_subgraphs[1]+self.expected_subgraphs[2])
+        for i in range(2, 9):
+            with self.subTest(subgraph_size=i):
+                subgraphs = rustworkx.connected_subgraphs(graph, i)
+                self.assertConnectedSubgraphsEqual(subgraphs, self.expected_subgraphs[i])
 
-    def test_size_three_subgraphs(self):
+    def test_unique_subgraphs(self):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(self.nodes)
         graph.add_edges_from_no_data(self.edges)
-        subgraphs = rustworkx.connected_subgraphs(graph, 3)
-        self.assertEqual(subgraphs, self.expected_subgraphs[1]+self.expected_subgraphs[2]+self.expected_subgraphs[3])
+        for i in range(2, 9):
+            with self.subTest(subgraph_size=i):
+                subgraphs = rustworkx.connected_subgraphs(graph, i)
+                self.assertEqual(len(subgraphs), len({tuple(sorted(el)) for el in subgraphs}))
 
-    def test_full_graph(self):
+    def test_disconnected_graph(self):
         graph = rustworkx.PyGraph()
-        graph.add_nodes_from(self.nodes)
-        graph.add_edges_from_no_data(self.edges)
-        subgraphs = rustworkx.connected_subgraphs(graph, 8)
-        self.assertEqual(subgraphs, list(self.expected_subgraphs.values()))
+        graph.add_nodes_from([0, 1, 2, 3, 4])
+        graph.add_edge(0, 1, None)
+        graph.add_edge(1, 2, None)
+        graph.add_edge(0, 2, None)
+
+        graph.add_edge(3, 4, None)
+
+        self.assertConnectedSubgraphsEqual(rustworkx.connected_subgraphs(graph, 1), [[n] for n in graph.nodes()])
+        self.assertConnectedSubgraphsEqual(rustworkx.connected_subgraphs(graph, 2), graph.edge_list())
+        self.assertConnectedSubgraphsEqual(rustworkx.connected_subgraphs(graph, 3), [[0, 1, 2]])
+        self.assertConnectedSubgraphsEqual(rustworkx.connected_subgraphs(graph, 4), [])
+
+    def assertConnectedSubgraphsEqual(self, subgraphs, expected):
+        self.assertEqual({tuple(sorted(el)) for el in subgraphs}, {tuple(sorted(el)) for el in expected})
