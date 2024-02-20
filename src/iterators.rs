@@ -411,8 +411,8 @@ trait PyGCProtocol {
 
 #[derive(FromPyObject)]
 enum SliceOrInt<'a> {
-    Slice(&'a PySlice),
     Int(isize),
+    Slice(&'a PySlice),
 }
 
 trait PyConvertToPyArray {
