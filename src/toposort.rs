@@ -61,6 +61,10 @@ enum NodeState {
 ///     and raise :class:`~rustworkx.DAGHasCycle` if any cycle is detected. If
 ///     it's set to ``False``, topological sorter will output as many nodes
 ///     as possible until cycles block more progress. By default is ``True``.
+/// :param bool reverse: If ``False`` (the default), perform a regular topological ordering.  If
+///     ``True``, the ordering will be a reversed topological ordering; that is, a topological
+///     order if all the edges had their directions flipped, such that the first nodes returned are
+///     the ones that have only incoming edges in the DAG.
 #[pyclass(module = "rustworkx")]
 pub struct TopologicalSorter {
     dag: Py<PyDiGraph>,
@@ -69,13 +73,14 @@ pub struct TopologicalSorter {
     node2state: HashMap<NodeIndex, NodeState>,
     num_passed_out: usize,
     num_finished: usize,
+    reverse: bool,
 }
 
 #[pymethods]
 impl TopologicalSorter {
     #[new]
-    #[pyo3(signature=(dag, check_cycle=true), text_signature = "(graph, /, check_cycle=True)")]
-    fn new(py: Python, dag: Py<PyDiGraph>, check_cycle: bool) -> PyResult<Self> {
+    #[pyo3(signature=(dag, /, check_cycle=true, *, reverse=false))]
+    fn new(py: Python, dag: Py<PyDiGraph>, check_cycle: bool, reverse: bool) -> PyResult<Self> {
         {
             let dag = &dag.borrow(py);
             if !dag.check_cycle && check_cycle && !is_directed_acyclic_graph(dag) {
@@ -83,17 +88,18 @@ impl TopologicalSorter {
             }
         }
 
+        let in_dir = if reverse {
+            petgraph::Direction::Outgoing
+        } else {
+            petgraph::Direction::Incoming
+        };
+
         let ready_nodes = {
             let dag = &dag.borrow(py);
 
             dag.graph
                 .node_identifiers()
-                .filter(|node| {
-                    dag.graph
-                        .neighbors_directed(*node, petgraph::Direction::Incoming)
-                        .next()
-                        .is_none()
-                })
+                .filter(|node| dag.graph.neighbors_directed(*node, in_dir).next().is_none())
                 .collect()
         };
 
@@ -104,6 +110,7 @@ impl TopologicalSorter {
             node2state: HashMap::new(),
             num_passed_out: 0,
             num_finished: 0,
+            reverse,
         })
     }
 
@@ -149,6 +156,11 @@ impl TopologicalSorter {
     ///     by "get_ready".
     fn done(&mut self, py: Python, nodes: Vec<usize>) -> PyResult<()> {
         let dag = &self.dag.borrow(py);
+        let (in_dir, out_dir) = if self.reverse {
+            (petgraph::Direction::Outgoing, petgraph::Direction::Incoming)
+        } else {
+            (petgraph::Direction::Incoming, petgraph::Direction::Outgoing)
+        };
         for node in nodes {
             let node = NodeIndex::new(node);
             match self.node2state.get_mut(&node) {
@@ -170,10 +182,7 @@ impl TopologicalSorter {
                 }
             }
 
-            for succ in dag
-                .graph
-                .neighbors_directed(node, petgraph::Direction::Outgoing)
-            {
+            for succ in dag.graph.neighbors_directed(node, out_dir) {
                 match self.predecessor_count.entry(succ) {
                     Entry::Occupied(mut entry) => {
                         *entry.get_mut() -= 1;
@@ -183,11 +192,7 @@ impl TopologicalSorter {
                         }
                     }
                     Entry::Vacant(entry) => {
-                        let in_degree = dag
-                            .graph
-                            .neighbors_directed(succ, petgraph::Direction::Incoming)
-                            .count()
-                            - 1;
+                        let in_degree = dag.graph.neighbors_directed(succ, in_dir).count() - 1;
 
                         if in_degree == 0 {
                             self.ready_nodes.push(succ);

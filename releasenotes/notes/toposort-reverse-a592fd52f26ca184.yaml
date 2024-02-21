@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    :func:`.lexicographical_topological_sort` and :class:`.TopologicalSorter` now accept a
+    ``reverse`` keyword argument, which can be set to ``True`` to find a "reversed" topological
+    ordering.  This is a topological ordering that would be found if all the edges in the graph had
+    their directions reversed.
