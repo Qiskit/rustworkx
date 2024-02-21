@@ -59,10 +59,9 @@ fn simple_enum<Ty: EdgeType + Sync>(
         let nu: HashSet<NodeIndex> = graph.neighbors(u).collect();
         let np: HashSet<NodeIndex> = p
             .iter()
-            .map(|n| graph.neighbors(*n))
-            .flatten()
+            .flat_map(|n| graph.neighbors(*n))
             .collect::<HashSet<NodeIndex>>()
-            .union(&p)
+            .union(p)
             .cloned()
             .collect();
         //X' = X u N(u)/ N|P|
@@ -79,5 +78,5 @@ fn simple_enum<Ty: EdgeType + Sync>(
             return is_leaf_node;
         }
     }
-    return is_leaf_node;
+    is_leaf_node
 }
