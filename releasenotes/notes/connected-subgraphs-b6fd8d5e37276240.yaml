@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Added a procedure to determine all connected subgraphs of size `k` in polynomial delay between two generated graphs.
+    This improves upon the brute-force method by two orders of magnitude for sparse graphs such as heavy-hex, enabling
+    addressing larger graphs and for a larger `k`. The introduced method is based on "Enumerating Connected Induced 
+    Subgraphs: Improved Delay and Experimental Comparison" by Christian Komusiewicz and Frank Sommer. In particular, the
+    routine `Simple` is implemented without a more efficient realization of intermediate sets `X` and `P` as discussed 
+    in Lemma 4 of above work.
+

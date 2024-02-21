@@ -11,8 +11,6 @@
 # under the License.
 
 import unittest
-
-from copy import copy
 import rustworkx
 
 

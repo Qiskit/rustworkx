@@ -12,20 +12,16 @@
 
 use crate::StablePyGraph;
 use hashbrown::HashSet;
-use petgraph::data::DataMap;
-use petgraph::graph::Node;
-use petgraph::prelude::StableGraph;
-use petgraph::stable_graph::{Neighbors, NodeIndex};
-use petgraph::visit::{IntoNeighbors, NodeCount, Walker};
+use petgraph::stable_graph::NodeIndex;
 use petgraph::EdgeType;
-use pyo3::PyObject;
 use std::cmp::max;
-use std::hash::Hash;
 use std::ops::Not;
 
 // Implemented after ``Simple`` from
 // "Enumerating Connected Induced Subgraphs: Improved Delay and Experimental Comparison".
-// Christian Komusiewicz and Frank Sommer
+// Christian Komusiewicz and Frank Sommer. Some more runtime and spaceimprovements can be gained by
+// implementing the data structure defined for Lemma 4 (essentially a more efficient way of
+// tracking set ``x`` and ``p``)
 pub fn k_connected_subgraphs<Ty: EdgeType + Sync>(
     graph: &StablePyGraph<Ty>,
     k: usize,
@@ -33,7 +29,7 @@ pub fn k_connected_subgraphs<Ty: EdgeType + Sync>(
     let mut connected_subgraphs = Vec::new();
     let mut graph = graph.clone();
 
-    while (graph.node_count() == max(k, 1)) || (graph.node_count() > max(k, 1)) {
+    while graph.node_count() >= max(k, 1) {
         let mut p: HashSet<NodeIndex> = HashSet::new();
         let v: NodeIndex = graph.node_indices().next().unwrap();
         p.insert(v);
@@ -55,7 +51,7 @@ fn simple_enum<Ty: EdgeType + Sync>(
         subgraphs.push(p.iter().map(|n| n.index()).collect::<Vec<usize>>());
         return true;
     }
-
+    let mut is_leaf_node: bool = false;
     while x.is_empty().not() {
         let u: NodeIndex = x.iter().next().cloned().unwrap();
         x.remove(&u);
@@ -77,10 +73,11 @@ fn simple_enum<Ty: EdgeType + Sync>(
         let mut p_next: HashSet<NodeIndex> = p.clone();
         p_next.insert(u);
 
-        let inserted_subgraphs: bool = simple_enum(&mut p_next, &mut x_next, graph, subgraphs, k);
-        if inserted_subgraphs.not() {
-            return false;
+        if simple_enum(&mut p_next, &mut x_next, graph, subgraphs, k) {
+            is_leaf_node = true;
+        } else {
+            return is_leaf_node;
         }
     }
-    return true;
+    return is_leaf_node;
 }
