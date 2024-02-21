@@ -17,84 +17,76 @@ import rustworkx
 class TestGraphAllConnectedSubgraphs(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.edges = [
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (0, 3),
-            (0, 4),
-            (4, 5),
-            (4, 7),
-            (7, 6),
-            (5, 6)
-        ]
+        self.edges = [(0, 1), (1, 2), (2, 3), (0, 3), (0, 4), (4, 5), (4, 7), (7, 6), (5, 6)]
         self.nodes = list(range(8))
-        self.expected_subgraph_nodes = [[0, 1],
-                                        [0, 3],
-                                        [0, 4],
-                                        [1, 2],
-                                        [2, 3],
-                                        [4, 5],
-                                        [4, 7],
-                                        [5, 6],
-                                        [6, 7],
-                                        [0, 1, 2],
-                                        [0, 1, 3],
-                                        [0, 1, 4],
-                                        [0, 2, 3],
-                                        [0, 3, 4],
-                                        [0, 4, 5],
-                                        [0, 4, 7],
-                                        [1, 2, 3],
-                                        [4, 5, 7],
-                                        [4, 5, 6],
-                                        [4, 6, 7],
-                                        [5, 6, 7],
-                                        [0, 1, 2, 3],
-                                        [0, 1, 2, 4],
-                                        [0, 1, 3, 4],
-                                        [0, 1, 4, 5],
-                                        [0, 1, 4, 7],
-                                        [0, 2, 3, 4],
-                                        [0, 3, 4, 5],
-                                        [0, 3, 4, 7],
-                                        [0, 4, 5, 7],
-                                        [0, 4, 5, 6],
-                                        [0, 4, 7, 6],
-                                        [4, 5, 7, 6],
-                                        [0, 1, 2, 3, 4],
-                                        [0, 1, 2, 4, 5],
-                                        [0, 1, 2, 4, 7],
-                                        [0, 1, 3, 4, 5],
-                                        [0, 1, 3, 4, 7],
-                                        [0, 1, 4, 5, 7],
-                                        [0, 1, 4, 5, 6],
-                                        [0, 1, 4, 7, 6],
-                                        [0, 2, 3, 4, 5],
-                                        [0, 2, 3, 4, 7],
-                                        [0, 3, 4, 5, 7],
-                                        [0, 3, 4, 5, 6],
-                                        [0, 3, 4, 7, 6],
-                                        [0, 4, 5, 7, 6],
-                                        [0, 1, 2, 3, 4, 5],
-                                        [0, 1, 2, 3, 4, 7],
-                                        [0, 1, 2, 4, 5, 7],
-                                        [0, 1, 2, 4, 5, 6],
-                                        [0, 1, 2, 4, 7, 6],
-                                        [0, 1, 3, 4, 5, 7],
-                                        [0, 1, 3, 4, 5, 6],
-                                        [0, 1, 3, 4, 7, 6],
-                                        [0, 1, 4, 5, 7, 6],
-                                        [0, 2, 3, 4, 5, 7],
-                                        [0, 2, 3, 4, 5, 6],
-                                        [0, 2, 3, 4, 7, 6],
-                                        [0, 3, 4, 5, 7, 6],
-                                        [0, 1, 2, 3, 4, 5, 7],
-                                        [0, 1, 2, 3, 4, 5, 6],
-                                        [0, 1, 2, 3, 4, 7, 6],
-                                        [0, 1, 2, 4, 5, 7, 6],
-                                        [0, 1, 3, 4, 5, 7, 6],
-                                        [0, 2, 3, 4, 5, 7, 6]]
+        self.expected_subgraph_nodes = [
+            [0, 1],
+            [0, 3],
+            [0, 4],
+            [1, 2],
+            [2, 3],
+            [4, 5],
+            [4, 7],
+            [5, 6],
+            [6, 7],
+            [0, 1, 2],
+            [0, 1, 3],
+            [0, 1, 4],
+            [0, 2, 3],
+            [0, 3, 4],
+            [0, 4, 5],
+            [0, 4, 7],
+            [1, 2, 3],
+            [4, 5, 7],
+            [4, 5, 6],
+            [4, 6, 7],
+            [5, 6, 7],
+            [0, 1, 2, 3],
+            [0, 1, 2, 4],
+            [0, 1, 3, 4],
+            [0, 1, 4, 5],
+            [0, 1, 4, 7],
+            [0, 2, 3, 4],
+            [0, 3, 4, 5],
+            [0, 3, 4, 7],
+            [0, 4, 5, 7],
+            [0, 4, 5, 6],
+            [0, 4, 7, 6],
+            [4, 5, 7, 6],
+            [0, 1, 2, 3, 4],
+            [0, 1, 2, 4, 5],
+            [0, 1, 2, 4, 7],
+            [0, 1, 3, 4, 5],
+            [0, 1, 3, 4, 7],
+            [0, 1, 4, 5, 7],
+            [0, 1, 4, 5, 6],
+            [0, 1, 4, 7, 6],
+            [0, 2, 3, 4, 5],
+            [0, 2, 3, 4, 7],
+            [0, 3, 4, 5, 7],
+            [0, 3, 4, 5, 6],
+            [0, 3, 4, 7, 6],
+            [0, 4, 5, 7, 6],
+            [0, 1, 2, 3, 4, 5],
+            [0, 1, 2, 3, 4, 7],
+            [0, 1, 2, 4, 5, 7],
+            [0, 1, 2, 4, 5, 6],
+            [0, 1, 2, 4, 7, 6],
+            [0, 1, 3, 4, 5, 7],
+            [0, 1, 3, 4, 5, 6],
+            [0, 1, 3, 4, 7, 6],
+            [0, 1, 4, 5, 7, 6],
+            [0, 2, 3, 4, 5, 7],
+            [0, 2, 3, 4, 5, 6],
+            [0, 2, 3, 4, 7, 6],
+            [0, 3, 4, 5, 7, 6],
+            [0, 1, 2, 3, 4, 5, 7],
+            [0, 1, 2, 3, 4, 5, 6],
+            [0, 1, 2, 3, 4, 7, 6],
+            [0, 1, 2, 4, 5, 7, 6],
+            [0, 1, 3, 4, 5, 7, 6],
+            [0, 2, 3, 4, 5, 7, 6],
+        ]
         self.expected_subgraphs = {}
         for node_list in self.expected_subgraph_nodes:
             graph = rustworkx.PyGraph()
@@ -161,10 +153,16 @@ class TestGraphAllConnectedSubgraphs(unittest.TestCase):
 
         graph.add_edge(3, 4, None)
 
-        self.assertConnectedSubgraphsEqual(rustworkx.connected_subgraphs(graph, 1), [[n] for n in graph.nodes()])
-        self.assertConnectedSubgraphsEqual(rustworkx.connected_subgraphs(graph, 2), graph.edge_list())
+        self.assertConnectedSubgraphsEqual(
+            rustworkx.connected_subgraphs(graph, 1), [[n] for n in graph.nodes()]
+        )
+        self.assertConnectedSubgraphsEqual(
+            rustworkx.connected_subgraphs(graph, 2), graph.edge_list()
+        )
         self.assertConnectedSubgraphsEqual(rustworkx.connected_subgraphs(graph, 3), [[0, 1, 2]])
         self.assertConnectedSubgraphsEqual(rustworkx.connected_subgraphs(graph, 4), [])
 
     def assertConnectedSubgraphsEqual(self, subgraphs, expected):
-        self.assertEqual({tuple(sorted(el)) for el in subgraphs}, {tuple(sorted(el)) for el in expected})
+        self.assertEqual(
+            {tuple(sorted(el)) for el in subgraphs}, {tuple(sorted(el)) for el in expected}
+        )
