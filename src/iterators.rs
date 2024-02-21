@@ -631,7 +631,7 @@ macro_rules! custom_vec_iter_impl {
                 self_
             }
 
-            fn __len__(&self, py: Python) -> usize {
+            fn __length_hint__(&self, py: Python) -> usize {
                 self.inner
                     .as_ref()
                     .unwrap()
@@ -639,10 +639,6 @@ macro_rules! custom_vec_iter_impl {
                     .$data
                     .len()
                     .saturating_sub(self.index)
-            }
-
-            fn __length_hint__(&self, py: Python) -> usize {
-                self.__len__(py)
             }
 
             fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
