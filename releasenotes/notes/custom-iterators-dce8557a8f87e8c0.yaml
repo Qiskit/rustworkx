@@ -2,8 +2,9 @@
 features:
   - |
     Rustworkx functions that return custom iterable objects, such as
-    :meth:`.PyDiGraph.node_indices`, now have an associated custom iterator object for these.  This
-    provides a speedup of approximately 40% for iterating through the custom iterables.
+    :meth:`.PyDiGraph.node_indices`, now each have an associated custom
+    iterator and reversed-iterator object for these.  This provides a speedup
+    of approximately 40% for iterating through the custom iterables.
 
     These types are not directly nameable or constructable from Python space, and other than the
     performance improvement, the behavior should largely not be noticable from Python space.
