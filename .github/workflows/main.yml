@@ -57,7 +57,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.8, 3.9, "3.10", "3.11", "3.12.0"]
+        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
         platform: [
           { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" },
