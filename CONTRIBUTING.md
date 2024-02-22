@@ -3,7 +3,7 @@
 First read the overall Qiskit project contribution guidelines. These are all
 included in the Qiskit documentation:
 
-https://qiskit.org/documentation/contributing_to_qiskit.html
+https://github.com/Qiskit/qiskit/blob/main/CONTRIBUTING.md
 
 While it's not all directly applicable since most of it is about the Qiskit
 project itself and rustworkx is an independent library developed in tandem
