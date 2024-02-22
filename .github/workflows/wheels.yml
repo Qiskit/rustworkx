@@ -258,7 +258,7 @@ jobs:
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32
+          CIBW_SKIP: cp36-* cp37-* cp39-* cp310-* cp311-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v4
         with:
