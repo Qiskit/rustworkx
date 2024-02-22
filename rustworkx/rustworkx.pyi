@@ -13,6 +13,7 @@ from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 from typing import (
     TypeVar,
     Callable,
+    Iterable,
     Iterator,
     final,
     Sequence,
@@ -271,6 +272,7 @@ def lexicographical_topological_sort(
     key: Callable[[_S], str],
     *,
     reverse: bool = ...,
+    initial: Iterable[int] | None = ...,
 ) -> list[_S]: ...
 def transitive_reduction(graph: PyDiGraph, /) -> tuple[PyDiGraph, dict[int, int]]: ...
 def layers(
@@ -288,6 +290,7 @@ class TopologicalSorter:
         check_cycle: bool,
         *,
         reverse: bool = ...,
+        initial: Iterable[int] | None = ...,
     ) -> None: ...
     def is_active(self) -> bool: ...
     def get_ready(self) -> list[int]: ...
