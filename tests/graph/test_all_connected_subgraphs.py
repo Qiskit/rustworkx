@@ -9,9 +9,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import itertools
 import unittest
 import rustworkx
+
+
+def bruteforce(g, k):
+    connected_subgraphs = []
+    for sg in (
+        g.subgraph(selected_nodes) for selected_nodes in itertools.combinations(g.node_indices(), k)
+    ):
+        if rustworkx.is_connected(sg):
+            connected_subgraphs.append(list(sg.nodes()))
+    return connected_subgraphs
 
 
 class TestGraphAllConnectedSubgraphs(unittest.TestCase):
@@ -19,91 +29,10 @@ class TestGraphAllConnectedSubgraphs(unittest.TestCase):
         super().setUp()
         self.edges = [(0, 1), (1, 2), (2, 3), (0, 3), (0, 4), (4, 5), (4, 7), (7, 6), (5, 6)]
         self.nodes = list(range(8))
-        self.expected_subgraph_nodes = [
-            [0, 1],
-            [0, 3],
-            [0, 4],
-            [1, 2],
-            [2, 3],
-            [4, 5],
-            [4, 7],
-            [5, 6],
-            [6, 7],
-            [0, 1, 2],
-            [0, 1, 3],
-            [0, 1, 4],
-            [0, 2, 3],
-            [0, 3, 4],
-            [0, 4, 5],
-            [0, 4, 7],
-            [1, 2, 3],
-            [4, 5, 7],
-            [4, 5, 6],
-            [4, 6, 7],
-            [5, 6, 7],
-            [0, 1, 2, 3],
-            [0, 1, 2, 4],
-            [0, 1, 3, 4],
-            [0, 1, 4, 5],
-            [0, 1, 4, 7],
-            [0, 2, 3, 4],
-            [0, 3, 4, 5],
-            [0, 3, 4, 7],
-            [0, 4, 5, 7],
-            [0, 4, 5, 6],
-            [0, 4, 7, 6],
-            [4, 5, 7, 6],
-            [0, 1, 2, 3, 4],
-            [0, 1, 2, 4, 5],
-            [0, 1, 2, 4, 7],
-            [0, 1, 3, 4, 5],
-            [0, 1, 3, 4, 7],
-            [0, 1, 4, 5, 7],
-            [0, 1, 4, 5, 6],
-            [0, 1, 4, 7, 6],
-            [0, 2, 3, 4, 5],
-            [0, 2, 3, 4, 7],
-            [0, 3, 4, 5, 7],
-            [0, 3, 4, 5, 6],
-            [0, 3, 4, 7, 6],
-            [0, 4, 5, 7, 6],
-            [0, 1, 2, 3, 4, 5],
-            [0, 1, 2, 3, 4, 7],
-            [0, 1, 2, 4, 5, 7],
-            [0, 1, 2, 4, 5, 6],
-            [0, 1, 2, 4, 7, 6],
-            [0, 1, 3, 4, 5, 7],
-            [0, 1, 3, 4, 5, 6],
-            [0, 1, 3, 4, 7, 6],
-            [0, 1, 4, 5, 7, 6],
-            [0, 2, 3, 4, 5, 7],
-            [0, 2, 3, 4, 5, 6],
-            [0, 2, 3, 4, 7, 6],
-            [0, 3, 4, 5, 7, 6],
-            [0, 1, 2, 3, 4, 5, 7],
-            [0, 1, 2, 3, 4, 5, 6],
-            [0, 1, 2, 3, 4, 7, 6],
-            [0, 1, 2, 4, 5, 7, 6],
-            [0, 1, 3, 4, 5, 7, 6],
-            [0, 2, 3, 4, 5, 7, 6],
-        ]
-        self.expected_subgraphs = {}
-        for node_list in self.expected_subgraph_nodes:
-            graph = rustworkx.PyGraph()
-            graph.add_nodes_from(node_list)
-            graph.nodes()
-            node_index_map = {n: i for i, n in enumerate(node_list)}
-            for e in self.edges:
-                if e[0] in graph.nodes() and e[1] in graph.nodes():
-                    graph.add_edge(node_index_map[e[0]], node_index_map[e[1]], None)
-            self.expected_subgraphs.setdefault(len(node_list), list()).append(graph.nodes())
-
-        for n in self.nodes:
-            g = rustworkx.PyGraph()
-            g.add_node(n)
-            self.expected_subgraphs.setdefault(1, list()).append(g.nodes())
-
-        self.expected_subgraphs[8] = [self.nodes]
+        g = rustworkx.PyGraph()
+        g.add_nodes_from(self.nodes)
+        g.add_edges_from_no_data(self.edges)
+        self.expected_subgraphs = {k: list(bruteforce(g, k)) for k in range(1, 9)}
 
     def test_empty_graph(self):
         graph = rustworkx.PyGraph()

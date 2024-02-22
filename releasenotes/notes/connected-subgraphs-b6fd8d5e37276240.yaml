@@ -1,10 +1,10 @@
 ---
 features:
   - |
-    Added a procedure to determine all connected subgraphs of size `k` in polynomial delay between two generated graphs.
-    This improves upon the brute-force method by two orders of magnitude for sparse graphs such as heavy-hex, enabling
-    addressing larger graphs and for a larger `k`. The introduced method is based on "Enumerating Connected Induced 
-    Subgraphs: Improved Delay and Experimental Comparison" by Christian Komusiewicz and Frank Sommer. In particular, the
-    routine `Simple` is implemented without a more efficient realization of intermediate sets `X` and `P` as discussed 
-    in Lemma 4 of above work.
-
+    Added a function :func:`~rustworkx.connected_subgraphs` to determine all connected subgraphs of size `k` in 
+    polynomial delay for undirected graphs. This improves upon the brute-force method by two orders of magnitude for 
+    sparse graphs such as heavy-hex, enabling addressing larger graphs and for a larger `k`. The introduced method is 
+    based on "Enumerating Connected Induced Subgraphs: Improved Delay and Experimental Comparison" by Christian 
+    Komusiewicz and Frank Sommer. In particular, the procedure `Simple` is implemented. Possible runtime improvement can
+    be gained by parallelization over each recursion or by following the discussion in Lemma 4 of above work and thus
+    implementing intermediate sets `X` and `P` more efficiently.
