@@ -1,7 +1,7 @@
 ---
 prelude: >
   The rustworkx 0.14.1 release is a small bug fix release that fixes two issues,
-  first it address a performance regression that was introduced in 0.12.0
+  firstly it address a performance regression that was introduced in 0.12.0
   for accessing items of custom sequence return types such as
   :class:`.NodeIndices`. Secondly, it fixes a build configuration issue for
   Linux ppc64le with Python 3.12 and 3.8 which prevented publishing wheels in
