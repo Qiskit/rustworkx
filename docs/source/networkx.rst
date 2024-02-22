@@ -14,8 +14,8 @@ Some Key Differences
 rustworkx (as the name implies) was inspired by networkx and the goal of the
 project is to provide a similar level of functionality and utility to what
 networkx offers but with much faster performance. However, because of
-limitations in the boundary between rust and python, different design
-decisions, and other differences the libraries are not identical.
+limitations in the boundary between rust and python, design
+decisions and other aspects of the libraries are not identical.
 
 The biggest difference to keep in mind is networkx is a very dynamic in how it
 can be used. It allows you to treat a graph object associatively (like a python
@@ -411,9 +411,9 @@ networkx graph then you can use :func:`rustworkx.networkx_converter` to convert
 that networkx ``Graph`` object into an equivalent rustworkx
 :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph` object. Note that
 networkx is **not** a dependency for rustworkx and you are responsible for
-installing networkx to use this function. Accordingly, there is not equivalent
-function provided to convert the reverse direction (because doing so would add
-an unwanted dependency on networkx, even an optional one) but writing such a
+installing networkx to use this function. Accordingly, there isn't an equivalent
+function provided to convert in the reverse direction (because doing so would add
+an unwanted dependency on networkx, even if it is an optional one). However, writing such a
 function is straightforward, for example::
 
     import networkx as nx
