@@ -16,7 +16,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.14.0"
+version = "0.14.1"
 edition = "2021"
 rust-version = "1.64"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
@@ -57,7 +57,7 @@ rand_pcg.workspace = true
 rayon.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-rustworkx-core = { path = "rustworkx-core", version = "=0.14.0" }
+rustworkx-core = { path = "rustworkx-core", version = "=0.14.1" }
 
 [dependencies.pyo3]
 version = "0.20.2"

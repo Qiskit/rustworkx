@@ -1,0 +1,28 @@
+---
+prelude: >
+  The rustworkx 0.14.1 release is a small bug fix release that fixes two issues,
+  firstly it address a performance regression that was introduced in 0.12.0
+  for accessing items of custom sequence return types such as
+  :class:`.NodeIndices`. Secondly, it fixes a build configuration issue for
+  Linux ppc64le with Python 3.12 and 3.8 which prevented publishing wheels in
+  0.14.0.
+
+fixes:
+  - |
+    Fixed an performance issue with the custom sequence return type classes'
+    ``__getitem__`` method (used for element access and iteration). When support
+    for slice access was added to these classes in rustworkx 0.12.0 this was
+    previously implemented in a way that added unnecessary overhead to index
+    based access, which has been corrected. This fix applies to ``__getitem__``
+    on:
+
+      * :class:`.BFSSuccessors`
+      * :class:`.BFSPredecessors`
+      * :class:`.NodeIndices`
+      * :class:`.EdgeIndices`
+      * :class:`.EdgeList`
+      * :class:`.WeightedEdgeList`
+      * :class:`.Chains`
+
+    See `#1090 <https://github.com/Qiskit/rustworkx/issues/1090>`__ for more
+    details.
