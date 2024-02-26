@@ -1,11 +1,11 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use hashbrown::hash_map::Entry;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use hashbrown::HashMap;
+use hashbrown::hash_map::Entry;
+use hashbrown::{HashMap, HashSet};
 
 use crate::iterators::{NodeIndices, RelationalCoarsestPartition};
 use crate::{digraph, Directed, StablePyGraph};
@@ -150,6 +150,8 @@ fn build_counterimage<IndexHolder: HasValues>(
             *node_index_pointer,
             graph
                 .neighbors_directed(*node_index_pointer, Incoming)
+                .collect::<HashSet<_>>()
+                .into_iter()
                 .collect::<Vec<graph::NodeIndex>>(),
         );
     });
