@@ -34,6 +34,20 @@ class TestBisimulation(unittest.TestCase):
         res = rustworkx.digraph_maximum_bisimulation(graph)
         self.assertEqual(res, [])
 
+    def test_multigraph_compatability(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(range(5))
+        graph.add_edges_from_no_data([(0, 1), (1, 4), (1, 4), (1, 4), (1, 4), (2, 3), (3, 0)])
+
+        reference_solution = [{0,}, {1,}, {2,}, {3,}, {4,}]
+        result = rustworkx.digraph_maximum_bisimulation(graph)
+
+        for block in result:
+            self.assertEqual(len(block), len(set(block)))
+
+        for block in result:
+            self.assertIn(set(block), reference_solution)
+
     def setUp(self):
         graphs = []
         reference_solution = []
