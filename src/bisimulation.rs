@@ -316,6 +316,7 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Option<Vec<Block>> {
         all_fine_blocks.retain(|x| !removeable_fine_blocks.iter().any(|y| Rc::ptr_eq(x, y)));
         queue.extend(coarse_block_that_are_now_compound);
 
+        // counterimage = E^{-1}(B) - E^{-1}(S-B)
         {
             let counterimage_splitter_complement =
                 build_counterimage(graph, (*simple_splitter_block).clone());
