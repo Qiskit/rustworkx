@@ -7,7 +7,7 @@ use pyo3::Python;
 use hashbrown::hash_map::Entry;
 use hashbrown::{HashMap, HashSet};
 
-use crate::iterators::{NodeIndices, RelationalCoarsestPartition};
+use crate::iterators::{IndexPartitionBlock, RelationalCoarsestPartition};
 use crate::{digraph, Directed, StablePyGraph};
 use petgraph::graph;
 use petgraph::Direction::{Incoming, Outgoing};
@@ -363,8 +363,8 @@ pub fn digraph_maximum_bisimulation(
     }
     let result = maximum_bisimulation(&graph.graph)?
         .into_iter()
-        .map(|block| NodeIndices {
-            nodes: block
+        .map(|block| IndexPartitionBlock {
+            block: block
                 .into_iter()
                 .map(|node| node.index())
                 .collect::<Vec<usize>>(),
