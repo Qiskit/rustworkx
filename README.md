@@ -3,7 +3,7 @@
 A high-performance general purpose graph library for Python,
 written in Rust.
 
-## Status
+### Status
 [![License](https://img.shields.io/github/license/Qiskit/rustworkx.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
 ![Build Status](https://github.com/Qiskit/rustworkx/actions/workflows/main.yml/badge.svg?branch=main)
 [![Build Status](https://img.shields.io/travis/com/Qiskit/rustworkx/main.svg?style=popout-square)](https://travis-ci.com/Qiskit/rustworkx)
