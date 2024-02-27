@@ -21,9 +21,11 @@ any Python application.
 
 ## Using rustworkx
 
-Once you have rustworkx installed you can use it by importing rustworkx.
-All the functions and graph classes are off the root of the package.
-For example, calculating the shortest path between A and C would be:
+Once you have rustworkx installed, simply import `rustworkx`.
+All graph classes and top-level functions are accessible from the root
+package.
+To illustrate this, the following example calculates the shortest path
+between two nodes A and C in a `PyGraph` (an undirected graph):
 
 ```python3
 import rustworkx
