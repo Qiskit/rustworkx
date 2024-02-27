@@ -14,10 +14,8 @@
   - You can see the full rendered docs at:
     <https://www.rustworkx.org/>
 
-rustworkx is a general purpose graph library for Python written in Rust to
-take advantage of the performance and safety that Rust provides. It is
-designed to provide a high performance general purpose graph library for
-any Python application.
+rustworkx is a high-performance general purpose graph library for Python,
+written in Rust.
 
 ## Using rustworkx
 
@@ -25,11 +23,12 @@ Once you have rustworkx installed, simply import `rustworkx`.
 All graph classes and top-level functions are accessible from the root
 package.
 To illustrate this, the following example calculates the shortest path
-between two nodes A and C in a `PyGraph` (an undirected graph):
+between two nodes `A` and `C` in an undirected graph.
 
 ```python3
 import rustworkx
 
+# Rustworkx's undirected graph type.
 graph = rustworkx.PyGraph()
 
 # Each time add node is called, it returns a new node index
