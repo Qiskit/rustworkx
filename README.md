@@ -18,9 +18,9 @@ written in Rust.
   - You can see the full rendered docs at:
     <https://www.rustworkx.org/>
 
-## Using rustworkx
+## Usage
 
-Once you have rustworkx installed, simply import `rustworkx`.
+Once installed, simply import `rustworkx`.
 All graph classes and top-level functions are accessible from the root
 package.
 To illustrate this, the following example calculates the shortest path
