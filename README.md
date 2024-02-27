@@ -19,17 +19,29 @@ take advantage of the performance and safety that Rust provides. It is
 designed to provide a high performance general purpose graph library for
 any Python application.
 
-## Project history
+## Using rustworkx
 
-Rustworkx was originally called retworkx and was created initially to be
-a replacement for [Qiskit](https://www.ibm.com/quantum/qiskit)'s previous (and current)
-NetworkX usage (hence the original name).  The project was originally started
-to build a faster directed graph to use as the underlying data structure for
-the DAG at the center of
-[qiskit](https://github.com/Qiskit/qiskit/)'s transpiler. However,
-since it's initial introduction the project has grown substantially and now
-covers all applications that need to work with graphs which includes
-Qiskit.
+Once you have rustworkx installed you can use it by importing rustworkx.
+All the functions and graph classes are off the root of the package.
+For example, calculating the shortest path between A and C would be:
+
+```python3
+import rustworkx
+
+graph = rustworkx.PyGraph()
+
+# Each time add node is called, it returns a new node index
+a = graph.add_node("A")
+b = graph.add_node("B")
+c = graph.add_node("C")
+
+# add_edges_from takes tuples of node indices and weights,
+# and returns edge indices
+graph.add_edges_from([(a, b, 1.5), (a, c, 5.0), (b, c, 2.5)])
+
+# Returns the path A -> B -> C
+rustworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
+```
 
 ## Installing rustworkx
 
@@ -87,30 +99,6 @@ with `pip install 'rustworkx[graphviz]'`.
 
 If you would like to install all the optional Python dependencies when you
 install rustworkx you can use `pip install 'rustworkx[all]'` to do this.
-
-## Using rustworkx
-
-Once you have rustworkx installed you can use it by importing rustworkx.
-All the functions and graph classes are off the root of the package.
-For example, calculating the shortest path between A and C would be:
-
-```python3
-import rustworkx
-
-graph = rustworkx.PyGraph()
-
-# Each time add node is called, it returns a new node index
-a = graph.add_node("A")
-b = graph.add_node("B")
-c = graph.add_node("C")
-
-# add_edges_from takes tuples of node indices and weights,
-# and returns edge indices
-graph.add_edges_from([(a, b, 1.5), (a, c, 5.0), (b, c, 2.5)])
-
-# Returns the path A -> B -> C
-rustworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
-```
 
 ## Building from source
 
@@ -179,3 +167,15 @@ public Slack channel in the Qiskit workspace,
 [#rustworkx](https://qiskit.slack.com/messages/rustworkx/). You can join the
 Qiskit Slack workspace [here](http://ibm.co/joinqiskitslack). Additionally,
 there is an IRC channel `#rustworkx` on the [OFTC IRC network](https://www.oftc.net/)
+
+## Project history
+
+Rustworkx was originally called retworkx and was created initially to be
+a replacement for [Qiskit](https://www.ibm.com/quantum/qiskit)'s previous (and current)
+NetworkX usage (hence the original name).  The project was originally started
+to build a faster directed graph to use as the underlying data structure for
+the DAG at the center of
+[qiskit](https://github.com/Qiskit/qiskit/)'s transpiler. However,
+since it's initial introduction the project has grown substantially and now
+covers all applications that need to work with graphs which includes
+Qiskit.
