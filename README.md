@@ -1,9 +1,5 @@
 # rustworkx
 
-A high-performance general purpose graph library for Python,
-written in Rust.
-
-### Status
 [![License](https://img.shields.io/github/license/Qiskit/rustworkx.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
 ![Build Status](https://github.com/Qiskit/rustworkx/actions/workflows/main.yml/badge.svg?branch=main)
 [![Build Status](https://img.shields.io/travis/com/Qiskit/rustworkx/main.svg?style=popout-square)](https://travis-ci.com/Qiskit/rustworkx)
@@ -18,11 +14,12 @@ written in Rust.
   - You can see the full rendered docs at:
     <https://www.rustworkx.org/>
 
+A high-performance, general-purpose graph library for Python, written in Rust.
+
 ## Usage
 
 Once installed, simply import `rustworkx`.
-All graph classes and top-level functions are accessible from the root
-package.
+All graph classes and top-level functions are accessible with a single import.
 To illustrate this, the following example calculates the shortest path
 between two nodes `A` and `C` in an undirected graph.
 
@@ -47,7 +44,7 @@ rustworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
 
 ## Installing rustworkx
 
-rustworkx is published on pypi so on x86\_64, i686, ppc64le, s390x, and
+rustworkx is published on [PyPI](https://pypi.org/project/rustworkx/) so on x86\_64, i686, ppc64le, s390x, and
 aarch64 Linux systems, x86\_64 on Mac OSX, and 32 and 64 bit Windows
 installing is as simple as running:
 
@@ -55,7 +52,7 @@ installing is as simple as running:
 pip install rustworkx
 ```
 
-This will install a precompiled version of rustworkx into your python
+This will install a precompiled version of rustworkx into your Python
 environment.
 
 ### Installing on a platform without precompiled binaries
@@ -77,7 +74,8 @@ pip install rustworkx
 will build rustworkx for your local system from the source package and install
 it just as it would if there was a prebuilt binary available.
 
-Note: To build from source you will need to ensure you have pip >=19.0.0
+> [!NOTE]  
+> To build from source you will need to ensure you have pip >=19.0.0
 installed, which supports PEP-517, or that you have manually installed
 `setuptools-rust` prior to running `pip install rustworkx`. If you recieve an
 error about `setuptools-rust` not being found you should upgrade pip with
@@ -101,6 +99,21 @@ with `pip install 'rustworkx[graphviz]'`.
 
 If you would like to install all the optional Python dependencies when you
 install rustworkx you can use `pip install 'rustworkx[all]'` to do this.
+
+## Authors and Citation
+
+rustworkx is the work of [many people](https://github.com/Qiskit/rustworkx/graphs/contributors) who contribute
+to the project at different levels. If you use rustworkx in your research, please cite our
+[paper](https://doi.org/10.21105/joss.03968) as per the included [BibTeX file](CITATION.bib).
+
+## Community
+
+Besides Github interactions (such as opening issues) there are two locations
+available to talk to other rustworkx users and developers. The first is a
+public Slack channel in the Qiskit workspace,
+[#rustworkx](https://qiskit.slack.com/messages/rustworkx/). You can join the
+Qiskit Slack workspace [here](http://ibm.co/joinqiskitslack). Additionally,
+there is an IRC channel `#rustworkx` on the [OFTC IRC network](https://www.oftc.net/)
 
 ## Building from source
 
@@ -150,25 +163,11 @@ optimizations and include debuginfo which can be handy for debugging. Do note
 that installing rustworkx this way will be significantly slower then using
 `pip install` and should only be used for debugging/development.
 
-It's worth noting that `pip install -e` does not work, as it will link the python
+> [!TIP]
+> It's worth noting that `pip install -e` does not work, as it will link the python
 packaging shim to your python environment but not build the rustworkx binary. If
 you want to build rustworkx in debug mode you have to use
 `python setup.py develop`.
-
-## Authors and Citation
-
-rustworkx is the work of [many people](https://github.com/Qiskit/rustworkx/graphs/contributors) who contribute
-to the project at different levels. If you use rustworkx in your research, please cite our
-[paper](https://doi.org/10.21105/joss.03968) as per the included [BibTeX file](CITATION.bib).
-
-## Community
-
-Besides Github interactions (such as opening issues) there are two locations
-available to talk to other rustworkx users and developers. The first is a
-public Slack channel in the Qiskit workspace,
-[#rustworkx](https://qiskit.slack.com/messages/rustworkx/). You can join the
-Qiskit Slack workspace [here](http://ibm.co/joinqiskitslack). Additionally,
-there is an IRC channel `#rustworkx` on the [OFTC IRC network](https://www.oftc.net/)
 
 ## Project history
 
