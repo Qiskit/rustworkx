@@ -33,7 +33,7 @@ numpy = "0.20.0"
 petgraph = "0.6.4"
 rand = "0.8"
 rand_pcg = "0.3"
-rayon = "1.8"
+rayon = "1.9"
 rayon-cond = "1.7"
 
 [lib]
