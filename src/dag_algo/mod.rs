@@ -34,6 +34,18 @@ use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::NodeCount;
 
+/// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
+/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
+#[inline(always)]
+pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
+    if reverse {
+        (petgraph::Direction::Outgoing, petgraph::Direction::Incoming)
+    } else {
+        (petgraph::Direction::Incoming, petgraph::Direction::Outgoing)
+    }
+}
+
 /// Find the longest path in a DAG
 ///
 /// :param PyDiGraph graph: The graph to find the longest path on. The input
@@ -374,11 +386,7 @@ pub fn lexicographical_topological_sort(
     };
     // HashMap of node_index indegree
     let node_count = dag.node_count();
-    let (in_dir, out_dir) = if reverse {
-        (petgraph::Direction::Outgoing, petgraph::Direction::Incoming)
-    } else {
-        (petgraph::Direction::Incoming, petgraph::Direction::Outgoing)
-    };
+    let (in_dir, out_dir) = traversal_directions(reverse);
     let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_count);
     for node in dag.graph.node_indices() {
         in_degree_map.insert(node, dag.graph.edges_directed(node, in_dir).count());

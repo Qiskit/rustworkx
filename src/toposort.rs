@@ -22,7 +22,7 @@ use pyo3::Python;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::IntoNodeIdentifiers;
 
-use crate::dag_algo::is_directed_acyclic_graph;
+use crate::dag_algo::{is_directed_acyclic_graph, traversal_directions};
 use crate::DAGHasCycle;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,12 +88,7 @@ impl TopologicalSorter {
             }
         }
 
-        let in_dir = if reverse {
-            petgraph::Direction::Outgoing
-        } else {
-            petgraph::Direction::Incoming
-        };
-
+        let (in_dir, _) = traversal_directions(reverse);
         let ready_nodes = {
             let dag = &dag.borrow(py);
 
@@ -156,11 +151,7 @@ impl TopologicalSorter {
     ///     by "get_ready".
     fn done(&mut self, py: Python, nodes: Vec<usize>) -> PyResult<()> {
         let dag = &self.dag.borrow(py);
-        let (in_dir, out_dir) = if self.reverse {
-            (petgraph::Direction::Outgoing, petgraph::Direction::Incoming)
-        } else {
-            (petgraph::Direction::Incoming, petgraph::Direction::Outgoing)
-        };
+        let (in_dir, out_dir) = traversal_directions(self.reverse);
         for node in nodes {
             let node = NodeIndex::new(node);
             match self.node2state.get_mut(&node) {
