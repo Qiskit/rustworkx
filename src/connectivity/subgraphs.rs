@@ -15,7 +15,6 @@ use hashbrown::HashSet;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::EdgeType;
 use std::cmp::max;
-use std::ops::Not;
 
 // Implemented after ``Simple`` from
 // "Enumerating Connected Induced Subgraphs: Improved Delay and Experimental Comparison".
@@ -29,9 +28,12 @@ pub fn k_connected_subgraphs<Ty: EdgeType + Sync>(
     let mut connected_subgraphs = Vec::new();
     let mut graph = graph.clone();
 
-    while graph.node_count() >= max(k, 1) {
+    while let Some(v) = graph.node_indices().next() {
+        if graph.node_count() < max(k, 1) {
+            break;
+        }
+
         let mut p: HashSet<NodeIndex> = HashSet::new();
-        let v: NodeIndex = graph.node_indices().next().unwrap();
         p.insert(v);
         let mut x: HashSet<NodeIndex> = graph.neighbors(v).collect();
         simple_enum(&mut p, &mut x, &graph, &mut connected_subgraphs, k);
@@ -52,8 +54,7 @@ fn simple_enum<Ty: EdgeType + Sync>(
         return true;
     }
     let mut is_leaf_node: bool = false;
-    while x.is_empty().not() {
-        let u: NodeIndex = x.iter().next().cloned().unwrap();
+    while let Some(u) = x.iter().next().cloned() {
         x.remove(&u);
 
         let nu: HashSet<NodeIndex> = graph.neighbors(u).collect();
