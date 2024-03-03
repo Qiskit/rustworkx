@@ -22,7 +22,7 @@ use pyo3::Python;
 use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
-use crate::graph;
+use crate::{graph, is_valid_weight};
 
 use rustworkx_core::steiner_tree::metric_closure as core_metric_closure;
 use rustworkx_core::steiner_tree::steiner_tree as core_steiner_tree;
@@ -51,7 +51,8 @@ pub fn metric_closure(
     let callable = |e: EdgeReference<PyObject>| -> PyResult<f64> {
         let data = e.weight();
         let raw = weight_fn.call1(py, (data,))?;
-        raw.extract(py)
+        let weight = raw.extract(py)?;
+        is_valid_weight(weight)
     };
     if let Some(result_graph) = core_metric_closure(&graph.graph, callable)? {
         let mut out_graph = graph.clone();
@@ -126,14 +127,18 @@ pub fn steiner_tree(
         let raw = weight_fn.call1(py, (data,))?;
         raw.extract(py)
     };
-    let result = core_steiner_tree(
-        &graph.graph,
-        &terminal_nodes
-            .into_iter()
-            .map(NodeIndex::new)
-            .collect::<Vec<_>>(),
-        callable,
-    )?;
+    let mut terminal_n: Vec<NodeIndex> = Vec::with_capacity(terminal_nodes.len());
+    for n in &terminal_nodes {
+        let index = NodeIndex::new(*n);
+        if graph.graph.node_weight(index).is_none() {
+            return Err(PyValueError::new_err(format!(
+                "Provided terminal node index {} is not present in graph",
+                n
+            )));
+        }
+        terminal_n.push(index);
+    }
+    let result = core_steiner_tree(&graph.graph, &terminal_n, callable)?;
     if let Some(result) = result {
         let mut out_graph = graph.clone();
         for node in graph
