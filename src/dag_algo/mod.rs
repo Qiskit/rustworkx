@@ -34,6 +34,18 @@ use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::NodeCount;
 
+/// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
+/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
+#[inline(always)]
+pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
+    if reverse {
+        (petgraph::Direction::Outgoing, petgraph::Direction::Incoming)
+    } else {
+        (petgraph::Direction::Incoming, petgraph::Direction::Outgoing)
+    }
+}
+
 /// Find the longest path in a DAG
 ///
 /// :param PyDiGraph graph: The graph to find the longest path on. The input
@@ -338,27 +350,35 @@ pub fn layers(
 /// topologically sorted using the provided key function. A topological sort
 /// is a linear ordering of vertices such that for every directed edge from
 /// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
-/// in the ordering.
+/// in the ordering.  If ``reverse`` is set to ``False``, the edges are treated
+/// as if they pointed in the opposite direction.
 ///
 /// This function differs from :func:`~rustworkx.topological_sort` because
 /// when there are ties between nodes in the sort order this function will
 /// use the string returned by the ``key`` argument to determine the output
-/// order used.
+/// order used.  The ``reverse`` argument does not affect the ordering of keys
+/// from this function, only the edges of the graph.
 ///
 /// :param PyDiGraph dag: The DAG to get the topological sorted nodes from
 /// :param callable key: key is a python function or other callable that
 ///     gets passed a single argument the node data from the graph and is
 ///     expected to return a string which will be used for resolving ties
 ///     in the sorting order.
+/// :param bool reverse: If ``False`` (the default), perform a regular
+///     topological ordering.  If ``True``, return the lexicographical
+///     topological order that would have been found if all the edges in the
+///     graph were reversed.  This does not affect the comparisons from the
+///     ``key``.
 ///
 /// :returns: A list of node's data lexicographically topologically sorted.
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(dag, key, /)")]
+#[pyo3(signature = (dag, /, key, *, reverse=false))]
 pub fn lexicographical_topological_sort(
     py: Python,
     dag: &digraph::PyDiGraph,
     key: PyObject,
+    reverse: bool,
 ) -> PyResult<PyObject> {
     let key_callable = |a: &PyObject| -> PyResult<PyObject> {
         let res = key.call1(py, (a,))?;
@@ -366,9 +386,10 @@ pub fn lexicographical_topological_sort(
     };
     // HashMap of node_index indegree
     let node_count = dag.node_count();
+    let (in_dir, out_dir) = traversal_directions(reverse);
     let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_count);
     for node in dag.graph.node_indices() {
-        in_degree_map.insert(node, dag.in_degree(node.index()));
+        in_degree_map.insert(node, dag.graph.edges_directed(node, in_dir).count());
     }
 
     #[derive(Clone, Eq, PartialEq)]
@@ -407,9 +428,8 @@ pub fn lexicographical_topological_sort(
         }
     }
     let mut out_list: Vec<&PyObject> = Vec::with_capacity(node_count);
-    let dir = petgraph::Direction::Outgoing;
     while let Some(State { node, .. }) = zero_indegree.pop() {
-        let neighbors = dag.graph.neighbors_directed(node, dir);
+        let neighbors = dag.graph.neighbors_directed(node, out_dir);
         for child in neighbors {
             let child_degree = in_degree_map.get_mut(&child).unwrap();
             *child_degree -= 1;

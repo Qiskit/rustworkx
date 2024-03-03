@@ -95,7 +95,7 @@ or more concisely::
 The other large difference to keep in mind is that many functions in rustworkx
 are explicitly typed. This means that they either always return or accept
 either a :class:`~rustworkx.PyDiGraph` or a :class:`~rustworkx.PyGraph` but not
-both. Generally, functions prefixed with `graph_*` and `digraph_*` explicitly typed.
+both. Generally, functions prefixed with `graph_*` and `digraph_*` are explicitly typed.
 Explicitly typed functions also indicate their type on the docstrings.
 This is different from networkx where everything is pretty much dynamically
 typed and you can pass a graph object to any function and it will work as
@@ -137,7 +137,7 @@ networkx has a concept of
 `graph <https://networkx.org/documentation/stable/tutorial.html#graph-attributes>`__,
 `node <https://networkx.org/documentation/stable/tutorial.html#node-attributes>`__,
 and `edge attributes <https://networkx.org/documentation/stable/tutorial.html#edge-attributes>`__
-in addition to the hashable object used for a node's payload. Retworkx has
+in addition to the hashable object used for a node's payload. Rustworkx has
 graph attributes similar to NetworkX however instead of being treated like
 a dictionary on the graph object itself they're accessible from a dedicated
 :class:`~.PyGraph.attrs` attribute. This attribute can be any Python object

@@ -49,6 +49,7 @@ from .rustworkx import graph_katz_centrality as graph_katz_centrality
 from .rustworkx import graph_greedy_color as graph_greedy_color
 from .rustworkx import graph_greedy_edge_color as graph_greedy_edge_color
 from .rustworkx import graph_is_bipartite as graph_is_bipartite
+from .rustworkx import connected_subgraphs as connected_subgraphs
 from .rustworkx import digraph_is_bipartite as digraph_is_bipartite
 from .rustworkx import graph_two_color as graph_two_color
 from .rustworkx import digraph_two_color as digraph_two_color

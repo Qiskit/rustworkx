@@ -233,6 +233,33 @@ class TestNodes(unittest.TestCase):
         expected = ["A parent", "a", 0, 1, 2, 3, 4]
         self.assertEqual(expected, res)
 
+    def test_lexicographical_topo_sort_reverse(self):
+        #      +--> b ----> e
+        #      |      \
+        # a ---+       +--> d
+        #      |      /
+        #      +--> c ----> f
+        dag = rustworkx.PyDiGraph()
+        nodes = dag.add_nodes_from(list("abcdef"))
+        dag.add_edges_from_no_data(
+            [
+                (nodes[0], nodes[1]),
+                (nodes[0], nodes[2]),
+                (nodes[1], nodes[3]),
+                (nodes[2], nodes[3]),
+                (nodes[1], nodes[4]),
+                (nodes[2], nodes[5]),
+            ]
+        )
+        expected = ["d", "e", "b", "f", "c", "a"]
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, lambda x: x, reverse=True), expected
+        )
+        dag.reverse()
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, lambda x: x, reverse=False), expected
+        )
+
     def test_lexicographical_topo_sort_qiskit(self):
         dag = rustworkx.PyDAG()
         # inputs
