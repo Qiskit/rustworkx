@@ -39,7 +39,23 @@ class TestBisimulation(unittest.TestCase):
         graph.add_nodes_from(range(5))
         graph.add_edges_from_no_data([(0, 1), (1, 4), (1, 4), (1, 4), (1, 4), (2, 3), (3, 0)])
 
-        reference_solution = [{0,}, {1,}, {2,}, {3,}, {4,}]
+        reference_solution = [
+            {
+                0,
+            },
+            {
+                1,
+            },
+            {
+                2,
+            },
+            {
+                3,
+            },
+            {
+                4,
+            },
+        ]
         result = rustworkx.digraph_maximum_bisimulation(graph)
 
         for block in result:

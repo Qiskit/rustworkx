@@ -10,5 +10,8 @@ features:
   - |
     Added a new class :class:`~rustworkx.RelationalCoarsestPartition` to output
     the maximum bisimulation or relational coarsest partition of a graph. This
-    class contains instances of :class:`~rustworkx.NodeIndices` and can be
+    class contains instances of :class:`~rustworkx.IndexPartitionBlock` and can be
     iterated over.
+  - |
+    Added a new class :class:`~rustworkx.IndexPartitionBlock` to output
+    a block of a node partition. This class is an iterator over node indices.
