@@ -536,6 +536,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
     m.add_class::<iterators::RelationalCoarsestPartition>()?;
+    m.add_class::<iterators::IndexPartitionBlock>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::BFSPredecessors>()?;
     m.add_class::<iterators::Chains>()?;
