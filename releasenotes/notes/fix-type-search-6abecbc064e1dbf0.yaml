@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed the bug type hint for the :func:`~rustworkx.bfs_search`,
+    :func:`~rustworkx.dfs_search` and :func:`~rustworkx.dijkstra_search`.
+    Refer to `#1130 <https://github.com/Qiskit/rustworkx/issues/1130>`__ for
+    more information.

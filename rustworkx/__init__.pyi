@@ -11,7 +11,7 @@
 
 import numpy as np
 
-from typing import Generic, TypeVar, Any, Callable, Iterator, overload
+from typing import Generic, TypeVar, Any, Callable, Iterator, overload, Sequence
 
 # Re-Exports of rust native functions in rustworkx.rustworkx
 # To workaround limitations in mypy around re-exporting objects from the inner
@@ -550,17 +550,17 @@ def cartesian_product(
 ) -> tuple[PyDiGraph, ProductNodeMap]: ...
 def bfs_search(
     graph: PyGraph | PyDiGraph,
-    source: int,
+    source: Sequence[int] | None,
     visitor: _BFSVisitor,
 ) -> None: ...
 def dfs_search(
     graph: PyGraph | PyDiGraph,
-    source: int,
+    source: Sequence[int] | None,
     visitor: _DFSVisitor,
 ) -> None: ...
 def dijkstra_search(
     graph: PyGraph | PyDiGraph,
-    source: int,
+    source: Sequence[int] | None,
     weight_fn: Callable[[Any], float],
     visitor: _DijkstraVisitor,
 ) -> None: ...
