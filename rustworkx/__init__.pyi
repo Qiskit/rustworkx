@@ -9,9 +9,9 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
-from typing import Generic, TypeVar, Any, Callable, Iterator, overload, Sequence
-
 import numpy as np
+
+from typing import Generic, TypeVar, Any, Callable, Iterator, overload, Sequence
 
 # Re-Exports of rust native functions in rustworkx.rustworkx
 # To workaround limitations in mypy around re-exporting objects from the inner
