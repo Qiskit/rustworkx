@@ -843,11 +843,11 @@ custom_vec_iter_impl!(
         import rustworkx as rx
 
         graph = rx.generators.directed_path_graph(5)
-        nodes = rx.node_indices(0)
+        nodes = graph.node_indices()
         # Index based access
         third_element = nodes[2]
         # Use as iterator
-        nodes_iter = iter(node)
+        nodes_iter = iter(nodes)
         first_element = next(nodes_iter)
         second_element = next(nodes_iter)
 
