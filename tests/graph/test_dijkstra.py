@@ -225,6 +225,16 @@ class TestDijkstraGraph(unittest.TestCase):
                             as_undirected=as_undirected,
                         )
 
+    def test_dijkstra_path_with_invalid_source(self):
+        with self.assertRaises(IndexError):
+            rustworkx.dijkstra_shortest_paths(self.graph, len(self.graph.node_indices()) + 1)
+
+    def test_dijkstra_path_lengths_with_invalid_source(self):
+        with self.assertRaises(IndexError):
+            rustworkx.dijkstra_shortest_path_lengths(
+                self.graph, len(self.graph.node_indices()) + 1, edge_cost_fn=float
+            )
+
     def dijkstra_lengths_with_invalid_weights(self):
         graph = rustworkx.generators.path_graph(2)
         for invalid_weight in [float("nan"), -1]:
