@@ -90,7 +90,9 @@ class TestGraphColoring(unittest.TestCase):
     def test_simple_graph_with_strategy(self):
         graph = rustworkx.PyGraph()
         [a, b, c, d, e, f, g, h] = graph.add_nodes_from(["a", "b", "c", "d", "e", "f", "g", "h"])
-        graph.add_edges_from([(a, b, 1), (a, c, 1), (a, d, 1), (d, e, 1), (e, f, 1), (f, g, 1), (f, h, 1)])
+        graph.add_edges_from(
+            [(a, b, 1), (a, c, 1), (a, d, 1), (d, e, 1), (e, f, 1), (f, g, 1), (f, h, 1)]
+        )
 
         with self.subTest():
             res = rustworkx.graph_greedy_color(graph)
