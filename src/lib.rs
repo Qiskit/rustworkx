@@ -554,6 +554,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodeMap>()?;
     m.add_class::<iterators::ProductNodeMap>()?;
     m.add_class::<iterators::BiconnectedComponents>()?;
+    m.add_class::<GreedyStrategy>()?;
     m.add_wrapped(wrap_pymodule!(generators::generators))?;
     Ok(())
 }

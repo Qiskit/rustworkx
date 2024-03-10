@@ -23,6 +23,15 @@ use rustworkx_core::coloring::{
     misra_gries_edge_color, two_color,
 };
 
+pub use rustworkx_core::coloring::GreedyStrategyCore;
+
+#[pyclass(module = "rustworkx")]
+#[derive(Clone, PartialEq)]
+pub enum GreedyStrategy {
+    Degree,
+    Saturation,
+}
+
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
 /// This function uses a `largest-first` strategy as described in [1]_ and colors
@@ -64,14 +73,19 @@ use rustworkx_core::coloring::{
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, preset_color_fn=None, greedy_strategy=0)")]
-#[pyo3(signature=(graph, /, preset_color_fn=None, greedy_strategy=0))]
+#[pyo3(text_signature = "(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree)")]
+#[pyo3(signature=(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree))]
 pub fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
     preset_color_fn: Option<PyObject>,
-    greedy_strategy: usize,
+    greedy_strategy: GreedyStrategy,
 ) -> PyResult<PyObject> {
+    let inner_strategy = match greedy_strategy {
+        GreedyStrategy::Saturation => GreedyStrategyCore::Saturation,
+        GreedyStrategy::Degree => GreedyStrategyCore::Degree,
+    };
+
     let colors = match preset_color_fn {
         Some(preset_color_fn) => {
             let callback = |node_idx: NodeIndex| -> PyResult<Option<usize>> {
@@ -79,9 +93,9 @@ pub fn graph_greedy_color(
                     .call1(py, (node_idx.index(),))
                     .map(|x| x.extract(py).ok())
             };
-            greedy_node_color_with_preset_colors(&graph.graph, callback, greedy_strategy)?
+            greedy_node_color_with_preset_colors(&graph.graph, callback, inner_strategy)?
         }
-        None => greedy_node_color(&graph.graph, greedy_strategy),
+        None => greedy_node_color(&graph.graph, inner_strategy),
     };
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
