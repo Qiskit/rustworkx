@@ -41,6 +41,7 @@ use rustworkx_core::coloring::{
 ///     is no preset. Note if you do use a callable there is no validation that
 ///     the preset values are valid colors. You can generate an invalid coloring
 ///     if you the specified function returned invalid colors for any nodes.
+/// :param greedy_strategy: ADD THE DESCRIPTION HERE
 ///
 /// :returns: A dictionary where keys are node indices and the value is
 ///     the color
@@ -63,11 +64,13 @@ use rustworkx_core::coloring::{
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, preset_color_fn=None)")]
+#[pyo3(text_signature = "(graph, /, preset_color_fn=None, greedy_strategy=0)")]
+#[pyo3(signature=(graph, /, preset_color_fn=None, greedy_strategy=0))]
 pub fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
     preset_color_fn: Option<PyObject>,
+    greedy_strategy: usize,
 ) -> PyResult<PyObject> {
     let colors = match preset_color_fn {
         Some(preset_color_fn) => {
@@ -76,9 +79,9 @@ pub fn graph_greedy_color(
                     .call1(py, (node_idx.index(),))
                     .map(|x| x.extract(py).ok())
             };
-            greedy_node_color_with_preset_colors(&graph.graph, callback)?
+            greedy_node_color_with_preset_colors(&graph.graph, callback, greedy_strategy)?
         }
-        None => greedy_node_color(&graph.graph),
+        None => greedy_node_color(&graph.graph, greedy_strategy),
     };
     let out_dict = PyDict::new(py);
     for (node, color) in colors {

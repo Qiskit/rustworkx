@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use priority_queue::PriorityQueue;
+use std::cmp::Ordering;
 use std::cmp::Reverse;
 use std::convert::Infallible;
 use std::hash::Hash;
@@ -99,10 +101,27 @@ where
 
 fn inner_greedy_node_color<G, F, E>(
     graph: G,
+    preset_color_fn: F,
+    greedy_strategy: usize,
+) -> Result<DictMap<G::NodeId, usize>, E>
+where
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G::NodeId: Hash + Eq + Send + Sync,
+    F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
+{
+    if greedy_strategy == 0 {
+        inner_greedy_node_color_strategy_degree(graph, preset_color_fn)
+    } else {
+        inner_greedy_node_color_strategy_saturation(graph, preset_color_fn)
+    }
+}
+
+fn inner_greedy_node_color_strategy_degree<G, F, E>(
+    graph: G,
     mut preset_color_fn: F,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
@@ -141,6 +160,100 @@ where
     Ok(colors)
 }
 
+#[derive(Clone, Eq, PartialEq)]
+struct SaturationStrategyData {
+    // degree of a node: number of neighbors without color
+    degree: usize,
+    // saturation degree of a node: number of colors used by neighbors
+    saturation: usize,
+}
+
+impl Ord for SaturationStrategyData {
+    fn cmp(&self, other: &SaturationStrategyData) -> Ordering {
+        self.saturation
+            .cmp(&other.saturation)
+            .then_with(|| self.degree.cmp(&other.degree))
+    }
+}
+
+impl PartialOrd for SaturationStrategyData {
+    fn partial_cmp(&self, other: &SaturationStrategyData) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+fn inner_greedy_node_color_strategy_saturation<G, F, E>(
+    graph: G,
+    mut preset_color_fn: F,
+) -> Result<DictMap<G::NodeId, usize>, E>
+where
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G::NodeId: Hash + Eq + Send + Sync,
+    F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
+{
+    let mut colors: DictMap<G::NodeId, usize> = DictMap::with_capacity(graph.node_count());
+    let empty_set: HashSet<usize> = HashSet::new();
+    let mut nbd_colors = vec![empty_set; graph.node_bound()];
+
+    let mut pq: PriorityQueue<G::NodeId, SaturationStrategyData> =
+        PriorityQueue::with_capacity(graph.node_count());
+
+    // Handle preset nodes
+    for k in graph.node_identifiers() {
+        if let Some(color) = preset_color_fn(k)? {
+            colors.insert(k, color);
+            for v in graph.neighbors(k) {
+                let vindex = NodeIndexable::to_index(&graph, v);
+                nbd_colors[vindex].insert(color);
+            }
+        }
+    }
+
+    // Add non-preset nodes to priority queue
+    for k in graph.node_identifiers() {
+        if colors.get(&k).is_none() {
+            let mut degree = 0;
+            for v in graph.neighbors(k) {
+                if colors.get(&v).is_none() {
+                    degree += 1;
+                }
+            }
+            let kindex = NodeIndexable::to_index(&graph, k);
+            let saturation = nbd_colors[kindex].len();
+            pq.push(k, SaturationStrategyData { degree, saturation });
+        }
+    }
+
+    // Greedily process nodes
+    while let Some((k, data)) = pq.pop() {
+        let kindex = NodeIndexable::to_index(&graph, k);
+        let neighbor_colors = &nbd_colors[kindex];
+        let mut current_color: usize = 0;
+        loop {
+            if !neighbor_colors.contains(&current_color) {
+                break;
+            }
+            current_color += 1;
+        }
+        colors.insert(k, current_color);
+        for v in graph.neighbors(k) {
+            if colors.get(&v).is_none() {
+                let vindex = NodeIndexable::to_index(&graph, v);
+                nbd_colors[vindex].insert(current_color);
+                pq.push(
+                    v,
+                    SaturationStrategyData {
+                        degree: data.degree - 1,
+                        saturation: nbd_colors[vindex].len(),
+                    },
+                );
+            }
+        }
+    }
+
+    Ok(colors)
+}
+
 /// Color a graph using a greedy graph coloring algorithm.
 ///
 /// This function uses a `largest-first` strategy as described in:
@@ -167,7 +280,7 @@ where
 /// use rustworkx_core::coloring::greedy_node_color;
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_node_color(&g);
+/// let colors = greedy_node_color(&g, 0);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 0);
 /// expected_colors.insert(NodeIndex::new(1), 1);
@@ -175,12 +288,17 @@ where
 /// assert_eq!(colors, expected_colors);
 /// ```
 ///
-pub fn greedy_node_color<G>(graph: G) -> DictMap<G::NodeId, usize>
+pub fn greedy_node_color<G>(graph: G, greedy_strategy: usize) -> DictMap<G::NodeId, usize>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::NodeId: Hash + Eq + Send + Sync,
 {
-    inner_greedy_node_color(graph, |_| Ok::<Option<usize>, Infallible>(None)).unwrap()
+    inner_greedy_node_color(
+        graph,
+        |_| Ok::<Option<usize>, Infallible>(None),
+        greedy_strategy,
+    )
+    .unwrap()
 }
 
 /// Color a graph using a greedy graph coloring algorithm with preset colors
@@ -198,7 +316,7 @@ where
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on
-/// * `preset_color_fn` - A callback function that will recieve the node identifier
+/// * `preset_color_fn` - A callback function that will receive the node identifier
 ///     for each node in the graph and is expected to return an `Option<usize>`
 ///     (wrapped in a `Result`) that is `None` if the node has no preset and
 ///     the usize represents the preset color.
@@ -222,7 +340,7 @@ where
 /// };
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_node_color_with_preset_colors(&g, preset_color_fn).unwrap();
+/// let colors = greedy_node_color_with_preset_colors(&g, preset_color_fn, 0).unwrap();
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 1);
 /// expected_colors.insert(NodeIndex::new(1), 0);
@@ -232,13 +350,14 @@ where
 pub fn greedy_node_color_with_preset_colors<G, F, E>(
     graph: G,
     preset_color_fn: F,
+    greedy_strategy: usize,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
-    inner_greedy_node_color(graph, preset_color_fn)
+    inner_greedy_node_color(graph, preset_color_fn, greedy_strategy)
 }
 
 /// Color edges of a graph using a greedy approach.
@@ -273,7 +392,7 @@ where
 ///
 pub fn greedy_edge_color<G>(graph: G) -> DictMap<G::EdgeId, usize>
 where
-    G: EdgeCount + IntoNodeIdentifiers + IntoEdges,
+    G: EdgeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::EdgeId: Hash + Eq,
 {
     let (new_graph, edge_to_node_map): (
@@ -281,7 +400,7 @@ where
         HashMap<G::EdgeId, NodeIndex>,
     ) = line_graph(&graph, || (), || ());
 
-    let colors = greedy_node_color(&new_graph);
+    let colors = greedy_node_color(&new_graph, 0);
 
     let mut edge_colors: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
 
@@ -559,11 +678,11 @@ where
 
 #[cfg(test)]
 mod test_node_coloring {
-
-    use crate::coloring::greedy_node_color;
     use crate::coloring::two_color;
+    use crate::coloring::{greedy_node_color, greedy_node_color_with_preset_colors};
     use crate::dictmap::*;
     use crate::petgraph::prelude::*;
+    use std::convert::Infallible;
 
     use crate::petgraph::graph::NodeIndex;
     use crate::petgraph::Undirected;
@@ -572,7 +691,7 @@ mod test_node_coloring {
     fn test_greedy_node_color_empty_graph() {
         // Empty graph
         let graph = Graph::<(), (), Undirected>::new_undirected();
-        let colors = greedy_node_color(&graph);
+        let colors = greedy_node_color(&graph, 0);
         let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -581,7 +700,7 @@ mod test_node_coloring {
     fn test_greedy_node_color_simple_graph() {
         // Simple graph
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (0, 2)]);
-        let colors = greedy_node_color(&graph);
+        let colors = greedy_node_color(&graph, 0);
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
@@ -603,7 +722,7 @@ mod test_node_coloring {
             (0, 2),
             (0, 2),
         ]);
-        let colors = greedy_node_color(&graph);
+        let colors = greedy_node_color(&graph, 0);
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
@@ -612,6 +731,58 @@ mod test_node_coloring {
         .into_iter()
         .collect();
         assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_node_color_saturation() {
+        // Simple graph
+        let graph = Graph::<(), (), Undirected>::from_edges([
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (3, 4),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+        ]);
+
+        let colors = greedy_node_color(&graph, 4);
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 1),
+            (NodeIndex::new(1), 0),
+            (NodeIndex::new(2), 2),
+            (NodeIndex::new(3), 0),
+            (NodeIndex::new(4), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_node_color_saturation_and_preset() {
+        // Simple graph
+        let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (0, 2), (2, 3), (2, 4)]);
+
+        let preset_color_fn = |node_idx: NodeIndex| -> Result<Option<usize>, Infallible> {
+            if node_idx.index() == 0 {
+                Ok(Some(1))
+            } else {
+                Ok(None)
+            }
+        };
+
+        let colors = greedy_node_color_with_preset_colors(&graph, preset_color_fn, 4);
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 1),
+            (NodeIndex::new(1), 0),
+            (NodeIndex::new(2), 0),
+            (NodeIndex::new(3), 1),
+            (NodeIndex::new(4), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, Ok(expected_colors));
     }
 
     #[test]

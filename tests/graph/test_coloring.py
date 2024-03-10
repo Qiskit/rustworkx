@@ -87,6 +87,23 @@ class TestGraphColoring(unittest.TestCase):
         with self.assertRaises(OverflowError):
             rustworkx.graph_greedy_color(graph, preset)
 
+    def test_simple_graph_with_strategy(self):
+        graph = rustworkx.PyGraph()
+        [a, b, c, d, e, f, g, h] = graph.add_nodes_from(["a", "b", "c", "d", "e", "f", "g", "h"])
+        graph.add_edges_from([(a, b, 1), (a, c, 1), (a, d, 1), (d, e, 1), (e, f, 1), (f, g, 1), (f, h, 1)])
+
+        # with self.subTest():
+        #     print("\n")
+        #     print(f"DEFAULT STRATEGY")
+        #     res = rustworkx.graph_greedy_color(graph)
+        #     self.assertEqual({a: 0, b: 1, c: 1, d: 1, e: 2, f: 0, g: 1, h: 1}, res)
+
+        with self.subTest(greedy_strategy=5):
+            print(f"ALTERNATIVE STRATEGY")
+            res = rustworkx.graph_greedy_color(graph, greedy_strategy=5)
+            print(res)
+            # self.assertEqual({0: 0, 1: 1, 2: 1}, res)
+
 
 class TestGraphEdgeColoring(unittest.TestCase):
     def test_graph(self):
