@@ -225,7 +225,7 @@ where
     }
 
     // Greedily process nodes
-    while let Some((k, data)) = pq.pop() {
+    while let Some((k, _)) = pq.pop() {
         let kindex = NodeIndexable::to_index(&graph, k);
         let neighbor_colors = &nbd_colors[kindex];
         let mut current_color: usize = 0;
@@ -235,15 +235,18 @@ where
             }
             current_color += 1;
         }
+
         colors.insert(k, current_color);
         for v in graph.neighbors(k) {
             if colors.get(&v).is_none() {
                 let vindex = NodeIndexable::to_index(&graph, v);
                 nbd_colors[vindex].insert(current_color);
+                let (_, vdata) = pq.get(&v).unwrap();
+
                 pq.push(
                     v,
                     SaturationStrategyData {
-                        degree: data.degree - 1,
+                        degree: vdata.degree - 1,
                         saturation: nbd_colors[vindex].len(),
                     },
                 );
@@ -743,16 +746,19 @@ mod test_node_coloring {
             (3, 4),
             (4, 5),
             (5, 6),
-            (6, 7),
+            (5, 7),
         ]);
 
         let colors = greedy_node_color(&graph, 4);
         let expected_colors: DictMap<NodeIndex, usize> = [
-            (NodeIndex::new(0), 1),
-            (NodeIndex::new(1), 0),
-            (NodeIndex::new(2), 2),
-            (NodeIndex::new(3), 0),
-            (NodeIndex::new(4), 1),
+            (NodeIndex::new(0), 0),
+            (NodeIndex::new(1), 1),
+            (NodeIndex::new(2), 1),
+            (NodeIndex::new(3), 1),
+            (NodeIndex::new(4), 0),
+            (NodeIndex::new(5), 1),
+            (NodeIndex::new(6), 0),
+            (NodeIndex::new(7), 0),
         ]
         .into_iter()
         .collect();
