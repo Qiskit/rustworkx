@@ -207,8 +207,12 @@ where
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
     let mut colors: DictMap<G::NodeId, usize> = DictMap::with_capacity(graph.node_count());
-    let empty_set: HashSet<usize> = HashSet::new();
-    let mut nbd_colors = vec![empty_set; graph.node_bound()];
+
+    let mut nbd_colors: HashMap<G::NodeId, HashSet<usize>> =
+        HashMap::with_capacity(graph.node_count());
+    for k in graph.node_identifiers() {
+        nbd_colors.insert(k, HashSet::new());
+    }
 
     let mut pq: PriorityQueue<G::NodeId, SaturationStrategyData> =
         PriorityQueue::with_capacity(graph.node_count());
@@ -218,8 +222,7 @@ where
         if let Some(color) = preset_color_fn(k)? {
             colors.insert(k, color);
             for v in graph.neighbors(k) {
-                let vindex = NodeIndexable::to_index(&graph, v);
-                nbd_colors[vindex].insert(color);
+                nbd_colors.get_mut(&v).unwrap().insert(color);
             }
         }
     }
@@ -233,16 +236,14 @@ where
                     degree += 1;
                 }
             }
-            let kindex = NodeIndexable::to_index(&graph, k);
-            let saturation = nbd_colors[kindex].len();
+            let saturation = nbd_colors.get(&k).unwrap().len();
             pq.push(k, SaturationStrategyData { degree, saturation });
         }
     }
 
     // Greedily process nodes
     while let Some((k, _)) = pq.pop() {
-        let kindex = NodeIndexable::to_index(&graph, k);
-        let neighbor_colors = &nbd_colors[kindex];
+        let neighbor_colors = nbd_colors.get(&k).unwrap();
         let mut current_color: usize = 0;
         loop {
             if !neighbor_colors.contains(&current_color) {
@@ -254,15 +255,14 @@ where
         colors.insert(k, current_color);
         for v in graph.neighbors(k) {
             if colors.get(&v).is_none() {
-                let vindex = NodeIndexable::to_index(&graph, v);
-                nbd_colors[vindex].insert(current_color);
+                nbd_colors.get_mut(&v).unwrap().insert(current_color);
                 let (_, vdata) = pq.get(&v).unwrap();
 
                 pq.push(
                     v,
                     SaturationStrategyData {
                         degree: vdata.degree - 1,
-                        saturation: nbd_colors[vindex].len(),
+                        saturation: nbd_colors.get(&v).unwrap().len(),
                     },
                 );
             }
