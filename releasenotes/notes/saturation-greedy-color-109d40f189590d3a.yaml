@@ -1,0 +1,28 @@
+---
+features:
+  - Added a new class :class:`~.GreedyStrategy` used to specify the strategy used by 
+    the greedy node and edge coloring algorithms. The currently supported strategies
+    include the `Degree` strategy that colors the nodes with higher degree first, and
+    the `Saturation` strategy that dynamically chooses the vertex chooses the vertex 
+    that has the largest number of different colors already assigned to its neighbors, 
+    and, in case of a tie, the vertex that has the largest number of uncolored neighbors.
+  - |
+    Added a new keyword argument, ``greedy_strategy``, to :func:`.graph_greedy_color`
+    and to :func:`.graph_greedy_color `graph_greedy_edge_color` to specify the  
+    greedy coloring strategy.
+    
+    For example:
+
+    .. jupyter-execute::
+
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+
+        graph = rx.generators.generalized_petersen_graph(5, 2)
+
+        coloring = rx.graph_greedy_color(graph, greedy_strategy=rx.GreedyStrategy.Saturation)
+        colors = [coloring[node] for node in graph.node_indices()]
+
+        layout = rx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
+        mpl_draw(graph, node_color=colors, pos=layout)
+  
