@@ -8,8 +8,7 @@ features:
     and, in case of a tie, the vertex that has the largest number of uncolored neighbors.
   - |
     Added a new keyword argument, ``greedy_strategy``, to :func:`.graph_greedy_color`
-    and to :func:`.graph_greedy_color `graph_greedy_edge_color` to specify the  
-    greedy coloring strategy.
+    and to :func:`.graph_greedy_edge_color` to specify the greedy coloring strategy.
     
     For example:
 
