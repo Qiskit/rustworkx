@@ -230,12 +230,10 @@ where
     // Add non-preset nodes to priority queue
     for k in graph.node_identifiers() {
         if colors.get(&k).is_none() {
-            let mut degree = 0;
-            for v in graph.neighbors(k) {
-                if colors.get(&v).is_none() {
-                    degree += 1;
-                }
-            }
+            let degree = graph
+                .neighbors(k)
+                .filter(|v| colors.get(v).is_none())
+                .count();
             let saturation = nbd_colors.get(&k).unwrap().len();
             pq.push(k, SaturationStrategyData { degree, saturation });
         }
