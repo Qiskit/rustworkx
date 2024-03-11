@@ -99,6 +99,7 @@ where
     Some(colors)
 }
 
+/// coloring strategies for greedy node- and edge- coloring algorithms
 #[derive(Clone, PartialEq)]
 pub enum GreedyStrategyCore {
     Degree,
@@ -169,6 +170,11 @@ where
     Ok(colors)
 }
 
+/// Data associated to nodes for the greedy coloring algorithm
+/// using the "saturation first" strategy: always picking the node that
+/// has the largest number of different colors already assigned to its
+/// neighbors, and, in case of a tie, the node that has the largest number
+/// of uncolored neighbors.
 #[derive(Clone, Eq, PartialEq)]
 struct SaturationStrategyData {
     // degree of a node: number of neighbors without color
@@ -268,19 +274,24 @@ where
 
 /// Color a graph using a greedy graph coloring algorithm.
 ///
-/// This function uses a `largest-first` strategy as described in:
+/// This function uses one of several greedy strategies described in:
 ///
 /// Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 /// Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 ///
-/// to color the nodes with higher degree first.
+/// The `Degree` (aka `largest-first`) strategy colors the nodes with higher degree
+/// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
+/// chooses the vertex that has the largest number of different colors already
+/// assigned to its neighbors, and, in case of a tie, the vertex that has the
+/// largest number of uncolored neighbors.
 ///
 /// The coloring problem is NP-hard and this is a heuristic algorithm
 /// which may not return an optimal solution.
 ///
 /// Arguments:
 ///
-/// * `graph` - The graph object to run the algorithm on
+/// * `graph` - The graph object to run the algorithm.
+/// * `greedy_strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example
 /// ```rust
@@ -318,10 +329,16 @@ where
 
 /// Color a graph using a greedy graph coloring algorithm with preset colors
 ///
-/// This function uses a `largest-first` strategy as described in:
+/// This function uses one of several greedy strategies described in:
 ///
 /// Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 /// Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
+///
+/// The `Degree` (aka `largest-first`) strategy colors the nodes with higher degree
+/// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
+/// chooses the vertex that has the largest number of different colors already
+/// assigned to its neighbors, and, in case of a tie, the vertex that has the
+/// largest number of uncolored neighbors.
 ///
 /// to color the nodes with higher degree first.
 ///
@@ -330,11 +347,12 @@ where
 ///
 /// Arguments:
 ///
-/// * `graph` - The graph object to run the algorithm on
+/// * `graph` - The graph object to run the algorithm on.
 /// * `preset_color_fn` - A callback function that will receive the node identifier
 ///     for each node in the graph and is expected to return an `Option<usize>`
 ///     (wrapped in a `Result`) that is `None` if the node has no preset and
 ///     the usize represents the preset color.
+/// * `greedy_strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example
 /// ```rust
@@ -384,7 +402,8 @@ where
 ///
 /// Arguments:
 ///
-/// * `graph` - The graph object to run the algorithm on
+/// * `graph` - The graph object to run the algorithm on.
+/// * `greedy_strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example
 /// ```rust
@@ -393,10 +412,10 @@ where
 /// use petgraph::graph::EdgeIndex;
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::coloring::greedy_edge_color;
+/// use rustworkx_core::coloring::{greedy_edge_color, GreedyStrategyCore};
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (0, 2), (2, 3)]);
-/// let colors = greedy_edge_color(&g);
+/// let colors = greedy_edge_color(&g, GreedyStrategyCore::Degree);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(EdgeIndex::new(0), 2);
 /// expected_colors.insert(EdgeIndex::new(1), 0);
@@ -405,7 +424,10 @@ where
 /// assert_eq!(colors, expected_colors);
 /// ```
 ///
-pub fn greedy_edge_color<G>(graph: G) -> DictMap<G::EdgeId, usize>
+pub fn greedy_edge_color<G>(
+    graph: G,
+    greedy_strategy: GreedyStrategyCore,
+) -> DictMap<G::EdgeId, usize>
 where
     G: EdgeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::EdgeId: Hash + Eq,
@@ -415,7 +437,7 @@ where
         HashMap<G::EdgeId, NodeIndex>,
     ) = line_graph(&graph, || (), || ());
 
-    let colors = greedy_node_color(&new_graph, GreedyStrategyCore::Degree);
+    let colors = greedy_node_color(&new_graph, greedy_strategy);
 
     let mut edge_colors: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
 
@@ -881,7 +903,7 @@ mod test_node_coloring {
 
 #[cfg(test)]
 mod test_edge_coloring {
-    use crate::coloring::greedy_edge_color;
+    use crate::coloring::{greedy_edge_color, GreedyStrategyCore};
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
 
@@ -892,7 +914,7 @@ mod test_edge_coloring {
     fn test_greedy_edge_color_empty_graph() {
         // Empty graph
         let graph = Graph::<(), (), Undirected>::new_undirected();
-        let colors = greedy_edge_color(&graph);
+        let colors = greedy_edge_color(&graph, GreedyStrategyCore::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -901,7 +923,7 @@ mod test_edge_coloring {
     fn test_greedy_edge_color_simple_graph() {
         // Graph with an edge removed
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3)]);
-        let colors = greedy_edge_color(&graph);
+        let colors = greedy_edge_color(&graph, GreedyStrategyCore::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -917,7 +939,7 @@ mod test_edge_coloring {
         // Simple graph
         let mut graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0)]);
         graph.remove_edge(edge_index(1));
-        let colors = greedy_edge_color(&graph);
+        let colors = greedy_edge_color(&graph, GreedyStrategyCore::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
