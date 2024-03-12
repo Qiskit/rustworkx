@@ -1,0 +1,7 @@
+---
+prelude: >
+  The rustworkx 0.14.2 release is a small bug fix release that fixes two issues.
+  Firstly, it includes a fix for the Python type annotations of graph search
+  methods. Secondly, it includes improved error messages for shortest path
+  functions when providing a source that is not in the graph.
+
