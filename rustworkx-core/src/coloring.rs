@@ -349,7 +349,9 @@ where
 /// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
 /// chooses the vertex that has the largest number of different colors already
 /// assigned to its neighbors, and, in case of a tie, the vertex that has the
-/// largest number of uncolored neighbors.
+/// largest number of uncolored neighbors. The `IndependentSet` strategy finds
+/// independent subsets of the graph and assigns a different color to each of these
+/// subsets.
 ///
 /// The coloring problem is NP-hard and this is a heuristic algorithm
 /// which may not return an optimal solution.
@@ -404,7 +406,9 @@ where
 /// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
 /// chooses the vertex that has the largest number of different colors already
 /// assigned to its neighbors, and, in case of a tie, the vertex that has the
-/// largest number of uncolored neighbors.
+/// largest number of uncolored neighbors. The `IndependentSet` strategy finds
+/// independent subsets of the graph and assigns a different color to each of these
+/// subsets.
 ///
 /// to color the nodes with higher degree first.
 ///
