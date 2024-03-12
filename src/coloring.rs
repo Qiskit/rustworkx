@@ -30,6 +30,7 @@ pub use rustworkx_core::coloring::GreedyStrategyCore;
 pub enum GreedyStrategy {
     Degree,
     Saturation,
+    IndependentSet,
 }
 
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
@@ -39,7 +40,9 @@ pub enum GreedyStrategy {
 /// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
 /// chooses the vertex that has the largest number of different colors already
 /// assigned to its neighbors, and, in case of a tie, the vertex that has the
-/// largest number of uncolored neighbors.
+/// largest number of uncolored neighbors. The `IndependentSet` strategy finds
+/// independent subsets of the graph and assigns a different color to each of these
+/// subsets.
 ///
 /// .. note::
 ///
@@ -90,6 +93,7 @@ pub fn graph_greedy_color(
     let inner_strategy = match greedy_strategy {
         GreedyStrategy::Saturation => GreedyStrategyCore::Saturation,
         GreedyStrategy::Degree => GreedyStrategyCore::Degree,
+        GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
     };
 
     let colors = match preset_color_fn {
@@ -119,7 +123,9 @@ pub fn graph_greedy_color(
 /// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
 /// chooses the vertex that has the largest number of different colors already
 /// assigned to its neighbors, and, in case of a tie, the vertex that has the
-/// largest number of uncolored neighbors.
+/// largest number of uncolored neighbors. The `IndependentSet` strategy finds
+/// independent subsets of the graph and assigns a different color to each of these
+/// subsets.
 ///
 /// :param PyGraph: The input PyGraph object to edge-color.
 /// :param greedy_strategy: The greedy strategy used by the algorithm. When the
@@ -151,6 +157,7 @@ pub fn graph_greedy_edge_color(
     let inner_strategy = match greedy_strategy {
         GreedyStrategy::Saturation => GreedyStrategyCore::Saturation,
         GreedyStrategy::Degree => GreedyStrategyCore::Degree,
+        GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
     };
 
     let colors = greedy_edge_color(&graph.graph, inner_strategy);
