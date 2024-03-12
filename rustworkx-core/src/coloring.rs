@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use ahash::RandomState;
 use priority_queue::PriorityQueue;
 use std::cmp::Ordering;
 use std::cmp::Reverse;
@@ -20,6 +21,7 @@ use crate::dictmap::*;
 use crate::line_graph::line_graph;
 
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
     EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNeighborsDirected,
@@ -104,6 +106,7 @@ where
 pub enum GreedyStrategyCore {
     Degree,
     Saturation,
+    IndependentSet,
 }
 
 fn inner_greedy_node_color<G, F, E>(
@@ -122,6 +125,9 @@ where
         }
         GreedyStrategyCore::Saturation => {
             inner_greedy_node_color_strategy_saturation(graph, preset_color_fn)
+        }
+        GreedyStrategyCore::IndependentSet => {
+            inner_greedy_node_color_strategy_independent_set(graph, preset_color_fn)
         }
     }
 }
@@ -265,6 +271,68 @@ where
                 );
             }
         }
+    }
+
+    Ok(colors)
+}
+
+fn inner_greedy_node_color_strategy_independent_set<G, F, E>(
+    graph: G,
+    mut preset_color_fn: F,
+) -> Result<DictMap<G::NodeId, usize>, E>
+where
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G::NodeId: Hash + Eq + Send + Sync,
+    F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
+{
+    let mut colors: DictMap<G::NodeId, usize> = DictMap::with_capacity(graph.node_count());
+
+    let mut preset: HashSet<G::NodeId> = HashSet::new();
+    let mut unprocessed: IndexSet<G::NodeId, RandomState> =
+        IndexSet::with_hasher(RandomState::default());
+
+    // Handle preset nodes
+    for k in graph.node_identifiers() {
+        if let Some(color) = preset_color_fn(k)? {
+            colors.insert(k, color);
+            preset.insert(k);
+        } else {
+            unprocessed.insert(k);
+        }
+    }
+
+    let mut current_color = 0;
+    while !unprocessed.is_empty() {
+        let mut remaining: IndexSet<G::NodeId, RandomState> =
+            IndexSet::with_hasher(RandomState::default());
+
+        // Remove neighbors of preset nodes with the given color
+        for k in &preset {
+            if colors.get(k) == Some(&current_color) {
+                for u in graph.neighbors(*k) {
+                    if unprocessed.swap_take(&u).is_some() {
+                        remaining.insert(u);
+                    }
+                }
+            }
+        }
+
+        // Greedily extract maximal independent set
+        while !unprocessed.is_empty() {
+            // Greedily take any node
+            // Possible optimization is to choose node with smallest degree among unprocessed
+            let k = *unprocessed.iter().next().unwrap();
+            colors.insert(k, current_color);
+            unprocessed.swap_remove(&k);
+            for u in graph.neighbors(k) {
+                if unprocessed.swap_take(&u).is_some() {
+                    remaining.insert(u);
+                }
+            }
+        }
+
+        unprocessed = remaining;
+        current_color += 1;
     }
 
     Ok(colors)
@@ -716,19 +784,76 @@ mod test_node_coloring {
     use crate::coloring::{greedy_node_color, greedy_node_color_with_preset_colors};
     use crate::coloring::{two_color, GreedyStrategyCore};
     use crate::dictmap::*;
-    use crate::petgraph::prelude::*;
+    use crate::generators::{complete_graph, cycle_graph, heavy_hex_graph, path_graph};
     use std::convert::Infallible;
+    use std::hash::Hash;
 
     use crate::petgraph::graph::NodeIndex;
+    use crate::petgraph::prelude::*;
     use crate::petgraph::Undirected;
+    use petgraph::visit::{IntoEdgeReferences, IntoNodeIdentifiers};
+
+    /// Helper function to check validity of node coloring
+    fn check_node_colors<G>(graph: G, colors: &DictMap<G::NodeId, usize>)
+    where
+        G: IntoNodeIdentifiers + IntoEdgeReferences,
+        G::NodeId: Hash + Eq + Send + Sync,
+    {
+        // Check that every node has valid color
+        for k in graph.node_identifiers() {
+            if !colors.contains_key(&k) {
+                panic!("Problem: some nodes have no color assigned.");
+            } else {
+                println!("Valid color: ok");
+            }
+        }
+
+        // Check that nodes connected by an edge have different colors
+        for e in graph.edge_references() {
+            if colors.get(&e.source()) == colors.get(&e.target()) {
+                panic!("Problem: same color for connected nodes.");
+            } else {
+                println!("Connected nodes: ok");
+            }
+        }
+    }
+
+    /// Helper function to check validity of node coloring with preset colors
+    fn check_preset_colors<G, F, E>(
+        graph: G,
+        colors: &DictMap<G::NodeId, usize>,
+        mut preset_color_fn: F,
+    ) where
+        G: IntoNodeIdentifiers + IntoEdgeReferences,
+        G::NodeId: Hash + Eq + Send + Sync,
+        F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
+    {
+        // Check preset values
+        for k in graph.node_identifiers() {
+            if let Ok(Some(color)) = preset_color_fn(k) {
+                if *colors.get(&k).unwrap() != color {
+                    panic!("Problem: colors are different from preset vales.");
+                } else {
+                    println!("Preset values: ok");
+                }
+            }
+        }
+    }
 
     #[test]
     fn test_greedy_node_color_empty_graph() {
         // Empty graph
         let graph = Graph::<(), (), Undirected>::new_undirected();
-        let colors = greedy_node_color(&graph, GreedyStrategyCore::Degree);
-        let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
-        assert_eq!(colors, expected_colors);
+
+        for greedy_strategy in vec![
+            GreedyStrategyCore::Degree,
+            GreedyStrategyCore::Saturation,
+            GreedyStrategyCore::IndependentSet,
+        ] {
+            let colors = greedy_node_color(&graph, greedy_strategy);
+            let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
+            assert_eq!(colors, expected_colors);
+        }
     }
 
     #[test]
@@ -782,6 +907,8 @@ mod test_node_coloring {
         ]);
 
         let colors = greedy_node_color(&graph, GreedyStrategyCore::Saturation);
+        check_node_colors(&graph, &colors);
+
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
@@ -814,7 +941,11 @@ mod test_node_coloring {
             &graph,
             preset_color_fn,
             GreedyStrategyCore::Saturation,
-        );
+        )
+        .unwrap();
+        check_node_colors(&graph, &colors);
+        check_preset_colors(&graph, &colors, preset_color_fn);
+
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 1),
             (NodeIndex::new(1), 0),
@@ -824,7 +955,85 @@ mod test_node_coloring {
         ]
         .into_iter()
         .collect();
-        assert_eq!(colors, Ok(expected_colors));
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_node_color_independent_set() {
+        // Simple graph
+        let graph = Graph::<(), (), Undirected>::from_edges([
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (3, 4),
+            (4, 5),
+            (5, 6),
+            (5, 7),
+        ]);
+
+        let colors = greedy_node_color(&graph, GreedyStrategyCore::IndependentSet);
+        check_node_colors(&graph, &colors);
+
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 0),
+            (NodeIndex::new(1), 1),
+            (NodeIndex::new(2), 1),
+            (NodeIndex::new(3), 1),
+            (NodeIndex::new(4), 0),
+            (NodeIndex::new(5), 1),
+            (NodeIndex::new(6), 0),
+            (NodeIndex::new(7), 0),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_node_color_independent_set_and_preset() {
+        // Simple graph
+        let graph = Graph::<(), (), Undirected>::from_edges([
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (3, 4),
+            (4, 5),
+            (5, 6),
+            (5, 7),
+        ]);
+
+        let preset_color_fn = |node_idx: NodeIndex| -> Result<Option<usize>, Infallible> {
+            if node_idx.index() == 0 {
+                Ok(Some(1))
+            } else if node_idx.index() == 3 {
+                Ok(Some(0))
+            } else {
+                Ok(None)
+            }
+        };
+
+        let colors = greedy_node_color_with_preset_colors(
+            &graph,
+            preset_color_fn,
+            GreedyStrategyCore::IndependentSet,
+        )
+        .unwrap();
+        check_node_colors(&graph, &colors);
+        check_preset_colors(&graph, &colors, preset_color_fn);
+
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 1),
+            (NodeIndex::new(1), 0),
+            (NodeIndex::new(2), 0),
+            (NodeIndex::new(3), 0),
+            (NodeIndex::new(4), 1),
+            (NodeIndex::new(5), 2),
+            (NodeIndex::new(6), 0),
+            (NodeIndex::new(7), 0),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
     }
 
     #[test]
@@ -896,6 +1105,66 @@ mod test_node_coloring {
         expected_colors.insert(NodeIndex::new(5), 1);
         expected_colors.insert(NodeIndex::new(6), 1);
         assert_eq!(coloring, expected_colors)
+    }
+
+    #[test]
+    fn test_path_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            path_graph(Some(7), None, || (), || (), false).unwrap();
+
+        for greedy_strategy in vec![
+            GreedyStrategyCore::Degree,
+            GreedyStrategyCore::Saturation,
+            GreedyStrategyCore::IndependentSet,
+        ] {
+            let colors = greedy_node_color(&graph, greedy_strategy);
+            check_node_colors(&graph, &colors);
+        }
+    }
+
+    #[test]
+    fn test_cycle_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            cycle_graph(Some(15), None, || (), || (), false).unwrap();
+
+        for greedy_strategy in vec![
+            GreedyStrategyCore::Degree,
+            GreedyStrategyCore::Saturation,
+            GreedyStrategyCore::IndependentSet,
+        ] {
+            let colors = greedy_node_color(&graph, greedy_strategy);
+            check_node_colors(&graph, &colors);
+        }
+    }
+
+    #[test]
+    fn test_heavy_hex_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            heavy_hex_graph(7, || (), || (), false).unwrap();
+
+        for greedy_strategy in vec![
+            GreedyStrategyCore::Degree,
+            GreedyStrategyCore::Saturation,
+            GreedyStrategyCore::IndependentSet,
+        ] {
+            let colors = greedy_node_color(&graph, greedy_strategy);
+            check_node_colors(&graph, &colors);
+        }
+    }
+
+    #[test]
+    fn test_complete_graph() {
+        let graph: petgraph::graph::UnGraph<(), ()> =
+            complete_graph(Some(10), None, || (), || ()).unwrap();
+
+        for greedy_strategy in vec![
+            GreedyStrategyCore::Degree,
+            GreedyStrategyCore::Saturation,
+            GreedyStrategyCore::IndependentSet,
+        ] {
+            let colors = greedy_node_color(&graph, greedy_strategy);
+            check_node_colors(&graph, &colors);
+        }
     }
 }
 
