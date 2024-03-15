@@ -121,7 +121,7 @@ enum Type {
     Float,
     Double,
     String,
-    Long
+    Long,
 }
 
 #[derive(Clone)]
@@ -163,7 +163,7 @@ impl Key {
             Type::Float => Value::Float(val.parse()?),
             Type::Double => Value::Double(val.parse()?),
             Type::String => Value::String(val),
-            Type::Long => Value::Long(val.parse()?)
+            Type::Long => Value::Long(val.parse()?),
         })
     }
 

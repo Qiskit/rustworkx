@@ -380,7 +380,7 @@ class TestGraphML(unittest.TestCase):
             ]
             edges = []
             self.assertGraphEqual(graph, nodes, edges, directed=True)
-    
+
     def test_long(self):
         graph_xml = self.HEADER.format(
             """
