@@ -60,7 +60,7 @@ impl From<ParseBoolError> for Error {
 impl From<ParseIntError> for Error {
     #[inline]
     fn from(e: ParseIntError) -> Error {
-        Error::ParseValue(format!("Failed conversion to 'int': {}", e))
+        Error::ParseValue(format!("Failed conversion to 'int' or 'long': {}", e))
     }
 }
 
@@ -121,6 +121,7 @@ enum Type {
     Float,
     Double,
     String,
+    Long,
 }
 
 #[derive(Clone)]
@@ -130,6 +131,7 @@ enum Value {
     Float(f32),
     Double(f64),
     String(String),
+    Long(isize),
     UnDefined,
 }
 
@@ -141,6 +143,7 @@ impl IntoPy<PyObject> for Value {
             Value::Float(val) => val.into_py(py),
             Value::Double(val) => val.into_py(py),
             Value::String(val) => val.into_py(py),
+            Value::Long(val) => val.into_py(py),
             Value::UnDefined => py.None(),
         }
     }
@@ -160,6 +163,7 @@ impl Key {
             Type::Float => Value::Float(val.parse()?),
             Type::Double => Value::Double(val.parse()?),
             Type::String => Value::String(val),
+            Type::Long => Value::Long(val.parse()?),
         })
     }
 
@@ -419,6 +423,7 @@ impl GraphML {
             b"float" => Type::Float,
             b"double" => Type::Double,
             b"string" => Type::String,
+            b"long" => Type::Long,
             _ => {
                 return Err(Error::InvalidDoc(format!(
                     "Invalid 'attr.type' attribute in key with id={}.",
