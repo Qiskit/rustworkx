@@ -13,8 +13,9 @@
 // There are two useful macros to quickly define a new custom return type:
 //
 // :`custom_vec_iter_impl` holds a `Vec<T>` and can be used as a
-//  read-only sequence/list. To use it, you should specify the name of the new type,
-//  the name of the vector that holds the data, the type `T` and a docstring.
+//  read-only sequence/list. To use it, you should specify the name of the new type for the
+//  iterable, a name for that new type's iterator, a name for the new type's reversed iterator, the
+//  name of the vector that holds the data, the type `T` and a docstring.
 //
 //  e.g `custom_vec_iter_impl!(MyReadOnlyType, data, (usize, f64), "Docs");`
 //      defines a new type named `MyReadOnlyType` that holds a vector called `data`
@@ -411,8 +412,8 @@ trait PyGCProtocol {
 
 #[derive(FromPyObject)]
 enum SliceOrInt<'a> {
-    Slice(&'a PySlice),
     Int(isize),
+    Slice(&'a PySlice),
 }
 
 trait PyConvertToPyArray {
@@ -473,7 +474,7 @@ impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
 }
 
 macro_rules! custom_vec_iter_impl {
-    ($name:ident, $data:ident, $T:ty, $doc:literal) => {
+    ($name:ident, $iter:ident, $reversed:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
         #[pyclass(module = "rustworkx", sequence)]
         #[derive(Clone)]
@@ -580,6 +581,20 @@ macro_rules! custom_vec_iter_impl {
                 }
             }
 
+            fn __iter__(self_: Py<Self>, py: Python) -> $iter {
+                $iter {
+                    inner: Some(self_.clone_ref(py)),
+                    index: 0,
+                }
+            }
+
+            fn __reversed__(self_: Py<Self>, py: Python) -> $reversed {
+                $reversed {
+                    inner: Some(self_.clone_ref(py)),
+                    index: 0,
+                }
+            }
+
             fn __array__(&self, py: Python, _dt: Option<&PyArrayDescr>) -> PyResult<PyObject> {
                 // Note: we accept the dtype argument on the signature but
                 // effictively do nothing with it to let Numpy handle the conversion itself
@@ -594,11 +609,114 @@ macro_rules! custom_vec_iter_impl {
                 PyGCProtocol::__clear__(self)
             }
         }
+
+        #[doc = concat!("Custom iterator class for :class:`.", stringify!($name), "`")]
+        // No module because this isn't constructable from Python space, and is only exposed as an
+        // implementation detail.
+        #[pyclass]
+        pub struct $iter {
+            inner: Option<Py<$name>>,
+            index: usize,
+        }
+
+        #[pymethods]
+        impl $iter {
+            fn __next__(&mut self, py: Python) -> Option<Py<PyAny>> {
+                let data = self.inner.as_ref().unwrap().borrow(py);
+                if self.index < data.$data.len() {
+                    let out = data.$data[self.index].clone().into_py(py);
+                    self.index += 1;
+                    Some(out)
+                } else {
+                    None
+                }
+            }
+
+            fn __iter__(self_: Py<Self>) -> Py<Self> {
+                // Python iterators typically just return themselves from this, though in principle
+                // we could return a separate object that iterates starting from the same point.
+                self_
+            }
+
+            fn __length_hint__(&self, py: Python) -> usize {
+                self.inner
+                    .as_ref()
+                    .unwrap()
+                    .borrow(py)
+                    .$data
+                    .len()
+                    .saturating_sub(self.index)
+            }
+
+            fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
+                if let Some(obj) = self.inner.as_ref() {
+                    vis.call(obj)?
+                }
+                Ok(())
+            }
+
+            fn __clear__(&mut self) {
+                self.inner = None;
+            }
+        }
+
+        #[doc = concat!("Custom reversed iterator class for :class:`.", stringify!($name), "`")]
+        // No module because this isn't constructable from Python space, and is only exposed as an
+        // implementation detail.
+        #[pyclass]
+        pub struct $reversed {
+            inner: Option<Py<$name>>,
+            index: usize,
+        }
+
+        #[pymethods]
+        impl $reversed {
+            fn __next__(&mut self, py: Python) -> Option<Py<PyAny>> {
+                let data = self.inner.as_ref().unwrap().borrow(py);
+                let len = data.$data.len();
+                if self.index < len {
+                    let out = data.$data[len - self.index - 1].clone().into_py(py);
+                    self.index += 1;
+                    Some(out)
+                } else {
+                    None
+                }
+            }
+
+            fn __iter__(self_: Py<Self>) -> Py<Self> {
+                // Python iterators typically just return themselves from this, though in principle
+                // we could return a separate object that iterates starting from the same point.
+                self_
+            }
+
+            fn __length_hint__(&self, py: Python) -> usize {
+                self.inner
+                    .as_ref()
+                    .unwrap()
+                    .borrow(py)
+                    .$data
+                    .len()
+                    .saturating_sub(self.index)
+            }
+
+            fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
+                if let Some(obj) = self.inner.as_ref() {
+                    vis.call(obj)?
+                }
+                Ok(())
+            }
+
+            fn __clear__(&mut self) {
+                self.inner = None;
+            }
+        }
     };
 }
 
 custom_vec_iter_impl!(
     BFSSuccessors,
+    BFSSuccessorsIter,
+    BFSSuccessorsRev,
     bfs_successors,
     (PyObject, Vec<PyObject>),
     "A custom class for the return from :func:`rustworkx.bfs_successors`
@@ -651,6 +769,8 @@ impl PyGCProtocol for BFSSuccessors {
 
 custom_vec_iter_impl!(
     BFSPredecessors,
+    BFSPredecessorsIter,
+    BFSPredecessorsRev,
     bfs_predecessors,
     (PyObject, Vec<PyObject>),
     "A custom class for the return from :func:`rustworkx.bfs_predecessors`
@@ -703,6 +823,8 @@ impl PyGCProtocol for BFSPredecessors {
 
 custom_vec_iter_impl!(
     NodeIndices,
+    NodeIndicesIter,
+    NodeIndicesRev,
     nodes,
     usize,
     "A custom class for the return of node indices
@@ -721,11 +843,11 @@ custom_vec_iter_impl!(
         import rustworkx as rx
 
         graph = rx.generators.directed_path_graph(5)
-        nodes = rx.node_indices(0)
+        nodes = graph.node_indices()
         # Index based access
         third_element = nodes[2]
         # Use as iterator
-        nodes_iter = iter(node)
+        nodes_iter = iter(nodes)
         first_element = next(nodes_iter)
         second_element = next(nodes_iter)
 
@@ -735,6 +857,8 @@ impl PyGCProtocol for NodeIndices {}
 
 custom_vec_iter_impl!(
     EdgeList,
+    EdgeListIter,
+    EdgeListRev,
     edges,
     (usize, usize),
     "A custom class for the return of edge lists
@@ -773,6 +897,8 @@ impl PyGCProtocol for EdgeList {}
 
 custom_vec_iter_impl!(
     WeightedEdgeList,
+    WeightedEdgeListIter,
+    WeightedEdgeListRev,
     edges,
     (usize, usize, PyObject),
     "A custom class for the return of edge lists with weights
@@ -823,6 +949,8 @@ impl PyGCProtocol for WeightedEdgeList {
 
 custom_vec_iter_impl!(
     EdgeIndices,
+    EdgeIndicesIter,
+    EdgeIndicesRev,
     edges,
     usize,
     "A custom class for the return of edge indices
@@ -875,6 +1003,8 @@ impl PyDisplay for EdgeList {
 
 custom_vec_iter_impl!(
     Chains,
+    ChainsIter,
+    ChainsRev,
     chains,
     EdgeList,
     "A custom class for the return of a list of list of edges.

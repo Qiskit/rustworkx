@@ -326,3 +326,13 @@ class TestDijkstraDiGraph(unittest.TestCase):
                     rustworkx.digraph_all_pairs_dijkstra_path_lengths(
                         graph, edge_cost_fn=lambda _: invalid_weight
                     )
+
+    def test_dijkstra_path_digraph_with_invalid_source(self):
+        with self.assertRaises(IndexError):
+            rustworkx.dijkstra_shortest_paths(self.graph, len(self.graph.node_indices()) + 1)
+
+    def test_dijkstra_path_digraph_lengths_with_invalid_source(self):
+        with self.assertRaises(IndexError):
+            rustworkx.dijkstra_shortest_path_lengths(
+                self.graph, len(self.graph.node_indices()) + 1, edge_cost_fn=lambda x: x
+            )

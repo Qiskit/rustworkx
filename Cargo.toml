@@ -16,7 +16,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.14.0"
+version = "0.15.0"
 edition = "2021"
 rust-version = "1.64"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
@@ -33,7 +33,7 @@ numpy = "0.20.0"
 petgraph = "0.6.4"
 rand = "0.8"
 rand_pcg = "0.3"
-rayon = "1.8"
+rayon = "1.9"
 rayon-cond = "1.7"
 
 [lib]
@@ -57,11 +57,11 @@ rand_pcg.workspace = true
 rayon.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-rustworkx-core = { path = "rustworkx-core", version = "=0.14.0" }
+rustworkx-core = { path = "rustworkx-core", version = "=0.15.0" }
 
 [dependencies.pyo3]
-version = "0.20.2"
-features = ["abi3-py38","extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
+version = "0.20.3"
+features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.ndarray]
 version = "^0.15.6"

@@ -82,3 +82,15 @@ class TestTopologicalSorter(unittest.TestCase):
         self.assertEqual(nodes, [starting_node])
         sorter.done(nodes)
         self.assertFalse(sorter.is_active())
+
+    def test_reverse_order(self):
+        sorter = rustworkx.TopologicalSorter(self.graph, reverse=True)
+        self.assertEqual(set(sorter.get_ready()), {4, 5})
+        sorter.done([5])
+        self.assertEqual(set(sorter.get_ready()), {3})
+        sorter.done([3, 4])
+        self.assertEqual(set(sorter.get_ready()), {2})
+        sorter.done([2])
+        self.assertEqual(set(sorter.get_ready()), {0, 1})
+        sorter.done([0, 1])
+        self.assertFalse(sorter.is_active())

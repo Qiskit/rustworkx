@@ -14,6 +14,7 @@
 
 mod all_pairs_all_simple_paths;
 mod johnson_simple_cycles;
+mod subgraphs;
 
 use super::{
     digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
@@ -39,6 +40,7 @@ use crate::iterators::{
 };
 use crate::{EdgeType, StablePyGraph};
 
+use crate::graph::PyGraph;
 use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
 
@@ -657,6 +659,27 @@ pub fn digraph_all_pairs_all_simple_paths(
         min_depth,
         cutoff,
     ))
+}
+
+/// Return all the connected subgraphs (as a list of node indices) with exactly k nodes
+///
+///
+/// :param PyGraph graph: The graph to find all connected subgraphs in
+/// :param int k: The maximum number of nodes in a returned connected subgraph.
+///
+/// :returns: A list of connected subgraphs with k nodes, represented by their node indices
+///
+/// :raises ValueError: If ``k`` is larger than the number of nodes in ``graph``
+#[pyfunction]
+#[pyo3(text_signature = "(graph, k, /)")]
+pub fn connected_subgraphs(graph: &PyGraph, k: usize) -> PyResult<Vec<Vec<usize>>> {
+    if k > graph.node_count() {
+        return Err(PyValueError::new_err(
+            "Value for k must be < node count in input graph",
+        ));
+    }
+
+    Ok(subgraphs::k_connected_subgraphs(&graph.graph, k))
 }
 
 /// Return all the simple paths between all pairs of nodes in the graph
