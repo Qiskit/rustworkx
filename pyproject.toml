@@ -35,6 +35,7 @@ test-skip = "cp38-*musllinux* *linux_s390x *ppc64le"
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"
 environment = 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} && pipx run abi3audit --strict --report {wheel}"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
