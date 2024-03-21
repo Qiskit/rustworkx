@@ -3,7 +3,6 @@ name: Wheel Test Build
 on:
   push:
     branches: [ stable-abi-work ]
-
 jobs:
   rustworkx-core:
     name: Publish rustworkx-core
@@ -70,7 +69,7 @@ jobs:
     environment: release
     permissions:
       id-token: write
-    needs: ["build_wheels", "build-mac-arm-wheels", "build-win32-wheels"]
+    needs: ["build_wheels", "build-win32-wheels"]
     steps:
       - uses: actions/download-artifact@v3
         with:
