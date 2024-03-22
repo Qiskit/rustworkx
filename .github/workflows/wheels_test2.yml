@@ -13,7 +13,7 @@ jobs:
       - name: Run cargo publish
         run: |
           cd rustworkx-core
-          cargo publish
+          # cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
   sdist:
