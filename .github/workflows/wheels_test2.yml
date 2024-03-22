@@ -62,7 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-          name: shared-wheel-builds
+          name: shared-wheel-builds-${{ matrix.runs-on }}
   upload_shared_wheels:
     name: Upload shared build wheels
     runs-on: ubuntu-latest
@@ -73,7 +73,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: shared-wheel-builds
+          pattern: shared-wheel-builds-*
+          merge-multiple: true
           path: deploy
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -255,7 +256,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-          name: shared-wheel-builds
+          name: shared-wheel-builds-win32
   retworkx-compat-build:
     name: Build retworkx
     runs-on: ubuntu-latest
