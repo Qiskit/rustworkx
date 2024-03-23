@@ -90,12 +90,12 @@ jobs:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.platform.rust-target }}
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade tox
+        run: python -m pip install --upgrade nox
       - name: 'Install binary dependencies'
         run: sudo apt-get install -y graphviz
         if: runner.os == 'Linux'
       - name: 'Run tests'
-        run: tox -epy
+        run: nox -e test
   tests_stubs:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]
@@ -114,9 +114,9 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade tox
+        run: python -m pip install --upgrade nox
       - name: 'Run rustworkx stub tests'
-        run: tox -estubs
+        run: nox -estubs
   coverage:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]
@@ -178,9 +178,9 @@ jobs:
       - name: Install binary deps
         run: sudo apt-get install -y graphviz
       - name: Install deps
-        run: pip install -U tox
+        run: pip install -U nox
       - name: Build Docs
-        run: tox -edocs
+        run: nox -e docs
       - uses: actions/upload-artifact@v4
         with:
           name: html_docs
