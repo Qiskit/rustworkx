@@ -72,7 +72,7 @@ jobs:
       id-token: write
     needs: ["build_wheels", "build-win32-wheels"]
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           pattern: shared-wheel-builds-*
           merge-multiple: true
