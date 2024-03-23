@@ -18,12 +18,20 @@ lint_deps = [
     "setuptools-rust",
 ]
 
+stubs_deps = [
+    "mypy==1.8.0",
+    "typing-extensions",
+]
+
+def install_rustworkx(session):
+    session.install(*deps)
+    session.install(".[all]", "-c", "constraints.txt")
+
 # We define a common base such that -e test triggers a test with the current
 # Python version of the interpreter and -e test_with_version launches
 # a test with the specified version of Python.
 def base_test(session):
-    session.install(*deps)
-    session.install(".[all]", "-c", "constraints.txt")
+    install_rustworkx(session)
     session.chdir("tests")
     session.run("python", "-m", "unittest", "discover", *session.posargs)
 
@@ -45,8 +53,7 @@ def lint(session):
 
 @nox.session(python=["3"])
 def docs(session):
-    session.install(*deps)
-    session.install(".[all]", "-c", "constraints.txt")
+    install_rustworkx(session)
     session.install("-r", "docs/source/requirements.txt", "-c", "constraints.txt")
     session.run("python", "-m", "ipykernel", "install", "--user")
     session.run("jupyter", "kernelspec", "list")
@@ -60,8 +67,7 @@ def black(session):
 
 @nox.session(python=["3"])
 def stubs(session):
-    session.install(*deps)
-    session.install(".[all]", "-c", "constraints.txt")
-    session.install("mypy==1.8.0", "typing-extensions")
+    install_rustworkx(session)
+    session.install(*stubs_deps)
     session.chdir("tests")
     session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx")
