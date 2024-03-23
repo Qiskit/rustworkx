@@ -62,7 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-          name: shared-wheel-builds-${{ matrix.runs-on }}
+          name: shared-wheel-builds-${{ matrix.os }}
   upload_shared_wheels:
     name: Upload shared build wheels
     runs-on: ubuntu-latest
