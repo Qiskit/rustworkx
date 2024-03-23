@@ -37,6 +37,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./dist/*
+          name: sdist-rustworkx
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
   build_wheels:
@@ -114,6 +115,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
+          name: wheel-builds-aarch64
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -152,6 +154,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
+          name: wheel-builds-musl-aarch64
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -189,6 +192,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
+          name: wheel-builds-ppc64le
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -226,6 +230,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
+          name: wheel-builds-s390x
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -280,5 +285,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./dist/*
+          name: sdist-retworkx
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
