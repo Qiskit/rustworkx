@@ -37,10 +37,8 @@ def test_with_version(session):
 
 @nox.session(python=["3"])
 def lint(session):
-    session.install(*deps)
-    session.install(".[all]", "-c", "constraints.txt")
+    black(session)
     session.install(*lint_deps)
-    session.run("black", "--check", "--diff", "rustworkx", "tests", "retworkx", *session.posargs)
     session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
