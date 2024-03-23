@@ -381,6 +381,37 @@ class TestGraphML(unittest.TestCase):
             edges = []
             self.assertGraphEqual(graph, nodes, edges, directed=True)
 
+    def test_long(self):
+        graph_xml = self.HEADER.format(
+            """
+            <key id="d0" for="node" attr.name="test" attr.type="long">
+            <default>42</default>
+            </key>
+            <graph id="G" edgedefault="directed">
+            <node id="n0">
+                <data key="d0">8</data>
+            </node>
+            <node id="n1"/>
+            <node id="n2">
+                <data key="d0">42</data>
+            </node>
+            </graph>
+            """
+        )
+
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            graphml = rustworkx.read_graphml(fd.name)
+            graph = graphml[0]
+            nodes = [
+                {"id": "n0", "test": 8},
+                {"id": "n1", "test": 42},
+                {"id": "n2", "test": 42},
+            ]
+            edges = []
+            self.assertGraphEqual(graph, nodes, edges, directed=True)
+
     def test_convert_error(self):
         graph_xml = self.HEADER.format(
             """
@@ -390,7 +421,7 @@ class TestGraphML(unittest.TestCase):
             """
         )
 
-        for type in ["boolean", "int", "float", "double"]:
+        for type in ["boolean", "int", "float", "double", "long"]:
             self.assertGraphMLRaises(graph_xml=graph_xml.format(type))
 
     def test_invalid_xml(self):

@@ -1825,7 +1825,7 @@ impl PyGraph {
         let node_index = self.graph.add_node(obj);
 
         // Sanitize new node index from user input.
-        indices_to_remove.remove(&node_index);
+        indices_to_remove.swap_remove(&node_index);
 
         // Determine edges for new node.
         // note: `edges_directed` returns all edges with `i` as
