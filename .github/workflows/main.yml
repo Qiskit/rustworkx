@@ -119,7 +119,7 @@ jobs:
         run: tox -estubs
   coverage:
     if: github.repository_owner == 'Qiskit'
-    needs: [build_lint]
+    needs: [tests]
     name: Coverage
     runs-on: ubuntu-latest
     steps:
