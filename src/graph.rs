@@ -1819,7 +1819,7 @@ impl PyGraph {
                     Ok::<_, PyErr>(w1.clone_ref(py))
                 })?
             }
-            (None, true) => self.graph.contract_nodes(nodes, obj)?,
+            (None, true) => self.graph.contract_nodes(nodes, obj),
         };
         Ok(res.index())
     }

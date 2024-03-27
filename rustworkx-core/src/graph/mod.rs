@@ -17,7 +17,7 @@ use petgraph::graph::IndexType;
 use petgraph::graphmap::{GraphMap, NodeTrait};
 use petgraph::matrix_graph::{MatrixGraph, Nullable};
 use petgraph::stable_graph::StableGraph;
-use petgraph::visit::Data;
+use petgraph::visit::{Data, IntoNodeIdentifiers};
 use petgraph::{EdgeType, Graph};
 
 pub mod contraction;
@@ -37,8 +37,8 @@ pub mod undirected {
 
 /// A graph whose nodes may be removed.
 pub trait NodeRemovable: Data {
-    type RemoveResult;
-    fn remove_node(&mut self, node: Self::NodeId) -> Self::RemoveResult;
+    type Output;
+    fn remove_node(&mut self, node: Self::NodeId) -> Self::Output;
 }
 
 impl<N, E, Ty, Ix> NodeRemovable for StableGraph<N, E, Ty, Ix>
@@ -46,7 +46,7 @@ where
     Ty: EdgeType,
     Ix: IndexType,
 {
-    type RemoveResult = Option<Self::NodeWeight>;
+    type Output = Option<Self::NodeWeight>;
     fn remove_node(&mut self, node: Self::NodeId) -> Option<Self::NodeWeight> {
         self.remove_node(node)
     }
@@ -57,7 +57,7 @@ where
     Ty: EdgeType,
     Ix: IndexType,
 {
-    type RemoveResult = Option<Self::NodeWeight>;
+    type Output = Option<Self::NodeWeight>;
     fn remove_node(&mut self, node: Self::NodeId) -> Option<Self::NodeWeight> {
         self.remove_node(node)
     }
@@ -68,8 +68,8 @@ where
     N: NodeTrait,
     Ty: EdgeType,
 {
-    type RemoveResult = bool;
-    fn remove_node(&mut self, node: Self::NodeId) -> Self::RemoveResult {
+    type Output = bool;
+    fn remove_node(&mut self, node: Self::NodeId) -> Self::Output {
         self.remove_node(node)
     }
 }
@@ -77,8 +77,13 @@ where
 impl<N, E, Ty: EdgeType, Null: Nullable<Wrapped = E>, Ix: IndexType> NodeRemovable
     for MatrixGraph<N, E, Ty, Null, Ix>
 {
-    type RemoveResult = Self::NodeWeight;
-    fn remove_node(&mut self, node: Self::NodeId) -> Self::RemoveResult {
-        self.remove_node(node)
+    type Output = Option<Self::NodeWeight>;
+    fn remove_node(&mut self, node: Self::NodeId) -> Self::Output {
+        for n in self.node_identifiers() {
+            if node == n {
+                return Some(self.remove_node(node));
+            }
+        }
+        None
     }
 }
