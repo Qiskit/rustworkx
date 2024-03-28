@@ -23,17 +23,33 @@ use rustworkx_core::coloring::{
     misra_gries_edge_color, two_color,
 };
 
+pub use rustworkx_core::coloring::GreedyStrategyCore;
+
+#[pyclass(module = "rustworkx")]
+#[derive(Clone, PartialEq)]
+pub enum GreedyStrategy {
+    Degree,
+    Saturation,
+    IndependentSet,
+}
+
 /// Color a :class:`~.PyGraph` object using a greedy graph coloring algorithm.
 ///
-/// This function uses a `largest-first` strategy as described in [1]_ and colors
-/// the nodes with higher degree first.
+/// This function uses one of several greedy strategies described in: [1]_.
+/// The `Degree` (aka `largest-first`) strategy colors the nodes with higher degree
+/// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
+/// chooses the vertex that has the largest number of different colors already
+/// assigned to its neighbors, and, in case of a tie, the vertex that has the
+/// largest number of uncolored neighbors. The `IndependentSet` strategy finds
+/// independent subsets of the graph and assigns a different color to each of these
+/// subsets.
 ///
 /// .. note::
 ///
 ///     The coloring problem is NP-hard and this is a heuristic algorithm which
 ///     may not return an optimal solution.
 ///
-/// :param PyGraph: The input PyGraph object to color
+/// :param PyGraph: The input PyGraph object to color.
 /// :param preset_color_fn: An optional callback function that is used to manually
 ///     specify a color to use for particular nodes in the graph. If specified
 ///     this takes a callable that will be passed a node index and is expected to
@@ -41,6 +57,9 @@ use rustworkx_core::coloring::{
 ///     is no preset. Note if you do use a callable there is no validation that
 ///     the preset values are valid colors. You can generate an invalid coloring
 ///     if you the specified function returned invalid colors for any nodes.
+/// :param greedy_strategy: The greedy strategy used by the algorithm. When the
+///     strategy is not explicitly specified, the `Degree` strategy is used by
+///     default.
 ///
 /// :returns: A dictionary where keys are node indices and the value is
 ///     the color
@@ -63,12 +82,20 @@ use rustworkx_core::coloring::{
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, preset_color_fn=None)")]
+#[pyo3(text_signature = "(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree)")]
+#[pyo3(signature=(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree))]
 pub fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
     preset_color_fn: Option<PyObject>,
+    greedy_strategy: GreedyStrategy,
 ) -> PyResult<PyObject> {
+    let inner_strategy = match greedy_strategy {
+        GreedyStrategy::Saturation => GreedyStrategyCore::Saturation,
+        GreedyStrategy::Degree => GreedyStrategyCore::Degree,
+        GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
+    };
+
     let colors = match preset_color_fn {
         Some(preset_color_fn) => {
             let callback = |node_idx: NodeIndex| -> PyResult<Option<usize>> {
@@ -76,9 +103,9 @@ pub fn graph_greedy_color(
                     .call1(py, (node_idx.index(),))
                     .map(|x| x.extract(py).ok())
             };
-            greedy_node_color_with_preset_colors(&graph.graph, callback)?
+            greedy_node_color_with_preset_colors(&graph.graph, callback, inner_strategy)?
         }
-        None => greedy_node_color(&graph.graph),
+        None => greedy_node_color(&graph.graph, inner_strategy),
     };
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
@@ -91,7 +118,19 @@ pub fn graph_greedy_color(
 ///
 /// This function works by greedily coloring the line graph of the given graph.
 ///
-/// :param PyGraph: The input PyGraph object to edge-color
+/// This function uses one of several greedy strategies described in: [1]_.
+/// The `Degree` (aka `largest-first`) strategy colors the nodes with higher degree
+/// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
+/// chooses the vertex that has the largest number of different colors already
+/// assigned to its neighbors, and, in case of a tie, the vertex that has the
+/// largest number of uncolored neighbors. The `IndependentSet` strategy finds
+/// independent subsets of the graph and assigns a different color to each of these
+/// subsets.
+///
+/// :param PyGraph: The input PyGraph object to edge-color.
+/// :param greedy_strategy: The greedy strategy used by the algorithm. When the
+///     strategy is not explicitly specified, the `Degree` strategy is used by
+///     default.
 ///
 /// :returns: A dictionary where keys are edge indices and the value is the color
 /// :rtype: dict
@@ -104,10 +143,24 @@ pub fn graph_greedy_color(
 ///     edge_colors = rx.graph_greedy_edge_color(graph)
 ///     assert edge_colors == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 2}
 ///
+///
+/// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
+///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
-pub fn graph_greedy_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
-    let colors = greedy_edge_color(&graph.graph);
+#[pyo3(text_signature = "(graph, /, greedy_strategy=GreedyStrategy::Degree)")]
+#[pyo3(signature=(graph, /, greedy_strategy=GreedyStrategy::Degree))]
+pub fn graph_greedy_edge_color(
+    py: Python,
+    graph: &graph::PyGraph,
+    greedy_strategy: GreedyStrategy,
+) -> PyResult<PyObject> {
+    let inner_strategy = match greedy_strategy {
+        GreedyStrategy::Saturation => GreedyStrategyCore::Saturation,
+        GreedyStrategy::Degree => GreedyStrategyCore::Degree,
+        GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
+    };
+
+    let colors = greedy_edge_color(&graph.graph, inner_strategy);
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
         out_dict.set_item(node.index(), color)?;
