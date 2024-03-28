@@ -18,7 +18,7 @@
 set -e
 
 # Build the documentation.
-tox -edocs
+nox -edocs
 
 # Extract the release version from Cargo.toml
 VERSION=$(grep -Po -m1 'version = "\K[0-9]+\.[0-9]+' Cargo.toml)

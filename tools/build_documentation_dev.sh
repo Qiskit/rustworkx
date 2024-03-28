@@ -18,7 +18,7 @@
 set -e
 
 # Build the documentation.
-RUSTWORKX_DEV_DOCS=1 tox -edocs
+RUSTWORKX_DEV_DOCS=1 nox -e docs
 
 # Copy the stable docs from the git repo
 TMP_DIR=$(mktemp -d)
