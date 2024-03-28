@@ -20,8 +20,8 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexSet;
 use rustworkx_core::dictmap::*;
+use rustworkx_core::graph::undirected::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
@@ -40,10 +40,10 @@ use crate::iterators::NodeMap;
 use super::dot_utils::build_dot;
 use super::iterators::{EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
-    find_node_by_weight, merge_duplicates, weight_callable, IsNan, NoEdgeBetweenNodes,
-    NodesRemoved, StablePyGraph,
+    find_node_by_weight, weight_callable, IsNan, NoEdgeBetweenNodes, NodesRemoved, StablePyGraph,
 };
 
+use crate::RxPyResult;
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
@@ -360,18 +360,7 @@ impl PyGraph {
         if !self.multigraph {
             return false;
         }
-        let mut edges: HashSet<[NodeIndex; 2]> =
-            HashSet::with_capacity(2 * self.graph.edge_count());
-        for edge in self.graph.edge_references() {
-            let endpoints = [edge.source(), edge.target()];
-            let endpoints_rev = [edge.target(), edge.source()];
-            if edges.contains(&endpoints) || edges.contains(&endpoints_rev) {
-                return true;
-            }
-            edges.insert(endpoints);
-            edges.insert(endpoints_rev);
-        }
-        false
+        self.graph.has_parallel_edges()
     }
 
     /// Clears all nodes and edges
@@ -1817,50 +1806,22 @@ impl PyGraph {
         nodes: Vec<usize>,
         obj: PyObject,
         weight_combo_fn: Option<PyObject>,
-    ) -> PyResult<usize> {
-        let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
-            nodes.into_iter().map(NodeIndex::new).collect();
-
-        // Create new node.
-        let node_index = self.graph.add_node(obj);
-
-        // Sanitize new node index from user input.
-        indices_to_remove.swap_remove(&node_index);
-
-        // Determine edges for new node.
-        // note: `edges_directed` returns all edges with `i` as
-        // an endpoint. `Direction::Incoming` configures `edge.target()`
-        // to return `i` and `edge.source()` to return the other node.
-        let mut edges: Vec<_> = indices_to_remove
-            .iter()
-            .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
-            .filter_map(|edge| {
-                let pred = edge.source();
-                if !indices_to_remove.contains(&pred) {
-                    Some((pred, edge.weight().clone_ref(py)))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        // Remove nodes that will be replaced.
-        for index in indices_to_remove {
-            self.remove_node(index.index())?;
-        }
-
-        // If `weight_combo_fn` was specified, merge edges according
-        // to that function, even if this is a multigraph. If unspecified,
-        // defer parallel edge handling to `add_edge`.
-        if let Some(merge_fn) = weight_combo_fn {
-            edges = merge_duplicates(edges, |w1, w2| merge_fn.call1(py, (w1, w2)))?;
-        }
-
-        for (source, weight) in edges {
-            self.add_edge(source.index(), node_index.index(), weight)?;
-        }
-
-        Ok(node_index.index())
+    ) -> RxPyResult<usize> {
+        let nodes = nodes.into_iter().map(|i| NodeIndex::new(i));
+        let res = match (weight_combo_fn, &self.multigraph) {
+            (Some(user_callback), _) => {
+                self.graph
+                    .contract_nodes_simple(nodes, obj, |w1, w2| user_callback.call1(py, (w1, w2)))?
+            }
+            (None, false) => {
+                // By default, just take first edge.
+                self.graph.contract_nodes_simple(nodes, obj, move |w1, _| {
+                    Ok::<_, PyErr>(w1.clone_ref(py))
+                })?
+            }
+            (None, true) => self.graph.contract_nodes(nodes, obj)?,
+        };
+        Ok(res.index())
     }
 
     /// Return a new PyGraph object for a subgraph of this graph

@@ -69,6 +69,7 @@ use std::convert::Infallible;
 /// to use needs a callback that returns [`Result`] but in your case no
 /// error can happen.
 pub type Result<T, E = Infallible> = core::result::Result<T, E>;
+pub mod err;
 
 pub mod bipartite_coloring;
 /// Module for centrality algorithms.
@@ -77,6 +78,7 @@ pub mod centrality;
 pub mod coloring;
 pub mod connectivity;
 pub mod generators;
+pub mod graph;
 pub mod line_graph;
 
 /// Module for maximum weight matching algorithms.
