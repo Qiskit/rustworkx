@@ -46,32 +46,3 @@ before-test = 'python -m pip install numpy --config-settings=setup-args="-Dallow
 
 [tool.cibuildwheel.macos]
 environment = "MACOSX_DEPLOYMENT_TARGET=10.12"
-
-[tool.tox]
-legacy_tox_ini = """
-    [tox]
-    minversion = 4.4.0
-    envlist = py38, py39, py310, py311, lint
-    isolated_build = true
-
-    [testenv]
-    skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e test'); sys.exit(1)"
-
-    [testenv:lint]
-    skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e lint'); sys.exit(1)"
-
-    [testenv:docs]
-    skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e docs'); sys.exit(1)"
-
-    [testenv:black]
-    skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e black'); sys.exit(1)"
-
-
-    [testenv:stubs]
-    skip_install = true
-    commands = python -c "import sys; print('rustworkx no longer supports tox. Please run the equivalent comand with nox: nox -e stubs'); sys.exit(1)"
-"""

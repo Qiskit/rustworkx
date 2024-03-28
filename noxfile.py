@@ -61,6 +61,11 @@ def docs(session):
     session.run("sphinx-build", "-W", "-d", "build/.doctrees", "-b", "html", "source", "build/html", *session.posargs)
 
 @nox.session(python=["3"])
+def docs_clean(session):
+    session.chdir("docs")
+    session.run("rm", "-rf", "build", "source/apiref", external=True)
+
+@nox.session(python=["3"])
 def black(session):
     session.install(*[d for d in lint_deps if "black" in d])
     session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
