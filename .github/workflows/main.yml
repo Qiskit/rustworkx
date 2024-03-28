@@ -156,10 +156,11 @@ jobs:
           name: coverage
           path: coveralls.info
       - name: Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: coveralls.info
+          format: lcov
+          file: ./coveralls.info
   docs:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]
