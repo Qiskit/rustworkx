@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    rustworkx wheels are now built against Python's stable
+    Application Binary Interface (ABI). For rustworkx users, this means
+    that wheels distributed by us via PyPI will continue to work with
+    newer versions of Python without having to recompile the code.
+    This change will also simplify the release process for the developers
+    and reduce the storage size required to mirror rustworkx wheels.
