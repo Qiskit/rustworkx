@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added new methods, :meth:`.PyDiGraph.subsitute_subgraph` and
+    :meth:`.PyGraph.substitute_subgraph`, which is used to replace
+    a subgraph in a graph object with an external graph.
