@@ -118,7 +118,7 @@ class TestGraphvizDraw(unittest.TestCase):
         _save_image(image, "test_graphviz_draw_graph_attr.png")
 
     def test_image_type(self):
-        graph = rustworkx.directed_gnp_random_graph(50, 0.8)
+        graph = rustworkx.directed_gnp_random_graph(10, 0.8)
         image = graphviz_draw(graph, image_type="jpg")
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_draw_image_type.jpg")
@@ -129,7 +129,7 @@ class TestGraphvizDraw(unittest.TestCase):
             graphviz_draw(graph, image_type="raw")
 
     def test_method(self):
-        graph = rustworkx.directed_gnp_random_graph(50, 0.8)
+        graph = rustworkx.directed_gnp_random_graph(10, 0.8)
         image = graphviz_draw(graph, method="sfdp")
         self.assertIsInstance(image, PIL.Image.Image)
         _save_image(image, "test_graphviz_method.png")
