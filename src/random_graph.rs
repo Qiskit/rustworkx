@@ -357,7 +357,7 @@ pub fn random_geometric_graph(
     }
 
     for pval in pos.iter() {
-        let pos_dict = PyDict::new(py);
+        let pos_dict = PyDict::new_bound(py);
         pos_dict.set_item("pos", pval.to_object(py))?;
 
         inner_graph.add_node(pos_dict.into());
