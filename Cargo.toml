@@ -60,7 +60,7 @@ serde_json = "1.0"
 rustworkx-core = { path = "rustworkx-core", version = "=0.15.0" }
 
 [dependencies.pyo3]
-version = "0.21.0"
+version = "0.21.1"
 features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
 [dependencies.ndarray]
