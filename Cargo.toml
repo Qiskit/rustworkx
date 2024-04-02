@@ -18,7 +18,7 @@ members = [
 [workspace.package]
 version = "0.15.0"
 edition = "2021"
-rust-version = "1.64"
+rust-version = "1.70"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 repository = "https://github.com/Qiskit/rustworkx"
 license = "Apache-2.0"
@@ -34,7 +34,6 @@ petgraph = "0.6.4"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.10"
-rayon-cond = "1.7"
 
 [lib]
 name = "rustworkx"
