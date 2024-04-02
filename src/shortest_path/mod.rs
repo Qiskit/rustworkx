@@ -1083,7 +1083,7 @@ pub fn graph_floyd_warshall_numpy(
         false,
         parallel_threshold,
     )?;
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1157,8 +1157,8 @@ pub fn graph_floyd_warshall_successor_and_distance(
         parallel_threshold,
     )?;
     Ok((
-        matrix.into_pyarray(py).into(),
-        next.unwrap().into_pyarray(py).into(),
+        matrix.into_pyarray_bound(py).into(),
+        next.unwrap().into_pyarray_bound(py).into(),
     ))
 }
 
@@ -1219,7 +1219,7 @@ pub fn digraph_floyd_warshall_numpy(
         false,
         parallel_threshold,
     )?;
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1296,8 +1296,8 @@ pub fn digraph_floyd_warshall_successor_and_distance(
         parallel_threshold,
     )?;
     Ok((
-        matrix.into_pyarray(py).into(),
-        next.unwrap().into_pyarray(py).into(),
+        matrix.into_pyarray_bound(py).into(),
+        next.unwrap().into_pyarray_bound(py).into(),
     ))
 }
 
@@ -1383,7 +1383,7 @@ pub fn digraph_distance_matrix(
         as_undirected,
         null_value,
     );
-    matrix.into_pyarray(py).into()
+    matrix.into_pyarray_bound(py).into()
 }
 
 /// Get the distance matrix for an undirected graph
@@ -1424,7 +1424,7 @@ pub fn graph_distance_matrix(
         true,
         null_value,
     );
-    matrix.into_pyarray(py).into()
+    matrix.into_pyarray_bound(py).into()
 }
 
 /// Return the average shortest path length for a :class:`~rustworkx.PyDiGraph`

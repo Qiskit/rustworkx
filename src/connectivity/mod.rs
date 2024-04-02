@@ -349,7 +349,7 @@ pub fn digraph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Return the adjacency matrix for a PyGraph class
@@ -442,7 +442,7 @@ pub fn graph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Compute the complement of an undirected graph.
@@ -839,7 +839,7 @@ pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> 
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new(py);
+    let out_dict = PyDict::new_bound(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
@@ -865,7 +865,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new(py);
+    let out_dict = PyDict::new_bound(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
