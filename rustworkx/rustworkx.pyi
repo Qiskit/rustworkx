@@ -235,6 +235,7 @@ def stoer_wagner_min_cut(
 def simple_cycles(graph: PyDiGraph, /) -> Iterator[NodeIndices]: ...
 def graph_isolates(graph: PyGraph) -> NodeIndices: ...
 def digraph_isolates(graph: PyDiGraph) -> NodeIndices: ...
+def connected_subgraphs(graph: PyGraph, k: int, /) -> list[list[int]]: ...
 
 # DAG Algorithms
 
@@ -896,33 +897,33 @@ _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor)
 
 def digraph_bfs_search(
     graph: PyDiGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def graph_bfs_search(
     graph: PyGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dfs_search(
     graph: PyDiGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def graph_dfs_search(
     graph: PyGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
     visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
 def graph_dijkstra_search(
     graph: PyGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
     visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...

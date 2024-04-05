@@ -338,9 +338,9 @@ pub fn layers(
         next_layer = Vec::new();
     }
     if !index_output {
-        Ok(PyList::new(py, output).into())
+        Ok(PyList::new_bound(py, output).into())
     } else {
-        Ok(PyList::new(py, output_indices).into())
+        Ok(PyList::new_bound(py, output_indices).into())
     }
 }
 
@@ -481,7 +481,7 @@ pub fn lexicographical_topological_sort(
         }
         out_list.push(&dag.graph[node])
     }
-    Ok(PyList::new(py, out_list).into())
+    Ok(PyList::new_bound(py, out_list).into())
 }
 
 /// Return the topological generations of a DAG

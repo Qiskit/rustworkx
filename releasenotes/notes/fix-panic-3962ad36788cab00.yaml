@@ -1,0 +1,14 @@
+---
+fixes:
+  - |
+    Fixed an issue with the Dijkstra path functions:
+
+      * :func:`rustworkx.dijkstra_shortest_paths`
+      * :func:`rustworkx.dijkstra_shortest_path_lengths`
+      * :func:`rustworkx.bellman_ford_shortest_path_lengths`
+      * :func:`rustworkx.bellman_ford_shortest_paths`
+      * :func:`rustworkx.astar_shortest_path`
+
+    where a `Pyo3.PanicException`were raise with no much detail at the moment
+    of pass in the `source` argument the index of an out of bound node.
+    Fixed `#1117 <https://github.com/Qiskit/rustworkx/issues/1117>`__

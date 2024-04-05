@@ -110,28 +110,37 @@ also run successfully. Before you open a new pull request for your change,
 you'll want to run the test suite locally.
 
 The easiest way to run the test suite is to use
-[**tox**](https://tox.readthedocs.io/en/latest/#). You can install tox
-with pip: `pip install -U tox`. Tox provides several advantages, but the
+[**Nox**](https://nox.thea.codes/en/stable/). You can install Nox
+with pip: `pip install -U nox`. Nox provides several advantages, but the
 biggest one is that it builds an isolated virtualenv for running tests. This
 means it does not pollute your system python when running. However, by default
-tox will recompile rustworkx from source every time it is run even if there
+Nox will recompile rustworkx from source every time it is run even if there
 are no changes made to the rust code. To avoid this you can use the
-`--skip-pkg-install` package if you'd like to rerun tests without recompiling.
-Note, you only want to use this flag if you recently ran tox and there are no
+`--no-install` package if you'd like to rerun tests without recompiling.
+Note, you only want to use this flag if you recently ran Nox and there are no
 rust code (or packaged python code) changes to the repo since then. Otherwise
-the rustworkx package tox installs in it's virtualenv will be out of date (or
+the rustworkx package Nox installs in it's virtualenv will be out of date (or
 missing).
 
-Note, if you run tests outside of tox that you can **not** run the tests from
+Note, if you run tests outside of Nox that you can **not** run the tests from
 the root of the repo, this is because rustworkx packaging shim will conflict
 with imports from rustworkx the installed version of rustworkx (which contains
 the compiled extension).
+
+#### Running tests with a specific Python version
+
+If you want to run the tests with a specific version of Python, use the `test_with_version`
+target. For example, to launch a test with version 3.11 the command is:
+
+```python
+nox --python 3.11 -e test_with_version
+```
 
 #### Running subsets of tests
 
 If you just want to run a subset of tests you can pass a selection regex to the
 test runner. For example, if you want to run all tests that have "dag" in the
-test id you can run: `tox -epy -- dag`. You can pass arguments directly to the
+test id you can run: `nox -e test -- dag`. You can pass arguments directly to the
 test runner after the bare `--`. To see all the options on test selection you
 can refer to the stestr manual:
 
@@ -142,22 +151,22 @@ you can do this faster with the `-n`/`--no-discover` option. For example:
 
 to run a module:
 ```
-tox -epy -- -n test_max_weight_matching
+nox -e test -- -n test_max_weight_matching
 ```
 or to run the same module by path:
 ```
-tox -epy -- -n graph/test_nodes.py
+nox -e test -- -n graph/test_nodes.py
 ```
 to run a class:
 ```
-tox -epy -- -n graph.test_nodes.TestNodes
+nox -e test -- -n graph.test_nodes.TestNodes
 ```
 to run a method:
 ```
-tox -epy -- -n graph.test_nodes.TestNodes.test_no_nodes
+nox -e test -- -n graph.test_nodes.TestNodes.test_no_nodes
 ```
 
-It's important to note that tox will be running from the `tests/` directory in
+It's important to note that Nox will be running from the `tests/` directory in
 the repo, so any paths you pass to the test runner via path need to be relative
 to that directory.
 
@@ -165,7 +174,7 @@ to that directory.
 
 When running the visualization tests, each test will generate a visualization
 and only fail if an exception is raised by the call. Each test saves the output
-image to the current working directory (which if running tests with `tox` is
+image to the current working directory (which if running tests with `nox` is
 `tests/`) to ensure the generated image is usable. However to not clutter the
 system each test cleans up this generated image and by default a test run does
 not include any way to view the images from the visualization tests.
@@ -177,7 +186,7 @@ skip the cleanup. This will enable you to look at the output image and ensure th
 visualization is correct. For example, running:
 
 ```
-RUSTWORKX_TEST_PRESERVE_IMAGES=1 tox -epy
+RUSTWORKX_TEST_PRESERVE_IMAGES=1 nox -e test
 ```
 
 will run the visualization tests and preserve the generated image files after
@@ -230,25 +239,25 @@ cargo clippy
 Python is used primarily for tests and some small pieces of packaging
 and namespace configuration code in the actual library.
 [black](https://github.com/psf/black) and [flake8](https://flake8.pycqa.org/en/latest/) are used to enforce consistent
-style in the python code in the repository. You can run them via tox using:
+style in the python code in the repository. You can run them via Nox using:
 
 ```bash
-tox -elint
+nox -e lint
 ```
 
 This will also run `cargo fmt` in check mode to ensure that you ran `cargo fmt`
 and will fail if the Rust code doesn't conform to the style rules.
 
-If black returns a code formatting error you can run `tox -eblack` to automatically
+If black returns a code formatting error you can run `nox -e black` to automatically
 update the code formatting to conform to the style.
 
 ### Building documentation
 
-Just like with tests building documentation is done via tox. This will handle
+Just like with tests building documentation is done via Nox. This will handle
 compiling rustworkx, installing the python dependencies, and then building the
 documentation in an isolated venv. You can run just the docs build with:
 ```
-tox -edocs
+nox -e docs
 ```
 which will output the html rendered documentation in `docs/build/html` which
 you can view locally in a web browser.
@@ -291,10 +300,10 @@ Having type annotations is very helpful for Python end-users. Adding
 annotations lets users type check their code with [mypy](http://mypy-lang.org/),
 which can be helpful for finding bugs when using rustworkx.
 
-Just like with tests for the code, annotations are also tested via tox.
+Just like with tests for the code, annotations are also tested via Nox.
 
 ```
-tox -estubs
+nox -e stubs
 ```
 
 One important thing to note is that if you're adding a new function to the Rust
@@ -433,7 +442,7 @@ it has been tagged::
 
 Building the release notes is part of the standard rustworkx documentation
 builds. To check what the rendered html output of the release notes will look
-like for the current state of the repo you can run: `tox -edocs` which will
+like for the current state of the repo you can run: `nox -e docs` which will
 build all the documentation into `docs/_build/html` and the release notes in
 particular will be located at `docs/_build/html/release_notes.html`
 

@@ -306,3 +306,15 @@ class TestBellmanFordGraph(unittest.TestCase):
 
         with self.assertRaises(rustworkx.NegativeCycle):
             rustworkx.all_pairs_bellman_ford_path_lengths(graph, float)
+
+    def test_raises_index_error_bellman_ford_paths(self):
+        with self.assertRaises(IndexError):
+            rustworkx.graph_bellman_ford_shortest_paths(
+                self.graph, len(self.graph.node_indices()) + 1, weight_fn=lambda x: float(x)
+            )
+
+    def test_raises_index_error_bellman_ford_path_lenghts(self):
+        with self.assertRaises(IndexError):
+            rustworkx.graph_bellman_ford_shortest_path_lengths(
+                self.graph, len(self.graph.node_indices()) + 1, edge_cost_fn=lambda x: float(x)
+            )
