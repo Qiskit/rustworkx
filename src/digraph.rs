@@ -3296,8 +3296,7 @@ impl PartialEq for PyAnyId {
 impl Eq for PyAnyId {}
 
 /// Internal-only helper class used by `remove_node_retain_edges_by_key` to store its data as a
-/// typed object in a Python dictionary.  This object should be fairly cheap to construct new
-/// instances of; it involves two refcount updates, but otherwise is just two pointers wide.
+/// typed object in a Python dictionary.
 #[pyclass]
 struct RemoveNodeEdgeValue {
     weight: Py<PyAny>,
