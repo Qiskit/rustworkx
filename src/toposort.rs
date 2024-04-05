@@ -74,7 +74,7 @@ enum NodeState {
 ///     zero-in-degree node is not in it.
 ///
 ///     It is a :exc:`ValueError` to give an `initial` set where the nodes have even a partial
-///     defined topological order between themselves, though this might not appear until some call
+///     topological order between themselves, though this might not appear until some call
 ///     to :meth:`done`.
 #[pyclass(module = "rustworkx")]
 pub struct TopologicalSorter {
@@ -192,7 +192,7 @@ impl TopologicalSorter {
     ///     by "get_ready".
     /// :raises `ValueError`: If one of the given ``initial`` nodes is a direct successor of one
     ///     of the nodes given to :meth:`done`.  This can only happen if the ``initial`` nodes had
-    ///     some topological ordering amongst themselves (even partial), which is not a valid
+    ///     even a partial topological ordering amongst themselves, which is not a valid
     ///     starting input.
     fn done(&mut self, py: Python, nodes: Vec<usize>) -> PyResult<()> {
         let dag = &self.dag.borrow(py);

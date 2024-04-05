@@ -375,7 +375,7 @@ pub fn layers(
 ///     ``initial`` set will be in the ordering.  Notably, any node that has a natural in degree of
 ///     zero will not be in the output ordering if ``initial`` is given and the zero-in-degree node
 ///     is not in it.  It is a :exc:`ValueError` to give an `initial` set where the nodes have even
-///     a partial defined topological order between themselves.
+///     a partial topological order between themselves.
 ///
 /// :returns: A list of node's data lexicographically topologically sorted.
 /// :rtype: list
