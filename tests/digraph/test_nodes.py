@@ -428,6 +428,114 @@ class TestNodes(unittest.TestCase):
             rustworkx.lexicographical_topological_sort(dag, lambda x: x, reverse=False), expected
         )
 
+    def test_lexicographical_topo_sort_initial(self):
+        dag = rustworkx.PyDiGraph()
+        dag.add_nodes_from(range(9))
+        dag.add_edges_from_no_data(
+            [
+                (0, 1),
+                (0, 2),
+                (1, 3),
+                (2, 4),
+                (3, 4),
+                (4, 5),
+                (5, 6),
+                (4, 7),
+                (6, 8),
+                (7, 8),
+            ]
+        )
+        # Last three nodes, nothing reachable except nodes that will be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[6, 7]),
+            [6, 7, 8],
+        )
+        # Setting `initial` to the set of root nodes should return the same as not setting it.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[0]),
+            rustworkx.lexicographical_topological_sort(dag, str),
+        )
+        # Node 8 is reachable from 7, but isn't dominated by it, so shouldn't be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[7]),
+            [7],
+        )
+
+        # Putting the `initial` in unsorted order should not affect the return order.
+        dag = rustworkx.PyDiGraph()
+        # Deliberately break id:weight correspondence.
+        dag.add_nodes_from(range(5)[::-1])
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[2, 4, 3, 0, 1]),
+            rustworkx.lexicographical_topological_sort(dag, str),
+        )
+
+    def test_lexicographical_topo_sort_initial_reverse(self):
+        dag = rustworkx.PyDiGraph()
+        dag.add_nodes_from(range(9))
+        dag.add_edges_from_no_data(
+            [
+                (0, 1),
+                (0, 2),
+                (1, 3),
+                (2, 4),
+                (3, 4),
+                (4, 5),
+                (5, 6),
+                (4, 7),
+                (6, 8),
+                (7, 8),
+            ]
+        )
+        # Last three nodes, nothing reachable except nodes that will be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True, initial=[1, 2]),
+            [1, 2, 0],
+        )
+        # Setting `initial` to the set of root nodes should return the same as not setting it.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True, initial=[8]),
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True),
+        )
+        # Node 0 is reachable from 1, but isn't dominated by it, so shouldn't be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True, initial=[1]),
+            [1],
+        )
+
+        # Putting the `initial` in unsorted order should not affect the return order.
+        dag = rustworkx.PyDiGraph()
+        # Deliberately break id:weight correspondence.
+        dag.add_nodes_from(range(5)[::-1])
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(
+                dag, str, reverse=True, initial=[2, 4, 3, 0, 1]
+            ),
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True),
+        )
+
+    def test_lexicographical_topo_sort_initial_natural_zero(self):
+        dag = rustworkx.PyDiGraph()
+        dag.add_nodes_from(range(5))
+        # There's no edges in this graph, so a natural topological ordering allows everything in the
+        # first pass.  If `initial` is given, though, the loose zero-degree nodes are not dominated
+        # by the givens, so should not be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, key=str, initial=[0, 3]),
+            [0, 3],
+        )
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, key=str, reverse=True, initial=[0, 3]),
+            [0, 3],
+        )
+
+    def test_lexicographical_topo_sort_initial_invalid(self):
+        dag = rustworkx.generators.directed_path_graph(5)
+        with self.assertRaisesRegex(ValueError, "initial node is reachable from another"):
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[0, 1])
+        with self.assertRaisesRegex(ValueError, "initial node is reachable from another"):
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True, initial=[3, 4])
+
     def test_lexicographical_topo_sort_qiskit(self):
         dag = rustworkx.PyDAG()
         # inputs
