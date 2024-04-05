@@ -185,7 +185,7 @@ impl TopologicalSorter {
     /// This method unblocks any successor of each node in *nodes* for being returned
     /// in the future by a call to "get_ready".
     ///
-    /// :param list nodes: A list of node indices to marks as done.
+    /// :param list nodes: A list of node indices to mark as done.
     ///
     /// :raises `ValueError`: If any node in *nodes* has already been marked as
     ///     processed by a previous call to this method or node has not yet been returned
