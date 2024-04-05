@@ -96,7 +96,7 @@ impl TopologicalSorter {
         dag: Py<PyDiGraph>,
         check_cycle: bool,
         reverse: bool,
-        initial: Option<Py<PyAny>>,
+        initial: Option<&Bound<PyAny>>,
     ) -> PyResult<Self> {
         {
             let dag = &dag.borrow(py);
@@ -110,7 +110,6 @@ impl TopologicalSorter {
         let ready_nodes = if let Some(initial) = initial {
             let dag = &dag.borrow(py);
             initial
-                .as_ref(py)
                 .iter()?
                 .map(|maybe_index| {
                     let node = NodeIndex::new(maybe_index?.extract::<usize>()?);

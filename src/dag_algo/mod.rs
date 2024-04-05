@@ -386,7 +386,7 @@ pub fn lexicographical_topological_sort(
     dag: &digraph::PyDiGraph,
     key: PyObject,
     reverse: bool,
-    initial: Option<Py<PyAny>>,
+    initial: Option<&Bound<PyAny>>,
 ) -> PyResult<PyObject> {
     let key_callable = |a: &PyObject| -> PyResult<PyObject> {
         let res = key.call1(py, (a,))?;
@@ -425,7 +425,7 @@ pub fn lexicographical_topological_sort(
     if let Some(initial) = initial {
         // In this case, we don't iterate through all the nodes in the graph, and most nodes aren't
         // in `in_degree_map`; we'll fill in the relevant edge counts lazily.
-        for maybe_index in initial.as_ref(py).iter()? {
+        for maybe_index in initial.iter()? {
             let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
             if dag.graph.contains_node(node) {
                 // It's not necessarily actually zero, but we treat it as if it is.  If the node is
