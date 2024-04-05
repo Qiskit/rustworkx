@@ -216,9 +216,9 @@ impl PyGraph {
             edges.push(edge);
         }
 
-        let out_dict = PyDict::new(py);
-        let nodes_lst: PyObject = PyList::new(py, nodes).into();
-        let edges_lst: PyObject = PyList::new(py, edges).into();
+        let out_dict = PyDict::new_bound(py);
+        let nodes_lst: PyObject = PyList::new_bound(py, nodes).into();
+        let edges_lst: PyObject = PyList::new_bound(py, edges).into();
         out_dict.set_item("nodes", nodes_lst)?;
         out_dict.set_item("edges", edges_lst)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
@@ -228,15 +228,11 @@ impl PyGraph {
     }
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
-        let dict_state = state.downcast::<PyDict>(py)?;
-        let nodes_lst = dict_state
-            .get_item("nodes")?
-            .unwrap()
-            .downcast::<PyList>()?;
-        let edges_lst = dict_state
-            .get_item("edges")?
-            .unwrap()
-            .downcast::<PyList>()?;
+        let dict_state = state.downcast_bound::<PyDict>(py)?;
+        let binding = dict_state.get_item("nodes")?.unwrap();
+        let nodes_lst = binding.downcast::<PyList>()?;
+        let binding = dict_state.get_item("edges")?.unwrap();
+        let edges_lst = binding.downcast::<PyList>()?;
 
         self.graph = StablePyGraph::<Undirected>::default();
         self.multigraph = dict_state
@@ -271,11 +267,8 @@ impl PyGraph {
             }
         } else if nodes_lst.len() == 1 {
             // graph has only one node, handle logic here to save one if in the loop later
-            let item = nodes_lst
-                .get_item(0)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap();
+            let binding = nodes_lst.get_item(0).unwrap();
+            let item = binding.downcast::<PyTuple>().unwrap();
             let node_idx: usize = item.get_item(0).unwrap().extract().unwrap();
             let node_w = item.get_item(1).unwrap().extract().unwrap();
 
@@ -287,11 +280,8 @@ impl PyGraph {
                 self.graph.remove_node(NodeIndex::new(i));
             }
         } else {
-            let last_item = nodes_lst
-                .get_item(nodes_lst.len() - 1)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap();
+            let binding = nodes_lst.get_item(nodes_lst.len() - 1).unwrap();
+            let last_item = binding.downcast::<PyTuple>().unwrap();
 
             // list of temporary nodes that will be removed later to re-create holes
             let node_bound_1: usize = last_item.get_item(0).unwrap().extract().unwrap();
@@ -1259,7 +1249,7 @@ impl PyGraph {
                 let mut file = Vec::<u8>::new();
                 build_dot(py, &self.graph, &mut file, graph_attr, node_attr, edge_attr)?;
                 Ok(Some(
-                    PyString::new(py, str::from_utf8(&file)?).to_object(py),
+                    PyString::new_bound(py, str::from_utf8(&file)?).to_object(py),
                 ))
             }
         }
@@ -1372,7 +1362,7 @@ impl PyGraph {
                     Some(del) => pieces[2..].join(del),
                     None => pieces[2..].join(&' '.to_string()),
                 };
-                PyString::new(py, &weight_str).into()
+                PyString::new_bound(py, &weight_str).into()
             } else {
                 py.None()
             };
@@ -1626,7 +1616,7 @@ impl PyGraph {
                 weight.clone_ref(py),
             );
         }
-        let out_dict = PyDict::new(py);
+        let out_dict = PyDict::new_bound(py);
         for (orig_node, new_node) in new_node_map.iter() {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
