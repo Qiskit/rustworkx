@@ -1151,7 +1151,7 @@ impl PyDiGraph {
     ) -> PyResult<()> {
         let node_index = NodeIndex::new(node);
         let in_edges = {
-            let in_edges = PyDict::new(py);
+            let in_edges = PyDict::new_bound(py);
             for edge in self
                 .graph
                 .edges_directed(node_index, petgraph::Direction::Incoming)
@@ -1161,15 +1161,15 @@ impl PyDiGraph {
                 } else {
                     edge.weight().clone_ref(py)
                 };
-                if let Some(edge_data) = in_edges.get_item(key_value.as_ref(py))? {
-                    let edge_data = edge_data.extract::<RemoveNodeEdgeValue>()?;
-                    edge_data.nodes.as_ref(py).append(edge.source().index())?
+                if let Some(edge_data) = in_edges.get_item(key_value.bind(py))? {
+                    let edge_data = edge_data.downcast::<RemoveNodeEdgeValue>()?;
+                    edge_data.borrow_mut().nodes.push(edge.source());
                 } else {
                     in_edges.set_item(
                         key_value,
                         RemoveNodeEdgeValue {
                             weight: edge.weight().clone_ref(py),
-                            nodes: PyList::new(py, [edge.source().index()]).into_py(py),
+                            nodes: vec![edge.source()],
                         }
                         .into_py(py),
                     )?
@@ -1178,7 +1178,7 @@ impl PyDiGraph {
             in_edges
         };
         let out_edges = {
-            let out_edges = PyDict::new(py);
+            let out_edges = PyDict::new_bound(py);
             for edge in self
                 .graph
                 .edges_directed(node_index, petgraph::Direction::Outgoing)
@@ -1188,15 +1188,15 @@ impl PyDiGraph {
                 } else {
                     edge.weight().clone_ref(py)
                 };
-                if let Some(edge_data) = out_edges.get_item(key_value.as_ref(py))? {
-                    let edge_data = edge_data.extract::<RemoveNodeEdgeValue>()?;
-                    edge_data.nodes.as_ref(py).append(edge.target().index())?
+                if let Some(edge_data) = out_edges.get_item(key_value.bind(py))? {
+                    let edge_data = edge_data.downcast::<RemoveNodeEdgeValue>()?;
+                    edge_data.borrow_mut().nodes.push(edge.target());
                 } else {
                     out_edges.set_item(
                         key_value,
                         RemoveNodeEdgeValue {
                             weight: edge.weight().clone_ref(py),
-                            nodes: PyList::new(py, [edge.target().index()]).into_py(py),
+                            nodes: vec![edge.target()],
                         }
                         .into_py(py),
                     )?
@@ -1206,21 +1206,19 @@ impl PyDiGraph {
         };
 
         for (in_key, in_edge_data) in in_edges {
-            let in_edge_data = in_edge_data.extract::<RemoveNodeEdgeValue>()?;
+            let in_edge_data = in_edge_data.downcast::<RemoveNodeEdgeValue>()?.borrow();
             let out_edge_data = match out_edges.get_item(in_key)? {
-                Some(out_edge_data) => out_edge_data.extract::<RemoveNodeEdgeValue>()?,
+                Some(out_edge_data) => out_edge_data.downcast::<RemoveNodeEdgeValue>()?.borrow(),
                 None => continue,
             };
-            for source in in_edge_data.nodes.as_ref(py) {
-                let source = NodeIndex::new(source.extract::<usize>()?);
-                for target in out_edge_data.nodes.as_ref(py) {
-                    let target = NodeIndex::new(target.extract::<usize>()?);
+            for source in in_edge_data.nodes.iter() {
+                for target in out_edge_data.nodes.iter() {
                     let weight = if use_outgoing {
                         out_edge_data.weight.clone_ref(py)
                     } else {
                         in_edge_data.weight.clone_ref(py)
                     };
-                    self._add_edge(source, target, weight)?;
+                    self._add_edge(*source, *target, weight)?;
                 }
             }
         }
@@ -3301,8 +3299,7 @@ impl Eq for PyAnyId {}
 /// typed object in a Python dictionary.  This object should be fairly cheap to construct new
 /// instances of; it involves two refcount updates, but otherwise is just two pointers wide.
 #[pyclass]
-#[derive(Clone)]
 struct RemoveNodeEdgeValue {
     weight: Py<PyAny>,
-    nodes: Py<PyList>,
+    nodes: Vec<NodeIndex>,
 }
