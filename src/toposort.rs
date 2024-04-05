@@ -65,6 +65,17 @@ enum NodeState {
 ///     ``True``, the ordering will be a reversed topological ordering; that is, a topological
 ///     order if all the edges had their directions flipped, such that the first nodes returned are
 ///     the ones that have only incoming edges in the DAG.
+/// :param Iterable[int] initial: If given, the initial node indices to start the topological
+///     ordering from.  If not given, the topological ordering will certainly contain every node in
+///     the graph.  If given, only the ``initial`` nodes and nodes that are dominated by the
+///     ``initial`` set will be in the ordering.  Notably, the first return from :meth:`get_ready`
+///     will be the same set of values as ``initial``, and any node that has a natural in
+///     degree of zero will not be in the output ordering if ``initial`` is given and the
+///     zero-in-degree node is not in it.
+///
+///     It is a :exc:`ValueError` to give an `initial` set where the nodes have even a partial
+///     topological order between themselves, though this might not appear until some call
+///     to :meth:`done`.
 #[pyclass(module = "rustworkx")]
 pub struct TopologicalSorter {
     dag: Py<PyDiGraph>,
@@ -79,8 +90,14 @@ pub struct TopologicalSorter {
 #[pymethods]
 impl TopologicalSorter {
     #[new]
-    #[pyo3(signature=(dag, /, check_cycle=true, *, reverse=false))]
-    fn new(py: Python, dag: Py<PyDiGraph>, check_cycle: bool, reverse: bool) -> PyResult<Self> {
+    #[pyo3(signature=(dag, /, check_cycle=true, *, reverse=false, initial=None))]
+    fn new(
+        py: Python,
+        dag: Py<PyDiGraph>,
+        check_cycle: bool,
+        reverse: bool,
+        initial: Option<&Bound<PyAny>>,
+    ) -> PyResult<Self> {
         {
             let dag = &dag.borrow(py);
             if !dag.check_cycle && check_cycle && !is_directed_acyclic_graph(dag) {
@@ -89,9 +106,32 @@ impl TopologicalSorter {
         }
 
         let (in_dir, _) = traversal_directions(reverse);
-        let ready_nodes = {
+        let mut predecessor_count = HashMap::new();
+        let ready_nodes = if let Some(initial) = initial {
             let dag = &dag.borrow(py);
-
+            initial
+                .iter()?
+                .map(|maybe_index| {
+                    let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
+                    // If we're using an initial set, it's possible that the user gave us an
+                    // initial list with topological ordering defined between the nodes.  With this
+                    // online sorter we detect that with a lag (it'll happen in a later call to
+                    // `done`), but we'll see it as an attempt to reduce a predecessor count below
+                    // this initial zero.
+                    predecessor_count.insert(node, 0);
+                    dag.graph
+                        .contains_node(node)
+                        .then_some(node)
+                        .ok_or_else(|| {
+                            PyValueError::new_err(format!(
+                                "node index {} is not in this graph",
+                                node.index()
+                            ))
+                        })
+                })
+                .collect::<PyResult<Vec<_>>>()?
+        } else {
+            let dag = &dag.borrow(py);
             dag.graph
                 .node_identifiers()
                 .filter(|node| dag.graph.neighbors_directed(*node, in_dir).next().is_none())
@@ -101,7 +141,7 @@ impl TopologicalSorter {
         Ok(TopologicalSorter {
             dag,
             ready_nodes,
-            predecessor_count: HashMap::new(),
+            predecessor_count,
             node2state: HashMap::new(),
             num_passed_out: 0,
             num_finished: 0,
@@ -144,11 +184,15 @@ impl TopologicalSorter {
     /// This method unblocks any successor of each node in *nodes* for being returned
     /// in the future by a call to "get_ready".
     ///
-    /// :param list nodes: A list of node indices to marks as done.
+    /// :param list nodes: A list of node indices to mark as done.
     ///
     /// :raises `ValueError`: If any node in *nodes* has already been marked as
     ///     processed by a previous call to this method or node has not yet been returned
     ///     by "get_ready".
+    /// :raises `ValueError`: If one of the given ``initial`` nodes is a direct successor of one
+    ///     of the nodes given to :meth:`done`.  This can only happen if the ``initial`` nodes had
+    ///     even a partial topological ordering amongst themselves, which is not a valid
+    ///     starting input.
     fn done(&mut self, py: Python, nodes: Vec<usize>) -> PyResult<()> {
         let dag = &self.dag.borrow(py);
         let (in_dir, out_dir) = traversal_directions(self.reverse);
@@ -176,10 +220,16 @@ impl TopologicalSorter {
             for succ in dag.graph.neighbors_directed(node, out_dir) {
                 match self.predecessor_count.entry(succ) {
                     Entry::Occupied(mut entry) => {
-                        *entry.get_mut() -= 1;
-                        if *entry.get() == 0 {
+                        let in_degree = entry.get_mut();
+                        if *in_degree == 0 {
+                            return Err(PyValueError::new_err(
+                                "at least one initial node is reachable from another",
+                            ));
+                        } else if *in_degree == 1 {
                             self.ready_nodes.push(succ);
                             entry.remove_entry();
+                        } else {
+                            *in_degree -= 1;
                         }
                     }
                     Entry::Vacant(entry) => {
