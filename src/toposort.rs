@@ -17,6 +17,7 @@ use hashbrown::HashMap;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyList;
 use pyo3::Python;
 
 use petgraph::stable_graph::NodeIndex;
@@ -84,7 +85,8 @@ pub struct TopologicalSorter {
     node2state: HashMap<NodeIndex, NodeState>,
     num_passed_out: usize,
     num_finished: usize,
-    reverse: bool,
+    in_dir: petgraph::Direction,
+    out_dir: petgraph::Direction,
 }
 
 #[pymethods]
@@ -105,7 +107,7 @@ impl TopologicalSorter {
             }
         }
 
-        let (in_dir, _) = traversal_directions(reverse);
+        let (in_dir, out_dir) = traversal_directions(reverse);
         let mut predecessor_count = HashMap::new();
         let ready_nodes = if let Some(initial) = initial {
             let dag = &dag.borrow(py);
@@ -145,7 +147,8 @@ impl TopologicalSorter {
             node2state: HashMap::new(),
             num_passed_out: 0,
             num_finished: 0,
-            reverse,
+            in_dir,
+            out_dir,
         })
     }
 
@@ -167,16 +170,15 @@ impl TopologicalSorter {
     ///
     /// :returns: A list of node indices of all the ready nodes.
     /// :rtype: List
-    fn get_ready(&mut self) -> Vec<usize> {
-        let mut out = Vec::with_capacity(self.ready_nodes.len());
-        for nx in &self.ready_nodes {
-            out.push(nx.index());
-            self.node2state.insert(*nx, NodeState::Ready);
-        }
-
-        self.ready_nodes.clear();
-        self.num_passed_out += out.len();
-        out
+    fn get_ready<'py>(&mut self, py: Python<'py>) -> Bound<'py, PyList> {
+        self.num_passed_out += self.ready_nodes.len();
+        PyList::new_bound(
+            py,
+            self.ready_nodes.drain(..).map(|nx| {
+                self.node2state.insert(nx, NodeState::Ready);
+                nx.index()
+            }),
+        )
     }
 
     /// Marks a set of nodes returned by "get_ready" as processed.
@@ -184,7 +186,8 @@ impl TopologicalSorter {
     /// This method unblocks any successor of each node in *nodes* for being returned
     /// in the future by a call to "get_ready".
     ///
-    /// :param list nodes: A list of node indices to mark as done.
+    /// :param nodes: A node index or list of node indices to mark as done.
+    /// :type nodes: int | list[int]
     ///
     /// :raises `ValueError`: If any node in *nodes* has already been marked as
     ///     processed by a previous call to this method or node has not yet been returned
@@ -193,60 +196,73 @@ impl TopologicalSorter {
     ///     of the nodes given to :meth:`done`.  This can only happen if the ``initial`` nodes had
     ///     even a partial topological ordering amongst themselves, which is not a valid
     ///     starting input.
-    fn done(&mut self, py: Python, nodes: Vec<usize>) -> PyResult<()> {
-        let dag = &self.dag.borrow(py);
-        let (in_dir, out_dir) = traversal_directions(self.reverse);
-        for node in nodes {
-            let node = NodeIndex::new(node);
-            match self.node2state.get_mut(&node) {
-                None => {
-                    return Err(PyValueError::new_err(format!(
-                        "node {} was not passed out (still not ready).",
-                        node.index()
-                    )));
-                }
-                Some(NodeState::Done) => {
-                    return Err(PyValueError::new_err(format!(
-                        "node {} was already marked done.",
-                        node.index()
-                    )));
-                }
-                Some(state) => {
-                    debug_assert_eq!(*state, NodeState::Ready);
-                    *state = NodeState::Done;
-                }
+    fn done(&mut self, nodes: &Bound<PyAny>) -> PyResult<()> {
+        if let Ok(node) = nodes.extract::<usize>() {
+            self.done_single(nodes.py(), NodeIndex::new(node))
+        } else if let Ok(nodes) = nodes.downcast::<PyList>() {
+            for node in nodes {
+                self.done_single(nodes.py(), NodeIndex::new(node.extract()?))?
             }
-
-            for succ in dag.graph.neighbors_directed(node, out_dir) {
-                match self.predecessor_count.entry(succ) {
-                    Entry::Occupied(mut entry) => {
-                        let in_degree = entry.get_mut();
-                        if *in_degree == 0 {
-                            return Err(PyValueError::new_err(
-                                "at least one initial node is reachable from another",
-                            ));
-                        } else if *in_degree == 1 {
-                            self.ready_nodes.push(succ);
-                            entry.remove_entry();
-                        } else {
-                            *in_degree -= 1;
-                        }
-                    }
-                    Entry::Vacant(entry) => {
-                        let in_degree = dag.graph.neighbors_directed(succ, in_dir).count() - 1;
-
-                        if in_degree == 0 {
-                            self.ready_nodes.push(succ);
-                        } else {
-                            entry.insert(in_degree);
-                        }
-                    }
-                }
+            Ok(())
+        } else {
+            for node in nodes.iter()? {
+                self.done_single(nodes.py(), NodeIndex::new(node?.extract()?))?
             }
+            Ok(())
+        }
+    }
+}
 
-            self.num_finished += 1;
+impl TopologicalSorter {
+    #[inline(always)]
+    fn done_single(&mut self, py: Python, node: NodeIndex) -> PyResult<()> {
+        let dag = self.dag.borrow(py);
+        match self.node2state.get_mut(&node) {
+            None => {
+                return Err(PyValueError::new_err(format!(
+                    "node {} was not passed out (still not ready).",
+                    node.index()
+                )));
+            }
+            Some(NodeState::Done) => {
+                return Err(PyValueError::new_err(format!(
+                    "node {} was already marked done.",
+                    node.index()
+                )));
+            }
+            Some(state) => {
+                debug_assert_eq!(*state, NodeState::Ready);
+                *state = NodeState::Done;
+            }
         }
 
+        for succ in dag.graph.neighbors_directed(node, self.out_dir) {
+            match self.predecessor_count.entry(succ) {
+                Entry::Occupied(mut entry) => {
+                    let in_degree = entry.get_mut();
+                    if *in_degree == 0 {
+                        return Err(PyValueError::new_err(
+                            "at least one initial node is reachable from another",
+                        ));
+                    } else if *in_degree == 1 {
+                        self.ready_nodes.push(succ);
+                        entry.remove_entry();
+                    } else {
+                        *in_degree -= 1;
+                    }
+                }
+                Entry::Vacant(entry) => {
+                    let in_degree = dag.graph.neighbors_directed(succ, self.in_dir).count() - 1;
+
+                    if in_degree == 0 {
+                        self.ready_nodes.push(succ);
+                    } else {
+                        entry.insert(in_degree);
+                    }
+                }
+            }
+        }
+        self.num_finished += 1;
         Ok(())
     }
 }

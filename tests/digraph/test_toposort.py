@@ -45,6 +45,28 @@ class TestTopologicalSorter(unittest.TestCase):
         nodes = sorter.get_ready()
         self.assertEqual(nodes, [])
 
+    def test_topo_sort_single_indices(self):
+        sorter = rustworkx.TopologicalSorter(self.graph)
+        nodes = sorter.get_ready()
+        self.assertEqual(set(nodes), {0, 1})
+        sorter.done(0)
+        sorter.done(1)
+        nodes = sorter.get_ready()
+        self.assertEqual(set(nodes), {2})
+        sorter.done(2)
+        nodes = sorter.get_ready()
+        self.assertEqual(set(nodes), {3, 4})
+
+        # Try not calling 'done' on everything, and going a little out-of-order.
+        sorter.done(3)
+        self.assertEqual(set(sorter.get_ready()), {5})
+        sorter.done(5)
+        self.assertEqual(set(sorter.get_ready()), set())
+        self.assertTrue(sorter.is_active())
+        sorter.done(4)
+        self.assertEqual(set(sorter.get_ready()), set())
+        self.assertFalse(sorter.is_active())
+
     def test_topo_sort_do_not_emit_if_node_has_undone_preds(self):
         sorter = rustworkx.TopologicalSorter(self.graph)
         nodes = sorter.get_ready()
