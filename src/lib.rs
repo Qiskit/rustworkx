@@ -241,7 +241,7 @@ where
 {
     match weight_fn {
         Some(weight_fn) => {
-            let res = weight_fn.as_ref(py).call1((weight,))?;
+            let res = weight_fn.bind(py).call1((weight,))?;
             res.extract()
         }
         None => Ok(default),
@@ -341,9 +341,9 @@ fn find_node_by_weight<Ty: EdgeType>(
     for node in graph.node_indices() {
         let weight = graph.node_weight(node).unwrap();
         if obj
-            .as_ref(py)
+            .bind(py)
             .rich_compare(weight, pyo3::basic::CompareOp::Eq)?
-            .is_true()?
+            .is_truthy()?
         {
             index = Some(node);
             break;
@@ -382,23 +382,32 @@ create_exception!(rustworkx, FailedToConverge, PyException);
 create_exception!(rustworkx, GraphNotBipartite, PyException);
 
 #[pymodule]
-fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
-    m.add("InvalidNode", py.get_type::<InvalidNode>())?;
-    m.add("DAGWouldCycle", py.get_type::<DAGWouldCycle>())?;
-    m.add("NoEdgeBetweenNodes", py.get_type::<NoEdgeBetweenNodes>())?;
-    m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
-    m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
-    m.add("NoPathFound", py.get_type::<NoPathFound>())?;
-    m.add("InvalidMapping", py.get_type::<InvalidMapping>())?;
-    m.add("NullGraph", py.get_type::<NullGraph>())?;
-    m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
+    m.add("InvalidNode", py.get_type_bound::<InvalidNode>())?;
+    m.add("DAGWouldCycle", py.get_type_bound::<DAGWouldCycle>())?;
+    m.add(
+        "NoEdgeBetweenNodes",
+        py.get_type_bound::<NoEdgeBetweenNodes>(),
+    )?;
+    m.add("DAGHasCycle", py.get_type_bound::<DAGHasCycle>())?;
+    m.add(
+        "NoSuitableNeighbors",
+        py.get_type_bound::<NoSuitableNeighbors>(),
+    )?;
+    m.add("NoPathFound", py.get_type_bound::<NoPathFound>())?;
+    m.add("InvalidMapping", py.get_type_bound::<InvalidMapping>())?;
+    m.add("NullGraph", py.get_type_bound::<NullGraph>())?;
+    m.add("NegativeCycle", py.get_type_bound::<NegativeCycle>())?;
     m.add(
         "JSONSerializationError",
-        py.get_type::<JSONSerializationError>(),
+        py.get_type_bound::<JSONSerializationError>(),
     )?;
-    m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
-    m.add("GraphNotBipartite", py.get_type::<GraphNotBipartite>())?;
+    m.add("FailedToConverge", py.get_type_bound::<FailedToConverge>())?;
+    m.add(
+        "GraphNotBipartite",
+        py.get_type_bound::<GraphNotBipartite>(),
+    )?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -567,6 +576,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_wrapped(wrap_pyfunction!(graph_isolates))?;
     m.add_wrapped(wrap_pyfunction!(digraph_isolates))?;
+    m.add_wrapped(wrap_pyfunction!(connected_subgraphs))?;
     m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;

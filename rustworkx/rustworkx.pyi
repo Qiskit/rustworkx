@@ -13,6 +13,7 @@ from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 from typing import (
     TypeVar,
     Callable,
+    Iterable,
     Iterator,
     final,
     Sequence,
@@ -23,6 +24,7 @@ from typing import (
     ValuesView,
     Mapping,
     overload,
+    Hashable,
 )
 from abc import ABC
 from rustworkx import generators  # noqa
@@ -234,6 +236,7 @@ def stoer_wagner_min_cut(
 def simple_cycles(graph: PyDiGraph, /) -> Iterator[NodeIndices]: ...
 def graph_isolates(graph: PyGraph) -> NodeIndices: ...
 def digraph_isolates(graph: PyDiGraph) -> NodeIndices: ...
+def connected_subgraphs(graph: PyGraph, k: int, /) -> list[list[int]]: ...
 
 # DAG Algorithms
 
@@ -267,8 +270,11 @@ def topological_sort(graph: PyDiGraph, /) -> NodeIndices: ...
 def topological_generations(dag: PyDiGraph, /) -> list[NodeIndices]: ...
 def lexicographical_topological_sort(
     dag: PyDiGraph[_S, _T],
-    key: Callable[[_S], str],
     /,
+    key: Callable[[_S], str],
+    *,
+    reverse: bool = ...,
+    initial: Iterable[int] | None = ...,
 ) -> list[_S]: ...
 def transitive_reduction(graph: PyDiGraph, /) -> tuple[PyDiGraph, dict[int, int]]: ...
 def layers(
@@ -279,10 +285,19 @@ def layers(
 ) -> list[_S] | list[int]: ...
 @final
 class TopologicalSorter:
-    def __init__(self, dag: PyDiGraph, check_cycle: bool) -> None: ...
+    def __init__(
+        self,
+        dag: PyDiGraph,
+        /,
+        check_cycle: bool,
+        *,
+        reverse: bool = ...,
+        initial: Iterable[int] | None = ...,
+        check_args: bool = ...,
+    ) -> None: ...
     def is_active(self) -> bool: ...
     def get_ready(self) -> list[int]: ...
-    def done(self, nodes: Sequence[int]) -> None: ...
+    def done(self, nodes: int | Sequence[int]) -> None: ...
 
 # isomorpism
 
@@ -884,33 +899,33 @@ _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor)
 
 def digraph_bfs_search(
     graph: PyDiGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def graph_bfs_search(
     graph: PyGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dfs_search(
     graph: PyDiGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def graph_dfs_search(
     graph: PyGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
     visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
 def graph_dijkstra_search(
     graph: PyGraph,
-    source: int | None = ...,
+    source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
     visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
@@ -979,6 +994,8 @@ class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
     def __ne__(self, other: object) -> bool: ...
     def __setstate__(self, state: Sequence[_T_co]) -> None: ...
     def __array__(self, _dt: np.dtype | None = ...) -> np.ndarray: ...
+    def __iter__(self) -> Iterator[_T_co]: ...
+    def __reversed__(self) -> Iterator[_T_co]: ...
 
 class _RustworkxCustomHashMapIter(Generic[_S, _T_co], Mapping[_S, _T_co], ABC):
     def __init__(self) -> None: ...
@@ -1325,8 +1342,17 @@ class PyDiGraph(Generic[_S, _T]):
         self,
         node: int,
         /,
-        use_outgoing: bool | None = ...,
-        condition: Callable[[_S, _S], bool] | None = ...,
+        use_outgoing: bool = ...,
+        condition: Callable[[_T, _T], bool] | None = ...,
+    ) -> None: ...
+    def remove_node_retain_edges_by_id(self, node: int, /) -> None: ...
+    def remove_node_retain_edges_by_key(
+        self,
+        node: int,
+        /,
+        key: Callable[[_T], Hashable] | None = ...,
+        *,
+        use_outgoing: bool = ...,
     ) -> None: ...
     def remove_nodes_from(self, index_list: Sequence[int], /) -> None: ...
     def subgraph(

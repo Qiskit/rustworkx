@@ -2,7 +2,7 @@
 Rustworkx Comparison Benchmarks With Other Libraries
 ****************************************************
 
-rustworkx is competitive against other popular graph libraries for Python. We compared rustworkx to the igraph, graph-tools and NetworkIt libraries `in a benchmark consisting of four tasks available on Github for reproducibility <https://github.com/mtreinish/retworkx-comparison-benchmarks>`__ . We report the results from a machine with an Intel(R) i9-9900K CPU at 3.60GHz with eight cores, 16 theads, and 32GB of RAM avaialble. 
+rustworkx is competitive against other popular graph libraries for Python. We compared rustworkx to the igraph, graph-tools and NetworkIt libraries `in a benchmark consisting of four tasks available on Github for reproducibility <https://github.com/mtreinish/retworkx-comparison-benchmarks>`__. We report the results from a machine with an Intel(R) i9-9900K CPU at 3.60GHz with eight cores, 16 theads, and 32GB of RAM avaialble. 
 
 Graph Creation
 ==============
@@ -28,7 +28,7 @@ The third benchmark is to calculate the distance among all nodes in a weighted g
 Subgraph Isomorphism
 ====================
 
-Lastly, the fourth benchamrk is about graph isomorphism. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic (De Santo et al., 2003). See :func:`~rustworkx.is_subgraph_isomorphic` for more information on the benchmarked function.
+Lastly, the fourth benchmark is about graph isomorphism. We compare the time to answer if pairs of graphs from the ARG Database are subgraph-isomorphic (De Santo et al., 2003). See :func:`~rustworkx.is_subgraph_isomorphic` for more information on the benchmarked function.
 
 .. image:: /images/subgraph_isomorphism.svg
 

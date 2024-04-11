@@ -103,7 +103,7 @@ source.
      -
    * - macOS (11 or newer)
      - arm64
-     - :ref:`tier-4`
+     - :ref:`tier-1` [#f1]_
      -
    * - Windows 64bit
      - x86_64
@@ -116,6 +116,11 @@ source.
 
 
 .. _manylinux 2014: https://peps.python.org/pep-0599/>
+
+.. [#f1] Due to CI environment limitations tests for macOS arm64 are only run with
+   Python >= 3.10. The published binaries are still built and tested for all supported
+   Python versions, but the tests run on proposed changes are only run with Python >=3.10
+
 
 .. _tier-1:
 
