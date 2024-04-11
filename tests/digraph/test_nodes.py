@@ -174,6 +174,174 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(["a", "b", "c"], res)
         self.assertEqual([0, 1, 2], dag.node_indexes())
 
+    def test_remove_nodes_retain_edges_by_id_singles(self):
+        dag = rustworkx.PyDAG()
+        weights = [object(), object()]
+        before_nodes = [dag.add_node(i) for i, _ in enumerate(weights)]
+        middle = dag.add_node(10)
+        after_nodes = [dag.add_node(20 + i) for i, _ in enumerate(weights)]
+        for before, after, weight in zip(before_nodes, after_nodes, weights):
+            dag.add_edge(before, middle, weight)
+            dag.add_edge(middle, after, weight)
+        dag.remove_node_retain_edges_by_id(middle)
+        self.assertEqual(set(dag.node_indices()), set(before_nodes) | set(after_nodes))
+        expected_edges = set(zip(before_nodes, after_nodes, weights))
+        self.assertEqual(set(dag.weighted_edge_list()), expected_edges)
+
+    def test_remove_nodes_retain_edges_by_id_parallel(self):
+        dag = rustworkx.PyDAG()
+        nodes = [dag.add_node(i) for i in range(3)]
+        weights = [object(), object(), object()]
+        for weight in weights:
+            dag.add_edge(nodes[0], nodes[1], weight)
+            dag.add_edge(nodes[1], nodes[2], weight)
+        # The middle node has three precessor edges and three successor edges, where each set has
+        # one edge each of three weights. Edges should be paired up in bijection during the removal.
+        dag.remove_node_retain_edges_by_id(nodes[1])
+        self.assertEqual(set(dag.node_indices()), {nodes[0], nodes[2]})
+        expected_edges = {(nodes[0], nodes[2], weight) for weight in weights}
+        self.assertEqual(set(dag.weighted_edge_list()), expected_edges)
+
+    def test_remove_nodes_retain_edges_by_id_broadcast(self):
+        dag = rustworkx.PyDAG()
+        nodes = {a: dag.add_node(a) for a in "abcdefghijklmn"}
+        mid = dag.add_node("middle")
+        weights = [object(), object(), object(), object(), object()]
+        expected_edges = set()
+
+        # 2:1 broadcast.
+        dag.add_edge(nodes["a"], mid, weights[0])
+        dag.add_edge(nodes["b"], mid, weights[0])
+        dag.add_edge(mid, nodes["c"], weights[0])
+        expected_edges |= {
+            (nodes["a"], nodes["c"], weights[0]),
+            (nodes["b"], nodes["c"], weights[0]),
+        }
+
+        # 1:2 broadcast
+        dag.add_edge(nodes["d"], mid, weights[1])
+        dag.add_edge(mid, nodes["e"], weights[1])
+        dag.add_edge(mid, nodes["f"], weights[1])
+        expected_edges |= {
+            (nodes["d"], nodes["e"], weights[1]),
+            (nodes["d"], nodes["f"], weights[1]),
+        }
+
+        # 2:2 broadacst
+        dag.add_edge(nodes["g"], mid, weights[2])
+        dag.add_edge(nodes["h"], mid, weights[2])
+        dag.add_edge(mid, nodes["i"], weights[2])
+        dag.add_edge(mid, nodes["j"], weights[2])
+        expected_edges |= {
+            (nodes["g"], nodes["i"], weights[2]),
+            (nodes["g"], nodes["j"], weights[2]),
+            (nodes["h"], nodes["i"], weights[2]),
+            (nodes["h"], nodes["j"], weights[2]),
+        }
+
+        # 0:1 broadcast
+        dag.add_edge(mid, nodes["k"], weights[3])
+
+        # 1:0 broadcast
+        dag.add_edge(nodes["l"], mid, weights[4])
+
+        # Edge that doesn't go via the middle at all, but shares an id with another edge.  This
+        # shouldn't be touched.
+        dag.add_edge(nodes["m"], nodes["n"], weights[0])
+        expected_edges |= {
+            (nodes["m"], nodes["n"], weights[0]),
+        }
+
+        dag.remove_node_retain_edges_by_id(mid)
+
+        self.assertEqual(set(dag.nodes()), set(nodes))
+        self.assertEqual(set(dag.weighted_edge_list()), expected_edges)
+
+    def test_remove_nodes_retain_edges_by_key_singles_id_map(self):
+        dag = rustworkx.PyDAG()
+        before = [dag.add_node(0), dag.add_node(1)]
+        middle = dag.add_node(2)
+        after = [dag.add_node(3), dag.add_node(4)]
+
+        expected_edges = set()
+        dag.add_edge(before[0], middle, (0,))
+        dag.add_edge(middle, after[0], (0,))
+        expected_edges.add((before[0], after[0], (0,)))
+        dag.add_edge(before[1], middle, (1,))
+        dag.add_edge(middle, after[1], (1,))
+        expected_edges.add((before[1], after[1], (1,)))
+
+        dag.remove_node_retain_edges_by_id(middle)
+
+        self.assertEqual(set(dag.node_indices()), set(before) | set(after))
+        self.assertEqual(set(dag.weighted_edge_list()), expected_edges)
+
+    def test_remove_nodes_retain_edges_by_key_broadcast_mod_map(self):
+        dag = rustworkx.PyDAG()
+        nodes = {a: dag.add_node(a) for a in "abcdefghijklmn"}
+        mid = dag.add_node("middle")
+        expected_edges = {}
+
+        # 2:1 broadcast.
+        dag.add_edge(nodes["a"], mid, 10)
+        dag.add_edge(nodes["b"], mid, 20)
+        dag.add_edge(mid, nodes["c"], 30)
+        # The edge data here is a list of allowed weight - the function doesn't prescribe which
+        # exact weight will be used, just that it's from the incoming edges.
+        allowed_weights = {10, 20}
+        expected_edges[nodes["a"], nodes["c"]] = allowed_weights
+        expected_edges[nodes["b"], nodes["c"]] = allowed_weights
+
+        # 1:2 broadcast
+        dag.add_edge(nodes["d"], mid, 11)
+        dag.add_edge(mid, nodes["e"], 21)
+        dag.add_edge(mid, nodes["f"], 31)
+        allowed_weights = {11}
+        expected_edges[nodes["d"], nodes["e"]] = allowed_weights
+        expected_edges[nodes["d"], nodes["f"]] = allowed_weights
+
+        # 2:2 broadacst
+        dag.add_edge(nodes["g"], mid, 12)
+        dag.add_edge(nodes["h"], mid, 22)
+        dag.add_edge(mid, nodes["i"], 32)
+        dag.add_edge(mid, nodes["j"], 42)
+        allowed_weights = {12, 22}
+        expected_edges[nodes["g"], nodes["i"]] = allowed_weights
+        expected_edges[nodes["g"], nodes["j"]] = allowed_weights
+        expected_edges[nodes["h"], nodes["i"]] = allowed_weights
+        expected_edges[nodes["h"], nodes["j"]] = allowed_weights
+
+        # 0:1 broadcast
+        dag.add_edge(mid, nodes["k"], 13)
+
+        # 1:0 broadcast
+        dag.add_edge(nodes["l"], mid, 14)
+
+        # Edge that doesn't go via the middle at all, but shares a key with another edge.  This
+        # shouldn't be touched.
+        dag.add_edge(nodes["m"], nodes["n"], 10)
+        expected_edges[nodes["m"], nodes["n"]] = {10}
+
+        dag.remove_node_retain_edges_by_key(mid, key=lambda weight: weight % 10)
+
+        self.assertEqual(set(dag.nodes()), set(nodes))
+        self.assertEqual(set(dag.edge_list()), set(expected_edges))
+        for source, target, weight in dag.weighted_edge_list():
+            self.assertIn(weight, expected_edges[source, target])
+
+    def test_remove_nodes_retain_edges_by_key_use_outgoing(self):
+        dag = rustworkx.PyDAG()
+        before = dag.add_node(0)
+        middle = dag.add_node(1)
+        after = dag.add_node(2)
+        dag.add_edge(before, middle, 0)
+        dag.add_edge(middle, after, 2)
+        dag.remove_node_retain_edges_by_key(
+            middle, key=lambda weight: weight % 2, use_outgoing=True
+        )
+        self.assertEqual(set(dag.node_indices()), {before, after})
+        self.assertEqual(set(dag.weighted_edge_list()), {(before, after, 2)})
+
     def test_topo_sort_empty(self):
         dag = rustworkx.PyDAG()
         self.assertEqual([], rustworkx.topological_sort(dag))
@@ -259,6 +427,114 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(
             rustworkx.lexicographical_topological_sort(dag, lambda x: x, reverse=False), expected
         )
+
+    def test_lexicographical_topo_sort_initial(self):
+        dag = rustworkx.PyDiGraph()
+        dag.add_nodes_from(range(9))
+        dag.add_edges_from_no_data(
+            [
+                (0, 1),
+                (0, 2),
+                (1, 3),
+                (2, 4),
+                (3, 4),
+                (4, 5),
+                (5, 6),
+                (4, 7),
+                (6, 8),
+                (7, 8),
+            ]
+        )
+        # Last three nodes, nothing reachable except nodes that will be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[6, 7]),
+            [6, 7, 8],
+        )
+        # Setting `initial` to the set of root nodes should return the same as not setting it.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[0]),
+            rustworkx.lexicographical_topological_sort(dag, str),
+        )
+        # Node 8 is reachable from 7, but isn't dominated by it, so shouldn't be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[7]),
+            [7],
+        )
+
+        # Putting the `initial` in unsorted order should not affect the return order.
+        dag = rustworkx.PyDiGraph()
+        # Deliberately break id:weight correspondence.
+        dag.add_nodes_from(range(5)[::-1])
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[2, 4, 3, 0, 1]),
+            rustworkx.lexicographical_topological_sort(dag, str),
+        )
+
+    def test_lexicographical_topo_sort_initial_reverse(self):
+        dag = rustworkx.PyDiGraph()
+        dag.add_nodes_from(range(9))
+        dag.add_edges_from_no_data(
+            [
+                (0, 1),
+                (0, 2),
+                (1, 3),
+                (2, 4),
+                (3, 4),
+                (4, 5),
+                (5, 6),
+                (4, 7),
+                (6, 8),
+                (7, 8),
+            ]
+        )
+        # Last three nodes, nothing reachable except nodes that will be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True, initial=[1, 2]),
+            [1, 2, 0],
+        )
+        # Setting `initial` to the set of root nodes should return the same as not setting it.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True, initial=[8]),
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True),
+        )
+        # Node 0 is reachable from 1, but isn't dominated by it, so shouldn't be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True, initial=[1]),
+            [1],
+        )
+
+        # Putting the `initial` in unsorted order should not affect the return order.
+        dag = rustworkx.PyDiGraph()
+        # Deliberately break id:weight correspondence.
+        dag.add_nodes_from(range(5)[::-1])
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(
+                dag, str, reverse=True, initial=[2, 4, 3, 0, 1]
+            ),
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True),
+        )
+
+    def test_lexicographical_topo_sort_initial_natural_zero(self):
+        dag = rustworkx.PyDiGraph()
+        dag.add_nodes_from(range(5))
+        # There's no edges in this graph, so a natural topological ordering allows everything in the
+        # first pass.  If `initial` is given, though, the loose zero-degree nodes are not dominated
+        # by the givens, so should not be returned.
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, key=str, initial=[0, 3]),
+            [0, 3],
+        )
+        self.assertEqual(
+            rustworkx.lexicographical_topological_sort(dag, key=str, reverse=True, initial=[0, 3]),
+            [0, 3],
+        )
+
+    def test_lexicographical_topo_sort_initial_invalid(self):
+        dag = rustworkx.generators.directed_path_graph(5)
+        with self.assertRaisesRegex(ValueError, "initial node is reachable from another"):
+            rustworkx.lexicographical_topological_sort(dag, str, initial=[0, 1])
+        with self.assertRaisesRegex(ValueError, "initial node is reachable from another"):
+            rustworkx.lexicographical_topological_sort(dag, str, reverse=True, initial=[3, 4])
 
     def test_lexicographical_topo_sort_qiskit(self):
         dag = rustworkx.PyDAG()
