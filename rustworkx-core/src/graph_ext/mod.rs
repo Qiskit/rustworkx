@@ -23,17 +23,11 @@ use petgraph::{EdgeType, Graph};
 pub mod contraction;
 pub mod multigraph;
 
-pub mod directed {
-    //! Extension methods for directed graphs.
-    pub use super::contraction::{ContractNodesDirected, ContractNodesSimpleDirected};
-    pub use super::multigraph::HasParallelEdgesDirected;
-}
-
-pub mod undirected {
-    //! Extension methods for undirected graphs.
-    pub use super::contraction::{ContractNodesSimpleUndirected, ContractNodesUndirected};
-    pub use super::multigraph::HasParallelEdgesUndirected;
-}
+pub use contraction::{
+    ContractNodesDirected, ContractNodesSimpleDirected, ContractNodesSimpleUndirected,
+    ContractNodesUndirected,
+};
+pub use multigraph::{HasParallelEdgesDirected, HasParallelEdgesUndirected};
 
 /// A graph whose nodes may be removed.
 pub trait NodeRemovable: Data {

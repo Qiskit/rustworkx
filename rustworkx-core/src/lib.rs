@@ -78,7 +78,7 @@ pub mod centrality;
 pub mod coloring;
 pub mod connectivity;
 pub mod generators;
-pub mod graph;
+pub mod graph_ext;
 pub mod line_graph;
 
 /// Module for maximum weight matching algorithms.

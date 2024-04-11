@@ -14,7 +14,7 @@
 
 use crate::dictmap::{DictMap, InitWithHasher};
 use crate::err::{ContractError, ContractSimpleError};
-use crate::graph::NodeRemovable;
+use crate::graph_ext::NodeRemovable;
 use indexmap::map::Entry::{Occupied, Vacant};
 use indexmap::IndexSet;
 use petgraph::data::Build;
@@ -51,7 +51,7 @@ pub trait ContractNodesDirected: Data {
     /// ```
     /// use std::convert::Infallible;
     /// use petgraph::prelude::*;
-    /// use rustworkx_core::graph::directed::*;
+    /// use rustworkx_core::graph_ext::*;
     ///
     /// // Performs the following transformation:
     /// //      ┌─┐
@@ -164,7 +164,7 @@ pub trait ContractNodesSimpleDirected: Data {
     /// ```
     /// use std::convert::Infallible;
     /// use petgraph::prelude::*;
-    /// use rustworkx_core::graph::directed::*;
+    /// use rustworkx_core::graph_ext::*;
     ///
     /// // Performs the following transformation:
     /// //                          ┌─┐
@@ -276,7 +276,7 @@ pub trait ContractNodesUndirected: Data {
     /// ```
     /// use std::convert::Infallible;
     /// use petgraph::prelude::*;
-    /// use rustworkx_core::graph::undirected::*;
+    /// use rustworkx_core::graph_ext::*;
     ///
     /// // Performs the following transformation:
     /// //      ┌─┐
@@ -358,7 +358,7 @@ pub trait ContractNodesSimpleUndirected: Data {
     /// ```
     /// use std::convert::Infallible;
     /// use petgraph::prelude::*;
-    /// use rustworkx_core::graph::undirected::*;
+    /// use rustworkx_core::graph_ext::*;
     ///
     /// // Performs the following transformation:
     /// //                          ┌─┐

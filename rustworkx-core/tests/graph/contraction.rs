@@ -17,8 +17,7 @@ use petgraph::visit::{
     Data, EdgeCount, EdgeRef, GraphBase, IntoEdgeReferences, IntoNodeIdentifiers,
 };
 use rustworkx_core::err::ContractError;
-use rustworkx_core::graph::directed::*;
-use rustworkx_core::graph::NodeRemovable;
+use rustworkx_core::graph_ext::*;
 use std::convert::Infallible;
 use std::fmt::Debug;
 use std::hash::Hash;

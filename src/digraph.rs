@@ -24,7 +24,7 @@ use std::str;
 use hashbrown::{HashMap, HashSet};
 
 use rustworkx_core::dictmap::*;
-use rustworkx_core::graph::directed::*;
+use rustworkx_core::graph_ext::*;
 
 use smallvec::SmallVec;
 
