@@ -468,6 +468,18 @@ impl PyGraph {
         self.node_indices()
     }
 
+    /// Return True if there is a node.
+    ///
+    /// :param int node: The index for the node
+    ///
+    /// :returns: True if there is a node false if there is no node
+    /// :rtype: bool
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn has_node(&self, node: usize) -> bool {
+        let index = NodeIndex::new(node);
+        self.graph.contains_node(index)
+    }
+
     /// Return True if there is an edge between ``node_a`` and ``node_b``.
     ///
     /// :param int node_a: The index for the first node
@@ -2039,7 +2051,7 @@ impl PyGraph {
     /// required to return a boolean value stating whether the node's data payload fits some criteria.
     ///
     /// For example::
-    ///     
+    ///
     ///     from rustworkx import PyGraph
     ///
     ///     graph = PyGraph()
@@ -2087,8 +2099,8 @@ impl PyGraph {
     ///     def my_filter_function(edge):
     ///         if edge:
     ///             return edge == 'B'
-    ///         return False  
-    ///        
+    ///         return False
+    ///
     ///     indices = graph.filter_edges(my_filter_function)
     ///     assert indices == [1]
     ///

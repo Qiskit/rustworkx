@@ -85,6 +85,7 @@ class TestNodes(unittest.TestCase):
         res = dag.nodes()
         self.assertEqual(["a", "c"], res)
         self.assertEqual([0, 2], dag.node_indexes())
+        self.assertTrue(dag.has_node(node_a))
         self.assertTrue(dag.has_edge(node_a, node_c))
         self.assertEqual(dag.get_all_edge_data(node_a, node_c), ["Edgy"])
 
@@ -97,6 +98,7 @@ class TestNodes(unittest.TestCase):
         res = dag.nodes()
         self.assertEqual(["a", "c"], res)
         self.assertEqual([0, 2], dag.node_indexes())
+        self.assertTrue(dag.has_node(node_a))
         self.assertTrue(dag.has_edge(node_a, node_c))
         self.assertEqual(dag.get_all_edge_data(node_a, node_c), ["Edgy_mk2"])
 
