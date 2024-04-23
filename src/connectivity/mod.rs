@@ -929,16 +929,20 @@ pub fn minimum_cycle_basis(py: Python, graph: &PyGraph) -> PyResult<Vec<Vec<usiz
                 let py_min_cycle_basis = min_cycle_basis
                     .iter()
                     .map(|cycle| {
-                        cycle.iter().map(|&node_index| graph.graph.to_index(node_index)).collect::<Vec<usize>>()
+                        cycle
+                            .iter()
+                            .map(|&node_index| graph.graph.to_index(node_index))
+                            .collect::<Vec<usize>>()
                     })
                     .collect::<Vec<Vec<usize>>>();
                 Ok(py_min_cycle_basis)
-            },
+            }
             Err(e) => {
                 // Handle errors by converting them into Python exceptions
-                Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                    format!("An error occurred: {:?}", e)
-                ))
+                Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                    "An error occurred: {:?}",
+                    e
+                )))
             }
         }
     })
