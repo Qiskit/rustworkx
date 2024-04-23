@@ -918,6 +918,32 @@ pub fn stoer_wagner_min_cut(
     }))
 }
 
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn minimum_cycle_basis(py: Python, graph: &PyGraph) -> PyResult<Vec<Vec<usize>>> {
+    py.allow_threads(|| {
+        let result = connectivity::minimum_cycle_basis(&graph.graph);
+        match result {
+            Ok(min_cycle_basis) => {
+                // Convert Rust Vec<Vec<NodeIndex>> to Python Vec<Vec<usize>>
+                let py_min_cycle_basis = min_cycle_basis
+                    .iter()
+                    .map(|cycle| {
+                        cycle.iter().map(|&node_index| graph.graph.to_index(node_index)).collect::<Vec<usize>>()
+                    })
+                    .collect::<Vec<Vec<usize>>>();
+                Ok(py_min_cycle_basis)
+            },
+            Err(e) => {
+                // Handle errors by converting them into Python exceptions
+                Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                    format!("An error occurred: {:?}", e)
+                ))
+            }
+        }
+    })
+}
+
 /// Return the articulation points of an undirected graph.
 ///
 /// An articulation point or cut vertex is any node whose removal (along with

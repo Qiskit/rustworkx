@@ -21,6 +21,7 @@ mod cycle_basis;
 mod find_cycle;
 mod isolates;
 mod min_cut;
+mod minimum_cycle_basis;
 
 pub use all_simple_paths::{
     all_simple_paths_multiple_targets, longest_simple_path_multiple_targets,
@@ -36,3 +37,4 @@ pub use cycle_basis::cycle_basis;
 pub use find_cycle::find_cycle;
 pub use isolates::isolates;
 pub use min_cut::stoer_wagner_min_cut;
+pub use minimum_cycle_basis::minimum_cycle_basis;
