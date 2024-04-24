@@ -740,8 +740,8 @@ where
 
     let beta: HashMap<usize, f64> = beta_map.unwrap_or_default();
     //Initialize the beta vector in case a beta map was not provided
-    let mut beta_v = vec![beta_scalar.unwrap_or(1.0); graph.node_bound()]; 
-    
+    let mut beta_v = vec![beta_scalar.unwrap_or(1.0); graph.node_bound()];
+
     if !beta.is_empty() {
         // Check if beta contains all node indices
         for node_index in graph.node_identifiers() {
