@@ -59,7 +59,7 @@ jobs:
         rust: [stable]
         python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
         platform: [
-          { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
+          { os: "macOS-13", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
           { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
