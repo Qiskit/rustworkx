@@ -179,3 +179,9 @@ class TestNodes(unittest.TestCase):
         res = graph.nodes()
         self.assertEqual(["a", "b", "c"], res)
         self.assertEqual([0, 1, 2], graph.node_indexes())
+
+    def test_has_node(self):
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        self.assertTrue(graph.has_node(node_a))
+        self.assertFalse(graph.has_node(node_a + 1))

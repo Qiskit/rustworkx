@@ -76,6 +76,12 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(["a"], res)
         self.assertEqual([0], dag.node_indexes())
 
+    def test_has_node(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        self.assertTrue(dag.has_node(node_a))
+        self.assertFalse(dag.has_node(node_a + 1))
+
     def test_remove_nodes_retain_edges_single_edge(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")

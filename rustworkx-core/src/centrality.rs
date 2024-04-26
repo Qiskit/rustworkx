@@ -738,23 +738,18 @@ where
 {
     let alpha: f64 = alpha.unwrap_or(0.1);
 
-    let mut beta: HashMap<usize, f64> = beta_map.unwrap_or_default();
+    let beta: HashMap<usize, f64> = beta_map.unwrap_or_default();
+    //Initialize the beta vector in case a beta map was not provided
+    let mut beta_v = vec![beta_scalar.unwrap_or(1.0); graph.node_bound()];
 
-    if beta.is_empty() {
-        // beta_map was none
-        // populate hashmap with default value
-        let beta_scalar = beta_scalar.unwrap_or(1.0);
-        for node_index in graph.node_identifiers() {
-            let node = graph.to_index(node_index);
-            beta.insert(node, beta_scalar);
-        }
-    } else {
+    if !beta.is_empty() {
         // Check if beta contains all node indices
         for node_index in graph.node_identifiers() {
             let node = graph.to_index(node_index);
             if !beta.contains_key(&node) {
                 return Ok(None); // beta_map was provided but did not include all nodes
             }
+            beta_v[node] = *beta.get(&node).unwrap(); //Initialize the beta vector with the provided values
         }
     }
 
@@ -776,7 +771,7 @@ where
         }
         for node_index in graph.node_identifiers() {
             let node = graph.to_index(node_index);
-            x[node] = alpha * x[node] + beta.get(&node).unwrap_or(&0.0);
+            x[node] = alpha * x[node] + beta_v[node];
         }
         if (0..x.len())
             .map(|node| (x[node] - x_last[node]).abs())
