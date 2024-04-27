@@ -613,13 +613,12 @@ macro_rules! custom_vec_iter_impl {
                 let res = self.$data.convert_to_pyarray(py)?;
                 Ok(match dtype {
                     Some(dtype) => {
-                        let locals = [("res", res), ("dtype", dtype)].into_py_dict_bound(py);
-                        py.eval_bound(
-                            "__import__('numpy').asarray(res, dtype=dtype)",
-                            None,
-                            Some(&locals),
-                        )?
-                        .into()
+                        let numpy_mod = py.import_bound("numpy")?;
+                        let args = (res,);
+                        let kwargs = [("dtype", dtype)].into_py_dict_bound(py);
+                        numpy_mod
+                            .call_method("asarray", args, Some(&kwargs))?
+                            .into()
                     }
                     None => res,
                 })
