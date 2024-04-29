@@ -61,17 +61,13 @@ where
     G::NodeId: Eq + Hash,
 {
     // Find a cycle in the given graph and return it as a list of edges
-    let mut graph_nodes: HashSet<G::NodeId> = graph.node_identifiers().collect();
     let mut cycle: Vec<(G::NodeId, G::NodeId)> = Vec::with_capacity(graph.edge_count());
-    let temp_value: G::NodeId;
     // If source is not set get an arbitrary node from the set of graph
     // nodes we've not "examined"
     let source_index = match source {
         Some(source_value) => source_value,
         None => {
-            temp_value = *graph_nodes.iter().next().unwrap();
-            graph_nodes.remove(&temp_value);
-            temp_value
+            return find_arbitrary_cycle(graph);
         }
     };
     // Stack (ie "pushdown list") of vertices already in the spanning tree
@@ -117,6 +113,18 @@ where
         }
     }
     cycle
+}
+
+fn find_arbitrary_cycle<G>(_graph: G) -> Vec<(G::NodeId, G::NodeId)>
+where
+    G: GraphBase,
+    G: NodeCount,
+    G: EdgeCount,
+    for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected,
+    G::NodeId: Eq + Hash,
+{
+    
+    Vec::new()
 }
 
 #[cfg(test)]
