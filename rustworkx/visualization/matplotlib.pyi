@@ -20,7 +20,7 @@ if typing.TYPE_CHECKING:
 _S = typing.TypeVar("_S")
 _T = typing.TypeVar("_T")
 
-class _DrawKwargs(typing.TypedDict):
+class _DrawKwargs(typing.TypedDict, total=False):
     arrowstyle: str
     arrow_size: int
     node_list: list[int]
