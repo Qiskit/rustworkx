@@ -11,8 +11,9 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
+use petgraph::algo;
 use petgraph::visit::{
-    EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
+    EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, Visitable,
 };
 use petgraph::Direction::Outgoing;
 use std::hash::Hash;
@@ -54,21 +55,26 @@ use std::hash::Hash;
 /// ```
 pub fn find_cycle<G>(graph: G, source: Option<G::NodeId>) -> Vec<(G::NodeId, G::NodeId)>
 where
+    G: Copy,
     G: GraphBase,
     G: NodeCount,
     G: EdgeCount,
-    for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected,
+    for<'b> &'b G:
+        GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected + Visitable,
     G::NodeId: Eq + Hash,
 {
     // Find a cycle in the given graph and return it as a list of edges
     let mut cycle: Vec<(G::NodeId, G::NodeId)> = Vec::with_capacity(graph.edge_count());
-    // If source is not set get an arbitrary node from the set of graph
-    // nodes we've not "examined"
+    // If source is not set get a node in an arbitrary cycle if it exists,
+    // otherwise return that there is no cycle
     let source_index = match source {
         Some(source_value) => source_value,
-        None => {
-            return find_arbitrary_cycle(graph);
-        }
+        None => match find_node_in_arbitrary_cycle(graph) {
+            Some(node_in_cycle) => node_in_cycle,
+            None => {
+                return Vec::new();
+            }
+        },
     };
     // Stack (ie "pushdown list") of vertices already in the spanning tree
     let mut stack: Vec<G::NodeId> = vec![source_index];
@@ -115,16 +121,25 @@ where
     cycle
 }
 
-fn find_arbitrary_cycle<G>(_graph: G) -> Vec<(G::NodeId, G::NodeId)>
+fn find_node_in_arbitrary_cycle<G>(graph: G) -> Option<G::NodeId>
 where
     G: GraphBase,
     G: NodeCount,
     G: EdgeCount,
-    for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected,
+    for<'b> &'b G:
+        GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected + Visitable,
     G::NodeId: Eq + Hash,
 {
-    
-    Vec::new()
+    for scc in algo::kosaraju_scc(&graph) {
+        if scc.len() > 1 {
+            // TODO: build
+        } else {
+            // TODO: check
+            let node = scc[0];
+            return Some(node);
+        }
+    }
+    None
 }
 
 #[cfg(test)]
