@@ -1060,6 +1060,8 @@ impl PyGCProtocol for Chains {}
 
 custom_vec_iter_impl!(
     IndexPartitionBlock,
+    IndexPartitionBlockIter,
+    IndexPartitionBlockRev,
     block,
     usize,
     "A custom class for the return of a block of node indices.
@@ -1097,9 +1099,9 @@ impl PyHash for IndexPartitionBlock {
     }
 }
 
-impl PyEq<PyAny> for IndexPartitionBlock {
+impl<'py> PyEq<Bound<'py, PyAny>> for IndexPartitionBlock {
     #[inline]
-    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+    fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.block, other, py)
     }
 }
@@ -1114,6 +1116,8 @@ py_convert_to_py_array_obj_impl! {IndexPartitionBlock}
 
 custom_vec_iter_impl!(
     RelationalCoarsestPartition,
+    RelationalCoarsestPartitionIter,
+    RelationalCoarsestPartitionRev,
     partition,
     IndexPartitionBlock,
     "A custom class for the return of a partition of node indices.
