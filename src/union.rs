@@ -58,9 +58,9 @@ fn union<Ty: EdgeType>(
     }
 
     let weights_equal = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
-        a.as_ref(py)
+        a.bind(py)
             .rich_compare(b, pyo3::basic::CompareOp::Eq)?
-            .is_true()
+            .is_truthy()
     };
 
     for edge in second.edge_references() {

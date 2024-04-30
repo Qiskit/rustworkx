@@ -198,6 +198,16 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         res = self.dag.node_indexes()
         np.testing.assert_array_equal(np.asarray(res, dtype=np.uintp), np.array([0, 1]))
 
+    def test_numpy_conversion_copy_false(self):
+        res = self.dag.node_indices()
+        with self.assertRaises(ValueError):
+            res.__array__(copy=False)
+
+    def test_numpy_conversion_dtype_complex(self):
+        res = self.dag.node_indices()
+        array = res.__array__(dtype=complex)
+        self.assertEqual(np.dtype(complex), array.dtype)
+
 
 class TestNodesCountMapping(unittest.TestCase):
     def setUp(self):

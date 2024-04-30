@@ -22,7 +22,6 @@ use std::marker;
 use hashbrown::HashMap;
 use rustworkx_core::dictmap::*;
 
-use pyo3::class::iter::IterNextOutput;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::PyTraverseError;
@@ -413,7 +412,7 @@ impl SemanticMatcher<PyObject> for Option<PyObject> {
     #[inline]
     fn eq(&self, py: Python, a: &PyObject, b: &PyObject) -> PyResult<bool> {
         let res = self.as_ref().unwrap().call1(py, (a, b))?;
-        res.is_true(py)
+        res.is_truthy(py)
     }
 }
 
@@ -1007,12 +1006,10 @@ macro_rules! vf2_mapping_impl {
                 slf.into()
             }
 
-            fn __next__(
-                mut slf: PyRefMut<Self>,
-            ) -> PyResult<IterNextOutput<NodeMap, &'static str>> {
+            fn __next__(mut slf: PyRefMut<Self>) -> PyResult<Option<NodeMap>> {
                 Python::with_gil(|py| match slf.vf2.next(py)? {
-                    Some(mapping) => Ok(IterNextOutput::Yield(mapping)),
-                    None => Ok(IterNextOutput::Return("Ended")),
+                    Some(mapping) => Ok(Some(mapping)),
+                    None => Ok(None),
                 })
             }
 

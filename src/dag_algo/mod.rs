@@ -338,9 +338,9 @@ pub fn layers(
         next_layer = Vec::new();
     }
     if !index_output {
-        Ok(PyList::new(py, output).into())
+        Ok(PyList::new_bound(py, output).into())
     } else {
-        Ok(PyList::new(py, output_indices).into())
+        Ok(PyList::new_bound(py, output_indices).into())
     }
 }
 
@@ -369,16 +369,24 @@ pub fn layers(
 ///     topological order that would have been found if all the edges in the
 ///     graph were reversed.  This does not affect the comparisons from the
 ///     ``key``.
+/// :param Iterable[int] initial: If given, the initial node indices to start the topological
+///     ordering from.  If not given, the topological ordering will certainly contain every node in
+///     the graph.  If given, only the ``initial`` nodes and nodes that are dominated by the
+///     ``initial`` set will be in the ordering.  Notably, any node that has a natural in degree of
+///     zero will not be in the output ordering if ``initial`` is given and the zero-in-degree node
+///     is not in it.  It is a :exc:`ValueError` to give an `initial` set where the nodes have even
+///     a partial topological order between themselves.
 ///
 /// :returns: A list of node's data lexicographically topologically sorted.
 /// :rtype: list
 #[pyfunction]
-#[pyo3(signature = (dag, /, key, *, reverse=false))]
+#[pyo3(signature = (dag, /, key, *, reverse=false, initial=None))]
 pub fn lexicographical_topological_sort(
     py: Python,
     dag: &digraph::PyDiGraph,
     key: PyObject,
     reverse: bool,
+    initial: Option<&Bound<PyAny>>,
 ) -> PyResult<PyObject> {
     let key_callable = |a: &PyObject| -> PyResult<PyObject> {
         let res = key.call1(py, (a,))?;
@@ -387,10 +395,6 @@ pub fn lexicographical_topological_sort(
     // HashMap of node_index indegree
     let node_count = dag.node_count();
     let (in_dir, out_dir) = traversal_directions(reverse);
-    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_count);
-    for node in dag.graph.node_indices() {
-        in_degree_map.insert(node, dag.graph.edges_directed(node, in_dir).count());
-    }
 
     #[derive(Clone, Eq, PartialEq)]
     struct State {
@@ -416,6 +420,31 @@ pub fn lexicographical_topological_sort(
             Some(self.cmp(other))
         }
     }
+
+    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_count);
+    if let Some(initial) = initial {
+        // In this case, we don't iterate through all the nodes in the graph, and most nodes aren't
+        // in `in_degree_map`; we'll fill in the relevant edge counts lazily.
+        for maybe_index in initial.iter()? {
+            let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
+            if dag.graph.contains_node(node) {
+                // It's not necessarily actually zero, but we treat it as if it is.  If the node is
+                // reachable from another we visit during the iteration, then there was a defined
+                // topological order between the `initial` set, and we'll throw an error.
+                in_degree_map.insert(node, 0);
+            } else {
+                return Err(PyValueError::new_err(format!(
+                    "node index {} is not in this graph",
+                    node.index()
+                )));
+            }
+        }
+    } else {
+        for node in dag.graph.node_indices() {
+            in_degree_map.insert(node, dag.graph.edges_directed(node, in_dir).count());
+        }
+    }
+
     let mut zero_indegree = BinaryHeap::with_capacity(node_count);
     for (node, degree) in in_degree_map.iter() {
         if *degree == 0 {
@@ -431,9 +460,14 @@ pub fn lexicographical_topological_sort(
     while let Some(State { node, .. }) = zero_indegree.pop() {
         let neighbors = dag.graph.neighbors_directed(node, out_dir);
         for child in neighbors {
-            let child_degree = in_degree_map.get_mut(&child).unwrap();
-            *child_degree -= 1;
+            let child_degree = in_degree_map
+                .entry(child)
+                .or_insert_with(|| dag.graph.edges_directed(child, in_dir).count());
             if *child_degree == 0 {
+                return Err(PyValueError::new_err(
+                    "at least one initial node is reachable from another",
+                ));
+            } else if *child_degree == 1 {
                 let map_key_raw = key_callable(&dag.graph[child])?;
                 let map_key: String = map_key_raw.extract(py)?;
                 zero_indegree.push(State {
@@ -441,11 +475,13 @@ pub fn lexicographical_topological_sort(
                     node: child,
                 });
                 in_degree_map.remove(&child);
+            } else {
+                *child_degree -= 1;
             }
         }
         out_list.push(&dag.graph[node])
     }
-    Ok(PyList::new(py, out_list).into())
+    Ok(PyList::new_bound(py, out_list).into())
 }
 
 /// Return the topological generations of a DAG

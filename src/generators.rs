@@ -1619,7 +1619,7 @@ pub fn directed_complete_graph(
 }
 
 #[pymodule]
-pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
+pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_cycle_graph))?;
     m.add_wrapped(wrap_pyfunction!(path_graph))?;

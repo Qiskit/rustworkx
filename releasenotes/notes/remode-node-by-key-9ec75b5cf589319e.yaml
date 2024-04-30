@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Added the :meth:`.PyDiGraph.remove_node_retain_edges_by_id` and
+    :meth:`~.PyDiGraph.remove_node_retain_edges_by_key` methods, which provide a node-removal that
+    is linear in the degree of the node, as opposed to quadratic like
+    :meth:`~.PyDiGraph.remove_node_retain_edges`.  These methods require, respectively, that the
+    edge weights are referentially identical if they should be retained (``a is b``, in Python), or
+    that you can supply a ``key`` function that produces a Python-hashable result that is used to
+    do the equality matching between input and output edges.
