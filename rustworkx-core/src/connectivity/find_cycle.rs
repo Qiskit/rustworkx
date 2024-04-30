@@ -13,7 +13,8 @@
 use hashbrown::{HashMap, HashSet};
 use petgraph::algo;
 use petgraph::visit::{
-    EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, Visitable,
+    EdgeCount, EdgeRef, GraphBase, IntoEdgeReferences, IntoNeighborsDirected, IntoNodeIdentifiers,
+    NodeCount, Visitable,
 };
 use petgraph::Direction::Outgoing;
 use std::hash::Hash;
@@ -59,8 +60,11 @@ where
     G: GraphBase,
     G: NodeCount,
     G: EdgeCount,
-    for<'b> &'b G:
-        GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected + Visitable,
+    for<'b> &'b G: GraphBase<NodeId = G::NodeId>
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + Visitable
+        + IntoEdgeReferences,
     G::NodeId: Eq + Hash,
 {
     // Find a cycle in the given graph and return it as a list of edges
@@ -126,17 +130,21 @@ where
     G: GraphBase,
     G: NodeCount,
     G: EdgeCount,
-    for<'b> &'b G:
-        GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected + Visitable,
+    for<'b> &'b G: GraphBase<NodeId = G::NodeId>
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + Visitable
+        + IntoEdgeReferences,
     G::NodeId: Eq + Hash,
 {
     for scc in algo::kosaraju_scc(&graph) {
         if scc.len() > 1 {
-            // TODO: build
-        } else {
-            // TODO: check
-            let node = scc[0];
-            return Some(node);
+            return Some(scc[0]);
+        }
+    }
+    for edge in graph.edge_references() {
+        if edge.source() == edge.target() {
+            return Some(edge.source());
         }
     }
     None
