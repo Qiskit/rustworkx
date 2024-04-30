@@ -14,7 +14,7 @@ use hashbrown::{HashMap, HashSet};
 use petgraph::algo;
 use petgraph::visit::{
     EdgeCount, EdgeRef, GraphBase, IntoEdgeReferences, IntoNeighborsDirected, IntoNodeIdentifiers,
-    NodeCount, Visitable,
+    NodeCount, Visitable, NodeIndexable
 };
 use petgraph::Direction::Outgoing;
 use std::hash::Hash;
@@ -64,6 +64,7 @@ where
         + IntoNodeIdentifiers
         + IntoNeighborsDirected
         + Visitable
+        + NodeIndexable
         + IntoEdgeReferences,
     G::NodeId: Eq + Hash,
 {
@@ -134,10 +135,11 @@ where
         + IntoNodeIdentifiers
         + IntoNeighborsDirected
         + Visitable
-        + IntoEdgeReferences,
+        + IntoEdgeReferences
+        + NodeIndexable,
     G::NodeId: Eq + Hash,
 {
-    for scc in algo::kosaraju_scc(&graph) {
+    for scc in algo::tarjan_scc(&graph) {
         if scc.len() > 1 {
             return Some(scc[0]);
         }
