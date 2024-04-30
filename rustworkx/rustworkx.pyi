@@ -54,6 +54,7 @@ class GraphNotBipartite(Exception): ...
 class GreedyStrategy:
     Degree: Any
     Saturation: Any
+    IndependentSet: Any
 
 # Cartesian product
 
