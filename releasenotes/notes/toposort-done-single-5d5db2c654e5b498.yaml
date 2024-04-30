@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    :meth:`.TopologicalSorter.done` now accepts single integers, in addition to lists of integers.
+    This can be a sizeable performance improvement for algorithms that iterate through nodes, and
+    only conditionally mark them as `done`; there is no longer a need to allocate a temporary Python
+    array.

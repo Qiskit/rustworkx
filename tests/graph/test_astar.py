@@ -112,3 +112,17 @@ class TestAstarGraph(unittest.TestCase):
                         edge_cost_fn=lambda _: invalid_weight,
                         estimate_cost_fn=lambda _: 0,
                     )
+
+    def test_astar_with_invalid_source_node(self):
+        g = rustworkx.PyGraph()
+        a = g.add_node("A")
+        b = g.add_node("B")
+        g.add_edge(a, b, 7)
+        with self.assertRaises(IndexError):
+            rustworkx.graph_astar_shortest_path(
+                g,
+                len(g.node_indices()) + 1,
+                goal_fn=lambda goal: goal == "B",
+                edge_cost_fn=lambda x: float(x),
+                estimate_cost_fn=lambda _: 0,
+            )

@@ -14,6 +14,7 @@
 
 mod all_pairs_all_simple_paths;
 mod johnson_simple_cycles;
+mod subgraphs;
 
 use super::{
     digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
@@ -39,6 +40,7 @@ use crate::iterators::{
 };
 use crate::{EdgeType, StablePyGraph};
 
+use crate::graph::PyGraph;
 use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
 
@@ -347,7 +349,7 @@ pub fn digraph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Return the adjacency matrix for a PyGraph class
@@ -440,7 +442,7 @@ pub fn graph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Compute the complement of an undirected graph.
@@ -659,6 +661,27 @@ pub fn digraph_all_pairs_all_simple_paths(
     ))
 }
 
+/// Return all the connected subgraphs (as a list of node indices) with exactly k nodes
+///
+///
+/// :param PyGraph graph: The graph to find all connected subgraphs in
+/// :param int k: The maximum number of nodes in a returned connected subgraph.
+///
+/// :returns: A list of connected subgraphs with k nodes, represented by their node indices
+///
+/// :raises ValueError: If ``k`` is larger than the number of nodes in ``graph``
+#[pyfunction]
+#[pyo3(text_signature = "(graph, k, /)")]
+pub fn connected_subgraphs(graph: &PyGraph, k: usize) -> PyResult<Vec<Vec<usize>>> {
+    if k > graph.node_count() {
+        return Err(PyValueError::new_err(
+            "Value for k must be < node count in input graph",
+        ));
+    }
+
+    Ok(subgraphs::k_connected_subgraphs(&graph.graph, k))
+}
+
 /// Return all the simple paths between all pairs of nodes in the graph
 ///
 /// This function is multithreaded and will launch a thread pool with threads
@@ -816,7 +839,7 @@ pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> 
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new(py);
+    let out_dict = PyDict::new_bound(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
@@ -842,7 +865,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new(py);
+    let out_dict = PyDict::new_bound(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
