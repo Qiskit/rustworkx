@@ -25,6 +25,17 @@ use rustworkx_core::coloring::{
 
 pub use rustworkx_core::coloring::GreedyStrategyCore;
 
+/// Greedy coloring strategies available for `graph_greedy_color`.
+///
+/// | Strategy       | Reference                                         |
+/// |----------------|---------------------------------------------------|
+/// | Degree         | `Largest-first` strategy in [1] (section 1.2.2.2) |
+/// | Saturation     | `DSATUR` strategy in [1] (section 1.2.2.8)        |
+/// | IndependentSet | `GIS` strategy in [1] (section 1.2.2.9)           |
+///
+///
+/// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
+///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyclass(module = "rustworkx")]
 #[derive(Clone, PartialEq)]
 pub enum GreedyStrategy {
