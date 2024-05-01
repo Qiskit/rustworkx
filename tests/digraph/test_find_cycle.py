@@ -95,3 +95,12 @@ class TestFindCycle(unittest.TestCase):
         self.assertEqual(len(res), 2)
         self.assertTrue(a in res[0] and b in res[0])
         self.assertTrue(a in res[1] and b in res[1])
+
+    def test_cycle_self_loop(self):
+        g = rustworkx.generators.directed_path_graph(1000)
+        a = g.add_node(1000)
+        b = g.node_indices()[-1]
+        g.add_edge(b, a, None)
+        g.add_edge(a, a, None)
+        res = rustworkx.digraph_find_cycle(g)
+        self.assertEqual(res, [(a, a)])
