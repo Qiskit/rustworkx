@@ -13,6 +13,7 @@
 import unittest
 
 import rustworkx
+import rustworkx.generators
 
 
 class TestFindCycle(unittest.TestCase):
@@ -78,3 +79,19 @@ class TestFindCycle(unittest.TestCase):
         self.graph.add_edge(1, 1, None)
         res = rustworkx.digraph_find_cycle(self.graph, 0)
         self.assertCycle(1, self.graph, res)
+
+    def test_no_cycle_no_source(self):
+        g = rustworkx.generators.directed_grid_graph(10, 10)
+        res = rustworkx.digraph_find_cycle(g)
+        self.assertEqual(res, [])
+
+    def test_cycle_no_source(self):
+        g = rustworkx.generators.directed_path_graph(1000)
+        a = g.add_node(1000)
+        b = g.node_indices()[-1]
+        g.add_edge(b, a, None)
+        g.add_edge(a, b, None)
+        res = rustworkx.digraph_find_cycle(g)
+        self.assertEqual(len(res), 2)
+        self.assertTrue(a in res[0] and b in res[0])
+        self.assertTrue(a in res[1] and b in res[1])
