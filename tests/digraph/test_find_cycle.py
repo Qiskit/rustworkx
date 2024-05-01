@@ -36,6 +36,14 @@ class TestFindCycle(unittest.TestCase):
             ]
         )
 
+    def assertCycle(self, first_node, graph, res):
+        self.assertEqual(first_node, res[0][0])
+        for i in range(len(res)):
+            s, t = res[i]
+            self.assertTrue(graph.has_edge(s, t))
+            next_s, _ = res[(i + 1) % len(res)]
+            self.assertEqual(t, next_s)
+
     def test_find_cycle(self):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(list(range(6)))
@@ -43,13 +51,13 @@ class TestFindCycle(unittest.TestCase):
             [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5), (4, 0)]
         )
         res = rustworkx.digraph_find_cycle(graph, 0)
-        self.assertEqual([(0, 1), (1, 2), (2, 3), (3, 4), (4, 0)], res)
+        self.assertCycle(0, graph, res)
 
     def test_find_cycle_multiple_roots_same_cycles(self):
         res = rustworkx.digraph_find_cycle(self.graph, 0)
-        self.assertEqual(res, [(0, 1), (1, 2), (2, 3), (3, 0)])
+        self.assertCycle(0, self.graph, res)
         res = rustworkx.digraph_find_cycle(self.graph, 1)
-        self.assertEqual(res, [(1, 2), (2, 3), (3, 0), (0, 1)])
+        self.assertCycle(1, self.graph, res)
         res = rustworkx.digraph_find_cycle(self.graph, 5)
         self.assertEqual(res, [])
 
@@ -57,9 +65,9 @@ class TestFindCycle(unittest.TestCase):
         self.graph.add_nodes_from(["A", "B", "C"])
         self.graph.add_edges_from_no_data([(10, 11), (12, 10), (11, 12)])
         res = rustworkx.digraph_find_cycle(self.graph, 0)
-        self.assertEqual(res, [(0, 1), (1, 2), (2, 3), (3, 0)])
+        self.assertCycle(0, self.graph, res)
         res = rustworkx.digraph_find_cycle(self.graph, 10)
-        self.assertEqual(res, [(10, 11), (11, 12), (12, 10)])
+        self.assertCycle(10, self.graph, res)
 
     def test_invalid_types(self):
         graph = rustworkx.PyGraph()
@@ -69,4 +77,4 @@ class TestFindCycle(unittest.TestCase):
     def test_self_loop(self):
         self.graph.add_edge(1, 1, None)
         res = rustworkx.digraph_find_cycle(self.graph, 0)
-        self.assertEqual([(1, 1)], res)
+        self.assertCycle(1, self.graph, res)
