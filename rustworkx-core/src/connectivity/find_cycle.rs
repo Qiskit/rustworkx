@@ -234,4 +234,12 @@ mod tests {
         let res = find_cycle(&graph, None);
         assert_cycle!(graph, res);
     }
+
+    #[test]
+    fn test_no_cycle_no_source() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3)];
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
+        let res = find_cycle(&graph, None);
+        assert_eq!(res, []);
+    }
 }
