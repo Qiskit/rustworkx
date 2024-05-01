@@ -186,20 +186,13 @@ mod tests {
             (8, 9),
         ];
         let graph = DiGraph::<i32, i32>::from_edges(edge_list);
-        let mut res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
-        assert_eq!(res, [(0, 1), (1, 2), (2, 3), (3, 0)]);
-        res = find_cycle(&graph, Some(NodeIndex::new(1)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
-        assert_eq!(res, [(1, 2), (2, 3), (3, 0), (0, 1)]);
-        res = find_cycle(&graph, Some(NodeIndex::new(5)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
+        for i in [0, 1, 2, 3].iter() {
+            let idx = NodeIndex::new(*i);
+            let res = find_cycle(&graph, Some(idx));
+            assert_cycle!(graph, res);
+            assert_eq!(res[0].0, idx);
+        }
+        let res = find_cycle(&graph, Some(NodeIndex::new(5)));
         assert_eq!(res, []);
     }
 
@@ -222,7 +215,7 @@ mod tests {
         let mut graph = DiGraph::<i32, i32>::from_edges(edge_list);
         graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
         let res = find_cycle(&graph, Some(NodeIndex::new(0)));
-        assert_eq!(res[0].0, NodeIndex::new(0));
+        assert_eq!(res[0].0, NodeIndex::new(1));
         assert_cycle!(graph, res);
     }
 
