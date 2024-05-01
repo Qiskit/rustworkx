@@ -157,6 +157,18 @@ mod tests {
     use crate::connectivity::find_cycle;
     use petgraph::prelude::*;
 
+    // Utility to assert cycles in the response
+    macro_rules! assert_cycle {
+        ($g: expr, $cycle: expr) => {{
+            for i in 0..$cycle.len() {
+                let (s, t) = $cycle[i];
+                assert!($g.contains_edge(s, t));
+                let (next_s, _) = $cycle[(i + 1) % $cycle.len()];
+                assert_eq!(t, next_s);
+            }
+        }};
+    }
+
     #[test]
     fn test_find_cycle_source() {
         let edge_list = vec![
@@ -209,10 +221,35 @@ mod tests {
         ];
         let mut graph = DiGraph::<i32, i32>::from_edges(edge_list);
         graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
-        let res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
-        assert_eq!(res, [(1, 1)]);
+        let res = find_cycle(&graph, Some(NodeIndex::new(0)));
+        assert_eq!(res[0].0, NodeIndex::new(0));
+        assert_cycle!(graph, res);
+    }
+
+    #[test]
+    fn test_self_loop_no_source() {
+        let edge_list = vec![
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (2, 2),
+        ];
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
+        let res = find_cycle(&graph, None);
+        assert_cycle!(graph, res);
+    }
+
+    #[test]
+    fn test_cycle_no_source() {
+        let edge_list = vec![
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (4, 2)
+        ];
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
+        let res = find_cycle(&graph, None);
+        assert_cycle!(graph, res);
     }
 }
