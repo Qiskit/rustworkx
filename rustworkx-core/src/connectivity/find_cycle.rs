@@ -14,7 +14,7 @@ use hashbrown::{HashMap, HashSet};
 use petgraph::algo;
 use petgraph::visit::{
     EdgeCount, EdgeRef, GraphBase, IntoEdgeReferences, IntoNeighborsDirected, IntoNodeIdentifiers,
-    NodeCount, Visitable, NodeIndexable
+    NodeCount, NodeIndexable, Visitable,
 };
 use petgraph::Direction::Outgoing;
 use std::hash::Hash;
@@ -221,12 +221,7 @@ mod tests {
 
     #[test]
     fn test_self_loop_no_source() {
-        let edge_list = vec![
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (2, 2),
-        ];
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (2, 2)];
         let graph = DiGraph::<i32, i32>::from_edges(edge_list);
         let res = find_cycle(&graph, None);
         assert_cycle!(graph, res);
@@ -234,13 +229,7 @@ mod tests {
 
     #[test]
     fn test_cycle_no_source() {
-        let edge_list = vec![
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 4),
-            (4, 2)
-        ];
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4), (4, 2)];
         let graph = DiGraph::<i32, i32>::from_edges(edge_list);
         let res = find_cycle(&graph, None);
         assert_cycle!(graph, res);
