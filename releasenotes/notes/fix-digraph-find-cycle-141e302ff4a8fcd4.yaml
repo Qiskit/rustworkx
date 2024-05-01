@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Fixed the behavior of :func:`~rustworkx.digraph_find_cycle` when
+    no source node was provided. Previously, the function would start looking
+    for a cycle at an arbitrary node which was not guaranteed to return a cycle.
+    Now, the function will smartly choose a source node to start the search from
+    such that if a cycle exists, it will be found.
