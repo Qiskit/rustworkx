@@ -25,7 +25,9 @@ use rustworkx_core::coloring::{
 
 pub use rustworkx_core::coloring::GreedyStrategyCore;
 
-/// .. list-table:: Greedy coloring strategies available for `graph_greedy_color`
+/// Greedy coloring strategies available for `graph_greedy_color`
+///
+/// .. list-table::
 ///     :header-rows: 1
 ///
 ///     * - Strategy
