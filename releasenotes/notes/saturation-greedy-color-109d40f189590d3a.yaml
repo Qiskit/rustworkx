@@ -26,3 +26,27 @@ features:
 
         layout = rx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])
         mpl_draw(graph, node_color=colors, pos=layout)
+  - |
+    Added a new keyword argument, ``preset_color_fn``, to :func:`.graph_greedy_edge_color`
+    which is used to provide preset colors for specific edges when computing the graph
+    coloring. You can optionally pass a callable to that argument which will
+    be passed edge index from the graph and is either expected to return an
+    integer color to use for that edge, or `None` to indicate there is no
+    preset color for that edge. For example:
+    
+    .. jupyter-execute::
+    
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+    
+        graph = rx.generators.generalized_petersen_graph(5, 2)
+    
+        def preset_colors(edge_index):
+            if edge_index == 0:
+                return 3
+    
+        coloring = rx.graph_greedy_edge_color(graph, preset_color_fn=preset_colors)
+        colors = [coloring[edge] for edge in graph.edge_indices()]
+        
+        layout = rx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4], [6, 7, 8, 9, 5]])
+        mpl_draw(graph, edge_color=colors, pos=layout)
