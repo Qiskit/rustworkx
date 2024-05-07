@@ -203,6 +203,42 @@ class TestGraphEdgeColoring(unittest.TestCase):
             )
             self.assertEqual({0: 0, 1: 2, 2: 1, 3: 1, 4: 2, 5: 0}, edge_colors)
 
+    def test_greedy_strategies_with_preset(self):
+        def preset(edge_idx):
+            if edge_idx == 0:
+                return 1
+            elif edge_idx == 3:
+                return 0
+            else:
+                return None
+
+        graph = rustworkx.generators.complete_graph(4)
+
+        with self.subTest():
+            edge_colors = rustworkx.graph_greedy_edge_color(graph, preset_color_fn=preset)
+            print(f"{edge_colors = }")
+            self.assertEqual({0: 1, 1: 2, 2: 0, 3: 0, 4: 2, 5: 1}, edge_colors)
+
+        with self.subTest(greedy_strategy=rustworkx.GreedyStrategy.Degree):
+            edge_colors = rustworkx.graph_greedy_edge_color(
+                graph, preset_color_fn=preset, greedy_strategy=rustworkx.GreedyStrategy.Degree
+            )
+            self.assertEqual({0: 1, 1: 2, 2: 0, 3: 0, 4: 2, 5: 1}, edge_colors)
+
+        with self.subTest(greedy_strategy=rustworkx.GreedyStrategy.Saturation):
+            edge_colors = rustworkx.graph_greedy_edge_color(
+                graph, preset_color_fn=preset, greedy_strategy=rustworkx.GreedyStrategy.Saturation
+            )
+            self.assertEqual({0: 1, 1: 2, 2: 0, 3: 0, 4: 2, 5: 1}, edge_colors)
+
+        with self.subTest(greedy_strategy=rustworkx.GreedyStrategy.IndependentSet):
+            edge_colors = rustworkx.graph_greedy_edge_color(
+                graph,
+                preset_color_fn=preset,
+                greedy_strategy=rustworkx.GreedyStrategy.IndependentSet,
+            )
+            self.assertEqual({0: 1, 1: 2, 2: 0, 3: 0, 4: 2, 5: 1}, edge_colors)
+
 
 class TestMisraGriesColoring(unittest.TestCase):
     def test_simple_graph(self):
