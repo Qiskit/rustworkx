@@ -177,16 +177,24 @@ pub fn graph_greedy_edge_color(
         GreedyStrategy::Degree => GreedyStrategyCore::Degree,
         GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
     };
-
-    let callback = match preset_color_fn {
-        Some(preset_color_fn) => {
-            |edge_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
-                Ok(None)
-            }
-        },
-        None => |_: EdgeIndex| {
-                Ok(None)
-        }
+    //
+    // let callback = match preset_color_fn {
+    //     Some(preset_color_fn) => {
+    //         |edge_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
+    //             let result = preset_color_fn.call1(py, (edge_idx.index(),));
+    //             // let y = result.ok()?;
+    //             println!("Edge is {}", edge_idx.index());
+    //             // println!("y is {}", y);
+    //
+    //             Ok(None)
+    //         }
+    //     },
+    //     None => |edge_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
+    //             Ok(None)
+    //     }
+    // };
+    let callback = |edge_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
+        Ok(None)
     };
 
     let colors = greedy_edge_color(&graph.graph, callback, inner_strategy);
