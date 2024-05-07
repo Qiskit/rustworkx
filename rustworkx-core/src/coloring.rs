@@ -395,7 +395,7 @@ where
     .unwrap()
 }
 
-/// Color a graph using a greedy graph coloring algorithm with preset colors
+/// Color a graph using a greedy graph coloring algorithm with preset colors.
 ///
 /// This function uses one of several greedy strategies described in:
 ///
@@ -463,7 +463,8 @@ where
     inner_greedy_node_color(graph, preset_color_fn, greedy_strategy)
 }
 
-/// Color edges of a graph using a greedy approach.
+/// Color edges of a graph using a greedy graph coloring algorithm with preset
+/// colors.
 ///
 /// This function works by greedily coloring the line graph of the given graph.
 ///
@@ -473,6 +474,10 @@ where
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on.
+/// * `preset_color_fn` - A callback function that will receive the edge identifier
+///     for each edge in the graph and is expected to return an `Option<usize>`
+///     (wrapped in a `Result`) that is `None` if the edge has no preset and
+///     the usize represents the preset color.
 /// * `greedy_strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example

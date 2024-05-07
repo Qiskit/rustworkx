@@ -145,6 +145,13 @@ pub fn graph_greedy_color(
 /// subsets.
 ///
 /// :param PyGraph: The input PyGraph object to edge-color.
+/// :param preset_color_fn: An optional callback function that is used to manually
+///     specify a color to use for particular edges in the graph. If specified
+///     this takes a callable that will be passed an edge index and is expected to
+///     either return an integer representing a color or ``None`` to indicate there
+///     is no preset. Note if you do use a callable there is no validation that
+///     the preset values are valid colors. You can generate an invalid coloring
+///     if you the specified function returned invalid colors for any edges.
 /// :param greedy_strategy: The greedy strategy used by the algorithm. When the
 ///     strategy is not explicitly specified, the `Degree` strategy is used by
 ///     default.
