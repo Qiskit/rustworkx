@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::GraphNotBipartite;
-use crate::{digraph, graph, NodeIndex, EdgeIndex};
+use crate::{digraph, graph, EdgeIndex, NodeIndex};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -177,27 +177,22 @@ pub fn graph_greedy_edge_color(
         GreedyStrategy::Degree => GreedyStrategyCore::Degree,
         GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
     };
-    //
-    // let callback = match preset_color_fn {
-    //     Some(preset_color_fn) => {
-    //         |edge_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
-    //             let result = preset_color_fn.call1(py, (edge_idx.index(),));
-    //             // let y = result.ok()?;
-    //             println!("Edge is {}", edge_idx.index());
-    //             // println!("y is {}", y);
-    //
-    //             Ok(None)
-    //         }
-    //     },
-    //     None => |edge_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
-    //             Ok(None)
-    //     }
-    // };
-    let callback = |edge_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
-        Ok(None)
+
+    let colors = match preset_color_fn {
+        Some(preset_color_fn) => {
+            let callback = |edge_idx: EdgeIndex| -> PyResult<Option<usize>> {
+                preset_color_fn
+                    .call1(py, (edge_idx.index(),))
+                    .map(|x| x.extract(py).ok())
+            };
+            greedy_edge_color(&graph.graph, callback, inner_strategy)
+        }
+        None => {
+            let callback = |_: EdgeIndex| -> Result<Option<usize>, Infallible> { Ok(None) };
+            greedy_edge_color(&graph.graph, callback, inner_strategy)
+        }
     };
 
-    let colors = greedy_edge_color(&graph.graph, callback, inner_strategy);
     let out_dict = PyDict::new_bound(py);
     for (node, color) in colors {
         out_dict.set_item(node.index(), color)?;

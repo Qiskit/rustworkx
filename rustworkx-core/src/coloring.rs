@@ -1209,7 +1209,7 @@ mod test_edge_coloring {
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn,GreedyStrategyCore::Degree);
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1229,7 +1229,6 @@ mod test_edge_coloring {
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
         let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
-
 
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
