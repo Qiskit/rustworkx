@@ -11,11 +11,13 @@
 // under the License.
 
 use crate::GraphNotBipartite;
-use crate::{digraph, graph, NodeIndex};
+use crate::{digraph, graph, NodeIndex, EdgeIndex};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
+
+use std::convert::Infallible;
 
 use rustworkx_core::bipartite_coloring::bipartite_edge_color;
 use rustworkx_core::coloring::{
@@ -162,11 +164,12 @@ pub fn graph_greedy_color(
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, greedy_strategy=GreedyStrategy::Degree)")]
-#[pyo3(signature=(graph, /, greedy_strategy=GreedyStrategy::Degree))]
+#[pyo3(text_signature = "(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree)")]
+#[pyo3(signature=(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree))]
 pub fn graph_greedy_edge_color(
     py: Python,
     graph: &graph::PyGraph,
+    preset_color_fn: Option<PyObject>,
     greedy_strategy: GreedyStrategy,
 ) -> PyResult<PyObject> {
     let inner_strategy = match greedy_strategy {
@@ -175,7 +178,18 @@ pub fn graph_greedy_edge_color(
         GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
     };
 
-    let colors = greedy_edge_color(&graph.graph, inner_strategy);
+    let callback = match preset_color_fn {
+        Some(preset_color_fn) => {
+            |edge_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
+                Ok(None)
+            }
+        },
+        None => |_: EdgeIndex| {
+                Ok(None)
+        }
+    };
+
+    let colors = greedy_edge_color(&graph.graph, callback, inner_strategy);
     let out_dict = PyDict::new_bound(py);
     for (node, color) in colors {
         out_dict.set_item(node.index(), color)?;

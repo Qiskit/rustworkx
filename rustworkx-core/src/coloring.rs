@@ -483,9 +483,11 @@ where
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
 /// use rustworkx_core::coloring::{greedy_edge_color, GreedyStrategyCore};
+/// use std::convert::Infallible;
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (0, 2), (2, 3)]);
-/// let colors = greedy_edge_color(&g, GreedyStrategyCore::Degree);
+/// let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+/// let colors = greedy_edge_color(&g, preset_color_fn, GreedyStrategyCore::Degree);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(EdgeIndex::new(0), 2);
 /// expected_colors.insert(EdgeIndex::new(1), 0);
@@ -494,20 +496,28 @@ where
 /// assert_eq!(colors, expected_colors);
 /// ```
 ///
-pub fn greedy_edge_color<G>(
+pub fn greedy_edge_color<G, F, E>(
     graph: G,
+    preset_color_fn: F,
     greedy_strategy: GreedyStrategyCore,
 ) -> DictMap<G::EdgeId, usize>
 where
     G: EdgeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::EdgeId: Hash + Eq,
+    F: Fn(G::EdgeId) -> Result<Option<usize>, E>,
 {
     let (new_graph, edge_to_node_map): (
         petgraph::graph::UnGraph<(), ()>,
         HashMap<G::EdgeId, NodeIndex>,
     ) = line_graph(&graph, || (), || ());
 
-    let colors = greedy_node_color(&new_graph, greedy_strategy);
+    let node_to_edge_map: HashMap<&NodeIndex, &G::EdgeId> =
+        edge_to_node_map.iter().map(|(k, v)| (v, k)).collect();
+    let new_graph_preset_color_fn =
+        |x: NodeIndex| preset_color_fn(**node_to_edge_map.get(&x).unwrap());
+
+    let colors = inner_greedy_node_color(&new_graph, new_graph_preset_color_fn, greedy_strategy)
+        .unwrap_or_else(|_| panic!("Something went horribly wrong!"));
 
     let mut edge_colors: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
 
@@ -1177,6 +1187,7 @@ mod test_edge_coloring {
     use crate::coloring::{greedy_edge_color, GreedyStrategyCore};
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
+    use std::convert::Infallible;
 
     use petgraph::graph::{edge_index, EdgeIndex};
     use petgraph::Undirected;
@@ -1185,7 +1196,9 @@ mod test_edge_coloring {
     fn test_greedy_edge_color_empty_graph() {
         // Empty graph
         let graph = Graph::<(), (), Undirected>::new_undirected();
-        let colors = greedy_edge_color(&graph, GreedyStrategyCore::Degree);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -1194,7 +1207,9 @@ mod test_edge_coloring {
     fn test_greedy_edge_color_simple_graph() {
         // Graph with an edge removed
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3)]);
-        let colors = greedy_edge_color(&graph, GreedyStrategyCore::Degree);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+
+        let colors = greedy_edge_color(&graph, preset_color_fn,GreedyStrategyCore::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1210,7 +1225,12 @@ mod test_edge_coloring {
         // Simple graph
         let mut graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0)]);
         graph.remove_edge(edge_index(1));
-        let colors = greedy_edge_color(&graph, GreedyStrategyCore::Degree);
+
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
+
+
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
