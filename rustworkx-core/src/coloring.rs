@@ -1239,6 +1239,151 @@ mod test_edge_coloring {
         .collect();
         assert_eq!(colors, expected_colors);
     }
+
+    #[test]
+    fn test_greedy_edge_color_degree() {
+        // Simple graph
+        let graph =
+            Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 1),
+            (EdgeIndex::new(1), 0),
+            (EdgeIndex::new(2), 1),
+            (EdgeIndex::new(3), 0),
+            (EdgeIndex::new(4), 2),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_edge_color_degree_with_preset() {
+        // Simple graph
+        let graph =
+            Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
+
+        let preset_color_fn = |node_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
+            if node_idx.index() == 1 {
+                Ok(Some(1))
+            } else {
+                Ok(None)
+            }
+        };
+
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 0),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 0),
+            (EdgeIndex::new(3), 1),
+            (EdgeIndex::new(4), 2),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_edge_color_saturation() {
+        // Simple graph
+        let graph =
+            Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Saturation);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 1),
+            (EdgeIndex::new(1), 0),
+            (EdgeIndex::new(2), 1),
+            (EdgeIndex::new(3), 0),
+            (EdgeIndex::new(4), 2),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_edge_color_saturation_with_preset() {
+        // Simple graph
+        let graph =
+            Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
+
+        let preset_color_fn = |node_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
+            if node_idx.index() == 1 {
+                Ok(Some(1))
+            } else if node_idx.index() == 4 {
+                Ok(Some(0))
+            } else {
+                Ok(None)
+            }
+        };
+
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Saturation);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 0),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 2),
+            (EdgeIndex::new(3), 1),
+            (EdgeIndex::new(4), 0),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_edge_color_independent_set() {
+        // Simple graph
+        let graph =
+            Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::IndependentSet);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 0),
+            (EdgeIndex::new(1), 1),
+            (EdgeIndex::new(2), 2),
+            (EdgeIndex::new(3), 1),
+            (EdgeIndex::new(4), 0),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_greedy_edge_color_independent_set_with_preset() {
+        // Simple graph
+        let graph =
+            Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
+
+        let preset_color_fn = |node_idx: EdgeIndex| -> Result<Option<usize>, Infallible> {
+            if node_idx.index() == 1 {
+                Ok(Some(0))
+            } else if node_idx.index() == 4 {
+                Ok(Some(2))
+            } else {
+                Ok(None)
+            }
+        };
+
+        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::IndependentSet);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 1),
+            (EdgeIndex::new(1), 0),
+            (EdgeIndex::new(2), 1),
+            (EdgeIndex::new(3), 0),
+            (EdgeIndex::new(4), 2),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
 }
 
 #[cfg(test)]
