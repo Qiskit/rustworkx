@@ -12,55 +12,42 @@
 
 use std::cmp::Eq;
 use std::error::Error;
-use std::hash::Hash;
 use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
 
 use petgraph::algo;
-use petgraph::visit::Data;
 use petgraph::data::DataMap;
-use petgraph::visit::{EdgeRef, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeIndexable, Visitable, IntoEdgesDirected};
+use petgraph::visit::Data;
+use petgraph::visit::{
+    EdgeRef, GraphBase, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
+    NodeIndexable, Visitable,
+};
 
-
-// Taken from Kevin's PR, but we probably don't need the enum (no MergeError either)
+/// Define custom error classes for collect_bicolor_runs
 // TODO: clean up once the code compiles
 #[derive(Debug)]
-pub enum CollectBicolorError {
+pub enum CollectBicolorError<E: Error> {
     DAGWouldCycle,
+    CallableError(E), //placeholder, may remove if not used
 }
 
-impl Display for CollectBicolorError {
+impl<E: Error> Display for CollectBicolorError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             CollectBicolorError::DAGWouldCycle => fmt_dag_would_cycle(f),
+            CollectBicolorError::CallableError(ref e) => fmt_callable_error(f, e),
         }
     }
 }
 
-impl Error for CollectBicolorError {}
-
-#[derive(Debug)]
-pub enum CollectBicolorSimpleError<E: Error> {
-    DAGWouldCycle,
-    MergeError(E), //placeholder, may remove if not used
-}
-
-impl<E: Error> Display for CollectBicolorSimpleError<E> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CollectBicolorSimpleError::DAGWouldCycle => fmt_dag_would_cycle(f),
-            CollectBicolorSimpleError::MergeError(ref e) => fmt_merge_error(f, e),
-        }
-    }
-}
-
-impl<E: Error> Error for CollectBicolorSimpleError<E> {}
+impl<E: Error> Error for CollectBicolorError<E> {}
 
 fn fmt_dag_would_cycle(f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(f, "The operation would introduce a cycle.")
 }
 
-fn fmt_merge_error<E: Error>(f: &mut Formatter<'_>, inner: &E) -> std::fmt::Result {
-    write!(f, "The prov failed with: {:?}", inner)
+fn fmt_callable_error<E: Error>(f: &mut Formatter<'_>, inner: &E) -> std::fmt::Result {
+    write!(f, "The function failed with: {:?}", inner)
 }
 /// Collect runs that match a filter function given edge colors
 ///
@@ -88,13 +75,15 @@ pub fn collect_bicolor_runs<G, F, C, B, E>(
     graph: G,
     filter_fn: F,
     color_fn: C,
-) -> Result<Vec<Vec<&<G as Data>::NodeWeight>>, CollectBicolorSimpleError<E>> //OG type: PyResult<Vec<Vec<PyObject>>>
+) -> Result<Vec<Vec<G::NodeId>>, CollectBicolorError<E>>
+//OG type: PyResult<Vec<Vec<PyObject>>>
 where
     E: Error,
     // add Option to input type because of line 135
-    F: FnMut(&Option<&<G as Data>::NodeWeight>) -> Result<Option<bool>, CollectBicolorSimpleError<E>>, //OG input: &PyObject, OG return: PyResult<Option<bool>>
-    C: FnMut(&<G as Data>::EdgeWeight) -> Result<Option<usize>, CollectBicolorSimpleError<E>>, //OG input: &PyObject, OG return: PyResult<Option<usize>>
-    G: NodeIndexable // can take node index type and convert to usize. It restricts node index type.
+    F: Fn(&Option<&<G as Data>::NodeWeight>) -> Result<Option<bool>, CollectBicolorError<E>>, //OG input: &PyObject, OG return: PyResult<Option<bool>>
+    C: Fn(&<G as Data>::EdgeWeight) -> Result<Option<usize>, CollectBicolorError<E>>, //OG input: &PyObject, OG return: PyResult<Option<usize>>
+    G: NodeIndexable
+        // can take node index type and convert to usize. It restricts node index type.
         + IntoNodeIdentifiers // used in toposort. Turns graph into list of nodes
         + IntoNeighborsDirected // used in toposort
         + IntoEdgesDirected // used in line 138
@@ -102,25 +91,23 @@ where
         + DataMap, // used to access node weights
     <G as GraphBase>::NodeId: Eq + Hash,
 {
-    let mut pending_list: Vec<Vec<&<G as Data>::NodeWeight>> = Vec::new(); //OG type: Vec<Vec<PyObject>>
+    let mut pending_list: Vec<Vec<G::NodeId>> = Vec::new(); //OG type: Vec<Vec<PyObject>>
     let mut block_id: Vec<Option<usize>> = Vec::new(); //OG type: Vec<Option<usize>>
-    let mut block_list: Vec<Vec<&<G as Data>::NodeWeight>> = Vec::new(); //OG type: Vec<Vec<PyObject>> -> return
+    let mut block_list: Vec<Vec<G::NodeId>> = Vec::new(); //OG type: Vec<Vec<PyObject>> -> return
 
-    let filter_node = |node: &Option<&<G as Data>::NodeWeight>| -> Result<Option<bool>, CollectBicolorSimpleError<E>>{
-        // TODO: just return the output of filter_fn
-        let res = filter_fn(node);
-        res
-    };
+    let filter_node =
+        |node: &Option<&<G as Data>::NodeWeight>| -> Result<Option<bool>, CollectBicolorError<E>> {
+            filter_fn(node)
+        };
 
-    let color_edge = |edge: &<G as Data>::EdgeWeight| -> Result<Option<usize>, CollectBicolorSimpleError<E>>{
-        // TODO: just return the output of color_fn
-        let res = color_fn(edge);
-        res
-    };
+    let color_edge =
+        |edge: &<G as Data>::EdgeWeight| -> Result<Option<usize>, CollectBicolorError<E>> {
+            color_fn(edge)
+        };
 
-    let nodes = match algo::toposort(&graph, None){
+    let nodes = match algo::toposort(&graph, None) {
         Ok(nodes) => nodes,
-        Err(_err) => return Err(CollectBicolorSimpleError::DAGWouldCycle)
+        Err(_err) => return Err(CollectBicolorError::DAGWouldCycle),
     };
 
     // Utility for ensuring pending_list has the color index
@@ -135,8 +122,7 @@ where
 
     for node in nodes {
         if let Some(is_match) = filter_node(&graph.node_weight(node))? {
-            let raw_edges = graph
-                .edges_directed(node, petgraph::Direction::Outgoing);
+            let raw_edges = graph.edges_directed(node, petgraph::Direction::Outgoing);
 
             // Remove all edges that do not yield errors from color_fn
             let colors = raw_edges
@@ -149,14 +135,15 @@ where
             // Remove null edges from color_fn
             let colors = colors.into_iter().flatten().collect::<Vec<usize>>();
 
+            // &NodeIndexable::from_index(&graph, node)
             if colors.len() <= 2 && is_match {
                 if colors.len() == 1 {
                     let c0 = colors[0];
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     if let Some(c0_block_id) = block_id[c0] {
-                        block_list[c0_block_id].push(graph.node_weight(node).expect("REASON"));
+                        block_list[c0_block_id].push(node);
                     } else {
-                        pending_list[c0].push(graph.node_weight(node).expect("REASON"));
+                        pending_list[c0].push(node);
                     }
                 } else if colors.len() == 2 {
                     let c0 = colors[0];
@@ -168,17 +155,16 @@ where
                         && block_id[c1].is_some()
                         && block_id[c0] == block_id[c1]
                     {
-                        block_list[block_id[c0].unwrap_or_default()]
-                            .push(graph.node_weight(node).expect("REASON"));
+                        block_list[block_id[c0].unwrap_or_default()].push(node);
                     } else {
-                        let mut new_block: Vec<&<G as Data>::NodeWeight> =
+                        let mut new_block: Vec<G::NodeId> =
                             Vec::with_capacity(pending_list[c0].len() + pending_list[c1].len() + 1);
 
                         // Clears pending lits and add to new block
                         new_block.append(&mut pending_list[c0]);
                         new_block.append(&mut pending_list[c1]);
 
-                        new_block.push(graph.node_weight(node).expect("REASON"));
+                        new_block.push(node);
 
                         // Create new block, assign its id to color pair
                         block_id[c0] = Some(block_list.len());

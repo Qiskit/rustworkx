@@ -73,12 +73,12 @@ pub type Result<T, E = Infallible> = core::result::Result<T, E>;
 pub mod bipartite_coloring;
 /// Module for centrality algorithms.
 pub mod centrality;
+pub mod collect_bicolor_runs;
 /// Module for coloring algorithms.
 pub mod coloring;
 pub mod connectivity;
 pub mod generators;
 pub mod line_graph;
-pub mod collect_bicolor_runs;
 
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
