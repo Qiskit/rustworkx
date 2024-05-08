@@ -18,9 +18,11 @@ use std::fmt::{Debug, Display, Formatter};
 use petgraph::algo;
 use petgraph::visit::Data;
 use petgraph::data::DataMap;
-use petgraph::visit::{EdgeRef, GraphBase, GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable, IntoEdgesDirected};
+use petgraph::visit::{EdgeRef, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeIndexable, Visitable, IntoEdgesDirected};
 
 
+// Taken from Kevin's PR, but we probably don't need the enum (no MergeError either)
+// TODO: clean up once the code compiles
 #[derive(Debug)]
 pub enum CollectBicolorError {
     DAGWouldCycle,
@@ -86,32 +88,32 @@ pub fn collect_bicolor_runs<G, F, C, B, E>(
     graph: G,
     filter_fn: F,
     color_fn: C,
-) -> Result<Vec<Vec<usize>>, CollectBicolorSimpleError<E>> //OG type: PyResult<Vec<Vec<PyObject>>>
+) -> Result<Vec<Vec<&<G as Data>::NodeWeight>>, CollectBicolorSimpleError<E>> //OG type: PyResult<Vec<Vec<PyObject>>>
 where
     E: Error,
-    // add option because of line 135
+    // add Option to input type because of line 135
     F: FnMut(&Option<&<G as Data>::NodeWeight>) -> Result<Option<bool>, CollectBicolorSimpleError<E>>, //OG input: &PyObject, OG return: PyResult<Option<bool>>
     C: FnMut(&<G as Data>::EdgeWeight) -> Result<Option<usize>, CollectBicolorSimpleError<E>>, //OG input: &PyObject, OG return: PyResult<Option<usize>>
-    G: NodeIndexable //can take node index type and convert to usize. It restricts node index type.
-        + IntoNodeIdentifiers //turn graph into list of nodes
-        + IntoNeighborsDirected // toposort
-        + IntoEdgesDirected
-        + Visitable // toposort
-        + GraphProp // gives access to whether graph is directed
-        + NodeCount
-        + DataMap,
+    G: NodeIndexable // can take node index type and convert to usize. It restricts node index type.
+        + IntoNodeIdentifiers // used in toposort. Turns graph into list of nodes
+        + IntoNeighborsDirected // used in toposort
+        + IntoEdgesDirected // used in line 138
+        + Visitable //  used in toposort
+        + DataMap, // used to access node weights
     <G as GraphBase>::NodeId: Eq + Hash,
 {
-    let mut pending_list = Vec::new(); //OG type: Vec<Vec<PyObject>>
-    let mut block_id = Vec::new(); //OG type: Vec<Option<usize>>
-    let mut block_list = Vec::new(); //OG type: Vec<Vec<PyObject>> -> return
+    let mut pending_list: Vec<Vec<&<G as Data>::NodeWeight>> = Vec::new(); //OG type: Vec<Vec<PyObject>>
+    let mut block_id: Vec<Option<usize>> = Vec::new(); //OG type: Vec<Option<usize>>
+    let mut block_list: Vec<Vec<&<G as Data>::NodeWeight>> = Vec::new(); //OG type: Vec<Vec<PyObject>> -> return
 
     let filter_node = |node: &Option<&<G as Data>::NodeWeight>| -> Result<Option<bool>, CollectBicolorSimpleError<E>>{
+        // TODO: just return the output of filter_fn
         let res = filter_fn(node);
         res
     };
 
     let color_edge = |edge: &<G as Data>::EdgeWeight| -> Result<Option<usize>, CollectBicolorSimpleError<E>>{
+        // TODO: just return the output of color_fn
         let res = color_fn(edge);
         res
     };
@@ -131,7 +133,6 @@ where
         };
     }
 
-    // tried unsuccessfully &NodeIndexable::from_index(&graph, node)
     for node in nodes {
         if let Some(is_match) = filter_node(&graph.node_weight(node))? {
             let raw_edges = graph
@@ -153,9 +154,9 @@ where
                     let c0 = colors[0];
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     if let Some(c0_block_id) = block_id[c0] {
-                        block_list[c0_block_id].push(graph.node_weight(node));
+                        block_list[c0_block_id].push(graph.node_weight(node).expect("REASON"));
                     } else {
-                        pending_list[c0].push(graph.node_weight(node));
+                        pending_list[c0].push(graph.node_weight(node).expect("REASON"));
                     }
                 } else if colors.len() == 2 {
                     let c0 = colors[0];
@@ -168,16 +169,16 @@ where
                         && block_id[c0] == block_id[c1]
                     {
                         block_list[block_id[c0].unwrap_or_default()]
-                            .push(graph.node_weight(node));
+                            .push(graph.node_weight(node).expect("REASON"));
                     } else {
-                        let mut new_block: Vec<Option<&<G as Data>::NodeWeight>> =
+                        let mut new_block: Vec<&<G as Data>::NodeWeight> =
                             Vec::with_capacity(pending_list[c0].len() + pending_list[c1].len() + 1);
 
                         // Clears pending lits and add to new block
                         new_block.append(&mut pending_list[c0]);
                         new_block.append(&mut pending_list[c1]);
 
-                        new_block.push(graph.node_weight(node));
+                        new_block.push(graph.node_weight(node).expect("REASON"));
 
                         // Create new block, assign its id to color pair
                         block_id[c0] = Some(block_list.len());
