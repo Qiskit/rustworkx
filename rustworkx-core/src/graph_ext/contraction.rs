@@ -274,7 +274,6 @@ pub trait ContractNodesUndirected: Data {
     ///
     /// # Example
     /// ```
-    /// use std::convert::Infallible;
     /// use petgraph::prelude::*;
     /// use rustworkx_core::graph_ext::*;
     ///

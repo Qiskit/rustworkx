@@ -114,7 +114,7 @@ pub struct RxPyErr {
 }
 
 /// Type alias for a [Result] with error type [RxPyErr].
-type RxPyResult<T> = Result<T, RxPyErr>;
+pub type RxPyResult<T> = Result<T, RxPyErr>;
 
 fn map_dag_would_cycle<E: std::error::Error>(value: E) -> PyErr {
     DAGWouldCycle::new_err(format!("{:?}", value))

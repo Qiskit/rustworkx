@@ -24,14 +24,14 @@
 //! There are four traits related to node contraction available for different
 //! graphs / configurations, including:
 //!
-//! - [`ContractNodesDirected`][ContractNodesDirected]
-//! - [`ContractNodesSimpleDirected`][ContractNodesSimpleDirected]
-//! - [`ContractNodesUndirected`][ContractNodesUndirected]
-//! - [`ContractNodesSimpleUndirected`][ContractNodesSimpleUndirected]
+//! - [`ContractNodesDirected`]
+//! - [`ContractNodesSimpleDirected`]
+//! - [`ContractNodesUndirected`]
+//! - [`ContractNodesSimpleUndirected`]
 //!
 //! Of these, the `ContractNodesSimple-` traits provide a
 //! `contract_nodes_simple` method for applicable graph types, which performs
-//! node contraction without introducing multiple edge between nodes (edges
+//! node contraction without introducing parallel edges between nodes (edges
 //! between any two given nodes are merged via the method's merge function).
 //! These traits can be used for node contraction within simple graphs to
 //! preserve this property, or on multi-graphs to ensure that the contraction
@@ -45,11 +45,12 @@
 //! ### Multi-graph Extensions
 //!
 //! These traits provide additional helper methods for use with multi-graphs,
-//! e.g. [`HasParallelEdgesDirected`][HasParallelEdgesDirected].
+//! e.g. [`HasParallelEdgesDirected`].
 //!
 //! ### Graph Extension Trait Implementations
 //!
-//! The following table lists the traits that are implemented for each graph type:
+//! The following table lists the traits that are currently implemented for
+//! each graph type:
 //!
 //! |                               | Graph | StableGraph | GraphMap | MatrixGraph | Csr   | List  |
 //! | ----------------------------- | :---: | :---------: | :------: | :---------: | :---: | :---: |
