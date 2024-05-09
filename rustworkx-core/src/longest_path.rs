@@ -52,7 +52,10 @@ use std::collections::HashMap;
 /// let result = longest_path(&graph, weight_fn);
 /// assert_eq!(result, Some((vec![n1, n2, n3], 4)));
 /// ```
-pub fn longest_path<N, E, F, T>(graph: &DiGraph<N, E>, mut weight_fn: F) -> Option<(Vec<NodeIndex>, T)>
+pub fn longest_path<N, E, F, T>(
+    graph: &DiGraph<N, E>,
+    mut weight_fn: F,
+) -> Option<(Vec<NodeIndex>, T)>
 where
     F: FnMut(NodeIndex, NodeIndex, &E) -> T,
     T: Ord + Copy + std::ops::Add<Output = T> + Default,
@@ -63,7 +66,8 @@ where
     }
 
     let mut path: Vec<NodeIndex> = Vec::new(); // This will store the longest path
-    let nodes = match algo::toposort(graph, None) { // Topologically sort the nodes
+    let nodes = match algo::toposort(graph, None) {
+        // Topologically sort the nodes
         Ok(nodes) => nodes,
         Err(_) => return None, // Should not happen since we check for cycles above
     };
@@ -79,7 +83,7 @@ where
     for node in nodes {
         let parents = graph.edges_directed(node, petgraph::Direction::Incoming);
         let mut us: Vec<(T, NodeIndex)> = Vec::new(); // This will store weights from each parent
-        // Process each parent edge of the current node
+                                                      // Process each parent edge of the current node
         for edge in parents {
             let (p_node, target, weight) = (edge.source(), edge.target(), edge.weight());
             let weight = weight_fn(p_node, target, weight); // Compute the weight using the provided function
@@ -132,7 +136,10 @@ mod test_longest_path {
         graph.add_node(());
 
         let weight_fn = |_: NodeIndex, _: NodeIndex, _: &()| 1;
-        assert_eq!(longest_path(&graph, weight_fn), Some((vec![NodeIndex::new(0)], 0)));
+        assert_eq!(
+            longest_path(&graph, weight_fn),
+            Some((vec![NodeIndex::new(0)], 0))
+        );
     }
 
     /// Tests a simple path from one node to another to ensure it computes path lengths correctly.
