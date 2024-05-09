@@ -118,8 +118,8 @@ where
 
 impl<N, E> ContractNodesDirected for graphmap::GraphMap<N, E, Directed>
 where
-    N: Copy + Ord + Hash + 'static,
-    E: Clone + 'static,
+    for<'a> N: graphmap::NodeTrait + 'a,
+    for<'a> E: Clone + 'a,
 {
     type Error = ContractError;
 
@@ -233,8 +233,8 @@ where
 
 impl<N, E> ContractNodesSimpleDirected for graphmap::GraphMap<N, E, Directed>
 where
-    N: Copy + Ord + Hash + 'static,
-    E: Clone + 'static,
+    for<'a> N: graphmap::NodeTrait + 'a,
+    for<'a> E: Clone + 'a,
 {
     type Error<Err: Error> = ContractSimpleError<Err>;
 
@@ -327,8 +327,8 @@ where
 
 impl<N, E> ContractNodesUndirected for graphmap::GraphMap<N, E, Undirected>
 where
-    N: Copy + Ord + Hash + 'static,
-    E: Clone + 'static,
+    for<'a> N: graphmap::NodeTrait + 'a,
+    for<'a> E: Clone + 'a,
 {
     fn contract_nodes<I>(&mut self, nodes: I, obj: Self::NodeWeight) -> Self::NodeId
     where
@@ -426,8 +426,8 @@ where
 
 impl<N, E> ContractNodesSimpleUndirected for graphmap::GraphMap<N, E, Undirected>
 where
-    N: Copy + Ord + Hash + 'static,
-    E: Clone + 'static,
+    for<'a> N: graphmap::NodeTrait + 'a,
+    for<'a> E: Clone + 'a,
 {
     type Error<Err: Error> = ContractSimpleError<Err>;
 
