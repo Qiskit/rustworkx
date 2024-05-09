@@ -12,6 +12,54 @@
 
 //! This module defines traits that extend PetGraph's graph
 //! data structures.
+//!
+//! The `-Directed` and `-Undirected` trait variants are implemented as
+//! applicable for directed and undirected graph types. For example, only
+//! directed graph types are concerned with cycle checking and corresponding
+//! error handling, so these traits provide applicable parameters and return
+//! types to account for this.
+//!
+//! ### Node Contraction
+//!
+//! There are four traits related to node contraction available for different
+//! graphs / configurations, including:
+//!
+//! - [`ContractNodesDirected`][ContractNodesDirected]
+//! - [`ContractNodesSimpleDirected`][ContractNodesSimpleDirected]
+//! - [`ContractNodesUndirected`][ContractNodesUndirected]
+//! - [`ContractNodesSimpleUndirected`][ContractNodesSimpleUndirected]
+//!
+//! Of these, the `ContractNodesSimple-` traits provide a
+//! `contract_nodes_simple` method for applicable graph types, which performs
+//! node contraction without introducing multiple edge between nodes (edges
+//! between any two given nodes are merged via the method's merge function).
+//! These traits can be used for node contraction within simple graphs to
+//! preserve this property, or on multi-graphs to ensure that the contraction
+//! does not introduce additional parallel edges.
+//!
+//! The other `ContractNodes-` traits provide a `contract_nodes` method, which
+//! happily introduces parallel edges when multiple nodes in the contraction
+//! have an incoming edge from the same source node or when multiple nodes in
+//! the contraction have an outgoing edge to the same target node.
+//!
+//! ### Multi-graph Extensions
+//!
+//! These traits provide additional helper methods for use with multi-graphs,
+//! e.g. [`HasParallelEdgesDirected`][HasParallelEdgesDirected].
+//!
+//! ### Graph Extension Trait Implementations
+//!
+//! The following table lists the traits that are implemented for each graph type:
+//!
+//! |                               | Graph | StableGraph | GraphMap | MatrixGraph | Csr   | List  |
+//! | ----------------------------- | :---: | :---------: | :------: | :---------: | :---: | :---: |
+//! | ContractNodesDirected         |       |  x          |    x     |             |       |       |
+//! | ContractNodesSimpleDirected   |       |  x          |    x     |             |       |       |
+//! | ContractNodesUndirected       |       |  x          |    x     |             |       |       |
+//! | ContractNodesSimpleUndirected |       |  x          |    x     |             |       |       |
+//! | HasParallelEdgesDirected      | x     |  x          |    x     | x           | x     | x     |
+//! | HasParallelEdgesUndirected    | x     |  x          |    x     | x           | x     | x     |
+//! | NodeRemovable                 | x     |  x          |    x     | x           |       |       |
 
 use petgraph::graph::IndexType;
 use petgraph::graphmap::{GraphMap, NodeTrait};
