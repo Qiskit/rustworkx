@@ -69,3 +69,62 @@ where
     Some((path, path_weight))
 }
 
+#[cfg(test)]
+mod test_longest_path {
+    use super::*;
+    use petgraph::graph::DiGraph;
+    use petgraph::graph::NodeIndex;
+
+    #[test]
+    fn test_empty_graph() {
+        let graph: DiGraph<(), ()> = DiGraph::new();
+        let weight_fn = |_: NodeIndex, _: NodeIndex, _: &()| 0;
+        assert_eq!(longest_path(&graph, weight_fn), Some((vec![], 0)));
+    }
+
+    #[test]
+    fn test_single_node() {
+        let mut graph = DiGraph::new();
+        graph.add_node(());
+
+        let weight_fn = |_: NodeIndex, _: NodeIndex, _: &()| 1;
+        assert_eq!(longest_path(&graph, weight_fn), Some((vec![NodeIndex::new(0)], 0)));
+    }
+
+    #[test]
+    fn test_simple_path() {
+        let mut graph = DiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        graph.add_edge(n1, n2, 1);
+
+        let weight_fn = |_, _, &w: &i32| w;
+        assert_eq!(longest_path(&graph, weight_fn), Some((vec![n1, n2], 1)));
+    }
+
+    #[test]
+    fn test_dag_with_multiple_paths() {
+        let mut graph = DiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        graph.add_edge(n1, n2, 1);
+        graph.add_edge(n1, n3, 2);
+        graph.add_edge(n2, n3, 1);
+
+        let weight_fn = |_, _, &w: &i32| w;
+        assert_eq!(longest_path(&graph, weight_fn), Some((vec![n1, n3], 2)));
+    }
+
+    #[test]
+    fn test_graph_with_cycle() {
+        let mut graph = DiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        graph.add_edge(n1, n2, 1);
+        graph.add_edge(n2, n1, 1); // Creates a cycle
+
+        let weight_fn = |_, _, &w: &i32| w;
+        assert_eq!(longest_path(&graph, weight_fn), None);
+    }
+}
