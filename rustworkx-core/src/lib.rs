@@ -83,6 +83,7 @@ pub mod line_graph;
 pub mod max_weight_matching;
 pub mod planar;
 pub mod shortest_path;
+pub mod longest_path;
 pub mod traversal;
 // These modules define additional data structures
 pub mod dictmap;
