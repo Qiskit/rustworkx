@@ -13,7 +13,7 @@
 use petgraph::algo;
 use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::visit::EdgeRef;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 /// Calculates the longest path in a directed acyclic graph (DAG).
 ///
@@ -60,10 +60,6 @@ where
     F: FnMut(NodeIndex, NodeIndex, &E) -> T,
     T: Ord + Copy + std::ops::Add<Output = T> + Default,
 {
-    // Check for cycles; return None if any are found
-    if algo::is_cyclic_directed(graph) {
-        return None;
-    }
 
     let mut path: Vec<NodeIndex> = Vec::new(); // This will store the longest path
     let nodes = match algo::toposort(graph, None) {
