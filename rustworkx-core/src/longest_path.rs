@@ -10,10 +10,15 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use petgraph::algo;
-use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::visit::EdgeRef;
 use hashbrown::HashMap;
+use num_traits::{Num, Zero};
+use petgraph::algo;
+use petgraph::graph::NodeIndex;
+use petgraph::visit::{
+    Data, EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected,
+    IntoNodeIdentifiers, Visitable,
+};
+use petgraph::Directed;
 
 /// Calculates the longest path in a directed acyclic graph (DAG).
 ///
@@ -22,14 +27,14 @@ use hashbrown::HashMap;
 /// computation undefined.
 ///
 /// # Arguments
-/// * `graph`: Reference to a `DiGraph` representing the DAG.
+/// * `graph`: Reference to a directed graph.
 /// * `weight_fn`: Function to determine the weight of each edge, given source and target `NodeIndex` and edge weight.
 ///
 /// # Type Parameters
-/// * `N`: The node type.
-/// * `E`: The edge type.
+/// * `G`: Type of the graph. Must be a directed graph.`
+/// * `E`: Type of the edge weight.
 /// * `F`: Type of the weight function.
-/// * `T`: The type of the edge weight. Must support ordering, addition, zero initialization, and copying.
+/// * `T`: The type of the edge weight. Must implement `Num`, `Zero`, `PartialOrd`, and `Copy`.
 ///
 /// # Returns
 /// * `None` if the graph contains a cycle.
@@ -52,15 +57,19 @@ use hashbrown::HashMap;
 /// let result = longest_path(&graph, weight_fn);
 /// assert_eq!(result, Some((vec![n1, n2, n3], 4)));
 /// ```
-pub fn longest_path<N, E, F, T>(
-    graph: &DiGraph<N, E>,
-    mut weight_fn: F,
-) -> Option<(Vec<NodeIndex>, T)>
+pub fn longest_path<G, E, F, T>(graph: G, mut weight_fn: F) -> Option<(Vec<NodeIndex>, T)>
 where
-    F: FnMut(NodeIndex, NodeIndex, &E) -> T,
-    T: Ord + Copy + std::ops::Add<Output = T> + Default,
+    G: GraphProp<EdgeType = Directed>
+        + EdgeRef
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + IntoEdgesDirected
+        + Visitable
+        + GraphBase<NodeId = NodeIndex>
+        + Data<EdgeWeight = E>,
+    F: FnMut(usize, usize, &E) -> T,
+    T: Num + Zero + PartialOrd + Copy,
 {
-
     let mut path: Vec<NodeIndex> = Vec::new(); // This will store the longest path
     let nodes = match algo::toposort(graph, None) {
         // Topologically sort the nodes
@@ -70,7 +79,7 @@ where
 
     // Handle the trivial case where the graph is empty
     if nodes.is_empty() {
-        return Some((path, T::default()));
+        return Some((path, T::zero()));
     }
 
     let mut dist: HashMap<NodeIndex, (T, NodeIndex)> = HashMap::new(); // Distance map from node to (weight, prev_node)
@@ -78,24 +87,32 @@ where
     // Iterate over nodes in topological order
     for node in nodes {
         let parents = graph.edges_directed(node, petgraph::Direction::Incoming);
-        let mut us: Vec<(T, NodeIndex)> = Vec::new(); // This will store weights from each parent
-                                                      // Process each parent edge of the current node
-        for edge in parents {
-            let (p_node, target, weight) = (edge.source(), edge.target(), edge.weight());
-            let weight = weight_fn(p_node, target, weight); // Compute the weight using the provided function
-            let length = *dist.get(&p_node).map_or(&T::default(), |(d, _)| d) + weight;
+        let mut us: Vec<(T, NodeIndex)> = Vec::new();
+        for p_edge in parents {
+            let p_node = p_edge.source();
+            let weight: T = weight_fn(p_node.index(), p_edge.target().index(), p_edge.weight());
+            let length = dist[&p_node].0 + weight;
             us.push((length, p_node));
         }
-        // Determine the longest path to this node from any of its parents
-        if let Some(maxu) = us.iter().max_by_key(|x| x.0) {
-            dist.insert(node, *maxu);
+        let maxu: (T, NodeIndex) = if !us.is_empty() {
+            *us.iter()
+                .max_by(|a, b| {
+                    let weight_a = a.0;
+                    let weight_b = b.0;
+                    weight_a.partial_cmp(&weight_b).unwrap()
+                })
+                .unwrap()
         } else {
-            dist.insert(node, (T::default(), node));
-        }
+            (T::zero(), node)
+        };
+        dist.insert(node, maxu);
     }
 
     // Find the node that has the maximum distance
-    let first = dist.keys().max_by_key(|&n| dist[n].0).unwrap();
+    let first = dist
+        .keys()
+        .max_by(|a, b| dist[*a].partial_cmp(&dist[*b]).unwrap())
+        .unwrap();
     let mut v = *first;
     let mut u: Option<NodeIndex> = None;
     // Backtrack from this node to find the path
@@ -121,7 +138,7 @@ mod test_longest_path {
     #[test]
     fn test_empty_graph() {
         let graph: DiGraph<(), ()> = DiGraph::new();
-        let weight_fn = |_: NodeIndex, _: NodeIndex, _: &()| 0;
+        let weight_fn = |_, _, _: &()| 0;
         assert_eq!(longest_path(&graph, weight_fn), Some((vec![], 0)));
     }
 
@@ -131,7 +148,7 @@ mod test_longest_path {
         let mut graph = DiGraph::new();
         graph.add_node(());
 
-        let weight_fn = |_: NodeIndex, _: NodeIndex, _: &()| 1;
+        let weight_fn = |_, _, _: &()| 1;
         assert_eq!(
             longest_path(&graph, weight_fn),
             Some((vec![NodeIndex::new(0)], 0))
