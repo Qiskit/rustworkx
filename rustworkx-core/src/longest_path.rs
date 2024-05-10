@@ -15,8 +15,8 @@ use num_traits::{Num, Zero};
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    Data, EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected,
-    IntoNodeIdentifiers, Visitable,
+    EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
+    Visitable,
 };
 use petgraph::Directed;
 
@@ -28,7 +28,9 @@ use petgraph::Directed;
 ///
 /// # Arguments
 /// * `graph`: Reference to a directed graph.
-/// * `weight_fn`: Function to determine the weight of each edge, given source and target `NodeIndex` and edge weight.
+/// * `weight_fn` - An input callable that will be passed the `EdgeRef` for each edge in the graph.
+///  The callable should return the weight of the edge. The weight must be a type that implements
+/// `Num`, `Zero`, `PartialOrd`, and `Copy`.
 ///
 /// # Type Parameters
 /// * `G`: Type of the graph. Must be a directed graph.`
@@ -39,35 +41,16 @@ use petgraph::Directed;
 /// # Returns
 /// * `None` if the graph contains a cycle.
 /// * `Some((Vec<NodeIndex>, T))` representing the longest path as a sequence of nodes and its total weight.
-///
-/// # Example
-/// ```rust
-/// use petgraph::graph::{DiGraph, NodeIndex};
-/// use rustworkx_core::longest_path::longest_path;
-///
-/// let mut graph = DiGraph::new();
-/// let n1 = graph.add_node(());
-/// let n2 = graph.add_node(());
-/// let n3 = graph.add_node(());
-/// graph.add_edge(n1, n2, 3);
-/// graph.add_edge(n1, n3, 2);
-/// graph.add_edge(n2, n3, 1);
-///
-/// let weight_fn = |_, _, &weight: &i32| weight;
-/// let result = longest_path(&graph, weight_fn);
-/// assert_eq!(result, Some((vec![n1, n2, n3], 4)));
 /// ```
-pub fn longest_path<G, E, F, T>(graph: G, mut weight_fn: F) -> Option<(Vec<NodeIndex>, T)>
+pub fn longest_path<G, F, T>(graph: G, mut weight_fn: F) -> Option<(Vec<NodeIndex>, T)>
 where
     G: GraphProp<EdgeType = Directed>
-        + EdgeRef
         + IntoNodeIdentifiers
         + IntoNeighborsDirected
         + IntoEdgesDirected
         + Visitable
-        + GraphBase<NodeId = NodeIndex>
-        + Data<EdgeWeight = E>,
-    F: FnMut(usize, usize, &E) -> T,
+        + GraphBase<NodeId = NodeIndex>,
+    F: FnMut(G::EdgeRef) -> T,
     T: Num + Zero + PartialOrd + Copy,
 {
     let mut path: Vec<NodeIndex> = Vec::new(); // This will store the longest path
@@ -90,7 +73,7 @@ where
         let mut us: Vec<(T, NodeIndex)> = Vec::new();
         for p_edge in parents {
             let p_node = p_edge.source();
-            let weight: T = weight_fn(p_node.index(), p_edge.target().index(), p_edge.weight());
+            let weight: T = weight_fn(p_edge);
             let length = dist[&p_node].0 + weight;
             us.push((length, p_node));
         }
@@ -132,61 +115,29 @@ where
 #[cfg(test)]
 mod test_longest_path {
     use super::*;
-    use petgraph::graph::{DiGraph, NodeIndex};
+    use petgraph::graph::DiGraph;
+    use petgraph::stable_graph::StableDiGraph;
 
-    /// Tests an empty graph to ensure it returns a path length of zero.
     #[test]
     fn test_empty_graph() {
         let graph: DiGraph<(), ()> = DiGraph::new();
-        let weight_fn = |_, _, _: &()| 0;
-        assert_eq!(longest_path(&graph, weight_fn), Some((vec![], 0)));
-    }
-
-    /// Tests a graph with a single node to ensure it correctly handles graphs without edges.
-    #[test]
-    fn test_single_node() {
-        let mut graph = DiGraph::new();
-        graph.add_node(());
-
-        let weight_fn = |_, _, _: &()| 1;
-        assert_eq!(
-            longest_path(&graph, weight_fn),
-            Some((vec![NodeIndex::new(0)], 0))
-        );
-    }
-
-    /// Tests a simple path from one node to another to ensure it computes path lengths correctly.
-    #[test]
-    fn test_simple_path() {
-        let mut graph = DiGraph::new();
-        let n1 = graph.add_node(());
-        let n2 = graph.add_node(());
-        graph.add_edge(n1, n2, 1);
-
-        let weight_fn = |_, _, &w: &i32| w;
-        assert_eq!(longest_path(&graph, weight_fn), Some((vec![n1, n2], 1)));
-    }
-
-    /// Tests the path from the function description to ensure it computes the correct longest path.
-    #[test]
-    fn example_longest_path() {
-        let mut graph = DiGraph::new();
-        let n1 = graph.add_node(());
-        let n2 = graph.add_node(());
-        let n3 = graph.add_node(());
-        graph.add_edge(n1, n2, 3);
-        graph.add_edge(n1, n3, 2);
-        graph.add_edge(n2, n3, 1);
-
-        let weight_fn = |_, _, &weight: &i32| weight;
+        let weight_fn = |_: petgraph::graph::EdgeReference<()>| 0;
         let result = longest_path(&graph, weight_fn);
-        assert_eq!(result, Some((vec![n1, n2, n3], 4)));
+        assert_eq!(result, Some((vec![], 0)));
     }
 
-    /// Tests a graph with multiple paths to ensure it selects the longest path correctly.
+    #[test]
+    fn test_single_node_graph() {
+        let mut graph: DiGraph<(), ()> = DiGraph::new();
+        let node = graph.add_node(());
+        let weight_fn = |_: petgraph::graph::EdgeReference<()>| 0;
+        let result = longest_path(&graph, weight_fn);
+        assert_eq!(result, Some((vec![node], 0)));
+    }
+
     #[test]
     fn test_dag_with_multiple_paths() {
-        let mut graph = DiGraph::new();
+        let mut graph: DiGraph<(), i32> = DiGraph::new();
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
         let n3 = graph.add_node(());
@@ -194,20 +145,51 @@ mod test_longest_path {
         graph.add_edge(n1, n3, 2);
         graph.add_edge(n2, n3, 1);
 
-        let weight_fn = |_, _, &w: &i32| w;
-        assert_eq!(longest_path(&graph, weight_fn), Some((vec![n1, n3], 2)));
+        let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| *edge.weight();
+        let result = longest_path(&graph, weight_fn);
+        assert_eq!(result, Some((vec![n1, n3], 2)));
     }
 
-    /// Tests a graph with a cycle to ensure it returns None, as cycles invalidate longest path calculations in a DAG.
     #[test]
     fn test_graph_with_cycle() {
-        let mut graph = DiGraph::new();
+        let mut graph: DiGraph<(), i32> = DiGraph::new();
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
         graph.add_edge(n1, n2, 1);
         graph.add_edge(n2, n1, 1); // Creates a cycle
 
-        let weight_fn = |_, _, &w: &i32| w;
-        assert_eq!(longest_path(&graph, weight_fn), None);
+        let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| *edge.weight();
+        let result = longest_path(&graph, weight_fn);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_negative_weights() {
+        let mut graph: DiGraph<(), i32> = DiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        graph.add_edge(n1, n2, -1);
+        graph.add_edge(n1, n3, 2);
+        graph.add_edge(n2, n3, -1);
+
+        let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| *edge.weight();
+        let result = longest_path(&graph, weight_fn);
+        assert_eq!(result, Some((vec![n1, n3], 2)));
+    }
+
+    #[test]
+    fn test_longest_path_in_stable_digraph() {
+        let mut graph: StableDiGraph<(), i32> = StableDiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        graph.add_edge(n1, n2, 1);
+        graph.add_edge(n1, n3, 2);
+        graph.add_edge(n2, n3, 1);
+
+        let weight_fn = |edge: petgraph::stable_graph::EdgeReference<'_, i32>| *edge.weight();
+        let result = longest_path(&graph, weight_fn);
+        assert_eq!(result, Some((vec![n1, n3], 2)));
     }
 }
