@@ -41,6 +41,26 @@ use petgraph::Directed;
 /// * `None` if the graph contains a cycle.
 /// * `Some((Vec<usize>, T))` representing the longest path as a sequence of nodes and its total weight.
 /// * `Err(E)` if there is an error computing the weight of any edge.
+///
+/// # Example
+/// ```
+/// use petgraph::graph::DiGraph;
+/// use petgraph::graph::NodeIndex;
+/// use petgraph::Directed;
+/// use rustworkx_core::longest_path::longest_path;
+///
+/// let mut graph: DiGraph<(), i32> = DiGraph::new();
+/// let n0 = graph.add_node(());
+/// let n1 = graph.add_node(());
+/// let n2 = graph.add_node(());
+/// graph.add_edge(n0, n1, 1);
+/// graph.add_edge(n0, n2, 2);
+/// graph.add_edge(n1, n2, 1);
+///
+/// let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| Ok::<i32, &str>(*edge.weight());
+/// let result = longest_path(&graph, weight_fn).unwrap();
+/// assert_eq!(result, Some((vec![n0.index(), n2.index()], 2)));
+/// ```
 pub fn longest_path<G, F, T, E>(graph: G, mut weight_fn: F) -> Result<Option<(Vec<usize>, T)>, E>
 where
     G: GraphProp<EdgeType = Directed>
@@ -111,7 +131,6 @@ where
 
     Ok(Some((path, path_weight)))
 }
-
 
 #[cfg(test)]
 mod test_longest_path {
@@ -190,7 +209,8 @@ mod test_longest_path {
         graph.add_edge(n0, n2, 2);
         graph.add_edge(n1, n2, 1);
 
-        let weight_fn = |edge: petgraph::stable_graph::EdgeReference<'_, i32>| Ok::<i32, &str>(*edge.weight());
+        let weight_fn =
+            |edge: petgraph::stable_graph::EdgeReference<'_, i32>| Ok::<i32, &str>(*edge.weight());
         let result = longest_path(&graph, weight_fn);
         assert_eq!(result, Ok(Some((vec![0, 2], 2))));
     }

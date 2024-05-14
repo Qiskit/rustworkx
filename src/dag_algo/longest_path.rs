@@ -28,19 +28,17 @@ where
     let dag = &graph.graph;
 
     // Create a new weight function that matches the required signature
-    let edge_cost = |edge_ref: EdgeReference<'_, PyObject>| -> T {
+    let edge_cost = |edge_ref: EdgeReference<'_, PyObject>| -> Result<T, PyErr> {
         let source = edge_ref.source().index();
         let target = edge_ref.target().index();
         let weight = edge_ref.weight();
-        match weight_fn(source, target, weight) {
-            Ok(w) => w,
-            Err(_) => T::zero(),
-        }
+        weight_fn(source, target, weight)
     };
 
     let (path, path_weight) = match core_longest_path(dag, edge_cost) {
-        Some(result) => result,
-        None => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Ok(Some(result)) => result,
+        Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Err(e) => return Err(e),
     };
 
     Ok((path, path_weight))
