@@ -30,7 +30,7 @@ hashbrown = { version = ">=0.13, <0.15", features = ["rayon"] }
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 num-traits = "0.2"
 numpy = "0.21.0"
-petgraph = "0.6.4"
+petgraph = "0.6.5"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.10"
