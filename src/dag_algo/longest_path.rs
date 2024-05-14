@@ -11,14 +11,12 @@
 // under the License.
 
 use crate::{digraph, DAGHasCycle};
+use rustworkx_core::longest_path::longest_path as core_longest_path;
 
-use hashbrown::HashMap;
+use petgraph::stable_graph::EdgeReference;
+use petgraph::visit::EdgeRef;
 
 use pyo3::prelude::*;
-
-use petgraph::algo;
-use petgraph::prelude::*;
-use petgraph::stable_graph::NodeIndex;
 
 use num_traits::{Num, Zero};
 
@@ -28,52 +26,22 @@ where
     T: Num + Zero + PartialOrd + Copy,
 {
     let dag = &graph.graph;
-    let mut path: Vec<usize> = Vec::new();
-    let nodes = match algo::toposort(&graph.graph, None) {
-        Ok(nodes) => nodes,
-        Err(_err) => return Err(DAGHasCycle::new_err("Sort encountered a cycle")),
-    };
-    if nodes.is_empty() {
-        return Ok((path, T::zero()));
-    }
-    let mut dist: HashMap<NodeIndex, (T, NodeIndex)> = HashMap::new();
-    for node in nodes {
-        let parents = dag.edges_directed(node, petgraph::Direction::Incoming);
-        let mut us: Vec<(T, NodeIndex)> = Vec::new();
-        for p_edge in parents {
-            let p_node = p_edge.source();
-            let weight: T = weight_fn(p_node.index(), p_edge.target().index(), p_edge.weight())?;
-            let length = dist[&p_node].0 + weight;
-            us.push((length, p_node));
+
+    // Create a new weight function that matches the required signature
+    let edge_cost = |edge_ref: EdgeReference<'_, PyObject>| -> T {
+        let source = edge_ref.source().index();
+        let target = edge_ref.target().index();
+        let weight = edge_ref.weight();
+        match weight_fn(source, target, weight) {
+            Ok(w) => w,
+            Err(_) => T::zero(),
         }
-        let maxu: (T, NodeIndex) = if !us.is_empty() {
-            *us.iter()
-                .max_by(|a, b| {
-                    let weight_a = a.0;
-                    let weight_b = b.0;
-                    weight_a.partial_cmp(&weight_b).unwrap()
-                })
-                .unwrap()
-        } else {
-            (T::zero(), node)
-        };
-        dist.insert(node, maxu);
-    }
-    let first = dist
-        .keys()
-        .max_by(|a, b| dist[*a].partial_cmp(&dist[*b]).unwrap())
-        .unwrap();
-    let mut v = *first;
-    let mut u: Option<NodeIndex> = None;
-    while match u {
-        Some(u) => u != v,
-        None => true,
-    } {
-        path.push(v.index());
-        u = Some(v);
-        v = dist[&v].1;
-    }
-    path.reverse();
-    let path_weight = dist[first].0;
+    };
+
+    let (path, path_weight) = match core_longest_path(dag, edge_cost) {
+        Some(result) => result,
+        None => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+    };
+
     Ok((path, path_weight))
 }
