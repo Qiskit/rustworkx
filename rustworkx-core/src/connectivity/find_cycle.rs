@@ -56,7 +56,6 @@ use std::hash::Hash;
 /// ```
 pub fn find_cycle<G>(graph: G, source: Option<G::NodeId>) -> Vec<(G::NodeId, G::NodeId)>
 where
-    G: Copy,
     G: GraphBase,
     G: NodeCount,
     G: EdgeCount,
@@ -74,7 +73,7 @@ where
     // otherwise return that there is no cycle
     let source_index = match source {
         Some(source_value) => source_value,
-        None => match find_node_in_arbitrary_cycle(graph) {
+        None => match find_node_in_arbitrary_cycle(&graph) {
             Some(node_in_cycle) => node_in_cycle,
             None => {
                 return Vec::new();
@@ -126,7 +125,7 @@ where
     cycle
 }
 
-fn find_node_in_arbitrary_cycle<G>(graph: G) -> Option<G::NodeId>
+fn find_node_in_arbitrary_cycle<G>(graph: &G) -> Option<G::NodeId>
 where
     G: GraphBase,
     G: NodeCount,
@@ -139,7 +138,7 @@ where
         + NodeIndexable,
     G::NodeId: Eq + Hash,
 {
-    for scc in algo::tarjan_scc(&graph) {
+    for scc in algo::kosaraju_scc(&graph) {
         if scc.len() > 1 {
             return Some(scc[0]);
         }
