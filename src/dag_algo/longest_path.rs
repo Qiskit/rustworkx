@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::{digraph, DAGHasCycle};
-use rustworkx_core::longest_path::longest_path as core_longest_path;
+use rustworkx_core::dag_algo::longest_path as core_longest_path;
 
 use petgraph::stable_graph::EdgeReference;
 use petgraph::visit::EdgeRef;

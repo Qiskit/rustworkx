@@ -78,7 +78,7 @@ pub mod coloring;
 pub mod connectivity;
 pub mod generators;
 pub mod line_graph;
-pub mod longest_path;
+pub mod dag_algo;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
 pub mod planar;
