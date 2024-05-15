@@ -84,44 +84,32 @@ where
         return Ok(Some((path, T::zero())));
     }
 
-    let mut dist: HashMap<NodeIndex, (T, NodeIndex)> = HashMap::new(); // Stores the distance and the previous node
+    let mut dist: HashMap<NodeIndex, (T, NodeIndex)> = HashMap::with_capacity(nodes.len()); // Stores the distance and the previous node
 
     // Iterate over nodes in topological order
     for node in nodes {
         let parents = graph.edges_directed(node, petgraph::Direction::Incoming);
-        let mut us: Vec<(T, NodeIndex)> = Vec::new(); // Stores the distance and the previous node for each parent
+        let mut incoming_path: Vec<(T, NodeIndex)> = Vec::new(); // Stores the distance and the previous node for each parent
         for p_edge in parents {
             let p_node = p_edge.source();
             let weight: T = weight_fn(p_edge)?;
             let length = dist[&p_node].0 + weight;
-            us.push((length, p_node));
+            incoming_path.push((length, p_node));
         }
         // Determine the maximum distance and corresponding parent node
-        let maxu: (T, NodeIndex) = if !us.is_empty() {
-            *us.iter()
-                .max_by(|a, b| {
-                    let weight_a = a.0;
-                    let weight_b = b.0;
-                    weight_a.partial_cmp(&weight_b).unwrap()
-                })
-                .unwrap()
-        } else {
-            (T::zero(), node) // If there are no incoming edges, the distance is zero
-        };
+        let max_path: (T, NodeIndex) = incoming_path
+            .into_iter()
+            .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+            .unwrap_or((T::zero(), node)); // If there are no incoming edges, the distance is zero
+
         // Store the maximum distance and the corresponding parent node for the current node
-        dist.insert(node, maxu);
+        dist.insert(node, max_path);
     }
-    let first = dist
-        .keys()
-        .max_by(|a, b: &&NodeIndex| dist[*a].partial_cmp(&dist[*b]).unwrap())
-        .unwrap();
+    let (first, _) = dist.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap()).unwrap();
     let mut v = *first;
     let mut u: Option<NodeIndex> = None;
     // Backtrack from this node to find the path
-    while match u {
-        Some(u) => u != v,
-        None => true,
-    } {
+    while u.map_or(true, |u| u != v) {
         path.push(v.index());
         u = Some(v);
         v = dist[&v].1;
