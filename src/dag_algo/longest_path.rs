@@ -20,6 +20,22 @@ use pyo3::prelude::*;
 
 use num_traits::{Num, Zero};
 
+/// Calculate the longest path in a directed acyclic graph (DAG).
+///
+/// This function interfaces with the Python `PyDiGraph` object to compute the longest path
+/// using the provided weight function.
+///
+/// # Arguments
+/// * `graph`: Reference to a `PyDiGraph` object.
+/// * `weight_fn`: A callable that takes the source node index, target node index, and the weight
+///   object and returns the weight of the edge as a `PyResult<T>`.
+///
+/// # Type Parameters
+/// * `F`: Type of the weight function.
+/// * `T`: The type of the edge weight. Must implement `Num`, `Zero`, `PartialOrd`, and `Copy`.
+///
+/// # Returns
+/// * `PyResult<(Vec<usize>, T)>` representing the longest path as a sequence of node indices and its total weight.
 pub fn longest_path<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<(Vec<usize>, T)>
 where
     F: FnMut(usize, usize, &PyObject) -> PyResult<T>,

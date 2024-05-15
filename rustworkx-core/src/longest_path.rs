@@ -105,7 +105,10 @@ where
         // Store the maximum distance and the corresponding parent node for the current node
         dist.insert(node, max_path);
     }
-    let (first, _) = dist.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap()).unwrap();
+    let (first, _) = dist
+        .iter()
+        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .unwrap();
     let mut v = *first;
     let mut u: Option<NodeIndex> = None;
     // Backtrack from this node to find the path
