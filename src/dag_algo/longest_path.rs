@@ -13,7 +13,7 @@
 use crate::{digraph, DAGHasCycle};
 use rustworkx_core::dag_algo::longest_path as core_longest_path;
 
-use petgraph::stable_graph::EdgeReference;
+use petgraph::stable_graph::{EdgeReference, NodeIndex};
 use petgraph::visit::EdgeRef;
 
 use pyo3::prelude::*;
@@ -35,7 +35,7 @@ use num_traits::{Num, Zero};
 /// * `T`: The type of the edge weight. Must implement `Num`, `Zero`, `PartialOrd`, and `Copy`.
 ///
 /// # Returns
-/// * `PyResult<(Vec<usize>, T)>` representing the longest path as a sequence of node indices and its total weight.
+/// * `PyResult<(Vec<G::NodeId>, T)>` representing the longest path as a sequence of node indices and its total weight.
 pub fn longest_path<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<(Vec<usize>, T)>
 where
     F: FnMut(usize, usize, &PyObject) -> PyResult<T>,
@@ -52,7 +52,10 @@ where
     };
 
     let (path, path_weight) = match core_longest_path(dag, edge_cost) {
-        Ok(Some(result)) => result,
+        Ok(Some((path, path_weight))) => (
+            path.into_iter().map(NodeIndex::index).collect(),
+            path_weight,
+        ),
         Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
         Err(e) => return Err(e),
     };
