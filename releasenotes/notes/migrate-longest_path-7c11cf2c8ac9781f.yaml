@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Added `longest_path` function to rustworkx-core. Before `longest_path` 
+    was only exposed via the Python interface. Now rust users can take 
+    advantage of this functionality in rustworkx-core. 
+    Refer to `#1168<https://github.com/Qiskit/rustworkx/issues/1168>`__ 
+    for more details. 
+    
