@@ -188,9 +188,18 @@ impl PyGraph {
 impl PyGraph {
     #[new]
     #[pyo3(signature=(multigraph=true, attrs=None, *, initial_node_count=0, initial_edge_count=0))]
-    fn new(py: Python, multigraph: bool, attrs: Option<PyObject>, initial_node_count: usize, initial_edge_count: usize) -> Self {
+    fn new(
+        py: Python,
+        multigraph: bool,
+        attrs: Option<PyObject>,
+        initial_node_count: usize,
+        initial_edge_count: usize,
+    ) -> Self {
         PyGraph {
-            graph: StablePyGraph::<Undirected>::with_capacity(initial_node_count, initial_edge_count),
+            graph: StablePyGraph::<Undirected>::with_capacity(
+                initial_node_count,
+                initial_edge_count,
+            ),
             node_removed: false,
             multigraph,
             attrs: attrs.unwrap_or_else(|| py.None()),
