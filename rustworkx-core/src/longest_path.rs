@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 use hashbrown::HashMap;
-use num_traits::{Num, Zero};
+
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{
@@ -18,6 +18,8 @@ use petgraph::visit::{
     Visitable,
 };
 use petgraph::Directed;
+
+use num_traits::{Num, Zero};
 
 /// Calculates the longest path in a directed acyclic graph (DAG).
 ///
@@ -54,12 +56,12 @@ use petgraph::Directed;
 /// let n1 = graph.add_node(());
 /// let n2 = graph.add_node(());
 /// graph.add_edge(n0, n1, 1);
-/// graph.add_edge(n0, n2, 2);
+/// graph.add_edge(n0, n2, 3);
 /// graph.add_edge(n1, n2, 1);
 ///
 /// let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| Ok::<i32, &str>(*edge.weight());
 /// let result = longest_path(&graph, weight_fn).unwrap();
-/// assert_eq!(result, Some((vec![n0.index(), n2.index()], 2)));
+/// assert_eq!(result, Some((vec![n0.index(), n2.index()], 3)));
 /// ```
 pub fn longest_path<G, F, T, E>(graph: G, mut weight_fn: F) -> Result<Option<(Vec<usize>, T)>, E>
 where
@@ -72,30 +74,29 @@ where
     F: FnMut(G::EdgeRef) -> Result<T, E>,
     T: Num + Zero + PartialOrd + Copy,
 {
-    let mut path: Vec<usize> = Vec::new(); // This will store the longest path
+    let mut path: Vec<usize> = Vec::new();
     let nodes = match algo::toposort(graph, None) {
-        // Topologically sort the nodes
         Ok(nodes) => nodes,
-        Err(_) => return Ok(None), // Should not happen since we check for cycles above
+        Err(_) => return Ok(None), // Return None if the graph contains a cycle
     };
 
-    // Handle the trivial case where the graph is empty
     if nodes.is_empty() {
         return Ok(Some((path, T::zero())));
     }
 
-    let mut dist: HashMap<NodeIndex, (T, NodeIndex)> = HashMap::new(); // Distance map from node to (weight, prev_node)
+    let mut dist: HashMap<NodeIndex, (T, NodeIndex)> = HashMap::new(); // Stores the distance and the previous node
 
     // Iterate over nodes in topological order
     for node in nodes {
         let parents = graph.edges_directed(node, petgraph::Direction::Incoming);
-        let mut us: Vec<(T, NodeIndex)> = Vec::new();
+        let mut us: Vec<(T, NodeIndex)> = Vec::new(); // Stores the distance and the previous node for each parent
         for p_edge in parents {
             let p_node = p_edge.source();
             let weight: T = weight_fn(p_edge)?;
             let length = dist[&p_node].0 + weight;
             us.push((length, p_node));
         }
+        // Determine the maximum distance and corresponding parent node
         let maxu: (T, NodeIndex) = if !us.is_empty() {
             *us.iter()
                 .max_by(|a, b| {
@@ -105,15 +106,14 @@ where
                 })
                 .unwrap()
         } else {
-            (T::zero(), node)
+            (T::zero(), node) // If there are no incoming edges, the distance is zero
         };
+        // Store the maximum distance and the corresponding parent node for the current node
         dist.insert(node, maxu);
     }
-
-    // Find the node that has the maximum distance
     let first = dist
         .keys()
-        .max_by(|a, b| dist[*a].partial_cmp(&dist[*b]).unwrap())
+        .max_by(|a, b: &&NodeIndex| dist[*a].partial_cmp(&dist[*b]).unwrap())
         .unwrap();
     let mut v = *first;
     let mut u: Option<NodeIndex> = None;
@@ -150,7 +150,6 @@ mod test_longest_path {
     fn test_single_node_graph() {
         let mut graph: DiGraph<(), ()> = DiGraph::new();
         graph.add_node(());
-
         let weight_fn = |_: petgraph::graph::EdgeReference<()>| Ok::<i32, &str>(0);
         let result = longest_path(&graph, weight_fn);
         assert_eq!(result, Ok(Some((vec![0], 0))));
@@ -162,13 +161,20 @@ mod test_longest_path {
         let n0 = graph.add_node(());
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
-        graph.add_edge(n0, n1, 1);
+        let n3 = graph.add_node(());
+        let n4 = graph.add_node(());
+        let n5 = graph.add_node(());
+        graph.add_edge(n0, n1, 3);
         graph.add_edge(n0, n2, 2);
         graph.add_edge(n1, n2, 1);
-
+        graph.add_edge(n1, n3, 4);
+        graph.add_edge(n2, n3, 2);
+        graph.add_edge(n3, n4, 2);
+        graph.add_edge(n2, n5, 1);
+        graph.add_edge(n4, n5, 3);
         let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| Ok::<i32, &str>(*edge.weight());
         let result = longest_path(&graph, weight_fn);
-        assert_eq!(result, Ok(Some((vec![0, 2], 2))));
+        assert_eq!(result, Ok(Some((vec![0, 1, 3, 4, 5], 12))));
     }
 
     #[test]
@@ -192,8 +198,7 @@ mod test_longest_path {
         let n2 = graph.add_node(());
         graph.add_edge(n0, n1, -1);
         graph.add_edge(n0, n2, 2);
-        graph.add_edge(n1, n2, -1);
-
+        graph.add_edge(n1, n2, -2);
         let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| Ok::<i32, &str>(*edge.weight());
         let result = longest_path(&graph, weight_fn);
         assert_eq!(result, Ok(Some((vec![0, 2], 2))));
@@ -206,13 +211,12 @@ mod test_longest_path {
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
         graph.add_edge(n0, n1, 1);
-        graph.add_edge(n0, n2, 2);
+        graph.add_edge(n0, n2, 3);
         graph.add_edge(n1, n2, 1);
-
         let weight_fn =
             |edge: petgraph::stable_graph::EdgeReference<'_, i32>| Ok::<i32, &str>(*edge.weight());
         let result = longest_path(&graph, weight_fn);
-        assert_eq!(result, Ok(Some((vec![0, 2], 2))));
+        assert_eq!(result, Ok(Some((vec![0, 2], 3))));
     }
 
     #[test]
@@ -224,7 +228,6 @@ mod test_longest_path {
         graph.add_edge(n0, n1, 1);
         graph.add_edge(n0, n2, 2);
         graph.add_edge(n1, n2, 1);
-
         let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| {
             if *edge.weight() == 2 {
                 Err("Error: edge weight is 2")
