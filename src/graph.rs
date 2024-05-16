@@ -20,7 +20,7 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexSet;
+use indexmap::{IndexMap, IndexSet};
 use rustworkx_core::dictmap::*;
 
 use pyo3::exceptions::PyIndexError;
@@ -35,10 +35,10 @@ use num_traits::Zero;
 use numpy::Complex64;
 use numpy::PyReadonlyArray2;
 
-use crate::iterators::NodeMap;
-
 use super::dot_utils::build_dot;
-use super::iterators::{EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
+use super::iterators::{
+    EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
+};
 use super::{
     find_node_by_weight, merge_duplicates, weight_callable, IsNan, NoEdgeBetweenNodes,
     NodesRemoved, StablePyGraph,
@@ -1965,6 +1965,111 @@ impl PyGraph {
             out_graph.graph.remove_edge(edge.id());
         }
         out_graph
+    }
+
+    /// Substitute a subgraph in the graph with a different subgraph
+    ///
+    /// :param list nodes: A list of nodes in this graph representing the subgraph
+    ///     to be removed.
+    /// :param PyDiGraph subgraph: The subgraph to replace ``nodes`` with
+    /// :param dict input_node_map: The mapping of node indices from ```nodes`` to a node
+    ///     in ``subgraph``. This is used for incoming and outgoing edges into the removed
+    ///     subgraph. This will replace any edges conneted to a node in  ``nodes`` with the
+    ///     other endpoint outside ``nodes`` where the node in ``nodes`` replaced via this
+    ///     mapping.
+    /// :param callable edge_weight_map: An optional callable object that when
+    ///     used will receive an edge's weight/data payload from ``subgraph`` and
+    ///     will return an object to use as the weight for a newly created edge
+    ///     after the edge is mapped from ``other``. If not specified the weight
+    ///     from the edge in ``other`` will be copied by reference and used.
+    ///
+    /// :returns: A mapping of node indices in ``other`` to the new node index in this graph
+    /// :rtype: NodeMap
+    pub fn substitute_subgraph(
+        &mut self,
+        py: Python,
+        nodes: Vec<usize>,
+        other: &PyGraph,
+        input_node_map: HashMap<usize, usize>,
+        edge_weight_map: Option<PyObject>,
+    ) -> PyResult<NodeMap> {
+        let mut io_nodes: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
+        let mut node_map: IndexMap<usize, usize, ahash::RandomState> =
+            IndexMap::with_capacity_and_hasher(
+                other.graph.node_count(),
+                ahash::RandomState::default(),
+            );
+        let removed_nodes: HashSet<NodeIndex> = nodes.iter().map(|n| NodeIndex::new(*n)).collect();
+
+        let weight_map_fn = |obj: &PyObject, weight_fn: &Option<PyObject>| -> PyResult<PyObject> {
+            match weight_fn {
+                Some(weight_fn) => weight_fn.call1(py, (obj,)),
+                None => Ok(obj.clone_ref(py)),
+            }
+        };
+        for node in nodes {
+            let index = NodeIndex::new(node);
+            io_nodes.extend(
+                self.graph
+                    .edges_directed(index, petgraph::Direction::Outgoing)
+                    .filter_map(|edge| {
+                        if !removed_nodes.contains(&edge.target()) {
+                            Some((edge.source(), edge.target(), edge.weight().clone_ref(py)))
+                        } else {
+                            None
+                        }
+                    }),
+            );
+            self.graph.remove_node(index);
+        }
+        for node in other.graph.node_indices() {
+            let weight = other.graph.node_weight(node).unwrap();
+            let new_index = self.graph.add_node(weight.clone_ref(py));
+            node_map.insert(node.index(), new_index.index());
+        }
+        for edge in other.graph.edge_references() {
+            let new_source = node_map[edge.source().index()];
+            let new_target = node_map[edge.target().index()];
+            self.graph.add_edge(
+                NodeIndex::new(new_source),
+                NodeIndex::new(new_target),
+                weight_map_fn(edge.weight(), &edge_weight_map)?,
+            );
+        }
+        for edge in io_nodes {
+            let old_source = edge.0;
+            let new_source = if removed_nodes.contains(&old_source) {
+                match input_node_map.get(&old_source.index()) {
+                    Some(new_source) => NodeIndex::new(node_map[new_source]),
+                    None => {
+                        let missing_index = old_source.index();
+                        return Err(PyIndexError::new_err(format!(
+                            "Input/Output node {} not found in io_node_map",
+                            missing_index
+                        )));
+                    }
+                }
+            } else {
+                old_source
+            };
+            let old_target = edge.1;
+            let new_target = if removed_nodes.contains(&old_target) {
+                match input_node_map.get(&old_target.index()) {
+                    Some(new_target) => NodeIndex::new(node_map[new_target]),
+                    None => {
+                        let missing_index = old_target.index();
+                        return Err(PyIndexError::new_err(format!(
+                            "Input/Output node {} not found in io_node_map",
+                            missing_index
+                        )));
+                    }
+                }
+            } else {
+                old_target
+            };
+            self.graph.add_edge(new_source, new_target, edge.2);
+        }
+        Ok(NodeMap { node_map })
     }
 
     /// Return a shallow copy of the graph
