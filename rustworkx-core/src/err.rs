@@ -54,13 +54,3 @@ fn fmt_dag_would_cycle(f: &mut Formatter<'_>) -> std::fmt::Result {
 fn fmt_merge_error<E: Error>(f: &mut Formatter<'_>, inner: &E) -> std::fmt::Result {
     write!(f, "The prov failed with: {:?}", inner)
 }
-
-#[allow(dead_code)]
-fn fmt_node_not_found<N: Debug>(f: &mut Formatter<'_>, node: &N) -> std::fmt::Result {
-    write!(f, "Node not found in graph: {:?}", node)
-}
-
-#[allow(dead_code)]
-fn fmt_edge_not_found<E: Debug>(f: &mut Formatter<'_>, edge: &E) -> std::fmt::Result {
-    write!(f, "Edge not found in graph: {:?}", edge)
-}
