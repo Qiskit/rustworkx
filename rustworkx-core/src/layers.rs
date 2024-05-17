@@ -16,8 +16,7 @@ use petgraph::visit::{
     NodeIndexable,
 };
 
-/// Error returned by generator functions when the input arguments are an
-/// invalid combination (such as missing required options).
+/// Error returned by Layers function when an index is not part of the graph.
 #[derive(Debug, PartialEq, Eq)]
 pub struct LayersInvalidIndex(pub Option<String>);
 
@@ -37,20 +36,34 @@ impl fmt::Display for LayersInvalidIndex {
 
 use std::{error::Error, fmt, hash::Hash};
 
-/// Return a list of layers
+/// Return a list of graph layers
 ///
 /// A layer is a subgraph whose nodes are disjoint, i.e.,
 /// a layer has depth 1. The layers are constructed using a greedy algorithm.
 ///
-/// :param graph: The DAG to get the layers from
-/// :param list first_layer: A list of node ids for the first layer. This
+/// Arguments:
+///
+/// * `graph` - The graph to get the layers from
+/// * `first_layer` - A list of node ids for the first layer. This
 ///     will be the first layer in the output
 ///
-/// :returns: A list of layers, each layer is a list of node data, or if
-///     ``index_output`` is ``True`` each layer is a list of node indices.
-/// :rtype: list
+/// ```
+/// use rustworkx_core::petgraph::prelude::*;
+/// use rustworkx_core::coloring::two_color;
+/// use rustworkx_core::dictmap::*;
 ///
-/// :raises InvalidNode: If a node index in ``first_layer`` is not in the graph
+/// let edge_list = vec![
+///  (0, 1),
+///  (1, 2),
+///  (2, 3),
+///  (3, 4),
+/// ];
+///
+/// let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
+/// let layers = layers(&graph, vec![0,1]).unwrap();
+/// let expected_layers = vec![vec![0,1], vec![1,2], vec![2,3], vec![3,4], vec![4]];
+/// assert_eq!(layers, expected_layers)
+/// ```
 pub fn layers<G>(graph: G, first_layer: Vec<usize>) -> Result<Vec<Vec<usize>>, LayersInvalidIndex>
 where
     G: NodeIndexable // Used in from_index and to_index.
