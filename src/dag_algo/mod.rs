@@ -16,6 +16,7 @@ use super::DictMap;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 use rustworkx_core::dictmap::InitWithHasher;
+use rustworkx_core::layers::layers as core_layers;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -32,7 +33,7 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::NodeCount;
+use petgraph::visit::{NodeCount, NodeIndexable};
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
 /// direction of graph traversal, based on whether the graph is being traved forwards (following
@@ -251,96 +252,25 @@ pub fn layers(
     first_layer: Vec<usize>,
     index_output: bool,
 ) -> PyResult<PyObject> {
-    let mut output_indices: Vec<Vec<usize>> = Vec::new();
-    let mut output: Vec<Vec<&PyObject>> = Vec::new();
-    // Convert usize to NodeIndex
-    let mut first_layer_index: Vec<NodeIndex> = Vec::new();
-    for index in first_layer {
-        first_layer_index.push(NodeIndex::new(index));
-    }
-
-    let mut cur_layer = first_layer_index;
-    let mut next_layer: Vec<NodeIndex> = Vec::new();
-    let mut predecessor_count: HashMap<NodeIndex, usize> = HashMap::new();
-
-    let mut layer_node_data: Vec<&PyObject> = Vec::new();
-    if !index_output {
-        for layer_node in &cur_layer {
-            let node_data = match dag.graph.node_weight(*layer_node) {
-                Some(data) => data,
-                None => {
-                    return Err(InvalidNode::new_err(format!(
-                        "An index input in 'first_layer' {} is not a valid node index in the graph",
-                        layer_node.index()
-                    )))
-                }
-            };
-            layer_node_data.push(node_data);
-        }
-        output.push(layer_node_data);
-    } else {
-        for layer_node in &cur_layer {
-            if !dag.graph.contains_node(*layer_node) {
-                return Err(InvalidNode::new_err(format!(
-                    "An index input in 'first_layer' {} is not a valid node index in the graph",
-                    layer_node.index()
-                )));
+    let result = core_layers(&dag.graph, first_layer);
+    match result {
+        Ok(result) => {
+            if index_output {
+                Ok(result.to_object(py))
+            } else {
+                Ok(result
+                    .iter()
+                    .map(|x| {
+                        x.iter()
+                            .map(|index| dag.graph.node_weight(dag.graph.from_index(*index)))
+                            .collect::<Vec<Option<&PyObject>>>()
+                            .to_object(py)
+                    })
+                    .collect::<Vec<PyObject>>()
+                    .to_object(py))
             }
         }
-        output_indices.push(cur_layer.iter().map(|x| x.index()).collect());
-    }
-
-    // Iterate until there are no more
-    while !cur_layer.is_empty() {
-        for node in &cur_layer {
-            let children = dag
-                .graph
-                .neighbors_directed(*node, petgraph::Direction::Outgoing);
-            let mut used_indices: HashSet<NodeIndex> = HashSet::new();
-            for succ in children {
-                // Skip duplicate successors
-                if used_indices.contains(&succ) {
-                    continue;
-                }
-                used_indices.insert(succ);
-                let mut multiplicity: usize = 0;
-                let raw_edges = dag
-                    .graph
-                    .edges_directed(*node, petgraph::Direction::Outgoing);
-                for edge in raw_edges {
-                    if edge.target() == succ {
-                        multiplicity += 1;
-                    }
-                }
-                predecessor_count
-                    .entry(succ)
-                    .and_modify(|e| *e -= multiplicity)
-                    .or_insert(dag.in_degree(succ.index()) - multiplicity);
-                if *predecessor_count.get(&succ).unwrap() == 0 {
-                    next_layer.push(succ);
-                    predecessor_count.remove(&succ);
-                }
-            }
-        }
-        if !index_output {
-            let mut layer_node_data: Vec<&PyObject> = Vec::new();
-
-            for layer_node in &next_layer {
-                layer_node_data.push(&dag.graph[*layer_node]);
-            }
-            if !layer_node_data.is_empty() {
-                output.push(layer_node_data);
-            }
-        } else if !next_layer.is_empty() {
-            output_indices.push(next_layer.iter().map(|x| x.index()).collect());
-        }
-        cur_layer = next_layer;
-        next_layer = Vec::new();
-    }
-    if !index_output {
-        Ok(PyList::new_bound(py, output).into())
-    } else {
-        Ok(PyList::new_bound(py, output_indices).into())
+        Err(e) => Err(InvalidNode::new_err(e.0)),
     }
 }
 
