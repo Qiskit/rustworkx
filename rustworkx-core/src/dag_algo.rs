@@ -9,13 +9,15 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations
 // under the License.
+
+use std::cmp::Eq;
+use std::hash::Hash;
+
 use hashbrown::HashMap;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::visit::{
-    EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
-    Visitable,
+    EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNodeIdentifiers, Visitable,
 };
 use petgraph::Directed;
 
@@ -51,7 +53,6 @@ type LongestPathResult<G, T, E> = Result<Option<(Vec<NodeId<G>>, T)>, E>;
 /// # Example
 /// ```
 /// use petgraph::graph::DiGraph;
-/// use petgraph::graph::NodeIndex;
 /// use petgraph::Directed;
 /// use rustworkx_core::dag_algo::longest_path;
 ///
@@ -69,14 +70,10 @@ type LongestPathResult<G, T, E> = Result<Option<(Vec<NodeId<G>>, T)>, E>;
 /// ```
 pub fn longest_path<G, F, T, E>(graph: G, mut weight_fn: F) -> LongestPathResult<G, T, E>
 where
-    G: GraphProp<EdgeType = Directed>
-        + IntoNodeIdentifiers
-        + IntoNeighborsDirected
-        + IntoEdgesDirected
-        + Visitable
-        + GraphBase<NodeId = NodeIndex>,
+    G: GraphProp<EdgeType = Directed> + IntoNodeIdentifiers + IntoEdgesDirected + Visitable,
     F: FnMut(G::EdgeRef) -> Result<T, E>,
     T: Num + Zero + PartialOrd + Copy,
+    <G as GraphBase>::NodeId: Hash + Eq + PartialOrd,
 {
     let mut path: Vec<NodeId<G>> = Vec::new();
     let nodes = match algo::toposort(graph, None) {
@@ -88,12 +85,12 @@ where
         return Ok(Some((path, T::zero())));
     }
 
-    let mut dist: HashMap<NodeIndex, (T, NodeIndex)> = HashMap::with_capacity(nodes.len()); // Stores the distance and the previous node
+    let mut dist: HashMap<G::NodeId, (T, G::NodeId)> = HashMap::with_capacity(nodes.len()); // Stores the distance and the previous node
 
     // Iterate over nodes in topological order
     for node in nodes {
         let parents = graph.edges_directed(node, petgraph::Direction::Incoming);
-        let mut incoming_path: Vec<(T, NodeIndex)> = Vec::new(); // Stores the distance and the previous node for each parent
+        let mut incoming_path: Vec<(T, G::NodeId)> = Vec::new(); // Stores the distance and the previous node for each parent
         for p_edge in parents {
             let p_node = p_edge.source();
             let weight: T = weight_fn(p_edge)?;
@@ -101,7 +98,7 @@ where
             incoming_path.push((length, p_node));
         }
         // Determine the maximum distance and corresponding parent node
-        let max_path: (T, NodeIndex) = incoming_path
+        let max_path: (T, G::NodeId) = incoming_path
             .into_iter()
             .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
             .unwrap_or((T::zero(), node)); // If there are no incoming edges, the distance is zero
@@ -114,7 +111,7 @@ where
         .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
         .unwrap();
     let mut v = *first;
-    let mut u: Option<NodeIndex> = None;
+    let mut u: Option<G::NodeId> = None;
     // Backtrack from this node to find the path
     while u.map_or(true, |u| u != v) {
         path.push(v);
