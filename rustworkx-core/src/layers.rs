@@ -49,7 +49,7 @@ use std::{error::Error, fmt, hash::Hash};
 ///
 /// ```
 /// use rustworkx_core::petgraph::prelude::*;
-/// use rustworkx_core::coloring::two_color;
+/// use rustworkx_core::layers::layers;
 /// use rustworkx_core::dictmap::*;
 ///
 /// let edge_list = vec![
