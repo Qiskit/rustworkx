@@ -256,18 +256,18 @@ pub fn layers(
     match result {
         Ok(result) => {
             if index_output {
-                Ok(result.to_object(py))
+                Ok(PyList::new_bound(py, result).into())
             } else {
-                Ok(result
-                    .iter()
-                    .map(|x| {
+                Ok(PyList::new_bound(
+                    py,
+                    result.map(|x| {
                         x.iter()
                             .map(|index| dag.graph.node_weight(dag.graph.from_index(*index)))
                             .collect::<Vec<Option<&PyObject>>>()
                             .to_object(py)
-                    })
-                    .collect::<Vec<PyObject>>()
-                    .to_object(py))
+                    }),
+                )
+                .into())
             }
         }
         Err(e) => Err(InvalidNode::new_err(e.0)),

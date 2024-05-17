@@ -15,6 +15,7 @@ use petgraph::visit::{
     EdgeRef, GraphBase, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
     NodeIndexable,
 };
+use std::{error::Error, fmt, hash::Hash, vec::IntoIter};
 
 /// Error returned by Layers function when an index is not part of the graph.
 #[derive(Debug, PartialEq, Eq)]
@@ -34,7 +35,7 @@ impl fmt::Display for LayersInvalidIndex {
     }
 }
 
-use std::{error::Error, fmt, hash::Hash};
+pub type LayersIterator = IntoIter<Vec<usize>>;
 
 /// Return a list of graph layers
 ///
@@ -60,11 +61,11 @@ use std::{error::Error, fmt, hash::Hash};
 /// ];
 ///
 /// let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
-/// let layers = layers(&graph, vec![0,1]).unwrap();
+/// let layers: Vec<Vec<usize>> = layers(&graph, vec![0,1]).unwrap().collect();
 /// let expected_layers = vec![vec![0,1], vec![1,2], vec![2,3], vec![3,4], vec![4]];
 /// assert_eq!(layers, expected_layers)
 /// ```
-pub fn layers<G>(graph: G, first_layer: Vec<usize>) -> Result<Vec<Vec<usize>>, LayersInvalidIndex>
+pub fn layers<G>(graph: G, first_layer: Vec<usize>) -> Result<LayersIterator, LayersInvalidIndex>
 where
     G: NodeIndexable // Used in from_index and to_index.
         + IntoNodeIdentifiers // Used for .node_identifiers
@@ -132,5 +133,5 @@ where
         cur_layer = next_layer;
         next_layer = Vec::new();
     }
-    Ok(output_indices)
+    Ok(output_indices.into_iter())
 }
