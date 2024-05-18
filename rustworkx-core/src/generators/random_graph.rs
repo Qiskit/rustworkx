@@ -662,8 +662,8 @@ where
 /// assert_eq!(g.edge_count(), 2);
 /// ```
 pub fn hyperbolic_random_graph<G, T, F, H, M>(
-    radii: &Vec<f64>,
-    angles: &Vec<f64>,
+    radii: &[f64],
+    angles: &[f64],
     beta: Option<f64>,
     r: f64,
     seed: Option<u64>,
