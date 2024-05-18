@@ -558,6 +558,14 @@ def random_geometric_graph(
     p: float = ...,
     seed: int | None = ...,
 ) -> PyGraph: ...
+def undirected_hyperbolic_random_graph(
+    radii: list[float],
+    angles: list[float],
+    r: float,
+    beta: float | None,
+    /,
+    seed: int | None = ...,
+) -> PyGraph: ...
 def barabasi_albert_graph(
     n: int,
     m: int,

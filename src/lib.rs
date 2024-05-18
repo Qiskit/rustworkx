@@ -477,6 +477,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
+    m.add_wrapped(wrap_pyfunction!(undirected_hyperbolic_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_random_bipartite_graph))?;
