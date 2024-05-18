@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-mod longest_path;
-
 use super::DictMap;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
@@ -22,6 +20,7 @@ use std::collections::BinaryHeap;
 use super::iterators::NodeIndices;
 use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
 
+use rustworkx_core::dag_algo::longest_path as core_longest_path;
 use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
@@ -32,7 +31,53 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::stable_graph::EdgeReference;
 use petgraph::visit::NodeCount;
+
+use num_traits::{Num, Zero};
+
+/// Calculate the longest path in a directed acyclic graph (DAG).
+///
+/// This function interfaces with the Python `PyDiGraph` object to compute the longest path
+/// using the provided weight function.
+///
+/// # Arguments
+/// * `graph`: Reference to a `PyDiGraph` object.
+/// * `weight_fn`: A callable that takes the source node index, target node index, and the weight
+///   object and returns the weight of the edge as a `PyResult<T>`.
+///
+/// # Type Parameters
+/// * `F`: Type of the weight function.
+/// * `T`: The type of the edge weight. Must implement `Num`, `Zero`, `PartialOrd`, and `Copy`.
+///
+/// # Returns
+/// * `PyResult<(Vec<G::NodeId>, T)>` representing the longest path as a sequence of node indices and its total weight.
+fn longest_path<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<(Vec<usize>, T)>
+where
+    F: FnMut(usize, usize, &PyObject) -> PyResult<T>,
+    T: Num + Zero + PartialOrd + Copy,
+{
+    let dag = &graph.graph;
+
+    // Create a new weight function that matches the required signature
+    let edge_cost = |edge_ref: EdgeReference<'_, PyObject>| -> Result<T, PyErr> {
+        let source = edge_ref.source().index();
+        let target = edge_ref.target().index();
+        let weight = edge_ref.weight();
+        weight_fn(source, target, weight)
+    };
+
+    let (path, path_weight) = match core_longest_path(dag, edge_cost) {
+        Ok(Some((path, path_weight))) => (
+            path.into_iter().map(NodeIndex::index).collect(),
+            path_weight,
+        ),
+        Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Err(e) => return Err(e),
+    };
+
+    Ok((path, path_weight))
+}
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
 /// direction of graph traversal, based on whether the graph is being traved forwards (following
@@ -82,7 +127,7 @@ pub fn dag_longest_path(
             }
         };
     Ok(NodeIndices {
-        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -121,7 +166,7 @@ pub fn dag_longest_path_length(
                 None => Ok(1),
             }
         };
-    let (_, path_weight) = longest_path::longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -163,7 +208,7 @@ pub fn dag_weighted_longest_path(
         Ok(float_res)
     };
     Ok(NodeIndices {
-        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -204,7 +249,7 @@ pub fn dag_weighted_longest_path_length(
         }
         Ok(float_res)
     };
-    let (_, path_weight) = longest_path::longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
