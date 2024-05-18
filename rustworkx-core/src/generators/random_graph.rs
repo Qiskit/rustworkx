@@ -650,8 +650,8 @@ where
 /// use rustworkx_core::generators::hyperbolic_random_graph;
 ///
 /// let g: petgraph::graph::UnGraph<(), ()> = hyperbolic_random_graph(
-///     vec![0.4, 2., 3.],
-///     vec![0., 0., 0.],
+///     &vec![0.4, 2., 3.],
+///     &vec![0., 0., 0.],
 ///     None,
 ///     2.,
 ///     None,
@@ -662,8 +662,8 @@ where
 /// assert_eq!(g.edge_count(), 2);
 /// ```
 pub fn hyperbolic_random_graph<G, T, F, H, M>(
-    radii: Vec<f64>,
-    angles: Vec<f64>,
+    radii: &Vec<f64>,
+    angles: &Vec<f64>,
     beta: Option<f64>,
     r: f64,
     seed: Option<u64>,
@@ -1050,8 +1050,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_seeded() {
         let g = hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            vec![3., 0.5, 0.5, 0.],
-            vec![0., PI, 0., 0.],
+            &vec![3., 0.5, 0.5, 0.],
+            &vec![0., PI, 0., 0.],
             Some(10000.),
             0.75,
             Some(10),
@@ -1066,8 +1066,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_empty() {
         let g = hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            vec![3., 0.5, 1.],
-            vec![0., PI, 0.],
+            &vec![3., 0.5, 1.],
+            &vec![0., PI, 0.],
             None,
             1.,
             None,
@@ -1082,8 +1082,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_bad_angle_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            vec![0., 0.],
-            vec![0., 3.142],
+            &vec![0., 0.],
+            &vec![0., 3.142],
             None,
             1.,
             None,
@@ -1098,8 +1098,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_neg_radii_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            vec![0., -1.],
-            vec![0., 0.],
+            &vec![0., -1.],
+            &vec![0., 0.],
             None,
             1.,
             None,
@@ -1114,8 +1114,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_neg_r_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            vec![0.],
-            vec![0.],
+            &vec![0.],
+            &vec![0.],
             None,
             -1.,
             None,
@@ -1130,8 +1130,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_neg_beta_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            vec![0.],
-            vec![0.],
+            &vec![0.],
+            &vec![0.],
             Some(-1.),
             1.,
             None,
@@ -1146,8 +1146,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_len_coord_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            vec![1.],
-            vec![1., 2.],
+            &vec![1.],
+            &vec![1., 2.],
             None,
             1.,
             None,
@@ -1162,8 +1162,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_empty_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            vec![],
-            vec![],
+            &vec![],
+            &vec![],
             None,
             1.,
             None,
@@ -1178,8 +1178,8 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_directed_error() {
         match hyperbolic_random_graph::<petgraph::graph::DiGraph<(), ()>, _, _, _, _>(
-            vec![0.],
-            vec![0.],
+            &vec![0.],
+            &vec![0.],
             None,
             1.,
             None,

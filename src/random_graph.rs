@@ -425,7 +425,7 @@ pub fn undirected_hyperbolic_random_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> = match core_generators::hyperbolic_random_graph(
-        radii, angles, beta, r, seed, default_fn, default_fn,
+        &radii, &angles, beta, r, seed, default_fn, default_fn,
     ) {
         Ok(graph) => graph,
         Err(_) => return Err(PyValueError::new_err("invalid positions or parameters")),
