@@ -1,10 +1,10 @@
 use crate::connectivity::conn_components::connected_components;
 use crate::dictmap::*;
+use crate::shortest_path::dijkstra;
 use crate::Result;
 use hashbrown::{HashMap, HashSet};
 use petgraph::algo::{astar, min_spanning_tree};
 use petgraph::csr::IndexType;
-use crate::shortest_path::dijkstra;
 use petgraph::data::{DataMap, Element};
 use petgraph::graph::Graph;
 use petgraph::graph::NodeIndex;
@@ -35,20 +35,18 @@ impl EdgeWeightToNumber for i32 {
 
 fn create_subgraphs_from_components<G>(
     graph: G,
-    components: Vec<HashSet<G::NodeId>>
+    components: Vec<HashSet<G::NodeId>>,
 ) -> Vec<(Graph<G::NodeId, i32, Undirected>, HashMap<usize, NodeIndex>)>
 where
-    G:   IntoEdgeReferences
-        + NodeIndexable
-        + IntoNodeIdentifiers,
+    G: IntoEdgeReferences + NodeIndexable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
     G::EdgeWeight: EdgeWeightToNumber,
 {
     components
         .into_iter()
         .map(|component| {
-            let mut subgraph = Graph::<_ ,i32, Undirected>::default();
-            let mut node_subnode_map:HashMap<usize, NodeIndex> = HashMap::new();
+            let mut subgraph = Graph::<_, i32, Undirected>::default();
+            let mut node_subnode_map: HashMap<usize, NodeIndex> = HashMap::new();
             for nodeid in graph.node_identifiers() {
                 if component.contains(&nodeid) {
                     let node = graph.to_index(nodeid);
@@ -66,7 +64,8 @@ where
                 }
             }
             (subgraph, node_subnode_map)
-        }).collect()  
+        })
+        .collect()
 }
 pub fn minimum_cycle_basis<G, E>(graph: G) -> Result<Vec<Vec<NodeIndex>>, E>
 where
@@ -114,20 +113,23 @@ where
         .map(|(index, node_index)| (node_index, index))
         .collect();
     for edge in subgraph.edge_references() {
-        sub_edges.push((
-            node_map[&edge.source()],
-            node_map[&edge.target()],
-        ));
+        sub_edges.push((node_map[&edge.source()], node_map[&edge.target()]));
     }
     let mst = min_spanning_tree(&subgraph);
-    let sub_mst_edges: Vec<_> = mst.filter_map(|element| {
-        if let Element::Edge { source, target, weight: _ } = element {
-            Some((source, target))
+    let sub_mst_edges: Vec<_> = mst
+        .filter_map(|element| {
+            if let Element::Edge {
+                source,
+                target,
+                weight: _,
+            } = element
+            {
+                Some((source, target))
             } else {
-            None
+                None
             }
-            })
-            .collect();
+        })
+        .collect();
 
     let mut chords: Vec<(usize, usize)> = Vec::new();
     for edge in sub_edges.iter() {
@@ -201,7 +203,7 @@ where
 fn _min_cycle<G, F, E>(
     subgraph: G,
     orth: HashSet<(usize, usize)>,
-    mut weight_fn: F
+    mut weight_fn: F,
 ) -> Result<Vec<(usize, usize)>, E>
 where
     G: IntoNodeReferences + IntoEdgeReferences + DataMap + NodeIndexable,
@@ -243,11 +245,13 @@ where
     let mut shortest_path_map: HashMap<G::NodeId, i32> = HashMap::new();
     for nodeid in subgraph.node_identifiers() {
         let (node, lifted_node) = subgraph_gi_map[&nodeid];
-        let result: Result<DictMap<NodeIndex, i32>> = dijkstra(&gi, 
-            node, 
-            Some(lifted_node), 
+        let result: Result<DictMap<NodeIndex, i32>> = dijkstra(
+            &gi,
+            node,
+            Some(lifted_node),
             |e| Ok(*e.weight() as i32),
-            None);
+            None,
+        );
         // Find the shortest distance in the result and store it in the shortest_path_map
         let spl = result.unwrap()[&lifted_node];
         shortest_path_map.insert(nodeid, spl);
@@ -301,15 +305,12 @@ where
     Ok(min_edgelist)
 }
 
-
-
 #[cfg(test)]
 mod test_minimum_cycle_basis {
 
     use crate::connectivity::minimum_cycle_basis::minimum_cycle_basis;
     use petgraph::graph::{Graph, NodeIndex};
     use petgraph::Undirected;
-
 
     #[test]
     fn test_empty_graph() {
