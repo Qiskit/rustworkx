@@ -403,7 +403,7 @@ pub fn random_geometric_graph(
 ///
 /// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
 ///
-/// :param list[list[float]] radii: Hyperboloid coordinates of the nodes
+/// :param list[list[float]] pos: Hyperboloid coordinates of the nodes
 ///     [[:math:`x_1^0`, ..., :math:`x_1^D`], ...]. Since the first dimension is associated to
 ///     the positive term in the metric, each :math:`x_u^0` must be at least 1.
 /// :param float beta: Sigmoid sharpness (nonnegative) of the connection probability.
@@ -414,7 +414,7 @@ pub fn random_geometric_graph(
 /// :return: A PyGraph object
 /// :rtype: PyGraph
 #[pyfunction]
-#[pyo3(text_signature = "(radii, angles, r, beta, /, seed=None)")]
+#[pyo3(text_signature = "(pos, beta, r, /, seed=None)")]
 pub fn hyperbolic_random_graph(
     py: Python,
     pos: Vec<Vec<f64>>,
