@@ -14,7 +14,6 @@
 
 use std::hash::Hash;
 
-use num_traits::Float;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{
     Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected,
