@@ -681,7 +681,7 @@ where
     }
     if pos
         .iter()
-        .any(|xs| xs.iter().any(|x| x.is_infinite() || x.is_nan()))
+        .any(|xs| xs.iter().any(|x| x.is_nan()))
     {
         return Err(InvalidInputError {});
     }
