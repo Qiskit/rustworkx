@@ -679,10 +679,7 @@ where
     if num_nodes == 0 {
         return Err(InvalidInputError {});
     }
-    if pos
-        .iter()
-        .any(|xs| xs.iter().any(|x| x.is_nan()))
-    {
+    if pos.iter().any(|xs| xs.iter().any(|x| x.is_nan())) {
         return Err(InvalidInputError {});
     }
     let dim = pos[0].len();
@@ -734,17 +731,18 @@ where
 }
 
 #[inline]
-fn hyperbolic_distance<F>(p1: &[F], p2: &[F]) -> F
-where
-    F: Float + std::iter::Sum,
-{
-    (p1[0] * p2[0]
-        - p1.iter()
-            .skip(1)
-            .zip(p2.iter().skip(1))
-            .map(|(&x, &y)| x * y)
-            .sum())
-    .acosh()
+fn hyperbolic_distance(p1: &[f64], p2: &[f64]) -> f64 {
+    if p1.iter().chain(p2.iter()).any(|x| x.is_infinite()) {
+        f64::INFINITY
+    } else {
+        (p1[0] * p2[0]
+            - p1.iter()
+                .skip(1)
+                .zip(p2.iter().skip(1))
+                .map(|(&x, &y)| x * y)
+                .sum::<f64>())
+        .acosh()
+    }
 }
 
 #[cfg(test)]
@@ -1063,6 +1061,13 @@ mod tests {
                 &[0.5_f64.cosh(), -0.5_f64.sinh(), 0.]
             ),
             3.5
+        );
+    }
+    #[test]
+    fn test_hyperbolic_dist_inf() {
+        assert_eq!(
+            hyperbolic_distance(&[f64::INFINITY, f64::INFINITY, 0.], &[1., 0., 0.]),
+            f64::INFINITY
         );
     }
 
