@@ -1,11 +1,7 @@
 features:
   - |
-    Adds new random graph generator function, :func:`.undirected_hyperbolic_random_graph`
-    to generate a random graph using the H² random graph model.
+    Adds new random graph generator function, :func:`.hyperbolic_random_graph`
+    to sample the hyperbolic random graph model.
   - |
     Adds new function to the rustworkx-core module ``rustworkx_core::generators``
-    ``hyperbolic_random_graph()`` that generates a H^2 hyperbolic random graph.
-
-issues:
-  - |
-    Related to issue `#150 <https://github.com/Qiskit/rustworkx/issues/150>`.
+    ``hyperbolic_random_graph()`` that samples the hyperbolic random graph model.

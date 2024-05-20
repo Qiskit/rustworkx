@@ -12,9 +12,9 @@
 
 #![allow(clippy::float_cmp)]
 
-use std::f64::consts::PI;
 use std::hash::Hash;
 
+use num_traits::Float;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{
     Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected,
@@ -620,24 +620,23 @@ where
     Ok(graph)
 }
 
-/// Generate a hyperbolic random undirected graph.
+/// Generate a hyperbolic random undirected graph (also called hyperbolic geometric graph).
 ///
-/// The H² hyperbolic random graph model connects pairs of nodes with a probability
+/// The hyperbolic random graph model connects pairs of nodes with a probability
 /// that decreases as their hyperbolic distance increases.
 ///
-/// The number of nodes is inferred from the coordinates `radii` and `angles`. `radii`
-/// and `angles` must have the same size and cannot be empty. If `beta` is `None`,
-/// all pairs of nodes with a distance smaller than ``r`` are connected.
-///
-/// D. Krioukov et al. "Hyperbolic geometry of complex networks", Phys. Rev. E 82, pp 036106, 2010.
+/// The number of nodes and the dimension are inferred from the coordinates `pos` of the
+/// hyperboloid model (at least 3-dimensional). If `beta` is `None`, all pairs of nodes
+/// with a distance smaller than ``r`` are connected.
 ///
 /// Arguments:
 ///
-/// * `radii` - radial coordinates (nonnegative) of the nodes.
-/// * `angles` - angular coordinates (between -pi and pi) of the nodes.
+/// * `pos` - Hyperboloid model coordinates of the nodes `[p_1, p_2, ...]` where `p_i` is the
+///     position of node i. The first dimension corresponds to the negative term in the metric
+///     and so for each node i, `p_i[0]` must be at least 1.
 /// * `beta` - Sigmoid sharpness (nonnegative) of the connection probability.
 /// * `r` - Distance at which the connection probability is 0.5 for the probabilistic model.
-///     Threshold when ``beta`` is ``None``.
+///     Threshold when `beta` is `None`.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
 ///     for newly created nodes.
@@ -650,8 +649,9 @@ where
 /// use rustworkx_core::generators::hyperbolic_random_graph;
 ///
 /// let g: petgraph::graph::UnGraph<(), ()> = hyperbolic_random_graph(
-///     &vec![0.4, 2., 3.],
-///     &vec![0., 0., 0.],
+///     &[vec![1_f64.cosh(), 3_f64.sinh(), 0.],
+///       vec![0.5_f64.cosh(), -0.5_f64.sinh(), 0.],
+///       vec![1_f64.cosh(), -1_f64.sinh(), 0.]],
 ///     None,
 ///     2.,
 ///     None,
@@ -659,11 +659,10 @@ where
 ///     || {()},
 /// ).unwrap();
 /// assert_eq!(g.node_count(), 3);
-/// assert_eq!(g.edge_count(), 2);
+/// assert_eq!(g.edge_count(), 1);
 /// ```
 pub fn hyperbolic_random_graph<G, T, F, H, M>(
-    radii: &[f64],
-    angles: &[f64],
+    pos: &[Vec<f64>],
     beta: Option<f64>,
     r: f64,
     seed: Option<u64>,
@@ -676,20 +675,18 @@ where
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
-    let num_nodes = radii.len();
-    if num_nodes == 0 || radii.len() != angles.len() {
+    let num_nodes = pos.len();
+    if num_nodes == 0 {
         return Err(InvalidInputError {});
     }
-    if radii.iter().any(|x| x.is_infinite() || x.is_nan()) {
+    if pos
+        .iter()
+        .any(|xs| xs.iter().any(|x| x.is_infinite() || x.is_nan()))
+    {
         return Err(InvalidInputError {});
     }
-    if angles.iter().any(|x| x.is_infinite() || x.is_nan()) {
-        return Err(InvalidInputError {});
-    }
-    if radii.iter().fold(0_f64, |a, &b| a.min(b)) < 0. {
-        return Err(InvalidInputError {});
-    }
-    if angles.iter().map(|x| x.abs()).fold(0_f64, |a, b| a.max(b)) > PI {
+    let dim = pos[0].len();
+    if dim < 3 || pos.iter().any(|x| x.len() != dim || x[0] < 1.) {
         return Err(InvalidInputError {});
     }
     if beta.is_some_and(|b| b < 0. || b.is_nan()) {
@@ -713,19 +710,14 @@ where
     }
 
     let between = Uniform::new(0.0, 1.0);
-    for (v, (r1, theta1)) in radii
-        .iter()
-        .zip(angles.iter())
-        .enumerate()
-        .take(num_nodes - 1)
-    {
-        for (w, (r2, theta2)) in radii.iter().zip(angles.iter()).enumerate().skip(v + 1) {
-            let dist = hyperbolic_distance(r1, theta1, r2, theta2);
+    for (v, p1) in pos.iter().enumerate().take(num_nodes - 1) {
+        for (w, p2) in pos.iter().enumerate().skip(v + 1) {
+            let dist = hyperbolic_distance(p1, p2);
             let is_edge = match beta {
                 Some(b) => {
-                    let prob = 1. / ((b / 2. * (dist - r)).exp() + 1.);
+                    let prob_inverse = (b / 2. * (dist - r)).exp() + 1.;
                     let u: f64 = between.sample(&mut rng);
-                    u < prob
+                    prob_inverse * u < 1.
                 }
                 None => dist < r,
             };
@@ -742,8 +734,17 @@ where
 }
 
 #[inline]
-fn hyperbolic_distance(r1: &f64, theta1: &f64, r2: &f64, theta2: &f64) -> f64 {
-    (r1.cosh() * r2.cosh() - r1.sinh() * r2.sinh() * (theta1 - theta2).cos()).acosh()
+fn hyperbolic_distance<F>(p1: &[F], p2: &[F]) -> F
+where
+    F: Float + std::iter::Sum,
+{
+    (p1[0] * p2[0]
+        - p1.iter()
+            .skip(1)
+            .zip(p2.iter().skip(1))
+            .map(|(&x, &y)| x * y)
+            .sum())
+    .acosh()
 }
 
 #[cfg(test)]
@@ -754,7 +755,8 @@ mod tests {
         path_graph, random_bipartite_graph, random_geometric_graph,
     };
     use crate::petgraph;
-    use std::f64::consts::PI;
+
+    use super::hyperbolic_distance;
 
     // Test gnp_random_graph
 
@@ -1046,12 +1048,33 @@ mod tests {
     }
 
     // Test hyperbolic_random_graph
+    //
+    // Hyperboloid (H^2) "polar" coordinates (r, theta) are transformed to "cartesian"
+    // coordinates using
+    // z = cosh(r)
+    // x = sinh(r)cos(theta)
+    // y = sinh(r)sin(theta)
+
+    #[test]
+    fn test_hyperbolic_dist() {
+        assert_eq!(
+            hyperbolic_distance(
+                &[3_f64.cosh(), 3_f64.sinh(), 0.],
+                &[0.5_f64.cosh(), -0.5_f64.sinh(), 0.]
+            ),
+            3.5
+        );
+    }
 
     #[test]
     fn test_hyperbolic_random_graph_seeded() {
         let g = hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &vec![3., 0.5, 0.5, 0.],
-            &vec![0., PI, 0., 0.],
+            &[
+                vec![3_f64.cosh(), 3_f64.sinh(), 0.],
+                vec![0.5_f64.cosh(), -0.5_f64.sinh(), 0.],
+                vec![0.5_f64.cosh(), 0.5_f64.sinh(), 0.],
+                vec![1., 0., 0.],
+            ],
             Some(10000.),
             0.75,
             Some(10),
@@ -1064,10 +1087,13 @@ mod tests {
     }
 
     #[test]
-    fn test_hyperbolic_random_graph_empty() {
+    fn test_hyperbolic_random_graph_threshold() {
         let g = hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &vec![3., 0.5, 1.],
-            &vec![0., PI, 0.],
+            &[
+                vec![1_f64.cosh(), 3_f64.sinh(), 0.],
+                vec![0.5_f64.cosh(), -0.5_f64.sinh(), 0.],
+                vec![1_f64.cosh(), -1_f64.sinh(), 0.],
+            ],
             None,
             1.,
             None,
@@ -1076,14 +1102,13 @@ mod tests {
         )
         .unwrap();
         assert_eq!(g.node_count(), 3);
-        assert_eq!(g.edge_count(), 0);
+        assert_eq!(g.edge_count(), 1);
     }
 
     #[test]
-    fn test_hyperbolic_random_graph_bad_angle_error() {
+    fn test_hyperbolic_random_graph_invalid_dim_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &vec![0., 0.],
-            &vec![0., 3.142],
+            &[vec![1., 0.]],
             None,
             1.,
             None,
@@ -1096,10 +1121,9 @@ mod tests {
     }
 
     #[test]
-    fn test_hyperbolic_random_graph_neg_radii_error() {
+    fn test_hyperbolic_random_graph_invalid_first_coord_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &vec![0., -1.],
-            &vec![0., 0.],
+            &[vec![0., 0., 0.]],
             None,
             1.,
             None,
@@ -1114,8 +1138,7 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_neg_r_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &vec![0.],
-            &vec![0.],
+            &[vec![1., 0., 0.], vec![1., 0., 0.]],
             None,
             -1.,
             None,
@@ -1130,8 +1153,7 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_neg_beta_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &vec![0.],
-            &vec![0.],
+            &[vec![1., 0., 0.], vec![1., 0., 0.]],
             Some(-1.),
             1.,
             None,
@@ -1144,10 +1166,9 @@ mod tests {
     }
 
     #[test]
-    fn test_hyperbolic_random_graph_len_coord_error() {
+    fn test_hyperbolic_random_graph_diff_dims_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &vec![1.],
-            &vec![1., 2.],
+            &[vec![1., 0., 0.], vec![1., 0., 0., 0.]],
             None,
             1.,
             None,
@@ -1162,8 +1183,7 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_empty_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &vec![],
-            &vec![],
+            &[],
             None,
             1.,
             None,
@@ -1178,8 +1198,7 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_directed_error() {
         match hyperbolic_random_graph::<petgraph::graph::DiGraph<(), ()>, _, _, _, _>(
-            &vec![0.],
-            &vec![0.],
+            &[vec![1., 0., 0.], vec![1., 0., 0.]],
             None,
             1.,
             None,

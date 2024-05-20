@@ -558,9 +558,8 @@ def random_geometric_graph(
     p: float = ...,
     seed: int | None = ...,
 ) -> PyGraph: ...
-def undirected_hyperbolic_random_graph(
-    radii: list[float],
-    angles: list[float],
+def hyperbolic_random_graph(
+    pos: list[list[float]],
     r: float,
     beta: float | None,
     /,
