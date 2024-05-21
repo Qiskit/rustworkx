@@ -150,17 +150,16 @@ jobs:
         run: |
           set -e
           mv tests/retworkx*profraw .
-          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.info
+          ./grcov . --binary-path ./target/debug/ -s . -t coveralls --branch --ignore-not-existing --ignore "/*" -o ./coveralls.json
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coveralls.info
+          path: coveralls.json
       - name: Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          format: lcov
-          file: ./coveralls.info
+          file: ./coveralls.json
   docs:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]
