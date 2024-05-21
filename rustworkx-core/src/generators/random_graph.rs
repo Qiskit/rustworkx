@@ -619,6 +619,152 @@ where
     Ok(graph)
 }
 
+/// Generate a G<sub>np</sub> random graph, also known as an
+/// Erdős-Rényi graph or a binomial graph.
+///
+/// For number of nodes `n` and probability `p`, the G<sub>np</sub>
+/// graph algorithm creates `n` nodes, and for all the `n * (n - 1)` possible edges,
+/// each edge is created independently with probability `p`.
+/// In general, for any probability `p`, the expected number of edges returned
+/// is `m = p * n * (n - 1)`. If `p = 0` or `p = 1`, the returned
+/// graph is not random and will always be an empty or a complete graph respectively.
+/// An empty graph has zero edges and a complete directed graph has `n (n - 1)` edges.
+/// The run time is `O(n + m)` where `m` is the expected number of edges mentioned above.
+/// When `p = 0`, run time always reduces to `O(n)`, as the lower bound.
+/// When `p = 1`, run time always goes to `O(n + n * (n - 1))`, as the upper bound.
+///
+/// For `0 < p < 1`, the algorithm is based on the implementation of the networkx function
+/// ``fast_gnp_random_graph``,
+/// <https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120>
+///
+/// Vladimir Batagelj and Ulrik Brandes,
+///    "Efficient generation of large random networks",
+///    Phys. Rev. E, 71, 036113, 2005.
+///
+/// Arguments:
+///
+/// * `num_nodes` - The number of nodes for creating the random graph.
+/// * `probability` - The probability of creating an edge between two nodes as a float.
+/// * `seed` - An optional seed to use for the random number generator.
+/// * `default_node_weight` - A callable that will return the weight to use
+///     for newly created nodes.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::gnp_random_graph;
+///
+/// let g: petgraph::graph::DiGraph<(), ()> = gnp_random_graph(
+///     20,
+///     1.0,
+///     None,
+///     || {()},
+///     || {()},
+/// ).unwrap();
+/// assert_eq!(g.node_count(), 20);
+/// assert_eq!(g.edge_count(), 20 * (20 - 1));
+/// ```
+pub fn sbm_random_graph<G, T, F, H, M>(
+    blocks: &[usize],
+    probabilities: &[Vec<f64>],
+    loops: bool,
+    seed: Option<u64>,
+    mut default_node_weight: F,
+    mut default_edge_weight: H,
+) -> Result<G, InvalidInputError>
+where
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + GraphProp,
+    F: FnMut() -> T,
+    H: FnMut() -> M,
+    G::NodeId: Eq + Hash,
+{
+    let num_nodes = blocks.len();
+    if num_nodes == 0 {
+        return Err(InvalidInputError {});
+    }
+    let num_communities = probabilities.len();
+    if probabilities
+        .iter()
+        .any(|xs| xs.len() != num_communities || xs.iter().any(|&x| !(0. ..=1.).contains(&x)))
+    {
+        return Err(InvalidInputError {});
+    }
+    if blocks.iter().max().unwrap_or(&usize::MAX) >= &num_communities {
+        return Err(InvalidInputError {});
+    }
+    if blocks.len() != num_nodes {
+        return Err(InvalidInputError {});
+    }
+
+    let mut graph = G::with_capacity(num_nodes, num_nodes);
+    let directed = graph.is_directed();
+    if !directed && !symmetric_matrix(probabilities) {
+        return Err(InvalidInputError {});
+    }
+
+    for _ in 0..num_nodes {
+        graph.add_node(default_node_weight());
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let between = Uniform::new(0.0, 1.0);
+
+    let mut block_partition: Vec<Vec<usize>> = (0..num_communities).map(|_| Vec::new()).collect();
+    for (vertex, block) in blocks.iter().enumerate() {
+        block_partition[*block].push(vertex);
+    }
+
+    let block_pairs = block_partition
+        .iter()
+        .enumerate()
+        .zip(block_partition.iter().enumerate())
+        .filter(|((i, _), (j, _))| directed || i <= j);
+
+    for ((b1, block1), (b2, block2)) in block_pairs {
+        let prob = probabilities[b1][b2];
+        println!("block_len={x}", x=
+            block1
+                .iter()
+                .zip(block2.iter())
+                .filter(|(v, w)| v != w && directed || v < w || v == w && loops).count()
+        );
+        if prob > 0. {
+            block1
+                .iter()
+                .zip(block2.iter())
+                .filter(|(v, w)| v != w && directed || v < w || v == w && loops)
+                .filter(|_| between.sample(&mut rng) < prob)
+                .for_each(|(&v, &w)| {
+                    graph.add_edge(
+                        graph.from_index(v),
+                        graph.from_index(w),
+                        default_edge_weight(),
+                    );
+                });
+        }
+    }
+    Ok(graph)
+}
+
+fn symmetric_matrix<T: std::cmp::PartialEq>(mat: &[Vec<T>]) -> bool {
+    let n = mat.len();
+    for (i, row) in mat.iter().enumerate().take(n - 1) {
+        if row.len() != n {
+            return false;
+        }
+        for (j, m_ij) in row.iter().enumerate().skip(i + 1) {
+            if m_ij != &mat[j][i] {
+                return false;
+            }
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use crate::generators::InvalidInputError;
@@ -627,6 +773,8 @@ mod tests {
         random_bipartite_graph, random_geometric_graph,
     };
     use crate::petgraph;
+
+    use super::sbm_random_graph;
 
     // Test gnp_random_graph
 
@@ -915,5 +1063,20 @@ mod tests {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
         };
+    }
+
+    // Test sbm_random_graph
+    #[test]
+    fn test_sbm_complete_block() {
+        let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 1],
+            &[vec![1., 0.], vec![0., 1.]],
+            true,
+            None,
+            || (),
+            || (),
+        ).unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 5);
     }
 }
