@@ -1,0 +1,21 @@
+---
+prelude: >
+  A new module ``graph_ext`` has been introduced which provides traits
+  that extend ``petgraph`` data structures with additional methods when
+  imported.
+features:
+  - |
+    Node contraction is now supported for ``petgraph`` types ``StableGraph``
+    and ``GraphMap`` in rustworkx-core. To use it, import one of the ``ContractNodes*`` traits
+    from ``graph_ext`` and call the ``contract_nodes`` method on your graph.
+  - |
+    All current ``petgraph`` data structures now support testing for parallel
+    edges in ``rustworkx-core``. To use this, import ``HasParallelEdgesDirected``
+    or ``HasParallelEdgesUndirected`` depending on your graph type, and call
+    the ``has_parallel_edges`` method on your graph.
+  - |
+    A new trait ``NodeRemovable`` has been added to ``graph_ext`` module in
+    ``rustworkx-core`` which provides a consistent interface for performing
+    node removal operations on ``petgraph`` types ``Graph``, ``StableGraph``,
+    ``GraphMap``, and ``MatrixGraph``. To use it, import ``NodeRemovable`` from
+    ``graph_ext``.
