@@ -1,8 +1,4 @@
 ---
-prelude: >
-  A new module ``graph_ext`` has been introduced which provides traits
-  that extend ``petgraph`` data structures with additional methods when
-  imported.
 features:
   - |
     Node contraction is now supported for ``petgraph`` types ``StableGraph``
