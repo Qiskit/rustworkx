@@ -19,7 +19,7 @@ use hashbrown::HashMap;
 use petgraph::algo;
 use petgraph::visit::{
     EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
-    IntoNodeReferences, NodeCount, Visitable,
+    NodeCount, Visitable,
 };
 use petgraph::Directed;
 
@@ -131,9 +131,7 @@ where
         + IntoNodeIdentifiers
         + IntoNeighborsDirected
         + IntoEdgesDirected
-        + IntoNodeReferences
-        + NodeCount
-        + Visitable,
+        + NodeCount,
     <G as GraphBase>::NodeId: Hash + Eq + Ord,
     F: FnMut(G::NodeId) -> Result<String, E>,
 {
