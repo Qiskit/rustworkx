@@ -99,9 +99,7 @@ class TestGraphColoring(unittest.TestCase):
             self.assertEqual({a: 0, b: 1, c: 1, d: 1, e: 2, f: 0, g: 1, h: 1}, res)
 
         with self.subTest(strategy=rustworkx.ColoringStrategy.Degree):
-            res = rustworkx.graph_greedy_color(
-                graph, strategy=rustworkx.ColoringStrategy.Degree
-            )
+            res = rustworkx.graph_greedy_color(graph, strategy=rustworkx.ColoringStrategy.Degree)
             self.assertEqual({a: 0, b: 1, c: 1, d: 1, e: 2, f: 0, g: 1, h: 1}, res)
 
         with self.subTest(strategy=rustworkx.ColoringStrategy.Saturation):
