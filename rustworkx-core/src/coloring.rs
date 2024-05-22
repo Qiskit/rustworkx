@@ -211,12 +211,10 @@ where
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
     let mut colors: DictMap<G::NodeId, usize> = DictMap::with_capacity(graph.node_count());
-
-    let mut nbd_colors: HashMap<G::NodeId, HashSet<usize>> =
-        HashMap::with_capacity(graph.node_count());
-    for k in graph.node_identifiers() {
-        nbd_colors.insert(k, HashSet::new());
-    }
+    let mut nbd_colors: HashMap<G::NodeId, HashSet<usize>> = graph
+        .node_identifiers()
+        .map(|k| (k, HashSet::new()))
+        .collect();
 
     let mut pq: PriorityQueue<G::NodeId, SaturationStrategyData> =
         PriorityQueue::with_capacity(graph.node_count());
