@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.8
-      - run: pip install -U ruff black~=22.0
+      - run: pip install -U ruff==0.4.1 black~=22.0
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -59,7 +59,7 @@ jobs:
         rust: [stable]
         python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
         platform: [
-          { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
+          { os: "macOS-13", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
           { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
@@ -150,17 +150,17 @@ jobs:
         run: |
           set -e
           mv tests/retworkx*profraw .
-          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.info
+          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coveralls.info
+          path: coveralls.lcov
       - name: Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           format: lcov
-          file: ./coveralls.info
+          file: ./coveralls.lcov
   docs:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]

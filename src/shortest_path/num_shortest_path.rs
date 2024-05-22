@@ -46,7 +46,7 @@ pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
             let neighbor: usize = neighbor_index.index();
             if distance[neighbor].is_none() {
                 distance[neighbor] = Some(dist_plus_one);
-                out_map[neighbor] = count_current.clone();
+                out_map[neighbor].clone_from(&count_current)
             } else if distance[neighbor] == Some(dist_plus_one) {
                 out_map[neighbor] += &count_current;
             }
