@@ -245,10 +245,7 @@ where
     while let Some((k, _)) = pq.pop() {
         let neighbor_colors = nbd_colors.get(&k).unwrap();
         let mut current_color: usize = 0;
-        loop {
-            if !neighbor_colors.contains(&current_color) {
-                break;
-            }
+        while neighbor_colors.contains(&current_color) {
             current_color += 1;
         }
 
