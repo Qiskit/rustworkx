@@ -120,9 +120,7 @@ where
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
     match strategy {
-        ColoringStrategy::Degree => {
-            inner_greedy_node_color_strategy_degree(graph, preset_color_fn)
-        }
+        ColoringStrategy::Degree => inner_greedy_node_color_strategy_degree(graph, preset_color_fn),
         ColoringStrategy::Saturation => {
             inner_greedy_node_color_strategy_saturation(graph, preset_color_fn)
         }
@@ -340,26 +338,23 @@ where
 
 /// Color a graph using a greedy graph coloring algorithm.
 ///
-/// This function uses one of several greedy strategies described in:
+/// This function uses a `largest-first` strategy as described in:
 ///
 /// Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 /// Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 ///
-/// The `Degree` (aka `largest-first`) strategy colors the nodes with higher degree
-/// first. The `Saturation` (aka `DSATUR` and `SLF`) strategy dynamically
-/// chooses the vertex that has the largest number of different colors already
-/// assigned to its neighbors, and, in case of a tie, the vertex that has the
-/// largest number of uncolored neighbors. The `IndependentSet` strategy finds
-/// independent subsets of the graph and assigns a different color to each of these
-/// subsets.
+/// to color the nodes with higher degree first.
 ///
 /// The coloring problem is NP-hard and this is a heuristic algorithm
 /// which may not return an optimal solution.
 ///
+/// # Note:
+/// Please consider using ``greedy_node_color_with_coloring_strategy``, which is
+/// a more general version of this function.
+///
 /// Arguments:
 ///
-/// * `graph` - The graph object to run the algorithm.
-/// * `strategy` - The greedy strategy used by the algorithm.
+/// * `graph` - The graph object to run the algorithm on
 ///
 /// # Example
 /// ```rust
@@ -368,10 +363,10 @@ where
 /// use petgraph::graph::NodeIndex;
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::coloring::{greedy_node_color, ColoringStrategy};
+/// use rustworkx_core::coloring::greedy_node_color;
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_node_color(&g, ColoringStrategy::Degree);
+/// let colors = greedy_node_color(&g);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 0);
 /// expected_colors.insert(NodeIndex::new(1), 1);
@@ -379,10 +374,7 @@ where
 /// assert_eq!(colors, expected_colors);
 /// ```
 ///
-pub fn greedy_node_color<G>(
-    graph: G,
-    strategy: ColoringStrategy,
-) -> DictMap<G::NodeId, usize>
+pub fn greedy_node_color<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::NodeId: Hash + Eq + Send + Sync,
@@ -390,9 +382,71 @@ where
     inner_greedy_node_color(
         graph,
         |_| Ok::<Option<usize>, Infallible>(None),
-        strategy,
+        ColoringStrategy::Degree,
     )
     .unwrap()
+}
+
+/// Color a graph using a greedy graph coloring algorithm with preset colors
+///
+/// This function uses a `largest-first` strategy as described in:
+///
+/// Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
+/// Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
+///
+/// to color the nodes with higher degree first.
+///
+/// The coloring problem is NP-hard and this is a heuristic algorithm
+/// which may not return an optimal solution.
+///
+/// # Note:
+/// Please consider using ``greedy_node_color_with_coloring_strategy``, which is
+/// a more general version of this function.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `preset_color_fn` - A callback function that will recieve the node identifier
+///     for each node in the graph and is expected to return an `Option<usize>`
+///     (wrapped in a `Result`) that is `None` if the node has no preset and
+///     the usize represents the preset color.
+///
+/// # Example
+/// ```rust
+///
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::NodeIndex;
+/// use petgraph::Undirected;
+/// use rustworkx_core::dictmap::*;
+/// use std::convert::Infallible;
+/// use rustworkx_core::coloring::greedy_node_color_with_preset_colors;
+///
+/// let preset_color_fn = |node_idx: NodeIndex| -> Result<Option<usize>, Infallible> {
+///     if node_idx.index() == 0 {
+///         Ok(Some(1))
+///     } else {
+///         Ok(None)
+///     }
+/// };
+///
+/// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
+/// let colors = greedy_node_color_with_preset_colors(&g, preset_color_fn).unwrap();
+/// let mut expected_colors = DictMap::new();
+/// expected_colors.insert(NodeIndex::new(0), 1);
+/// expected_colors.insert(NodeIndex::new(1), 0);
+/// expected_colors.insert(NodeIndex::new(2), 0);
+/// assert_eq!(colors, expected_colors);
+/// ```
+pub fn greedy_node_color_with_preset_colors<G, F, E>(
+    graph: G,
+    preset_color_fn: F,
+) -> Result<DictMap<G::NodeId, usize>, E>
+where
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G::NodeId: Hash + Eq + Send + Sync,
+    F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
+{
+    inner_greedy_node_color(graph, preset_color_fn, ColoringStrategy::Degree)
 }
 
 /// Color a graph using a greedy graph coloring algorithm with preset colors.
@@ -432,7 +486,7 @@ where
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
 /// use std::convert::Infallible;
-/// use rustworkx_core::coloring::{greedy_node_color_with_preset_colors, ColoringStrategy};
+/// use rustworkx_core::coloring::{greedy_node_color_with_coloring_strategy, ColoringStrategy};
 ///
 /// let preset_color_fn = |node_idx: NodeIndex| -> Result<Option<usize>, Infallible> {
 ///     if node_idx.index() == 0 {
@@ -443,24 +497,25 @@ where
 /// };
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_node_color_with_preset_colors(&g, preset_color_fn, ColoringStrategy::Degree).unwrap();
+/// let colors = greedy_node_color_with_coloring_strategy(&g, preset_color_fn, ColoringStrategy::Degree);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 1);
 /// expected_colors.insert(NodeIndex::new(1), 0);
 /// expected_colors.insert(NodeIndex::new(2), 0);
 /// assert_eq!(colors, expected_colors);
 /// ```
-pub fn greedy_node_color_with_preset_colors<G, F, E>(
+pub fn greedy_node_color_with_coloring_strategy<G, F, E>(
     graph: G,
     preset_color_fn: F,
     strategy: ColoringStrategy,
-) -> Result<DictMap<G::NodeId, usize>, E>
+) -> DictMap<G::NodeId, usize>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
     inner_greedy_node_color(graph, preset_color_fn, strategy)
+        .unwrap_or_else(|_| panic!("Something went horribly wrong!"))
 }
 
 /// Color edges of a graph using a greedy graph coloring algorithm with preset
@@ -800,8 +855,9 @@ where
 
 #[cfg(test)]
 mod test_node_coloring {
-    use crate::coloring::{greedy_node_color, greedy_node_color_with_preset_colors};
-    use crate::coloring::{two_color, ColoringStrategy};
+    use crate::coloring::{
+        greedy_node_color, greedy_node_color_with_coloring_strategy, two_color, ColoringStrategy,
+    };
     use crate::dictmap::*;
     use crate::generators::{complete_graph, cycle_graph, heavy_hex_graph, path_graph};
     use std::convert::Infallible;
@@ -860,16 +916,64 @@ mod test_node_coloring {
     }
 
     #[test]
+    fn test_legacy_greedy_node_color_empty_graph() {
+        // Empty graph
+        let graph = Graph::<(), (), Undirected>::new_undirected();
+        let colors = greedy_node_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_legacy_greedy_node_color_simple_graph() {
+        // Simple graph
+        let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (0, 2)]);
+        let colors = greedy_node_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 0),
+            (NodeIndex::new(1), 1),
+            (NodeIndex::new(2), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_legacy_greedy_node_color_simple_graph_large_degree() {
+        // Graph with multiple edges
+        let graph = Graph::<(), (), Undirected>::from_edges([
+            (0, 1),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+        ]);
+        let colors = greedy_node_color(&graph);
+        let expected_colors: DictMap<NodeIndex, usize> = [
+            (NodeIndex::new(0), 0),
+            (NodeIndex::new(1), 1),
+            (NodeIndex::new(2), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
     fn test_greedy_node_color_empty_graph() {
         // Empty graph
         let graph = Graph::<(), (), Undirected>::new_undirected();
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
         for strategy in vec![
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, strategy);
+            let colors =
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
             let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
             assert_eq!(colors, expected_colors);
         }
@@ -879,7 +983,12 @@ mod test_node_coloring {
     fn test_greedy_node_color_simple_graph() {
         // Simple graph
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (0, 2)]);
-        let colors = greedy_node_color(&graph, ColoringStrategy::Degree);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+        let colors = greedy_node_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Degree,
+        );
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
@@ -901,7 +1010,12 @@ mod test_node_coloring {
             (0, 2),
             (0, 2),
         ]);
-        let colors = greedy_node_color(&graph, ColoringStrategy::Degree);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+        let colors = greedy_node_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Degree,
+        );
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
@@ -925,7 +1039,12 @@ mod test_node_coloring {
             (5, 7),
         ]);
 
-        let colors = greedy_node_color(&graph, ColoringStrategy::Saturation);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+        let colors = greedy_node_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Saturation,
+        );
         check_node_colors(&graph, &colors);
 
         let expected_colors: DictMap<NodeIndex, usize> = [
@@ -956,12 +1075,11 @@ mod test_node_coloring {
             }
         };
 
-        let colors = greedy_node_color_with_preset_colors(
+        let colors = greedy_node_color_with_coloring_strategy(
             &graph,
             preset_color_fn,
             ColoringStrategy::Saturation,
-        )
-        .unwrap();
+        );
         check_node_colors(&graph, &colors);
         check_preset_colors(&graph, &colors, preset_color_fn);
 
@@ -990,7 +1108,12 @@ mod test_node_coloring {
             (5, 7),
         ]);
 
-        let colors = greedy_node_color(&graph, ColoringStrategy::IndependentSet);
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
+        let colors = greedy_node_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::IndependentSet,
+        );
         check_node_colors(&graph, &colors);
 
         let expected_colors: DictMap<NodeIndex, usize> = [
@@ -1031,12 +1154,11 @@ mod test_node_coloring {
             }
         };
 
-        let colors = greedy_node_color_with_preset_colors(
+        let colors = greedy_node_color_with_coloring_strategy(
             &graph,
             preset_color_fn,
             ColoringStrategy::IndependentSet,
-        )
-        .unwrap();
+        );
         check_node_colors(&graph, &colors);
         check_preset_colors(&graph, &colors, preset_color_fn);
 
@@ -1130,13 +1252,15 @@ mod test_node_coloring {
     fn test_path_graph() {
         let graph: petgraph::graph::UnGraph<(), ()> =
             path_graph(Some(7), None, || (), || (), false).unwrap();
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
         for strategy in vec![
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, strategy);
+            let colors =
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
             check_node_colors(&graph, &colors);
         }
     }
@@ -1145,13 +1269,15 @@ mod test_node_coloring {
     fn test_cycle_graph() {
         let graph: petgraph::graph::UnGraph<(), ()> =
             cycle_graph(Some(15), None, || (), || (), false).unwrap();
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
         for strategy in vec![
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, strategy);
+            let colors =
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
             check_node_colors(&graph, &colors);
         }
     }
@@ -1160,13 +1286,15 @@ mod test_node_coloring {
     fn test_heavy_hex_graph() {
         let graph: petgraph::graph::UnGraph<(), ()> =
             heavy_hex_graph(7, || (), || (), false).unwrap();
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
         for strategy in vec![
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, strategy);
+            let colors =
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
             check_node_colors(&graph, &colors);
         }
     }
@@ -1175,13 +1303,15 @@ mod test_node_coloring {
     fn test_complete_graph() {
         let graph: petgraph::graph::UnGraph<(), ()> =
             complete_graph(Some(10), None, || (), || ()).unwrap();
+        let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
         for strategy in vec![
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, strategy);
+            let colors =
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
             check_node_colors(&graph, &colors);
         }
     }
