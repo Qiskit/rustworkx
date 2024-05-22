@@ -21,7 +21,7 @@ use std::convert::Infallible;
 
 use rustworkx_core::bipartite_coloring::bipartite_edge_color;
 use rustworkx_core::coloring::{
-    greedy_edge_color, greedy_node_color, greedy_node_color_with_preset_colors,
+    greedy_edge_color_with_coloring_strategy, greedy_node_color_with_coloring_strategy,
     misra_gries_edge_color, two_color,
 };
 
@@ -120,9 +120,12 @@ pub fn graph_greedy_color(
                     .call1(py, (node_idx.index(),))
                     .map(|x| x.extract(py).ok())
             };
-            greedy_node_color_with_preset_colors(&graph.graph, callback, inner_strategy)?
+            greedy_node_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)
         }
-        None => greedy_node_color(&graph.graph, inner_strategy),
+        None => {
+            let callback = |_: NodeIndex| -> Result<Option<usize>, Infallible> { Ok(None) };
+            greedy_node_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)
+        }
     };
     let out_dict = PyDict::new_bound(py);
     for (node, color) in colors {
@@ -192,11 +195,11 @@ pub fn graph_greedy_edge_color(
                     .call1(py, (edge_idx.index(),))
                     .map(|x| x.extract(py).ok())
             };
-            greedy_edge_color(&graph.graph, callback, inner_strategy)
+            greedy_edge_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)
         }
         None => {
             let callback = |_: EdgeIndex| -> Result<Option<usize>, Infallible> { Ok(None) };
-            greedy_edge_color(&graph.graph, callback, inner_strategy)
+            greedy_edge_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)
         }
     };
 
