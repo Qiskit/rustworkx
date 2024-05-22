@@ -115,7 +115,7 @@ fn inner_greedy_node_color<G, F, E>(
     strategy: ColoringStrategy,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
@@ -135,7 +135,7 @@ fn inner_greedy_node_color_strategy_degree<G, F, E>(
     mut preset_color_fn: F,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
@@ -206,7 +206,7 @@ fn inner_greedy_node_color_strategy_saturation<G, F, E>(
     mut preset_color_fn: F,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
@@ -279,7 +279,7 @@ fn inner_greedy_node_color_strategy_independent_set<G, F, E>(
     mut preset_color_fn: F,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
@@ -376,7 +376,7 @@ where
 ///
 pub fn greedy_node_color<G>(graph: G) -> DictMap<G::NodeId, usize>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
 {
     inner_greedy_node_color(
@@ -442,7 +442,7 @@ pub fn greedy_node_color_with_preset_colors<G, F, E>(
     preset_color_fn: F,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
@@ -510,7 +510,7 @@ pub fn greedy_node_color_with_coloring_strategy<G, F, E>(
     strategy: ColoringStrategy,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G: NodeCount + IntoNodeIdentifiers + IntoEdges,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
