@@ -275,18 +275,18 @@ pub fn undirected_gnm_random_graph(
 
 /// Return a directed graph from the stochastic block model.
 ///
-/// The stochastic block model is a generalization of the G<sub>np</sub> graph model
+/// The stochastic block model is a generalization of the :math:`G(n,p)` graph model
 /// (see [rustworkx.undirected_gnp_random_graph] ). The connection probability of
-/// nodes `u` and `v` depends on their block (or community) and is given by
-/// `probabilities[blocks[u]][blocks[v]]`. The number of nodes and the number of blocks
-/// are inferred from `blocks`.
+/// nodes ``u`` and ``v`` depends on their block (or community) and is given by
+/// ``probabilities[blocks[u]][blocks[v]]``. The number of nodes and the number of
+/// blocks are inferred from ``blocks``.
 ///
 /// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
 ///
 /// Arguments:
 ///
 /// :param list[int] blocks: Block membership (between 0 and B-1) of each node.
-/// :param list[list[float]] probabilities: Matrix B x B that contains the
+/// :param list[list[float]] probabilities: B x B matrix that contains the
 ///     connection probability between nodes of different blocks.
 /// :param bool loops: Determines whether the graph can have loops or not.
 /// :param int seed:  An optional seed to use for the random number generator.
@@ -330,11 +330,11 @@ pub fn directed_sbm_random_graph(
 
 /// Return an undirected graph from the stochastic block model.
 ///
-/// The stochastic block model is a generalization of the G<sub>np</sub> graph model
+/// The stochastic block model is a generalization of the :math:`G(n,p)` graph model
 /// (see [rustworkx.undirected_gnp_random_graph] ). The connection probability of
-/// nodes `u` and `v` depends on their block (or community) and is given by
-/// `probabilities[blocks[u]][blocks[v]]`. The number of nodes and the number of blocks
-/// are inferred from `blocks`.
+/// nodes ``u`` and ``v`` depends on their block (or community) and is given by
+/// ``probabilities[blocks[u]][blocks[v]]``. The number of nodes and the number of
+/// blocks are inferred from ``blocks``.
 ///
 /// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
 ///
