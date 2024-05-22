@@ -9,6 +9,13 @@ features:
     The ``IndependentSet`` strategy finds independent subsets of the graph, and assigns 
     a different color to each of these subsets.
   - |
+    The rustworkx-core ``coloring`` module has 2 new functions,
+    ``greedy_node_color_with_coloring_strategy`` and
+    ``greedy_edge_color_with_coloring_strategy``.
+    These functions color respectively the nodes or the edges of the graph
+    using the specified coloring strategy and handling the preset colors
+    when provided.
+  - |
     Added a new keyword argument, ``strategy``, to :func:`.graph_greedy_color`
     and to :func:`.graph_greedy_edge_color` to specify the greedy coloring strategy.
     
