@@ -618,7 +618,7 @@ pub fn greedy_edge_color_with_coloring_strategy<G, F, E>(
     strategy: ColoringStrategy,
 ) -> Result<DictMap<G::EdgeId, usize>, E>
 where
-    G: EdgeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
+    G: EdgeCount + IntoNodeIdentifiers + IntoEdges,
     G::EdgeId: Hash + Eq,
     F: Fn(G::EdgeId) -> Result<Option<usize>, E>,
 {
