@@ -518,6 +518,63 @@ where
         .unwrap_or_else(|_| panic!("Something went horribly wrong!"))
 }
 
+/// Color edges of a graph using a greedy approach.
+///
+/// This function works by greedily coloring the line graph of the given graph.
+///
+/// The coloring problem is NP-hard and this is a heuristic algorithm
+/// which may not return an optimal solution.
+///
+/// # Note:
+/// Please consider using ``greedy_edge_color_with_coloring_strategy``, which is
+/// a more general version of this function.
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+///
+/// # Example
+/// ```rust
+///
+/// use petgraph::graph::Graph;
+/// use petgraph::graph::EdgeIndex;
+/// use petgraph::Undirected;
+/// use rustworkx_core::dictmap::*;
+/// use rustworkx_core::coloring::greedy_edge_color;
+///
+/// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (0, 2), (2, 3)]);
+/// let colors = greedy_edge_color(&g);
+/// let mut expected_colors = DictMap::new();
+/// expected_colors.insert(EdgeIndex::new(0), 2);
+/// expected_colors.insert(EdgeIndex::new(1), 0);
+/// expected_colors.insert(EdgeIndex::new(2), 1);
+/// expected_colors.insert(EdgeIndex::new(3), 2);
+/// assert_eq!(colors, expected_colors);
+/// ```
+///
+pub fn greedy_edge_color<G>(graph: G) -> DictMap<G::EdgeId, usize>
+where
+    G: EdgeCount + IntoNodeIdentifiers + IntoEdges,
+    G::EdgeId: Hash + Eq,
+{
+    let (new_graph, edge_to_node_map): (
+        petgraph::graph::UnGraph<(), ()>,
+        HashMap<G::EdgeId, NodeIndex>,
+    ) = line_graph(&graph, || (), || ());
+
+    let colors = greedy_node_color(&new_graph);
+
+    let mut edge_colors: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
+
+    for edge in graph.edge_references() {
+        let edge_index = edge.id();
+        let node_index = edge_to_node_map.get(&edge_index).unwrap();
+        let edge_color = colors.get(node_index).unwrap();
+        edge_colors.insert(edge_index, *edge_color);
+    }
+
+    edge_colors
+}
+
 /// Color edges of a graph using a greedy graph coloring algorithm with preset
 /// colors.
 ///
@@ -542,12 +599,12 @@ where
 /// use petgraph::graph::EdgeIndex;
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::coloring::{greedy_edge_color, ColoringStrategy};
+/// use rustworkx_core::coloring::{greedy_edge_color_with_coloring_strategy, ColoringStrategy};
 /// use std::convert::Infallible;
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (0, 2), (2, 3)]);
 /// let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
-/// let colors = greedy_edge_color(&g, preset_color_fn, ColoringStrategy::Degree);
+/// let colors = greedy_edge_color_with_coloring_strategy(&g, preset_color_fn, ColoringStrategy::Degree);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(EdgeIndex::new(0), 2);
 /// expected_colors.insert(EdgeIndex::new(1), 0);
@@ -556,7 +613,7 @@ where
 /// assert_eq!(colors, expected_colors);
 /// ```
 ///
-pub fn greedy_edge_color<G, F, E>(
+pub fn greedy_edge_color_with_coloring_strategy<G, F, E>(
     graph: G,
     preset_color_fn: F,
     strategy: ColoringStrategy,
@@ -1319,7 +1376,9 @@ mod test_node_coloring {
 
 #[cfg(test)]
 mod test_edge_coloring {
-    use crate::coloring::{greedy_edge_color, ColoringStrategy};
+    use crate::coloring::{
+        greedy_edge_color, greedy_edge_color_with_coloring_strategy, ColoringStrategy,
+    };
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
     use std::convert::Infallible;
@@ -1328,12 +1387,56 @@ mod test_edge_coloring {
     use petgraph::Undirected;
 
     #[test]
+    fn test_legacy_greedy_edge_color_empty_graph() {
+        // Empty graph
+        let graph = Graph::<(), (), Undirected>::new_undirected();
+        let colors = greedy_edge_color(&graph);
+        let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_legacy_greedy_edge_color_simple_graph() {
+        // Graph with an edge removed
+        let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3)]);
+        let colors = greedy_edge_color(&graph);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 1),
+            (EdgeIndex::new(1), 0),
+            (EdgeIndex::new(2), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
+    fn test_legacy_greedy_edge_color_graph_with_removed_edges() {
+        // Simple graph
+        let mut graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0)]);
+        graph.remove_edge(edge_index(1));
+        let colors = greedy_edge_color(&graph);
+        let expected_colors: DictMap<EdgeIndex, usize> = [
+            (EdgeIndex::new(0), 1),
+            (EdgeIndex::new(1), 0),
+            (EdgeIndex::new(2), 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(colors, expected_colors);
+    }
+
+    #[test]
     fn test_greedy_edge_color_empty_graph() {
         // Empty graph
         let graph = Graph::<(), (), Undirected>::new_undirected();
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Degree,
+        );
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -1344,7 +1447,11 @@ mod test_edge_coloring {
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Degree,
+        );
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1363,7 +1470,11 @@ mod test_edge_coloring {
 
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Degree,
+        );
 
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
@@ -1382,7 +1493,11 @@ mod test_edge_coloring {
             Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Degree,
+        );
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1409,7 +1524,11 @@ mod test_edge_coloring {
             }
         };
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Degree,
+        );
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1429,7 +1548,11 @@ mod test_edge_coloring {
             Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Saturation);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Saturation,
+        );
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1458,7 +1581,11 @@ mod test_edge_coloring {
             }
         };
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Saturation);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::Saturation,
+        );
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1478,7 +1605,11 @@ mod test_edge_coloring {
             Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::IndependentSet);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::IndependentSet,
+        );
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1507,7 +1638,11 @@ mod test_edge_coloring {
             }
         };
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::IndependentSet);
+        let colors = greedy_edge_color_with_coloring_strategy(
+            &graph,
+            preset_color_fn,
+            ColoringStrategy::IndependentSet,
+        );
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
