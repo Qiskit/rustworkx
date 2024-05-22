@@ -497,7 +497,7 @@ where
 /// };
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_node_color_with_coloring_strategy(&g, preset_color_fn, ColoringStrategy::Degree);
+/// let colors = greedy_node_color_with_coloring_strategy(&g, preset_color_fn, ColoringStrategy::Degree).unwrap();
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 1);
 /// expected_colors.insert(NodeIndex::new(1), 0);
@@ -508,14 +508,13 @@ pub fn greedy_node_color_with_coloring_strategy<G, F, E>(
     graph: G,
     preset_color_fn: F,
     strategy: ColoringStrategy,
-) -> DictMap<G::NodeId, usize>
+) -> Result<DictMap<G::NodeId, usize>, E>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
     inner_greedy_node_color(graph, preset_color_fn, strategy)
-        .unwrap_or_else(|_| panic!("Something went horribly wrong!"))
 }
 
 /// Color edges of a graph using a greedy approach.
@@ -604,7 +603,7 @@ where
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (0, 2), (2, 3)]);
 /// let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
-/// let colors = greedy_edge_color_with_coloring_strategy(&g, preset_color_fn, ColoringStrategy::Degree);
+/// let colors = greedy_edge_color_with_coloring_strategy(&g, preset_color_fn, ColoringStrategy::Degree).unwrap();
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(EdgeIndex::new(0), 2);
 /// expected_colors.insert(EdgeIndex::new(1), 0);
@@ -617,7 +616,7 @@ pub fn greedy_edge_color_with_coloring_strategy<G, F, E>(
     graph: G,
     preset_color_fn: F,
     strategy: ColoringStrategy,
-) -> DictMap<G::EdgeId, usize>
+) -> Result<DictMap<G::EdgeId, usize>, E>
 where
     G: EdgeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::EdgeId: Hash + Eq,
@@ -633,8 +632,7 @@ where
     let new_graph_preset_color_fn =
         |x: NodeIndex| preset_color_fn(**node_to_edge_map.get(&x).unwrap());
 
-    let colors = inner_greedy_node_color(&new_graph, new_graph_preset_color_fn, strategy)
-        .unwrap_or_else(|_| panic!("Something went horribly wrong!"));
+    let colors = inner_greedy_node_color(&new_graph, new_graph_preset_color_fn, strategy)?;
 
     let mut edge_colors: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
 
@@ -645,7 +643,7 @@ where
         edge_colors.insert(edge_index, *edge_color);
     }
 
-    edge_colors
+    Ok(edge_colors)
 }
 
 struct MisraGries<G: GraphBase> {
@@ -1032,7 +1030,7 @@ mod test_node_coloring {
             let colors =
                 greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
             let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
-            assert_eq!(colors, expected_colors);
+            assert_eq!(colors, Ok(expected_colors));
         }
     }
 
@@ -1053,7 +1051,7 @@ mod test_node_coloring {
         ]
         .into_iter()
         .collect();
-        assert_eq!(colors, expected_colors);
+        assert_eq!(colors, Ok(expected_colors));
     }
 
     #[test]
@@ -1080,7 +1078,7 @@ mod test_node_coloring {
         ]
         .into_iter()
         .collect();
-        assert_eq!(colors, expected_colors);
+        assert_eq!(colors, Ok(expected_colors));
     }
 
     #[test]
@@ -1101,7 +1099,8 @@ mod test_node_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Saturation,
-        );
+        )
+        .unwrap();
         check_node_colors(&graph, &colors);
 
         let expected_colors: DictMap<NodeIndex, usize> = [
@@ -1136,7 +1135,8 @@ mod test_node_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Saturation,
-        );
+        )
+        .unwrap();
         check_node_colors(&graph, &colors);
         check_preset_colors(&graph, &colors, preset_color_fn);
 
@@ -1170,7 +1170,8 @@ mod test_node_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::IndependentSet,
-        );
+        )
+        .unwrap();
         check_node_colors(&graph, &colors);
 
         let expected_colors: DictMap<NodeIndex, usize> = [
@@ -1215,7 +1216,8 @@ mod test_node_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::IndependentSet,
-        );
+        )
+        .unwrap();
         check_node_colors(&graph, &colors);
         check_preset_colors(&graph, &colors, preset_color_fn);
 
@@ -1317,7 +1319,8 @@ mod test_node_coloring {
             ColoringStrategy::IndependentSet,
         ] {
             let colors =
-                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy)
+                    .unwrap();
             check_node_colors(&graph, &colors);
         }
     }
@@ -1334,7 +1337,8 @@ mod test_node_coloring {
             ColoringStrategy::IndependentSet,
         ] {
             let colors =
-                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy)
+                    .unwrap();
             check_node_colors(&graph, &colors);
         }
     }
@@ -1351,7 +1355,8 @@ mod test_node_coloring {
             ColoringStrategy::IndependentSet,
         ] {
             let colors =
-                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy)
+                    .unwrap();
             check_node_colors(&graph, &colors);
         }
     }
@@ -1368,7 +1373,8 @@ mod test_node_coloring {
             ColoringStrategy::IndependentSet,
         ] {
             let colors =
-                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy);
+                greedy_node_color_with_coloring_strategy(&graph, preset_color_fn, strategy)
+                    .unwrap();
             check_node_colors(&graph, &colors);
         }
     }
@@ -1436,7 +1442,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Degree,
-        );
+        )
+        .unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -1451,7 +1458,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Degree,
-        );
+        )
+        .unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1474,7 +1482,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Degree,
-        );
+        )
+        .unwrap();
 
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
@@ -1497,7 +1506,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Degree,
-        );
+        )
+        .unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1528,7 +1538,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Degree,
-        );
+        )
+        .unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1552,7 +1563,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Saturation,
-        );
+        )
+        .unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1585,7 +1597,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::Saturation,
-        );
+        )
+        .unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1609,7 +1622,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::IndependentSet,
-        );
+        )
+        .unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1642,7 +1656,8 @@ mod test_edge_coloring {
             &graph,
             preset_color_fn,
             ColoringStrategy::IndependentSet,
-        );
+        )
+        .unwrap();
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),

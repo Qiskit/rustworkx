@@ -120,11 +120,11 @@ pub fn graph_greedy_color(
                     .call1(py, (node_idx.index(),))
                     .map(|x| x.extract(py).ok())
             };
-            greedy_node_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)
+            greedy_node_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)?
         }
         None => {
             let callback = |_: NodeIndex| -> Result<Option<usize>, Infallible> { Ok(None) };
-            greedy_node_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)
+            greedy_node_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)?
         }
     };
     let out_dict = PyDict::new_bound(py);
@@ -195,11 +195,11 @@ pub fn graph_greedy_edge_color(
                     .call1(py, (edge_idx.index(),))
                     .map(|x| x.extract(py).ok())
             };
-            greedy_edge_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)
+            greedy_edge_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)?
         }
         None => {
             let callback = |_: EdgeIndex| -> Result<Option<usize>, Infallible> { Ok(None) };
-            greedy_edge_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)
+            greedy_edge_color_with_coloring_strategy(&graph.graph, callback, inner_strategy)?
         }
     };
 
