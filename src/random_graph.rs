@@ -488,6 +488,63 @@ pub fn random_geometric_graph(
     Ok(graph)
 }
 
+/// Return a hyperbolic random undirected graph (also called hyperbolic geometric graph).
+///
+/// The usual hyperbolic random graph model connects pairs of nodes with probability
+///
+/// .. math::
+///
+///     P[(u,v) \in E] = \frac{1}{1+\exp(\beta(d(u,v) - R)/2)},
+///
+/// a sigmoid function that decreases as the hyperbolic distance between nodes :math:`u`
+/// and :math:`v` increases. The hyperbolic distance is given by
+///
+/// .. math::
+///
+///     d(u,v) = \text{arccosh}\left[x_u^0 x_v^0 - \sum_{j=1}^D x_u^j x_v^j \right],
+///
+/// where :math:`D` is the dimension of the hyperbolic space and :math:`x_u^d` is the
+/// :math:`d` th-dimension coordinate of node :math:`u` in the hyperboloid model. The
+/// number of nodes and the dimension are inferred from the coordinates ``pos``.
+///
+/// If ``beta`` is ``None``, all pairs of nodes with a distance smaller than ``r`` are connected.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// :param list[list[float]] pos: Hyperboloid coordinates of the nodes
+///     [[:math:`x_1^0`, ..., :math:`x_1^D`], ...]. Since the first dimension is associated to
+///     the positive term in the metric, each :math:`x_u^0` must be at least 1.
+/// :param float beta: Sigmoid sharpness (nonnegative) of the connection probability.
+/// :param float r: Distance at which the connection probability is 0.5 for the probabilistic model.
+///     Threshold when ``beta`` is ``None``.
+/// :param int seed: An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(pos, beta, r, /, seed=None)")]
+pub fn hyperbolic_random_graph(
+    py: Python,
+    pos: Vec<Vec<f64>>,
+    r: f64,
+    beta: Option<f64>,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::hyperbolic_random_graph(&pos, beta, r, seed, default_fn, default_fn)
+        {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyValueError::new_err("invalid positions or parameters")),
+        };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
 /// Generate a random graph using Barabási–Albert preferential attachment
 ///
 /// A graph is grown to $n$ nodes by adding new nodes each with $m$ edges that
