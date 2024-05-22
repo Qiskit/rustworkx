@@ -619,32 +619,20 @@ where
     Ok(graph)
 }
 
-/// Generate a G<sub>np</sub> random graph, also known as an
-/// Erdős-Rényi graph or a binomial graph.
+/// Generate a graph from the stochastic block model.
 ///
-/// For number of nodes `n` and probability `p`, the G<sub>np</sub>
-/// graph algorithm creates `n` nodes, and for all the `n * (n - 1)` possible edges,
-/// each edge is created independently with probability `p`.
-/// In general, for any probability `p`, the expected number of edges returned
-/// is `m = p * n * (n - 1)`. If `p = 0` or `p = 1`, the returned
-/// graph is not random and will always be an empty or a complete graph respectively.
-/// An empty graph has zero edges and a complete directed graph has `n (n - 1)` edges.
-/// The run time is `O(n + m)` where `m` is the expected number of edges mentioned above.
-/// When `p = 0`, run time always reduces to `O(n)`, as the lower bound.
-/// When `p = 1`, run time always goes to `O(n + n * (n - 1))`, as the upper bound.
-///
-/// For `0 < p < 1`, the algorithm is based on the implementation of the networkx function
-/// ``fast_gnp_random_graph``,
-/// <https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120>
-///
-/// Vladimir Batagelj and Ulrik Brandes,
-///    "Efficient generation of large random networks",
-///    Phys. Rev. E, 71, 036113, 2005.
+/// The stochastic block model is a generalization of the G<sub>np</sub> graph model
+/// (see [rustworkx_core::generators::gnp_random_graph] ). The connection probability of
+/// nodes `u` and `v` depends on their block (or community) and is given by
+/// `probabilities[blocks[u]][blocks[v]]`. The number of nodes and the number of blocks
+/// are inferred from `blocks`.
 ///
 /// Arguments:
 ///
-/// * `num_nodes` - The number of nodes for creating the random graph.
-/// * `probability` - The probability of creating an edge between two nodes as a float.
+/// * `blocks` - Block membership (between 0 and B-1) of each node.
+/// * `probabilities` - B x B matrix that contains the connection probability between
+///     nodes of different blocks. Must be symmetric for undirected graphs.
+/// * `loops` - Determines whether the graph can have loops or not.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
 ///     for newly created nodes.
@@ -654,17 +642,19 @@ where
 /// # Example
 /// ```rust
 /// use rustworkx_core::petgraph;
-/// use rustworkx_core::generators::gnp_random_graph;
+/// use rustworkx_core::generators::sbm_random_graph;
 ///
-/// let g: petgraph::graph::DiGraph<(), ()> = gnp_random_graph(
-///     20,
-///     1.0,
-///     None,
-///     || {()},
-///     || {()},
-/// ).unwrap();
-/// assert_eq!(g.node_count(), 20);
-/// assert_eq!(g.edge_count(), 20 * (20 - 1));
+/// let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+///     &vec![1, 0, 1],
+///     &[vec![0., 1.], vec![0., 1.]],
+///     true,
+///     Some(10),
+///     || (),
+///     || (),
+/// )
+/// .unwrap();
+/// assert_eq!(g.node_count(), 3);
+/// assert_eq!(g.edge_count(), 6);
 /// ```
 pub fn sbm_random_graph<G, T, F, H, M>(
     blocks: &[usize],
@@ -714,37 +704,28 @@ where
     let between = Uniform::new(0.0, 1.0);
 
     let mut block_partition: Vec<Vec<usize>> = (0..num_communities).map(|_| Vec::new()).collect();
-    for (vertex, block) in blocks.iter().enumerate() {
-        block_partition[*block].push(vertex);
+    for (node, block) in blocks.iter().enumerate() {
+        block_partition[*block].push(node);
     }
 
-    let block_pairs = block_partition
-        .iter()
-        .enumerate()
-        .zip(block_partition.iter().enumerate())
-        .filter(|((i, _), (j, _))| directed || i <= j);
-
-    for ((b1, block1), (b2, block2)) in block_pairs {
-        let prob = probabilities[b1][b2];
-        println!("block_len={x}", x=
-            block1
-                .iter()
-                .zip(block2.iter())
-                .filter(|(v, w)| v != w && directed || v < w || v == w && loops).count()
-        );
-        if prob > 0. {
-            block1
-                .iter()
-                .zip(block2.iter())
-                .filter(|(v, w)| v != w && directed || v < w || v == w && loops)
-                .filter(|_| between.sample(&mut rng) < prob)
-                .for_each(|(&v, &w)| {
-                    graph.add_edge(
-                        graph.from_index(v),
-                        graph.from_index(w),
-                        default_edge_weight(),
-                    );
-                });
+    for (v, &b_v) in blocks.iter().enumerate().take(if directed || loops {
+        num_nodes
+    } else {
+        num_nodes - 1
+    }) {
+        for (w, &b_w) in blocks
+            .iter()
+            .enumerate()
+            .skip(if directed { 0 } else { v })
+            .filter(|&(w, _)| w != v || loops)
+        {
+            if between.sample(&mut rng) < probabilities[b_v][b_w] {
+                graph.add_edge(
+                    graph.from_index(v),
+                    graph.from_index(w),
+                    default_edge_weight(),
+                );
+            }
         }
     }
     Ok(graph)
@@ -770,11 +751,9 @@ mod tests {
     use crate::generators::InvalidInputError;
     use crate::generators::{
         barabasi_albert_graph, gnm_random_graph, gnp_random_graph, path_graph,
-        random_bipartite_graph, random_geometric_graph,
+        random_bipartite_graph, random_geometric_graph, sbm_random_graph,
     };
     use crate::petgraph;
-
-    use super::sbm_random_graph;
 
     // Test gnp_random_graph
 
@@ -1067,16 +1046,180 @@ mod tests {
 
     // Test sbm_random_graph
     #[test]
-    fn test_sbm_complete_block() {
+    fn test_sbm_directed_complete_blocks() {
         let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
             &vec![1, 0, 1],
-            &[vec![1., 0.], vec![0., 1.]],
+            &[vec![0., 1.], vec![0., 1.]],
             true,
-            None,
+            Some(10),
             || (),
             || (),
-        ).unwrap();
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 6);
+        for (u, v) in [(0, 0), (0, 2), (2, 0), (2, 2), (1, 0), (1, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        assert_eq!(g.contains_edge(0.into(), 1.into()), false);
+        assert_eq!(g.contains_edge(2.into(), 1.into()), false);
+    }
+
+    #[test]
+    fn test_sbm_directed_complete_blocks_loops() {
+        let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 1],
+            &[vec![0., 1.], vec![0., 1.]],
+            true,
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 6);
+        for (u, v) in [(0, 0), (0, 2), (2, 0), (2, 2), (1, 0), (1, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        assert_eq!(g.contains_edge(0.into(), 1.into()), false);
+        assert_eq!(g.contains_edge(2.into(), 1.into()), false);
+    }
+
+    #[test]
+    fn test_sbm_undirected_complete_blocks_loops() {
+        let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 1],
+            &[vec![0., 1.], vec![1., 1.]],
+            true,
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 5);
+        for (u, v) in [(0, 0), (0, 2), (2, 2), (1, 0), (1, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        assert_eq!(g.contains_edge(1.into(), 1.into()), false);
+    }
+
+    #[test]
+    fn test_sbm_directed_complete_blocks_noloops() {
+        let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 1],
+            &[vec![0., 1.], vec![0., 1.]],
+            false,
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 4);
+        for (u, v) in [(0, 2), (2, 0), (1, 0), (1, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        assert_eq!(g.contains_edge(0.into(), 1.into()), false);
+        assert_eq!(g.contains_edge(2.into(), 1.into()), false);
+        for u in 0..2 {
+            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+        }
+    }
+
+    #[test]
+    fn test_sbm_undirected_complete_blocks_noloops() {
+        let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 1],
+            &[vec![0., 1.], vec![1., 1.]],
+            false,
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 3);
+        for (u, v) in [(0, 2), (1, 0), (1, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        for u in 0..2 {
+            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+        }
+    }
+
+    #[test]
+    fn test_sbm_block_outofrange_error() {
+        match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 2],
+            &[vec![0., 1.], vec![1., 1.]],
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    #[test]
+    fn test_sbm_invalid_matrix_error() {
+        match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 1],
+            &[vec![0., 1.], vec![1.]],
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    #[test]
+    fn test_sbm_asymmetric_matrix_error() {
+        match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 1],
+            &[vec![0., 1.], vec![0., 1.]],
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    #[test]
+    fn test_sbm_invalid_probability_error() {
+        match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 0, 1],
+            &[vec![0., 1.], vec![0., -1.]],
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    #[test]
+    fn test_sbm_empty_error() {
+        match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![],
+            &[],
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
     }
 }

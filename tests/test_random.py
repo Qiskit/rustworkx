@@ -176,6 +176,71 @@ class TestGNMRandomGraph(unittest.TestCase):
         self.assertEqual(graph.nodes(), [0, 1, 2])
 
 
+class TestRandomSBM(unittest.TestCase):
+    def test_undirected_sbm_complete_blocks_loops(self):
+        graph = rustworkx.undirected_sbm_random_graph([0, 1, 0], [[1, 1], [1, 0]], True)
+        self.assertEqual(len(graph), 3)
+        self.assertEqual(len(graph.edges()), 5)
+        for i in range(2):
+            for j in range(i, 2):
+                if (i, j) != (1, 1):
+                    self.assertTrue(graph.has_edge(i, j))
+        self.assertFalse(graph.has_edge(1, 1))
+
+    def test_directed_sbm_complete_blocks_loops(self):
+        graph = rustworkx.directed_sbm_random_graph([0, 1, 0], [[0, 0], [1, 1]], True)
+        self.assertEqual(len(graph), 3)
+        self.assertEqual(len(graph.edges()), 3)
+        self.assertEqual(set(graph.edge_list()), set([(1, 1), (1, 0), (1, 2)]))
+
+    def test_undirected_sbm_complete_blocks_noloops(self):
+        graph = rustworkx.undirected_sbm_random_graph([0, 1, 0], [[1, 1], [1, 0]], False)
+        self.assertEqual(len(graph), 3)
+        self.assertEqual(len(graph.edges()), 3)
+        for i in range(2):
+            for j in range(i, 2):
+                if i != j:
+                    self.assertTrue(graph.has_edge(i, j))
+
+    def test_directed_sbm_complete_blocks_noloops(self):
+        graph = rustworkx.directed_sbm_random_graph([0, 1, 0], [[0, 0], [1, 1]], False)
+        self.assertEqual(len(graph), 3)
+        self.assertEqual(len(graph.edges()), 2)
+        self.assertEqual(set(graph.edge_list()), set([(1, 0), (1, 2)]))
+
+    def test_undirected_sbm_asymmetric_probabilities_error(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph([0, 1, 0], [[0, 0], [1, 1]], True)
+
+    def test_sbm_out_of_range_blocks_error(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph([0, 2, 0], [[1, 0], [0, 1]], True)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph([0, 2, 0], [[1, 0], [0, 1]], True)
+
+    def test_sbm_invalid_matrix(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph([0, 1, 0], [[1, 0], [0, 1, 0]], True)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph([0, 1, 0], [[1, 0], [0, 1, 0]], True)
+
+    def test_sbm_invalid_probabilities(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph([0, 1, 0], [[1, 0], [0, 1.5]], True)
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph([0, 1, 0], [[-1, 0], [0, 1]], True)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph([0, 1, 0], [[1, 0], [0, 1.5]], True)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph([0, 1, 0], [[-1, 0], [0, 1]], True)
+
+    def test_sbm_empty(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph([], [], True)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph([], [], True)
+
+
 class TestGeometricRandomGraph(unittest.TestCase):
     def test_random_geometric_empty(self):
         graph = rustworkx.random_geometric_graph(20, 0)

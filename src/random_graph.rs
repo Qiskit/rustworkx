@@ -273,6 +273,114 @@ pub fn undirected_gnm_random_graph(
     })
 }
 
+/// Return a directed graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the G<sub>np</sub> graph model
+/// (see [rustworkx.undirected_gnp_random_graph] ). The connection probability of
+/// nodes `u` and `v` depends on their block (or community) and is given by
+/// `probabilities[blocks[u]][blocks[v]]`. The number of nodes and the number of blocks
+/// are inferred from `blocks`.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// Arguments:
+///
+/// :param list[int] blocks: Block membership (between 0 and B-1) of each node.
+/// :param list[list[float]] probabilities: Matrix B x B that contains the
+///     connection probability between nodes of different blocks.
+/// :param bool loops: Determines whether the graph can have loops or not.
+/// :param int seed:  An optional seed to use for the random number generator.
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+#[pyfunction]
+#[pyo3(text_signature = "(blocks, probabilities, loops, /, seed=None)")]
+pub fn directed_sbm_random_graph(
+    py: Python,
+    blocks: Vec<usize>,
+    probabilities: Vec<Vec<f64>>,
+    loops: bool,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::sbm_random_graph(
+        &blocks,
+        &probabilities,
+        loops,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid blocks or probabilities input",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Return an undirected graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the G<sub>np</sub> graph model
+/// (see [rustworkx.undirected_gnp_random_graph] ). The connection probability of
+/// nodes `u` and `v` depends on their block (or community) and is given by
+/// `probabilities[blocks[u]][blocks[v]]`. The number of nodes and the number of blocks
+/// are inferred from `blocks`.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// Arguments:
+///
+/// :param list[int] blocks: Block membership (between 0 and B-1) of each node.
+/// :param list[list[float]] probabilities: Symmetric B x B matrix that contains
+///     the connection probability between nodes of different blocks.
+/// :param bool loops: Determines whether the graph can have loops or not.
+/// :param int seed:  An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(blocks, probabilities, loops, /, seed=None)")]
+pub fn undirected_sbm_random_graph(
+    py: Python,
+    blocks: Vec<usize>,
+    probabilities: Vec<Vec<f64>>,
+    loops: bool,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::sbm_random_graph(
+        &blocks,
+        &probabilities,
+        loops,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid blocks or probabilities input",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
 #[inline]
 fn pnorm(x: f64, p: f64) -> f64 {
     if p == 1.0 || p == std::f64::INFINITY {

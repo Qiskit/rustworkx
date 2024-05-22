@@ -127,6 +127,8 @@ from .rustworkx import directed_gnm_random_graph as directed_gnm_random_graph
 from .rustworkx import undirected_gnm_random_graph as undirected_gnm_random_graph
 from .rustworkx import directed_gnp_random_graph as directed_gnp_random_graph
 from .rustworkx import undirected_gnp_random_graph as undirected_gnp_random_graph
+from .rustworkx import directed_sbm_random_graph as directed_sbm_random_graph
+from .rustworkx import undirected_sbm_random_graph as undirected_sbm_random_graph
 from .rustworkx import random_geometric_graph as random_geometric_graph
 from .rustworkx import barabasi_albert_graph as barabasi_albert_graph
 from .rustworkx import directed_barabasi_albert_graph as directed_barabasi_albert_graph
