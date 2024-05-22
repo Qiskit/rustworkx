@@ -103,7 +103,7 @@ where
 
 /// coloring strategies for greedy node- and edge- coloring algorithms
 #[derive(Clone, PartialEq)]
-pub enum GreedyStrategyCore {
+pub enum ColoringStrategy {
     Degree,
     Saturation,
     IndependentSet,
@@ -112,21 +112,21 @@ pub enum GreedyStrategyCore {
 fn inner_greedy_node_color<G, F, E>(
     graph: G,
     preset_color_fn: F,
-    greedy_strategy: GreedyStrategyCore,
+    strategy: ColoringStrategy,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
-    match greedy_strategy {
-        GreedyStrategyCore::Degree => {
+    match strategy {
+        ColoringStrategy::Degree => {
             inner_greedy_node_color_strategy_degree(graph, preset_color_fn)
         }
-        GreedyStrategyCore::Saturation => {
+        ColoringStrategy::Saturation => {
             inner_greedy_node_color_strategy_saturation(graph, preset_color_fn)
         }
-        GreedyStrategyCore::IndependentSet => {
+        ColoringStrategy::IndependentSet => {
             inner_greedy_node_color_strategy_independent_set(graph, preset_color_fn)
         }
     }
@@ -359,7 +359,7 @@ where
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm.
-/// * `greedy_strategy` - The greedy strategy used by the algorithm.
+/// * `strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example
 /// ```rust
@@ -368,10 +368,10 @@ where
 /// use petgraph::graph::NodeIndex;
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::coloring::{greedy_node_color, GreedyStrategyCore};
+/// use rustworkx_core::coloring::{greedy_node_color, ColoringStrategy};
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_node_color(&g, GreedyStrategyCore::Degree);
+/// let colors = greedy_node_color(&g, ColoringStrategy::Degree);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 0);
 /// expected_colors.insert(NodeIndex::new(1), 1);
@@ -381,7 +381,7 @@ where
 ///
 pub fn greedy_node_color<G>(
     graph: G,
-    greedy_strategy: GreedyStrategyCore,
+    strategy: ColoringStrategy,
 ) -> DictMap<G::NodeId, usize>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
@@ -390,7 +390,7 @@ where
     inner_greedy_node_color(
         graph,
         |_| Ok::<Option<usize>, Infallible>(None),
-        greedy_strategy,
+        strategy,
     )
     .unwrap()
 }
@@ -422,7 +422,7 @@ where
 ///     for each node in the graph and is expected to return an `Option<usize>`
 ///     (wrapped in a `Result`) that is `None` if the node has no preset and
 ///     the usize represents the preset color.
-/// * `greedy_strategy` - The greedy strategy used by the algorithm.
+/// * `strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example
 /// ```rust
@@ -432,7 +432,7 @@ where
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
 /// use std::convert::Infallible;
-/// use rustworkx_core::coloring::{greedy_node_color_with_preset_colors, GreedyStrategyCore};
+/// use rustworkx_core::coloring::{greedy_node_color_with_preset_colors, ColoringStrategy};
 ///
 /// let preset_color_fn = |node_idx: NodeIndex| -> Result<Option<usize>, Infallible> {
 ///     if node_idx.index() == 0 {
@@ -443,7 +443,7 @@ where
 /// };
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (0, 2)]);
-/// let colors = greedy_node_color_with_preset_colors(&g, preset_color_fn, GreedyStrategyCore::Degree).unwrap();
+/// let colors = greedy_node_color_with_preset_colors(&g, preset_color_fn, ColoringStrategy::Degree).unwrap();
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(NodeIndex::new(0), 1);
 /// expected_colors.insert(NodeIndex::new(1), 0);
@@ -453,14 +453,14 @@ where
 pub fn greedy_node_color_with_preset_colors<G, F, E>(
     graph: G,
     preset_color_fn: F,
-    greedy_strategy: GreedyStrategyCore,
+    strategy: ColoringStrategy,
 ) -> Result<DictMap<G::NodeId, usize>, E>
 where
     G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
     G::NodeId: Hash + Eq + Send + Sync,
     F: FnMut(G::NodeId) -> Result<Option<usize>, E>,
 {
-    inner_greedy_node_color(graph, preset_color_fn, greedy_strategy)
+    inner_greedy_node_color(graph, preset_color_fn, strategy)
 }
 
 /// Color edges of a graph using a greedy graph coloring algorithm with preset
@@ -478,7 +478,7 @@ where
 ///     for each edge in the graph and is expected to return an `Option<usize>`
 ///     (wrapped in a `Result`) that is `None` if the edge has no preset and
 ///     the usize represents the preset color.
-/// * `greedy_strategy` - The greedy strategy used by the algorithm.
+/// * `strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example
 /// ```rust
@@ -487,12 +487,12 @@ where
 /// use petgraph::graph::EdgeIndex;
 /// use petgraph::Undirected;
 /// use rustworkx_core::dictmap::*;
-/// use rustworkx_core::coloring::{greedy_edge_color, GreedyStrategyCore};
+/// use rustworkx_core::coloring::{greedy_edge_color, ColoringStrategy};
 /// use std::convert::Infallible;
 ///
 /// let g = Graph::<(), (), Undirected>::from_edges(&[(0, 1), (1, 2), (0, 2), (2, 3)]);
 /// let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
-/// let colors = greedy_edge_color(&g, preset_color_fn, GreedyStrategyCore::Degree);
+/// let colors = greedy_edge_color(&g, preset_color_fn, ColoringStrategy::Degree);
 /// let mut expected_colors = DictMap::new();
 /// expected_colors.insert(EdgeIndex::new(0), 2);
 /// expected_colors.insert(EdgeIndex::new(1), 0);
@@ -504,7 +504,7 @@ where
 pub fn greedy_edge_color<G, F, E>(
     graph: G,
     preset_color_fn: F,
-    greedy_strategy: GreedyStrategyCore,
+    strategy: ColoringStrategy,
 ) -> DictMap<G::EdgeId, usize>
 where
     G: EdgeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
@@ -521,7 +521,7 @@ where
     let new_graph_preset_color_fn =
         |x: NodeIndex| preset_color_fn(**node_to_edge_map.get(&x).unwrap());
 
-    let colors = inner_greedy_node_color(&new_graph, new_graph_preset_color_fn, greedy_strategy)
+    let colors = inner_greedy_node_color(&new_graph, new_graph_preset_color_fn, strategy)
         .unwrap_or_else(|_| panic!("Something went horribly wrong!"));
 
     let mut edge_colors: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
@@ -801,7 +801,7 @@ where
 #[cfg(test)]
 mod test_node_coloring {
     use crate::coloring::{greedy_node_color, greedy_node_color_with_preset_colors};
-    use crate::coloring::{two_color, GreedyStrategyCore};
+    use crate::coloring::{two_color, ColoringStrategy};
     use crate::dictmap::*;
     use crate::generators::{complete_graph, cycle_graph, heavy_hex_graph, path_graph};
     use std::convert::Infallible;
@@ -864,12 +864,12 @@ mod test_node_coloring {
         // Empty graph
         let graph = Graph::<(), (), Undirected>::new_undirected();
 
-        for greedy_strategy in vec![
-            GreedyStrategyCore::Degree,
-            GreedyStrategyCore::Saturation,
-            GreedyStrategyCore::IndependentSet,
+        for strategy in vec![
+            ColoringStrategy::Degree,
+            ColoringStrategy::Saturation,
+            ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, greedy_strategy);
+            let colors = greedy_node_color(&graph, strategy);
             let expected_colors: DictMap<NodeIndex, usize> = [].into_iter().collect();
             assert_eq!(colors, expected_colors);
         }
@@ -879,7 +879,7 @@ mod test_node_coloring {
     fn test_greedy_node_color_simple_graph() {
         // Simple graph
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (0, 2)]);
-        let colors = greedy_node_color(&graph, GreedyStrategyCore::Degree);
+        let colors = greedy_node_color(&graph, ColoringStrategy::Degree);
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
@@ -901,7 +901,7 @@ mod test_node_coloring {
             (0, 2),
             (0, 2),
         ]);
-        let colors = greedy_node_color(&graph, GreedyStrategyCore::Degree);
+        let colors = greedy_node_color(&graph, ColoringStrategy::Degree);
         let expected_colors: DictMap<NodeIndex, usize> = [
             (NodeIndex::new(0), 0),
             (NodeIndex::new(1), 1),
@@ -925,7 +925,7 @@ mod test_node_coloring {
             (5, 7),
         ]);
 
-        let colors = greedy_node_color(&graph, GreedyStrategyCore::Saturation);
+        let colors = greedy_node_color(&graph, ColoringStrategy::Saturation);
         check_node_colors(&graph, &colors);
 
         let expected_colors: DictMap<NodeIndex, usize> = [
@@ -959,7 +959,7 @@ mod test_node_coloring {
         let colors = greedy_node_color_with_preset_colors(
             &graph,
             preset_color_fn,
-            GreedyStrategyCore::Saturation,
+            ColoringStrategy::Saturation,
         )
         .unwrap();
         check_node_colors(&graph, &colors);
@@ -990,7 +990,7 @@ mod test_node_coloring {
             (5, 7),
         ]);
 
-        let colors = greedy_node_color(&graph, GreedyStrategyCore::IndependentSet);
+        let colors = greedy_node_color(&graph, ColoringStrategy::IndependentSet);
         check_node_colors(&graph, &colors);
 
         let expected_colors: DictMap<NodeIndex, usize> = [
@@ -1034,7 +1034,7 @@ mod test_node_coloring {
         let colors = greedy_node_color_with_preset_colors(
             &graph,
             preset_color_fn,
-            GreedyStrategyCore::IndependentSet,
+            ColoringStrategy::IndependentSet,
         )
         .unwrap();
         check_node_colors(&graph, &colors);
@@ -1131,12 +1131,12 @@ mod test_node_coloring {
         let graph: petgraph::graph::UnGraph<(), ()> =
             path_graph(Some(7), None, || (), || (), false).unwrap();
 
-        for greedy_strategy in vec![
-            GreedyStrategyCore::Degree,
-            GreedyStrategyCore::Saturation,
-            GreedyStrategyCore::IndependentSet,
+        for strategy in vec![
+            ColoringStrategy::Degree,
+            ColoringStrategy::Saturation,
+            ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, greedy_strategy);
+            let colors = greedy_node_color(&graph, strategy);
             check_node_colors(&graph, &colors);
         }
     }
@@ -1146,12 +1146,12 @@ mod test_node_coloring {
         let graph: petgraph::graph::UnGraph<(), ()> =
             cycle_graph(Some(15), None, || (), || (), false).unwrap();
 
-        for greedy_strategy in vec![
-            GreedyStrategyCore::Degree,
-            GreedyStrategyCore::Saturation,
-            GreedyStrategyCore::IndependentSet,
+        for strategy in vec![
+            ColoringStrategy::Degree,
+            ColoringStrategy::Saturation,
+            ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, greedy_strategy);
+            let colors = greedy_node_color(&graph, strategy);
             check_node_colors(&graph, &colors);
         }
     }
@@ -1161,12 +1161,12 @@ mod test_node_coloring {
         let graph: petgraph::graph::UnGraph<(), ()> =
             heavy_hex_graph(7, || (), || (), false).unwrap();
 
-        for greedy_strategy in vec![
-            GreedyStrategyCore::Degree,
-            GreedyStrategyCore::Saturation,
-            GreedyStrategyCore::IndependentSet,
+        for strategy in vec![
+            ColoringStrategy::Degree,
+            ColoringStrategy::Saturation,
+            ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, greedy_strategy);
+            let colors = greedy_node_color(&graph, strategy);
             check_node_colors(&graph, &colors);
         }
     }
@@ -1176,12 +1176,12 @@ mod test_node_coloring {
         let graph: petgraph::graph::UnGraph<(), ()> =
             complete_graph(Some(10), None, || (), || ()).unwrap();
 
-        for greedy_strategy in vec![
-            GreedyStrategyCore::Degree,
-            GreedyStrategyCore::Saturation,
-            GreedyStrategyCore::IndependentSet,
+        for strategy in vec![
+            ColoringStrategy::Degree,
+            ColoringStrategy::Saturation,
+            ColoringStrategy::IndependentSet,
         ] {
-            let colors = greedy_node_color(&graph, greedy_strategy);
+            let colors = greedy_node_color(&graph, strategy);
             check_node_colors(&graph, &colors);
         }
     }
@@ -1189,7 +1189,7 @@ mod test_node_coloring {
 
 #[cfg(test)]
 mod test_edge_coloring {
-    use crate::coloring::{greedy_edge_color, GreedyStrategyCore};
+    use crate::coloring::{greedy_edge_color, ColoringStrategy};
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
     use std::convert::Infallible;
@@ -1203,7 +1203,7 @@ mod test_edge_coloring {
         let graph = Graph::<(), (), Undirected>::new_undirected();
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [].into_iter().collect();
         assert_eq!(colors, expected_colors);
     }
@@ -1214,7 +1214,7 @@ mod test_edge_coloring {
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1233,7 +1233,7 @@ mod test_edge_coloring {
 
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
 
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
@@ -1252,7 +1252,7 @@ mod test_edge_coloring {
             Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1279,7 +1279,7 @@ mod test_edge_coloring {
             }
         };
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Degree);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Degree);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1299,7 +1299,7 @@ mod test_edge_coloring {
             Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Saturation);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Saturation);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),
@@ -1328,7 +1328,7 @@ mod test_edge_coloring {
             }
         };
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::Saturation);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::Saturation);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1348,7 +1348,7 @@ mod test_edge_coloring {
             Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (2, 3), (3, 0), (2, 4)]);
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::IndependentSet);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::IndependentSet);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 0),
             (EdgeIndex::new(1), 1),
@@ -1377,7 +1377,7 @@ mod test_edge_coloring {
             }
         };
 
-        let colors = greedy_edge_color(&graph, preset_color_fn, GreedyStrategyCore::IndependentSet);
+        let colors = greedy_edge_color(&graph, preset_color_fn, ColoringStrategy::IndependentSet);
         let expected_colors: DictMap<EdgeIndex, usize> = [
             (EdgeIndex::new(0), 1),
             (EdgeIndex::new(1), 0),

@@ -6,7 +6,7 @@ Coloring
 .. autosummary::
    :toctree: ../../apiref
 
-   rustworkx.GreedyStrategy
+   rustworkx.ColoringStrategy
    rustworkx.graph_greedy_color
    rustworkx.graph_bipartite_edge_color
    rustworkx.graph_greedy_edge_color

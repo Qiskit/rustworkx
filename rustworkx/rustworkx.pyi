@@ -51,7 +51,7 @@ class InvalidMapping(Exception): ...
 class GraphNotBipartite(Exception): ...
 
 @final
-class GreedyStrategy:
+class ColoringStrategy:
     Degree: Any
     Saturation: Any
     IndependentSet: Any
@@ -148,13 +148,13 @@ def graph_greedy_color(
     graph: PyGraph,
     /,
     preset_color_fn: Callable[[int], int | None] | None = ...,
-    greedy_strategy: int = ...,
+    strategy: int = ...,
 ) -> dict[int, int]: ...
 def graph_greedy_edge_color(
     graph: PyGraph,
     /,
     preset_color_fn: Callable[[int], int | None] | None = ...,
-    greedy_strategy: int = ...,
+    strategy: int = ...,
 ) -> dict[int, int]: ...
 def graph_is_bipartite(graph: PyGraph) -> bool: ...
 def digraph_is_bipartite(graph: PyDiGraph) -> bool: ...

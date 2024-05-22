@@ -1,6 +1,6 @@
 ---
 features:
-  - Added a new class :class:`~.GreedyStrategy` used to specify the strategy used by 
+  - Added a new class :class:`~.ColoringStrategy` used to specify the strategy used by 
     the greedy node and edge coloring algorithms. 
     The ``Degree`` strategy colors the nodes with higher degree first.
     The ``Saturation`` strategy dynamically chooses the vertex that has the largest 
@@ -9,7 +9,7 @@ features:
     The ``IndependentSet`` strategy finds independent subsets of the graph, and assigns 
     a different color to each of these subsets.
   - |
-    Added a new keyword argument, ``greedy_strategy``, to :func:`.graph_greedy_color`
+    Added a new keyword argument, ``strategy``, to :func:`.graph_greedy_color`
     and to :func:`.graph_greedy_edge_color` to specify the greedy coloring strategy.
     
     For example:
@@ -21,7 +21,7 @@ features:
 
         graph = rx.generators.generalized_petersen_graph(5, 2)
 
-        coloring = rx.graph_greedy_color(graph, greedy_strategy=rx.GreedyStrategy.Saturation)
+        coloring = rx.graph_greedy_color(graph, strategy=rx.ColoringStrategy.Saturation)
         colors = [coloring[node] for node in graph.node_indices()]
 
         layout = rx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4],[6, 7, 8, 9, 5]])

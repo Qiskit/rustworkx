@@ -25,7 +25,7 @@ use rustworkx_core::coloring::{
     misra_gries_edge_color, two_color,
 };
 
-pub use rustworkx_core::coloring::GreedyStrategyCore;
+pub use rustworkx_core::coloring::ColoringStrategy as ColoringStrategyCore;
 
 /// Greedy coloring strategies available for `graph_greedy_color`
 ///
@@ -44,7 +44,7 @@ pub use rustworkx_core::coloring::GreedyStrategyCore;
 /// [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs, Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyclass(module = "rustworkx")]
 #[derive(Clone, PartialEq)]
-pub enum GreedyStrategy {
+pub enum ColoringStrategy {
     Degree,
     Saturation,
     IndependentSet,
@@ -74,7 +74,7 @@ pub enum GreedyStrategy {
 ///     is no preset. Note if you do use a callable there is no validation that
 ///     the preset values are valid colors. You can generate an invalid coloring
 ///     if you the specified function returned invalid colors for any nodes.
-/// :param greedy_strategy: The greedy strategy used by the algorithm. When the
+/// :param strategy: The strategy used by the algorithm. When the
 ///     strategy is not explicitly specified, the `Degree` strategy is used by
 ///     default.
 ///
@@ -99,18 +99,18 @@ pub enum GreedyStrategy {
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree)")]
-#[pyo3(signature=(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree))]
+#[pyo3(text_signature = "(graph, /, preset_color_fn=None, strategy=ColoringStrategy::Degree)")]
+#[pyo3(signature=(graph, /, preset_color_fn=None, strategy=ColoringStrategy::Degree))]
 pub fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
     preset_color_fn: Option<PyObject>,
-    greedy_strategy: GreedyStrategy,
+    strategy: ColoringStrategy,
 ) -> PyResult<PyObject> {
-    let inner_strategy = match greedy_strategy {
-        GreedyStrategy::Saturation => GreedyStrategyCore::Saturation,
-        GreedyStrategy::Degree => GreedyStrategyCore::Degree,
-        GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
+    let inner_strategy = match strategy {
+        ColoringStrategy::Saturation => ColoringStrategyCore::Saturation,
+        ColoringStrategy::Degree => ColoringStrategyCore::Degree,
+        ColoringStrategy::IndependentSet => ColoringStrategyCore::IndependentSet,
     };
 
     let colors = match preset_color_fn {
@@ -152,7 +152,7 @@ pub fn graph_greedy_color(
 ///     is no preset. Note if you do use a callable there is no validation that
 ///     the preset values are valid colors. You can generate an invalid coloring
 ///     if you the specified function returned invalid colors for any edges.
-/// :param greedy_strategy: The greedy strategy used by the algorithm. When the
+/// :param strategy: The greedy strategy used by the algorithm. When the
 ///     strategy is not explicitly specified, the `Degree` strategy is used by
 ///     default.
 ///
@@ -171,18 +171,18 @@ pub fn graph_greedy_color(
 /// .. [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs,
 ///     Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree)")]
-#[pyo3(signature=(graph, /, preset_color_fn=None, greedy_strategy=GreedyStrategy::Degree))]
+#[pyo3(text_signature = "(graph, /, preset_color_fn=None, strategy=ColoringStrategy::Degree)")]
+#[pyo3(signature=(graph, /, preset_color_fn=None, strategy=ColoringStrategy::Degree))]
 pub fn graph_greedy_edge_color(
     py: Python,
     graph: &graph::PyGraph,
     preset_color_fn: Option<PyObject>,
-    greedy_strategy: GreedyStrategy,
+    strategy: ColoringStrategy,
 ) -> PyResult<PyObject> {
-    let inner_strategy = match greedy_strategy {
-        GreedyStrategy::Saturation => GreedyStrategyCore::Saturation,
-        GreedyStrategy::Degree => GreedyStrategyCore::Degree,
-        GreedyStrategy::IndependentSet => GreedyStrategyCore::IndependentSet,
+    let inner_strategy = match strategy {
+        ColoringStrategy::Saturation => ColoringStrategyCore::Saturation,
+        ColoringStrategy::Degree => ColoringStrategyCore::Degree,
+        ColoringStrategy::IndependentSet => ColoringStrategyCore::IndependentSet,
     };
 
     let colors = match preset_color_fn {
