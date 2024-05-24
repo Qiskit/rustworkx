@@ -239,6 +239,7 @@ from .rustworkx import BFSPredecessors as BFSPredecessors
 from .rustworkx import EdgeIndexMap as EdgeIndexMap
 from .rustworkx import EdgeIndices as EdgeIndices
 from .rustworkx import Chains as Chains
+from .rustworkx import IndexPartitionBlock as IndexPartitionBlock
 from .rustworkx import RelationalCoarsestPartition as RelationalCoarsestPartition
 from .rustworkx import EdgeList as EdgeList
 from .rustworkx import NodeMap as NodeMap
