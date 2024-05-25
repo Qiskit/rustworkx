@@ -23,6 +23,8 @@ use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 
+use numpy::PyReadonlyArray2;
+
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
@@ -269,6 +271,116 @@ pub fn undirected_gnm_random_graph(
         graph,
         node_removed: false,
         multigraph: true,
+        attrs: py.None(),
+    })
+}
+
+/// Return a directed graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the :math:`G(n,p)` random graph
+/// (see :func:`~rustworkx.directed_gnp_random_graph`). The connection probability of
+/// nodes ``u`` and ``v`` depends on their block (or community) and is given by
+/// ``probabilities[blocks[u]][blocks[v]]``, where ``blocks[u]`` is the block
+/// membership of node ``u``. The number of nodes and the number of blocks are
+/// inferred from ``sizes``.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// Arguments:
+///
+/// :param list[int] sizes: Number of nodes in each block.
+/// :param np.ndarray probabilities: B x B array that contains the connection
+///     probability between nodes of different blocks.
+/// :param bool loops: Determines whether the graph can have loops or not.
+/// :param int seed:  An optional seed to use for the random number generator.
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+#[pyfunction]
+#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)")]
+pub fn directed_sbm_random_graph<'p>(
+    py: Python<'p>,
+    sizes: Vec<usize>,
+    probabilities: PyReadonlyArray2<'p, f64>,
+    loops: bool,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::sbm_random_graph(
+        &sizes,
+        &probabilities.as_array(),
+        loops,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid blocks or probabilities input",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Return an undirected graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the :math:`G(n,p)` random graph
+/// (see :func:`~rustworkx.undirected_gnp_random_graph`). The connection probability of
+/// nodes ``u`` and ``v`` depends on their block (or community) and is given by
+/// ``probabilities[blocks[u]][blocks[v]]``, where ``blocks[u]`` is the block membership
+/// of node ``u``. The number of nodes and the number of blocks are inferred from
+/// ``sizes``.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// Arguments:
+///
+/// :param list[int] sizes: Number of nodes in each block.
+/// :param np.ndarray probabilities: Symmetric B x B array that contains the
+///     connection probability between nodes of different blocks.
+/// :param bool loops: Determines whether the graph can have loops or not.
+/// :param int seed:  An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)")]
+pub fn undirected_sbm_random_graph<'p>(
+    py: Python<'p>,
+    sizes: Vec<usize>,
+    probabilities: PyReadonlyArray2<'p, f64>,
+    loops: bool,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::sbm_random_graph(
+        &sizes,
+        &probabilities.as_array(),
+        loops,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid blocks or probabilities input",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
         attrs: py.None(),
     })
 }
