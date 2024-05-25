@@ -633,6 +633,7 @@ dependencies = [
  "fixedbitset",
  "hashbrown 0.14.5",
  "indexmap 2.2.6",
+ "ndarray",
  "num-traits",
  "petgraph",
  "priority-queue",

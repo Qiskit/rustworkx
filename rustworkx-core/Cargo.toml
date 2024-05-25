@@ -16,6 +16,7 @@ ahash.workspace = true
 fixedbitset.workspace = true
 hashbrown.workspace = true
 indexmap.workspace = true
+ndarray = "0.15.6"
 num-traits.workspace = true
 petgraph.workspace = true
 priority-queue = "2.0"
