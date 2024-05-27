@@ -329,7 +329,7 @@ where
 ///
 /// ```
 /// use rustworkx_core::petgraph::prelude::*;
-/// use rustworkx_core::layers::layers;
+/// use rustworkx_core::dag_algo::layers;
 /// use rustworkx_core::dictmap::*;
 ///
 /// let edge_list = vec![
@@ -340,7 +340,7 @@ where
 /// ];
 ///
 /// let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
-/// let layers: Vec<Vec<usize>> = layers(&graph, vec![0,1]).unwrap().collect();
+/// let layers: Vec<Vec<usize>> = layers(&graph, vec![0,1]).unwrap();
 /// let expected_layers = vec![vec![0,1], vec![1,2], vec![2,3], vec![3,4], vec![4]];
 /// assert_eq!(layers, expected_layers)
 /// ```
