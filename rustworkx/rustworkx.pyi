@@ -549,6 +549,20 @@ def undirected_gnp_random_graph(
     /,
     seed: int | None = ...,
 ) -> PyGraph: ...
+def directed_sbm_random_graph(
+    sizes: list[int],
+    probabilities: np.ndarray,
+    loops: bool,
+    /,
+    seed: int | None = ...,
+) -> PyDiGraph: ...
+def undirected_sbm_random_graph(
+    sizes: list[int],
+    probabilities: np.ndarray,
+    loops: bool,
+    /,
+    seed: int | None = ...,
+) -> PyGraph: ...
 def random_geometric_graph(
     num_nodes: int,
     radius: float,
