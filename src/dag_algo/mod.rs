@@ -13,10 +13,8 @@
 use super::DictMap;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
+use rustworkx_core::dag_algo::layers as core_layers;
 use rustworkx_core::dictmap::InitWithHasher;
-use rustworkx_core::layers::layers as core_layers;
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 
 use super::iterators::NodeIndices;
 use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
@@ -33,8 +31,8 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::{NodeCount, NodeIndexable};
 use petgraph::stable_graph::EdgeReference;
+use petgraph::visit::{NodeCount, NodeIndexable};
 
 use num_traits::{Num, Zero};
 
@@ -306,7 +304,7 @@ pub fn layers(
             } else {
                 Ok(PyList::new_bound(
                     py,
-                    result.map(|x| {
+                    result.iter().map(|x| {
                         x.iter()
                             .map(|index| dag.graph.node_weight(dag.graph.from_index(*index)))
                             .collect::<Vec<Option<&PyObject>>>()

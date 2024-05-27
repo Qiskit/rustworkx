@@ -54,3 +54,21 @@ fn fmt_dag_would_cycle(f: &mut Formatter<'_>) -> std::fmt::Result {
 fn fmt_merge_error<E: Error>(f: &mut Formatter<'_>, inner: &E) -> std::fmt::Result {
     write!(f, "The prov failed with: {:?}", inner)
 }
+
+/// Error returned by Layers function when an index is not part of the graph.
+#[derive(Debug, PartialEq, Eq)]
+pub struct LayersError(pub Option<String>);
+
+impl Error for LayersError {}
+
+impl Display for LayersError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match &self.0 {
+            Some(message) => write!(f, "{message}"),
+            None => write!(
+                f,
+                "The provided layer contains an index that is not present in the graph"
+            ),
+        }
+    }
+}

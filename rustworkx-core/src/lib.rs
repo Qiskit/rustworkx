@@ -115,9 +115,6 @@ mod min_scored;
 pub mod token_swapper;
 pub mod utils;
 
-// Module for layers
-pub mod layers;
-
 pub mod steiner_tree;
 
 // re-export petgraph so there is a consistent version available to users and
