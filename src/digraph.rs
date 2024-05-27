@@ -22,9 +22,9 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexSet;
 
 use rustworkx_core::dictmap::*;
+use rustworkx_core::graph_ext::*;
 
 use smallvec::SmallVec;
 
@@ -44,6 +44,7 @@ use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 
+use crate::RxPyResult;
 use petgraph::visit::{
     EdgeIndexable, GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
     NodeIndexable, Visitable,
@@ -54,8 +55,8 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    find_node_by_weight, merge_duplicates, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan,
-    NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved, StablePyGraph,
+    find_node_by_weight, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan, NoEdgeBetweenNodes,
+    NoSuitableNeighbors, NodesRemoved, StablePyGraph,
 };
 
 use super::dag_algo::is_directed_acyclic_graph;
@@ -480,15 +481,7 @@ impl PyDiGraph {
         if !self.multigraph {
             return false;
         }
-        let mut edges: HashSet<[NodeIndex; 2]> = HashSet::with_capacity(self.graph.edge_count());
-        for edge in self.graph.edge_references() {
-            let endpoints = [edge.source(), edge.target()];
-            if edges.contains(&endpoints) {
-                return true;
-            }
-            edges.insert(endpoints);
-        }
-        false
+        self.graph.has_parallel_edges()
     }
 
     /// Clear all nodes and edges
@@ -2665,98 +2658,26 @@ impl PyDiGraph {
         obj: PyObject,
         check_cycle: Option<bool>,
         weight_combo_fn: Option<PyObject>,
-    ) -> PyResult<usize> {
-        let can_contract = |nodes: &IndexSet<NodeIndex, ahash::RandomState>| {
-            // Start with successors of `nodes` that aren't in `nodes` itself.
-            let visit_next: Vec<NodeIndex> = nodes
-                .iter()
-                .flat_map(|n| self.graph.edges(*n))
-                .filter_map(|edge| {
-                    let target_node = edge.target();
-                    if !nodes.contains(&target_node) {
-                        Some(target_node)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            // Now, if we can reach any of `nodes`, there exists a path from `nodes`
-            // back to `nodes` of length > 1, meaning contraction is disallowed.
-            let mut dfs = Dfs::from_parts(visit_next, self.graph.visit_map());
-            while let Some(node) = dfs.next(&self.graph) {
-                if nodes.contains(&node) {
-                    // we found a path back to `nodes`
-                    return false;
-                }
+    ) -> RxPyResult<usize> {
+        let nodes = nodes.into_iter().map(|i| NodeIndex::new(i));
+        let check_cycle = check_cycle.unwrap_or(self.check_cycle);
+        let res = match (weight_combo_fn, &self.multigraph) {
+            (Some(user_callback), _) => {
+                self.graph
+                    .contract_nodes_simple(nodes, obj, check_cycle, |w1, w2| {
+                        user_callback.call1(py, (w1, w2))
+                    })?
             }
-            true
+            (None, false) => {
+                // By default, just take first edge.
+                self.graph
+                    .contract_nodes_simple(nodes, obj, check_cycle, move |w1, _| {
+                        Ok::<_, PyErr>(w1.clone_ref(py))
+                    })?
+            }
+            (None, true) => self.graph.contract_nodes(nodes, obj, check_cycle)?,
         };
-
-        let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
-            nodes.into_iter().map(NodeIndex::new).collect();
-
-        if check_cycle.unwrap_or(self.check_cycle) && !can_contract(&indices_to_remove) {
-            return Err(DAGWouldCycle::new_err("Contraction would create cycle(s)"));
-        }
-
-        // Create new node.
-        let node_index = self.graph.add_node(obj);
-
-        // Sanitize new node index from user input.
-        indices_to_remove.swap_remove(&node_index);
-
-        // Determine edges for new node.
-        let mut incoming_edges: Vec<_> = indices_to_remove
-            .iter()
-            .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
-            .filter_map(|edge| {
-                let pred = edge.source();
-                if !indices_to_remove.contains(&pred) {
-                    Some((pred, edge.weight().clone_ref(py)))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        let mut outgoing_edges: Vec<_> = indices_to_remove
-            .iter()
-            .flat_map(|&i| self.graph.edges_directed(i, Direction::Outgoing))
-            .filter_map(|edge| {
-                let succ = edge.target();
-                if !indices_to_remove.contains(&succ) {
-                    Some((succ, edge.weight().clone_ref(py)))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        // Remove nodes that will be replaced.
-        for index in indices_to_remove {
-            self.remove_node(index.index())?;
-        }
-
-        // If `weight_combo_fn` was specified, merge edges according
-        // to that function, even if this is a multigraph. If unspecified,
-        // defer parallel edge handling to `add_edge_no_cycle_check`.
-        if let Some(merge_fn) = weight_combo_fn {
-            let f = |w1: &Py<_>, w2: &Py<_>| merge_fn.call1(py, (w1, w2));
-
-            incoming_edges = merge_duplicates(incoming_edges, f)?;
-            outgoing_edges = merge_duplicates(outgoing_edges, f)?;
-        }
-
-        for (source, weight) in incoming_edges {
-            self.add_edge_no_cycle_check(source, node_index, weight);
-        }
-
-        for (target, weight) in outgoing_edges {
-            self.add_edge_no_cycle_check(node_index, target, weight);
-        }
-
-        Ok(node_index.index())
+        Ok(res.index())
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph

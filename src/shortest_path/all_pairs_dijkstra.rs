@@ -180,7 +180,7 @@ pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
             .collect(),
     };
     if let Some(x) = distances {
-        *x = temp_distances.read().unwrap().clone()
+        x.clone_from(&temp_distances.read().unwrap())
     };
     Ok(out_map)
 }

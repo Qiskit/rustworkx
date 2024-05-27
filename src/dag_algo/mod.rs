@@ -10,18 +10,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-mod longest_path;
-
 use super::DictMap;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 use rustworkx_core::dictmap::InitWithHasher;
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 
 use super::iterators::NodeIndices;
 use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
 
+use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
+use rustworkx_core::dag_algo::longest_path as core_longest_path;
 use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
@@ -32,7 +30,53 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::stable_graph::EdgeReference;
 use petgraph::visit::NodeCount;
+
+use num_traits::{Num, Zero};
+
+/// Calculate the longest path in a directed acyclic graph (DAG).
+///
+/// This function interfaces with the Python `PyDiGraph` object to compute the longest path
+/// using the provided weight function.
+///
+/// # Arguments
+/// * `graph`: Reference to a `PyDiGraph` object.
+/// * `weight_fn`: A callable that takes the source node index, target node index, and the weight
+///   object and returns the weight of the edge as a `PyResult<T>`.
+///
+/// # Type Parameters
+/// * `F`: Type of the weight function.
+/// * `T`: The type of the edge weight. Must implement `Num`, `Zero`, `PartialOrd`, and `Copy`.
+///
+/// # Returns
+/// * `PyResult<(Vec<G::NodeId>, T)>` representing the longest path as a sequence of node indices and its total weight.
+fn longest_path<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<(Vec<usize>, T)>
+where
+    F: FnMut(usize, usize, &PyObject) -> PyResult<T>,
+    T: Num + Zero + PartialOrd + Copy,
+{
+    let dag = &graph.graph;
+
+    // Create a new weight function that matches the required signature
+    let edge_cost = |edge_ref: EdgeReference<'_, PyObject>| -> Result<T, PyErr> {
+        let source = edge_ref.source().index();
+        let target = edge_ref.target().index();
+        let weight = edge_ref.weight();
+        weight_fn(source, target, weight)
+    };
+
+    let (path, path_weight) = match core_longest_path(dag, edge_cost) {
+        Ok(Some((path, path_weight))) => (
+            path.into_iter().map(NodeIndex::index).collect(),
+            path_weight,
+        ),
+        Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Err(e) => return Err(e),
+    };
+
+    Ok((path, path_weight))
+}
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
 /// direction of graph traversal, based on whether the graph is being traved forwards (following
@@ -82,7 +126,7 @@ pub fn dag_longest_path(
             }
         };
     Ok(NodeIndices {
-        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -121,7 +165,7 @@ pub fn dag_longest_path_length(
                 None => Ok(1),
             }
         };
-    let (_, path_weight) = longest_path::longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -163,7 +207,7 @@ pub fn dag_weighted_longest_path(
         Ok(float_res)
     };
     Ok(NodeIndices {
-        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -204,7 +248,7 @@ pub fn dag_weighted_longest_path_length(
         }
         Ok(float_res)
     };
-    let (_, path_weight) = longest_path::longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -388,100 +432,35 @@ pub fn lexicographical_topological_sort(
     reverse: bool,
     initial: Option<&Bound<PyAny>>,
 ) -> PyResult<PyObject> {
-    let key_callable = |a: &PyObject| -> PyResult<PyObject> {
-        let res = key.call1(py, (a,))?;
-        Ok(res.to_object(py))
+    let key_callable = |a: NodeIndex| -> PyResult<String> {
+        let weight = &dag.graph[a];
+        let res: String = key.call1(py, (weight,))?.extract(py)?;
+        Ok(res)
     };
-    // HashMap of node_index indegree
-    let node_count = dag.node_count();
-    let (in_dir, out_dir) = traversal_directions(reverse);
-
-    #[derive(Clone, Eq, PartialEq)]
-    struct State {
-        key: String,
-        node: NodeIndex,
-    }
-
-    impl Ord for State {
-        fn cmp(&self, other: &State) -> Ordering {
-            // Notice that the we flip the ordering on costs.
-            // In case of a tie we compare positions - this step is necessary
-            // to make implementations of `PartialEq` and `Ord` consistent.
-            other
-                .key
-                .cmp(&self.key)
-                .then_with(|| other.node.index().cmp(&self.node.index()))
-        }
-    }
-
-    // `PartialOrd` needs to be implemented as well.
-    impl PartialOrd for State {
-        fn partial_cmp(&self, other: &State) -> Option<Ordering> {
-            Some(self.cmp(other))
-        }
-    }
-
-    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_count);
-    if let Some(initial) = initial {
-        // In this case, we don't iterate through all the nodes in the graph, and most nodes aren't
-        // in `in_degree_map`; we'll fill in the relevant edge counts lazily.
-        for maybe_index in initial.iter()? {
-            let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
-            if dag.graph.contains_node(node) {
-                // It's not necessarily actually zero, but we treat it as if it is.  If the node is
-                // reachable from another we visit during the iteration, then there was a defined
-                // topological order between the `initial` set, and we'll throw an error.
-                in_degree_map.insert(node, 0);
-            } else {
-                return Err(PyValueError::new_err(format!(
-                    "node index {} is not in this graph",
-                    node.index()
-                )));
+    let initial: Option<Vec<NodeIndex>> = match initial {
+        Some(initial) => {
+            let mut initial_vec: Vec<NodeIndex> = Vec::new();
+            for maybe_index in initial.iter()? {
+                let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
+                initial_vec.push(node);
             }
+            Some(initial_vec)
         }
-    } else {
-        for node in dag.graph.node_indices() {
-            in_degree_map.insert(node, dag.graph.edges_directed(node, in_dir).count());
-        }
+        None => None,
+    };
+    let out_list = core_lexico_topo_sort(&dag.graph, key_callable, reverse, initial.as_deref())?;
+    match out_list {
+        Some(out_list) => Ok(PyList::new_bound(
+            py,
+            out_list
+                .into_iter()
+                .map(|node| dag.graph[node].clone_ref(py)),
+        )
+        .into()),
+        None => Err(PyValueError::new_err(
+            "at least one initial node is reachable from another",
+        )),
     }
-
-    let mut zero_indegree = BinaryHeap::with_capacity(node_count);
-    for (node, degree) in in_degree_map.iter() {
-        if *degree == 0 {
-            let map_key_raw = key_callable(&dag.graph[*node])?;
-            let map_key: String = map_key_raw.extract(py)?;
-            zero_indegree.push(State {
-                key: map_key,
-                node: *node,
-            });
-        }
-    }
-    let mut out_list: Vec<&PyObject> = Vec::with_capacity(node_count);
-    while let Some(State { node, .. }) = zero_indegree.pop() {
-        let neighbors = dag.graph.neighbors_directed(node, out_dir);
-        for child in neighbors {
-            let child_degree = in_degree_map
-                .entry(child)
-                .or_insert_with(|| dag.graph.edges_directed(child, in_dir).count());
-            if *child_degree == 0 {
-                return Err(PyValueError::new_err(
-                    "at least one initial node is reachable from another",
-                ));
-            } else if *child_degree == 1 {
-                let map_key_raw = key_callable(&dag.graph[child])?;
-                let map_key: String = map_key_raw.extract(py)?;
-                zero_indegree.push(State {
-                    key: map_key,
-                    node: child,
-                });
-                in_degree_map.remove(&child);
-            } else {
-                *child_degree -= 1;
-            }
-        }
-        out_list.push(&dag.graph[node])
-    }
-    Ok(PyList::new_bound(py, out_list).into())
 }
 
 /// Return the topological generations of a DAG

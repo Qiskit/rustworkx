@@ -549,6 +549,20 @@ def undirected_gnp_random_graph(
     /,
     seed: int | None = ...,
 ) -> PyGraph: ...
+def directed_sbm_random_graph(
+    sizes: list[int],
+    probabilities: np.ndarray,
+    loops: bool,
+    /,
+    seed: int | None = ...,
+) -> PyDiGraph: ...
+def undirected_sbm_random_graph(
+    sizes: list[int],
+    probabilities: np.ndarray,
+    loops: bool,
+    /,
+    seed: int | None = ...,
+) -> PyGraph: ...
 def random_geometric_graph(
     num_nodes: int,
     radius: float,
@@ -556,6 +570,13 @@ def random_geometric_graph(
     dim: int = ...,
     pos: list[list[float]] | None = ...,
     p: float = ...,
+    seed: int | None = ...,
+) -> PyGraph: ...
+def hyperbolic_random_graph(
+    pos: list[list[float]],
+    r: float,
+    beta: float | None,
+    /,
     seed: int | None = ...,
 ) -> PyGraph: ...
 def barabasi_albert_graph(
@@ -993,7 +1014,7 @@ class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
     def __len__(self) -> int: ...
     def __ne__(self, other: object) -> bool: ...
     def __setstate__(self, state: Sequence[_T_co]) -> None: ...
-    def __array__(self, _dt: np.dtype | None = ...) -> np.ndarray: ...
+    def __array__(self, dtype: np.dtype | None = ..., copy: bool | None = ...) -> np.ndarray: ...
     def __iter__(self) -> Iterator[_T_co]: ...
     def __reversed__(self) -> Iterator[_T_co]: ...
 
