@@ -365,9 +365,9 @@ where
     // Throw error if a cycle is found at the current node
     if let Some(node) = &cur_layer.first() {
         let check_cycle = find_cycle(&graph, Some(**node));
-        if check_cycle.len() > 0 {
+        if !check_cycle.is_empty() {
             return Err(LayersError(Some(
-                format!("The provided graph has a cycle",),
+                "The provided graph has a cycle".to_string(),
             )));
         }
     }
