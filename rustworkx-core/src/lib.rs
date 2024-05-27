@@ -95,14 +95,14 @@ pub mod err;
 pub mod bipartite_coloring;
 /// Module for centrality algorithms.
 pub mod centrality;
-pub mod collect_bicolor_runs;
 /// Module for coloring algorithms.
 pub mod coloring;
 pub mod connectivity;
-pub mod dag_algo;
 pub mod generators;
 pub mod graph_ext;
 pub mod line_graph;
+/// Module for algorithms that work on DAGs.
+pub mod dag_algo;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
 pub mod planar;
