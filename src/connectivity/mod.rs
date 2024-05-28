@@ -25,7 +25,7 @@ use hashbrown::{HashMap, HashSet};
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
-use petgraph::{algo, Graph};
+use petgraph::algo;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -917,7 +917,6 @@ pub fn stoer_wagner_min_cut(
         )
     }))
 }
-
 
 /// Return the articulation points of an undirected graph.
 ///
