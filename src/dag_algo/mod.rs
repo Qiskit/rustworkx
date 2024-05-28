@@ -18,8 +18,9 @@ use rustworkx_core::dictmap::InitWithHasher;
 use super::iterators::NodeIndices;
 use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
 
-use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
+use rustworkx_core::dag_algo::{CollectBicolorError, lexicographical_topological_sort as core_lexico_topo_sort};
 use rustworkx_core::dag_algo::longest_path as core_longest_path;
+use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
 use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
@@ -603,7 +604,18 @@ pub fn collect_runs(
     Ok(out_list)
 }
 
-/// Collect runs that match a filter function given edge colors
+/// Define custom error conversion logic for collect_bicolor_runs.
+fn convert_error(err: CollectBicolorError<PyErr>) -> PyErr {
+// Note that we cannot implement From<CollectBicolorError<PyErr>> for PyErr
+// because nor PyErr nor CollectBicolorError are defined in this crate,
+// so we use .map_err(convert_error) to convert a CollectBicolorError to PyErr instead.
+    match err {
+        CollectBicolorError::DAGWouldCycle => PyErr::new::<PyValueError, _>("DAG would cycle"),
+        CollectBicolorError::CallableError(err) => err,
+    }
+}
+
+/// Collect runs that match a filter function given edge colors.
 ///
 /// A bicolor run is a list of group of nodes connected by edges of exactly
 /// two colors. In addition, all nodes in the group must match the given
@@ -633,103 +645,44 @@ pub fn collect_bicolor_runs(
     filter_fn: PyObject,
     color_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
-    let mut pending_list: Vec<Vec<PyObject>> = Vec::new();
-    let mut block_id: Vec<Option<usize>> = Vec::new();
-    let mut block_list: Vec<Vec<PyObject>> = Vec::new();
 
-    let filter_node = |node: &PyObject| -> PyResult<Option<bool>> {
-        let res = filter_fn.call1(py, (node,))?;
-        res.extract(py)
-    };
+    let dag = &graph.graph;
 
-    let color_edge = |edge: &PyObject| -> PyResult<Option<usize>> {
-        let res = color_fn.call1(py, (edge,))?;
-        res.extract(py)
-    };
-
-    let nodes = match algo::toposort(&graph.graph, None) {
-        Ok(nodes) => nodes,
-        Err(_err) => return Err(DAGHasCycle::new_err("Sort encountered a cycle")),
-    };
-
-    // Utility for ensuring pending_list has the color index
-    macro_rules! ensure_vector_has_index {
-        ($pending_list: expr, $block_id: expr, $color: expr) => {
-            if $color >= $pending_list.len() {
-                $pending_list.resize($color + 1, Vec::new());
-                $block_id.resize($color + 1, None);
-            }
-        };
-    }
-
-    for node in nodes {
-        if let Some(is_match) = filter_node(&graph.graph[node])? {
-            let raw_edges = graph
-                .graph
-                .edges_directed(node, petgraph::Direction::Outgoing);
-
-            // Remove all edges that do not yield errors from color_fn
-            let colors = raw_edges
-                .map(|edge| {
-                    let edge_weight = edge.weight();
-                    color_edge(edge_weight)
-                })
-                .collect::<PyResult<Vec<Option<usize>>>>()?;
-
-            // Remove null edges from color_fn
-            let colors = colors.into_iter().flatten().collect::<Vec<usize>>();
-
-            if colors.len() <= 2 && is_match {
-                if colors.len() == 1 {
-                    let c0 = colors[0];
-                    ensure_vector_has_index!(pending_list, block_id, c0);
-                    if let Some(c0_block_id) = block_id[c0] {
-                        block_list[c0_block_id].push(graph.graph[node].clone_ref(py));
-                    } else {
-                        pending_list[c0].push(graph.graph[node].clone_ref(py));
-                    }
-                } else if colors.len() == 2 {
-                    let c0 = colors[0];
-                    let c1 = colors[1];
-                    ensure_vector_has_index!(pending_list, block_id, c0);
-                    ensure_vector_has_index!(pending_list, block_id, c1);
-
-                    if block_id[c0].is_some()
-                        && block_id[c1].is_some()
-                        && block_id[c0] == block_id[c1]
-                    {
-                        block_list[block_id[c0].unwrap_or_default()]
-                            .push(graph.graph[node].clone_ref(py));
-                    } else {
-                        let mut new_block: Vec<PyObject> =
-                            Vec::with_capacity(pending_list[c0].len() + pending_list[c1].len() + 1);
-
-                        // Clears pending lits and add to new block
-                        new_block.append(&mut pending_list[c0]);
-                        new_block.append(&mut pending_list[c1]);
-
-                        new_block.push(graph.graph[node].clone_ref(py));
-
-                        // Create new block, assign its id to color pair
-                        block_id[c0] = Some(block_list.len());
-                        block_id[c1] = Some(block_list.len());
-                        block_list.push(new_block);
-                    }
-                }
-            } else {
-                for color in colors {
-                    ensure_vector_has_index!(pending_list, block_id, color);
-                    if let Some(color_block_id) = block_id[color] {
-                        block_list[color_block_id].append(&mut pending_list[color]);
-                    }
-                    block_id[color] = None;
-                    pending_list[color].clear();
-                }
-            }
+    // Wrap filter_fn to return Result<Option<bool>, CollectBicolorError<E>>
+    let filter_fn_wrapper =
+        |node: &PyObject| -> Result<Option<bool>, CollectBicolorError<PyErr>> {
+            match filter_fn.call1(py, (node,)) {
+                Ok(res) => res.extract(py).map_err(CollectBicolorError::CallableError),
+                Err(err) => Err(CollectBicolorError::CallableError(err)),
         }
-    }
+    };
 
-    Ok(block_list)
+    // Wrap color_fn to return Result<Option<usize>, CollectBicolorError<E>>
+    let color_fn_wrapper =
+        |edge: &PyObject| -> Result<Option<usize>, CollectBicolorError<PyErr>> {
+            match color_fn.call1(py, (edge,)) {
+                Ok(res) => res.extract(py).map_err(CollectBicolorError::CallableError),
+                Err(err) => Err(CollectBicolorError::CallableError(err)),
+        }
+    };
+
+    // Map CollectBicolorError to PyErr using custom convert_error function
+    let block_list =
+        core_collect_bicolor_runs::<&StablePyGraph<Directed>, _, _, (), PyErr>(
+            dag,
+            filter_fn_wrapper,
+            color_fn_wrapper
+        ).map_err(convert_error)?;
+
+    // Convert the result list from Vec<Vec<NodeId>> to Vec<Vec<PyObject>>
+    let py_block_list: Vec<Vec<PyObject>> = block_list.into_iter().map(|index_list| {
+        index_list.into_iter().map(|node_index| {
+            let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
+            node_weight.into_py(py)
+        }).collect()
+    }).collect();
+
+    Ok(py_block_list)
 }
 
 /// Returns the transitive reduction of a directed acyclic graph

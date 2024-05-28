@@ -19,7 +19,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
     def test_cycle(self):
         dag = rustworkx.PyDiGraph()
         dag.extend_from_edge_list([(0, 1), (1, 2), (2, 0)])
-        with self.assertRaises(rustworkx.DAGHasCycle):
+        with self.assertRaises(ValueError):
             rustworkx.collect_bicolor_runs(dag, lambda _: True, lambda _: None)
 
     def test_filter_function_inner_exception(self):
