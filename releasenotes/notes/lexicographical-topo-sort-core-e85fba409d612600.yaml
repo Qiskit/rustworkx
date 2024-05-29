@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new function ``lexicographical_topological_sort`` to the
+    ``rustworkx_core::dag_algo`` module. That is a gneric Rust implementation
+    for the core rust library that provides the
+    :func:`.lexicographical_topological_sort` function to Rust users.
