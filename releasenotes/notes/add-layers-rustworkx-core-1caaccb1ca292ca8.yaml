@@ -1,9 +1,5 @@
 ---
 features:
   - |
-    Add method :meth:`~rustworkx-core.dag_algo.layers` to get the layers of a 
-    directed acyclic graph.
-upgrade:
-  - |
-    Adjusted method :meth:`~rustworkx.dag_algo.layers` to use the new method 
-    :meth:`~rustworkx-core.dag_algo.layers`in its logic.
+    Add method :meth:`~rustworkx-core.dag_algo.layers` in rustworkx-core to 
+    get the layers of a directed acyclic graph.
