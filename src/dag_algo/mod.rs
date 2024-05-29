@@ -610,7 +610,7 @@ fn convert_error(err: CollectBicolorError<PyErr>) -> PyErr {
 // because nor PyErr nor CollectBicolorError are defined in this crate,
 // so we use .map_err(convert_error) to convert a CollectBicolorError to PyErr instead.
     match err {
-        CollectBicolorError::DAGWouldCycle => PyErr::new::<PyValueError, _>("DAG would cycle"),
+        CollectBicolorError::DAGHasCycle => PyErr::new::<DAGHasCycle, _>("Sort encountered a cycle"),
         CollectBicolorError::CallableError(err) => err,
     }
 }

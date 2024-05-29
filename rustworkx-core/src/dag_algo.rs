@@ -319,7 +319,7 @@ where
 /// Define custom error classes for collect_bicolor_runs
 #[derive(Debug)]
 pub enum CollectBicolorError<E: Error> {
-    DAGWouldCycle,
+    DAGHasCycle,
     CallableError(E)
 }
 
@@ -328,14 +328,14 @@ impl<E: Error> Error for CollectBicolorError<E> {}
 impl<E: Error> Display for CollectBicolorError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CollectBicolorError::DAGWouldCycle => fmt_dag_would_cycle(f),
+            CollectBicolorError::DAGHasCycle => fmt_dag_has_cycle(f),
             CollectBicolorError::CallableError(ref e) => fmt_callable_error(f, e),
         }
     }
 }
 
-fn fmt_dag_would_cycle(f: &mut Formatter<'_>) -> std::fmt::Result {
-    write!(f, "The operation would introduce a cycle.")
+fn fmt_dag_has_cycle(f: &mut Formatter<'_>) -> std::fmt::Result {
+    write!(f, "Sort encountered a cycle")
 }
 
 fn fmt_callable_error<E: Error>(f: &mut Formatter<'_>, inner: &E) -> std::fmt::Result {
@@ -400,7 +400,7 @@ where
 
     let nodes = match algo::toposort(&graph, None) {
         Ok(nodes) => nodes,
-        Err(_err) => return Err(CollectBicolorError::DAGWouldCycle),
+        Err(_err) => return Err(CollectBicolorError::DAGHasCycle),
     };
 
     // Utility for ensuring pending_list has the color index
