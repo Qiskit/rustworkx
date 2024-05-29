@@ -18,9 +18,9 @@ use rustworkx_core::dictmap::InitWithHasher;
 use super::iterators::NodeIndices;
 use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
 
-use rustworkx_core::dag_algo::{CollectBicolorError, lexicographical_topological_sort as core_lexico_topo_sort};
-use rustworkx_core::dag_algo::longest_path as core_longest_path;
 use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
+use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
+use rustworkx_core::dag_algo::longest_path as core_longest_path;
 use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
@@ -604,17 +604,6 @@ pub fn collect_runs(
     Ok(out_list)
 }
 
-/// Define custom error conversion logic for collect_bicolor_runs.
-fn convert_error(err: CollectBicolorError<PyErr>) -> PyErr {
-// Note that we cannot implement From<CollectBicolorError<PyErr>> for PyErr
-// because nor PyErr nor CollectBicolorError are defined in this crate,
-// so we use .map_err(convert_error) to convert a CollectBicolorError to PyErr instead.
-    match err {
-        CollectBicolorError::DAGHasCycle => PyErr::new::<DAGHasCycle, _>("Sort encountered a cycle"),
-        CollectBicolorError::CallableError(err) => err,
-    }
-}
-
 /// Collect runs that match a filter function given edge colors.
 ///
 /// A bicolor run is a list of group of nodes connected by edges of exactly
@@ -645,44 +634,36 @@ pub fn collect_bicolor_runs(
     filter_fn: PyObject,
     color_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
-
     let dag = &graph.graph;
 
-    // Wrap filter_fn to return Result<Option<bool>, CollectBicolorError<E>>
-    let filter_fn_wrapper =
-        |node: &PyObject| -> Result<Option<bool>, CollectBicolorError<PyErr>> {
-            match filter_fn.call1(py, (node,)) {
-                Ok(res) => res.extract(py).map_err(CollectBicolorError::CallableError),
-                Err(err) => Err(CollectBicolorError::CallableError(err)),
-        }
+    let filter_fn_wrapper = |node: &PyObject| -> Result<Option<bool>, PyErr> {
+        let res = filter_fn.call1(py, (node,))?;
+        res.extract(py)
     };
 
-    // Wrap color_fn to return Result<Option<usize>, CollectBicolorError<E>>
-    let color_fn_wrapper =
-        |edge: &PyObject| -> Result<Option<usize>, CollectBicolorError<PyErr>> {
-            match color_fn.call1(py, (edge,)) {
-                Ok(res) => res.extract(py).map_err(CollectBicolorError::CallableError),
-                Err(err) => Err(CollectBicolorError::CallableError(err)),
-        }
+    let color_fn_wrapper = |edge: &PyObject| -> Result<Option<usize>, PyErr> {
+        let res = color_fn.call1(py, (edge,))?;
+        res.extract(py)
     };
 
-    // Map CollectBicolorError to PyErr using custom convert_error function
-    let block_list =
-        core_collect_bicolor_runs::<&StablePyGraph<Directed>, _, _, (), PyErr>(
-            dag,
-            filter_fn_wrapper,
-            color_fn_wrapper
-        ).map_err(convert_error)?;
+    let block_list = match core_collect_bicolor_runs(dag, filter_fn_wrapper, color_fn_wrapper) {
+        Ok(Some(block_list)) => block_list
+            .into_iter()
+            .map(|index_list| {
+                index_list
+                    .into_iter()
+                    .map(|node_index| {
+                        let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
+                        node_weight.into_py(py)
+                    })
+                    .collect()
+            })
+            .collect(),
+        Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Err(e) => return Err(e),
+    };
 
-    // Convert the result list from Vec<Vec<NodeId>> to Vec<Vec<PyObject>>
-    let py_block_list: Vec<Vec<PyObject>> = block_list.into_iter().map(|index_list| {
-        index_list.into_iter().map(|node_index| {
-            let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
-            node_weight.into_py(py)
-        }).collect()
-    }).collect();
-
-    Ok(py_block_list)
+    Ok(block_list)
 }
 
 /// Returns the transitive reduction of a directed acyclic graph
