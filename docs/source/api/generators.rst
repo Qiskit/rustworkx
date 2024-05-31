@@ -32,3 +32,4 @@ Generators
     rustworkx.generators.directed_empty_graph
     rustworkx.generators.complete_graph
     rustworkx.generators.directed_complete_graph
+    rustworkx.generators.dorogovtsev_goltsev_mendes_graph
