@@ -19,7 +19,8 @@ use dfs_visit::{dfs_handler, PyDfsVisitor};
 use dijkstra_visit::{dijkstra_handler, PyDijkstraVisitor};
 
 use rustworkx_core::traversal::{
-    breadth_first_search, depth_first_search, dfs_edges, dijkstra_search,
+    ancestors as core_ancestors, breadth_first_search, depth_first_search,
+    descendants as core_descendants, dfs_edges, dijkstra_search,
 };
 
 use super::{digraph, graph, iterators, CostFn};
@@ -32,7 +33,6 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{Bfs, NodeCount, Reversed};
 
@@ -221,16 +221,10 @@ pub fn bfs_predecessors(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
-    let index = NodeIndex::new(node);
-    let mut out_set: HashSet<usize> = HashSet::new();
-    let reverse_graph = Reversed(&graph.graph);
-    let res = algo::dijkstra(reverse_graph, index, None, |_| 1);
-    for n in res.keys() {
-        let n_int = n.index();
-        out_set.insert(n_int);
-    }
-    out_set.remove(&node);
-    out_set
+    core_ancestors(&graph.graph, NodeIndex::new(node))
+        .map(|x| x.index())
+        .filter(|x| *x != node)
+        .collect()
 }
 
 /// Return the descendants of a node in a graph.
@@ -249,14 +243,10 @@ pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
-    let mut out_set: HashSet<usize> = HashSet::new();
-    let res = algo::dijkstra(&graph.graph, index, None, |_| 1);
-    for n in res.keys() {
-        let n_int = n.index();
-        out_set.insert(n_int);
-    }
-    out_set.remove(&node);
-    out_set
+    core_descendants(&graph.graph, index)
+        .map(|x| x.index())
+        .filter(|x| *x != node)
+        .collect()
 }
 
 /// Breadth-first traversal of a directed graph.

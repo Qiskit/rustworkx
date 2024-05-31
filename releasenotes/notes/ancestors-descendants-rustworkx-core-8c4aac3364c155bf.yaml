@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Added a new function ``ancestors()`` to the
+    ``rustworkx_core::traversal`` module. That is a generic Rust implementation
+    for the core rust library that provides the
+    :func:`.ancestors` function to Rust users.
+  - |
+    Added a new function ``descendants()`` to the
+    ``rustworkx_core::traversal`` module. That is a generic Rust implementation
+    for the core rust library that provides the
+    :func:`.descendants` function to Rust users.
