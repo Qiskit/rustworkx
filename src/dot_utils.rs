@@ -64,7 +64,6 @@ where
     Ok(())
 }
 
-/// Convert an attr map to an output string
 fn attr_map_to_string<'a>(
     py: Python,
     attrs: Option<&'a PyObject>,
@@ -82,15 +81,18 @@ fn attr_map_to_string<'a>(
     if attrs.is_empty() {
         return Ok("".to_string());
     }
+    // concatnate 123 to key and value
 
+    // Change here: Ensure all string values are quoted
     let attr_string = attrs
         .iter()
         .map(|(key, value)| {
-            if key == "label" {
-                format!("{}=\"{}\"", key, value)
-            } else {
-                format!("{}={}", key, value)
-            }
+            let escaped_value = value
+                .replace("\\", "\\\\")  // Escape backslashes first
+                .replace("\"", "\\\"")  // Escape double quotes
+                .replace("\n", "\\n")   // Escape newlines
+                .replace(":", "\\:");   // Escape colons
+            format!("{}=\"{}\"", key, escaped_value)
         })
         .collect::<Vec<String>>()
         .join(", ");

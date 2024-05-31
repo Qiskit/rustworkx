@@ -174,8 +174,6 @@ def graphviz_draw(
             "instructions."
         )
 
-    print(graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr))
-
     dot_str = cast(str, graph.to_dot(node_attr_fn, edge_attr_fn, graph_attr))
     if image_type is None:
         output_format = "png"
