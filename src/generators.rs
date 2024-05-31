@@ -1618,6 +1618,93 @@ pub fn directed_complete_graph(
     })
 }
 
+/// Generate a ladder graph
+///
+/// :param int num_node: The number of nodes to generate the graph with. Node
+///     weights will be None if this is specified. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights``will be used.
+/// :param list weights: A list of node weights. If both ``num_node`` and
+///     ``weights`` are set this will be ignored and ``weights`` will be used.
+/// :param bool multigraph: When set to False the output
+///     :class:`~rustworkx.PyGraph` object will not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated ladder graph
+/// :rtype: PyGraph
+/// :raises IndexError: If neither ``num_nodes`` or ``weights`` are specified
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   graph = rustworkx.generators.ladder_graph(5)
+///   mpl_draw(graph)
+///
+#[pyfunction(multigraph = true)]
+#[pyo3(text_signature = "(/, num_nodes=None, weights=None, multigraph=True")]
+pub fn ladder_graph(
+    py: Python,
+    num_nodes: Option<usize>,
+    weights: Option<Vec<PyObject>>,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    if weights.is_none() && num_nodes.is_none() {
+        return Err(PyIndexError::new_err(
+            "num_nodes and weights list not specified",
+        ));
+    } else if num_nodes.is_none() && weights.as_ref().unwrap().len() % 2 == 1 {
+        return Err(PyIndexError::new_err(
+            "length of weights must be even numbers",
+        ));
+    }
+    let node_len = if weights.is_none() {
+        num_nodes.unwrap()
+    } else {
+        weights.as_ref().unwrap().len() / 2
+    };
+    
+    if node_len == 0 {
+        return Ok(graph::PyGraph {
+            graph: StablePyGraph::<Undirected>::default(),
+            node_removed: false,
+            multigraph,
+            attrs: py.None(),
+        });
+    }
+    let num_edges = 3 * node_len - 2;
+    let mut graph = StablePyGraph::<Undirected>::with_capacity(node_len * 2, num_edges);
+    match weights {
+        Some(weights) => {
+            for weight in weights {
+                graph.add_node(weight);
+            }
+        }
+        None => {
+            (0..(node_len * 2)).for_each(|_| {
+                graph.add_node(py.None());
+            });
+        }
+    };
+
+    for rail_a in 0..node_len - 1 {
+        graph.add_edge(NodeIndex::new(rail_a), NodeIndex::new(rail_a+1), py.None());
+        let rail_b = rail_a + node_len;
+        graph.add_edge(NodeIndex::new(rail_b), NodeIndex::new(rail_b+1), py.None());
+    }
+    for rung_a in 0..node_len {
+        graph.add_edge(NodeIndex::new(rung_a), NodeIndex::new(rung_a+node_len), py.None());
+    }
+    
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -1646,5 +1733,6 @@ pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_empty_graph))?;
     m.add_wrapped(wrap_pyfunction!(complete_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_complete_graph))?;
+    m.add_wrapped(wrap_pyfunction!(ladder_graph))?;
     Ok(())
 }
