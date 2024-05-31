@@ -755,9 +755,9 @@ def draw_edges(
             line_width = width
 
         # radius of edges
-        
-        reverse_edge  = np.concatenate(([dst], [src]))
-        for edge in edge_pos: #the loop can be optimized
+
+        reverse_edge = np.concatenate(([dst], [src]))
+        for edge in edge_pos:  # the loop can be optimized
             if bool(np.sum(np.all(np.equal(edge, reverse_edge)))):
                 rad = 0.25
                 break
@@ -1011,7 +1011,7 @@ def draw_edge_labels(
             x1 * label_pos + x2 * (1.0 - label_pos),
             y1 * label_pos + y2 * (1.0 - label_pos),
         )
-        if (n2, n1) in labels.keys(): #loop
+        if (n2, n1) in labels.keys():  # loop
             x += 0.05 * label_pos
             if n2 > n1:
                 y -= 0.25
