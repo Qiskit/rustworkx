@@ -17,7 +17,7 @@ import rustworkx
 
 class TestDorogovtsevGoltsevMendesGraph(unittest.TestCase):
     def test_dorogovtsev_goltsev_mendes_graph(self):
-        for t in range(6):
-            graph = rustworkx.generators.dorogovtsev_goltsev_mendes_graph(t)
-            self.assertEqual(len(graph), 3 * (3**t + 1) / 2)
-            self.assertEqual(len(graph.edges()), 3 ** (t + 1))
+        for n in range(0, 6):
+            graph = rustworkx.generators.dorogovtsev_goltsev_mendes_graph(n)
+            self.assertEqual(len(graph), (3 ** n + 3) // 2)
+            self.assertEqual(len(graph.edges()), 3 ** n)

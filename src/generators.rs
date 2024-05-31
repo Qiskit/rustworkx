@@ -1620,10 +1620,10 @@ pub fn directed_complete_graph(
 
 /// TODO: docs
 #[pyfunction]
-#[pyo3(signature=(t,))]
-pub fn dorogovtsev_goltsev_mendes_graph(py: Python, t: isize) -> PyResult<graph::PyGraph> {
+#[pyo3(signature=(n,))]
+pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
-    let graph = match core_generators::dorogovtsev_goltsev_mendes_graph(t, default_fn, default_fn) {
+    let graph = match core_generators::dorogovtsev_goltsev_mendes_graph(n, default_fn, default_fn) {
         Ok(graph) => graph,
         Err(_) => return Err(PyIndexError::new_err("t must be >= -1")),
     };

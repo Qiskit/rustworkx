@@ -10,16 +10,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use petgraph::{
-    data::Create,
-    visit::{Data, EdgeIndexable},
-};
+use petgraph::{data::Create, visit::Data};
 
 use super::InvalidInputError;
 
 // TODO: docs
 pub fn dorogovtsev_goltsev_mendes_graph<G, T, F, H, M>(
-    t: isize,
+    n: usize,
     mut default_node_weight: F,
     mut default_edge_weight: H,
 ) -> Result<G, InvalidInputError>
@@ -28,10 +25,7 @@ where
     F: FnMut() -> T,
     H: FnMut() -> M,
 {
-    if t < -1 {
-        return Err(InvalidInputError {});
-    }
-    let n_edges = usize::pow(3, t as u32 + 1); // Check against overflow?
+    let n_edges = usize::pow(3, n as u32); // Check against overflow?
     let n_nodes = (n_edges + 3) / 2;
     let mut graph = G::with_capacity(n_nodes, n_edges);
 
@@ -42,7 +36,7 @@ where
         .unwrap();
     let mut current_endpoints = vec![(node_0, node_1)];
 
-    for _ in 0..t + 1 {
+    for _ in 0..n {
         let mut new_endpoints = vec![];
         for (source, target) in current_endpoints.iter() {
             let new_node = graph.add_node(default_node_weight());
