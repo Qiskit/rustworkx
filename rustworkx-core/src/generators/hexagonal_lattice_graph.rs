@@ -78,16 +78,24 @@ pub fn hexagonal_lattice_graph<G, T, F, H, M>(
     mut default_node_weight: F,
     mut default_edge_weight: H,
     bidirectional: bool,
+    periodic: bool,
+    with_positions: Option<F>,
 ) -> Result<G, InvalidInputError>
 where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
-    F: FnMut() -> T,
+    F: FnMut(usize, usize) -> T,
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
     if rows == 0 || cols == 0 {
-        return Ok(G::with_capacity(0, 0));
+        let empty_graph = G::with_capacity(0, 0);
+        let empty_positions = std::collections::HashMap::new();
+        return Ok((empty_graph, empty_positions));
     }
+    if periodic && (cols % 2 == 1 || rows < 2 || cols < 2) {
+        return Err(InvalidInputError);
+    }
+
     let mut rowlen = rows;
     let mut collen = cols;
 
@@ -181,9 +189,28 @@ where
             }
         }
     }
-    Ok(graph)
-}
 
+    // ToDo: Implement contracted_nodes
+
+    let h = (3.0 as f64).sqrt() / 2.0;
+    let mut pos = std::collections::HashMap::new();
+
+    if let Some(mut position_fn) = with_positions {
+        for i in 0..cols {
+            for j in 0..rows {
+                let x = 0.5 + i as f64 + (i / 2) as f64 + ((j % 2) as f64 * ((i % 2) as f64 - 0.5));
+                let y = if periodic {
+                    h * j as f64 + 0.01 * (i * i) as f64
+                } else {
+                    h * j as f64
+                };
+                pos.insert((i, j), (x, y));
+            }
+        }
+    }
+
+    Ok((graph, pos))
+}
 #[cfg(test)]
 mod tests {
     use crate::generators::hexagonal_lattice_graph;
