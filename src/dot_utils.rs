@@ -64,6 +64,7 @@ where
     Ok(())
 }
 
+/// Convert an attr map to an output string
 fn attr_map_to_string<'a>(
     py: Python,
     attrs: Option<&'a PyObject>,
@@ -81,7 +82,6 @@ fn attr_map_to_string<'a>(
     if attrs.is_empty() {
         return Ok("".to_string());
     }
-    // Change here: Ensure all string values are quoted
     let attr_string = attrs
         .iter()
         .map(|(key, value)| {
