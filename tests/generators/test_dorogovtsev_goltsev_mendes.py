@@ -18,6 +18,11 @@ import rustworkx
 class TestDorogovtsevGoltsevMendesGraph(unittest.TestCase):
     def test_dorogovtsev_goltsev_mendes_graph(self):
         for n in range(0, 6):
-            graph = rustworkx.generators.dorogovtsev_goltsev_mendes_graph(n)
-            self.assertEqual(len(graph), (3**n + 3) // 2)
-            self.assertEqual(len(graph.edges()), 3**n)
+            with self.subTest(n=n):
+                graph = rustworkx.generators.dorogovtsev_goltsev_mendes_graph(n)
+                self.assertEqual(len(graph), (3**n + 3) // 2)
+                self.assertEqual(len(graph.edges()), 3**n)
+                self.assertTrue(rustworkx.is_planar(graph))
+
+    def test_dorogovstev_goltsev_mendes_graph_error(self):
+        self.assertRaises(OverflowError, rustworkx.generators.dorogovtsev_goltsev_mendes_graph, -1)
