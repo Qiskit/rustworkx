@@ -18,6 +18,7 @@ use petgraph::visit::{
     NodeRef,
 };
 use pyo3::prelude::*;
+use serde_json::json;
 
 static TYPE: [&str; 2] = ["graph", "digraph"];
 static EDGE: [&str; 2] = ["--", "->"];
@@ -85,11 +86,8 @@ fn attr_map_to_string<'a>(
     let attr_string = attrs
         .iter()
         .map(|(key, value)| {
-            let escaped_value = value
-                .replace('\\', "\\\\") // Escape backslashes first
-                .replace('"', "\\\"") // Escape double quotes
-                .replace('\n', "\\n") // Escape newlines
-                .replace(':', "\\:"); // Escape colons
+            let escaped_value = serde_json::to_string(value).unwrap();
+            let escaped_value = &escaped_value[1..escaped_value.len() - 1];
             format!("{}=\"{}\"", key, escaped_value)
         })
         .collect::<Vec<String>>()
