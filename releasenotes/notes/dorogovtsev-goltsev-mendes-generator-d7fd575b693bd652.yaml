@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added :func:`rustworkx.generators.dorogovtsev_goltsev_mendes_graph` that generates
+    deterministic scale-free graphs using the Dorogovtsev-Goltsev-Mendes iterative procedure.
+  - |
+    Added to rustworkx-for ``generators::dorogovtsev_goltsev_mendes_graph`` function that generates,
+    deterministic scale-free graphs using the Dorogovtsev-Goltsev-Mendes iterative procedure.

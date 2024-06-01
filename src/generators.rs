@@ -1618,6 +1618,47 @@ pub fn directed_complete_graph(
     })
 }
 
+/// Generate a Dorogovtsev-Goltsev-Mendes graph.
+///
+/// Generate a graph following the recursive procedure in [1]_ .
+/// Starting from the two-node, one-edge graph, iterating `n` times generates
+/// a graph with `(3**n + 3) // 2` nodes and `3**n` edges.
+///
+/// :param int n: The number of iterations to perform.
+///
+/// :returns: The generated Dorogovtsev-Goltsev-Mendes graph
+///
+/// :rtype: PyGraph
+///
+/// .. jupyter-execute::
+///   
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///   
+///   graph = rustworkx.generators.dorogovtsev_goltsev_mendes_graph(2)
+///   mpl_draw(graph)
+///
+/// .. [1] S. N. Dorogovtsev, A. V. Goltsev and J. F. F. Mendes
+///    "Pseudofractal scale-free web"
+///    Physical Review E 65, 066122, 2002
+///    https://arxiv.org/abs/cond-mat/0112143
+///
+#[pyfunction]
+#[pyo3(signature=(n,))]
+pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph = match core_generators::dorogovtsev_goltsev_mendes_graph(n, default_fn, default_fn) {
+        Ok(graph) => graph,
+        Err(_) => return Err(PyIndexError::new_err("t must be >= -1")),
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
 #[pymodule]
 pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
@@ -1646,5 +1687,6 @@ pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_empty_graph))?;
     m.add_wrapped(wrap_pyfunction!(complete_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_complete_graph))?;
+    m.add_wrapped(wrap_pyfunction!(dorogovtsev_goltsev_mendes_graph))?;
     Ok(())
 }
